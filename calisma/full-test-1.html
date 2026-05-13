@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/assets/users.js"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function() {
+  var path = window.location.pathname;
+  var slug = path.substring(path.lastIndexOf('/') + 1).replace(/\.html$/, '');
+  
+  // Redirects if not authed or no product access
+  var auth = window.GriAuth && window.GriAuth.requireAuth(slug);
+  if (!auth) return;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Override goHome (if file uses it) to redirect to user panel
+    window.goHome = function() { 
+      window.location.href = '/panelim.html'; 
+    };
+    
+    // Wire the toolbar home button directly
+    var homeBtn = document.getElementById('tb-home-btn');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', function(e) { 
+        e.preventDefault(); 
+        window.location.href = '/panelim.html'; 
+      });
+      homeBtn.addEventListener('touchend', function(e) { 
+        e.preventDefault(); 
+        window.location.href = '/panelim.html'; 
+      });
+    }
+  });
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAT R&W — Practice Test 1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#f8f7f4;--surface:#fff;--border:#e2e0dc;--text:#1a1a2e;--muted:#6b7280;--navy:#2d3a8c;--nlight:#eef0fb;--correct:#166534;--cbg:#f0fdf4;--wrong:#991b1b;--wbg:#fef2f2;--mark:#b45309;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+/* SPLASH */
+#splash{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;background:linear-gradient(155deg,#f8f7f4 55%,#eef0fb 100%)}
+.s-tag{display:inline-block;background:var(--navy);color:#fff;font-size:.67rem;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.3rem 1rem;border-radius:50px;margin-bottom:1.8rem}
+.s-title{font-family:'Lora',serif;font-size:clamp(1.9rem,5vw,3rem);font-weight:600;line-height:1.2;margin-bottom:.9rem}
+.s-title span{color:var(--navy)}
+.s-desc{color:var(--muted);font-size:.92rem;max-width:460px;line-height:1.65;margin-bottom:1.8rem}
+.s-chips{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:2.4rem}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.32rem .8rem;font-size:.76rem;color:var(--muted);font-family:'DM Mono',monospace}
+.btn-p{background:var(--navy);color:#fff;border:none;border-radius:var(--r);padding:.9rem 2.5rem;font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-p:hover{opacity:.85}
+.btn-sec{background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:var(--r);padding:.82rem 2.5rem;font-size:.95rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+.btn-sec:hover{background:var(--nlight)}
+.btn-row{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;margin-bottom:1.4rem}
+.promo-card{background:transparent;border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1.4rem;margin-top:1.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;max-width:340px;width:100%;text-align:center}
+.promo-name{font-size:.78rem;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em}
+.promo-title{font-size:.7rem;color:var(--muted);opacity:.75;font-family:'DM Mono',monospace;letter-spacing:.03em}
+.promo-exams{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-top:.15rem}
+.promo-tag{background:transparent;border:1px solid var(--border);border-radius:4px;font-size:.63rem;font-family:'DM Mono',monospace;padding:.12rem .4rem;letter-spacing:.05em;color:var(--muted);opacity:.8}
+.promo-phone{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);opacity:.75;margin-top:.1rem}
+/* TOPBAR */
+
+.tbl{display:flex;flex-direction:column;gap:1px}
+.tb-lbl{font-size:.64rem;opacity:.65;font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.tb-qn{font-size:.88rem;font-weight:600}
+.btn-mk{background:none;border:1.5px solid rgba(255,255,255,.35);border-radius:6px;color:rgba(255,255,255,.75);font-size:.71rem;font-family:'DM Mono',monospace;padding:.27rem .72rem;cursor:pointer;transition:all .15s}
+.btn-mk.mk,.btn-mk:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.15)}
+.prog-wrap{height:3px;background:#e5e7eb}
+.prog-bar{height:3px;background:var(--navy);transition:width .3s}
+/* QUIZ */
+#quiz{display:none;min-height:100vh;flex-direction:column}
+.qbody{flex:1;max-width:720px;margin:0 auto;padding:1.8rem 1.2rem 2.5rem;width:100%}
+.t-badge{display:inline-block;font-size:.62rem;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.21rem .68rem;border-radius:50px;color:#fff;margin-bottom:1.1rem}
+.pbox{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--navy);border-radius:var(--r);padding:1.2rem 1.4rem;margin-bottom:1.35rem;font-family:'Lora',serif;font-size:.95rem;line-height:1.78;color:#252538}
+.tx-lbl{display:block;font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:.45rem;font-style:normal}
+.pbox u{text-decoration:none;font-style:italic;font-weight:600;border-bottom:2px solid var(--navy)}
+.tdiv{border:none;border-top:1px dashed var(--border);margin:.7rem 0}
+.qt{font-size:.96rem;font-weight:600;line-height:1.55;margin-bottom:1.05rem}
+.opts{display:flex;flex-direction:column;gap:.48rem;margin-bottom:1.4rem}
+.opt{display:flex;align-items:flex-start;gap:.72rem;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:.7rem 1rem;cursor:pointer;transition:border-color .12s,background .12s;font-size:.92rem;color:var(--text);width:100%;text-align:left}
+.opt:hover{border-color:var(--navy);background:var(--nlight)}
+.opt.sel{border-color:var(--navy);background:var(--nlight)}
+.ol{display:flex;align-items:center;justify-content:center;width:23px;height:23px;min-width:23px;border-radius:50%;border:1.5px solid var(--border);font-size:.74rem;font-family:'DM Mono',monospace;font-weight:700;margin-top:1px;transition:all .12s}
+.opt.sel .ol{background:var(--navy);border-color:var(--navy);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:.8rem}
+.btn-n{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:.58rem 1.15rem;font-size:.87rem;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;transition:border-color .12s}
+.btn-n:hover{border-color:var(--navy)}
+.btn-n:disabled{opacity:.3;cursor:not-allowed}
+.btn-sub{background:var(--navy);color:#fff;border:none;border-radius:var(--r);padding:.58rem 1.4rem;font-size:.87rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-sub:hover{opacity:.85}
+.tracker{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.15rem}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--border);transition:all .2s;cursor:pointer}
+.dot.ans{background:var(--navy)}
+.dot.cur{background:var(--navy);box-shadow:0 0 0 2px var(--nlight),0 0 0 3px var(--navy)}
+/* MODULE BREAK */
+#mbreak{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center;background:linear-gradient(155deg,#f8f7f4 55%,#eef0fb 100%)}
+.mb-score{font-family:'DM Mono',monospace;font-size:3rem;font-weight:700;color:var(--navy);margin:1rem 0 .3rem}
+.mb-denom{font-size:.9rem;color:var(--muted);margin-bottom:1.5rem}
+.mb-title{font-family:'Lora',serif;font-size:1.6rem;font-weight:600;margin-bottom:.5rem}
+.mb-sub{color:var(--muted);font-size:.88rem;max-width:400px;margin-bottom:2rem;line-height:1.6}
+/* RESULTS */
+#results{display:none;background:var(--bg);min-height:100vh}
+.rh{background:var(--navy);color:#fff;padding:2rem 1.5rem;text-align:center}
+.rh h1{font-family:'Lora',serif;font-size:1.45rem;font-weight:600;margin-bottom:.3rem}
+.rh p{opacity:.7;font-size:.84rem}
+.rb{max-width:780px;margin:0 auto;padding:2rem 1.2rem 3rem}
+.sc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem;display:grid;grid-template-columns:auto 1fr;gap:1.6rem;align-items:center;margin-bottom:1.5rem}
+.sc-big{text-align:center}
+.sc-num{font-size:3.6rem;font-weight:700;color:var(--navy);font-family:'DM Mono',monospace;line-height:1}
+.sc-den{font-size:.83rem;color:var(--muted);font-family:'DM Mono',monospace}
+.sc-pct{font-size:1.2rem;font-weight:700;margin-bottom:.3rem}
+.sc-rng{font-size:.82rem;color:var(--muted);margin-bottom:.45rem}
+.sc-sum{font-size:.83rem;color:var(--muted);line-height:1.5}
+.mod-cards{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
+.mod-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
+.mod-card h4{font-size:.72rem;font-family:'DM Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.mod-score{font-size:1.8rem;font-weight:700;color:var(--navy);font-family:'DM Mono',monospace}
+.mod-pct{font-size:.8rem;color:var(--muted)}
+.stitle{font-size:.67rem;font-family:'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);margin-bottom:.9rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.ctable{width:100%;border-collapse:collapse;margin-bottom:1.8rem;font-size:.87rem}
+.ctable th{text-align:left;padding:.38rem .55rem;font-size:.67rem;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.ctable td{padding:.52rem .55rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.bar-w{width:88px;background:var(--border);border-radius:4px;height:5px;display:inline-block}
+.bar-f{height:5px;border-radius:4px;background:var(--navy)}
+.cpct{font-family:'DM Mono',monospace;font-size:.77rem;color:var(--muted);margin-left:.4rem}
+.bs{font-size:.64rem;font-family:'DM Mono',monospace;padding:.11rem .43rem;border-radius:4px}
+.bs.str{background:#f0fdf4;color:var(--correct)}
+.bs.rev{background:#fffbeb;color:var(--mark)}
+.bs.pri{background:var(--wbg);color:var(--wrong)}
+/* wrong items */
+.wi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:.68rem;overflow:hidden}
+.wh{display:flex;align-items:center;gap:.55rem;padding:.65rem .95rem;background:var(--wbg);border-bottom:1px solid #fecaca;cursor:pointer;user-select:none}
+.wn{font-family:'DM Mono',monospace;font-size:.77rem;color:var(--wrong);font-weight:600}
+.wt{font-size:.71rem;font-family:'DM Mono',monospace;color:var(--muted)}
+.wtog{margin-left:auto;font-size:.74rem;color:var(--muted)}
+.wb{padding:.95rem;display:none}
+.wb.open{display:block}
+.rpass{background:var(--bg);border-left:3px solid var(--border);border-radius:0 4px 4px 0;padding:.7rem .95rem;margin-bottom:.75rem;font-family:'Lora',serif;font-size:.86rem;line-height:1.72;color:#252538}
+.rpass u{text-decoration:none;font-style:italic;font-weight:600}
+.ac{background:var(--cbg);color:var(--correct);font-size:.83rem;font-weight:600;padding:.36rem .72rem;border-radius:5px;margin-bottom:.28rem}
+.aw{background:var(--wbg);color:var(--wrong);font-size:.83rem;padding:.36rem .72rem;border-radius:5px;margin-bottom:.62rem;text-decoration:line-through}
+.expl{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:.82rem .95rem;font-size:.84rem;line-height:1.67;color:#2a2a3e;white-space:pre-wrap}
+/* vocab */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.6rem;margin-bottom:1.8rem}
+.vc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.72rem .95rem}
+.vc.ms{border-color:#fca5a5;background:var(--wbg)}
+.vw{font-family:'Lora',serif;font-style:italic;font-size:.93rem;font-weight:600;margin-bottom:.15rem}
+.vd{font-size:.78rem;color:var(--muted);line-height:1.43}
+.vtag{font-size:.64rem;font-family:'DM Mono',monospace;margin-top:.28rem;color:var(--muted)}
+.vtag.m{color:var(--wrong)}
+/* study */
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.92rem 1.05rem;margin-bottom:.62rem}
+.scard h4{font-size:.87rem;font-weight:700;margin-bottom:.28rem}
+.scard p{font-size:.82rem;color:var(--muted);line-height:1.55}
+.ptag{display:inline-block;font-size:.62rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;padding:.12rem .42rem;border-radius:4px;margin-bottom:.32rem}
+.ptag.hi{background:var(--wbg);color:var(--wrong)}
+.ptag.me{background:#fffbeb;color:var(--mark)}
+.btn-rs{background:var(--navy);color:#fff;border:none;border-radius:var(--r);padding:.78rem 1.9rem;font-size:.88rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:1rem;transition:opacity .15s}
+.btn-rs:hover{opacity:.85}
+@media(max-width:520px){
+  .sc-card,.mod-cards{grid-template-columns:1fr}
+  .sc-num{font-size:2.7rem}
+  .vgrid{grid-template-columns:1fr 1fr}
+}
+
+  /* ═══ COVER PAGE ═══ */
+  #cv-main{display:none}
+
+
+  .tb-home{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.45);border-radius:6px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;font-family:'Inter','DM Sans',sans-serif;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+  .tb-home:hover{background:rgba(255,255,255,.32)}
+  .btn-home-cv{background:#fff;color:var(--teal,#1e3a3a);border:2px solid var(--teal,#1e3a3a);border-radius:var(--r,8px);padding:.75rem 1.8rem;font-size:.87rem;font-weight:700;font-family:'Inter','DM Sans',sans-serif;cursor:pointer;margin-top:1rem;margin-left:.7rem;transition:opacity .15s}
+  .btn-home-cv:hover{opacity:.8}
+
+  /* ── Topbar Redesign ── */
+  .topbar{
+    background:linear-gradient(to right,#1e1b4b,#4338ca);
+    color:#fff;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    z-index:200;
+    box-shadow:0 2px 12px rgba(0,0,0,.2);
+  }
+  .tb-inner{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.1rem;gap:.8rem}
+  .tb-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .tb-label{font-size:.52rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;opacity:.65;font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-qnum{font-size:.88rem;font-weight:800;letter-spacing:.02em;font-family:'DM Mono',monospace}
+  .tb-right{display:flex;gap:.4rem;align-items:center;flex-shrink:0}
+  .tb-score{font-size:.75rem;font-weight:700;font-family:'DM Mono',monospace;opacity:.85;white-space:nowrap}
+  .tb-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:.3rem .72rem;font-size:.6rem;font-weight:700;letter-spacing:.05em;cursor:pointer;font-family:'DM Mono',monospace;white-space:nowrap;transition:background .15s;touch-action:manipulation;-webkit-appearance:none}
+  .tb-btn:hover,.tb-btn:active{background:rgba(255,255,255,.28)}
+  .tb-mark{background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:.3rem .72rem;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;touch-action:manipulation}
+  .tb-mark.marked{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.5)}
+  .prog-wrap{height:3px;background:rgba(255,255,255,.2)}
+  .prog-bar{height:3px;background:rgba(255,255,255,.85);transition:width .35s ease}
+  @media(max-width:640px){
+    .tb-inner{padding:.42rem .8rem}
+    .tb-label{font-size:.47rem}
+    .tb-qnum{font-size:.8rem}
+    .tb-btn{padding:.26rem .6rem;font-size:.56rem}
+  }
+
+  /* Cover permanently hidden */
+</style>
+</head>
+<body>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Josefin+Sans:wght@300;400;600&family=EB+Garamond:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<div id="cv-main">
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="s-tag">SAT Reading &amp; Writing — Practice Test 1</div>
+  <div class="s-title">54 Questions.<br><span>Two Modules. One Score.</span></div>
+  <div class="s-desc">A complete Digital SAT R&amp;W experience: Module 1 (medium difficulty) followed by Module 2 (hard difficulty). Full diagnostic feedback at the end.</div>
+  <div class="s-chips">
+    <span class="chip">Practice Test 1 of Series</span>
+    <span class="chip">Module 1 — 27Q · Medium</span>
+    <span class="chip">Module 2 — 27Q · Hard</span>
+    <span class="chip">Words in Context</span>
+    <span class="chip">Text Structure</span>
+    <span class="chip">Cross-Text</span>
+    <span class="chip">Central Ideas</span>
+    <span class="chip">Evidence</span>
+    <span class="chip">Inferences</span>
+    <span class="chip">Transitions</span>
+    <span class="chip">Boundaries</span>
+    <span class="chip">Grammar</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn-p" onclick="startQuiz()">Begin Module 1 →</button>
+    <button class="btn-sec" onclick="startM2Only()">Module 2 Only →</button>
+  </div>
+  <div class="promo-card">
+    <div class="promo-name">Gri English</div>
+    <div class="promo-title">Sınav Materyalleri</div>
+    <div class="promo-exams">
+      <span class="promo-tag">IELTS</span>
+      <span class="promo-tag">SAT</span>
+      <span class="promo-tag">TOEFL</span>
+      <span class="promo-tag">VERSANT</span>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" style="display:none;flex-direction:column;">
+  <div class="topbar">
+    <div class="tb-inner">
+      <div class="tb-left">
+        <div class="tb-label" id="mod-lbl">Module 1 of 2</div>
+        <div class="tb-qnum" id="qnum">Question 1 of 27</div>
+      </div>
+      <div class="tb-right">
+        <button type="button" class="tb-mark" id="mkbtn" onclick="toggleMark()">&#9733; Mark</button>
+        <button type="button" class="tb-btn" id="tb-home-btn">&#8962; Ana Sayfa</button>
+      </div>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+  </div>
+  <div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+  <div class="qbody">
+    <div class="tracker" id="tracker"></div>
+    <div id="qarea"></div>
+  </div>
+</div>
+
+<!-- MODULE BREAK -->
+<div id="mbreak" style="display:none;flex-direction:column;">
+  <div class="s-tag">Module 1 Complete</div>
+  <div class="mb-title">End of Module 1</div>
+  <div class="mb-score" id="mb-sc">—</div>
+  <div class="mb-denom">out of 27</div>
+  <div class="mb-sub">Module 2 contains 27 harder questions. Take a moment, then continue when you're ready.</div>
+  <button class="btn-p" onclick="startM2()">Begin Module 2 →</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="rh">
+    <h1>Score Report — Practice Test 1</h1>
+    <p>SAT Reading &amp; Writing · Module 1 + Module 2</p>
+    <p>SAT Reading &amp; Writing — Module 1 + Module 2</p>
+  </div>
+  <div class="rb" id="rb"></div>
+</div>
+
+<script>
+const TC={wic:'#1d4ed8',tsp:'#7c3aed',ctx:'#0e7490',cid:'#7c2d12',coe:'#065f46',inf:'#1e3a5f',trn:'#be185d',bnd:'#991b1b',grm:'#374151'};
+const TN={wic:'Words in Context',tsp:'Text Structure & Purpose',ctx:'Cross-Text Connections',cid:'Central Ideas & Details',coe:'Command of Evidence',inf:'Inferences',trn:'Transitions',bnd:'Boundaries',grm:'Form, Structure, and Sense'};
+const SG={
+  wic:'Read the full sentence — and the sentence before and after. The correct answer fits the specific context, not just the general dictionary meaning. Build vocabulary through academic reading (The Atlantic, The Economist). For each unfamiliar word, learn its range of meaning across contexts.',
+  tsp:'Always map what the text DOES before reading the options: assumption→challenge? Problem→solution? Describe→evaluate? For "function of a detail" questions, ask what the detail contributes to the surrounding argument — not just what it says.',
+  ctx:'Read each text separately. Locate the specific claim the question asks about in Text 1, then find the exact sentence in Text 2 that addresses it. Don\'t paraphrase too loosely — the answer must be directly supported.',
+  cid:'Find the thesis (often first or last sentence). The correct answer paraphrases the main claim without being too narrow (just one detail) or too broad (not in the text). Eliminate extremes first.',
+  coe:'For quote-support questions: the quote must prove the claim directly, not just relate to the same topic. For "undermine" questions: attack the EXPLANATION, not just the conclusion. For data questions: trace the full causal chain the researcher proposes.',
+  inf:'The answer must follow from information in the passage — not from outside knowledge. Avoid choices that are too strong ("always," "never," "definitely") if the passage is merely suggestive. Stay close to what the text actually says.',
+  trn:'Identify the logical relationship first (contrast / addition / cause-effect / example / time), then match to the transition. Common traps: "as a result" vs "at the same time"; "however" vs "furthermore." Don\'t pick based on sound — pick based on logic.',
+  bnd:'Two rules cover 90% of SAT boundary questions: (1) Two independent clauses cannot be joined by a comma alone — use semicolon or comma + FANBOYS. (2) Matching punctuation: if a non-restrictive phrase opens with a comma, it must close with a comma; if it opens with a dash, it must close with a dash.',
+  grm:'Key grammar traps: (1) "Each," "every," "neither/either," "one" = singular verb. (2) Subject is never inside a prepositional phrase. (3) Participial phrases modify the noun immediately after them — misplacement = dangling modifier. (4) "That" = restrictive; "which" (with comma) = non-restrictive. (5) Parallel structure: verbs after "that" in subjunctive contexts take bare infinitive.'
+};
+
+// ── MODULE 1 QUESTIONS ──
+const M1=[
+  {id:'1-1',mod:1,type:'Words in Context',k:'wic',tw:'contingent',
+   p:'Though often described as a reformer, Governor Chen was more accurately a pragmatist: she would adopt any policy that produced measurable results, even if those policies seemed superficially contradictory. Her political philosophy was, in this sense, wholly <u>contingent</u>.',
+   q:'As used in the text, "contingent" most nearly means:',
+   o:['A) Dependent on circumstances','B) Provisional and temporary','C) Ideologically consistent','D) Carefully calculated'],
+   a:0,
+   e:'A is correct. Chen\'s philosophy depended entirely on what circumstances required — no fixed ideology, only what worked. "Contingent" = dependent on external conditions.\n\nB trap: "provisional" means temporary, not circumstance-dependent.\nC is opposite: her policies seemed contradictory, so not consistent.\nD trap: calculated describes method, not dependency.',
+   v:{w:'contingent',d:'koşullara bağlı; sabit olmayan, değişkenlere göre şekillenen'}},
+
+  {id:'1-2',mod:1,type:'Words in Context',k:'wic',tw:'pellucid',
+   p:'The scientific paper was praised for its <u>pellucid</u> prose: arguments that lesser writers had made opaque through jargon and qualification were here expressed with such clarity that even a non-specialist could follow them without difficulty.',
+   q:'As used in the text, "pellucid" most nearly means:',
+   o:['A) Technically sophisticated','B) Admirably concise','C) Deliberately simplified','D) Transparently clear'],
+   a:3,
+   e:'C is correct. The sentence contrasts pellucid with "opaque" — so pellucid means its opposite: clear and transparent.\n\nA is wrong: technically sophisticated implies complexity, not clarity.\nB trap: concise means brief; pellucid means clear. Different concepts.\nD is wrong: simplified implies reducing content; pellucid is about clarity of expression.',
+   v:{w:'pellucid',d:'berrak, şeffaf; anlaşılması son derece kolay'}},
+
+  {id:'1-3',mod:1,type:'Words in Context',k:'wic',tw:'tendentious',
+   p:'Critics initially dismissed the artist\'s grid paintings as derivative — mere imitations of Mondrian — but this assessment now seems <u>tendentious</u>: closer examination reveals that she was not copying Mondrian but systematically subverting his assumptions about order.',
+   q:'As used in the text, "tendentious" most nearly means:',
+   o:['A) Promoting a particular agenda or bias','B) Lacking sufficient evidence','C) Overly harsh in critical tone','D) Based on a demonstrable factual error'],
+   a:0,
+   e:'B is correct. "Tendentious" = slanted or biased in a way that promotes a particular agenda. The critics had an ideological position that distorted their reading.\n\nA describes weakness, not agenda-driven slant.\nC too limited: tone alone isn\'t what makes a judgment tendentious.\nD too specific: tendentiousness is bias, not factual error.',
+   v:{w:'tendentious',d:'taraflı, belirli bir görüşü destekler biçimde yanlı'}},
+
+  {id:'1-4',mod:1,type:'Words in Context',k:'wic',tw:'vociferous',
+   p:'The proposal to relocate the community center was met with <u>vociferous</u> opposition: residents packed the town hall, speakers interrupted each other, and the meeting continued for nearly five hours before the council agreed to delay its decision.',
+   q:'As used in the text, "vociferous" most nearly means:',
+   o:['A) Organized and methodical','B) Unexpectedly widespread','C) Loudly and forcefully expressed','D) Motivated by legitimate concerns'],
+   a:2,
+   e:'C is correct. Packed halls, interruptions, five-hour sessions — all signal loud, forceful opposition. "Vociferous" = loudly expressed.\n\nA wrong: the meeting sounds chaotic, not organized.\nB wrong: "widespread" addresses reach, not intensity or volume.\nD wrong: legitimacy of concerns is not discussed.',
+   v:{w:'vociferous',d:'yüksek sesli, gürültülü; bağırarak ve ısrarla dile getirilen'}},
+
+  {id:'1-5',mod:1,type:'Words in Context',k:'wic',tw:'oblique',
+   p:'The documentary filmmaker took a deliberately <u>oblique</u> approach to her subject, never addressing the central controversy directly but allowing it to emerge through juxtaposed interviews, archival footage, and unexplained silences.',
+   q:'As used in the text, "oblique" most nearly means:',
+   o:['A) Indirect and not straightforward','B) Visually innovative and striking','C) Critical and confrontational','D) Formally experimental in structure'],
+   a:0,
+   e:'A is correct. The filmmaker avoided directly addressing the controversy — she used indirect means. "Oblique" = indirect.\n\nB describes aesthetics, not approach to subject.\nC is opposite: oblique = indirect; confrontational = direct.\nD too broad: "experimental" could describe any unconventional technique; oblique specifically means indirect.',
+   v:{w:'oblique',d:'dolaylı, doğrudan olmayan; çapraz, doğrudan hedeflenmeyen'}},
+
+  {id:'1-6',mod:1,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'Marine biologists long assumed that deep-sea organisms were largely unaffected by surface phenomena, isolated as they were by thousands of meters of water. A series of studies conducted between 2018 and 2022 complicated this picture significantly. Researchers found that deep-sea carbon cycling was profoundly sensitive to changes in surface phytoplankton communities, which are themselves subject to surface-level warming. The abyss, it turns out, is not as decoupled from the surface as previously believed.',
+   q:'Which choice best describes the overall structure of the text?',
+   o:['A) A scientific hypothesis is proposed, tested, and ultimately confirmed.','B) A research methodology is described and its key limitations are identified.','C) Two competing scientific theories are compared and a synthesis is proposed.','D) A longstanding assumption is introduced, then challenged by more recent evidence.'],
+   a:3,
+   e:'B is correct. The text opens with what biologists "long assumed," then introduces studies that overturned that assumption. Classic structure: established view → new evidence challenges it.\n\nA wrong: no hypothesis tested and confirmed — an assumption is overturned.\nC wrong: no two theories compared.\nD wrong: methodology and limitations are not the focus.',
+   v:null},
+
+  {id:'1-7',mod:1,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'The final movement of the symphony arrives not as triumph but as something stranger: a return to the opening theme, now stripped of its original energy, played pianissimo over sustained strings. Scholars have debated whether this ending represents resignation, transcendence, or irony — but few dispute that it refuses the listener the catharsis that the preceding movements seemed to promise.',
+   q:'The main purpose of this text is to:',
+   o:['A) Argue that the symphony\'s final movement is the composer\'s greatest achievement.','B) Explain why the symphony\'s ending has produced such deep scholarly disagreement.','C) Contrast the emotional content of the final movement with the preceding movements.','D) Characterize the symphony\'s unusual ending and note the interpretive debate surrounding it.'],
+   a:3,
+   e:'C is correct. The text does two things: (1) describes the strange ending, and (2) notes the scholarly debate. C captures both.\n\nA wrong: the text describes the ending as strange, not as greatest achievement.\nB too narrow: focuses only on why there\'s disagreement, ignoring the characterization.\nD partially true but too narrow.',
+   v:null},
+
+  {id:'1-8',mod:1,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'In Agatha Christie\'s Hercule Poirot novels, the detective\'s foreignness is never incidental: his Belgian identity, his meticulous mannerisms, and his emphasis on "the little grey cells" mark him as an outsider. His very detachment from English society enables the penetrating clarity of his observations. England, Christie seems to suggest, requires an outsider to see it clearly.',
+   q:'The final sentence of the text primarily serves to:',
+   o:['A) Summarize the argument made in the two preceding sentences.','B) Extend the argument into a broader claim about Christie\'s artistic vision.','C) Provide a counterargument to the characterization of Poirot as an outsider.','D) Offer a specific example that supports the claim about Poirot\'s detachment.'],
+   a:1,
+   e:'B is correct. The first two sentences establish that Poirot\'s outsider status enables clarity. The final sentence generalizes this into a claim about Christie\'s vision — England needs outsiders to see it. This is an extension, not a summary.\n\nA wrong: the final sentence goes further than preceding sentences, doesn\'t just restate.\nC wrong: no counterargument — the sentence reinforces the argument.\nD wrong: the final sentence is a broad claim, not a specific example.',
+   v:null},
+
+  {id:'1-9',mod:1,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'When economists first modeled the relationship between minimum wage increases and employment, they predicted a clear negative effect: higher wages would reduce labor demand. Subsequent empirical research has been more equivocal. A 2021 meta-analysis reviewed over 80 studies and found that the median employment effect was close to zero — though the distribution of results was wide, with some studies showing meaningful job losses and others showing modest gains.',
+   q:'Which choice best states the main purpose of this text?',
+   o:['A) To argue that minimum wage increases have no meaningful negative effects on employment.','B) To suggest that economists have now reached a consensus about minimum wage policy.','C) To describe the methodology used in a prominent 2021 meta-analysis.','D) To explain how empirical research has complicated the original economic prediction.'],
+   a:3,
+   e:'B is correct. The text moves from the original prediction (clear negative effect) to research that complicated it. The purpose is to show the evidence made the story more complex.\n\nA too strong: the text says median effect is near zero, but doesn\'t say NO negative effects.\nC wrong: the meta-analysis is cited as evidence, not methodologically described.\nD opposite: results vary widely — no consensus.',
+   v:null},
+
+  {id:'1-10',mod:1,type:'Cross-Text Connections',k:'ctx',tw:null,
+   p:'Text 1\nThe privatization of public services invariably reduces their quality. When profit becomes the primary motive, efficiency is pursued at the expense of equity, and those least able to advocate for themselves bear the heaviest costs. The historical record is unambiguous on this point.\n\nText 2\nThe debate over privatization is more nuanced than its critics acknowledge. Well-designed privatization schemes, with robust oversight and clearly specified quality standards, have in some cases delivered services efficiently while maintaining accessibility. The evidence does not uniformly support either position.',
+   q:'Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1 that "the historical record is unambiguous"?',
+   o:['A) By agreeing the record is clear but arguing it actually supports privatization.','B) By arguing the debate should focus on oversight mechanisms rather than ownership structure.','C) By accepting that privatization often fails but arguing well-designed schemes are an exception.','D) By suggesting the author of Text 1 has overstated the clarity and uniformity of the available evidence.'],
+   a:3,
+   e:'B is correct. Text 2 states "The evidence does not uniformly support either position" — directly contradicting Text 1\'s claim that the record is "unambiguous." Text 2\'s author would challenge the certainty of that claim.\n\nA wrong: Text 2 doesn\'t say the record supports privatization.\nC partially describes Text 2 but doesn\'t directly address the "unambiguous" claim.\nD may be implied but is not what Text 2 says in direct response.',
+   v:null},
+
+  {id:'1-11',mod:1,type:'Cross-Text Connections',k:'ctx',tw:null,
+   p:'Text 1\nThe "Mozart effect" — the idea that listening to classical music temporarily enhances spatial reasoning — was based on a 1993 study involving college students. Subsequent research has failed to replicate the effect reliably, and the original claims have been significantly overstated in popular culture.\n\nText 2\nWhile the Mozart effect as originally conceived may have been exaggerated, the broader claim that music training influences cognitive development deserves more careful evaluation. Longitudinal studies have found that sustained musical training — as distinct from passive listening — is associated with improvements in executive function and verbal memory in children.',
+   q:'The author of Text 2 would most likely agree with which statement about the author of Text 1\'s argument?',
+   o:['A) It makes a valid point but conflates passive listening with active musical training.','B) It correctly identifies methodological flaws in the original 1993 study.','C) It overstates the degree to which the Mozart effect has been scientifically debunked.','D) It neglects important evidence about music\'s effects on adult cognitive performance.'],
+   a:0,
+   e:'B is correct. Text 2 distinguishes between "passive listening" (Mozart effect) and "sustained musical training." It agrees the Mozart effect was exaggerated (agreeing with Text 1) but argues Text 1 doesn\'t address the different, supported claim about training. This means Text 1 conflates the two.\n\nA wrong: Text 2 says nothing about the 1993 methodology.\nC wrong: Text 2 seems to agree the Mozart effect was overstated.\nD wrong: Text 2 focuses on children, not adults.',
+   v:null},
+
+  {id:'1-12',mod:1,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'Recent scholarship has challenged the familiar narrative that the Scientific Revolution represented a clean break from medieval thought. Historians of science now emphasize the extent to which early modern natural philosophers drew on scholastic traditions, Islamic scholarship, and ancient texts. The supposedly radical departures of Copernicus, Galileo, and Newton were, in important respects, developments within — rather than ruptures from — long-standing intellectual frameworks.',
+   q:'Which choice best states the main idea of the text?',
+   o:['A) Medieval thought was more scientifically sophisticated than modern historians previously recognized.','B) The Scientific Revolution was primarily indebted to Islamic scholarship.','C) The Scientific Revolution was less of a departure from prior intellectual traditions than is commonly claimed.','D) Early modern natural philosophers deliberately concealed their debts to earlier thinkers.'],
+   a:2,
+   e:'C is correct. The text argues the Scientific Revolution was not the radical break commonly portrayed — the key figures built on existing traditions.\n\nA distortion: the text doesn\'t claim medieval thought was "sophisticated in a modern scientific sense."\nB too specific: Islamic scholarship is one of several traditions mentioned.\nD not supported: the text says historians now emphasize these debts, but doesn\'t say the philosophers denied them.',
+   v:null},
+
+  {id:'1-13',mod:1,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'Although wolves were reintroduced to Yellowstone National Park in 1995, the ecological effects have been contested. Proponents of the "trophic cascade" model argue that wolves transformed the park by controlling elk populations, which allowed riparian vegetation to recover, stabilizing riverbanks. Critics note that while some changes occurred, they were also influenced by drought, elk hunting outside the park, and natural vegetation cycles — making it difficult to attribute the changes solely to wolf reintroduction.',
+   q:'The text most strongly suggests that the ecological impact of wolf reintroduction in Yellowstone is:',
+   o:['A) Primarily a result of changes in elk behavior rather than elk population size.','B) Largely limited to changes in riparian vegetation and riverbank stability.','C) More significant than proponents of the trophic cascade model acknowledge.','D) Difficult to isolate because multiple factors were operating simultaneously.'],
+   a:3,
+   e:'B is correct. Critics point out that drought, hunting, and natural cycles also influenced changes — "making it difficult to attribute the changes solely to wolves." The wolf effect cannot be isolated.\n\nA not in the text: behavior vs. population size not discussed.\nC opposite: critics suggest the impact is overstated, not understated.\nD too narrow: this is part of what proponents claim, not the text\'s conclusion.',
+   v:null},
+
+  {id:'1-14',mod:1,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'In her influential study of Victorian domestic spaces, the historian argued that the separation of the home from the workplace in nineteenth-century Britain was not merely architectural but ideological: it produced the domestic sphere as a site of femininity and moral regeneration, withdrawn from the competitive world of commerce. This spatial and ideological division reinforced both class and gender hierarchies, naturalizing the exclusion of women from economic life.',
+   q:'Which choice best captures the historian\'s main claim, as described in the text?',
+   o:['A) Victorian domestic architecture was designed primarily to enforce class distinctions.','B) Victorian gender norms were primarily a product of changes in architectural practice rather than economic forces.','C) The Victorian home was idealized as a moral retreat because women were already excluded from economic activity.','D) The home-workplace separation in Victorian Britain served ideological functions that reinforced gender and class hierarchies.'],
+   a:3,
+   e:'B is correct. The historian argues the separation was ideological (not just physical) and reinforced both class and gender hierarchies. B captures both dimensions.\n\nA too narrow: class mentioned but so is gender; the full claim covers both.\nC reverses causation: the separation helped produce women\'s exclusion, not just reflect it.\nD inverts causation: ideology drove architecture, not the other way around.',
+   v:null},
+
+  {id:'1-15',mod:1,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'The passenger pigeon\'s extinction in 1914 has long served as a cautionary tale about overhunting. Recent genetic analysis complicates this narrative: researchers found evidence that passenger pigeon populations had fluctuated dramatically over thousands of years, with population bottlenecks predating European contact. This suggests the species may have been more ecologically vulnerable — and more sensitive to human pressure — than its enormous historical population size implied.',
+   q:'What is the main purpose of this text?',
+   o:['A) To argue that hunting was not the primary cause of the passenger pigeon\'s extinction.','B) To present genetic evidence that adds complexity to the standard account of the extinction.','C) To describe the methods researchers used to analyze passenger pigeon DNA.','D) To suggest that the passenger pigeon\'s extinction was inevitable regardless of human activity.'],
+   a:1,
+   e:'B is correct. The text "complicates" the story by adding genetic evidence suggesting the species was more vulnerable than its large population implied — without denying overhunting\'s role.\n\nA too strong: the text adds nuance, never denies that overhunting played a role.\nC wrong: research methods not described.\nD too strong: "inevitable" is not supported.',
+   v:null},
+
+  {id:'1-16',mod:1,type:'Command of Evidence',k:'coe',tw:null,
+   p:'Lena Fischer argues that early twentieth-century urban planners systematically undervalued the social functions of public markets, treating them primarily as logistical infrastructure rather than as spaces of community formation.',
+   q:'Which quotation from Fischer\'s work would most directly support this claim?',
+   o:['A) "Markets served as the primary distribution points for fresh produce in cities with limited refrigeration capacity."','B) "Planners consistently prioritized traffic flow and hygiene in their assessments of market value, rarely acknowledging the markets\' role as gathering places for immigrant communities."','C) "The decline of public markets in the mid-twentieth century coincided with the rise of the supermarket and the automobile."','D) "Several prominent planners explicitly opposed market demolition on the grounds that it would disrupt established commercial networks."'],
+   a:1,
+   e:'B is correct. Fischer\'s claim: planners undervalued social functions and treated markets as logistical. B shows exactly this: planners focused on traffic/hygiene (logistics) and rarely acknowledged the community-gathering role.\n\nA describes markets as logistical but doesn\'t show planners undervaluing social functions.\nC describes a historical correlation, not how planners valued markets.\nD actually contradicts: shows planners valued commercial networks and opposed demolition.',
+   v:null},
+
+  {id:'1-17',mod:1,type:'Command of Evidence',k:'coe',tw:null,
+   p:'A research team concluded that students who take handwritten notes retain lecture content better than those who type, because handwriting forces students to process and summarize information rather than transcribe it verbatim.',
+   q:'Which finding, if true, would most directly undermine the researchers\' explanation for the effect they observed?',
+   o:['A) The retention advantage for handwritten notes disappears when typists are instructed to avoid verbatim transcription.','B) Students who handwrite notes report higher levels of engagement during lectures than those who type.','C) Handwriting speed is significantly slower than typing speed for most college students.','D) Students who use tablets with styluses show retention rates similar to those who type on keyboards.'],
+   a:0,
+   e:'B is correct. The explanation is that handwriting forces summarization. If B is true — advantage disappears when typists don\'t transcribe verbatim — then the effect is about the behavior (summarizing), not the medium (handwriting). This undermines the claim that handwriting specifically produces better retention.\n\nA wrong: higher engagement supports the explanation.\nC wrong: slower speed is presumably WHY handwriting forces summarization — supports it.\nD interesting but doesn\'t directly test the summarization mechanism.',
+   v:null},
+
+  {id:'1-18',mod:1,type:'Command of Evidence',k:'coe',tw:null,
+   p:'A researcher studying North American warblers found that the average spring migration date shifted from April 18 in 1980 to April 5 in 2020 — a 13-day advance. Average April temperatures in the study region increased from 8.2°C to 9.7°C over the same period. She concluded that rising temperatures drove earlier migration by causing an earlier emergence of insects, the birds\' primary food source.',
+   q:'Which finding, if true, would most strengthen the researcher\'s conclusion?',
+   o:['A) The birds\' migration routes became shorter over the same 40-year period.','B) In years with warmer-than-average April temperatures, insect emergence and warbler arrival both occurred earlier than in cooler years.','C) Other migratory bird species in the same region showed similar advances in migration timing.','D) The warbler population size remained stable throughout the 40-year period of the study.'],
+   a:1,
+   e:'B is correct. The causal chain is: rising temperatures → earlier insect emergence → earlier warbler migration. B tests this mechanism year-by-year: warmer April → insects emerge earlier AND warblers arrive earlier. Directly supports the chain.\n\nA wrong: shorter routes explain how birds travel, not why they depart earlier.\nC shows a common cause is possible but doesn\'t test the specific temperature-insect-bird mechanism.\nD addresses survival, not timing.',
+   v:null},
+
+  {id:'1-19',mod:1,type:'Inferences',k:'inf',tw:null,
+   p:'The philosopher did not publish a single paper in the last decade of her career. Her colleagues initially assumed she had abandoned philosophical work; her private journals, released posthumously, revealed that she had in fact been writing extensively — filling hundreds of pages with increasingly intricate arguments — but had grown convinced that publication would require compromises she was unwilling to make.',
+   q:'Based on the text, what can most reasonably be inferred about the philosopher\'s attitude toward academic publication?',
+   o:['A) She believed the private act of writing was more valuable than sharing ideas with a professional audience.','B) She found the requirements of academic publishing incompatible with the intellectual standards she held for herself.','C) She had become disillusioned with philosophy as a discipline after years of professional disappointment.','D) She feared that her colleagues would respond hostilely to the arguments she was developing.'],
+   a:1,
+   e:'B is correct. The journals show she was writing extensively but believed publication would require "compromises she was unwilling to make." Publication\'s requirements (editorial standards, peer review norms) conflicted with her own standards.\n\nA goes too far: she objected to what publication required, not to sharing ideas generally.\nC not supported: no mention of professional disappointment or disillusionment.\nD too speculative: the text gives no indication her concern was about colleagues\' reactions.',
+   v:null},
+
+  {id:'1-20',mod:1,type:'Inferences',k:'inf',tw:null,
+   p:'Observers of the 1920 census have noted a discrepancy: the recorded population of several major industrial cities was substantially lower than estimates based on factory employment records, tax rolls, and school enrollment data would suggest. Historians have proposed several explanations, including deliberate undercounting of immigrant populations, migration between the census date and the recording period, and administrative error.',
+   q:'Which inference is best supported by the information in the text?',
+   o:['A) The 1920 census significantly overestimated population in rural areas to compensate for urban undercounting.','B) Factory employment records were more reliable than the other data sources available to historians.','C) The recorded population figures for the cities in question may not accurately reflect the actual number of people living there.','D) Immigrant populations were deliberately excluded from the 1920 census by federal authorities.'],
+   a:2,
+   e:'C is correct. The discrepancy between census figures and multiple other data sources suggests the figures may be inaccurate. C is the most careful, directly supported inference.\n\nA not supported: rural areas not mentioned.\nB not supported: the text doesn\'t rank reliability of sources.\nD too strong: deliberate undercounting is only one of three proposed explanations — the text doesn\'t confirm it happened.',
+   v:null},
+
+  {id:'1-21',mod:1,type:'Transitions',k:'trn',tw:null,
+   p:'Early studies of the gut microbiome relied almost exclusively on culture-based methods, which could only sustain organisms that survived in laboratory conditions. Researchers assumed these methods captured a representative sample of gut microorganisms. _______, subsequent metagenomic sequencing revealed that culture-based approaches had captured only a fraction of the actual microbial diversity present.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) As a result','B) Furthermore','C) However','D) Similarly'],
+   a:2,
+   e:'C is correct. Researchers assumed the methods were representative → [transition] → sequencing showed they only captured a fraction. This is a contrast between assumption and reality.\n\nA wrong: the sequencing findings are not a result of researchers\' assumption.\nB wrong: the findings contradict the assumption, not add to it.\nD wrong: the findings refute the assumption, not resemble it.',
+   v:null},
+
+  {id:'1-22',mod:1,type:'Transitions',k:'trn',tw:null,
+   p:'The introduction of fast fashion has dramatically reduced the cost of clothing for consumers worldwide. _______, the environmental costs of fast fashion — including water pollution, textile waste, and carbon emissions — have grown enormously, raising questions about whether the model is sustainable.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) As a result','B) For example','C) At the same time','D) Therefore'],
+   a:2,
+   e:'C is correct. Two simultaneous but contrasting realities: consumer costs fell (positive) while environmental costs grew (negative). The transition must signal both are happening concurrently.\n\nA wrong: environmental costs are not caused by consumer costs falling.\nB wrong: environmental costs are not an example of reduced consumer costs.\nD wrong: same error as A — implies causation where there is contrast.',
+   v:null},
+
+  {id:'1-23',mod:1,type:'Transitions',k:'trn',tw:null,
+   p:'Maria Montessori developed her educational approach through direct observation of children in a working-class neighborhood in Rome in the early 1900s. Her methodology emphasized child-directed activity, hands-on materials, and multi-age classrooms. _______, subsequent researchers have examined whether the benefits she observed generalize across different socioeconomic and cultural contexts.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) In contrast','B) Building on this foundation','C) Predictably','D) As a result'],
+   a:1,
+   e:'B is correct. Subsequent researchers extended Montessori\'s work by testing its generalizability — they built on her foundation, not opposed it.\n\nA wrong: subsequent researchers didn\'t work against Montessori.\nC wrong: nothing in the text signals this follow-up was obviously foreseeable.\nD too narrow: the research didn\'t directly result from the methodology itself.',
+   v:null},
+
+  {id:'1-24',mod:1,type:'Boundaries',k:'bnd',tw:null,
+   p:'The study, published in a prestigious peer-reviewed journal last spring _______ challenged decades of conventional wisdom about the role of sleep in memory consolidation.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) ,','B) ; it','C) — as well as','D) , which'],
+   a:0,
+   e:'A is correct. "Published in a prestigious peer-reviewed journal last spring" is a non-restrictive participial phrase modifying "The study." The phrase is opened with a comma after "The study," so it must be closed with a comma before the main verb "challenged."\n\nResult: The study, [phrase], challenged...\n\nB wrong: a semicolon cannot appear inside a non-restrictive phrase.\nC wrong: changes the meaning and creates an ungrammatical structure.\nD wrong: ", which" converts the phrase into a relative clause requiring sentence restructuring.',
+   v:null},
+
+  {id:'1-25',mod:1,type:'Boundaries',k:'bnd',tw:null,
+   p:'Scholars have long debated the extent to which Machiavelli\'s Prince was intended as sincere political advice _______ some argue it was a veiled critique designed to expose the nature of power rather than celebrate it.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) ;','B) ,','C) , and','D) , because'],
+   a:0,
+   e:'A is correct. Two independent clauses: (1) "Scholars have long debated..." and (2) "some argue it was a veiled critique..." A semicolon correctly joins two closely related independent clauses.\n\nB alone creates a comma splice — joining two independent clauses with only a comma is a Standard Written English violation.\nC (, and) grammatically possible but "and" implies simple addition where the second clause is actually an elaboration/explanation.\nD (, because) makes the second clause subordinate, changing the meaning to imply the debate exists because of the argument.',
+   v:null},
+
+  {id:'1-26',mod:1,type:'Form, Structure, and Sense',k:'grm',tw:null,
+   p:'Each of the proposed amendments to the municipal code, including the controversial provision regarding noise ordinances, _______ been reviewed by the city attorney before being submitted to the full council.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) have','B) has','C) were','D) are'],
+   a:1,
+   e:'B is correct. The grammatical subject is "Each," not "amendments." "Each" is always singular in English.\n\nThe prepositional phrase "of the proposed amendments" and the participial phrase "including the controversial provision..." are modifiers — they cannot change the subject\'s number.\n\nSubject: Each (singular) → verb: has\n\nA is the most common wrong answer: students see the nearby plural "amendments" and incorrectly use a plural verb.\nC is plural and past tense — neither appropriate.\nD is plural present — also wrong.',
+   v:null},
+
+  {id:'1-27',mod:1,type:'Form, Structure, and Sense',k:'grm',tw:null,
+   p:'Having spent two decades studying the ancient manuscripts, the professor\'s conclusion was that the texts revealed a previously unknown trade network connecting the Mediterranean and the Indian Ocean.',
+   q:'Which choice best corrects the underlined portion of the text?',
+   o:['A) Having spent two decades studying the ancient manuscripts, the professor\'s conclusion was','B) After two decades spent studying the ancient manuscripts, the professor\'s conclusion being','C) The professor, having spent two decades studying the ancient manuscripts, concluded','D) The ancient manuscripts, having been studied for two decades by the professor, led to the conclusion'],
+   a:2,
+   e:'C is correct. The original has a dangling modifier: "Having spent two decades studying the manuscripts" must modify the person who did the studying — the professor. But the grammatical subject is "the professor\'s conclusion," which cannot study manuscripts.\n\nC fixes this: subject = the professor (who did the studying), verb = concluded.\n\nA keeps the dangling modifier.\nB creates an ungrammatical structure with no proper main verb.\nD is passive and shifts agency awkwardly — the manuscripts didn\'t lead to the conclusion, the professor did.',
+   v:null}
+];
+
+// ── MODULE 2 QUESTIONS ──
+const M2=[
+  {id:'2-1',mod:2,type:'Words in Context',k:'wic',tw:'sanguine',
+   p:'Despite a series of disappointing quarterly results, the company\'s chief executive remained <u>sanguine</u>, publicly reassuring investors that the underlying fundamentals had not changed and that the short-term losses would prove temporary.',
+   q:'As used in the text, "sanguine" most nearly means:',
+   o:['A) Confidently optimistic despite adverse conditions','B) Transparent about financial performance','C) Composed and outwardly calm','D) Strategically cautious about public statements'],
+   a:0,
+   e:'B is correct. "Sanguine" means optimistic or cheerful, especially in difficult circumstances. The CEO was reassuring investors and expressing confidence despite poor results — exactly sanguine.\n\nA wrong: transparency about finances is not the same as optimism.\nC close trap: composed or calm is related but sanguine specifically means optimistic, not merely calm.\nD wrong: cautious is actually opposite — sanguine involves confident optimism.',
+   v:{w:'sanguine',d:'iyimser, umutlu; olumsuz koşullara rağmen güvenen'}},
+
+  {id:'2-2',mod:2,type:'Words in Context',k:'wic',tw:'laconic',
+   p:'Known for her <u>laconic</u> prose — her novels rarely exceed two hundred pages — she once told an interviewer that every sentence she failed to cut was a failure of nerve.',
+   q:'As used in the text, "laconic" most nearly means:',
+   o:['A) Austere and unornamented in style','B) Using remarkably few words; brief','C) Emotionally restrained and impersonal','D) Deliberately ambiguous in meaning'],
+   a:1,
+   e:'B is correct. "Laconic" means brief and concise, using few words. The passage establishes brevity as the defining feature: short novels, cutting unnecessary sentences.\n\nA close trap: austere overlaps with laconic but focuses on ornament, not length. Laconic specifically means brief.\nC wrong: emotionally restrained describes tone, not the quantity of words.\nD wrong: ambiguous is unrelated to brevity.',
+   v:{w:'laconic',d:'kısa ve öz; az kelimeyle çok şey anlatan'}},
+
+  {id:'2-3',mod:2,type:'Words in Context',k:'wic',tw:'adumbrated',
+   p:'In his 1848 essay, the economist did not fully develop his theory of labor value but <u>adumbrated</u> it, sketching its outlines with enough precision that later readers could reconstruct his intended argument.',
+   q:'As used in the text, "adumbrated" most nearly means:',
+   o:['A) Anticipated and predicted','B) Explained fully and systematically','C) Outlined in a preliminary or incomplete way','D) Applied to a concrete practical problem'],
+   a:2,
+   e:'C is correct. "Adumbrate" means to outline or give a faint sketch of something without fully developing it. The passage contrasts adumbrating with "fully developing" — and says he "sketched its outlines."\n\nA related but wrong: anticipated means foreseen in advance; adumbrated means roughly outlined.\nB is the opposite of what the passage says.\nD wrong: the economist did not apply the theory practically.',
+   v:{w:'adumbrate',def:'taslak çizmek, kabaca belirtmek; tam geliştirmeden ipuçlarını ortaya koymak',d:'taslak çizmek, kabaca belirtmek; tam geliştirmeden ipuçlarını ortaya koymak'}},
+
+  {id:'2-4',mod:2,type:'Words in Context',k:'wic',tw:'parsimonious',
+   p:'The committee\'s <u>parsimonious</u> allocation of research funding — distributing just enough to prevent complete project failure — frustrated scientists who argued that underfunding produced weak results while still consuming significant institutional attention.',
+   q:'As used in the text, "parsimonious" most nearly means:',
+   o:['A) Excessively frugal; reluctant to spend more than the minimum','B) Deliberately inequitable in distribution','C) Subject to strict bureaucratic oversight','D) Administratively complex and slow'],
+   a:0,
+   e:'B is correct. "Parsimonious" means excessively reluctant to spend or give — frugal to a fault. The committee gave only the minimum necessary, which frustrated scientists who needed more.\n\nA wrong: inequitable addresses fairness, not reluctance to spend.\nC wrong: bureaucratic oversight is a different issue.\nD wrong: administrative complexity is a different issue entirely.',
+   v:{w:'parsimonious',d:'son derece tutumlu, cimrice; zorunlu minimumdan fazlasını vermekten kaçınan'}},
+
+  {id:'2-5',mod:2,type:'Words in Context',k:'wic',tw:'vitiate',
+   p:'The introduction of unverified eyewitness testimony, the defense argued, would <u>vitiate</u> the integrity of the trial: once the jury heard claims that could not be cross-examined, any resulting verdict would be legally and morally suspect.',
+   q:'As used in the text, "vitiate" most nearly means:',
+   o:['A) Impair or invalidate','B) Complicate and delay','C) Unfairly prejudice the jury against','D) Formally challenge in court'],
+   a:0,
+   e:'B is correct. "Vitiate" means to impair or make ineffective — to undermine or invalidate. The defense argues the testimony would undermine the trial\'s integrity and make any verdict suspect.\n\nA wrong: vitiate means impair or destroy, not merely complicate.\nC close but wrong: prejudice addresses fairness toward a party; vitiate addresses the validity of the process itself.\nD wrong: formally challenging is a procedural action; vitiate means to undermine or render invalid.',
+   v:{w:'vitiate',d:'bozmak, geçersiz kılmak; bütünlüğünü/geçerliliğini zayıflatmak'}},
+
+  {id:'2-6',mod:2,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'It would be naive to claim that moral intuitions are infallible guides to ethical truth — history offers ample evidence that widely shared intuitions have endorsed slavery, excluded women from political life, and justified colonial violence. Yet this catalogue of failures does not show that intuitions should be abandoned altogether. It shows, rather, that they must be critically examined, revised in light of argument, and weighed against competing considerations.',
+   q:'The phrase "It would be naive to claim" in the opening sentence primarily serves to:',
+   o:['A) Introduce a counterargument that the author will ultimately reject entirely.','B) Signal that the author\'s main argument depends on an unverifiable premise.','C) Identify a widespread misconception the author attributes to moral philosophers.','D) Acknowledge a genuine limitation of the position the author is about to defend.'],
+   a:3,
+   e:'B is correct. The author concedes a real weakness (intuitions have been wrong) before redirecting to a more nuanced defense (intuitions shouldn\'t be abandoned, just examined). This is a concession move that acknowledges a genuine limitation.\n\nA wrong: the counterargument about intuitions\' failures is not entirely rejected — it\'s accepted and incorporated.\nC wrong: the author doesn\'t attribute this as someone else\'s misconception; they grant it as true.\nD wrong: the premise (intuitions have failed) is historically verifiable.',
+   v:null},
+
+  {id:'2-7',mod:2,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'The notion that ancient Greek city-states were democracies is not simply false, but it is significantly misleading. Athenian democracy, the best-documented case, excluded women, enslaved people, and non-citizen residents — groups that together formed the majority of the population. What the Greeks called democracy we might more accurately call a restricted aristocracy of adult male citizens.',
+   q:'Which choice best describes the function of the second sentence in the text?',
+   o:['A) It contradicts the qualification introduced in the first sentence.','B) It establishes a contrast between Athens and other ancient Greek city-states.','C) It explains why historians have traditionally mischaracterized Athenian democracy.','D) It provides specific evidence that supports the qualification introduced in the first sentence.'],
+   a:3,
+   e:'B is correct. The first sentence introduces a qualification: calling Greek city-states democracies is "misleading." The second sentence provides specific evidence for why: groups comprising the majority were excluded. It supports the qualification with concrete detail.\n\nA wrong: the second sentence supports the first, not contradicts it.\nC wrong: historian characterization isn\'t mentioned; the text is making a direct argument.\nD wrong: Athens is used as the key example, not contrasted with other city-states.',
+   v:null},
+
+  {id:'2-8',mod:2,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'Conservation biologists have increasingly turned to rewilding — the large-scale restoration of ecosystems to a more natural state, typically through reintroduction of apex predators. The approach has achieved striking successes in some contexts but has also encountered fierce opposition from farming communities whose livelihoods depend on managing the same landscapes. Any honest assessment of rewilding must grapple with both the ecological promise and the genuine social costs.',
+   q:'The main purpose of this text is to:',
+   o:['A) Advocate for the expansion of rewilding programs despite opposition from farming communities.','B) Explain why apex predators are central to successful ecosystem restoration.','C) Present rewilding as a practice with both significant ecological benefits and real social tradeoffs.','D) Argue that conservation biologists have consistently underestimated the social costs of rewilding.'],
+   a:2,
+   e:'C is correct. The text presents rewilding as having genuine ecological promise AND genuine social costs, calling for an "honest assessment" of both. It doesn\'t advocate for or against.\n\nA wrong: the text does not advocate — it calls for honest assessment.\nB too narrow: apex predators are mentioned in the definition, not as the central focus.\nD wrong: the text doesn\'t say biologists have underestimated costs — it says any assessment must include them.',
+   v:null},
+
+  {id:'2-9',mod:2,type:'Text Structure & Purpose',k:'tsp',tw:null,
+   p:'For decades, researchers assumed that cell aging — senescence — was an entirely passive process, the inevitable result of molecular wear and tear. A series of discoveries in the 1990s overturned this view: scientists found that senescent cells actively secrete inflammatory molecules that damage surrounding tissue. More recently, researchers have identified conditions under which selectively clearing senescent cells from aging organisms substantially extends their healthy lifespan.',
+   q:'Which choice best describes the overall structure of the text?',
+   o:['A) An initial theory is described, then refined and extended by a series of subsequent discoveries.','B) Two competing theories of cell aging are presented and evaluated against the available evidence.','C) A research methodology is described, and its successful practical applications are identified.','D) An unsolved problem in biology is introduced, and current limitations in addressing it are explained.'],
+   a:0,
+   e:'A is correct. The text opens with the original passive theory → 1990s discoveries overturned it (cells actively secrete inflammatory molecules) → more recent research extended further (clearing senescent cells extends lifespan). An initial theory refined over time through discoveries.\n\nB wrong: no two competing theories are compared.\nC wrong: no methodology is described.\nD wrong: the text describes progress and solutions, not unsolved problems.',
+   v:null},
+
+  {id:'2-10',mod:2,type:'Cross-Text Connections',k:'ctx',tw:null,
+   p:'Text 1\nLiterary historians have long assumed that the novel form emerged primarily from the middle-class reading culture of eighteenth-century Britain — a product of expanding literacy, cheap print, and the leisure time that commercial prosperity afforded. The genre\'s social and economic roots are, on this account, inseparable from its formal features.\n\nText 2\nThe argument that the novel is inherently a bourgeois form has increasingly come under challenge. Scholars have identified sophisticated prose narratives from medieval Japan, Renaissance Spain, and ancient Rome that share essential features with what we call the novel — suggesting that the form\'s conditions of emergence may be more varied than the standard British account implies.',
+   q:'Based on the texts, the author of Text 2 would most likely characterize the claim in Text 1 that the novel\'s roots are "inseparable" from its British middle-class origins as:',
+   o:['A) Broadly accurate but overly focused on formal features at the expense of social context.','B) Essentially correct, though the timeline should be extended to include pre-British examples.','C) Methodologically flawed because it conflates reading culture with literary form.','D) Plausible as an account of the British novel specifically, but too narrow to explain the form more generally.'],
+   a:3,
+   e:'B is correct. Text 2 acknowledges the British middle-class account may describe one tradition (it "comes under challenge," not is proven wrong) but argues the form can emerge from many conditions — as proven by examples from Japan, Spain, and Rome. The claim is too narrow as a general account.\n\nA wrong: Text 2 doesn\'t accuse Text 1 of overemphasizing formal features.\nC wrong: Text 2 doesn\'t critique Text 1\'s methodology.\nD wrong: Text 2 doesn\'t say Text 1 is "essentially correct" — it says the argument is under challenge.',
+   v:null},
+
+  {id:'2-11',mod:2,type:'Cross-Text Connections',k:'ctx',tw:null,
+   p:'Text 1\nThe widespread adoption of social media platforms has dramatically reduced the cost of political organizing, enabling citizen movements to mobilize quickly and at scale. The Arab Spring of 2011 demonstrated that digital communication tools can support the rapid coordination of large-scale protests.\n\nText 2\nResearchers studying social media and political mobilization have found a persistent gap between online participation and durable political change. The ease of digital mobilization may actually lower the threshold for engagement to a point where it substitutes for rather than amplifies deeper forms of political commitment — a phenomenon sometimes called "slacktivism."',
+   q:'How does the argument in Text 2 relate to the argument in Text 1?',
+   o:['A) It contradicts Text 1 by arguing that social media has not actually reduced organizing costs.','B) It complicates Text 1 by questioning whether reduced organizing costs translate into lasting political change.','C) It supports Text 1 by providing additional evidence about the effectiveness of digital coordination.','D) It extends Text 1\'s argument to explain why the Arab Spring succeeded where other movements failed.'],
+   a:1,
+   e:'B is correct. Text 1 argues social media reduces organizing costs and enables mobilization. Text 2 doesn\'t deny this — it accepts that digital organizing is easy — but questions whether ease of organizing translates into durable political change. This complicates rather than contradicts Text 1.\n\nA wrong: Text 2 doesn\'t deny that organizing costs have fallen.\nC wrong: Text 2 questions Text 1\'s implicit conclusion, not supports it.\nD wrong: Text 2 doesn\'t explain the Arab Spring specifically.',
+   v:null},
+
+  {id:'2-12',mod:2,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'The history of scientific measurement is, in significant part, a history of failure. The instruments we have used have always introduced error; the phenomena we have measured have always exceeded our ability to quantify them; and the theories we have tested have always been approximations. What we call scientific progress is not the gradual elimination of error but the gradual understanding of its sources, magnitude, and implications — a process that yields not certainty but calibrated uncertainty.',
+   q:'Which choice best states the main claim of the text?',
+   o:['A) Scientific instruments are fundamentally incapable of producing accurate measurements.','B) Scientific progress consists not in eliminating error but in better understanding and accounting for it.','C) Scientific theories should be understood as approximations rather than descriptions of reality.','D) The history of science is primarily a record of measurement failures rather than achievements.'],
+   a:1,
+   e:'B is correct. The text\'s key move is redefining scientific progress: not elimination of error but understanding of it, yielding "calibrated uncertainty." B captures this argument precisely.\n\nA too strong: the text says instruments "always" introduce error, but doesn\'t say they\'re fundamentally incapable of accuracy — only that perfect accuracy is impossible.\nC partially right but too narrow: this is one element of the argument, not the main claim.\nD distorts: the text says measurement history is "in significant part" a history of failure, not primarily a record of failures.',
+   v:null},
+
+  {id:'2-13',mod:2,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'In the decades following World War II, American suburbanization was frequently described as a voluntary choice — families simply preferring space, greenery, and homeownership to urban density. Recent historical scholarship has complicated this narrative by documenting the role of federal mortgage policies that systematically excluded Black families from suburban developments, urban renewal programs that displaced established Black communities, and zoning regulations that maintained racial segregation. Suburbanization was not simply a preference; it was a landscape shaped by policy.',
+   q:'The text most strongly suggests that popular accounts of American post-WWII suburbanization:',
+   o:['A) Overestimated the role of federal mortgage policy in driving migration from cities to suburbs.','B) Accurately described the preferences of white families but ignored the experience of Black Americans.','C) Failed to account for the structural policies that produced and maintained racially unequal patterns of settlement.','D) Correctly identified the appeal of suburban living but misunderstood the economic incentives involved.'],
+   a:2,
+   e:'C is correct. The text says suburbanization was "not simply a preference" but "a landscape shaped by policy" — specifically racially discriminatory policies. Popular accounts that framed it as voluntary choice missed these structural forces.\n\nA wrong: the text doesn\'t say popular accounts overemphasized federal mortgage policy — it says they ignored policy\'s role entirely.\nB partially right but too limited: the text\'s critique is broader than just ignoring Black experience; it\'s about ignoring the structural policies.\nD wrong: the text doesn\'t discuss economic incentives as such.',
+   v:null},
+
+  {id:'2-14',mod:2,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'The claim that great art is "universal" — that it transcends cultural particularity to speak to all people in all times — is more complicated than it first appears. Works celebrated as universal typically reflect the assumptions and preoccupations of the dominant cultures that produced and canonized them. What appears universal to those within that culture may be invisible, alienating, or actively excluding to those outside it. Universality, in this sense, is often a form of cultural power masquerading as neutral aesthetic value.',
+   q:'The main argument of the passage is that:',
+   o:['A) Great art cannot genuinely appeal to people from different cultural backgrounds.','B) Aesthetic value is entirely determined by cultural context and cannot be assessed objectively.','C) The Western artistic canon has systematically excluded important works from non-Western traditions.','D) The concept of artistic universality reflects and reinforces existing cultural hierarchies.'],
+   a:3,
+   e:'B is correct. The argument is that "universality" is not neutral — it reflects the assumptions of dominant cultures and functions as cultural power disguised as aesthetic value. B captures this argument.\n\nA too strong: the text argues universality is culturally constructed, not that cross-cultural appeal is impossible.\nC too specific: the Western canon is not explicitly mentioned; the argument is about universality as a concept.\nD too strong: the text argues against claims of neutral universality, not against all forms of aesthetic assessment.',
+   v:null},
+
+  {id:'2-15',mod:2,type:'Central Ideas & Details',k:'cid',tw:null,
+   p:'Urban heat islands — the phenomenon in which cities are significantly warmer than surrounding rural areas — result from several interacting factors: the absorption and re-radiation of heat by asphalt and concrete, reduced evapotranspiration due to limited vegetation, waste heat from vehicles and buildings, and the geometry of urban canyons that trap solar radiation. The effect is most pronounced at night, when rural areas cool rapidly while urban surfaces continue releasing stored heat.',
+   q:'What is the main purpose of this text?',
+   o:['A) To argue that urban heat islands represent a more serious environmental threat than climate change.','B) To describe the mechanisms that cause cities to be warmer than surrounding rural areas.','C) To explain why the urban heat island effect is most severe in the most densely populated cities.','D) To evaluate proposed solutions to the urban heat island problem and their relative effectiveness.'],
+   a:1,
+   e:'B is correct. The text lists the mechanisms causing the urban heat island effect (asphalt, limited vegetation, waste heat, urban canyon geometry) and notes when the effect peaks. It\'s a mechanistic description.\n\nA wrong: no comparison to climate change appears.\nC wrong: the text mentions when (nighttime) the effect is pronounced, not which cities have it worst.\nD wrong: no solutions are discussed.',
+   v:null},
+
+  {id:'2-16',mod:2,type:'Command of Evidence',k:'coe',tw:null,
+   p:'Sociologist Maya Torres argues that remote work arrangements have not, as initially predicted, dissolved the boundaries between professional and personal life — instead, they have relocated those boundaries in ways that reinforce existing inequalities, particularly affecting workers without dedicated home office space.',
+   q:'Which quotation from Torres\'s work would most directly support this claim?',
+   o:['A) "Surveys consistently show that remote workers report higher job satisfaction than their office-based counterparts."','B) "Workers in shared housing or with young children at home logged significantly longer hours than those with dedicated workspace, and reported markedly higher rates of role conflict."','C) "The shift to remote work dramatically reduced commute times, a change that benefited urban workers disproportionately."','D) "Companies that implemented flexible scheduling during the pandemic saw lower voluntary turnover in subsequent years."'],
+   a:1,
+   e:'B is correct. Torres\'s claim has two parts: (1) boundaries relocated rather than dissolved, and (2) inequalities reinforced, particularly for workers without dedicated space. B directly demonstrates both: workers without dedicated workspace (shared housing, young children) worked longer hours and experienced more role conflict — showing unequal impact.\n\nA wrong: job satisfaction doesn\'t address boundary relocation or inequality.\nC wrong: reduced commute times don\'t address professional/personal boundaries.\nD wrong: turnover rates don\'t address the central claim.',
+   v:null},
+
+  {id:'2-17',mod:2,type:'Command of Evidence',k:'coe',tw:null,
+   p:'Researchers studying sleep deprivation concluded that adults who slept fewer than six hours per night performed significantly worse on standardized cognitive assessments than those who slept seven to nine hours. They attributed this difference to impaired memory consolidation, which they believed occurred primarily during deep sleep stages.',
+   q:'Which finding, if true, would most directly undermine the researchers\' explanation for the performance difference?',
+   o:['A) Adults who slept seven to nine hours reported higher life satisfaction than those who slept fewer hours.','B) The cognitive performance gap between the groups persisted even when sleep-deprived subjects were given stimulants that restored alertness.','C) When subjects were deprived only of the deep sleep stages while maintaining overall sleep duration, their cognitive performance did not decline significantly.','D) Cognitive performance on standardized assessments was positively correlated with years of formal education.'],
+   a:2,
+   e:'C is correct. The explanation is that the performance gap is caused by impaired memory consolidation during deep sleep. If C is true — removing deep sleep without reducing total sleep doesn\'t hurt performance — then deep sleep specifically is not responsible for the difference. This directly undermines the mechanism the researchers proposed.\n\nA wrong: life satisfaction doesn\'t address memory consolidation during sleep.\nB actually supports the explanation: if stimulants don\'t help, then the effect is about sleep quality, not just alertness.\nD wrong: education level is a confounding variable but doesn\'t address the deep sleep mechanism.',
+   v:null},
+
+  {id:'2-18',mod:2,type:'Command of Evidence',k:'coe',tw:null,
+   p:'A team of economists analyzed data from 47 cities that had introduced congestion pricing between 2000 and 2020. Cities implementing charges above $12 per trip saw average commute times fall by 22%, while cities with charges below $6 saw reductions of only 8%. The economists concluded that the magnitude of the charge was the primary determinant of the program\'s effectiveness.',
+   q:'Which of the following, if true, would most weaken the economists\' conclusion?',
+   o:['A) Several cities that implemented the highest charges also undertook major public transit expansions during the same period.','B) Cities that implemented congestion pricing saw increased tax revenue compared to those that did not.','C) Commute time reductions in high-charge cities were sustained over the full ten-year period following implementation.','D) Some commuters in cities with higher charges shifted to carpooling rather than to public transit.'],
+   a:0,
+   e:'A is correct. The conclusion is that charge magnitude is the primary driver. If A is true — high-charge cities also expanded transit — then transit expansion, not charge magnitude alone, may explain the greater commute time reductions. This introduces a confounding variable that undermines the conclusion.\n\nB wrong: increased tax revenue doesn\'t address whether charge magnitude caused commute reductions.\nC wrong: sustained effects actually support the conclusion rather than weakening it.\nD wrong: whether commuters shift to carpooling or transit doesn\'t question whether charge magnitude is the primary factor.',
+   v:null},
+
+  {id:'2-19',mod:2,type:'Inferences',k:'inf',tw:null,
+   p:'When the composer submitted the symphony\'s final draft to the orchestra\'s director, she included a handwritten note asking that the tempo markings throughout be treated as approximations rather than prescriptions. She had, she wrote, "heard too many conductors turn music into mathematics." The director later recalled that this note provoked more debate among the orchestra\'s musicians than any aspect of the score itself.',
+   q:'Based on the text, what can most reasonably be inferred about the composer\'s view of musical performance?',
+   o:['A) She believed that orchestral musicians were generally better interpreters of her work than conductors.','B) She had been personally disappointed by a previous performance conducted with mathematical precision.','C) She doubted that this particular director would follow her guidance regarding tempo.','D) She valued expressive flexibility in performance over strict adherence to notated instructions.'],
+   a:3,
+   e:'B is correct. She asked that tempo markings be treated as "approximations rather than prescriptions" and criticized conductors who "turn music into mathematics." This directly implies she valued interpretive flexibility over strict adherence.\n\nA wrong: the text doesn\'t distinguish musicians from conductors in terms of interpretive ability.\nC wrong: the text gives no indication she doubted this specific director.\nD possible but too speculative: "heard too many conductors" suggests a general pattern, not necessarily a personal disappointment she could describe specifically.',
+   v:null},
+
+  {id:'2-20',mod:2,type:'Inferences',k:'inf',tw:null,
+   p:'The island\'s indigenous language was declared extinct in 1953 when its last known fluent speaker died. In 2019, a linguist discovered an elderly resident who had learned the language from her grandmother but had never spoken it publicly, fearing that doing so would attract unwanted attention. The linguist\'s recordings revealed that the language had features — a complex system of evidential markers — not attested in any of the earlier documentation.',
+   q:'Which inference is best supported by the information in the text?',
+   o:['A) The 1953 declaration of extinction was based on incomplete knowledge of the language\'s surviving speakers.','B) The 1953 declaration caused subsequent speakers to conceal their knowledge of the language.','C) The features discovered by the linguist in 2019 were unique to this particular speaker\'s idiolect.','D) Earlier linguists who documented the language had failed to conduct sufficiently thorough fieldwork.'],
+   a:0,
+   e:'A is correct. The 2019 discovery of a speaker who had learned the language but never spoken it publicly shows that the 1953 declaration was made without complete information — there was a surviving speaker unknown to those who made the declaration.\n\nB too strong: the text doesn\'t establish that the 1953 declaration caused the concealment — the speaker feared unwanted attention, which may have predated 1953.\nC goes beyond the text: the text says these features weren\'t "attested" in earlier documentation, not that they were unique to her.\nD goes beyond the text: the text doesn\'t evaluate the quality of earlier fieldwork.',
+   v:null},
+
+  {id:'2-21',mod:2,type:'Transitions',k:'trn',tw:null,
+   p:'Traditional economic models assumed that individuals make decisions by rationally evaluating all available options and selecting the one that maximizes their utility. _______, decades of experimental research in behavioral economics have shown that human decision-making is systematically influenced by cognitive biases, reference points, and framing effects that produce choices inconsistent with rational maximization.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) Similarly','B) In contrast','C) As predicted','D) In addition'],
+   a:1,
+   e:'B is correct. The traditional model predicts rational maximization → behavioral economics shows systematic biases that produce irrational choices. This is a direct contrast between prediction and empirical finding.\n\nA wrong: behavioral economics findings are not similar to traditional assumptions — they contradict them.\nC wrong: "As predicted" implies the traditional model was confirmed; it was overturned.\nD wrong: behavioral findings don\'t add to the traditional model; they challenge it.',
+   v:null},
+
+  {id:'2-22',mod:2,type:'Transitions',k:'trn',tw:null,
+   p:'The discovery of the Higgs boson in 2012 confirmed a crucial prediction of the Standard Model of particle physics — a theoretical framework that describes the fundamental particles and forces of the universe. _______, the Standard Model cannot account for gravity, dark matter, or the observed preponderance of matter over antimatter, leaving physicists searching for a more comprehensive theory.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) Furthermore','B) For example','C) Nevertheless','D) As a result'],
+   a:2,
+   e:'C is correct. The Higgs boson confirmed a Standard Model prediction (success) → the Standard Model still cannot explain several major phenomena (significant limitation). This is a contrast: success despite/alongside significant gaps.\n\nA wrong: "Furthermore" would add another success or another limitation — not contrast a success with limitations.\nB wrong: the Standard Model\'s failures are not examples of Higgs boson confirmation.\nD wrong: the Standard Model\'s limitations are not caused by confirming the Higgs boson.',
+   v:null},
+
+  {id:'2-23',mod:2,type:'Transitions',k:'trn',tw:null,
+   p:'Early conservationists focused almost exclusively on preserving large, charismatic species — wolves, eagles, whales — that captured public attention and philanthropic support. Ecologists gradually recognized that ecosystems depend on the interactions of thousands of species, including microorganisms and invertebrates that rarely appear in fundraising materials. _______, modern conservation practice increasingly targets not individual species but the complex webs of relationships that sustain entire ecosystems.',
+   q:'Which choice completes the text with the most logical transition?',
+   o:['A) In contrast','B) Consequently','C) Similarly','D) Nevertheless'],
+   a:1,
+   e:'B is correct. Ecologists recognized ecosystems depend on complex interactions → (as a consequence/result) modern conservation now targets those complex webs. The second transition shows the practical result of the ecological recognition.\n\nA wrong: modern conservation is not contrasted with the ecological recognition — it follows from it.\nC wrong: modern conservation is a consequence of the recognition, not similar to something that came before.\nD wrong: "Nevertheless" implies modern conservation persists despite the ecological recognition, which reverses the logic.',
+   v:null},
+
+  {id:'2-24',mod:2,type:'Boundaries',k:'bnd',tw:null,
+   p:'The philosopher argued that free will — typically defined as the capacity to have done otherwise under identical circumstances _______ is incompatible with determinism, which holds that every event is necessitated by prior causes.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) ,','B) ;','C) —','D) :'],
+   a:2,
+   e:'C is correct. "Typically defined as the capacity to have done otherwise under identical circumstances" is a parenthetical phrase inserted between dashes. The opening dash appears after "free will" — so the closing punctuation must also be a dash to maintain matching (consistent) punctuation.\n\nResult: free will — [parenthetical phrase] — is incompatible with...\n\nA wrong: the phrase was opened with a dash, not a comma — mixing punctuation types violates consistency.\nB wrong: a semicolon cannot close a parenthetical phrase inside a sentence.\nD wrong: a colon signals introduction or elaboration, not the closing of a parenthetical phrase.',
+   v:null},
+
+  {id:'2-25',mod:2,type:'Boundaries',k:'bnd',tw:null,
+   p:'The study participants were divided into three cohorts _______ those who exercised fewer than two hours per week, those who exercised between two and five hours, and those who exercised more than five hours.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) ,','B) ;','C) :','D) —'],
+   a:2,
+   e:'C is correct. "The study participants were divided into three cohorts" is a complete independent clause. What follows is a list that explains what those three cohorts are. A colon correctly introduces a list or explanation after a complete independent clause.\n\nA wrong: a comma alone is too weak to introduce a list after an independent clause.\nB wrong: a semicolon joins two independent clauses; the list that follows is not an independent clause.\nD wrong: a dash could work informally but the colon is the standard, preferred choice for introducing a formal list.',
+   v:null},
+
+  {id:'2-26',mod:2,type:'Form, Structure, and Sense',k:'grm',tw:null,
+   p:'The new regulations require that all contractors submit their bids by the deadline, _______ all relevant licensing documentation, and agree to a mandatory third-party review process.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) attaching','B) to attach','C) attach','D) having attached'],
+   a:2,
+   e:'C is correct. The sentence uses subjunctive mood triggered by "require that": all contractors [base form verb], [base form verb], and [base form verb]. The three verbs must be parallel: submit... attach... agree.\n\nC (attach) maintains parallel structure as a bare infinitive/subjunctive form.\n\nA wrong: "attaching" is a gerund/participle — breaks parallel structure.\nB wrong: "to attach" is an infinitive with "to" — the other verbs don\'t have "to," so this breaks parallelism.\nD wrong: "having attached" is a perfect participle — breaks parallel structure and changes the meaning.',
+   v:null},
+
+  {id:'2-27',mod:2,type:'Form, Structure, and Sense',k:'grm',tw:null,
+   p:'Across the valley floor, _______ dozens of ancient ruins that archaeologists believe date to a civilization predating the earliest written records of the region.',
+   q:'Which choice completes the text so that it conforms to the conventions of Standard Written English?',
+   o:['A) there is','B) there are','C) it is','D) lay'],
+   a:1,
+   e:'B is correct. In "there are/is" constructions, the verb must agree with the true subject — the noun that comes after the verb. The true subject is "dozens of ancient ruins" (plural) → "there are."\n\nA wrong: "there is" is singular — but "dozens of ruins" is plural.\nC wrong: "it is" is singular and changes the grammatical structure entirely.\nD wrong: "lay" is transitive (requires an object) and in this sentence "across the valley floor" is a prepositional phrase, not a location specifying where something was placed. "Lie" would be grammatically possible, but the verb agreement and phrasing still make B the best choice.',
+   v:null}
+];
+
+// ── STATE ──
+let mod=1, qIdx=0;
+const A1=Array(27).fill(null), A2=Array(27).fill(null);
+const Mk1=Array(27).fill(false), Mk2=Array(27).fill(false);
+
+function Qs(){ return mod===1?M1:M2; }
+function As(){ return mod===1?A1:A2; }
+function Mk(){ return mod===1?Mk1:Mk2; }
+
+// ── START ──
+function startQuiz(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='flex';
+  renderQ();
+}
+
+function startM2Only(){
+  mod=2; qIdx=0;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='flex';
+  renderQ();
+}
+
+// ── TRACKER ──
+function buildTracker(){
+  const t=document.getElementById('tracker');
+  t.innerHTML='';
+  Qs().forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(As()[i]!==null?' ans':'')+(i===qIdx?' cur':'');
+    d.onclick=()=>{qIdx=i;renderQ();};
+    t.appendChild(d);
+  });
+}
+
+// ── RENDER ──
+function renderQ(){
+  const q=Qs()[qIdx];
+  document.getElementById('mod-lbl').textContent=`Module ${mod} of 2`;
+  document.getElementById('qnum').textContent=`Question ${qIdx+1} of ${Qs().length}`;
+  document.getElementById('prog').style.width=Math.round(((qIdx+1)/Qs().length)*100)+'%';
+  const mb=document.getElementById('mkbtn');
+  mb.className='btn-mk'+(Mk()[qIdx]?' mk':'');
+  mb.textContent=Mk()[qIdx]?'★ Marked':'☆ Mark';
+  buildTracker();
+
+  const area=document.getElementById('qarea');
+  area.innerHTML='';
+
+  // Badge
+  const b=document.createElement('div');
+  b.className='t-badge';
+  b.style.background=TC[q.k]||'#374151';
+  b.textContent=q.type;
+  area.appendChild(b);
+
+  // Passage
+  const pb=document.createElement('div');
+  pb.className='pbox';
+  if(q.k==='ctx'){
+    const pts=q.p.split('\n\n');
+    pts.forEach((part,pi)=>{
+      if(pi>0){const hr=document.createElement('hr');hr.className='tdiv';pb.appendChild(hr);}
+      const ls=part.split('\n');
+      if(ls[0].startsWith('Text ')){
+        const lbl=document.createElement('span');lbl.className='tx-lbl';lbl.textContent=ls[0];pb.appendChild(lbl);
+        const txt=document.createElement('span');txt.innerHTML=ls.slice(1).join('\n');pb.appendChild(txt);
+      }else{
+        const txt=document.createElement('span');txt.innerHTML=part;pb.appendChild(txt);
+      }
+    });
+  }else{
+    pb.innerHTML=q.p;
+  }
+  area.appendChild(pb);
+
+  // Question
+  const qt=document.createElement('div');
+  qt.className='qt';
+  qt.textContent=q.q;
+  area.appendChild(qt);
+
+  // Options
+  const ol=document.createElement('div');
+  ol.className='opts';
+  q.o.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt'+(As()[qIdx]===i?' sel':'');
+    btn.innerHTML=`<span class="ol">${String.fromCharCode(65+i)}</span><span>${opt.slice(3)}</span>`;
+    btn.onclick=()=>pick(i);
+    ol.appendChild(btn);
+  });
+  area.appendChild(ol);
+
+  // Nav
+  const nav=document.createElement('div');
+  nav.className='nav-row';
+  const prev=document.createElement('button');
+  prev.className='btn-n';
+  prev.textContent='← Previous';
+  prev.disabled=qIdx===0;
+  prev.onclick=()=>{qIdx--;renderQ();};
+  nav.appendChild(prev);
+
+  const ans=As().filter(a=>a!==null).length;
+  if(qIdx===Qs().length-1){
+    const sub=document.createElement('button');
+    sub.className='btn-sub';
+    sub.textContent=mod===1?`End Module 1 (${ans}/27 answered)`:`Submit Test (${ans}/27 answered)`;
+    sub.onclick=mod===1?endM1:submitTest;
+    nav.appendChild(sub);
+  }else{
+    const next=document.createElement('button');
+    next.className='btn-n';
+    next.textContent='Next →';
+    next.onclick=()=>{qIdx++;renderQ();};
+    nav.appendChild(next);
+  }
+  area.appendChild(nav);
+}
+
+function pick(i){As()[qIdx]=i;renderQ();}
+function toggleMark(){Mk()[qIdx]=!Mk()[qIdx];renderQ();}
+
+// ── MODULE BREAK ──
+function endM1(){
+  const sc=A1.filter((a,i)=>a===M1[i].a).length;
+  document.getElementById('mb-sc').textContent=sc;
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('mbreak').style.display='flex';
+  window.scrollTo(0,0);
+}
+
+function startM2(){
+  mod=2; qIdx=0;
+  document.getElementById('mbreak').style.display='none';
+  document.getElementById('quiz').style.display='flex';
+  renderQ();
+  window.scrollTo(0,0);
+}
+
+// ── SUBMIT ──
+function submitTest(){
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('results').style.display='block';
+  buildResults();
+  window.scrollTo(0,0);
+}
+
+// ── RESULTS ──
+function buildResults(){
+  const rb=document.getElementById('rb');
+  rb.innerHTML='';
+  const m1taken=A1.some(a=>a!==null);
+  const m1c=A1.filter((a,i)=>a===M1[i].a).length;
+  const m2c=A2.filter((a,i)=>a===M2[i].a).length;
+  const total=m1taken?m1c+m2c:m2c;
+  const denom=m1taken?54:27;
+  const pct=Math.round((total/denom)*100);
+
+  const ranges=[[93,100,'~750–800 (Excellent)'],[78,92,'~680–740 (Strong)'],[60,77,'~580–670 (Developing)'],[40,59,'~480–570 (Needs Work)'],[0,39,'Below ~480 (Focus Required)']];
+  const rng=ranges.find(r=>pct>=r[0]&&pct<=r[1]);
+
+  // Score card
+  const sc=document.createElement('div');
+  sc.className='sc-card';
+  sc.innerHTML=`<div class="sc-big"><div class="sc-num">${total}</div><div class="sc-den">/ ${denom}</div></div>
+    <div><div class="sc-pct">${pct}% correct</div>
+    <div class="sc-rng">Estimated SAT R&W Range: ${rng?rng[2]:'—'}</div>
+    <div class="sc-sum">${m1taken?'Full-length SAT R&W practice across both modules.':'Module 2 (hard difficulty) — 27 questions across all 9 R&W question types.'} Use the breakdown below to identify your strengths and weaknesses.</div></div>`;
+  rb.appendChild(sc);
+
+  // Module comparison
+  const mc=document.createElement('div');
+  mc.className='mod-cards';
+  mc.innerHTML=`<div class="mod-card"><h4>Module 1 · Medium</h4>
+    <div class="mod-score">${m1taken?m1c+'/27':'—'}</div>
+    <div class="mod-pct">${m1taken?Math.round(m1c/27*100)+'%':'Not taken'}</div></div>
+    <div class="mod-card"><h4>Module 2 · Hard</h4><div class="mod-score">${m2c}/27</div><div class="mod-pct">${Math.round(m2c/27*100)}%</div></div>`;
+  rb.appendChild(mc);
+
+  // Category breakdown — use whichever modules were taken
+  const activeQs=m1taken?[...M1,...M2]:M2;
+  const activeAs=m1taken?[...A1,...A2]:A2;
+  const ts={};
+  Object.keys(TN).forEach(k=>{ts[k]={c:0,t:0};});
+  activeQs.forEach((q,i)=>{ts[q.k].t++;if(activeAs[i]===q.a)ts[q.k].c++;});
+
+  const ctit=document.createElement('div');ctit.className='stitle';ctit.textContent='Performance by Question Type';rb.appendChild(ctit);
+  const tbl=document.createElement('table');tbl.className='ctable';
+  tbl.innerHTML='<thead><tr><th>Question Type</th><th>Score</th><th>Visual</th><th>Status</th></tr></thead>';
+  const tbody=document.createElement('tbody');
+  Object.entries(ts).forEach(([k,s])=>{
+    if(!s.t)return;
+    const p=Math.round(s.c/s.t*100);
+    let cls=p>=80?'str':p>=50?'rev':'pri';
+    let lbl=p>=80?'Strength':p>=50?'Review':'Priority';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${TN[k]}</td><td style="font-family:'DM Mono',monospace;font-size:.83rem">${s.c}/${s.t}</td>
+      <td><div style="display:flex;align-items:center;gap:.4rem"><div class="bar-w"><div class="bar-f" style="width:${p}%"></div></div><span class="cpct">${p}%</span></div></td>
+      <td><span class="bs ${cls}">${lbl}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);rb.appendChild(tbl);
+
+  // Wrong questions
+  const wrongAll=activeQs.map((q,i)=>({q,i,chosen:activeAs[i]})).filter(({q,i})=>activeAs[i]!==q.a);
+  const wtit=document.createElement('div');wtit.className='stitle';wtit.style.marginTop='1.5rem';
+  wtit.textContent=`Wrong Answers — Detailed Review (${wrongAll.length} question${wrongAll.length!==1?'s':''})`;
+  rb.appendChild(wtit);
+
+  if(wrongAll.length===0){
+    const p=document.createElement('div');
+    p.style.cssText='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:.9rem 1.1rem;margin-bottom:1.5rem;color:#166534;font-size:.88rem';
+    p.textContent='Perfect score across both modules. Exceptional performance.';
+    rb.appendChild(p);
+  } else {
+    const note=document.createElement('p');note.style.cssText='font-size:.78rem;color:var(--muted);margin-bottom:.9rem';
+    note.textContent='Click any question to expand the explanation.';rb.appendChild(note);
+
+    wrongAll.forEach(({q,i,chosen})=>{
+      const srcMod=q.mod;
+      const srcIdx=q.mod===1?i:i-(m1taken?27:0);
+      const item=document.createElement('div');item.className='wi';
+      const hdr=document.createElement('div');hdr.className='wh';
+      hdr.innerHTML=`<span class="wn">M${srcMod} Q${srcIdx+1}</span><span class="wt">${q.type}</span><span class="wtog" id="tog-${i}">+ Expand</span>`;
+      hdr.onclick=()=>{
+        const wb=document.getElementById(`wb-${i}`);
+        const tg=document.getElementById(`tog-${i}`);
+        wb.classList.toggle('open');
+        tg.textContent=wb.classList.contains('open')?'− Collapse':'+ Expand';
+      };
+      item.appendChild(hdr);
+
+      const wb=document.createElement('div');wb.className='wb';wb.id=`wb-${i}`;
+      const rp=document.createElement('div');rp.className='rpass';
+      if(q.k==='ctx'){
+        const pts=q.p.split('\n\n');
+        pts.forEach((part,pi)=>{
+          if(pi>0){const hr=document.createElement('hr');hr.className='tdiv';rp.appendChild(hr);}
+          const ls=part.split('\n');
+          if(ls[0].startsWith('Text ')){
+            const lbl=document.createElement('span');lbl.className='tx-lbl';lbl.textContent=ls[0];rp.appendChild(lbl);
+            const txt=document.createElement('span');txt.innerHTML=ls.slice(1).join('\n');rp.appendChild(txt);
+          }else{
+            const txt=document.createElement('span');txt.innerHTML=part;rp.appendChild(txt);
+          }
+        });
+      }else{rp.innerHTML=q.p;}
+      wb.appendChild(rp);
+
+      const qst=document.createElement('p');qst.style.cssText='font-size:.86rem;font-weight:600;margin-bottom:.55rem';qst.textContent=q.q;wb.appendChild(qst);
+      const ca=document.createElement('div');ca.className='ac';ca.textContent='✓ Correct: '+q.o[q.a];wb.appendChild(ca);
+      if(chosen!==null){const wa=document.createElement('div');wa.className='aw';wa.textContent='✗ Your answer: '+q.o[chosen];wb.appendChild(wa);}
+      const ex=document.createElement('div');ex.className='expl';ex.textContent=q.e;wb.appendChild(ex);
+      item.appendChild(wb);rb.appendChild(item);
+    });
+  }
+
+  // Vocabulary
+  const vtit=document.createElement('div');vtit.className='stitle';vtit.style.marginTop='2rem';
+  vtit.textContent=`Vocabulary Review — Words in Context (${m1taken?'10':'5'} Words)`;rb.appendChild(vtit);
+
+  const vg=document.createElement('div');vg.className='vgrid';
+  activeQs.filter(q=>q.v).forEach(q=>{
+    const qi=activeQs.indexOf(q);
+    const missed=activeAs[qi]!==q.a;
+    const card=document.createElement('div');card.className='vc'+(missed?' ms':'');
+    const def=q.v.def||q.v.d||'';
+    card.innerHTML=`<div class="vw">${q.v.w}</div><div class="vd">${def}</div>
+      <div class="vtag${missed?' m':''}">${missed?'✗ Missed':'✓ Correct'} · M${q.mod}</div>`;
+    vg.appendChild(card);
+  });
+  rb.appendChild(vg);
+
+  // Study plan
+  const sptit=document.createElement('div');sptit.className='stitle';sptit.style.marginTop='2rem';
+  sptit.textContent='Personalized Study Plan';rb.appendChild(sptit);
+
+  const typePerf=Object.entries(ts).filter(([,s])=>s.t>0)
+    .map(([k,s])=>({k,p:Math.round(s.c/s.t*100)}))
+    .sort((a,b)=>a.p-b.p);
+
+  let n=0;
+  typePerf.forEach(({k,p})=>{
+    if(p>=80||n>=6)return;
+    const pri=p<50?'hi':'me';
+    const card=document.createElement('div');card.className='scard';
+    card.innerHTML=`<span class="ptag ${pri}">${pri==='hi'?'Priority':'Review'} — ${p}%</span><h4>${TN[k]}</h4><p>${SG[k]}</p>`;
+    rb.appendChild(card);n++;
+  });
+
+  if(n===0){
+    const card=document.createElement('div');card.className='scard';
+    card.innerHTML='<h4>Excellent across all categories</h4><p>No weak areas detected. Focus on timing, test-day strategy, and working through official College Board materials on Bluebook or Khan Academy.</p>';
+    rb.appendChild(card);
+  }
+
+  // Next steps
+  const nx=document.createElement('div');nx.className='scard';nx.style.borderColor='var(--navy)';
+  nx.innerHTML=`<h4>What to do next</h4>
+    <p>1. Review every wrong answer above — understand not just the correct answer, but exactly why each wrong option fails.<br><br>
+    2. For Words in Context: Read academic texts regularly. The Atlantic, The Economist, and literary journals are ideal sources for the vocabulary level SAT tests.<br><br>
+    3. For grammar and punctuation: Drill the two core rules — comma splice prevention (semicolon or comma + FANBOYS) and matching punctuation around non-restrictive phrases.<br><br>
+    4. Take official tests on Bluebook (College Board's free app) or at khanacademy.org/sat for more practice with real adaptive scoring.</p>`;
+  rb.appendChild(nx);
+
+  const promo=document.createElement('div');
+  promo.className='promo-card';
+  promo.style.margin='1.5rem auto 0';
+  promo.innerHTML=`
+    <div class="promo-name">Gri English</div>
+    <div class="promo-title">Sınav Materyalleri</div>
+    <div class="promo-exams">
+      <span class="promo-tag">IELTS</span>
+      <span class="promo-tag">SAT</span>
+      <span class="promo-tag">TOEFL</span>
+      <span class="promo-tag">VERSANT</span>
+    </div>`;
+  rb.appendChild(promo);
+
+  const rs=document.createElement('button');rs.className='btn-rs';rs.textContent='Retake Test';
+  rs.onclick=()=>{
+    A1.fill(null);A2.fill(null);Mk1.fill(false);Mk2.fill(false);
+    mod=1;qIdx=0;
+    document.getElementById('results').style.display='none';
+    document.getElementById('splash').style.display='flex';
+    window.scrollTo(0,0);
+  };
+  rb.appendChild(rs);
+}
+</script>
+</div><!-- end cv-main -->
+<script>
+
+  // ── Cover page logic ──
+    (function(){
+    var dg=document.getElementById('cv-dots-inner');
+    if(dg){for(var i=0;i<25;i++){var s=document.createElement('span');dg.appendChild(s);}}
+  })();
+
+  showPackHome();
+
+  function goHome(){
+    showPackHome();
+    window.scrollTo(0,0);
+  }
+
+</script>
+</body>
+</html>

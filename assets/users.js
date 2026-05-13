@@ -24,6 +24,8 @@
        ielts-full-test
      YDT:
        ydt-tenses, ydt-modals, ydt-conditionals, ydt-relative-clauses
+     YDS:
+       yds-mini-deneme-1, yds-mini-deneme-2, yds-mini-deneme-3
    
    Hizmet ürünleri (IELTS Writing, EE Feedback, TOK Essay) Shopier
    üzerinden ödeme alınır ve e-posta üzerinden yürütülür. Bu hesap

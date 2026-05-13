@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<script src="/assets/users.js"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function() {
+  var path = window.location.pathname;
+  var slug = path.substring(path.lastIndexOf('/') + 1).replace(/\.html$/, '');
+  var auth = window.GriAuth && window.GriAuth.requireAuth(slug);
+  if (!auth) return;
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YDT — Conditionals — Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf7f9;--surface:#ffffff;--accent:#6B3D58;--accent-deep:#532D44;--accent-soft:#e9dde3;--text:#2D1B26;--text-soft:#5D4A55;--text-muted:#8B7282;--line:#e0d2da;--correct:#166534;--cbg:#f0fdf4;--wrong:#991b1b;--wbg:#fef2f2;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Splash */
+#splash{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;background:linear-gradient(155deg,#faf7f9 50%,#e9dde3 100%)}
+.s-eyebrow{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.s-title{font-family:'Lora',serif;font-size:clamp(1.9rem,5vw,2.8rem);font-weight:600;line-height:1.2;margin-bottom:.7rem;color:var(--accent-deep)}
+.s-desc{color:var(--text-soft);font-size:.95rem;max-width:480px;line-height:1.7;margin-bottom:1.6rem}
+.s-meta{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:2.4rem;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--text-muted);letter-spacing:.05em}
+.s-meta span strong{color:var(--accent);font-weight:600;margin-right:.3rem}
+.btn-p{background:var(--accent);color:#fff;border:none;border-radius:var(--r);padding:.9rem 2.5rem;font-size:1rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+.btn-p:hover{background:var(--accent-deep)}
+.btn-back{background:transparent;border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--r);padding:.6rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:1rem}
+.btn-back:hover{background:var(--accent-soft)}
+
+/* Quiz */
+#quiz{display:none;min-height:100vh}
+.qheader{background:var(--surface);border-bottom:1px solid var(--line);padding:.9rem 1.2rem;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.qhead-left{display:flex;align-items:center;gap:.7rem}
+.qhead-home{background:transparent;border:none;cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .5rem}
+.qhead-home:hover{color:var(--accent-deep)}
+.qhead-title{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
+.qcount{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--accent);font-weight:600}
+.qbody{max-width:720px;margin:0 auto;padding:1.8rem 1.2rem 2rem}
+.qnum{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem;font-weight:600}
+.qtext{font-family:'Lora',serif;font-size:1.05rem;line-height:1.75;color:var(--text);margin-bottom:1.6rem;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r);padding:1.15rem 1.3rem}
+.opts{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.8rem}
+.opt{display:flex;align-items:flex-start;gap:.8rem;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:.75rem 1rem;cursor:pointer;transition:border-color .12s,background .12s;font-size:.94rem;color:var(--text);font-family:'Lora',serif;text-align:left}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.ol{display:flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid var(--line);font-size:.74rem;font-family:'DM Mono',monospace;font-weight:700;color:var(--text-muted);transition:all .12s;flex-shrink:0;margin-top:1px}
+.opt.sel .ol{background:var(--accent);border-color:var(--accent);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap}
+.btn-n{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-size:.88rem;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;transition:all .12s}
+.btn-n:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn-n:disabled{opacity:.4;cursor:not-allowed}
+.btn-finish{background:var(--accent);color:#fff;border:1.5px solid var(--accent)}
+.btn-finish:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+.tracker{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.4rem;justify-content:center}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line);cursor:pointer;transition:all .15s}
+.dot.ans{background:var(--accent);border-color:var(--accent)}
+.dot.cur{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--accent)}
+
+/* Results */
+#result{display:none;min-height:100vh;padding:2rem 1.2rem 4rem}
+.r-wrap{max-width:720px;margin:0 auto}
+.r-head{text-align:center;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:var(--r);padding:2rem 1.5rem;margin-bottom:2rem}
+.r-eyebrow{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.r-score{font-family:'Lora',serif;font-size:2.8rem;font-weight:600;color:var(--accent-deep);margin-bottom:.3rem}
+.r-pct{font-family:'DM Mono',monospace;font-size:1.05rem;color:var(--text-soft);margin-bottom:1.3rem}
+.r-stats{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;font-size:.88rem;color:var(--text-soft)}
+.r-stats strong{color:var(--text);font-weight:600}
+.r-stats .pill-c{color:#166534;font-weight:600}
+.r-stats .pill-w{color:#991b1b;font-weight:600}
+.r-actions{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.review-title{font-family:'Lora',serif;font-size:1.3rem;font-weight:600;color:var(--accent-deep);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:2px solid var(--accent)}
+.r-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem 1.2rem;margin-bottom:.85rem}
+.r-item.correct{border-left:4px solid #166534}
+.r-item.wrong{border-left:4px solid #991b1b}
+.r-item.skipped{border-left:4px solid #b45309}
+.r-qnum{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.45rem;display:flex;justify-content:space-between;align-items:center}
+.r-status{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:.15rem .55rem;border-radius:4px}
+.r-status.s-c{background:#dcfce7;color:#166534}
+.r-status.s-w{background:#fee2e2;color:#991b1b}
+.r-status.s-s{background:#fef3c7;color:#b45309}
+.r-q{font-family:'Lora',serif;font-size:.95rem;line-height:1.65;color:var(--text);margin-bottom:.7rem}
+.r-ans{font-family:'DM Mono',monospace;font-size:.82rem;margin-bottom:.5rem}
+.r-ans .lbl{color:var(--text-muted);margin-right:.3rem}
+.r-ans .vy{color:#991b1b}
+.r-ans .vc{color:#166534;font-weight:600}
+.r-exp{background:var(--accent-soft);border-radius:6px;padding:.7rem .9rem;font-size:.88rem;line-height:1.6;color:var(--accent-deep);margin-top:.55rem;font-family:'Inter',sans-serif}
+
+@media(max-width:600px){.qhead-title{display:none}.s-meta{gap:.9rem;font-size:.7rem}.r-score{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="s-eyebrow">YDT · Gramer Çalışma Seti</div>
+  <h1 class="s-title">YDT — Conditionals</h1>
+  <p class="s-desc">50 cümle tamamlama sorusu. Type 0, Type 1, Type 2, Type 3, Mixed Conditionals, Inversions (Had I known, Were I, Should you), Unless / Provided that / In case, Wish ve If only yapılarını kapsayan YDT formatlı bir çalışma seti. Test bittikten sonra her soru için Türkçe açıklama.</p>
+  <div class="s-meta">
+    <span><strong>50</strong> Soru</span>
+    <span><strong>YDT</strong> Format</span>
+    <span><strong>Türkçe</strong> Açıklamalı</span>
+  </div>
+  <button class="btn-p" onclick="startQuiz()">Teste Başla</button>
+  <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <div class="qheader">
+    <div class="qhead-left">
+      <button class="qhead-home" onclick="exitQuiz()">← Panelim</button>
+      <span class="qhead-title">YDT · Gramer Çalışma Seti</span>
+    </div>
+    <div class="qcount" id="qcount">1 / 50</div>
+  </div>
+  <div class="qbody">
+    <div class="tracker" id="tracker"></div>
+    <div class="qnum" id="qnum">Soru 1</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+    <div class="nav-row">
+      <button class="btn-n" id="btn-prev" onclick="prev()">← Önceki</button>
+      <button class="btn-n" id="btn-next" onclick="next()">Sonraki →</button>
+      <button class="btn-n btn-finish" id="btn-finish" onclick="finish()" style="display:none">Testi Bitir</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+  <div class="r-wrap">
+    <div class="r-head">
+      <div class="r-eyebrow">Sonuç</div>
+      <div class="r-score" id="r-score">0 / 50</div>
+      <div class="r-pct" id="r-pct">%0</div>
+      <div class="r-stats">
+        <span><span class="pill-c">Doğru:</span> <strong id="s-c">0</strong></span>
+        <span><span class="pill-w">Yanlış:</span> <strong id="s-w">0</strong></span>
+        <span>Boş: <strong id="s-s">0</strong></span>
+      </div>
+      <div class="r-actions">
+        <button class="btn-p" onclick="restart()">Tekrar Dene</button>
+        <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+      </div>
+    </div>
+    <div class="review-title">Soru Soru Açıklamalar</div>
+    <div id="review"></div>
+    <div style="text-align:center;margin-top:2rem">
+      <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var QUESTIONS = [{"q": "Water ---- at exactly one hundred degrees Celsius at standard atmospheric pressure.", "opts": ["boils", "will boil", "would boil", "had boiled", "is boiling"], "ans": 0, "exp": "Doğru cevap: A. Bilimsel/genel gerçek = Type 0 Conditional. Yapı: if + present simple, present simple. 'Water boils at 100°C' her zaman doğru olduğu için present simple."}, {"q": "If the safety regulations ---- stricter, the recent industrial accident might have been entirely avoided last summer.", "opts": ["are", "had been", "would be", "were", "being"], "ans": 3, "exp": "Doğru cevap: D. Mixed Conditional: şu anki/sürekli durum (were) → geçmiş sonuç (might have been avoided). Kurallar şu anda daha sıkı olsa, geçen yazki kaza önlenmiş olabilirdi."}, {"q": "If she ---- the urgent email yesterday morning, she could have responded in time for the deadline.", "opts": ["sees", "saw", "had seen", "would see", "has seen"], "ans": 2, "exp": "Doğru cevap: C. Type 3 Conditional: geçmiş hipotetik. Yapı: if + past perfect (had seen), could/would have + V3 (could have responded). 'Yesterday morning' = geçmiş."}, {"q": "The construction project will not proceed ---- additional government funding becomes available within the next month.", "opts": ["if", "when", "provided that", "supposing", "unless"], "ans": 4, "exp": "Doğru cevap: E. 'Unless' = 'if not' (eğer ... olmazsa). Cümle 'will not proceed unless funding becomes available' = ek finansman gelmezse proje ilerlemeyecek."}, {"q": "---- about the severe storm forecast in time, the captain would have postponed the entire voyage immediately.", "opts": ["Knew he", "Had he known", "Did he know", "Should he know", "If knew he"], "ans": 1, "exp": "Doğru cevap: B. Type 3'ün devrik yapısı (inversion). 'Had he known' = 'If he had known'. Sonuç cümlesi 'would have postponed' (Type 3) ile uyumlu."}, {"q": "If global temperatures continue to rise at the current alarming rate, polar ice ---- much faster than scientists initially predicted.", "opts": ["will melt", "melted", "would melt", "had melted", "melts"], "ans": 0, "exp": "Doğru cevap: A. Type 1 Conditional: gerçeklikçi gelecek. Yapı: if + present simple, will + V1. Sıcaklıklar artmaya devam ederse, buz daha hızlı eriyecek."}, {"q": "The election candidate now wishes she ---- the campaign issues more thoroughly before the live televised debate.", "opts": ["studies", "studied", "had studying", "had studied", "would study"], "ans": 3, "exp": "Doğru cevap: D. Wish + past perfect = geçmişe yönelik pişmanlık. 'She wishes she had studied' = keşke (geçmişte) çalışsaydı. Tartışma geçmişte olduğu için."}, {"q": "The signed contract will be considered legally valid ---- both parties sign it in the presence of authorized witnesses.", "opts": ["unless", "although", "provided that", "supposing", "even though"], "ans": 2, "exp": "Doğru cevap: C. 'Provided that' = '...şartıyla, ...koşuluyla'. Şart bildiren bağlaç, 'if' yerine kullanılır. 'Geçerli olacak, şu şartla ki ...'"}, {"q": "If only the city council ---- the early warning signs about the bridge structure several years ago.", "opts": ["heeds", "heeded", "would heed", "heeding", "had heeded"], "ans": 4, "exp": "Doğru cevap: E. 'If only + past perfect' = geçmiş için derin pişmanlık. 'If only the council had heeded' = keşke konsey (geçmişte) dinleseydi."}, {"q": "If the company ---- substantially in renewable energy now, it could secure significant tax benefits in the long run.", "opts": ["invests", "invested", "had invested", "would invest", "is investing"], "ans": 1, "exp": "Doğru cevap: B. Type 2 Conditional: şu anki hipotetik. Yapı: if + past simple, could/would + V1. 'Şirket şu an yatırım yapsa, vergi avantajı elde edebilir.'"}, {"q": "If the medical team ---- the patient's serious allergies earlier, the complications would not be quite so severe today.", "opts": ["knew", "knows", "would know", "had known", "would have known"], "ans": 3, "exp": "Doğru cevap: D. Mixed Conditional: geçmiş şart (had known) → şimdiki sonuç (would not be ... today). 'Today' anahtar kelime — sonuç şu ana ait."}, {"q": "---- more time available, the research team would conduct several further experiments in the field.", "opts": ["Had they", "Were there", "If is there", "Should be", "Was it"], "ans": 1, "exp": "Doğru cevap: B. Type 2'nin devrik yapısı: 'Were there more time' = 'If there were more time'. Sonuç 'would conduct' Type 2 ile uyumlu."}, {"q": "Travellers should always carry detailed emergency contact information ---- they need urgent assistance during their journey abroad.", "opts": ["unless", "although", "supposing", "provided that", "in case"], "ans": 4, "exp": "Doğru cevap: E. 'In case' = '...ihtimaline karşı, ...olması durumunda'. Önlem amaçlı yapılan eylemler için kullanılır."}, {"q": "If we ---- this important issue at the next board meeting, we can probably avoid several further misunderstandings.", "opts": ["discuss", "discussed", "had discussed", "would discuss", "will discuss"], "ans": 0, "exp": "Doğru cevap: A. Type 1 Conditional: gerçeklikçi şart. Yapı: if + present simple, can + V1. 'If we discuss it, we can avoid misunderstandings.'"}, {"q": "The diplomatic negotiations would have succeeded much earlier if both parties ---- more genuine flexibility from the very start.", "opts": ["show", "showed", "had shown", "would show", "showing"], "ans": 2, "exp": "Doğru cevap: C. Type 3 Conditional: geçmiş hipotetik. Yapı: if + past perfect (had shown), would have + V3 (would have succeeded)."}, {"q": "---- any technical difficulties during the official online examination, please notify the supervisor immediately by chat.", "opts": ["If you have", "Have you", "Were you", "Should you encounter", "Had you"], "ans": 3, "exp": "Doğru cevap: D. Type 1'in resmi/kibar devrik yapısı: 'Should you encounter' = 'If you should encounter'. Resmi yönerge cümlelerinde sık kullanılır."}, {"q": "If I ---- in your position right now, I would seriously consider all the options before making such a major life decision.", "opts": ["am", "were", "had been", "would be", "be"], "ans": 1, "exp": "Doğru cevap: B. Type 2 Conditional: 'If I were' subjunctive yapı, tüm öznelerle (I/he/she/it dahil) 'were' kullanılır. 'If I were you' kalıbı klasik örneğidir."}, {"q": "---- you won a substantial sum of money in the lottery, what would be the very first thing you bought for yourself?", "opts": ["If only", "In case", "Unless", "Provided that", "Suppose"], "ans": 4, "exp": "Doğru cevap: E. 'Suppose' = 'Diyelim ki, farz et ki'. Hipotetik soru sormak için kullanılır, Type 2 mantığıyla işler. 'Suppose + past simple, would + V1.'"}, {"q": "You can take the company laptop home for the entire weekend ---- you bring it back undamaged on Monday morning.", "opts": ["as long as", "although", "unless", "in case", "however"], "ans": 0, "exp": "Doğru cevap: A. 'As long as' = '...sürece, ...koşuluyla'. 'Provided that' ile benzer anlam, koşul bildirir."}, {"q": "The devastating earthquake would not have caused such extensive damage if the residential buildings ---- to modern safety standards.", "opts": ["build", "built", "had been built", "would build", "building"], "ans": 2, "exp": "Doğru cevap: C. Type 3 passive: if + had been + V3, would have + V3. Bina inşa edilmiş (pasif): 'had been built'."}, {"q": "Many city residents wish the municipal government ---- closer attention to public transport and the cycling infrastructure.", "opts": ["pay", "paid", "had paid", "would pay", "pays"], "ans": 1, "exp": "Doğru cevap: B. Wish + past simple = şu anki gerçekliğe karşıt istek. 'Wish the government paid attention' = keşke (şu anda) dikkat etse."}, {"q": "---- you had to choose between studying abroad and starting a stable career immediately, which one would you ultimately prefer?", "opts": ["If only", "Provided", "Unless", "In case", "Supposing"], "ans": 4, "exp": "Doğru cevap: E. 'Supposing' = 'Diyelim ki, farz et ki'. 'Suppose' ile aynı işlev, hipotetik durum kurmak için kullanılır."}, {"q": "The scholarship committee will officially inform applicants ---- their submissions meet the required academic standards.", "opts": ["if", "although", "unless", "however", "whereas"], "ans": 0, "exp": "Doğru cevap: A. Type 1 Conditional: temel 'if' bağlacı. 'If their submissions meet ... will inform'. Standart şart cümlesi."}, {"q": "---- it not been for the remarkable dedication of the volunteer team, the entire project would never have been completed on time.", "opts": ["Were", "If", "Had", "Without", "Should"], "ans": 2, "exp": "Doğru cevap: C. 'Had it not been for X' = 'If it had not been for X' = 'X olmasaydı'. Type 3 inversion + 'But for' eşdeğeri yapı."}, {"q": "The new graduate will accept the corporate offer ---- the salary meets her significant financial expectations in the long term.", "opts": ["unless", "although", "whereas", "provided that", "supposing"], "ans": 3, "exp": "Doğru cevap: D. 'Provided that' = '...şartıyla'. Maaş beklentilerini karşılaması koşuluyla teklifi kabul edecek."}, {"q": "---- the rapid intervention of the emergency services, the fire could have spread throughout the entire neighbourhood last night.", "opts": ["Without", "Unless", "If only", "Provided", "In case"], "ans": 0, "exp": "Doğru cevap: A. 'Without X, Y could have happened' = 'X olmasaydı, Y olabilirdi'. İmalı (implied) Type 3 yapı. 'Without' = 'If it had not been for'."}, {"q": "The economy may experience considerable growth in the coming years if the recent fiscal reforms ---- effective in the long run.", "opts": ["had proved", "proves", "prove", "would prove", "proved"], "ans": 2, "exp": "Doğru cevap: C. Type 1 Conditional: if + present simple, may + V1. 'Reforms' çoğul olduğu için 'prove' (s'siz). Gerçekçi gelecek."}, {"q": "If the manager ---- a more democratic management style on a daily basis, the entire team would be much more productive.", "opts": ["adopt", "adopts", "had adopted", "would adopt", "adopted"], "ans": 4, "exp": "Doğru cevap: E. Type 2 Conditional: if + past simple (adopted), would + V1 (would be). Şu anki hipotetik genel durum."}, {"q": "---- about the unexpected cancellation a little earlier, we would have arranged alternative transportation in time.", "opts": ["Heard we", "Had we heard", "Did we hear", "Would we hear", "If we hear"], "ans": 1, "exp": "Doğru cevap: B. Type 3 inversion: 'Had we heard' = 'If we had heard'. Geçmiş hipotetik, devrik yapı."}, {"q": "If the chairman ---- such a conservative person by nature, he would have approved the bold new corporate strategy immediately.", "opts": ["is", "had been", "being", "were not", "was"], "ans": 3, "exp": "Doğru cevap: D. Mixed Conditional: şu anki/sürekli durum (were not) → geçmiş sonuç (would have approved). 'Yapı itibarıyla muhafazakâr olmasa, stratejiyi onaylardı.'"}, {"q": "---- for the new tax incentives offered last year, many small local businesses would have closed during the economic downturn.", "opts": ["But", "If", "Without", "Were it", "Had it"], "ans": 0, "exp": "Doğru cevap: A. 'But for X' = 'X olmasaydı' = 'If it had not been for X'. İmalı Type 3. 'Without' ile eşdeğer ama daha edebi/formal."}, {"q": "The international flight will not be delayed ---- the weather conditions deteriorate significantly within the next two hours.", "opts": ["if", "when", "unless", "provided", "supposing"], "ans": 2, "exp": "Doğru cevap: C. 'Unless' = 'if not'. 'Will not be delayed unless conditions deteriorate' = hava bozulmazsa ertelenmeyecek."}, {"q": "The escalating political crisis could be resolved much more quickly if the two opposing sides ---- more willing to compromise on key issues.", "opts": ["are", "be", "would be", "were", "had been"], "ans": 3, "exp": "Doğru cevap: D. Type 2 Conditional: if + past (were), could + V1 (could be resolved). Şu anki hipotetik durum."}, {"q": "The historic stone building will be carefully preserved ---- sufficient public funds are raised by the end of this calendar year.", "opts": ["although", "provided that", "unless", "however", "whereas"], "ans": 1, "exp": "Doğru cevap: B. 'Provided that' = '...şartıyla'. Fon toplanması koşuluyla bina korunacak."}, {"q": "If only the structural engineers ---- the critical weakness much earlier, before the bridge collapsed during the severe storm last winter.", "opts": ["discover", "discovered", "discovering", "would discover", "had discovered"], "ans": 4, "exp": "Doğru cevap: E. 'If only + past perfect' = geçmiş pişmanlık. 'Had discovered' = keşke (geçmişte) keşfetselerdi."}, {"q": "Most local residents now wish the new highway ---- through their quiet residential neighbourhoods quite so frequently.", "opts": ["does not pass", "did not pass", "had not passed", "would not pass", "pass not"], "ans": 1, "exp": "Doğru cevap: B. Wish + past simple = şu anki duruma karşıt istek. 'Wish it did not pass' = keşke (şu anda) geçmese."}, {"q": "The main conference room ---- automatically locked at exactly midnight if no one is still working inside the building.", "opts": ["is", "will be", "was", "had been", "being"], "ans": 0, "exp": "Doğru cevap: A. Type 0 Conditional: genel kural/gerçek. Yapı: if + present simple, present simple. 'Oda gece yarısı otomatik kilitlenir' — düzenli, kuralcı."}, {"q": "The natural disaster ---- significantly less devastating if proper warning systems had been firmly in place across the entire region.", "opts": ["is", "would be", "is being", "would have been", "had been"], "ans": 3, "exp": "Doğru cevap: D. Type 3 Conditional: if + past perfect (had been in place), would have + V3 (would have been less devastating). Geçmiş hipotetik."}, {"q": "If you ---- a chance to relocate to absolutely any country in the world right now, which one would you ultimately choose?", "opts": ["have", "will have", "had", "would have", "having"], "ans": 2, "exp": "Doğru cevap: C. Type 2 Conditional: if + past simple (had), would + V1 (would choose). Şu anki hipotetik. 'Right now' anahtar kelime."}, {"q": "The local hospital always keeps additional emergency supplies on hand ---- a sudden increase in patients occurs after a natural disaster.", "opts": ["unless", "provided", "although", "supposing", "in case"], "ans": 4, "exp": "Doğru cevap: E. 'In case' = '...ihtimaline karşı'. Önlem amaçlı, hastane fazla malzeme hazır bekletir."}, {"q": "The professional athlete would have qualified for the finals if she ---- to such severe injuries during the demanding preliminary rounds.", "opts": ["does not expose", "had not exposed", "had not been exposed", "is not exposed", "was not exposed"], "ans": 2, "exp": "Doğru cevap: C. Type 3 passive negative: if + had not been + V3, would have + V3. 'Maruz kalmamış olsaydı, finallere kalırdı.'"}, {"q": "If you ---- closely at the original painting, you can easily see the artist's unique personal signature hidden in the bottom corner.", "opts": ["look", "looked", "had looked", "would look", "are looking"], "ans": 0, "exp": "Doğru cevap: A. Type 1 Conditional: if + present simple (look), can + V1 (can see). Gerçekçi şart."}, {"q": "If the global economy ---- to recover at the current pace, many emerging markets would benefit significantly from the increased international trade.", "opts": ["start", "started", "had started", "would start", "starts"], "ans": 1, "exp": "Doğru cevap: B. Type 2 Conditional: if + past simple (started), would + V1 (would benefit). Şu anki hipotetik durum."}, {"q": "---- in your position at the moment, I would seriously consider seeking professional legal advice without further delay.", "opts": ["Was I", "Be I", "Had I been", "Were I", "If am I"], "ans": 3, "exp": "Doğru cevap: D. Type 2 inversion: 'Were I in your position' = 'If I were in your position'. Subjunctive 'were' tüm öznelerle."}, {"q": "But for the timely intervention of the brave bystanders, the accident ---- much more serious consequences for everyone involved that day.", "opts": ["has", "had", "will have", "would have", "would have had"], "ans": 4, "exp": "Doğru cevap: E. 'But for X' yapısı Type 3 sonucu gerektirir: would have + V3. 'Would have had' = sahip olabilirdi (geçmişte). Kaza zaten olmuş, müdahale olmasa daha kötü olabilirdi."}, {"q": "If the comprehensive new proposal ---- considered seriously by the committee, it could lead to substantial improvements in local infrastructure.", "opts": ["is", "had been", "were", "would be", "be"], "ans": 2, "exp": "Doğru cevap: C. Type 2 passive: if + were + V3 (were considered), could + V1 (could lead). 'Were' subjunctive, pasif çatıda."}, {"q": "Many concerned citizens now wish their elected representatives ---- closer attention to the rapidly rising cost of living last year.", "opts": ["pay", "paid", "have paid", "had pay", "had paid"], "ans": 4, "exp": "Doğru cevap: E. Wish + past perfect = geçmiş pişmanlık. 'Had paid attention last year' = keşke geçen yıl dikkat etselerdi."}, {"q": "The final committee decision will be officially announced next week, ---- the research team has gathered enough accurate data by that point.", "opts": ["although", "provided that", "unless", "supposing", "however"], "ans": 1, "exp": "Doğru cevap: B. 'Provided that' = '...şartıyla'. Yeterli veri toplanması koşuluyla karar açıklanacak."}, {"q": "If the parliament ---- the controversial bill last year, the current economic policies would be significantly more progressive today.", "opts": ["passes", "passed", "is passing", "had passed", "would pass"], "ans": 3, "exp": "Doğru cevap: D. Mixed Conditional: geçmiş şart (had passed last year) → şimdiki sonuç (would be more progressive today). Sonuç şu ana ait."}, {"q": "Solar panels ---- electricity whenever direct sunlight strikes their sensitive photovoltaic cells with sufficient intensity.", "opts": ["generate", "generated", "had generated", "would generate", "is generating"], "ans": 0, "exp": "Doğru cevap: A. Type 0 Conditional: bilimsel/genel gerçek. 'Whenever' kullanımı present simple ile birlikte: güneş ışığı vurdukça paneller elektrik üretir."}];
+var LETTERS = ['A','B','C','D','E'];
+var idx = 0;
+var ANS = new Array(QUESTIONS.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  document.getElementById('result').style.display='none';
+  idx = 0;
+  ANS = new Array(QUESTIONS.length).fill(null);
+  render();
+  buildTracker();
+  window.scrollTo(0,0);
+}
+
+function buildTracker(){
+  var t = document.getElementById('tracker');
+  t.innerHTML = '';
+  for(var i=0;i<QUESTIONS.length;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.i = i;
+    d.onclick = (function(n){return function(){idx=n;render();}})(i);
+    t.appendChild(d);
+  }
+  updateTracker();
+}
+
+function updateTracker(){
+  var dots = document.querySelectorAll('.dot');
+  for(var i=0;i<dots.length;i++){
+    dots[i].classList.remove('ans','cur');
+    if(ANS[i]!==null) dots[i].classList.add('ans');
+    if(i===idx) dots[i].classList.add('cur');
+  }
+}
+
+function render(){
+  var q = QUESTIONS[idx];
+  document.getElementById('qcount').textContent = (idx+1)+' / '+QUESTIONS.length;
+  document.getElementById('qnum').textContent = 'Soru '+(idx+1);
+  document.getElementById('qtext').textContent = q.q;
+  var optsEl = document.getElementById('opts');
+  optsEl.innerHTML = '';
+  for(var i=0;i<q.opts.length;i++){
+    var sel = ANS[idx]===i ? ' sel' : '';
+    var btn = document.createElement('button');
+    btn.className = 'opt'+sel;
+    btn.innerHTML = '<span class="ol">'+LETTERS[i]+'</span><span>'+q.opts[i]+'</span>';
+    btn.onclick = (function(n){return function(){selectOpt(n);}})(i);
+    optsEl.appendChild(btn);
+  }
+  document.getElementById('btn-prev').disabled = (idx===0);
+  document.getElementById('btn-next').style.display = (idx===QUESTIONS.length-1) ? 'none' : 'inline-block';
+  document.getElementById('btn-finish').style.display = (idx===QUESTIONS.length-1) ? 'inline-block' : 'none';
+  updateTracker();
+}
+
+function selectOpt(i){
+  ANS[idx] = i;
+  render();
+}
+
+function prev(){ if(idx>0){idx--;render();window.scrollTo(0,0);} }
+function next(){ if(idx<QUESTIONS.length-1){idx++;render();window.scrollTo(0,0);} }
+
+function finish(){
+  // Check if any unanswered, ask confirmation
+  var unanswered = ANS.filter(function(a){return a===null;}).length;
+  if(unanswered>0){
+    if(!confirm(unanswered+' soru boş kaldı. Yine de bitirmek istiyor musunuz?')) return;
+  }
+  showResult();
+}
+
+function exitQuiz(){
+  if(confirm('Testten çıkmak istediğinize emin misiniz? İlerlemeniz kaybolacak.')){
+    window.location.href = '/panelim.html';
+  }
+}
+
+function showResult(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('result').style.display='block';
+  var correct=0, wrong=0, skipped=0;
+  for(var i=0;i<QUESTIONS.length;i++){
+    if(ANS[i]===null) skipped++;
+    else if(ANS[i]===QUESTIONS[i].ans) correct++;
+    else wrong++;
+  }
+  document.getElementById('r-score').textContent = correct+' / '+QUESTIONS.length;
+  document.getElementById('r-pct').textContent = '%'+Math.round(correct/QUESTIONS.length*100);
+  document.getElementById('s-c').textContent = correct;
+  document.getElementById('s-w').textContent = wrong;
+  document.getElementById('s-s').textContent = skipped;
+  
+  var rev = document.getElementById('review');
+  rev.innerHTML = '';
+  for(var i=0;i<QUESTIONS.length;i++){
+    var q = QUESTIONS[i];
+    var item = document.createElement('div');
+    var status, statusClass, statusText;
+    if(ANS[i]===null){ status='skipped'; statusClass='s-s'; statusText='Boş'; }
+    else if(ANS[i]===q.ans){ status='correct'; statusClass='s-c'; statusText='Doğru'; }
+    else{ status='wrong'; statusClass='s-w'; statusText='Yanlış'; }
+    item.className = 'r-item '+status;
+    
+    var html = '<div class="r-qnum"><span>Soru '+(i+1)+'</span><span class="r-status '+statusClass+'">'+statusText+'</span></div>';
+    html += '<div class="r-q">'+escapeHtml(q.q)+'</div>';
+    if(ANS[i]!==null){
+      var yourCls = (ANS[i]===q.ans) ? 'vc' : 'vy';
+      html += '<div class="r-ans"><span class="lbl">Sizin cevabınız:</span><span class="'+yourCls+'">'+LETTERS[ANS[i]]+') '+escapeHtml(q.opts[ANS[i]])+'</span></div>';
+    }
+    html += '<div class="r-ans"><span class="lbl">Doğru cevap:</span><span class="vc">'+LETTERS[q.ans]+') '+escapeHtml(q.opts[q.ans])+'</span></div>';
+    html += '<div class="r-exp">'+escapeHtml(q.exp)+'</div>';
+    item.innerHTML = html;
+    rev.appendChild(item);
+  }
+  window.scrollTo(0,0);
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function restart(){ startQuiz(); }
+</script>
+</body>
+</html>

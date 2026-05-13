@@ -128,19 +128,26 @@
 
   <script>
     var PRODUCT_META = {
-      "grammar-pack-1":          { title: "Grammar Pack 1",          exam: "SAT",   cover: "cover-grammar-pack-1.png" },
-      "grammar-pack-2":          { title: "Grammar Pack 2",          exam: "SAT",   cover: "cover-grammar-pack-2.png" },
-      "grammar-pack-3":          { title: "Grammar Pack 3",          exam: "SAT",   cover: "cover-grammar-pack-3.png" },
-      "vocabulary-pack":         { title: "Vocabulary Pack",         exam: "SAT",   cover: "cover-vocabulary-pack.png" },
-      "study-pack":              { title: "Study Pack",              exam: "SAT",   cover: "cover-study-pack.png" },
-      "full-test-1":             { title: "Full Practice Test 1",    exam: "SAT",   cover: "cover-full-test-1.png" },
-      "full-test-2":             { title: "Full Practice Test 2",    exam: "SAT",   cover: "cover-full-test-2.png" },
-      "full-test-3":             { title: "Full Practice Test 3",    exam: "SAT",   cover: "cover-full-test-3.png" },
-      "full-test-4":             { title: "Full Practice Test 4",    exam: "SAT",   cover: "cover-full-test-4.png" },
-      "full-test-5":             { title: "Full Practice Test 5",    exam: "SAT",   cover: "cover-full-test-5.png" },
-      "toefl-writing-practice":  { title: "TOEFL Writing Practice",  exam: "TOEFL", cover: "cover-toefl-writing-practice.png" },
-      "spelling-practice":       { title: "Spelling Practice",       exam: "TOEFL", cover: "cover-spelling-practice.png" },
-      "ielts-full-test":         { title: "IELTS Full Test",         exam: "IELTS", cover: "cover-ielts-full-test.png" },
+      "grammar-pack-1":          { title: "Grammar Pack 1",                       exam: "SAT",   cover: "cover-grammar-pack-1.png" },
+      "grammar-pack-2":          { title: "Grammar Pack 2",                       exam: "SAT",   cover: "cover-grammar-pack-2.png" },
+      "grammar-pack-3":          { title: "Grammar Pack 3",                       exam: "SAT",   cover: "cover-grammar-pack-3.png" },
+      "vocabulary-pack":         { title: "Vocabulary Pack",                      exam: "SAT",   cover: "cover-vocabulary-pack.png" },
+      "study-pack":              { title: "Study Pack",                           exam: "SAT",   cover: "cover-study-pack.png" },
+      "full-test-1":             { title: "Full Practice Test 1",                 exam: "SAT",   cover: "cover-full-test-1.png" },
+      "full-test-2":             { title: "Full Practice Test 2",                 exam: "SAT",   cover: "cover-full-test-2.png" },
+      "full-test-3":             { title: "Full Practice Test 3",                 exam: "SAT",   cover: "cover-full-test-3.png" },
+      "full-test-4":             { title: "Full Practice Test 4",                 exam: "SAT",   cover: "cover-full-test-4.png" },
+      "full-test-5":             { title: "Full Practice Test 5",                 exam: "SAT",   cover: "cover-full-test-5.png" },
+      "toefl-writing-practice":  { title: "TOEFL Writing Practice",               exam: "TOEFL", cover: "cover-toefl-writing-practice.png" },
+      "spelling-practice":       { title: "Spelling Practice",                    exam: "TOEFL", cover: "cover-spelling-practice.png" },
+      "ielts-full-test":         { title: "IELTS Full Test",                      exam: "IELTS", cover: "cover-ielts-full-test.png" },
+      "ielts-writing-feedback":  { title: "IELTS Writing Feedback",               exam: "IELTS", cover: "cover-ielts-writing-feedback.png",   type: "service" },
+      "ib-english-b-ee-feedback":{ title: "English B Extended Essay Feedback",    exam: "IB",    cover: "cover-ib-english-b-ee-feedback.png", type: "service" },
+      "tok-essay-feedback":      { title: "TOK Essay Feedback",                   exam: "IB",    cover: "cover-tok-essay-feedback.png",       type: "service" },
+      "ydt-tenses":              { title: "YDT — Tenses",                         exam: "YDT",   cover: "cover-ydt-tenses.png" },
+      "ydt-modals":              { title: "YDT — Modals",                         exam: "YDT",   cover: "cover-ydt-modals.png" },
+      "ydt-conditionals":        { title: "YDT — Conditionals",                   exam: "YDT",   cover: "cover-ydt-conditionals.png" },
+      "ydt-relative-clauses":    { title: "YDT — Relative Clauses",               exam: "YDT",   cover: "cover-ydt-relative-clauses.png" },
     };
     
     var auth = window.GriAuth.verify();
@@ -185,17 +192,38 @@
         
         var cards = ownedSlugs.map(function(s) {
           var p = PRODUCT_META[s];
-          return '<a href="/calisma/' + s + '.html" class="product-card">' +
-            '<div class="product-cover has-image">' +
+          var isService = p.type === "service";
+          var href = isService ? '/urun/' + s + '.html' : '/calisma/' + s + '.html';
+          var subtitle = isService ? 'Hizmet · Detayı için tıklayın' : 'Açmak için tıklayın';
+          var ctaLabel = isService ? 'Bilgi' : 'Aç';
+          var statusLabel = isService ? 'Hizmet' : 'Erişim Açık';
+          
+          var coverHtml;
+          if (p.cover) {
+            coverHtml = '<div class="product-cover has-image">' +
               '<img src="/assets/images/' + p.cover + '" alt="' + p.title + '" loading="lazy">' +
-            '</div>' +
+            '</div>';
+          } else if (p.cssCover) {
+            var cw2html = p.cssCover.cw2 ? ' <span class="it">' + p.cssCover.cw2 + '</span>' : '';
+            coverHtml = '<div class="product-cover">' +
+              '<span class="cv-tag">' + p.cssCover.vol + ' &middot; ' + p.exam + '</span>' +
+              '<h3 class="cv-title">' + p.cssCover.cw1 + cw2html + '</h3>' +
+              '<span class="cv-line"></span>' +
+              '<span class="cv-foot">Gri English &middot; 2026</span>' +
+            '</div>';
+          } else {
+            coverHtml = '<div class="product-cover"><h3 class="cv-title">' + p.title + '</h3></div>';
+          }
+          
+          return '<a href="' + href + '" class="product-card">' +
+            coverHtml +
             '<div class="product-info">' +
-              '<span class="p-eyebrow">' + p.exam + ' &middot; Materyal</span>' +
+              '<span class="p-eyebrow">' + p.exam + ' &middot; ' + (isService ? 'Hizmet' : 'Materyal') + '</span>' +
               '<h3>' + p.title + '</h3>' +
-              '<p style="color: var(--text-muted); font-size: 0.85rem;">Açmak için tıklayın</p>' +
+              '<p style="color: var(--text-muted); font-size: 0.85rem;">' + subtitle + '</p>' +
               '<div class="product-foot">' +
-                '<span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal);">Erişim Açık</span>' +
-                '<span class="btn btn-gold" style="padding: 0.6rem 1.2rem; font-size: 0.75rem;">Aç</span>' +
+                '<span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal);">' + statusLabel + '</span>' +
+                '<span class="btn btn-gold" style="padding: 0.6rem 1.2rem; font-size: 0.75rem;">' + ctaLabel + '</span>' +
               '</div>' +
             '</div>' +
           '</a>';

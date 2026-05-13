@@ -22,6 +22,8 @@
        toefl-writing-practice, spelling-practice
      IELTS Academic:
        ielts-full-test
+     YDT:
+       ydt-tenses, ydt-modals, ydt-conditionals, ydt-relative-clauses
    
    Hizmet ürünleri (IELTS Writing, EE Feedback, TOK Essay) Shopier
    üzerinden ödeme alınır ve e-posta üzerinden yürütülür. Bu hesap

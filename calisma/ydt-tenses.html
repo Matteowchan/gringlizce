@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<script src="/assets/users.js"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function() {
+  var path = window.location.pathname;
+  var slug = path.substring(path.lastIndexOf('/') + 1).replace(/\.html$/, '');
+  var auth = window.GriAuth && window.GriAuth.requireAuth(slug);
+  if (!auth) return;
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YDT — Tenses — Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf7f9;--surface:#ffffff;--accent:#6B3D58;--accent-deep:#532D44;--accent-soft:#e9dde3;--text:#2D1B26;--text-soft:#5D4A55;--text-muted:#8B7282;--line:#e0d2da;--correct:#166534;--cbg:#f0fdf4;--wrong:#991b1b;--wbg:#fef2f2;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Splash */
+#splash{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;background:linear-gradient(155deg,#faf7f9 50%,#e9dde3 100%)}
+.s-eyebrow{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.s-title{font-family:'Lora',serif;font-size:clamp(1.9rem,5vw,2.8rem);font-weight:600;line-height:1.2;margin-bottom:.7rem;color:var(--accent-deep)}
+.s-desc{color:var(--text-soft);font-size:.95rem;max-width:480px;line-height:1.7;margin-bottom:1.6rem}
+.s-meta{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:2.4rem;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--text-muted);letter-spacing:.05em}
+.s-meta span strong{color:var(--accent);font-weight:600;margin-right:.3rem}
+.btn-p{background:var(--accent);color:#fff;border:none;border-radius:var(--r);padding:.9rem 2.5rem;font-size:1rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+.btn-p:hover{background:var(--accent-deep)}
+.btn-back{background:transparent;border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--r);padding:.6rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:1rem}
+.btn-back:hover{background:var(--accent-soft)}
+
+/* Quiz */
+#quiz{display:none;min-height:100vh}
+.qheader{background:var(--surface);border-bottom:1px solid var(--line);padding:.9rem 1.2rem;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.qhead-left{display:flex;align-items:center;gap:.7rem}
+.qhead-home{background:transparent;border:none;cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .5rem}
+.qhead-home:hover{color:var(--accent-deep)}
+.qhead-title{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
+.qcount{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--accent);font-weight:600}
+.qbody{max-width:720px;margin:0 auto;padding:1.8rem 1.2rem 2rem}
+.qnum{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem;font-weight:600}
+.qtext{font-family:'Lora',serif;font-size:1.05rem;line-height:1.75;color:var(--text);margin-bottom:1.6rem;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r);padding:1.15rem 1.3rem}
+.opts{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.8rem}
+.opt{display:flex;align-items:flex-start;gap:.8rem;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:.75rem 1rem;cursor:pointer;transition:border-color .12s,background .12s;font-size:.94rem;color:var(--text);font-family:'Lora',serif;text-align:left}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.ol{display:flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid var(--line);font-size:.74rem;font-family:'DM Mono',monospace;font-weight:700;color:var(--text-muted);transition:all .12s;flex-shrink:0;margin-top:1px}
+.opt.sel .ol{background:var(--accent);border-color:var(--accent);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap}
+.btn-n{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-size:.88rem;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;transition:all .12s}
+.btn-n:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn-n:disabled{opacity:.4;cursor:not-allowed}
+.btn-finish{background:var(--accent);color:#fff;border:1.5px solid var(--accent)}
+.btn-finish:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+.tracker{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.4rem;justify-content:center}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line);cursor:pointer;transition:all .15s}
+.dot.ans{background:var(--accent);border-color:var(--accent)}
+.dot.cur{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--accent)}
+
+/* Results */
+#result{display:none;min-height:100vh;padding:2rem 1.2rem 4rem}
+.r-wrap{max-width:720px;margin:0 auto}
+.r-head{text-align:center;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:var(--r);padding:2rem 1.5rem;margin-bottom:2rem}
+.r-eyebrow{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.r-score{font-family:'Lora',serif;font-size:2.8rem;font-weight:600;color:var(--accent-deep);margin-bottom:.3rem}
+.r-pct{font-family:'DM Mono',monospace;font-size:1.05rem;color:var(--text-soft);margin-bottom:1.3rem}
+.r-stats{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;font-size:.88rem;color:var(--text-soft)}
+.r-stats strong{color:var(--text);font-weight:600}
+.r-stats .pill-c{color:#166534;font-weight:600}
+.r-stats .pill-w{color:#991b1b;font-weight:600}
+.r-actions{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.review-title{font-family:'Lora',serif;font-size:1.3rem;font-weight:600;color:var(--accent-deep);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:2px solid var(--accent)}
+.r-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem 1.2rem;margin-bottom:.85rem}
+.r-item.correct{border-left:4px solid #166534}
+.r-item.wrong{border-left:4px solid #991b1b}
+.r-item.skipped{border-left:4px solid #b45309}
+.r-qnum{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.45rem;display:flex;justify-content:space-between;align-items:center}
+.r-status{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:.15rem .55rem;border-radius:4px}
+.r-status.s-c{background:#dcfce7;color:#166534}
+.r-status.s-w{background:#fee2e2;color:#991b1b}
+.r-status.s-s{background:#fef3c7;color:#b45309}
+.r-q{font-family:'Lora',serif;font-size:.95rem;line-height:1.65;color:var(--text);margin-bottom:.7rem}
+.r-ans{font-family:'DM Mono',monospace;font-size:.82rem;margin-bottom:.5rem}
+.r-ans .lbl{color:var(--text-muted);margin-right:.3rem}
+.r-ans .vy{color:#991b1b}
+.r-ans .vc{color:#166534;font-weight:600}
+.r-exp{background:var(--accent-soft);border-radius:6px;padding:.7rem .9rem;font-size:.88rem;line-height:1.6;color:var(--accent-deep);margin-top:.55rem;font-family:'Inter',sans-serif}
+
+@media(max-width:600px){.qhead-title{display:none}.s-meta{gap:.9rem;font-size:.7rem}.r-score{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="s-eyebrow">YDT · Gramer Çalışma Seti</div>
+  <h1 class="s-title">YDT — Tenses</h1>
+  <p class="s-desc">50 cümle tamamlama sorusu. Present Perfect, Past Perfect, Future Forms ve diğer tense yapılarını kapsayan YDT formatlı bir çalışma seti. Test bittikten sonra her soru için Türkçe açıklama.</p>
+  <div class="s-meta">
+    <span><strong>50</strong> Soru</span>
+    <span><strong>YDT</strong> Format</span>
+    <span><strong>Türkçe</strong> Açıklamalı</span>
+  </div>
+  <button class="btn-p" onclick="startQuiz()">Teste Başla</button>
+  <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <div class="qheader">
+    <div class="qhead-left">
+      <button class="qhead-home" onclick="exitQuiz()">← Panelim</button>
+      <span class="qhead-title">YDT · Gramer Çalışma Seti</span>
+    </div>
+    <div class="qcount" id="qcount">1 / 50</div>
+  </div>
+  <div class="qbody">
+    <div class="tracker" id="tracker"></div>
+    <div class="qnum" id="qnum">Soru 1</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+    <div class="nav-row">
+      <button class="btn-n" id="btn-prev" onclick="prev()">← Önceki</button>
+      <button class="btn-n" id="btn-next" onclick="next()">Sonraki →</button>
+      <button class="btn-n btn-finish" id="btn-finish" onclick="finish()" style="display:none">Testi Bitir</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+  <div class="r-wrap">
+    <div class="r-head">
+      <div class="r-eyebrow">Sonuç</div>
+      <div class="r-score" id="r-score">0 / 50</div>
+      <div class="r-pct" id="r-pct">%0</div>
+      <div class="r-stats">
+        <span><span class="pill-c">Doğru:</span> <strong id="s-c">0</strong></span>
+        <span><span class="pill-w">Yanlış:</span> <strong id="s-w">0</strong></span>
+        <span>Boş: <strong id="s-s">0</strong></span>
+      </div>
+      <div class="r-actions">
+        <button class="btn-p" onclick="restart()">Tekrar Dene</button>
+        <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+      </div>
+    </div>
+    <div class="review-title">Soru Soru Açıklamalar</div>
+    <div id="review"></div>
+    <div style="text-align:center;margin-top:2rem">
+      <button class="btn-back" onclick="window.location.href='/panelim.html'">Panelime Dön</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var QUESTIONS = [{"q": "Researchers ---- a new species of frog in the Amazon basin since the expedition began in 2019.", "opts": ["discover", "discovered", "have discovered", "had discovered", "are discovering"], "ans": 2, "exp": "Doğru cevap: C. 'Since the expedition began in 2019' present perfect ister; geçmişte başlayıp şu ana dek süren eylem."}, {"q": "By the year 2050, climate scientists predict that the Arctic ---- almost entirely free of summer ice.", "opts": ["will have become", "becomes", "has become", "became", "is becoming"], "ans": 0, "exp": "Doğru cevap: A. 'By + gelecek tarih' yapısı future perfect ister: will have + V3."}, {"q": "The astronaut realized that the satellite ---- its planned orbit long before mission control received any data.", "opts": ["leaves", "is leaving", "has left", "was leaving", "had left"], "ans": 4, "exp": "Doğru cevap: E. 'Long before mission control received' geçmişten önceki başka bir geçmiş = past perfect (had + V3)."}, {"q": "Aid workers ---- relief supplies in the disaster zone for nearly three months when the central government finally took over operations.", "opts": ["deliver", "had been delivering", "delivered", "have been delivering", "are delivering"], "ans": 1, "exp": "Doğru cevap: B. 'For nearly three months when the government took over' bir geçmiş noktasına kadar süredir devam eden eylem = past perfect continuous (had been + V-ing)."}, {"q": "As soon as the new tax policy is implemented, low-income households ---- substantial financial benefits.", "opts": ["receive", "had received", "received", "will receive", "have received"], "ans": 3, "exp": "Doğru cevap: D. 'As soon as + present simple' yapısında ana cümle future simple olur: will + V1."}, {"q": "Although she ---- about her sister's promotion for weeks, she only congratulated her in person yesterday evening.", "opts": ["had known", "knows", "is knowing", "was knowing", "had been known"], "ans": 0, "exp": "Doğru cevap: A. 'She congratulated her yesterday' (past simple) referans noktası. Ondan önceki haftalardan beri süren bilgi = past perfect."}, {"q": "By the time the firefighters arrived on the scene, the abandoned warehouse ---- almost completely to the ground.", "opts": ["burned", "is burning", "had burned", "has burned", "burns"], "ans": 2, "exp": "Doğru cevap: C. 'By the time + past simple' yapısı past perfect ister. İtfaiye varmadan önce yangın tamamlanmıştı."}, {"q": "The review committee ---- the final report when an unexpected announcement of new guidelines forced them to pause.", "opts": ["finalized", "has finalized", "finalizes", "is finalizing", "was finalizing"], "ans": 4, "exp": "Doğru cevap: E. 'When the announcement forced them to pause' o anda devam eden eylem = past continuous (was/were + V-ing)."}, {"q": "The retired diplomat ---- his memoirs since he stepped down from public service in 2020.", "opts": ["wrote", "has been writing", "writes", "had written", "was writing"], "ans": 1, "exp": "Doğru cevap: B. 'Since he stepped down in 2020' present perfect continuous ister: o tarihten beri süren ve hâlâ devam eden yazma eylemi."}, {"q": "Once you ---- the required paperwork, the citizenship application process will be officially complete.", "opts": ["submit", "will submit", "submitted", "have submitted", "had submitted"], "ans": 3, "exp": "Doğru cevap: D. 'Once + present perfect, future' yapısı: tamamlandıktan sonra başka bir şey olacak."}, {"q": "While our flight ---- the Atlantic, the captain announced an unexpected change in cruising altitude.", "opts": ["was crossing", "crossed", "had crossed", "crosses", "has crossed"], "ans": 0, "exp": "Doğru cevap: A. 'While + past continuous, past simple' yapısı: süren bir geçmiş eylem sırasında başka bir geçmiş eylem."}, {"q": "The ancient manuscript ---- in a remote cave for nearly two thousand years before local archaeologists finally discovered it.", "opts": ["lay", "was lying", "had lain", "has lain", "lies"], "ans": 2, "exp": "Doğru cevap: C. 'For nearly two thousand years before they discovered' yapısı: geçmişten önce süren durum = past perfect."}, {"q": "By next March, the research team ---- on the experimental vaccine trial for six full months.", "opts": ["will work", "has worked", "is working", "had been working", "will have been working"], "ans": 4, "exp": "Doğru cevap: E. 'By next March + for six months' yapısı: gelecekte bir noktaya kadar süredir devam eden eylem = future perfect continuous (will have been + V-ing)."}, {"q": "Whenever Professor Aydın ---- a public lecture, he begins with a deliberately provocative question to engage the audience.", "opts": ["is giving", "gave", "has given", "gives", "was giving"], "ans": 3, "exp": "Doğru cevap: D. 'Whenever' (her ne zaman) tekrarlanan rutinler/alışkanlıklar içindir, simple present kullanılır."}, {"q": "The witness insisted under oath that she ---- the suspect leave the building shortly after midnight.", "opts": ["sees", "had seen", "is seeing", "has seen", "was seeing"], "ans": 1, "exp": "Doğru cevap: B. Reported speech: ana fiil 'insisted' past simple. Tanığın 'gördüğü' eylem daha önceki bir olay = past perfect."}, {"q": "Throughout the late nineteenth century, rural families in the region ---- almost entirely on subsistence agriculture for their income.", "opts": ["depended", "have depended", "were depending", "had depended", "depend"], "ans": 0, "exp": "Doğru cevap: A. 'Throughout the late nineteenth century' tamamen geçmişte kalmış bitmiş bir dönem = simple past."}, {"q": "The candidate ---- her acceptance speech for nearly an hour before she finally felt confident enough to deliver it.", "opts": ["rehearses", "has rehearsed", "is rehearsing", "had been rehearsing", "rehearsed"], "ans": 3, "exp": "Doğru cevap: D. 'For nearly an hour before she felt ready' yapısı: geçmişe kadar süredir devam eden eylem = past perfect continuous."}, {"q": "The lawmakers ---- the new environmental bill when a sudden protest outside the parliament forced an unscheduled postponement.", "opts": ["discuss", "were discussing", "discussed", "have discussed", "had discussed"], "ans": 1, "exp": "Doğru cevap: B. 'When the protest forced...' anında devam eden eylem = past continuous (were + V-ing)."}, {"q": "The senior technician explains that the same malfunction ---- repeatedly in the past two weeks.", "opts": ["occurred", "occurs", "had occurred", "was occurring", "has occurred"], "ans": 4, "exp": "Doğru cevap: E. 'In the past two weeks' (son iki haftada) şimdiyle bağlantılı geçmiş periyot = present perfect."}, {"q": "The construction consortium ---- the suspension bridge by the end of the next fiscal year.", "opts": ["is completing", "completes", "will have completed", "had completed", "was completing"], "ans": 2, "exp": "Doğru cevap: C. 'By the end of next fiscal year' gelecekte tamamlanmış eylem = future perfect (will have + V3)."}, {"q": "The protesters ---- peacefully outside the parliament building since dawn, and their numbers continue to grow steadily.", "opts": ["gather", "have been gathering", "gathered", "had been gathering", "are gathering"], "ans": 1, "exp": "Doğru cevap: B. 'Since dawn ... continue to grow' yapısı: şafaktan beri süren ve hâlâ büyüyen eylem = present perfect continuous."}, {"q": "The volcano ---- dormant for several centuries when a sudden eruption took researchers completely by surprise in 1980.", "opts": ["remained", "has remained", "is remaining", "was remaining", "had remained"], "ans": 4, "exp": "Doğru cevap: E. 'When + 1980' yapısı: 1980'deki olaydan önce süregelen durum = past perfect."}, {"q": "The doctor recommends that patients ---- their prescribed medication regularly even after symptoms appear to disappear.", "opts": ["take", "took", "are taking", "had taken", "have taken"], "ans": 0, "exp": "Doğru cevap: A. 'Recommends that + subjunctive' yapısı: tavsiye fiillerinden sonra base form (yalın hâl) kullanılır."}, {"q": "In the documentary, the narrator claims that several ancient civilizations ---- highly complex astronomical calendars long before any written records appeared.", "opts": ["develop", "are developing", "have developed", "had developed", "develops"], "ans": 3, "exp": "Doğru cevap: D. 'Long before written records appeared' yapısı: geçmişten önceki bir geçmiş = past perfect."}, {"q": "Although the international volunteers ---- their best, they could not save all the wildlife affected by the catastrophic oil spill.", "opts": ["are doing", "have done", "did", "had done", "do"], "ans": 2, "exp": "Doğru cevap: C. 'Could not save' (past simple) ile uyumlu, basit geçmiş eylem = did their best."}, {"q": "The investigative journalist ---- the article all morning and is now finally satisfied with the published version.", "opts": ["edits", "has been editing", "edited", "is editing", "was editing"], "ans": 1, "exp": "Doğru cevap: B. 'All morning and is now finally satisfied' yapısı: sabahtan beri süren ve şu an tamamlanan eylem = present perfect continuous."}, {"q": "Long before the smartphone era, families in the village ---- in the living room every evening to listen to the radio together.", "opts": ["gather", "are gathering", "have gathered", "had gathered", "would gather"], "ans": 4, "exp": "Doğru cevap: E. 'Long before the smartphone era' geçmiş alışkanlıkları anlatır. 'Would + V1' geçmişte tekrarlanan eylemler için kullanılır (used to gibi)."}, {"q": "The botanist's recent paper confirms that the rare orchid ---- only in three remote valleys in the entire world.", "opts": ["grows", "grew", "had grown", "was growing", "has grown"], "ans": 0, "exp": "Doğru cevap: A. 'The rare orchid grows only in three valleys' genel/bilimsel gerçek = simple present."}, {"q": "When the rescue team reached the summit, several climbers ---- visibly from the early symptoms of severe altitude sickness.", "opts": ["had been suffering", "suffer", "are suffering", "were suffering", "have suffered"], "ans": 3, "exp": "Doğru cevap: D. 'When the rescue team reached ...' o anda devam eden eylem = past continuous (were + V-ing)."}, {"q": "The fact that human activity ---- the planet's natural rhythms is now a recurring theme across contemporary environmental literature.", "opts": ["disrupted", "had disrupted", "have disrupted", "were disrupting", "disrupt"], "ans": 2, "exp": "Doğru cevap: C. 'Is now a recurring theme' yapısı şimdiyle bağlantılı geçmişi gerektirir = present perfect (have/has + V3)."}, {"q": "Once the merger agreement ---- by representatives of both parties, the formal integration process can officially commence.", "opts": ["is signed", "signs", "has signed", "signed", "has been signed"], "ans": 4, "exp": "Doğru cevap: E. 'Once + present perfect (passive)' yapısı: imzalandıktan sonra başlayacak süreç = has been + V3."}, {"q": "The graduate students ---- their final examinations when the fire alarm suddenly began ringing throughout the building.", "opts": ["had taken", "were taking", "take", "have taken", "took"], "ans": 1, "exp": "Doğru cevap: B. 'When the fire alarm began ringing' anında devam eden eylem = past continuous."}, {"q": "As linguistic historians have repeatedly emphasized, every spoken language ---- in subtle and often unnoticed ways with each new generation.", "opts": ["had changed", "was changing", "changes", "has changed", "is changing"], "ans": 2, "exp": "Doğru cevap: C. 'Every spoken language changes with each generation' genel/bilimsel gerçek = simple present."}, {"q": "The patient told her physician that she ---- the troubling side effects only after a full week of taking the new medication.", "opts": ["noticed", "was noticing", "had been noticing", "is noticing", "has noticed"], "ans": 0, "exp": "Doğru cevap: A. 'Only after a week of taking' tek seferlik bitmiş bir eylem = simple past."}, {"q": "By next summer, the conservation team ---- to relocate the entire flock to a safer habitat in the northern wetlands.", "opts": ["have decided", "decide", "decided", "will have decided", "had decided"], "ans": 3, "exp": "Doğru cevap: D. 'By next summer' gelecekte tamamlanmış eylem = future perfect (will have + V3)."}, {"q": "The seasoned reporter ---- the high-profile corruption case for years before she finally broke the story to the public.", "opts": ["is covering", "had been covering", "covers", "has been covering", "covered"], "ans": 1, "exp": "Doğru cevap: B. 'For years before she finally broke' yapısı: geçmişe kadar süren eylem = past perfect continuous."}, {"q": "Recent long-term studies suggest that even brief exposure to second-hand smoke ---- significant risks to long-term cardiovascular health.", "opts": ["had posed", "is posing", "was posing", "posed", "poses"], "ans": 4, "exp": "Doğru cevap: E. 'Studies suggest that...' bilimsel/genel ifade = simple present."}, {"q": "The independent film festival ---- in its current format since 1989, attracting filmmakers from more than forty countries each year.", "opts": ["operated", "was operating", "has operated", "had operated", "operates"], "ans": 2, "exp": "Doğru cevap: C. 'Since 1989' present perfect ister: 1989'dan beri faaliyette."}, {"q": "Even though she ---- the coastal route many times before, she always insists on carrying a paper map alongside her phone.", "opts": ["has driven", "drives", "is driving", "drove", "had driven"], "ans": 0, "exp": "Doğru cevap: A. 'Many times before' yaşam tecrübesini ifade eder = present perfect."}, {"q": "Caravan merchants ---- their goods along the Silk Road for centuries until profitable alternative sea routes finally emerged.", "opts": ["traded", "were trading", "trade", "had been trading", "have traded"], "ans": 3, "exp": "Doğru cevap: D. 'For centuries until sea routes emerged' yapısı: geçmişe kadar uzun süre devam eden eylem = past perfect continuous."}, {"q": "By the time the rescue helicopters finally reached the remote island, the stranded survivors ---- on rainwater and coconuts for nearly two weeks.", "opts": ["had lived", "lived", "had been living", "were living", "have lived"], "ans": 2, "exp": "Doğru cevap: C. 'By the time + for nearly two weeks' yapısı: geçmişte bir noktaya kadar süredir devam eden eylem = past perfect continuous."}, {"q": "Medical researchers ---- significant progress in cancer immunotherapy treatments over the past decade and a half.", "opts": ["have made", "made", "had made", "make", "were making"], "ans": 0, "exp": "Doğru cevap: A. 'Over the past decade' şimdiyle bağlantılı geçmiş periyot = present perfect."}, {"q": "The Italian chef explained that he ---- the traditional recipe from his grandmother, who had grown up in a small coastal fishing village.", "opts": ["learnt", "has learnt", "was learning", "is learning", "had learnt"], "ans": 4, "exp": "Doğru cevap: E. Reported speech: 'he explained' (past simple). Tarifin öğrenildiği zaman daha önceki bir olay = past perfect."}, {"q": "The Olympic athletes ---- intensively for the upcoming championship throughout the entire past month at the high-altitude training camp.", "opts": ["trained", "have been training", "trains", "is training", "train"], "ans": 1, "exp": "Doğru cevap: B. 'Throughout the entire past month' yapısı: bir aydır süren ve hâlâ devam eden eylem = present perfect continuous."}, {"q": "The construction was delayed considerably because the engineers ---- a serious flaw in the original foundation design only after work had begun.", "opts": ["discover", "are discovering", "have discovered", "had discovered", "were discovering"], "ans": 3, "exp": "Doğru cevap: D. Gecikmenin nedeni daha önceki bir geçmiş olay = past perfect."}, {"q": "Cultural critics argue that mainstream contemporary cinema ---- the same predictable themes for nearly two decades by now.", "opts": ["has been recycling", "recycled", "is recycling", "recycles", "had recycled"], "ans": 0, "exp": "Doğru cevap: A. 'For nearly two decades by now' yapısı: yaklaşık 20 yıldır süregelen eylem = present perfect continuous."}, {"q": "Just as I ---- my morning coffee and preparing to leave the house, the doorbell rang unexpectedly.", "opts": ["have finished", "was finishing", "had finished", "finished", "finish"], "ans": 1, "exp": "Doğru cevap: B. 'Just as I ... the doorbell rang' yapısı: süren bir eylem sırasında başka bir olay = past continuous."}, {"q": "The publishing house ---- the manuscript carefully for nearly six months before finally deciding to release it as a hardcover edition.", "opts": ["considered", "has considered", "is considering", "had been considering", "considers"], "ans": 3, "exp": "Doğru cevap: D. 'For nearly six months before finally deciding' yapısı: bir geçmiş noktasına kadar süren eylem = past perfect continuous."}, {"q": "Sociolinguists have repeatedly observed that no two local dialects ---- in precisely the same way, even within neighbouring communities.", "opts": ["had evolved", "were evolving", "are evolving", "have evolved", "evolve"], "ans": 4, "exp": "Doğru cevap: E. 'No two dialects evolve' bilimsel/genel gerçek = simple present."}, {"q": "The marathon runner ---- approximately thirty kilometres when she finally began to feel the first physical signs of exhaustion setting in.", "opts": ["ran", "was running", "had run", "has run", "is running"], "ans": 2, "exp": "Doğru cevap: C. 'When she finally felt the signs' o zamana kadar tamamlanmış eylem = past perfect."}];
+var LETTERS = ['A','B','C','D','E'];
+var idx = 0;
+var ANS = new Array(QUESTIONS.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  document.getElementById('result').style.display='none';
+  idx = 0;
+  ANS = new Array(QUESTIONS.length).fill(null);
+  render();
+  buildTracker();
+  window.scrollTo(0,0);
+}
+
+function buildTracker(){
+  var t = document.getElementById('tracker');
+  t.innerHTML = '';
+  for(var i=0;i<QUESTIONS.length;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.i = i;
+    d.onclick = (function(n){return function(){idx=n;render();}})(i);
+    t.appendChild(d);
+  }
+  updateTracker();
+}
+
+function updateTracker(){
+  var dots = document.querySelectorAll('.dot');
+  for(var i=0;i<dots.length;i++){
+    dots[i].classList.remove('ans','cur');
+    if(ANS[i]!==null) dots[i].classList.add('ans');
+    if(i===idx) dots[i].classList.add('cur');
+  }
+}
+
+function render(){
+  var q = QUESTIONS[idx];
+  document.getElementById('qcount').textContent = (idx+1)+' / '+QUESTIONS.length;
+  document.getElementById('qnum').textContent = 'Soru '+(idx+1);
+  document.getElementById('qtext').textContent = q.q;
+  var optsEl = document.getElementById('opts');
+  optsEl.innerHTML = '';
+  for(var i=0;i<q.opts.length;i++){
+    var sel = ANS[idx]===i ? ' sel' : '';
+    var btn = document.createElement('button');
+    btn.className = 'opt'+sel;
+    btn.innerHTML = '<span class="ol">'+LETTERS[i]+'</span><span>'+q.opts[i]+'</span>';
+    btn.onclick = (function(n){return function(){selectOpt(n);}})(i);
+    optsEl.appendChild(btn);
+  }
+  document.getElementById('btn-prev').disabled = (idx===0);
+  document.getElementById('btn-next').style.display = (idx===QUESTIONS.length-1) ? 'none' : 'inline-block';
+  document.getElementById('btn-finish').style.display = (idx===QUESTIONS.length-1) ? 'inline-block' : 'none';
+  updateTracker();
+}
+
+function selectOpt(i){
+  ANS[idx] = i;
+  render();
+}
+
+function prev(){ if(idx>0){idx--;render();window.scrollTo(0,0);} }
+function next(){ if(idx<QUESTIONS.length-1){idx++;render();window.scrollTo(0,0);} }
+
+function finish(){
+  // Check if any unanswered, ask confirmation
+  var unanswered = ANS.filter(function(a){return a===null;}).length;
+  if(unanswered>0){
+    if(!confirm(unanswered+' soru boş kaldı. Yine de bitirmek istiyor musunuz?')) return;
+  }
+  showResult();
+}
+
+function exitQuiz(){
+  if(confirm('Testten çıkmak istediğinize emin misiniz? İlerlemeniz kaybolacak.')){
+    window.location.href = '/panelim.html';
+  }
+}
+
+function showResult(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('result').style.display='block';
+  var correct=0, wrong=0, skipped=0;
+  for(var i=0;i<QUESTIONS.length;i++){
+    if(ANS[i]===null) skipped++;
+    else if(ANS[i]===QUESTIONS[i].ans) correct++;
+    else wrong++;
+  }
+  document.getElementById('r-score').textContent = correct+' / '+QUESTIONS.length;
+  document.getElementById('r-pct').textContent = '%'+Math.round(correct/QUESTIONS.length*100);
+  document.getElementById('s-c').textContent = correct;
+  document.getElementById('s-w').textContent = wrong;
+  document.getElementById('s-s').textContent = skipped;
+  
+  var rev = document.getElementById('review');
+  rev.innerHTML = '';
+  for(var i=0;i<QUESTIONS.length;i++){
+    var q = QUESTIONS[i];
+    var item = document.createElement('div');
+    var status, statusClass, statusText;
+    if(ANS[i]===null){ status='skipped'; statusClass='s-s'; statusText='Boş'; }
+    else if(ANS[i]===q.ans){ status='correct'; statusClass='s-c'; statusText='Doğru'; }
+    else{ status='wrong'; statusClass='s-w'; statusText='Yanlış'; }
+    item.className = 'r-item '+status;
+    
+    var html = '<div class="r-qnum"><span>Soru '+(i+1)+'</span><span class="r-status '+statusClass+'">'+statusText+'</span></div>';
+    html += '<div class="r-q">'+escapeHtml(q.q)+'</div>';
+    if(ANS[i]!==null){
+      var yourCls = (ANS[i]===q.ans) ? 'vc' : 'vy';
+      html += '<div class="r-ans"><span class="lbl">Sizin cevabınız:</span><span class="'+yourCls+'">'+LETTERS[ANS[i]]+') '+escapeHtml(q.opts[ANS[i]])+'</span></div>';
+    }
+    html += '<div class="r-ans"><span class="lbl">Doğru cevap:</span><span class="vc">'+LETTERS[q.ans]+') '+escapeHtml(q.opts[q.ans])+'</span></div>';
+    html += '<div class="r-exp">'+escapeHtml(q.exp)+'</div>';
+    item.innerHTML = html;
+    rev.appendChild(item);
+  }
+  window.scrollTo(0,0);
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function restart(){ startQuiz(); }
+</script>
+</body>
+</html>

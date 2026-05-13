@@ -36,6 +36,12 @@ window.GRI_USERS = {
     role: "admin"
   },
   
+  // ===== DEMO (tanıtım hesabı, sınırlı erişim) =====
+  "demo": {
+    password: "demo2026",
+    products: ["grammar-pack-1", "vocabulary-pack", "full-test-1"]
+  },
+  
   // ===== GERÇEK MÜŞTERİLER =====
   // Yeni müşteri için aşağıya örnek formatta satır ekle:
   //

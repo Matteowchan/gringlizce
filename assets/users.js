@@ -18,6 +18,10 @@
        full-test-1, full-test-2, full-test-3, full-test-4, full-test-5
      SAT Bundle:
        full-test-bundle  ← bu yazılırsa otomatik full-test 1-5 erişimi açılır
+     TOEFL iBT / Versant:
+       toefl-writing-practice, spelling-practice
+     IELTS Academic:
+       ielts-full-test
    
    Hizmet ürünleri (IELTS Writing, EE Feedback, TOK Essay) Shopier
    üzerinden ödeme alınır ve e-posta üzerinden yürütülür. Bu hesap

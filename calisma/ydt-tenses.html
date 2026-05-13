@@ -62,6 +62,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .dot.ans{background:var(--accent);border-color:var(--accent)}
 .dot.cur{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--accent)}
 
+.exp-toggle-row{display:flex;justify-content:center;margin-top:1.2rem}
+.btn-exp{background:transparent;border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--r);padding:.55rem 1.4rem;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .12s}
+.btn-exp:hover{background:var(--accent-soft)}
+.btn-exp.open{background:var(--accent);color:#fff}
+.exp-box{background:var(--accent-soft);border-radius:var(--r);padding:1rem 1.2rem;margin-top:1rem;border-left:3px solid var(--accent)}
+.exp-correct{font-family:'DM Mono',monospace;font-size:.78rem;letter-spacing:.05em;color:var(--accent-deep);font-weight:700;margin-bottom:.55rem;text-transform:uppercase}
+.exp-text{font-size:.92rem;line-height:1.65;color:var(--accent-deep);font-family:'Inter',sans-serif}
+
 /* Results */
 #result{display:none;min-height:100vh;padding:2rem 1.2rem 4rem}
 .r-wrap{max-width:720px;margin:0 auto}
@@ -128,6 +136,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
       <button class="btn-n" id="btn-prev" onclick="prev()">← Önceki</button>
       <button class="btn-n" id="btn-next" onclick="next()">Sonraki →</button>
       <button class="btn-n btn-finish" id="btn-finish" onclick="finish()" style="display:none">Testi Bitir</button>
+    </div>
+    <div class="exp-toggle-row">
+      <button class="btn-exp" id="btn-exp" type="button" onclick="toggleExp()">Açıklamayı Göster</button>
+    </div>
+    <div class="exp-box" id="exp-box" style="display:none">
+      <div class="exp-correct" id="exp-correct"></div>
+      <div class="exp-text" id="exp-text"></div>
     </div>
   </div>
 </div>
@@ -197,6 +212,7 @@ function updateTracker(){
 }
 
 function render(){
+  closeExpBox();
   var q = QUESTIONS[idx];
   document.getElementById('qcount').textContent = (idx+1)+' / '+QUESTIONS.length;
   document.getElementById('qnum').textContent = 'Soru '+(idx+1);
@@ -215,6 +231,33 @@ function render(){
   document.getElementById('btn-next').style.display = (idx===QUESTIONS.length-1) ? 'none' : 'inline-block';
   document.getElementById('btn-finish').style.display = (idx===QUESTIONS.length-1) ? 'inline-block' : 'none';
   updateTracker();
+}
+
+function toggleExp(){
+  var box = document.getElementById('exp-box');
+  var btn = document.getElementById('btn-exp');
+  if(box.style.display === 'none'){
+    var q = QUESTIONS[idx];
+    document.getElementById('exp-correct').textContent = 'Doğru Cevap: ' + LETTERS[q.ans] + ') ' + q.opts[q.ans];
+    document.getElementById('exp-text').textContent = q.exp;
+    box.style.display = 'block';
+    btn.classList.add('open');
+    btn.textContent = 'Açıklamayı Gizle';
+  } else {
+    box.style.display = 'none';
+    btn.classList.remove('open');
+    btn.textContent = 'Açıklamayı Göster';
+  }
+}
+
+function closeExpBox(){
+  var box = document.getElementById('exp-box');
+  var btn = document.getElementById('btn-exp');
+  if(box && btn){
+    box.style.display = 'none';
+    btn.classList.remove('open');
+    btn.textContent = 'Açıklamayı Göster';
+  }
 }
 
 function selectOpt(i){

@@ -25,6 +25,11 @@
   --shadow-md: 0 4px 14px rgba(44, 42, 38, 0.07);
   --shadow-lg: 0 16px 40px rgba(44, 42, 38, 0.10);
 
+  /* Category accents (per-page override via body[data-cat]) */
+  --cat-accent: var(--teal);
+  --cat-accent-deep: var(--teal-deep);
+  --cat-accent-soft: var(--teal-soft);
+
   /* Typography */
   --font-display: 'Playfair Display', 'Bodoni Moda', Georgia, serif;
   --font-body: 'Crimson Pro', 'EB Garamond', 'Times New Roman', serif;
@@ -39,6 +44,33 @@
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
+}
+
+/* Per-category accent palettes */
+body[data-cat="sat"] {
+  --cat-accent: #7A3B3B;
+  --cat-accent-deep: #5F2A2A;
+  --cat-accent-soft: rgba(122, 59, 59, 0.12);
+}
+body[data-cat="ielts"] {
+  --cat-accent: #2A3F66;
+  --cat-accent-deep: #1B2A48;
+  --cat-accent-soft: rgba(42, 63, 102, 0.12);
+}
+body[data-cat="toefl"] {
+  --cat-accent: #A85A3C;
+  --cat-accent-deep: #84432B;
+  --cat-accent-soft: rgba(168, 90, 60, 0.14);
+}
+body[data-cat="ib"] {
+  --cat-accent: #2C5856;
+  --cat-accent-deep: #1A3D3B;
+  --cat-accent-soft: rgba(44, 88, 86, 0.12);
+}
+body[data-cat="ydt"] {
+  --cat-accent: #6B3D58;
+  --cat-accent-deep: #4F2A40;
+  --cat-accent-soft: rgba(107, 61, 88, 0.14);
 }
 
 /* ============================================================
@@ -1175,4 +1207,335 @@ section.compact { padding: 3rem 0; }
   justify-content: center;
   border-radius: 50%;
   letter-spacing: 0;
+}
+
+/* ============================================================
+   Category accent application
+   Applied when body has [data-cat] attribute
+   ============================================================ */
+
+body[data-cat] .cat-italic {
+  color: var(--cat-accent);
+}
+
+body[data-cat] .cat-divider::before,
+body[data-cat] .cat-divider::after {
+  background: var(--cat-accent);
+  opacity: 0.5;
+}
+
+body[data-cat] .cat-divider .dia {
+  background: var(--cat-accent);
+}
+
+body[data-cat] .cat-bordered {
+  border-color: var(--cat-accent);
+}
+
+body[data-cat] .cat-tag-strip {
+  background: var(--cat-accent);
+  color: var(--bg);
+}
+
+body[data-cat] .feature-list[style*="counter-reset"] li::before {
+  background: var(--cat-accent);
+}
+
+/* Info block (Sınav Hakkında) */
+.exam-info {
+  background: var(--bg-soft);
+  padding: 4rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.exam-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 760px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+.exam-info h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin: 2.2rem 0 0.8rem;
+  color: var(--text);
+}
+
+.exam-info h3:first-child {
+  margin-top: 0;
+}
+
+.exam-info p {
+  color: var(--text-soft);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+body[data-cat] .exam-info h3 {
+  position: relative;
+  padding-left: 0.9rem;
+}
+
+body[data-cat] .exam-info h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 4px;
+  height: 1rem;
+  background: var(--cat-accent);
+}
+
+/* ============================================================
+   Editorial Hero (homepage)
+   ============================================================ */
+
+.hero-editorial {
+  padding: 2.5rem 0 4rem;
+  position: relative;
+}
+
+/* Top meta strip */
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding-bottom: 1.6rem;
+  margin-bottom: 3rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hero-meta-sep {
+  color: var(--gold);
+  opacity: 0.6;
+}
+
+.hero-meta-spacer { flex: 1; }
+
+.hero-meta-issue {
+  color: var(--gold-deep);
+  letter-spacing: 0.18em;
+}
+
+@media (max-width: 640px) {
+  .hero-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+  }
+  .hero-meta-spacer { display: none; }
+  .hero-meta-issue { width: 100%; padding-top: 0.4rem; }
+}
+
+/* Two-column grid */
+.hero-grid-editorial {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+@media (max-width: 880px) {
+  .hero-grid-editorial {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+/* Left column */
+.hero-left { position: relative; }
+
+.hero-overline {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  margin-bottom: 1.2rem;
+}
+
+.hero-title-ed {
+  margin: 0 0 1.4rem;
+  line-height: 0.92;
+}
+
+.hero-title-ed .w1 {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 9.5vw, 8rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.hero-title-ed .w2 {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 5.8vw, 4.8rem);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--teal);
+  padding-left: clamp(1.5rem, 4vw, 4rem);
+  margin-top: 0.2rem;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 880px) {
+  .hero-title-ed .w2 { padding-left: 0; }
+}
+
+.hero-tag-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 2rem;
+}
+
+.hero-tag-rule {
+  width: 48px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.hero-tag-text {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
+.hero-lead-ed {
+  font-family: var(--font-body);
+  font-size: 1.18rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  max-width: 500px;
+  margin: 0 0 2rem;
+}
+
+.hero-cta-ed {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Right column — poster frame */
+.hero-right {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-poster-frame {
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  padding: 1.4rem;
+}
+
+.hero-poster-frame .hero-cover-ed {
+  display: block;
+  width: 100%;
+  height: auto;
+  box-shadow: 0 24px 60px rgba(26, 34, 48, 0.13);
+  border: 1px solid var(--line);
+}
+
+.hero-frame-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--gold);
+  opacity: 0.7;
+}
+
+.hero-frame-corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.hero-frame-corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.hero-frame-corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.hero-frame-corner.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+/* ============================================================
+   Reveal animations (load + scroll)
+   Only active when JS marks <html> with .js-ready
+   Default state without JS: fully visible (no animation, no hidden content)
+   ============================================================ */
+
+html.js-ready .reveal,
+html.js-ready .reveal-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+html.js-ready .reveal.is-visible,
+html.js-ready .reveal-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children inside a reveal-scroll container with [data-stagger] */
+html.js-ready [data-stagger].is-visible > * {
+  animation: stagger-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+html.js-ready [data-stagger].is-visible > *:nth-child(1) { animation-delay: 0ms; }
+html.js-ready [data-stagger].is-visible > *:nth-child(2) { animation-delay: 80ms; }
+html.js-ready [data-stagger].is-visible > *:nth-child(3) { animation-delay: 160ms; }
+html.js-ready [data-stagger].is-visible > *:nth-child(4) { animation-delay: 240ms; }
+html.js-ready [data-stagger].is-visible > *:nth-child(5) { animation-delay: 320ms; }
+html.js-ready [data-stagger].is-visible > *:nth-child(6) { animation-delay: 400ms; }
+
+@keyframes stagger-in {
+  0%   { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Subtle hover lift for cards (slightly more pronounced) */
+.exam-card { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background 0.25s ease; }
+.exam-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+.product-card { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease; }
+.product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+.product-card .cover-img,
+.product-card .product-cover img {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.product-card:hover .product-cover img {
+  transform: scale(1.025);
+}
+
+/* Reduced motion: disable transitions */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-scroll,
+  .exam-card,
+  .product-card,
+  .product-card .product-cover img {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  [data-stagger].is-visible > * {
+    animation: none !important;
+  }
 }

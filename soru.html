@@ -151,6 +151,46 @@
     .q-tool-btn:hover { color: var(--text); border-color: var(--text-muted); }
     .q-tool-btn svg { width: 12px; height: 12px; }
 
+    /* Timer (replaces İşaretle) */
+    .q-timer {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      padding: 0.35rem 0.55rem 0.35rem 0.7rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+    .q-timer-text {
+      font-weight: 600;
+      color: var(--text);
+      min-width: 3.2em;
+      text-align: center;
+    }
+    .q-timer.timer-hidden .q-timer-text {
+      display: none;
+    }
+    .q-timer-toggle {
+      background: none;
+      border: none;
+      padding: 2px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+    .q-timer-toggle:hover { color: var(--text); }
+    .q-timer-toggle svg { width: 13px; height: 13px; display: none; }
+    .q-timer .q-timer-toggle .q-eye-on { display: inline; }
+    .q-timer.timer-hidden .q-timer-toggle .q-eye-on { display: none; }
+    .q-timer.timer-hidden .q-timer-toggle .q-eye-off { display: inline; }
+
     .q-prompt {
       font-size: 1.05rem;
       line-height: 1.55;
@@ -198,9 +238,14 @@
       border-color: var(--cat-accent);
     }
 
-    /* Answered state: locked in, no hover, no further clicks */
-    .q-option.answered { cursor: default; }
-    .q-option.answered:hover { background: var(--bg); border-color: var(--line); }
+    /* Answered state — applies only to the specific option clicked (not all) */
+    .q-option.answered { cursor: default; pointer-events: none; }
+
+    /* After correct is found, lock remaining un-answered options too */
+    .q-options.locked .q-option:not(.answered) {
+      cursor: default;
+      pointer-events: none;
+    }
 
     /* Correct answer styling (always green when revealed) */
     .q-option.correct,
@@ -455,9 +500,26 @@
     .q-btn-explain.active { background: var(--bg); color: var(--teal); }
 
     @media (max-width: 540px) {
-      .q-actionbar { padding: 0.7rem 1rem; }
+      .q-actionbar {
+        padding: 0.65rem 0.7rem;
+        gap: 0.5rem;
+      }
       .q-tags-bar { display: none; }
-      .q-btn { font-size: 0.7rem; padding: 0.55rem 0.9rem; }
+      .q-actions { gap: 0.35rem; }
+      .q-btn {
+        padding: 0.6rem 0.7rem;
+        font-size: 0;        /* hides text nodes; icons remain (fixed svg sizes) */
+        gap: 0;
+        letter-spacing: 0;
+      }
+      .q-btn svg {
+        width: 17px;
+        height: 17px;
+      }
+      .q-nav-pill {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.78rem;
+      }
     }
 
     body { padding-bottom: 80px; }
@@ -620,6 +682,111 @@
     :root[data-theme="dark"] .sq-status { border-color: var(--bg); }
 
     :root[data-theme="dark"] .q-nav-pill { background: var(--text); color: var(--bg); }
+
+    /* Completion screen */
+    .q-completion {
+      max-width: 560px;
+      margin: 4rem auto;
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .q-completion-icon {
+      color: #3c825a;
+      display: inline-flex;
+      margin-bottom: 1.2rem;
+    }
+    .q-completion h2 {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      margin: 0 0 0.4rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .q-completion-sub {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin: 0 0 2rem;
+    }
+    .q-completion-stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 2.2rem;
+      flex-wrap: wrap;
+    }
+    .q-stat {
+      min-width: 110px;
+      padding: 1.1rem 1.2rem;
+      border-radius: 10px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .q-stat-num {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text);
+    }
+    .q-stat-label {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .q-stat-correct { border-color: rgba(60, 130, 90, 0.4); }
+    .q-stat-correct .q-stat-num { color: #3c825a; }
+    .q-stat-incorrect { border-color: rgba(180, 80, 70, 0.4); }
+    .q-stat-incorrect .q-stat-num { color: #b45046; }
+    .q-stat-skipped { border-color: var(--line); }
+    .q-stat-skipped .q-stat-num { color: var(--text-muted); }
+
+    .q-completion-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .q-comp-btn {
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .q-comp-btn-primary {
+      background: var(--cat-accent);
+      color: var(--bg);
+      border-color: var(--cat-accent);
+    }
+    .q-comp-btn-primary:hover { filter: brightness(1.08); }
+    .q-comp-btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--line);
+    }
+    .q-comp-btn-ghost:hover { background: var(--bg-soft); border-color: var(--text); }
+
+    @media (max-width: 640px) {
+      .q-completion { padding: 2rem 1.2rem; margin: 2rem auto; }
+      .q-completion h2 { font-size: 1.9rem; }
+      .q-stat { min-width: 90px; padding: 0.9rem 1rem; }
+      .q-stat-num { font-size: 1.8rem; }
+    }
   </style>
 </head>
 <body data-cat="sat">
@@ -719,10 +886,13 @@
       <div class="q-content">
         <div class="q-header">
           <span class="q-num" id="qNum">1</span>
-          <button class="q-tool-btn" type="button" id="markBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-            <span>İşaretle</span>
-          </button>
+          <div class="q-timer" id="qTimer">
+            <span class="q-timer-text" id="qTimerText">00:00</span>
+            <button class="q-timer-toggle" type="button" id="qTimerToggle" aria-label="Zamanlayıcıyı gizle">
+              <svg class="q-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="q-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
           <button class="q-tool-btn" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             <span>Bildir</span>
@@ -759,19 +929,19 @@
     </button>
 
     <div class="q-actions">
-      <button class="q-btn q-btn-prev" type="button" id="prevBtn">
+      <button class="q-btn q-btn-prev" type="button" id="prevBtn" aria-label="Önceki soru">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Önceki
       </button>
-      <button class="q-btn q-btn-remix" type="button" id="remixBtn">
+      <button class="q-btn q-btn-remix" type="button" id="remixBtn" aria-label="Sıraları karıştır">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Karıştır
       </button>
-      <button class="q-btn q-btn-explain" type="button" id="explainBtn">
+      <button class="q-btn q-btn-explain" type="button" id="explainBtn" aria-label="Açıklamayı göster">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Açıklama
       </button>
-      <button class="q-btn q-btn-next" type="button" id="nextBtn">
+      <button class="q-btn q-btn-next" type="button" id="nextBtn" aria-label="Sonraki soru">
         Sonraki
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
@@ -877,33 +1047,132 @@
     }
 
     // Subcategory navigation state
-    let SUBCATEGORY_LIST = [];  // ordered: [{slug, difficulty}]
+    let SUBCATEGORY_LIST = [];   // ordered: [{slug, difficulty}]
     let CURRENT_INDEX = 0;
+    let SET_URL_PARAMS = '';     // preserved across navigation, e.g. '&subcategories=a,b&shuffle=1'
+    let SET_KEY = null;          // sessionStorage key for this set's order
+
+    // Helpers — Fisher-Yates and sessionStorage answer tracking
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function getAnswerStatus(slug) {
+      return sessionStorage.getItem('gri.answer.' + slug); // 'correct' | 'incorrect' | null
+    }
+    function setAnswerStatus(slug, status) {
+      sessionStorage.setItem('gri.answer.' + slug, status);
+    }
+    function clearAnswersForSet(slugs) {
+      slugs.forEach(s => sessionStorage.removeItem('gri.answer.' + s));
+    }
+
+    // Timer — counts up from 00:00 on each question load
+    let timerInterval = null;
+    let timerSeconds = 0;
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerSeconds = 0;
+      renderTimer();
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        renderTimer();
+      }, 1000);
+    }
+    function stopTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+    function renderTimer() {
+      const el = document.getElementById('qTimerText');
+      if (!el) return;
+      const m = Math.floor(timerSeconds / 60);
+      const s = timerSeconds % 60;
+      el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
 
     async function loadQuestion() {
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('q');
       const id = params.get('id');
       const subcatParam = params.get('subcategory');
+      const subcatsParam = params.get('subcategories');
+      const shuffleParam = params.get('shuffle') === '1';
+
+      // Determine subcategory list defining the set (if any)
+      let subcatList = [];
+      if (subcatsParam) subcatList = subcatsParam.split(',').map(s => s.trim()).filter(Boolean);
+      else if (subcatParam) subcatList = [subcatParam];
+
+      // Build SET_URL_PARAMS to preserve across navigation
+      SET_URL_PARAMS = '';
+      if (subcatsParam) SET_URL_PARAMS = '&subcategories=' + encodeURIComponent(subcatsParam);
+      else if (subcatParam) SET_URL_PARAMS = '&subcategory=' + encodeURIComponent(subcatParam);
+      if (shuffleParam) SET_URL_PARAMS += '&shuffle=1';
+
+      // SET_KEY identifies this set in sessionStorage
+      SET_KEY = subcatList.length > 0
+        ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '')
+        : null;
 
       let currentQuestion = null;
-      let targetSubcategory = null;
+      let setSlugs = null;   // ordered list of slugs in this set
+      let isFreshEntry = false;  // user just clicked Başla / Karışık Başla
 
-      // Path A: ?q=slug -> fetch that specific question
-      if (slug) {
+      // === Resolve set order ===
+      if (subcatList.length > 0) {
+        // Try restoring from sessionStorage (mid-set navigation)
+        if (slug && SET_KEY) {
+          const stored = sessionStorage.getItem(SET_KEY);
+          if (stored) {
+            try { setSlugs = JSON.parse(stored); } catch (e) { setSlugs = null; }
+          }
+        }
+
+        // No stored order → build from DB
+        if (!setSlugs || setSlugs.length === 0) {
+          const { data: list, error } = await supabase
+            .from('questions')
+            .select('slug')
+            .eq('active', true)
+            .in('subcategory', subcatList)
+            .order('slug');
+          if (error || !list || list.length === 0) {
+            showError('Bu kategoride henüz soru yok.');
+            return;
+          }
+          setSlugs = list.map(r => r.slug);
+          if (shuffleParam) shuffleInPlace(setSlugs);
+          if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
+
+          // No q in URL → fresh entry, clear stale answers for this set
+          if (!slug) {
+            isFreshEntry = true;
+            clearAnswersForSet(setSlugs);
+          }
+        }
+      }
+
+      // === Resolve target question slug ===
+      let targetSlug = slug;
+      if (!targetSlug && setSlugs && setSlugs.length > 0) {
+        targetSlug = setSlugs[0];
+      }
+
+      // === Fetch current question ===
+      if (targetSlug) {
         const { data, error } = await supabase
           .from('questions')
           .select('*, passage:passages(*)')
           .eq('active', true)
-          .eq('slug', slug)
+          .eq('slug', targetSlug)
           .maybeSingle();
         if (error) { showError('Sunucu hatası: ' + (error.message || 'bilinmiyor')); return; }
         if (!data)  { showError('Bu soru bulunamadı.'); return; }
         currentQuestion = data;
-        targetSubcategory = data.subcategory;
-      }
-      // Path B: ?id=uuid
-      else if (id) {
+      } else if (id) {
         const { data, error } = await supabase
           .from('questions')
           .select('*, passage:passages(*)')
@@ -912,33 +1181,8 @@
           .maybeSingle();
         if (error || !data) { showError('Bu soru bulunamadı.'); return; }
         currentQuestion = data;
-        targetSubcategory = data.subcategory;
-      }
-      // Path C: ?subcategory=X -> fetch first question in that subcategory
-      else if (subcatParam) {
-        const { data: list, error: listErr } = await supabase
-          .from('questions')
-          .select('slug')
-          .eq('active', true)
-          .eq('subcategory', subcatParam)
-          .order('slug')
-          .limit(1);
-        if (listErr || !list || list.length === 0) {
-          showError('Bu kategoride henüz soru yok.');
-          return;
-        }
-        const firstSlug = list[0].slug;
-        const { data, error } = await supabase
-          .from('questions')
-          .select('*, passage:passages(*)')
-          .eq('slug', firstSlug)
-          .maybeSingle();
-        if (error || !data) { showError('Bu soru bulunamadı.'); return; }
-        currentQuestion = data;
-        targetSubcategory = subcatParam;
-      }
-      // Path D: no params -> first active question
-      else {
+      } else {
+        // No params at all — first active question
         const { data, error } = await supabase
           .from('questions')
           .select('*, passage:passages(*)')
@@ -948,24 +1192,48 @@
           .maybeSingle();
         if (error || !data) { showError('Soru bulunamadı.'); return; }
         currentQuestion = data;
-        targetSubcategory = data.subcategory;
       }
 
-      // Now fetch the navigator list for this subcategory (slug + difficulty)
-      const { data: navList } = await supabase
+      // === If no set was built (direct ?q= access), derive from question's subcategory ===
+      if (!setSlugs || setSlugs.length === 0) {
+        const { data: list } = await supabase
+          .from('questions')
+          .select('slug')
+          .eq('active', true)
+          .eq('subcategory', currentQuestion.subcategory)
+          .order('slug');
+        setSlugs = (list || []).map(r => r.slug);
+        // Implicit set — no SET_KEY persistence
+      }
+
+      // === Fetch difficulty info for all set members (for grid colors) ===
+      const { data: diffData } = await supabase
         .from('questions')
         .select('slug, difficulty')
-        .eq('active', true)
-        .eq('subcategory', targetSubcategory)
-        .order('slug');
+        .in('slug', setSlugs);
+      const diffMap = new Map();
+      (diffData || []).forEach(r => diffMap.set(r.slug, r.difficulty));
 
-      SUBCATEGORY_LIST = navList || [];
-      CURRENT_INDEX = Math.max(0, SUBCATEGORY_LIST.findIndex(item => item.slug === currentQuestion.slug));
+      SUBCATEGORY_LIST = setSlugs.map(s => ({
+        slug: s,
+        difficulty: diffMap.get(s) || 'medium'
+      }));
+      CURRENT_INDEX = Math.max(0, setSlugs.indexOf(currentQuestion.slug));
+
+      // === If fresh entry, replace URL to include ?q= so refresh keeps the position ===
+      if (isFreshEntry && currentQuestion.slug) {
+        const newUrl = 'soru.html?q=' + encodeURIComponent(currentQuestion.slug) + SET_URL_PARAMS;
+        window.history.replaceState(null, '', newUrl);
+      }
 
       renderQuestion(currentQuestion);
       renderNavigator();
       showContent();
       attachInteractivity();
+    }
+
+    function gotoSlug(slug) {
+      window.location.href = 'soru.html?q=' + encodeURIComponent(slug) + SET_URL_PARAMS;
     }
 
     function renderNavigator() {
@@ -979,9 +1247,83 @@
         const isCurrent = idx === CURRENT_INDEX;
         const classes = ['nav-sq', `diff-${item.difficulty || 'medium'}`];
         if (isCurrent) classes.push('sq-current');
-        // Status badge omitted for now — will come with user_progress integration
-        return `<button class="${classes.join(' ')}" data-slug="${item.slug}" type="button">${num}</button>`;
+
+        // Status badge from sessionStorage
+        const ans = getAnswerStatus(item.slug);
+        let badge = '';
+        if (ans === 'correct') {
+          badge = `<span class="sq-status correct" aria-label="Doğru"><svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></span>`;
+        } else if (ans === 'incorrect') {
+          badge = `<span class="sq-status incorrect" aria-label="Yanlış"><svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg></span>`;
+        }
+
+        return `<button class="${classes.join(' ')}" data-slug="${item.slug}" type="button">${num}${badge}</button>`;
       }).join('');
+    }
+
+    // Returns count of answered slugs in current set
+    function countAnswered() {
+      return SUBCATEGORY_LIST.reduce((acc, item) => acc + (getAnswerStatus(item.slug) ? 1 : 0), 0);
+    }
+
+    function showCompletionScreen() {
+      const total = SUBCATEGORY_LIST.length;
+      let correct = 0, incorrect = 0;
+      SUBCATEGORY_LIST.forEach(item => {
+        const v = getAnswerStatus(item.slug);
+        if (v === 'correct') correct++;
+        else if (v === 'incorrect') incorrect++;
+      });
+      const skipped = total - correct - incorrect;
+
+      const html = `
+        <div class="q-completion">
+          <div class="q-completion-icon">
+            <svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="28"/><polyline points="20 33 28 41 44 25"/></svg>
+          </div>
+          <h2>Tebrikler</h2>
+          <p class="q-completion-sub">Çalışman tamamlandı.</p>
+          <div class="q-completion-stats">
+            <div class="q-stat q-stat-correct">
+              <span class="q-stat-num">${correct}</span>
+              <span class="q-stat-label">Doğru</span>
+            </div>
+            <div class="q-stat q-stat-incorrect">
+              <span class="q-stat-num">${incorrect}</span>
+              <span class="q-stat-label">Yanlış</span>
+            </div>
+            ${skipped > 0 ? `
+            <div class="q-stat q-stat-skipped">
+              <span class="q-stat-num">${skipped}</span>
+              <span class="q-stat-label">Atlanmış</span>
+            </div>` : ''}
+          </div>
+          <div class="q-completion-actions">
+            <button class="q-comp-btn q-comp-btn-primary" type="button" id="restartSetBtn">Tekrar Başla</button>
+            <a class="q-comp-btn q-comp-btn-ghost" href="sat-soru-bankasi-rw.html">Soru Bankasına Dön</a>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('qPageWrap').innerHTML = html;
+      document.getElementById('qActionbar').style.display = 'none';
+      // Also hide breadcrumb if needed — keeping it for context
+
+      document.getElementById('restartSetBtn').addEventListener('click', () => {
+        // Clear answers, regenerate shuffle if applicable, then go to first
+        clearAnswersForSet(SUBCATEGORY_LIST.map(i => i.slug));
+        if (SET_KEY) {
+          // For shuffled sets, generate a NEW order
+          if (SET_URL_PARAMS.includes('shuffle=1')) {
+            const slugsOnly = SUBCATEGORY_LIST.map(i => i.slug);
+            shuffleInPlace(slugsOnly);
+            sessionStorage.setItem(SET_KEY, JSON.stringify(slugsOnly));
+            gotoSlug(slugsOnly[0]);
+            return;
+          }
+        }
+        gotoSlug(SUBCATEGORY_LIST[0].slug);
+      });
     }
 
     function renderQuestion(q) {
@@ -1089,43 +1431,83 @@
     }
 
     function attachInteractivity() {
-      // Option selection with instant correct/incorrect feedback
+      // Option selection — multi-attempt: wrong locks only that one, correct locks all
       const options = document.querySelectorAll('.q-option');
-      const correctLetter = document.getElementById('qOptions').dataset.correct;
+      const optionsContainer = document.getElementById('qOptions');
+      const correctLetter = optionsContainer.dataset.correct;
+      const currentSlug = SUBCATEGORY_LIST[CURRENT_INDEX]?.slug;
+      const priorAnswer = currentSlug ? getAnswerStatus(currentSlug) : null;
+      let firstAttemptRecorded = !!priorAnswer; // already answered → don't overwrite
+
+      // Restore visual state if question was previously answered (any revisit)
+      if (priorAnswer) {
+        options.forEach(o => {
+          const letter = o.querySelector('input')?.value;
+          if (letter === correctLetter) {
+            o.classList.add('answered', 'correct');
+            const inp = o.querySelector('input');
+            if (inp) inp.checked = true;
+          }
+        });
+        optionsContainer.classList.add('locked');
+      }
 
       options.forEach(opt => {
         opt.addEventListener('click', () => {
-          // Lock: once answered, no more clicks
-          if (document.querySelector('.q-option.answered')) return;
+          // Skip already-answered options (could be tried-wrong or set-correct)
+          if (opt.classList.contains('answered')) return;
+          // Skip everything if container is locked (correct already found)
+          if (optionsContainer.classList.contains('locked')) return;
 
           const input = opt.querySelector('input');
           const clickedLetter = input ? input.value : null;
           if (!clickedLetter) return;
 
-          // Mark all options as answered (visually locks)
-          options.forEach(o => {
-            o.classList.add('answered');
-            const letter = o.querySelector('input').value;
-            if (letter === correctLetter) {
-              o.classList.add('correct');
-            } else if (letter === clickedLetter) {
-              o.classList.add('incorrect');
+          const isCorrect = clickedLetter === correctLetter;
+
+          // Record first attempt only (subsequent retries don't change recorded status)
+          if (!firstAttemptRecorded) {
+            if (currentSlug) {
+              setAnswerStatus(currentSlug, isCorrect ? 'correct' : 'incorrect');
+              renderNavigator();
             }
-          });
+            firstAttemptRecorded = true;
+          }
+
+          opt.classList.add('answered');
+          if (isCorrect) {
+            opt.classList.add('correct');
+            optionsContainer.classList.add('locked');
+            stopTimer();
+          } else {
+            opt.classList.add('incorrect');
+          }
 
           input.checked = true;
         });
       });
 
-      // Mark for review
-      const markBtn = document.getElementById('markBtn');
-      if (markBtn) {
-        markBtn.addEventListener('click', () => {
-          markBtn.classList.toggle('active');
-          const span = markBtn.querySelector('span');
-          if (span) span.textContent = markBtn.classList.contains('active') ? 'İşaretlendi' : 'İşaretle';
-        });
+      // Timer — auto-starts on fresh question; for already-answered, show 00:00 stopped
+      const timerEl = document.getElementById('qTimer');
+      const timerToggle = document.getElementById('qTimerToggle');
+      if (priorAnswer) {
+        stopTimer();
+        timerSeconds = 0;
+        renderTimer();
+      } else {
+        startTimer();
       }
+      // Restore hidden preference from session
+      if (sessionStorage.getItem('gri.timer.hidden') === '1') {
+        timerEl.classList.add('timer-hidden');
+        timerToggle.setAttribute('aria-label', 'Zamanlayıcıyı göster');
+      }
+      timerToggle.addEventListener('click', () => {
+        const nowHidden = !timerEl.classList.contains('timer-hidden');
+        timerEl.classList.toggle('timer-hidden', nowHidden);
+        sessionStorage.setItem('gri.timer.hidden', nowHidden ? '1' : '0');
+        timerToggle.setAttribute('aria-label', nowHidden ? 'Zamanlayıcıyı göster' : 'Zamanlayıcıyı gizle');
+      });
 
       // Explanation panel toggle
       const grid = document.getElementById('qGrid');
@@ -1166,34 +1548,68 @@
         t.addEventListener('click', () => showExpPanel(t.getAttribute('data-opt')));
       });
 
-      // Prev (previous in same subcategory), Remix (random in subcategory), Next (next in order)
+      // Prev (previous in set), Karıştır (reshuffle whole set), Next (next unanswered, completion when none)
       document.getElementById('prevBtn').addEventListener('click', () => {
         if (SUBCATEGORY_LIST.length === 0) return;
         if (SUBCATEGORY_LIST.length === 1) {
-          alert('Bu kategoride tek soru var.');
+          alert('Bu sette tek soru var.');
           return;
         }
         const prevIdx = (CURRENT_INDEX - 1 + SUBCATEGORY_LIST.length) % SUBCATEGORY_LIST.length;
-        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[prevIdx].slug);
+        gotoSlug(SUBCATEGORY_LIST[prevIdx].slug);
       });
+
       document.getElementById('remixBtn').addEventListener('click', () => {
         if (SUBCATEGORY_LIST.length <= 1) {
-          alert('Bu kategoride başka soru yok.');
+          alert('Bu sette başka soru yok.');
           return;
         }
-        let nextIdx;
-        do { nextIdx = Math.floor(Math.random() * SUBCATEGORY_LIST.length); }
-        while (nextIdx === CURRENT_INDEX);
-        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[nextIdx].slug);
+
+        // Reshuffle entire order
+        const slugs = SUBCATEGORY_LIST.map(i => i.slug);
+        shuffleInPlace(slugs);
+        if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(slugs));
+
+        // Update local list with new order (preserve difficulty info)
+        const diffByOldSlug = new Map(SUBCATEGORY_LIST.map(i => [i.slug, i.difficulty]));
+        SUBCATEGORY_LIST = slugs.map(s => ({ slug: s, difficulty: diffByOldSlug.get(s) || 'medium' }));
+
+        // Navigate to first unanswered slug; if none, completion
+        const firstUnanswered = slugs.find(s => !getAnswerStatus(s));
+        if (!firstUnanswered) {
+          CURRENT_INDEX = 0;
+          showCompletionScreen();
+          return;
+        }
+        gotoSlug(firstUnanswered);
       });
+
       document.getElementById('nextBtn').addEventListener('click', () => {
         if (SUBCATEGORY_LIST.length === 0) return;
-        if (SUBCATEGORY_LIST.length === 1) {
-          alert('Bu kategoride tek soru var.');
+
+        // Find next UNANSWERED slug starting after current position (wrap around)
+        let nextSlug = null;
+        for (let step = 1; step <= SUBCATEGORY_LIST.length; step++) {
+          const idx = (CURRENT_INDEX + step) % SUBCATEGORY_LIST.length;
+          const candidate = SUBCATEGORY_LIST[idx];
+          if (!getAnswerStatus(candidate.slug)) {
+            nextSlug = candidate.slug;
+            break;
+          }
+        }
+
+        if (nextSlug) {
+          gotoSlug(nextSlug);
           return;
         }
-        const nextIdx = (CURRENT_INDEX + 1) % SUBCATEGORY_LIST.length;
-        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[nextIdx].slug);
+
+        // No unanswered remaining → if current is also answered, show completion
+        const currentSlug = SUBCATEGORY_LIST[CURRENT_INDEX]?.slug;
+        if (currentSlug && getAnswerStatus(currentSlug)) {
+          showCompletionScreen();
+        } else {
+          alert('Cevaplanmamış başka soru yok.');
+        }
       });
 
       // Nav panel toggle
@@ -1223,14 +1639,12 @@
         if (e.key === 'Escape' && navPanel.classList.contains('open')) closeNavPanel();
       });
 
-      // Grid square click → navigate to that question
+      // Grid square click → navigate to that question (preserving set context)
       document.querySelectorAll('.nav-sq').forEach(sq => {
         sq.addEventListener('click', () => {
           if (sq.classList.contains('sq-current')) return;
           const targetSlug = sq.getAttribute('data-slug');
-          if (targetSlug) {
-            window.location.href = 'soru.html?q=' + encodeURIComponent(targetSlug);
-          }
+          if (targetSlug) gotoSlug(targetSlug);
         });
       });
     }

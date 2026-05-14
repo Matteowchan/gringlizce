@@ -243,3 +243,66 @@
     initDropdowns();
   }
 })();
+
+
+
+/* -------- Nav dropdown hover with delay (prevents accidental close) -------- */
+(function() {
+  function initHoverDropdowns() {
+    var dropdowns = document.querySelectorAll('.nav-dropdown');
+    if (!dropdowns.length) return;
+
+    // Skip on touch devices — click-only there
+    if (!window.matchMedia('(hover: hover)').matches) return;
+
+    var timers = new WeakMap();
+    var CLOSE_DELAY = 250;
+
+    function openDropdown(dd) {
+      clearTimeout(timers.get(dd));
+      dd.classList.add('open');
+      var trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function scheduleClose(dd) {
+      clearTimeout(timers.get(dd));
+      var t = setTimeout(function() {
+        dd.classList.remove('open');
+        var trigger = dd.querySelector('.nav-dropdown-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        dd.querySelectorAll('.nav-submenu.open').forEach(function(s) {
+          s.classList.remove('open');
+        });
+      }, CLOSE_DELAY);
+      timers.set(dd, t);
+    }
+
+    dropdowns.forEach(function(dd) {
+      dd.addEventListener('mouseenter', function() { openDropdown(dd); });
+      dd.addEventListener('mouseleave', function() { scheduleClose(dd); });
+    });
+
+    // Submenus get the same treatment
+    var submenus = document.querySelectorAll('.nav-submenu');
+    submenus.forEach(function(sm) {
+      sm.addEventListener('mouseenter', function() {
+        clearTimeout(timers.get(sm));
+        sm.classList.add('open');
+      });
+      sm.addEventListener('mouseleave', function() {
+        clearTimeout(timers.get(sm));
+        var t = setTimeout(function() {
+          sm.classList.remove('open');
+        }, CLOSE_DELAY);
+        timers.set(sm, t);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHoverDropdowns);
+  } else {
+    initHoverDropdowns();
+  }
+})();

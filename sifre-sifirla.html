@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Şifre Sıfırla | Gri English</title>
+  <meta name="description" content="Gri English hesabınız için yeni şifre belirleyin.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="stylesheet" href="assets/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/users.js"></script>
+  <script src="assets/auth.js"></script>
+  <style>
+    .reset-shell { min-height: calc(100vh - 280px); display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
+    .reset-card { background: var(--bg-card, #fff); border: 1px solid var(--line, #D9D2C4); padding: 2.5rem 2rem; max-width: 420px; width: 100%; }
+    .reset-card h1 { font-family: var(--font-display, Georgia), serif; font-size: 1.8rem; margin: 0 0 0.4rem; color: var(--text, #1A2230); }
+    .reset-card .sub { color: var(--text-muted, #6B6862); font-size: 0.95rem; margin-bottom: 2rem; }
+    .reset-card label { display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); margin-bottom: 0.4rem; }
+    .reset-card input { width: 100%; background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.85rem 1rem; font-family: var(--font-body, Georgia), serif; font-size: 1rem; color: var(--text, #1A2230); margin-bottom: 1.4rem; transition: border-color 0.2s; }
+    .reset-card input:focus { outline: none; border-color: var(--teal, #2C5856); }
+    .reset-card .btn-submit { width: 100%; padding: 0.9rem; background: var(--teal, #2C5856); color: #F4EFE3; border: none; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+    .reset-card .btn-submit:hover { opacity: 0.85; }
+    .reset-card .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .reset-card .err { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(179,58,58,0.07); border: 1px solid rgba(179,58,58,0.2); color: #b33a3a; font-size: 0.85rem; }
+    .reset-card .err.show { display: block; }
+    .reset-card .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
+    .reset-card .ok.show { display: block; }
+    .reset-card .helper { margin-top: 1.8rem; padding-top: 1.5rem; border-top: 1px solid var(--line, #D9D2C4); font-size: 0.85rem; color: var(--text-muted, #6B6862); line-height: 1.6; }
+    .reset-card .helper a { color: var(--teal, #2C5856); }
+    .hidden { display: none !important; }
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+</head>
+<body>
+
+  <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="sat.html">SAT</a></li>
+          <li><a href="act.html">ACT</a></li>
+          <li><a href="ielts.html">IELTS</a></li>
+          <li><a href="toefl.html">TOEFL</a></li>
+          <li><a href="ib.html">IB</a></li>
+          <li><a href="ydt.html">YDT</a></li>
+          <li><a href="yds.html">YDS</a></li>
+          <li><a href="iletisim.html">İletişim</a></li>
+          <li><a href="giris.html" class="btn-nav-cta">Materyal Girişi</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="reset-shell">
+    <div class="reset-card">
+
+      <!-- Bekleme durumu -->
+      <div id="state-loading">
+        <h1>Doğrulanıyor</h1>
+        <p class="sub">Sıfırlama bağlantınız kontrol ediliyor, lütfen bekleyin.</p>
+      </div>
+
+      <!-- Form durumu -->
+      <div id="state-form" class="hidden">
+        <h1>Yeni Şifre Belirle</h1>
+        <p class="sub">Aşağıya yeni şifrenizi girin. En az 8 karakter olmalı.</p>
+
+        <form id="reset-form">
+          <label for="p1">Yeni Şifre</label>
+          <input type="password" id="p1" autocomplete="new-password" minlength="8" required>
+
+          <label for="p2">Yeni Şifre (Tekrar)</label>
+          <input type="password" id="p2" autocomplete="new-password" minlength="8" required>
+
+          <button type="submit" class="btn-submit" id="btn-submit">Şifreyi Güncelle</button>
+
+          <div class="err" id="err"></div>
+          <div class="ok" id="ok"></div>
+        </form>
+      </div>
+
+      <!-- Hata durumu (geçersiz/eskimiş link) -->
+      <div id="state-invalid" class="hidden">
+        <h1>Bağlantı Geçersiz</h1>
+        <p class="sub">Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş. Yeni bir bağlantı talep etmek için giriş sayfasındaki "Şifremi unuttum" bağlantısına tıklayın.</p>
+        <a href="/giris.html" class="btn-submit" style="display:inline-block;text-align:center;text-decoration:none;margin-top:1rem">Giriş Sayfasına Dön</a>
+      </div>
+
+      <!-- Başarı durumu -->
+      <div id="state-success" class="hidden">
+        <h1>Şifre Güncellendi</h1>
+        <p class="sub">Yeni şifreniz kaydedildi. Giriş sayfasına yönlendiriliyorsunuz.</p>
+      </div>
+
+      <div class="helper">
+        Sorun yaşarsanız <a href="mailto:mertatasal@gmail.com">mertatasal@gmail.com</a> adresine yazın.
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-bottom">
+        <span>&copy; 2026 Gri English &middot; Mert Atasal</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var elLoading = document.getElementById('state-loading');
+      var elForm = document.getElementById('state-form');
+      var elInvalid = document.getElementById('state-invalid');
+      var elSuccess = document.getElementById('state-success');
+
+      function showOnly(el) {
+        [elLoading, elForm, elInvalid, elSuccess].forEach(function (n) { n.classList.add('hidden'); });
+        el.classList.remove('hidden');
+      }
+
+      // detectSessionInUrl: true sayesinde supabase-js access_token'ı otomatik
+      // URL fragment'tan alıp oturum açar. Biraz bekleyip oturum var mı diye bakıyoruz.
+      async function init() {
+        // supabase'in fragment'ı işlemesi için biraz zaman ver
+        await new Promise(function (r) { setTimeout(r, 400); });
+
+        var resp = await window.GriAuth.supabase.auth.getSession();
+        var session = resp && resp.data && resp.data.session;
+
+        if (!session) {
+          showOnly(elInvalid);
+          return;
+        }
+
+        showOnly(elForm);
+      }
+
+      init();
+
+      document.getElementById('reset-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var p1 = document.getElementById('p1').value;
+        var p2 = document.getElementById('p2').value;
+        var errBox = document.getElementById('err');
+        var okBox = document.getElementById('ok');
+        var btn = document.getElementById('btn-submit');
+
+        errBox.classList.remove('show');
+        okBox.classList.remove('show');
+
+        if (p1 !== p2) {
+          errBox.textContent = 'Şifreler eşleşmiyor.';
+          errBox.classList.add('show');
+          return;
+        }
+        if (p1.length < 8) {
+          errBox.textContent = 'Şifre en az 8 karakter olmalı.';
+          errBox.classList.add('show');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Güncelleniyor...';
+
+        var result = await window.GriAuth.updatePassword(p1);
+
+        if (!result.ok) {
+          errBox.textContent = result.error;
+          errBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Şifreyi Güncelle';
+          return;
+        }
+
+        // Oturumu kapatıp giriş sayfasına yönlendir (yeni şifreyle giriş yapsın)
+        await window.GriAuth.logout();
+        showOnly(elSuccess);
+        setTimeout(function () { window.location.href = '/giris.html'; }, 2000);
+      });
+    })();
+  </script>
+
+</body>
+</html>

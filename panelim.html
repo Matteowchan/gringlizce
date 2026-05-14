@@ -20,10 +20,10 @@
     .panel-hero .welcome { font-family: var(--font-display, Georgia), serif; font-size: 2rem; margin: 0.5rem 0 0.3rem; }
     .panel-hero .uname { color: var(--teal, #2C5856); font-style: italic; }
     .panel-hero .sub { color: var(--text-muted, #6B6862); }
-    .panel-actions { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .panel-actions { margin-left: auto; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
     .panel-head { display: flex; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
-    .btn-logout { background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.5rem 1rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); cursor: pointer; transition: all 0.2s; }
-    .btn-logout:hover { border-color: var(--text, #1A2230); color: var(--text, #1A2230); }
+    .btn-action { background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.5rem 1rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); cursor: pointer; transition: all 0.2s; }
+    .btn-action:hover { border-color: var(--text, #1A2230); color: var(--text, #1A2230); }
     .empty-state { text-align: center; padding: 3rem 2rem; background: var(--bg-card, #fff); border: 1px solid var(--line, #D9D2C4); }
     .empty-state h3 { font-family: var(--font-display, Georgia), serif; font-size: 1.4rem; margin-bottom: 0.6rem; }
     .access-error { background: rgba(179,58,58,0.07); border: 1px solid rgba(179,58,58,0.2); padding: 1rem 1.2rem; margin-bottom: 2rem; color: #b33a3a; font-size: 0.9rem; }
@@ -36,13 +36,31 @@
     @media (max-width: 480px) {
       #products-area .product-card { max-width: 320px; }
     }
+
+    /* Şifre değiştir modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1.5rem; }
+    .modal-backdrop.show { display: flex; }
+    .modal-box { background: var(--bg-card, #fff); border: 1px solid var(--line, #D9D2C4); padding: 2rem; max-width: 420px; width: 100%; }
+    .modal-box h2 { font-family: var(--font-display, Georgia), serif; font-size: 1.4rem; margin: 0 0 0.4rem; }
+    .modal-box .modal-sub { color: var(--text-muted, #6B6862); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    .modal-box label { display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); margin-bottom: 0.4rem; }
+    .modal-box input { width: 100%; background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.85rem 1rem; font-family: var(--font-body, Georgia), serif; font-size: 1rem; color: var(--text, #1A2230); margin-bottom: 1.2rem; }
+    .modal-box input:focus { outline: none; border-color: var(--teal, #2C5856); }
+    .modal-actions { display: flex; gap: 0.8rem; margin-top: 0.5rem; }
+    .btn-cancel { flex: 1; padding: 0.9rem; background: transparent; color: var(--text-muted, #6B6862); border: 1px solid var(--line, #D9D2C4); font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
+    .btn-cancel:hover { color: var(--text, #1A2230); border-color: var(--text, #1A2230); }
+    .btn-submit-modal { flex: 1; padding: 0.9rem; background: var(--teal, #2C5856); color: #F4EFE3; border: none; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
+    .btn-submit-modal:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-box .err { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(179,58,58,0.07); border: 1px solid rgba(179,58,58,0.2); color: #b33a3a; font-size: 0.85rem; }
+    .modal-box .err.show { display: block; }
+    .modal-box .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
+    .modal-box .ok.show { display: block; }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
 </head>
 <body>
 
-  <!-- Launch discount banner -->
   <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
 
   <header class="site-header">
@@ -122,7 +140,8 @@
           <p class="sub">Satın aldığınız materyallere aşağıdan erişebilirsiniz.</p>
         </div>
         <div class="panel-actions">
-          <button class="btn-logout" onclick="doLogout()">Çıkış Yap</button>
+          <button class="btn-action" id="btn-change-pw">Şifre Değiştir</button>
+          <button class="btn-action" onclick="doLogout()">Çıkış Yap</button>
         </div>
       </div>
     </section>
@@ -131,6 +150,30 @@
 
     <div id="products-area" style="padding-bottom: 4rem;">
       <div class="loading-state">Materyaller yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- Şifre değiştir modal -->
+  <div class="modal-backdrop" id="modal-pw">
+    <div class="modal-box">
+      <h2>Şifre Değiştir</h2>
+      <p class="modal-sub">Yeni şifrenizi belirleyin. En az 8 karakter olmalı.</p>
+
+      <form id="pw-form">
+        <label for="p1">Yeni Şifre</label>
+        <input type="password" id="p1" autocomplete="new-password" minlength="8" required>
+
+        <label for="p2">Yeni Şifre (Tekrar)</label>
+        <input type="password" id="p2" autocomplete="new-password" minlength="8" required>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="btn-pw-cancel">Vazgeç</button>
+          <button type="submit" class="btn-submit-modal" id="btn-pw-submit">Güncelle</button>
+        </div>
+
+        <div class="err" id="pw-err"></div>
+        <div class="ok" id="pw-ok"></div>
+      </form>
     </div>
   </div>
 
@@ -203,11 +246,9 @@
     };
 
     (async function () {
-      // Önce hızlı bir verify (cache okur)
       var auth = window.GriAuth && window.GriAuth.verify();
 
       if (!auth) {
-        // Cache boş ama Supabase oturumu olabilir, refresh'le bak
         var cache = await window.GriAuth.refreshCache();
         if (!cache) {
           window.location.replace('/giris.html');
@@ -219,7 +260,6 @@
           return;
         }
       } else {
-        // Cache var ama arka planda taze çek (yeni satın alma vb. yansısın)
         try { await window.GriAuth.refreshCache(); } catch (e) {}
         auth = window.GriAuth.verify() || auth;
       }
@@ -307,6 +347,75 @@
       await window.GriAuth.logout();
       window.location.href = '/giris.html';
     }
+
+    // ===== Şifre Değiştir =====
+    var modal = document.getElementById('modal-pw');
+
+    document.getElementById('btn-change-pw').addEventListener('click', function () {
+      modal.classList.add('show');
+    });
+
+    document.getElementById('btn-pw-cancel').addEventListener('click', function () {
+      modal.classList.remove('show');
+      document.getElementById('pw-err').classList.remove('show');
+      document.getElementById('pw-ok').classList.remove('show');
+      document.getElementById('p1').value = '';
+      document.getElementById('p2').value = '';
+    });
+
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+        modal.classList.remove('show');
+      }
+    });
+
+    document.getElementById('pw-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var p1 = document.getElementById('p1').value;
+      var p2 = document.getElementById('p2').value;
+      var errBox = document.getElementById('pw-err');
+      var okBox = document.getElementById('pw-ok');
+      var btn = document.getElementById('btn-pw-submit');
+
+      errBox.classList.remove('show');
+      okBox.classList.remove('show');
+
+      if (p1 !== p2) {
+        errBox.textContent = 'Şifreler eşleşmiyor.';
+        errBox.classList.add('show');
+        return;
+      }
+      if (p1.length < 8) {
+        errBox.textContent = 'Şifre en az 8 karakter olmalı.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Güncelleniyor...';
+
+      var result = await window.GriAuth.updatePassword(p1);
+
+      if (!result.ok) {
+        errBox.textContent = result.error;
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Güncelle';
+        return;
+      }
+
+      okBox.textContent = 'Şifre başarıyla güncellendi.';
+      okBox.classList.add('show');
+      document.getElementById('p1').value = '';
+      document.getElementById('p2').value = '';
+      btn.disabled = false;
+      btn.textContent = 'Güncelle';
+
+      setTimeout(function () {
+        modal.classList.remove('show');
+        okBox.classList.remove('show');
+      }, 2000);
+    });
   </script>
 
 </body>

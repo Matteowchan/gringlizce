@@ -23,7 +23,7 @@
   }
 
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
   function getCache() {
@@ -121,6 +121,39 @@
     clearCache();
   }
 
+  // Şifremi unuttum maili gönder
+  async function sendPasswordReset(email) {
+    var clean = String(email || '').trim().toLowerCase();
+    if (!clean) return { ok: false, error: 'E-posta gerekli.' };
+    try {
+      var resp = await sb.auth.resetPasswordForEmail(clean, {
+        redirectTo: 'https://gringlizce.com/sifre-sifirla.html'
+      });
+      if (resp.error) {
+        return { ok: false, error: 'İstek gönderilemedi, tekrar deneyin.' };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: 'Sunucuya ulaşılamadı, tekrar deneyin.' };
+    }
+  }
+
+  // Mevcut oturumla yeni şifre belirle (panelim veya sifre-sifirla akışı)
+  async function updatePassword(newPassword) {
+    if (!newPassword || newPassword.length < 8) {
+      return { ok: false, error: 'Şifre en az 8 karakter olmalı.' };
+    }
+    try {
+      var resp = await sb.auth.updateUser({ password: newPassword });
+      if (resp.error) {
+        return { ok: false, error: resp.error.message || 'Şifre güncellenemedi.' };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: 'Sunucuya ulaşılamadı, tekrar deneyin.' };
+    }
+  }
+
   function requireAuth(slug, redirectPath) {
     var auth = verify();
     if (!auth) {
@@ -142,6 +175,8 @@
     logout: logout,
     requireAuth: requireAuth,
     refreshCache: refreshCache,
+    sendPasswordReset: sendPasswordReset,
+    updatePassword: updatePassword,
     supabase: sb
   };
 })();

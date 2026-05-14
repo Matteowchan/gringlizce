@@ -754,11 +754,15 @@
     <div class="q-tags-bar" id="qTagsBar"></div>
 
     <button class="q-nav-pill" type="button" id="navPill" aria-expanded="false">
-      <span class="np-count"><strong>1</strong> / <span id="npTotal">1</span></span>
+      <span class="np-count"><strong id="npCurrent">1</strong> / <span id="npTotal">1</span></span>
       <svg class="np-caret" viewBox="0 0 12 12" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M2 8l4-4 4 4z"/></svg>
     </button>
 
     <div class="q-actions">
+      <button class="q-btn q-btn-prev" type="button" id="prevBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Önceki
+      </button>
       <button class="q-btn q-btn-remix" type="button" id="remixBtn">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Karıştır
@@ -872,36 +876,112 @@
       document.getElementById('qActionbar').style.display = 'flex';
     }
 
+    // Subcategory navigation state
+    let SUBCATEGORY_LIST = [];  // ordered: [{slug, difficulty}]
+    let CURRENT_INDEX = 0;
+
     async function loadQuestion() {
-      // Parse URL: ?q=slug OR ?id=uuid
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('q');
       const id = params.get('id');
+      const subcatParam = params.get('subcategory');
 
-      let query = supabase
+      let currentQuestion = null;
+      let targetSubcategory = null;
+
+      // Path A: ?q=slug -> fetch that specific question
+      if (slug) {
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*, passage:passages(*)')
+          .eq('active', true)
+          .eq('slug', slug)
+          .maybeSingle();
+        if (error) { showError('Sunucu hatası: ' + (error.message || 'bilinmiyor')); return; }
+        if (!data)  { showError('Bu soru bulunamadı.'); return; }
+        currentQuestion = data;
+        targetSubcategory = data.subcategory;
+      }
+      // Path B: ?id=uuid
+      else if (id) {
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*, passage:passages(*)')
+          .eq('active', true)
+          .eq('id', id)
+          .maybeSingle();
+        if (error || !data) { showError('Bu soru bulunamadı.'); return; }
+        currentQuestion = data;
+        targetSubcategory = data.subcategory;
+      }
+      // Path C: ?subcategory=X -> fetch first question in that subcategory
+      else if (subcatParam) {
+        const { data: list, error: listErr } = await supabase
+          .from('questions')
+          .select('slug')
+          .eq('active', true)
+          .eq('subcategory', subcatParam)
+          .order('slug')
+          .limit(1);
+        if (listErr || !list || list.length === 0) {
+          showError('Bu kategoride henüz soru yok.');
+          return;
+        }
+        const firstSlug = list[0].slug;
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*, passage:passages(*)')
+          .eq('slug', firstSlug)
+          .maybeSingle();
+        if (error || !data) { showError('Bu soru bulunamadı.'); return; }
+        currentQuestion = data;
+        targetSubcategory = subcatParam;
+      }
+      // Path D: no params -> first active question
+      else {
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*, passage:passages(*)')
+          .eq('active', true)
+          .order('slug')
+          .limit(1)
+          .maybeSingle();
+        if (error || !data) { showError('Soru bulunamadı.'); return; }
+        currentQuestion = data;
+        targetSubcategory = data.subcategory;
+      }
+
+      // Now fetch the navigator list for this subcategory (slug + difficulty)
+      const { data: navList } = await supabase
         .from('questions')
-        .select('*, passage:passages(*)')
-        .eq('active', true);
+        .select('slug, difficulty')
+        .eq('active', true)
+        .eq('subcategory', targetSubcategory)
+        .order('slug');
 
-      if (slug) query = query.eq('slug', slug);
-      else if (id) query = query.eq('id', id);
-      else query = query.limit(1);
+      SUBCATEGORY_LIST = navList || [];
+      CURRENT_INDEX = Math.max(0, SUBCATEGORY_LIST.findIndex(item => item.slug === currentQuestion.slug));
 
-      const { data, error } = await query.maybeSingle();
-
-      if (error) {
-        console.error(error);
-        showError('Sunucu hatası: ' + (error.message || 'bilinmiyor'));
-        return;
-      }
-      if (!data) {
-        showError('Bu soru bulunamadı.');
-        return;
-      }
-
-      renderQuestion(data);
+      renderQuestion(currentQuestion);
+      renderNavigator();
       showContent();
       attachInteractivity();
+    }
+
+    function renderNavigator() {
+      const total = SUBCATEGORY_LIST.length;
+      document.getElementById('npCurrent').textContent = String(CURRENT_INDEX + 1);
+      document.getElementById('npTotal').textContent = String(total);
+
+      const gridEl = document.getElementById('npGrid');
+      gridEl.innerHTML = SUBCATEGORY_LIST.map((item, idx) => {
+        const num = idx + 1;
+        const isCurrent = idx === CURRENT_INDEX;
+        const classes = ['nav-sq', `diff-${item.difficulty || 'medium'}`];
+        if (isCurrent) classes.push('sq-current');
+        // Status badge omitted for now — will come with user_progress integration
+        return `<button class="${classes.join(' ')}" data-slug="${item.slug}" type="button">${num}</button>`;
+      }).join('');
     }
 
     function renderQuestion(q) {
@@ -1005,56 +1085,7 @@
       }
       tagsBarEl.innerHTML = tagsHtml.join('');
 
-      // Nav grid mock data (difficulty backgrounds + status badges)
-      // Will be replaced with real user_progress data after auth migration
-      const MOCK_GRID = [
-        { difficulty: 'easy',   status: null },
-        { difficulty: 'easy',   status: 'incorrect' },
-        { difficulty: 'easy',   status: 'correct' },
-        { difficulty: 'medium', status: 'incorrect' },
-        { difficulty: 'easy',   status: 'correct' },
-        { difficulty: 'medium', status: 'correct' },
-        { difficulty: 'easy',   status: null },
-        { difficulty: 'medium', status: 'correct' },
-        { difficulty: 'easy',   status: 'correct' },
-        { difficulty: 'hard',   status: 'incorrect' },
-        { difficulty: 'medium', status: null },
-        { difficulty: 'easy',   status: 'correct' },
-        { difficulty: 'medium', status: null },
-        { difficulty: 'hard',   status: 'incorrect' },
-        { difficulty: 'easy',   status: 'correct' },
-        { difficulty: 'medium', status: null },
-        { difficulty: 'medium', status: 'correct' },
-        { difficulty: 'hard',   status: 'incorrect' },
-        { difficulty: 'hard',   status: null },
-        { difficulty: 'easy',   status: null },
-        { difficulty: 'hard',   status: null },
-        { difficulty: 'medium', status: null },
-        { difficulty: 'hard',   status: 'incorrect' },
-        { difficulty: 'hard',   status: null }
-      ];
-
-      const npGridEl = document.getElementById('npGrid');
-      npGridEl.innerHTML = MOCK_GRID.map((sq, idx) => {
-        const num = idx + 1;
-        const isCurrent = num === 1;
-        const classes = ['nav-sq', `diff-${sq.difficulty}`];
-        if (isCurrent) classes.push('sq-current');
-
-        let badge = '';
-        if (sq.status === 'correct') {
-          badge = `<span class="sq-status correct" aria-label="Doğru">
-            <svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
-          </span>`;
-        } else if (sq.status === 'incorrect') {
-          badge = `<span class="sq-status incorrect" aria-label="Yanlış">
-            <svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>
-          </span>`;
-        }
-
-        return `<button class="${classes.join(' ')}" type="button">${num}${badge}</button>`;
-      }).join('');
-      document.getElementById('npTotal').textContent = String(MOCK_GRID.length);
+      // Navigator is now populated by renderNavigator() from real DB data
     }
 
     function attachInteractivity() {
@@ -1135,12 +1166,34 @@
         t.addEventListener('click', () => showExpPanel(t.getAttribute('data-opt')));
       });
 
-      // Remix and Next placeholders
+      // Prev (previous in same subcategory), Remix (random in subcategory), Next (next in order)
+      document.getElementById('prevBtn').addEventListener('click', () => {
+        if (SUBCATEGORY_LIST.length === 0) return;
+        if (SUBCATEGORY_LIST.length === 1) {
+          alert('Bu kategoride tek soru var.');
+          return;
+        }
+        const prevIdx = (CURRENT_INDEX - 1 + SUBCATEGORY_LIST.length) % SUBCATEGORY_LIST.length;
+        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[prevIdx].slug);
+      });
       document.getElementById('remixBtn').addEventListener('click', () => {
-        alert('Karıştır: bu özellik soru havuzu dolduğunda aktif olacak.');
+        if (SUBCATEGORY_LIST.length <= 1) {
+          alert('Bu kategoride başka soru yok.');
+          return;
+        }
+        let nextIdx;
+        do { nextIdx = Math.floor(Math.random() * SUBCATEGORY_LIST.length); }
+        while (nextIdx === CURRENT_INDEX);
+        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[nextIdx].slug);
       });
       document.getElementById('nextBtn').addEventListener('click', () => {
-        alert('Sonraki: bu özellik soru havuzu dolduğunda aktif olacak.');
+        if (SUBCATEGORY_LIST.length === 0) return;
+        if (SUBCATEGORY_LIST.length === 1) {
+          alert('Bu kategoride tek soru var.');
+          return;
+        }
+        const nextIdx = (CURRENT_INDEX + 1) % SUBCATEGORY_LIST.length;
+        window.location.href = 'soru.html?q=' + encodeURIComponent(SUBCATEGORY_LIST[nextIdx].slug);
       });
 
       // Nav panel toggle
@@ -1170,10 +1223,14 @@
         if (e.key === 'Escape' && navPanel.classList.contains('open')) closeNavPanel();
       });
 
+      // Grid square click → navigate to that question
       document.querySelectorAll('.nav-sq').forEach(sq => {
         sq.addEventListener('click', () => {
           if (sq.classList.contains('sq-current')) return;
-          alert('Bu soru henüz hazır değil. Soru havuzu dolduğunda aktif olacak.');
+          const targetSlug = sq.getAttribute('data-slug');
+          if (targetSlug) {
+            window.location.href = 'soru.html?q=' + encodeURIComponent(targetSlug);
+          }
         });
       });
     }

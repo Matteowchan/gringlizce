@@ -1640,13 +1640,18 @@
       });
 
       // Grid square click → navigate to that question (preserving set context)
-      document.querySelectorAll('.nav-sq').forEach(sq => {
-        sq.addEventListener('click', () => {
+      // Event delegation on parent: handlers survive renderNavigator() innerHTML rebuilds
+      const npGrid = document.getElementById('npGrid');
+      if (npGrid && !npGrid.dataset.clickBound) {
+        npGrid.addEventListener('click', (e) => {
+          const sq = e.target.closest('.nav-sq');
+          if (!sq || !npGrid.contains(sq)) return;
           if (sq.classList.contains('sq-current')) return;
           const targetSlug = sq.getAttribute('data-slug');
           if (targetSlug) gotoSlug(targetSlug);
         });
-      });
+        npGrid.dataset.clickBound = '1';
+      }
     }
 
     // Kick off

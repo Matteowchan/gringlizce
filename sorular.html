@@ -373,6 +373,17 @@
 
     let ALL_QUESTIONS = [];
 
+    // Read URL parameters for pre-filtering
+    function applyUrlFilters() {
+      const params = new URLSearchParams(window.location.search);
+      const exam = params.get('exam');
+      const subcategory = params.get('subcategory');
+      const difficulty = params.get('difficulty');
+      if (exam) document.getElementById('fExam').value = exam;
+      if (subcategory) document.getElementById('fSubcat').value = subcategory;
+      if (difficulty) document.getElementById('fDifficulty').value = difficulty;
+    }
+
     async function loadAllQuestions() {
       const { data, error } = await supabase
         .from('questions')
@@ -391,6 +402,7 @@
 
       ALL_QUESTIONS = data || [];
       populateSubcategoryFilter();
+      applyUrlFilters();
       render();
     }
 
@@ -411,6 +423,14 @@
       const exam = document.getElementById('fExam').value;
       const subcat = document.getElementById('fSubcat').value;
       const diff = document.getElementById('fDifficulty').value;
+
+      // Reflect current filters in URL (no reload)
+      const params = new URLSearchParams();
+      if (exam) params.set('exam', exam);
+      if (subcat) params.set('subcategory', subcat);
+      if (diff) params.set('difficulty', diff);
+      const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState(null, '', newUrl);
 
       const filtered = ALL_QUESTIONS.filter(q =>
         (!exam || q.exam_type === exam) &&

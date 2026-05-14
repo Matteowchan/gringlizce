@@ -158,3 +158,88 @@
     injectBackButton();
   }
 })();
+
+
+
+/* -------- Nav dropdown (Soru Bankası) -------- */
+(function() {
+  function initDropdowns() {
+    var dropdowns = document.querySelectorAll('.nav-dropdown');
+    if (!dropdowns.length) return;
+
+    dropdowns.forEach(function(dd) {
+      var trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (!trigger) return;
+
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isOpen = dd.classList.toggle('open');
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        // Close other dropdowns
+        dropdowns.forEach(function(other) {
+          if (other !== dd) {
+            other.classList.remove('open');
+            var ot = other.querySelector('.nav-dropdown-trigger');
+            if (ot) ot.setAttribute('aria-expanded', 'false');
+          }
+        });
+        // Close all submenus when toggling parent
+        if (!isOpen) {
+          dd.querySelectorAll('.nav-submenu.open').forEach(function(s) {
+            s.classList.remove('open');
+          });
+        }
+      });
+    });
+
+    // Submenu triggers (e.g. SAT inside dropdown)
+    var submenus = document.querySelectorAll('.nav-submenu');
+    submenus.forEach(function(sm) {
+      var trigger = sm.querySelector('.nav-submenu-trigger');
+      if (!trigger) return;
+      trigger.addEventListener('click', function(e) {
+        // On mobile drawer mode, prevent navigation and toggle submenu instead
+        var inDrawer = sm.closest('.nav-mobile-drawer.open');
+        if (inDrawer) {
+          e.preventDefault();
+          e.stopPropagation();
+          sm.classList.toggle('open');
+        }
+        // On desktop: allow click-through (link to landing page) but also keep dropdown open
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+      dropdowns.forEach(function(dd) {
+        if (!dd.contains(e.target) && dd.classList.contains('open')) {
+          dd.classList.remove('open');
+          var t = dd.querySelector('.nav-dropdown-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+          dd.querySelectorAll('.nav-submenu.open').forEach(function(s) {
+            s.classList.remove('open');
+          });
+        }
+      });
+    });
+
+    // Close on escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      dropdowns.forEach(function(dd) {
+        if (dd.classList.contains('open')) {
+          dd.classList.remove('open');
+          var t = dd.querySelector('.nav-dropdown-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDropdowns);
+  } else {
+    initDropdowns();
+  }
+})();

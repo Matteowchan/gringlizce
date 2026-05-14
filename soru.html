@@ -797,6 +797,147 @@
       .q-stat { min-width: 90px; padding: 0.9rem 1rem; }
       .q-stat-num { font-size: 1.8rem; }
     }
+
+    /* Report modal */
+    .q-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s; z-index: 60;
+    }
+    .q-modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .q-modal {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, calc(-50% + 16px));
+      width: min(520px, calc(100% - 2rem));
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+      z-index: 61;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 85vh; overflow-y: auto;
+    }
+    .q-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+
+    .q-modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .q-modal-head h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0;
+      color: var(--text);
+    }
+    .q-modal-close {
+      background: transparent; border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 0;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .q-modal-close:hover { color: var(--text); }
+
+    .q-modal-form {
+      padding: 1.3rem 1.4rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .q-modal-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .q-modal-label > span {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .q-modal-label select,
+    .q-modal-label textarea,
+    .q-modal-label input[type="text"],
+    .q-modal-label input[type="email"] {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text);
+      transition: border-color 0.15s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .q-modal-label textarea {
+      min-height: 110px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .q-modal-label select:focus,
+    .q-modal-label textarea:focus,
+    .q-modal-label input:focus {
+      outline: none;
+      border-color: var(--cat-accent);
+    }
+
+    .q-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.7rem;
+      margin-top: 0.3rem;
+    }
+    .q-modal-btn-ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      padding: 0.6rem 1.1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .q-modal-btn-ghost:hover { background: var(--bg-soft); border-color: var(--text-muted); }
+    .q-modal-btn-primary {
+      background: var(--text);
+      border: 1px solid var(--text);
+      color: var(--bg);
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      padding: 0.6rem 1.4rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .q-modal-btn-primary:hover { opacity: 0.9; }
+    .q-modal-btn-primary:disabled { opacity: 0.55; cursor: wait; }
+
+    .q-modal-feedback {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      margin-top: 0.4rem;
+      min-height: 1.2rem;
+      text-align: center;
+    }
+    .q-modal-feedback.success { color: #3c825a; }
+    .q-modal-feedback.error { color: #b45046; }
   </style>
 </head>
 <body data-cat="sat">
@@ -903,7 +1044,7 @@
               <svg class="q-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
-          <button class="q-tool-btn" type="button">
+          <button class="q-tool-btn" type="button" id="reportBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             <span>Bildir</span>
           </button>
@@ -983,6 +1124,41 @@
     </div>
 
     <div class="np-grid" id="npGrid"></div>
+  </div>
+
+  <!-- Report (Bildir) modal -->
+  <div class="q-modal-overlay" id="reportOverlay" aria-hidden="true"></div>
+  <div class="q-modal" id="reportModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="reportTitle">
+    <div class="q-modal-head">
+      <h3 id="reportTitle">Soruyu bildir</h3>
+      <button class="q-modal-close" type="button" id="reportClose" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form class="q-modal-form" id="reportForm" novalidate>
+      <label class="q-modal-label">
+        <span>Sorun türü</span>
+        <select name="kategori" id="reportCategory" required>
+          <option value="">Seçiniz</option>
+          <option value="Yanlış cevap">Yanlış cevap</option>
+          <option value="Soru hatası">Soru hatası (yazım, format)</option>
+          <option value="Açıklama hatası">Açıklama hatası</option>
+          <option value="Görüntü sorunu">Görüntü sorunu</option>
+          <option value="Diğer">Diğer</option>
+        </select>
+      </label>
+
+      <label class="q-modal-label">
+        <span>Detay</span>
+        <textarea name="detay" id="reportDetail" rows="5" placeholder="Sorunu kısaca açıklayın..." required></textarea>
+      </label>
+
+      <div class="q-modal-actions">
+        <button type="button" class="q-modal-btn-ghost" id="reportCancel">Vazgeç</button>
+        <button type="submit" class="q-modal-btn-primary" id="reportSubmit">Gönder</button>
+      </div>
+      <div class="q-modal-feedback" id="reportFeedback" aria-live="polite"></div>
+    </form>
   </div>
 
   <!-- Supabase config (publishable key is safe in frontend) -->
@@ -1659,6 +1835,88 @@
           if (targetSlug) gotoSlug(targetSlug);
         });
         npGrid.dataset.clickBound = '1';
+      }
+
+      // Report (Bildir) modal
+      const reportBtn = document.getElementById('reportBtn');
+      const reportOverlay = document.getElementById('reportOverlay');
+      const reportModal = document.getElementById('reportModal');
+      const reportClose = document.getElementById('reportClose');
+      const reportCancel = document.getElementById('reportCancel');
+      const reportForm = document.getElementById('reportForm');
+      const reportSubmit = document.getElementById('reportSubmit');
+      const reportFeedback = document.getElementById('reportFeedback');
+
+      function openReportModal() {
+        reportFeedback.textContent = '';
+        reportFeedback.className = 'q-modal-feedback';
+        reportSubmit.disabled = false;
+        reportSubmit.textContent = 'Gönder';
+        reportOverlay.classList.add('open');
+        reportModal.classList.add('open');
+        reportModal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeReportModal() {
+        reportOverlay.classList.remove('open');
+        reportModal.classList.remove('open');
+        reportModal.setAttribute('aria-hidden', 'true');
+      }
+
+      if (reportBtn) {
+        reportBtn.addEventListener('click', openReportModal);
+      }
+      if (reportClose) reportClose.addEventListener('click', closeReportModal);
+      if (reportCancel) reportCancel.addEventListener('click', closeReportModal);
+      if (reportOverlay) reportOverlay.addEventListener('click', closeReportModal);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && reportModal.classList.contains('open')) closeReportModal();
+      });
+
+      if (reportForm && !reportForm.dataset.bound) {
+        reportForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const category = document.getElementById('reportCategory').value.trim();
+          const detail = document.getElementById('reportDetail').value.trim();
+          if (!category || !detail) {
+            reportFeedback.textContent = 'Lütfen kategori seçin ve detay yazın.';
+            reportFeedback.className = 'q-modal-feedback error';
+            return;
+          }
+          reportSubmit.disabled = true;
+          reportSubmit.textContent = 'Gönderiliyor...';
+          reportFeedback.textContent = '';
+          reportFeedback.className = 'q-modal-feedback';
+          try {
+            const { error } = await supabase
+              .from('soru_bildirimleri')
+              .insert({
+                kategori: category,
+                detay: detail,
+                soru_slug: currentSlug || null,
+                soru_url: window.location.href,
+                user_agent: navigator.userAgent
+              });
+            if (!error) {
+              reportFeedback.textContent = 'Teşekkürler. Bildiriminiz iletildi.';
+              reportFeedback.className = 'q-modal-feedback success';
+              reportForm.reset();
+              setTimeout(closeReportModal, 1800);
+            } else {
+              console.error('Report insert error:', error);
+              reportFeedback.textContent = 'Gönderim başarısız oldu. Lütfen tekrar deneyin.';
+              reportFeedback.className = 'q-modal-feedback error';
+              reportSubmit.disabled = false;
+              reportSubmit.textContent = 'Gönder';
+            }
+          } catch (err) {
+            reportFeedback.textContent = 'Bağlantı hatası: ' + err.message;
+            reportFeedback.className = 'q-modal-feedback error';
+            reportSubmit.disabled = false;
+            reportSubmit.textContent = 'Gönder';
+          }
+        });
+        reportForm.dataset.bound = '1';
       }
     }
 

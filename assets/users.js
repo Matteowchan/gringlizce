@@ -1,60 +1,11 @@
 /* ============================================================
-   GRI ENGLISH — KULLANICI VERİTABANI
+   GRI ENGLISH — users.js (artık kullanılmıyor)
    ============================================================
-   
-   Yeni müşteri eklemek için:
-   1. Aşağıdaki örnekleri model alarak yeni satır ekle.
-   2. Her satır şu formatta:
-      "kullaniciadi": { password: "sifre", products: [...] }
-   3. Kullanıcı adı küçük harf, Türkçe karakter YOK (i, s, c, o, u, g).
-   4. Virgüller ve süslü parantezler önemli.
-   5. Kaydet, commit at, GitHub Pages 1 dk içinde yenilenir.
-   
-   Geçerli ürün slug'ları:
-     SAT Konu Paketleri:
-       grammar-pack-1, grammar-pack-2, grammar-pack-3
-       vocabulary-pack, study-pack
-     SAT Full Tests:
-       full-test-1, full-test-2, full-test-3, full-test-4, full-test-5
-     SAT Bundle:
-       full-test-bundle  ← bu yazılırsa otomatik full-test 1-5 erişimi açılır
-     TOEFL iBT / Versant:
-       toefl-writing-practice, spelling-practice
-     IELTS Academic:
-       ielts-full-test
-     YDT:
-       ydt-tenses, ydt-modals, ydt-conditionals, ydt-relative-clauses
-     YDS:
-       yds-mini-deneme-1, yds-mini-deneme-2, yds-mini-deneme-3
-     Sınav Koçluğu:
-       sat-coaching, act-coaching, ielts-coaching, toefl-coaching,
-       ib-coaching, ydt-coaching, yds-coaching
-   
-   Hizmet ürünleri (IELTS Writing, EE Feedback, TOK Essay) Shopier
-   üzerinden ödeme alınır ve e-posta üzerinden yürütülür. Bu hesap
-   sisteminde tanımlanmaz.
+   Bu dosya geçmiş sürümlerle uyumluluk için boş tutulmuştur.
+   Kullanıcı doğrulama artık Supabase Auth ile yapılır (auth.js).
+   Müşteri eklemek için: Edge Function Shopier siparişinden
+   otomatik kullanıcı oluşturur. Manuel ekleme için Supabase
+   Dashboard → Authentication → Users kullanın.
    ============================================================ */
 
-window.GRI_USERS = {
-  
-  // ===== ADMIN (test, tüm materyallere erişim) =====
-  "admin": {
-    password: "admin",
-    role: "admin"
-  },
-  
-  // ===== DEMO (tanıtım hesabı, sınırlı erişim) =====
-  "demo": {
-    password: "demo2026",
-    products: ["grammar-pack-1", "vocabulary-pack", "full-test-1"]
-  },
-  
-  // ===== GERÇEK MÜŞTERİLER =====
-  // Yeni müşteri için aşağıya örnek formatta satır ekle:
-  //
-  // "kullaniciadi": {
-  //   password: "guclu-sifre-123",
-  //   products: ["grammar-pack-1", "study-pack"]
-  // },
-  
-};
+window.GRI_USERS = window.GRI_USERS || {};

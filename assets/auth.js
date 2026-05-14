@@ -1,59 +1,128 @@
-/* Gri English — Auth helpers */
+/* ============================================================
+   Gri English — Auth Helpers (Supabase Auth)
+   ============================================================
+   Eski window.GriAuth API'si aynı kalır. İçerideki kullanıcı
+   verisi window.GRI_USERS yerine artık Supabase'den geliyor:
+     - Auth → supabase.auth (e-posta + şifre)
+     - Ürünler → public.purchases tablosu
+     - Rol → public.profiles tablosu
+   Önemli: supabase-js v2 kütüphanesi BU DOSYADAN ÖNCE yüklenmeli.
+   ============================================================ */
 
-window.GriAuth = (function() {
-  const STORAGE_KEY = 'gri_user';
-  
-  function getStored() {
+(function () {
+  var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  var CACHE_KEY = 'gri_cache';
+
+  // Eski auth.js'nin localStorage anahtarını temizle (varsa)
+  try { localStorage.removeItem('gri_user'); } catch (e) {}
+
+  if (!window.supabase || !window.supabase.createClient) {
+    console.error('[GriAuth] supabase-js yüklenmemiş. auth.js iptal.');
+    return;
+  }
+
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+
+  function getCache() {
+    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  function setCache(data) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function clearCache() {
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+  }
+
+  // Supabase'den taze profile + purchases çek, cache'e yaz
+  async function refreshCache() {
+    var resp = await sb.auth.getSession();
+    var session = resp && resp.data && resp.data.session;
+    if (!session) { clearCache(); return null; }
+
+    var userId = session.user.id;
+    var email = session.user.email || '';
+
+    var role = 'customer';
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    } catch(e) {
-      return null;
-    }
+      var pr = await sb.from('profiles').select('role').eq('id', userId).single();
+      if (pr && pr.data && pr.data.role) role = pr.data.role;
+    } catch (e) {}
+
+    var products = [];
+    try {
+      var ps = await sb.from('purchases').select('product_slug').eq('user_id', userId);
+      if (ps && ps.data) {
+        products = ps.data.map(function (r) { return r.product_slug; }).filter(Boolean);
+      }
+    } catch (e) {}
+
+    var cache = {
+      email: email,
+      user_id: userId,
+      role: role,
+      products: products,
+      cached_at: Date.now()
+    };
+    setCache(cache);
+    return cache;
   }
-  
+
+  // Sync verify: cache okur. Eski yapıdaki { username, record } imzasını korur.
   function verify() {
-    const stored = getStored();
-    if (!stored || !stored.username || !stored.password) return null;
-    if (!window.GRI_USERS) return null;
-    const rec = window.GRI_USERS[stored.username];
-    if (!rec || rec.password !== stored.password) return null;
-    return { username: stored.username, record: rec };
+    var c = getCache();
+    if (!c || !c.email) return null;
+    return {
+      username: c.email,
+      record: { role: c.role, products: c.products }
+    };
   }
-  
+
   function getOwnedProducts(rec) {
-    if (rec.role === 'admin') return '*'; // all access
-    let owned = (rec.products || []).slice();
-    if (owned.includes('full-test-bundle')) {
-      ['full-test-1','full-test-2','full-test-3','full-test-4','full-test-5'].forEach(p => {
-        if (!owned.includes(p)) owned.push(p);
+    if (!rec) return [];
+    if (rec.role === 'admin') return '*';
+    var owned = Array.isArray(rec.products) ? rec.products.slice() : [];
+    if (owned.indexOf('full-test-bundle') !== -1) {
+      ['full-test-1','full-test-2','full-test-3','full-test-4','full-test-5'].forEach(function (s) {
+        if (owned.indexOf(s) === -1) owned.push(s);
       });
     }
     return owned;
   }
-  
+
   function hasAccess(rec, slug) {
-    const owned = getOwnedProducts(rec);
+    var owned = getOwnedProducts(rec);
     if (owned === '*') return true;
-    return owned.includes(slug);
+    return owned.indexOf(slug) !== -1;
   }
-  
-  function login(username, password) {
-    if (!window.GRI_USERS) return { ok: false, error: 'Sistem yüklenemedi.' };
-    const u = username.trim().toLowerCase();
-    const rec = window.GRI_USERS[u];
-    if (!rec || rec.password !== password) {
-      return { ok: false, error: 'Kullanıcı adı veya şifre hatalı.' };
+
+  async function login(email, password) {
+    var clean = String(email || '').trim().toLowerCase();
+    var resp;
+    try {
+      resp = await sb.auth.signInWithPassword({ email: clean, password: password });
+    } catch (e) {
+      return { ok: false, error: 'Sunucuya ulaşılamadı, tekrar deneyin.' };
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ username: u, password: password }));
+    if (resp.error || !resp.data || !resp.data.session) {
+      return { ok: false, error: 'E-posta veya şifre hatalı.' };
+    }
+    await refreshCache();
     return { ok: true };
   }
-  
-  function logout() {
-    localStorage.removeItem(STORAGE_KEY);
+
+  async function logout() {
+    try { await sb.auth.signOut(); } catch (e) {}
+    clearCache();
   }
-  
+
   function requireAuth(slug, redirectPath) {
-    const auth = verify();
+    var auth = verify();
     if (!auth) {
       window.location.href = '/giris.html?return=' + encodeURIComponent(redirectPath || window.location.pathname);
       return null;
@@ -64,13 +133,15 @@ window.GriAuth = (function() {
     }
     return auth;
   }
-  
-  return {
+
+  window.GriAuth = {
     verify: verify,
     getOwnedProducts: getOwnedProducts,
     hasAccess: hasAccess,
     login: login,
     logout: logout,
-    requireAuth: requireAuth
+    requireAuth: requireAuth,
+    refreshCache: refreshCache,
+    supabase: sb
   };
 })();

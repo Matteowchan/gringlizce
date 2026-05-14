@@ -223,13 +223,13 @@
 
   <script>
     (function() {
-      const checkboxes = document.querySelectorAll('.qb-topic-check input[type="checkbox"]');
       const multiBar = document.getElementById('multiBar');
       const multiCount = document.getElementById('multiCount');
       const startBtn = document.getElementById('multiStartBtn');
 
       function getSelected() {
-        return Array.from(checkboxes)
+        // Query DOM each time - works with dynamically added checkboxes
+        return Array.from(document.querySelectorAll('.qb-topic-check input[type="checkbox"]'))
           .filter(c => c.checked)
           .map(c => c.dataset.subcategory)
           .filter(Boolean);
@@ -247,7 +247,12 @@
         }
       }
 
-      checkboxes.forEach(c => c.addEventListener('change', refresh));
+      // Event delegation - catches both pre-existing and dynamically added checkboxes
+      document.addEventListener('change', function(e) {
+        if (e.target.matches && e.target.matches('.qb-topic-check input[type="checkbox"]')) {
+          refresh();
+        }
+      });
 
       startBtn.addEventListener('click', () => {
         const sel = getSelected();

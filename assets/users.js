@@ -26,6 +26,9 @@
        ydt-tenses, ydt-modals, ydt-conditionals, ydt-relative-clauses
      YDS:
        yds-mini-deneme-1, yds-mini-deneme-2, yds-mini-deneme-3
+     Sınav Koçluğu:
+       sat-coaching, act-coaching, ielts-coaching, toefl-coaching,
+       ib-coaching, ydt-coaching, yds-coaching
    
    Hizmet ürünleri (IELTS Writing, EE Feedback, TOK Essay) Shopier
    üzerinden ödeme alınır ve e-posta üzerinden yürütülür. Bu hesap

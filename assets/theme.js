@@ -1,10 +1,11 @@
 /* ============================================================
-   GRI ENGLISH — Theme toggle
+   GRI ENGLISH — Theme toggle + mobile nav
    ============================================================ */
+
+/* -------- Theme toggle -------- */
 (function() {
   var THEME_KEY = 'gri-theme';
 
-  // Toggle button injection on DOM ready
   function injectToggle() {
     var navList = document.querySelector('.nav-links');
     if (!navList) return;
@@ -31,7 +32,6 @@
 
     li.appendChild(btn);
 
-    // Insert before the "Materyal Girişi" CTA so toggle sits left of it
     var cta = navList.querySelector('.btn-nav-cta');
     if (cta && cta.parentElement && cta.parentElement.tagName === 'LI') {
       navList.insertBefore(li, cta.parentElement);
@@ -46,9 +46,115 @@
     injectToggle();
   }
 
-  // Sync across tabs
   window.addEventListener('storage', function(e) {
     if (e.key !== THEME_KEY || !e.newValue) return;
     document.documentElement.setAttribute('data-theme', e.newValue);
   });
+})();
+
+
+/* -------- Mobile menu (hamburger) -------- */
+(function() {
+  function injectMobileMenu() {
+    var navContainer = document.querySelector('.site-header .nav');
+    var navList = document.querySelector('.nav-links');
+    if (!navContainer || !navList) return;
+    if (document.getElementById('mobile-toggle')) return;
+
+    var btn = document.createElement('button');
+    btn.id = 'mobile-toggle';
+    btn.className = 'mobile-toggle';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Menü');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
+
+    navContainer.appendChild(btn);
+    navList.classList.add('nav-mobile-drawer');
+
+    function close() {
+      navList.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('menu-open');
+    }
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = navList.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      document.body.classList.toggle('menu-open', isOpen);
+    });
+
+    navList.addEventListener('click', function(e) {
+      var a = e.target.closest && e.target.closest('a');
+      if (a) close();
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!navList.classList.contains('open')) return;
+      if (navList.contains(e.target) || btn.contains(e.target)) return;
+      close();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && navList.classList.contains('open')) close();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectMobileMenu);
+  } else {
+    injectMobileMenu();
+  }
+})();
+
+
+/* -------- Back button (mobile only, non-home pages) -------- */
+(function() {
+  function isHomePage() {
+    var p = window.location.pathname.replace(/\/$/, '');
+    return p === '' || p === '/' || p.endsWith('/index.html') || p.endsWith('/index');
+  }
+
+  function injectBackButton() {
+    if (isHomePage()) return;
+    if (document.getElementById('mobile-back')) return;
+
+    var btn = document.createElement('button');
+    btn.id = 'mobile-back';
+    btn.className = 'mobile-back';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Geri');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>Geri</span>';
+
+    btn.addEventListener('click', function() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        var path = window.location.pathname;
+        if (path.indexOf('/urun/') !== -1 || path.indexOf('/calisma/') !== -1) {
+          window.location.href = '../index.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      }
+    });
+
+    var header = document.querySelector('.site-header');
+    if (header && header.nextElementSibling) {
+      header.parentNode.insertBefore(btn, header.nextElementSibling);
+    } else if (header) {
+      header.parentNode.appendChild(btn);
+    } else {
+      document.body.insertBefore(btn, document.body.firstChild);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectBackButton);
+  } else {
+    injectBackButton();
+  }
 })();

@@ -324,6 +324,29 @@
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
     const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
+    function activateRow(row, subcategory) {
+      // Add active class for highlighted background
+      row.classList.add('qb-topic-active');
+
+      // Insert checkbox label at the start if missing
+      if (!row.querySelector('.qb-topic-check')) {
+        const label = document.createElement('label');
+        label.className = 'qb-topic-check';
+        label.innerHTML = '<input type="checkbox" data-subcategory="' + subcategory + '"><span class="qb-check-box" aria-hidden="true"></span>';
+        row.insertBefore(label, row.firstChild);
+      }
+
+      // Replace status span with Başla link
+      const status = row.querySelector('.qb-topic-status');
+      if (status && status.tagName === 'SPAN') {
+        const link = document.createElement('a');
+        link.className = 'qb-topic-status active';
+        link.href = 'soru.html?subcategory=' + subcategory;
+        link.textContent = 'Başla';
+        status.replaceWith(link);
+      }
+    }
+
     async function loadCounts() {
       try {
         const { data, error } = await supabase
@@ -358,6 +381,11 @@
           countEl.textContent = n + ' soru';
           countEl.classList.remove('has-questions', 'is-zero');
           countEl.classList.add(n > 0 ? 'has-questions' : 'is-zero');
+
+          // Auto-activate row if it has questions
+          if (n > 0) {
+            activateRow(row, sub);
+          }
         });
       } catch (err) {
         console.error('Bağlantı hatası:', err);

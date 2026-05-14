@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soru | Gri English</title>
+  <meta name="description" content="Gri English Soru Bankası — interaktif soru çözüm sayfası.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <meta name="theme-color" content="#7A3B3B">
+  <link rel="stylesheet" href="assets/main.css">
+
+  <style>
+    /* All question-page styles (same as static version) */
+    body { background: var(--bg); }
+
+    .q-page-wrap {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 6rem;
+    }
+
+    .q-loader {
+      max-width: 1500px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      text-align: center;
+      font-family: var(--font-ui);
+      color: var(--text-muted);
+    }
+    .q-loader .spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 2.5px solid var(--line);
+      border-top-color: var(--cat-accent);
+      border-radius: 50%;
+      animation: q-spin 0.8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes q-spin { to { transform: rotate(360deg); } }
+
+    .q-error {
+      max-width: 600px;
+      margin: 4rem auto;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .q-error h2 {
+      font-family: var(--font-display);
+      margin: 0 0 0.7rem;
+    }
+    .q-error p {
+      color: var(--text-soft);
+      margin: 0 0 1.2rem;
+    }
+
+    .q-breadcrumb {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .q-breadcrumb a { color: var(--text-muted); text-decoration: none; }
+    .q-breadcrumb a:hover { color: var(--cat-accent); }
+    .q-breadcrumb .current { color: var(--text); font-weight: 600; }
+    .q-breadcrumb .sep { opacity: 0.4; }
+
+    .q-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+      transition: grid-template-columns 0.3s ease;
+    }
+    .q-grid.show-explanation { grid-template-columns: 1fr 1fr 1fr; }
+
+    @media (max-width: 1000px) {
+      .q-grid, .q-grid.show-explanation { grid-template-columns: 1fr; }
+    }
+
+    .q-texts {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--text);
+      padding: 0.5rem 0;
+    }
+    .q-texts .text-label {
+      font-weight: 700;
+      font-size: 1rem;
+      margin: 1.4rem 0 0.5rem;
+      color: var(--text);
+    }
+    .q-texts .text-label:first-child { margin-top: 0; }
+    .q-texts p { margin: 0 0 0.8rem; }
+
+    .q-content {
+      border-left: 1px solid var(--line);
+      padding: 0 0 0 2rem;
+    }
+    @media (max-width: 1000px) {
+      .q-content { border-left: none; border-top: 1px solid var(--line); padding: 1.5rem 0 0; }
+    }
+
+    .q-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 1.5rem;
+    }
+    .q-num {
+      background: var(--text);
+      color: var(--bg);
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .q-tool-btn {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0.7rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .q-tool-btn:hover { color: var(--text); border-color: var(--text-muted); }
+    .q-tool-btn svg { width: 12px; height: 12px; }
+
+    .q-prompt {
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin: 0 0 1.5rem;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .q-options { display: flex; flex-direction: column; gap: 0.7rem; }
+
+    .q-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--bg);
+    }
+    .q-option:hover { border-color: var(--cat-accent); background: var(--bg-soft); }
+    .q-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .q-option.selected { border-color: var(--cat-accent); background: var(--cat-accent-soft); }
+
+    .q-letter {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--bg);
+      transition: all 0.15s;
+    }
+    .q-option.selected .q-letter {
+      background: var(--cat-accent);
+      color: var(--bg);
+      border-color: var(--cat-accent);
+    }
+
+    .q-option-text {
+      flex: 1;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .q-explanation {
+      display: none;
+      border-left: 1px solid var(--line);
+      padding: 0 0 0 2rem;
+    }
+    .q-grid.show-explanation .q-explanation { display: block; }
+    @media (max-width: 1000px) {
+      .q-explanation { border-left: none; border-top: 1px solid var(--line); padding: 1.5rem 0 0; }
+    }
+
+    .exp-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .exp-head h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text);
+    }
+    .exp-close {
+      background: transparent; border: none;
+      color: var(--text-muted);
+      cursor: pointer; padding: 0.3rem; line-height: 0;
+    }
+    .exp-close:hover { color: var(--text); }
+
+    .exp-tabs {
+      display: flex; gap: 0.3rem;
+      margin-bottom: 1.3rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .exp-tab {
+      background: transparent;
+      border: none;
+      padding: 0.55rem 0.9rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .exp-tab:hover { color: var(--text); }
+    .exp-tab.active { color: var(--cat-accent); border-bottom-color: var(--cat-accent); }
+
+    .exp-panel { display: none; }
+    .exp-panel.active { display: block; }
+
+    .exp-answer-box {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: flex-start; gap: 0.85rem;
+    }
+    .exp-answer-box.correct {
+      background: rgba(60, 130, 90, 0.08);
+      border-color: rgba(60, 130, 90, 0.4);
+    }
+    .exp-answer-box.incorrect {
+      background: rgba(180, 80, 70, 0.06);
+      border-color: rgba(180, 80, 70, 0.3);
+    }
+    .exp-answer-letter {
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-ui);
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--bg);
+    }
+    .exp-answer-box.correct .exp-answer-letter { background: #3c825a; }
+    .exp-answer-box.incorrect .exp-answer-letter { background: #b45046; }
+
+    .exp-answer-text { flex: 1; font-size: 0.92rem; line-height: 1.5; color: var(--text); }
+    .exp-answer-status {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 3px;
+      margin-bottom: 0.4rem;
+    }
+    .exp-answer-box.correct .exp-answer-status { background: #3c825a; color: white; }
+    .exp-answer-box.incorrect .exp-answer-status { background: #b45046; color: white; }
+
+    .exp-step {
+      margin-bottom: 1.5rem;
+      padding-left: 1.4rem;
+      border-left: 2px solid var(--cat-accent);
+    }
+    .exp-step h4 {
+      font-family: var(--font-display);
+      font-size: 1.02rem;
+      font-weight: 600;
+      margin: 0 0 0.55rem;
+      color: var(--cat-accent);
+    }
+    .exp-step p {
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: var(--text-soft);
+      margin: 0 0 0.6rem;
+    }
+    .exp-step blockquote {
+      margin: 0.7rem 0;
+      padding: 0.7rem 0.95rem;
+      background: var(--bg-soft);
+      border-radius: 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+      border-left: 3px solid var(--cat-accent-soft);
+    }
+    .exp-highlight {
+      background: rgba(200, 168, 108, 0.28);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    .q-actionbar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+      padding: 0.85rem 1.5rem;
+      z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .q-actionbar > .q-tags-bar { flex: 1; min-width: 0; }
+    .q-actionbar > .q-actions { flex: 0 0 auto; }
+
+    .q-tags-bar { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .q-tag-chip {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      padding: 0.35rem 0.7rem;
+      border-radius: 4px;
+    }
+    .q-tag-chip.primary {
+      color: var(--cat-accent);
+      border-color: var(--cat-accent);
+      background: var(--cat-accent-soft);
+    }
+    .q-tag-chip.difficulty {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    .q-tag-chip .diff-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .q-tag-chip.difficulty.easy { color: #3c825a; border-color: rgba(60, 130, 90, 0.4); background: rgba(60, 130, 90, 0.08); }
+    .q-tag-chip.difficulty.easy .diff-dot { background: #3c825a; }
+    .q-tag-chip.difficulty.medium { color: var(--gold-deep); border-color: var(--gold); background: var(--gold-soft); }
+    .q-tag-chip.difficulty.medium .diff-dot { background: var(--gold-deep); }
+    .q-tag-chip.difficulty.hard { color: #b45046; border-color: rgba(180, 80, 70, 0.4); background: rgba(180, 80, 70, 0.07); }
+    .q-tag-chip.difficulty.hard .diff-dot { background: #b45046; }
+
+    .q-actions { display: flex; gap: 0.6rem; align-items: center; }
+    .q-btn {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.65rem 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .q-btn:hover { border-color: var(--text-muted); }
+    .q-btn-remix { color: var(--gold-deep); border-color: var(--gold); background: var(--gold-soft); }
+    .q-btn-remix:hover { background: var(--gold); color: var(--bg); }
+    .q-btn-explain { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+    .q-btn-explain:hover { background: var(--teal-deep); border-color: var(--teal-deep); }
+    .q-btn-explain.active { background: var(--bg); color: var(--teal); }
+
+    @media (max-width: 540px) {
+      .q-actionbar { padding: 0.7rem 1rem; }
+      .q-tags-bar { display: none; }
+      .q-btn { font-size: 0.7rem; padding: 0.55rem 0.9rem; }
+    }
+
+    body { padding-bottom: 80px; }
+
+    /* Nav pill + grid panel (same as static) */
+    .q-nav-pill {
+      background: var(--text); color: var(--bg);
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      transition: transform 0.15s;
+    }
+    .q-nav-pill:hover { transform: translateY(-1px); }
+    .q-nav-pill .np-count strong { font-weight: 700; }
+    .q-nav-pill .np-caret { transition: transform 0.2s; }
+    .q-nav-pill[aria-expanded="true"] .np-caret { transform: rotate(180deg); }
+
+    .q-actionbar { gap: 1rem; }
+
+    .q-nav-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s; z-index: 45;
+    }
+    .q-nav-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .q-nav-panel {
+      position: fixed;
+      left: 50%; bottom: 65px;
+      transform: translate(-50%, 30px);
+      width: min(540px, calc(100% - 2rem));
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.15);
+      padding: 1.3rem 1.4rem 1.5rem;
+      z-index: 46;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 70vh; overflow-y: auto;
+    }
+    .q-nav-panel.open { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+
+    .np-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.4rem; }
+    .np-header h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin: 0; color: var(--text); }
+    .np-tools { display: flex; align-items: center; gap: 0.5rem; }
+    .np-filter {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .np-filter:hover { color: var(--text); border-color: var(--text-muted); }
+    .np-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; line-height: 0; border-radius: 4px; }
+    .np-close:hover { color: var(--text); background: var(--bg-soft); }
+
+    .np-legend {
+      display: flex; flex-wrap: wrap; gap: 1rem 1.4rem;
+      padding: 1rem 0 1.2rem;
+      border-top: 1px solid var(--line);
+      margin-top: 0.6rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: var(--text-soft);
+    }
+    .np-leg-item { display: inline-flex; align-items: center; gap: 0.45rem; }
+    .np-leg-item .lg-icon {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: white; flex-shrink: 0;
+    }
+    .lg-icon.correct { background: #3c825a; }
+    .lg-icon.incorrect { background: #c44a40; }
+    .lg-icon.review { background: #3c825a; }
+    .lg-icon.skipped { background: #c5a566; }
+
+    .np-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.55rem; }
+    @media (max-width: 540px) { .np-grid { grid-template-columns: repeat(5, 1fr); } }
+
+    .nav-sq {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 1.5px solid transparent;
+      background: var(--bg-soft);
+      font-family: var(--font-ui);
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: transform 0.12s, box-shadow 0.12s;
+      color: var(--text-muted);
+    }
+    .nav-sq:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); }
+    .nav-sq.sq-current { background: var(--bg); border-color: var(--text); color: var(--text); }
+
+    :root[data-theme="dark"] .q-nav-pill { background: var(--text); color: var(--bg); }
+  </style>
+</head>
+<body data-cat="sat">
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="sat.html">SAT</a></li>
+          <li><a href="act.html">ACT</a></li>
+          <li><a href="ielts.html">IELTS</a></li>
+          <li><a href="toefl.html">TOEFL</a></li>
+          <li><a href="ib.html">IB</a></li>
+          <li><a href="ydt.html">YDT</a></li>
+          <li><a href="yds.html">YDS</a></li>
+          <li class="nav-dropdown" data-dropdown="bank">
+            <a href="soru-bankasi.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Soru Bankası</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li class="nav-submenu">
+                <a href="sat-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>SAT</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="sat-soru-bankasi-rw.html">Reading &amp; Writing</a></li>
+                  <li><a href="sat-soru-bankasi-math.html">Math</a></li>
+                </ul>
+              </li>
+              <li><a href="act-soru-bankasi.html">ACT</a></li>
+              <li><a href="ielts-soru-bankasi.html">IELTS</a></li>
+              <li><a href="toefl-soru-bankasi.html">TOEFL</a></li>
+              <li><a href="ib-soru-bankasi.html">IB</a></li>
+              <li><a href="ydt-soru-bankasi.html">YDT</a></li>
+              <li><a href="yds-soru-bankasi.html">YDS</a></li>
+            </ul>
+          </li>
+          <li class="nav-dropdown" data-dropdown="notes">
+            <a href="ders-notlari.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Ders Notları</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="sat-ders-notlari.html">SAT</a></li>
+              <li><a href="act-ders-notlari.html">ACT</a></li>
+              <li><a href="ielts-ders-notlari.html">IELTS</a></li>
+              <li><a href="toefl-ders-notlari.html">TOEFL</a></li>
+              <li><a href="ib-ders-notlari.html">IB</a></li>
+              <li><a href="ydt-ders-notlari.html">YDT</a></li>
+              <li><a href="yds-ders-notlari.html">YDS</a></li>
+            </ul>
+          </li>
+          <li><a href="iletisim.html">İletişim</a></li>
+          <li><a href="giris.html" class="btn-nav-cta">Materyal Girişi</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- LOADING STATE -->
+  <div class="q-loader" id="qLoader">
+    <div class="spinner"></div>
+    <div>Soru yükleniyor</div>
+  </div>
+
+  <!-- ERROR STATE -->
+  <div class="q-error" id="qError" style="display: none;">
+    <h2>Soru bulunamadı</h2>
+    <p id="qErrorMsg">Aradığın soru sistemde yok ya da geçici bir bağlantı sorunu var.</p>
+    <a href="soru-bankasi.html" class="btn btn-primary">Soru Bankasına Dön</a>
+  </div>
+
+  <!-- MAIN CONTENT (filled by JS) -->
+  <div class="q-page-wrap" id="qPageWrap" style="display: none;">
+
+    <nav class="q-breadcrumb" id="qBreadcrumb">
+      <a href="index.html">Anasayfa</a>
+      <span class="sep">&rsaquo;</span>
+      <a href="soru-bankasi.html">Soru Bankası</a>
+      <span class="sep">&rsaquo;</span>
+      <a href="" id="bcExam"></a>
+      <span class="sep">&rsaquo;</span>
+      <a href="" id="bcSection"></a>
+      <span class="sep">&rsaquo;</span>
+      <span class="current" id="bcCurrent"></span>
+    </nav>
+
+    <div class="q-grid" id="qGrid">
+
+      <div class="q-texts" id="qTexts"></div>
+
+      <div class="q-content">
+        <div class="q-header">
+          <span class="q-num" id="qNum">1</span>
+          <button class="q-tool-btn" type="button" id="markBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>İşaretle</span>
+          </button>
+          <button class="q-tool-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <span>Bildir</span>
+          </button>
+        </div>
+
+        <p class="q-prompt" id="qPrompt"></p>
+
+        <div class="q-options" id="qOptions"></div>
+      </div>
+
+      <div class="q-explanation" id="qExplanation">
+        <div class="exp-head">
+          <h3>Adım Adım Açıklama</h3>
+          <button class="exp-close" type="button" id="expClose" aria-label="Kapat">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="exp-tabs" id="expTabs"></div>
+        <div id="expContent"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="q-actionbar" id="qActionbar" style="display: none;">
+    <div class="q-tags-bar" id="qTagsBar"></div>
+
+    <button class="q-nav-pill" type="button" id="navPill" aria-expanded="false">
+      <span class="np-count"><strong>1</strong> / <span id="npTotal">1</span></span>
+      <svg class="np-caret" viewBox="0 0 12 12" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M2 8l4-4 4 4z"/></svg>
+    </button>
+
+    <div class="q-actions">
+      <button class="q-btn q-btn-remix" type="button" id="remixBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Karıştır
+      </button>
+      <button class="q-btn q-btn-explain" type="button" id="explainBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Açıklama
+      </button>
+      <button class="q-btn q-btn-next" type="button" id="nextBtn">
+        Sonraki
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="q-nav-overlay" id="navOverlay" aria-hidden="true"></div>
+  <div class="q-nav-panel" id="navPanel" aria-hidden="true">
+    <div class="np-header">
+      <h3>Soru Bankası</h3>
+      <div class="np-tools">
+        <button class="np-filter" type="button">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Cevaplandı Filtrele
+        </button>
+        <button class="np-close" type="button" id="navClose" aria-label="Kapat">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="np-legend">
+      <span class="np-leg-item"><span class="lg-icon correct"><svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></span>Doğru</span>
+      <span class="np-leg-item"><span class="lg-icon incorrect"><svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg></span>Yanlış</span>
+      <span class="np-leg-item"><span class="lg-icon review"><svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></span>Tekrar İçin</span>
+      <span class="np-leg-item"><span class="lg-icon skipped"></span>Atlanmış</span>
+    </div>
+
+    <div class="np-grid" id="npGrid"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <div class="brand" style="margin-bottom: 1rem;">Gri <span class="it">English</span></div>
+          <p>Sınav İngilizcesi için titizlikle hazırlanmış (özenle düzenlenmiş) materyaller.</p>
+        </div>
+        <div>
+          <h4>Sınavlar</h4>
+          <ul>
+            <li><a href="sat.html">Digital SAT</a></li>
+            <li><a href="act.html">ACT</a></li>
+            <li><a href="ielts.html">IELTS</a></li>
+            <li><a href="toefl.html">TOEFL iBT / Versant</a></li>
+            <li><a href="ib.html">IB Diploma</a></li>
+            <li><a href="ydt.html">YDT</a></li>
+            <li><a href="yds.html">YDS</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Bağlantı</h4>
+          <ul>
+            <li><a href="iletisim.html">İletişim</a></li>
+            <li><a href="giris.html">Materyal Girişi</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Gri English &middot; Mert Atasal</span>
+        <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;">Focus &middot; Practice &middot; Succeed</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Supabase config (publishable key is safe in frontend) -->
+  <script>
+    window.SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    window.SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+
+    const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+
+    // Tag taksonomisi sözlüğü (slug -> human readable label)
+    const SECTION_LABELS = {
+      'rw': 'Reading & Writing',
+      'math': 'Math',
+      'reading': 'Reading',
+      'writing': 'Writing',
+      'listening': 'Listening',
+      'speaking': 'Speaking'
+    };
+    const CATEGORY_LABELS = {
+      'craft_and_structure': 'Craft and Structure',
+      'information_and_ideas': 'Information and Ideas',
+      'expression_of_ideas': 'Expression of Ideas',
+      'standard_english_conventions': 'Standard English Conventions'
+    };
+    const SUBCATEGORY_LABELS = {
+      'cross_text_connections': 'Cross-Text Connections',
+      'words_in_context': 'Words in Context',
+      'text_structure_and_purpose': 'Text Structure and Purpose',
+      'central_ideas_and_details': 'Central Ideas and Details',
+      'command_of_evidence': 'Command of Evidence',
+      'inferences': 'Inferences',
+      'transitions': 'Transitions',
+      'rhetorical_synthesis': 'Rhetorical Synthesis',
+      'boundaries': 'Boundaries',
+      'form_structure_sense': 'Form, Structure, and Sense'
+    };
+    const EXAM_LABELS = {
+      'sat': 'Digital SAT',
+      'act': 'ACT',
+      'ielts': 'IELTS',
+      'toefl': 'TOEFL',
+      'ib': 'IB',
+      'ydt': 'YDT',
+      'yds': 'YDS'
+    };
+    const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+
+    function esc(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showError(message) {
+      document.getElementById('qLoader').style.display = 'none';
+      document.getElementById('qError').style.display = 'block';
+      if (message) document.getElementById('qErrorMsg').textContent = message;
+    }
+
+    function showContent() {
+      document.getElementById('qLoader').style.display = 'none';
+      document.getElementById('qPageWrap').style.display = 'block';
+      document.getElementById('qActionbar').style.display = 'flex';
+    }
+
+    async function loadQuestion() {
+      // Parse URL: ?q=slug OR ?id=uuid
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('q');
+      const id = params.get('id');
+
+      let query = supabase
+        .from('questions')
+        .select('*, passage:passages(*)')
+        .eq('active', true);
+
+      if (slug) query = query.eq('slug', slug);
+      else if (id) query = query.eq('id', id);
+      else query = query.limit(1);
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        console.error(error);
+        showError('Sunucu hatası: ' + (error.message || 'bilinmiyor'));
+        return;
+      }
+      if (!data) {
+        showError('Bu soru bulunamadı.');
+        return;
+      }
+
+      renderQuestion(data);
+      showContent();
+      attachInteractivity();
+    }
+
+    function renderQuestion(q) {
+      // Body data-cat for color theming
+      document.body.setAttribute('data-cat', q.exam_type);
+
+      // Page title
+      const examLabel = EXAM_LABELS[q.exam_type] || q.exam_type;
+      const subLabel = SUBCATEGORY_LABELS[q.subcategory] || q.subcategory;
+      document.title = `${subLabel} | Gri English`;
+
+      // Breadcrumb
+      const examPage = q.exam_type + '.html';
+      const bankPage = q.exam_type + '-soru-bankasi.html';
+      const sectionPage = q.section ? `${q.exam_type}-soru-bankasi-${q.section}.html` : bankPage;
+      document.getElementById('bcExam').textContent = examLabel;
+      document.getElementById('bcExam').href = bankPage;
+      document.getElementById('bcSection').textContent = SECTION_LABELS[q.section] || q.section || '';
+      document.getElementById('bcSection').href = sectionPage;
+      document.getElementById('bcCurrent').textContent = subLabel;
+
+      // Texts (passage)
+      const textsEl = document.getElementById('qTexts');
+      if (q.passage && q.passage.texts) {
+        textsEl.innerHTML = q.passage.texts.map(t =>
+          `<p class="text-label">${esc(t.label)}</p><p>${esc(t.content)}</p>`
+        ).join('');
+      } else {
+        textsEl.style.display = 'none';
+        document.querySelector('.q-content').style.borderLeft = 'none';
+        document.querySelector('.q-content').style.paddingLeft = '0';
+      }
+
+      // Prompt
+      document.getElementById('qPrompt').textContent = q.question_text;
+
+      // Options
+      const optionsEl = document.getElementById('qOptions');
+      optionsEl.innerHTML = q.options.map(opt => `
+        <label class="q-option">
+          <input type="radio" name="answer" value="${esc(opt.letter)}">
+          <span class="q-letter">${esc(opt.letter)}</span>
+          <span class="q-option-text">${esc(opt.text)}</span>
+        </label>
+      `).join('');
+
+      // Explanation tabs and panels
+      const tabsEl = document.getElementById('expTabs');
+      const contentEl = document.getElementById('expContent');
+      const correctLetter = q.correct_answer;
+
+      tabsEl.innerHTML = q.options.map(opt => `
+        <button class="exp-tab${opt.letter === correctLetter ? ' active' : ''}" data-opt="${esc(opt.letter)}">
+          Seçenek ${esc(opt.letter)}
+        </button>
+      `).join('');
+
+      contentEl.innerHTML = q.options.map(opt => {
+        const explanation = q.explanations[opt.letter];
+        if (!explanation) return '';
+        const isCorrect = opt.letter === correctLetter;
+        const boxClass = isCorrect ? 'correct' : 'incorrect';
+        const statusLabel = isCorrect ? 'Doğru Cevap' : 'Yanlış Cevap';
+        const stepsHtml = (explanation.steps || []).map(step => `
+          <div class="exp-step">
+            <h4>${esc(step.title || '')}</h4>
+            ${step.body ? `<p>${esc(step.body)}</p>` : ''}
+            ${step.quote ? `<blockquote>${esc(step.quote)}</blockquote>` : ''}
+          </div>
+        `).join('');
+
+        return `
+          <div class="exp-panel${isCorrect ? ' active' : ''}" data-opt="${esc(opt.letter)}">
+            <div class="exp-answer-box ${boxClass}">
+              <span class="exp-answer-letter">${esc(opt.letter)}</span>
+              <div class="exp-answer-text">
+                <span class="exp-answer-status">${statusLabel}</span>
+                ${esc(opt.text)}
+              </div>
+            </div>
+            ${stepsHtml}
+          </div>
+        `;
+      }).join('');
+
+      // Tags chip bar
+      const tagsBarEl = document.getElementById('qTagsBar');
+      const tagsHtml = [];
+      if (q.category) {
+        tagsHtml.push(`<span class="q-tag-chip primary">${esc(CATEGORY_LABELS[q.category] || q.category)}</span>`);
+      }
+      if (q.subcategory) {
+        tagsHtml.push(`<span class="q-tag-chip">${esc(SUBCATEGORY_LABELS[q.subcategory] || q.subcategory)}</span>`);
+      }
+      if (q.difficulty) {
+        tagsHtml.push(`<span class="q-tag-chip difficulty ${esc(q.difficulty)}"><span class="diff-dot" aria-hidden="true"></span>${esc(DIFFICULTY_LABELS[q.difficulty] || q.difficulty)}</span>`);
+      }
+      tagsBarEl.innerHTML = tagsHtml.join('');
+
+      // Nav grid placeholder (24 mock squares until user_progress wired up)
+      const npGridEl = document.getElementById('npGrid');
+      const mock = [];
+      for (let i = 1; i <= 24; i++) {
+        mock.push(`<button class="nav-sq${i === 1 ? ' sq-current' : ''}" type="button">${i}</button>`);
+      }
+      npGridEl.innerHTML = mock.join('');
+      document.getElementById('npTotal').textContent = '24';
+    }
+
+    function attachInteractivity() {
+      // Option selection
+      const options = document.querySelectorAll('.q-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          options.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          const input = opt.querySelector('input');
+          if (input) input.checked = true;
+        });
+      });
+
+      // Mark for review
+      const markBtn = document.getElementById('markBtn');
+      if (markBtn) {
+        markBtn.addEventListener('click', () => {
+          markBtn.classList.toggle('active');
+          const span = markBtn.querySelector('span');
+          if (span) span.textContent = markBtn.classList.contains('active') ? 'İşaretlendi' : 'İşaretle';
+        });
+      }
+
+      // Explanation panel toggle
+      const grid = document.getElementById('qGrid');
+      const explainBtn = document.getElementById('explainBtn');
+      const expClose = document.getElementById('expClose');
+
+      function openExplanation() {
+        grid.classList.add('show-explanation');
+        explainBtn.classList.add('active');
+        const checked = document.querySelector('.q-option input:checked');
+        if (checked) showExpPanel(checked.value);
+        if (window.innerWidth <= 1000) {
+          setTimeout(() => {
+            document.getElementById('qExplanation').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 50);
+        }
+      }
+      function closeExplanation() {
+        grid.classList.remove('show-explanation');
+        explainBtn.classList.remove('active');
+      }
+
+      explainBtn.addEventListener('click', () => {
+        if (grid.classList.contains('show-explanation')) closeExplanation();
+        else openExplanation();
+      });
+      if (expClose) expClose.addEventListener('click', closeExplanation);
+
+      function showExpPanel(opt) {
+        document.querySelectorAll('.exp-tab').forEach(t => {
+          t.classList.toggle('active', t.getAttribute('data-opt') === opt);
+        });
+        document.querySelectorAll('.exp-panel').forEach(p => {
+          p.classList.toggle('active', p.getAttribute('data-opt') === opt);
+        });
+      }
+      document.querySelectorAll('.exp-tab').forEach(t => {
+        t.addEventListener('click', () => showExpPanel(t.getAttribute('data-opt')));
+      });
+
+      // Remix and Next placeholders
+      document.getElementById('remixBtn').addEventListener('click', () => {
+        alert('Karıştır: bu özellik soru havuzu dolduğunda aktif olacak.');
+      });
+      document.getElementById('nextBtn').addEventListener('click', () => {
+        alert('Sonraki: bu özellik soru havuzu dolduğunda aktif olacak.');
+      });
+
+      // Nav panel toggle
+      const navPill = document.getElementById('navPill');
+      const navPanel = document.getElementById('navPanel');
+      const navOverlay = document.getElementById('navOverlay');
+      const navClose = document.getElementById('navClose');
+
+      function openNavPanel() {
+        navPanel.classList.add('open');
+        navOverlay.classList.add('open');
+        navPill.setAttribute('aria-expanded', 'true');
+      }
+      function closeNavPanel() {
+        navPanel.classList.remove('open');
+        navOverlay.classList.remove('open');
+        navPill.setAttribute('aria-expanded', 'false');
+      }
+      navPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (navPanel.classList.contains('open')) closeNavPanel();
+        else openNavPanel();
+      });
+      if (navClose) navClose.addEventListener('click', closeNavPanel);
+      if (navOverlay) navOverlay.addEventListener('click', closeNavPanel);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navPanel.classList.contains('open')) closeNavPanel();
+      });
+
+      document.querySelectorAll('.nav-sq').forEach(sq => {
+        sq.addEventListener('click', () => {
+          if (sq.classList.contains('sq-current')) return;
+          alert('Bu soru henüz hazır değil. Soru havuzu dolduğunda aktif olacak.');
+        });
+      });
+    }
+
+    // Kick off
+    loadQuestion();
+  </script>
+
+</body>
+</html>

@@ -2663,7 +2663,11 @@
         }
       }
 
-      function renderError(message) {
+      function renderError(message, action) {
+        var actionHtml = '';
+        if (action && action.url && action.text) {
+          actionHtml = ' <a href="' + escapeHtml(action.url) + '">' + escapeHtml(action.text) + '</a>';
+        }
         popup.innerHTML = [
           '<div class="vocab-head">',
           '  <h3 class="vocab-word">Hata</h3>',
@@ -2674,7 +2678,7 @@
           '  </div>',
           '</div>',
           '<div class="vocab-divider"></div>',
-          '<div class="vocab-error">' + escapeHtml(message) + '</div>'
+          '<div class="vocab-error">' + escapeHtml(message) + actionHtml + '</div>'
         ].join('');
       }
 
@@ -2745,8 +2749,7 @@
           const data = await res.json();
           if (!res.ok || !data.ok) {
             if (data.error === 'login_required') {
-              renderError('Bu kelime henüz kayıtlı değil. Yeni kelime için giriş yapmalısın. ' +
-                '<a href="giris.html">Giriş Yap</a>');
+              renderError('Bu kelime henüz kayıtlı değil. Yeni kelime için giriş yapmalısın.', { url: 'giris.html', text: 'Giriş Yap' });
             } else if (data.error === 'ai_unavailable') {
               renderError('Sözlük şu an erişilemez. Birazdan tekrar dene.');
             } else {

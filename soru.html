@@ -1008,6 +1008,13 @@
     .hl-btn.hl-pink   { background: #f7c1d6; }
     .hl-btn.hl-clear  { background: var(--bg-soft, #f0ece0); color: var(--text-muted, #888); font-weight: 600; }
 
+    /* Native seçim menüsünü baskıla (iOS callout vs.) */
+    .q-texts, .q-prompt {
+      -webkit-touch-callout: none;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
     /* Mark renkleri (uygulanan vurgular) */
     mark.hl-yellow { background: #fdef82; color: inherit; padding: 0 2px; }
     mark.hl-blue   { background: #b8dcf5; color: inherit; padding: 0 2px; }
@@ -1333,6 +1340,10 @@
       <button class="q-btn q-btn-explain" type="button" id="explainBtn" aria-label="Açıklamayı göster">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Açıklama
+      </button>
+      <button class="q-btn q-btn-vocab" type="button" id="vocabBtn" aria-label="Sözlük">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Sözlük
       </button>
       <button class="q-btn q-btn-next" type="button" id="nextBtn" aria-label="Sonraki soru">
         Sonraki
@@ -2074,6 +2085,26 @@
       });
       if (expClose) expClose.addEventListener('click', closeExplanation);
 
+      // Sözlük butonu
+      const vocabBtn = document.getElementById('vocabBtn');
+      if (vocabBtn) {
+        vocabBtn.addEventListener('click', function () {
+          // Eğer kullanıcı pasajdan kelime seçtiyse onu prefill et
+          const sel = window.getSelection();
+          const selectedText = sel ? sel.toString().trim() : '';
+          const rect = vocabBtn.getBoundingClientRect();
+          if (window.GriVocab) {
+            if (selectedText && selectedText.length <= 60) {
+              // Doğrudan ara
+              window.GriVocab.openWithWord(selectedText, rect);
+            } else {
+              // Arama kutusu aç
+              window.GriVocab.openSearch(rect, '');
+            }
+          }
+        });
+      }
+
       function showExpPanel(opt) {
         document.querySelectorAll('.exp-tab').forEach(t => {
           t.classList.toggle('active', t.getAttribute('data-opt') === opt);
@@ -2293,12 +2324,6 @@
         <button type="button" class="hl-btn hl-blue" data-color="blue" title="Mavi"></button>
         <button type="button" class="hl-btn hl-pink" data-color="pink" title="Pembe"></button>
         <button type="button" class="hl-btn hl-clear" data-action="clear" title="Sil">×</button>
-        <button type="button" class="hl-btn hl-vocab" data-action="vocab" title="Sözlük" style="background: var(--bg-soft, #f0ece0); color: var(--text, #333); display: inline-flex; align-items: center; justify-content: center;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </button>
       `;
       document.body.appendChild(toolbar);
 
@@ -2536,17 +2561,6 @@
         if (!btn) return;
         const slug = SUBCATEGORY_LIST[CURRENT_INDEX] && SUBCATEGORY_LIST[CURRENT_INDEX].slug;
 
-        // Sözlük: seçili metni al, popup aç
-        if (btn.dataset.action === 'vocab') {
-          const sel = window.getSelection();
-          const word = sel ? sel.toString().trim() : '';
-          if (word && window.GriVocab) {
-            window.GriVocab.openWithWord(word, toolbar.getBoundingClientRect());
-          }
-          hide();
-          return;
-        }
-
         if (btn.dataset.action === 'clear') {
           clearHighlightInSelection();
           persistClear(slug);
@@ -2626,6 +2640,29 @@
 
       function renderLoading() {
         popup.innerHTML = '<div class="vocab-loading"><div class="vocab-spinner"></div><span>Aranıyor...</span></div>';
+      }
+
+      function renderSearch(prefill) {
+        popup.innerHTML = [
+          '<div class="vocab-head">',
+          '  <h3 class="vocab-word" style="font-size: 1.1rem;">Sözlük</h3>',
+          '  <div class="vocab-actions">',
+          '    <button class="vocab-icon-btn" data-action="close" title="Kapat">',
+          '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+          '    </button>',
+          '  </div>',
+          '</div>',
+          '<div class="vocab-divider"></div>',
+          '<form class="vocab-search-form" data-action="search-form" style="display: flex; gap: 0.5rem; margin: 0;">',
+          '  <input type="text" id="vocab-search-input" placeholder="İngilizce kelime yaz..." value="' + escapeHtml(prefill || '') + '" style="flex: 1; padding: 0.6rem 0.8rem; border: 1px solid var(--line, #ddd); background: transparent; font-family: var(--font-body, Georgia, serif); font-size: 0.95rem; color: var(--text, #333); outline: none; border-radius: 2px;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">',
+          '  <button type="submit" class="vocab-save-btn" style="width: auto; padding: 0.5rem 1rem; font-size: 10px;">ARA</button>',
+          '</form>',
+          '<p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.6rem 0 0; font-style: italic;">Pasajdan bir kelime seçip Sözlük\'e basarsan otomatik dolar.</p>'
+        ].join('');
+        const inp = popup.querySelector('#vocab-search-input');
+        if (inp) {
+          setTimeout(function () { inp.focus(); if (prefill) inp.select(); }, 60);
+        }
       }
 
       function renderError(message) {
@@ -2767,6 +2804,18 @@
         else if (action === 'save') saveCurrentWord();
       });
 
+      // Form submit (arama)
+      popup.addEventListener('submit', function (e) {
+        const form = e.target.closest('[data-action="search-form"]');
+        if (!form) return;
+        e.preventDefault();
+        const inp = form.querySelector('#vocab-search-input');
+        const word = inp ? inp.value.trim() : '';
+        if (!word) return;
+        renderLoading();
+        lookup(word);
+      });
+
       // Backdrop ve ESC ile kapat
       backdrop.addEventListener('click', hide);
       document.addEventListener('keydown', function (e) {
@@ -2788,6 +2837,10 @@
           renderLoading();
           show(anchorRect || { left: window.innerWidth / 2, right: window.innerWidth / 2, top: 100, bottom: 100, width: 0, height: 0 });
           lookup(word);
+        },
+        openSearch: function (anchorRect, prefill) {
+          renderSearch(prefill);
+          show(anchorRect || { left: window.innerWidth / 2, right: window.innerWidth / 2, top: 100, bottom: 100, width: 0, height: 0 });
         },
         close: hide,
       };

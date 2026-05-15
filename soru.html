@@ -1223,6 +1223,30 @@
         .replace(/'/g, '&#39;');
     }
 
+    // Whitelist-based HTML — allows basic format tags only
+    function safeHtml(s) {
+      if (s == null) return '';
+      var str = String(s);
+      // First, fully escape everything
+      var escaped = str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      // Then selectively un-escape allowed tags
+      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br'];
+      allowed.forEach(function (tag) {
+        var openRe = new RegExp('&lt;' + tag + '&gt;', 'gi');
+        var closeRe = new RegExp('&lt;/' + tag + '&gt;', 'gi');
+        var selfRe = new RegExp('&lt;' + tag + '\\s*/&gt;', 'gi');
+        escaped = escaped.replace(openRe, '<' + tag + '>')
+                         .replace(closeRe, '</' + tag + '>')
+                         .replace(selfRe, '<' + tag + '/>');
+      });
+      return escaped;
+    }
+
     function showError(message) {
       document.getElementById('qLoader').style.display = 'none';
       document.getElementById('qError').style.display = 'block';
@@ -1550,14 +1574,14 @@
       const textsEl = document.getElementById('qTexts');
       if (q.passage && q.passage.texts) {
         textsEl.innerHTML = q.passage.texts.map(t =>
-          `<p class="text-label">${esc(t.label)}</p><p>${esc(t.content)}</p>`
+          `<p class="text-label">${esc(t.label)}</p><p>${safeHtml(t.content)}</p>`
         ).join('');
       } else {
         textsEl.style.display = 'none';
       }
 
       // Prompt
-      document.getElementById('qPrompt').textContent = q.question_text;
+      document.getElementById('qPrompt').innerHTML = safeHtml(q.question_text);
 
       // Options
       const optionsEl = document.getElementById('qOptions');
@@ -1566,7 +1590,7 @@
         <label class="q-option">
           <input type="radio" name="answer" value="${esc(opt.letter)}">
           <span class="q-letter">${esc(opt.letter)}</span>
-          <span class="q-option-text">${esc(opt.text)}</span>
+          <span class="q-option-text">${safeHtml(opt.text)}</span>
           <span class="q-status-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 8 7 12 13 4" class="icon-check"/>
@@ -1596,8 +1620,8 @@
         const stepsHtml = (explanation.steps || []).map(step => `
           <div class="exp-step">
             <h4>${esc(step.title || '')}</h4>
-            ${step.body ? `<p>${esc(step.body)}</p>` : ''}
-            ${step.quote ? `<blockquote>${esc(step.quote)}</blockquote>` : ''}
+            ${step.body ? `<p>${safeHtml(step.body)}</p>` : ''}
+            ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
           </div>
         `).join('');
 
@@ -1607,7 +1631,7 @@
               <span class="exp-answer-letter">${esc(opt.letter)}</span>
               <div class="exp-answer-text">
                 <span class="exp-answer-status">${statusLabel}</span>
-                ${esc(opt.text)}
+                ${safeHtml(opt.text)}
               </div>
             </div>
             ${stepsHtml}

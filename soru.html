@@ -258,6 +258,16 @@
       pointer-events: none;
     }
 
+    /* Eleme — sağ tık veya basılı tutarak çapraz çiz */
+    .q-option.eliminated:not(.answered):not(.correct):not(.incorrect) .q-letter,
+    .q-option.eliminated:not(.answered):not(.correct):not(.incorrect) .q-option-text {
+      text-decoration: line-through;
+      opacity: 0.45;
+    }
+    .q-option.eliminated:not(.answered):not(.correct):not(.incorrect) {
+      background: var(--bg-soft, transparent);
+    }
+
     /* Correct answer styling (always green when revealed) */
     .q-option.correct,
     .q-option.correct:hover {
@@ -1707,6 +1717,31 @@
           }
 
           input.checked = true;
+        });
+
+        // Eleme — sağ tık (desktop)
+        opt.addEventListener('contextmenu', (e) => {
+          if (opt.classList.contains('answered')) return;
+          if (optionsContainer.classList.contains('locked')) return;
+          e.preventDefault();
+          opt.classList.toggle('eliminated');
+        });
+
+        // Eleme — basılı tutma (touch)
+        let pressTimer = null;
+        opt.addEventListener('touchstart', () => {
+          if (opt.classList.contains('answered')) return;
+          if (optionsContainer.classList.contains('locked')) return;
+          pressTimer = setTimeout(() => {
+            opt.classList.toggle('eliminated');
+            pressTimer = null;
+          }, 500);
+        }, { passive: true });
+        opt.addEventListener('touchend', () => {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        });
+        opt.addEventListener('touchmove', () => {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
         });
       });
 

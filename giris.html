@@ -48,11 +48,10 @@
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
-  <script src="assets/site-config.js" defer></script>
 </head>
 <body>
 
-  <div class="launch-banner" data-site-banner>Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+  <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
 
   <header class="site-header">
     <div class="wrap nav">
@@ -116,25 +115,60 @@
 
   <div class="login-shell">
     <div class="login-card">
-      <h1>Materyallere Giriş</h1>
-      <p class="sub">Satın aldığınız e-posta ve şifre ile giriş yapın.</p>
+      <div class="auth-tabs" style="display: flex; gap: 0; margin-bottom: 1.8rem; border-bottom: 1px solid var(--line);">
+        <button type="button" class="auth-tab active" data-tab="login" style="flex:1; background: none; border: none; padding: 0.8rem 0.5rem; cursor: pointer; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; color: var(--text); border-bottom: 2px solid var(--teal); margin-bottom: -1px;">Giriş Yap</button>
+        <button type="button" class="auth-tab" data-tab="signup" style="flex:1; background: none; border: none; padding: 0.8rem 0.5rem; cursor: pointer; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px;">Kayıt Ol</button>
+      </div>
 
-      <form id="login-form">
-        <label for="u">E-posta</label>
-        <input type="email" id="u" autocomplete="username" required autocapitalize="off" autocorrect="off">
+      <div id="login-pane">
+        <h1>Materyallere Giriş</h1>
+        <p class="sub">E-posta ve şifre ile giriş yap.</p>
 
-        <label for="p">Şifre</label>
-        <input type="password" id="p" autocomplete="current-password" required>
+        <form id="login-form">
+          <label for="u">E-posta</label>
+          <input type="email" id="u" autocomplete="username" required autocapitalize="off" autocorrect="off">
 
-        <div class="forgot"><a href="#" id="link-forgot">Şifremi unuttum</a></div>
+          <label for="p">Şifre</label>
+          <input type="password" id="p" autocomplete="current-password" required>
 
-        <button type="submit" class="btn-submit" id="btn-submit">Giriş Yap</button>
+          <div class="forgot"><a href="#" id="link-forgot">Şifremi unuttum</a></div>
 
-        <div class="err" id="err"></div>
-      </form>
+          <button type="submit" class="btn-submit" id="btn-submit">Giriş Yap</button>
 
-      <div class="helper">
-        Erişim bilginiz yok mu? <a href="mailto:mertatasal@gmail.com">mertatasal@gmail.com</a> adresine yazın.
+          <div class="err" id="err"></div>
+        </form>
+
+        <div class="helper">
+          Hesabın yok mu? Yukarıdaki <b>Kayıt Ol</b> sekmesinden ücretsiz aç. Materyal aldıysan otomatik hesap için gelen maildeki şifreyi kullan.
+        </div>
+      </div>
+
+      <div id="signup-pane" style="display: none;">
+        <h1>Ücretsiz Hesap Aç</h1>
+        <p class="sub">Hesap aç, soru bankasına ve Gri AI mentor'a günlük 10 ücretsiz hak ile başla.</p>
+
+        <form id="signup-form">
+          <label for="su-name">Ad Soyad</label>
+          <input type="text" id="su-name" autocomplete="name" required>
+
+          <label for="su-email">E-posta</label>
+          <input type="email" id="su-email" autocomplete="email" required autocapitalize="off" autocorrect="off">
+
+          <label for="su-pass">Şifre (en az 8 karakter)</label>
+          <input type="password" id="su-pass" autocomplete="new-password" required minlength="8">
+
+          <label for="su-pass2">Şifre Tekrar</label>
+          <input type="password" id="su-pass2" autocomplete="new-password" required minlength="8">
+
+          <button type="submit" class="btn-submit" id="btn-signup">Hesap Aç</button>
+
+          <div class="err" id="signup-err"></div>
+          <div class="ok" id="signup-ok"></div>
+        </form>
+
+        <div class="helper" style="font-size: 0.82rem;">
+          Kayıt olarak Gri English'in temel hizmet koşullarını kabul etmiş sayılırsınız. Şifre ve e-posta dışında bilgi saklanmaz.
+        </div>
       </div>
     </div>
   </div>
@@ -296,6 +330,119 @@
       okBox.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'Gönder';
+    });
+
+    // ===== Tab Toggle (Giriş / Kayıt) =====
+    (function () {
+      var tabs = document.querySelectorAll('.auth-tab');
+      var loginPane = document.getElementById('login-pane');
+      var signupPane = document.getElementById('signup-pane');
+
+      function activate(name) {
+        tabs.forEach(function (t) {
+          var isActive = t.dataset.tab === name;
+          t.classList.toggle('active', isActive);
+          t.style.color = isActive ? 'var(--text)' : 'var(--text-muted)';
+          t.style.borderBottomColor = isActive ? 'var(--teal)' : 'transparent';
+        });
+        loginPane.style.display = (name === 'login') ? 'block' : 'none';
+        signupPane.style.display = (name === 'signup') ? 'block' : 'none';
+      }
+
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () { activate(t.dataset.tab); });
+      });
+
+      // URL'de #signup varsa otomatik kayıt sekmesi açılsın
+      if (window.location.hash === '#signup') activate('signup');
+    })();
+
+    // ===== Signup — Supabase doğrudan =====
+    document.getElementById('signup-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var name = document.getElementById('su-name').value.trim();
+      var email = document.getElementById('su-email').value.trim().toLowerCase();
+      var pass = document.getElementById('su-pass').value;
+      var pass2 = document.getElementById('su-pass2').value;
+      var errBox = document.getElementById('signup-err');
+      var okBox = document.getElementById('signup-ok');
+      var btn = document.getElementById('btn-signup');
+
+      errBox.classList.remove('show');
+      okBox.classList.remove('show');
+
+      if (pass !== pass2) {
+        errBox.textContent = 'Şifreler eşleşmiyor.';
+        errBox.classList.add('show');
+        return;
+      }
+      if (pass.length < 8) {
+        errBox.textContent = 'Şifre en az 8 karakter olmalı.';
+        errBox.classList.add('show');
+        return;
+      }
+      if (!name) {
+        errBox.textContent = 'Ad soyad zorunlu.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Kayıt yapılıyor...';
+
+      try {
+        if (!window.supabase || !window.supabase.createClient) {
+          throw new Error('Supabase yüklenemedi');
+        }
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+
+        var result = await sbCli.auth.signUp({
+          email: email,
+          password: pass,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: window.location.origin + '/giris.html'
+          }
+        });
+
+        if (result.error) {
+          var msg = result.error.message || 'Kayıt başarısız.';
+          if (/already registered|already exists|duplicate/i.test(msg)) {
+            msg = 'Bu e-posta zaten kayıtlı. Giriş sekmesinden devam et veya şifreni sıfırla.';
+          }
+          errBox.textContent = msg;
+          errBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Hesap Aç';
+          return;
+        }
+
+        // Supabase'in email confirmation ayarı açıksa: kullanıcı maili onaylamadan login olmaz
+        // Ayar kapalıysa: doğrudan session gelir
+        if (result.data && result.data.session) {
+          // Otomatik giriş, panele yönlendir
+          okBox.textContent = 'Hesabın açıldı, yönlendiriliyor...';
+          okBox.classList.add('show');
+          setTimeout(function () {
+            window.location.href = '/panelim.html';
+          }, 1000);
+        } else {
+          okBox.textContent = 'Hesabın açıldı. E-postanı kontrol et, doğrulama bağlantısına tıkladıktan sonra giriş yapabilirsin.';
+          okBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Hesap Aç';
+        }
+      } catch (ex) {
+        console.error(ex);
+        errBox.textContent = 'Beklenmeyen bir hata oluştu: ' + (ex.message || ex);
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Hesap Aç';
+      }
     });
   </script>
 

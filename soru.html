@@ -2655,8 +2655,7 @@
           '<form class="vocab-search-form" data-action="search-form" style="display: flex; gap: 0.5rem; margin: 0;">',
           '  <input type="text" id="vocab-search-input" placeholder="İngilizce kelime yaz..." value="' + escapeHtml(prefill || '') + '" style="flex: 1; padding: 0.6rem 0.8rem; border: 1px solid var(--line, #ddd); background: transparent; font-family: var(--font-body, Georgia, serif); font-size: 0.95rem; color: var(--text, #333); outline: none; border-radius: 2px;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">',
           '  <button type="submit" class="vocab-save-btn" style="width: auto; padding: 0.5rem 1rem; font-size: 10px;">ARA</button>',
-          '</form>',
-          '<p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.6rem 0 0; font-style: italic;">Pasajdan bir kelime seçip Sözlük\'e basarsan otomatik dolar.</p>'
+          '</form>'
         ].join('');
         const inp = popup.querySelector('#vocab-search-input');
         if (inp) {
@@ -2734,8 +2733,8 @@
           const headers = {
             'Content-Type': 'application/json',
             'apikey': window.SUPABASE_KEY,
-            'Authorization': 'Bearer ' + (token || window.SUPABASE_KEY),
           };
+          if (token) headers['Authorization'] = 'Bearer ' + token;
 
           const res = await fetch(window.SUPABASE_URL + '/functions/v1/vocab-lookup', {
             method: 'POST',

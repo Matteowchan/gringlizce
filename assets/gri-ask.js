@@ -244,12 +244,18 @@
   }
 
   /* ===== States ===== */
-  function renderPromptState(remaining) {
+  function renderPromptState(remaining, turnsSoFar) {
     setQuotaText('Kalan hak: ' + remaining);
+    var turnsLeft = 2 - (turnsSoFar || 0);
+    var prevConversationHtml = '';
+    if (turnsSoFar && turnsSoFar > 0 && window.GriPrevTurns) {
+      prevConversationHtml = renderTurnsHtml(window.GriPrevTurns);
+    }
     setBody([
+      prevConversationHtml,
       '<div class="gri-prompt-area">',
       '  <textarea id="gri-prompt-input" placeholder="Bu soru hakkında ne sormak istersin? Örnek: B seçeneği neden yanlış?" maxlength="1000"></textarea>',
-      '  <p class="gri-prompt-hint">Her soru için Gri\'ye bir kez danışılabilir. Sorduktan sonra cevap kaydedilir, tekrar görüntüleyebilirsin.</p>',
+      '  <p class="gri-prompt-hint">Bu soru için Gri\'ye ' + turnsLeft + ' kez daha danışabilirsin (toplam 2 hak).</p>',
       '  <button class="gri-send" id="gri-send">Gri\'ye Sor</button>',
       '</div>'
     ].join(''));
@@ -264,6 +270,16 @@
     }, 80);
   }
 
+  function renderTurnsHtml(turns) {
+    if (!turns || !turns.length) return '';
+    return turns.map(function (t, i) {
+      return [
+        '<div class="gri-msg-user"><span class="gri-msg-label">Sen #', (i + 1), '</span>', escapeHtml(t.user_message || ''), '</div>',
+        '<div class="gri-msg-ai"><span class="gri-msg-label">Gri #', (i + 1), '</span>', escapeHtml(t.ai_response || ''), '</div>'
+      ].join('');
+    }).join('');
+  }
+
   function renderLoadingState() {
     setBody([
       '<div class="gri-loading">',
@@ -275,13 +291,35 @@
 
   function renderResponseState(data) {
     setQuotaText('Kalan hak: ' + (data.remaining != null ? data.remaining : '?'));
+    var turns = data.turns || [];
+    var canAskMore = data.can_ask_more && (data.remaining == null || data.remaining > 0);
     var pieces = [];
-    if (data.cached) {
-      pieces.push('<div class="gri-cached-note">Bu soru için Gri\'ye daha önce danıştın. Önceki cevabı gösteriyorum.</div>');
+
+    pieces.push(renderTurnsHtml(turns));
+
+    if (canAskMore) {
+      var turnsLeft = 2 - turns.length;
+      pieces.push([
+        '<div class="gri-prompt-area">',
+        '  <textarea id="gri-prompt-input" placeholder="Başka bir şey sormak ister misin?" maxlength="1000"></textarea>',
+        '  <p class="gri-prompt-hint">Bu soru için ' + turnsLeft + ' kez daha danışabilirsin.</p>',
+        '  <button class="gri-send" id="gri-send">Tekrar Sor</button>',
+        '</div>'
+      ].join(''));
+    } else if (turns.length >= 2) {
+      pieces.push('<div class="gri-cached-note">Bu soru için 2 hakkın da kullanıldı. Yeni sorulara geçebilirsin.</div>');
+    } else if (data.remaining === 0) {
+      pieces.push('<div class="gri-cached-note">AI sorgu hakkın bitti. Yeni paket alırsan bu soru için bir hak daha kullanabilirsin.</div>');
     }
-    pieces.push('<div class="gri-msg-user"><span class="gri-msg-label">Sen</span>' + escapeHtml(data.user_message || '') + '</div>');
-    pieces.push('<div class="gri-msg-ai"><span class="gri-msg-label">Gri</span>' + escapeHtml(data.response || '') + '</div>');
+
     setBody(pieces.join(''));
+
+    if (canAskMore) {
+      document.getElementById('gri-send').addEventListener('click', submitMessage);
+      document.getElementById('gri-prompt-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitMessage();
+      });
+    }
   }
 
   function renderPaywallState(packs) {
@@ -320,7 +358,7 @@
     if (!inp) return;
     var message = inp.value.trim();
     if (!message) return;
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
 
     renderLoadingState();
 
@@ -380,7 +418,6 @@
       var sessionRes = await sb.auth.getSession();
       var session = sessionRes && sessionRes.data && sessionRes.data.session;
       if (!session) {
-        // Giriş gerekli
         setQuotaText('Giriş gerekli');
         setBody([
           '<div class="gri-paywall">',
@@ -394,35 +431,55 @@
         return;
       }
 
-      // Mevcut kullanım ve quota'yı çek
       var userId = session.user.id;
-      var [usageRes, quotaRes] = await Promise.all([
+      var [turnsRes, quotaRes] = await Promise.all([
         sb.from('ai_question_usage')
           .select('user_message, ai_response, used_at')
           .eq('user_id', userId)
           .eq('question_id', qid)
-          .maybeSingle(),
+          .order('used_at', { ascending: true }),
         sb.from('ai_quota')
           .select('total_quota, used_count')
           .eq('user_id', userId)
           .maybeSingle(),
       ]);
 
+      var turns = turnsRes.data || [];
       var remaining = 0;
       if (quotaRes.data) {
         remaining = Math.max(0, quotaRes.data.total_quota - quotaRes.data.used_count);
       }
 
-      if (usageRes.data) {
+      // 2 tur tamamlanmışsa sadece konuşmayı göster
+      if (turns.length >= 2) {
         renderResponseState({
-          cached: true,
-          user_message: usageRes.data.user_message,
-          response: usageRes.data.ai_response,
+          turns: turns,
           remaining: remaining,
+          can_ask_more: false,
         });
         return;
       }
 
+      // En az 1 tur var, devam edebilir
+      if (turns.length > 0) {
+        if (remaining <= 0) {
+          // Kotaya bağlı: ilk tur var ama yeni tur için hak yok
+          renderResponseState({
+            turns: turns,
+            remaining: 0,
+            can_ask_more: false,
+          });
+          return;
+        }
+        renderResponseState({
+          turns: turns,
+          remaining: remaining,
+          can_ask_more: true,
+        });
+        return;
+      }
+
+      // Hiç tur yok, ilk soruyu sorabilir
       if (remaining <= 0) {
         renderPaywallState([
           { name: '10 Soru Paketi', price: 100, url: 'https://www.shopier.com/SATquestionBank/47230429' },
@@ -432,7 +489,7 @@
         return;
       }
 
-      renderPromptState(remaining);
+      renderPromptState(remaining, 0);
     } catch (e) {
       console.error('[Gri] state load failed:', e);
       renderErrorState('Veriler yüklenemedi.');

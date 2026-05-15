@@ -58,11 +58,10 @@
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
-  <script src="assets/site-config.js" defer></script>
 </head>
 <body>
 
-  <div class="launch-banner" data-site-banner>Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+  <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
 
   <header class="site-header">
     <div class="wrap nav">
@@ -237,13 +236,13 @@
       "yds-mini-deneme-1":       { title: "YDS Mini Deneme 1",                    exam: "YDS",   cover: "cover-yds-mini-deneme-1.png" },
       "yds-mini-deneme-2":       { title: "YDS Mini Deneme 2",                    exam: "YDS",   cover: "cover-yds-mini-deneme-2.png" },
       "yds-mini-deneme-3":       { title: "YDS Mini Deneme 3",                    exam: "YDS",   cover: "cover-yds-mini-deneme-3.png" },
-      "sat-coaching":            { title: "SAT — Sınav Koçluğu",                  exam: "SAT",   cover: null },
-      "act-coaching":            { title: "ACT — Sınav Koçluğu",                  exam: "ACT",   cover: null },
-      "ielts-coaching":          { title: "IELTS — Sınav Koçluğu",                exam: "IELTS", cover: null },
-      "toefl-coaching":          { title: "TOEFL — Sınav Koçluğu",                exam: "TOEFL", cover: null },
-      "ib-coaching":             { title: "IB — Sınav Koçluğu",                   exam: "IB",    cover: null },
-      "ydt-coaching":            { title: "YDT — Sınav Koçluğu",                  exam: "YDT",   cover: null },
-      "yds-coaching":            { title: "YDS — Sınav Koçluğu",                  exam: "YDS",   cover: null }
+      "sat-coaching":            { title: "SAT — Sınav Koçluğu",                  exam: "SAT",   cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "SAT", cw2: "Coaching" } },
+      "act-coaching":            { title: "ACT — Sınav Koçluğu",                  exam: "ACT",   cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "ACT", cw2: "Coaching" } },
+      "ielts-coaching":          { title: "IELTS — Sınav Koçluğu",                exam: "IELTS", cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "IELTS", cw2: "Coaching" } },
+      "toefl-coaching":          { title: "TOEFL — Sınav Koçluğu",                exam: "TOEFL", cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "TOEFL", cw2: "Coaching" } },
+      "ib-coaching":             { title: "IB — Sınav Koçluğu",                   exam: "IB",    cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "IB", cw2: "Coaching" } },
+      "ydt-coaching":            { title: "YDT — Sınav Koçluğu",                  exam: "YDT",   cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "YDT", cw2: "Coaching" } },
+      "yds-coaching":            { title: "YDS — Sınav Koçluğu",                  exam: "YDS",   cover: null, type: "service", cssCover: { vol: "Koçluk", cw1: "YDS", cw2: "Coaching" } }
     };
 
     (async function () {
@@ -304,7 +303,15 @@
       var cards = ownedSlugs.map(function (s) {
         var p = PRODUCT_META[s];
         var isService = p.type === "service";
-        var href = isService ? '/urun/' + s + '.html' : '/calisma/' + s + '.html';
+        var isCoaching = s.indexOf("-coaching") !== -1;
+        var href;
+        if (isCoaching) {
+          href = '/' + s + '.html';
+        } else if (isService) {
+          href = '/urun/' + s + '.html';
+        } else {
+          href = '/calisma/' + s + '.html';
+        }
         var subtitle = isService ? 'Hizmet · Detayı için tıklayın' : 'Açmak için tıklayın';
         var ctaLabel = isService ? 'Bilgi' : 'Aç';
         var statusLabel = isService ? 'Hizmet' : 'Erişim Açık';

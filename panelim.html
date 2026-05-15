@@ -195,6 +195,19 @@
       </div>
     </div>
 
+    <div id="vocab-list-area" style="padding: 1.5rem 0 3rem; display: none;">
+      <div class="section-head">
+        <span class="eyebrow">Sözlük</span>
+        <h2>Kelime Listem</h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+      <div id="vocab-list-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
+      <div id="vocab-list-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.8rem; max-width: 980px; margin: 0 auto;"></div>
+      <div id="vocab-list-empty" style="text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic; display: none;">
+        Henüz listene kelime eklemedin. Soru bankasında bir kelimeyi seç, açılan toolbar'dan kitap simgesine bas, sonra "+ Listeme Ekle" de.
+      </div>
+    </div>
+
     <div id="products-area" style="padding-bottom: 4rem;">
       <div class="loading-state">Materyaller yükleniyor...</div>
     </div>
@@ -443,6 +456,93 @@
         if (elArea) elArea.style.display = 'block';
       } catch (e) {
         console.warn('[Gri quota] load failed:', e);
+      }
+    })();
+
+    // Kelime Listem'i yükle
+    (async function loadVocabList() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var res = await sbCli.from('user_vocab')
+          .select('id, custom_note, saved_at, vocabulary:vocabulary_id (id, word_display, definition_json)')
+          .eq('user_id', userId)
+          .order('saved_at', { ascending: false });
+
+        var elArea = document.getElementById('vocab-list-area');
+        var elGrid = document.getElementById('vocab-list-grid');
+        var elCount = document.getElementById('vocab-list-count');
+        var elEmpty = document.getElementById('vocab-list-empty');
+        if (!elArea || !elGrid) return;
+
+        elArea.style.display = 'block';
+        var rows = (res && res.data) || [];
+
+        if (rows.length === 0) {
+          elCount.textContent = '';
+          elGrid.innerHTML = '';
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        elEmpty.style.display = 'none';
+        elCount.textContent = rows.length + ' kelime kayıtlı';
+
+        function escHtml(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        elGrid.innerHTML = rows.map(function (r) {
+          var vocab = r.vocabulary || {};
+          var def = vocab.definition_json || {};
+          var word = vocab.word_display || '—';
+          var turkish = def.turkish || '';
+          var level = def.level || '';
+          return [
+            '<div class="vocab-card" data-id="' + escHtml(r.id) + '" style="padding: 1rem 1.1rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 4px; position: relative;">',
+            '  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.3rem;">',
+            '    <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; color: var(--text); line-height: 1.2;">' + escHtml(word) + '</div>',
+            '    <button class="vocab-card-delete" data-id="' + escHtml(r.id) + '" style="background: none; border: none; cursor: pointer; padding: 0.2rem; color: var(--text-muted); border-radius: 50%; line-height: 1; font-size: 1rem;" title="Listemden çıkar">×</button>',
+            '  </div>',
+            '  <div style="font-style: italic; color: var(--text-soft); font-size: 0.9rem; line-height: 1.4;">' + escHtml(turkish) + '</div>',
+            level ? '<div style="margin-top: 0.5rem; display: inline-block; font-family: var(--font-ui); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); padding: 0.15rem 0.5rem; background: var(--bg-soft); border-radius: 2px;">' + escHtml(level) + '</div>' : '',
+            '</div>'
+          ].join('');
+        }).join('');
+
+        // Sil butonları
+        elGrid.querySelectorAll('.vocab-card-delete').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var id = btn.dataset.id;
+            if (!id) return;
+            if (!confirm('Bu kelimeyi listenden çıkarmak istiyor musun?')) return;
+            try {
+              await sbCli.from('user_vocab').delete().eq('id', id).eq('user_id', userId);
+              var card = btn.closest('.vocab-card');
+              if (card) card.remove();
+              // Sayım güncelle
+              var remaining = elGrid.querySelectorAll('.vocab-card').length;
+              if (remaining === 0) {
+                elCount.textContent = '';
+                elEmpty.style.display = 'block';
+              } else {
+                elCount.textContent = remaining + ' kelime kayıtlı';
+              }
+            } catch (e) { console.error('[vocab delete]', e); }
+          });
+        });
+      } catch (e) {
+        console.warn('[vocab list] load failed:', e);
       }
     })();
 

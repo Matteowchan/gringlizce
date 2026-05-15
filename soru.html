@@ -1012,6 +1012,172 @@
     mark.hl-yellow { background: #fdef82; color: inherit; padding: 0 2px; }
     mark.hl-blue   { background: #b8dcf5; color: inherit; padding: 0 2px; }
     mark.hl-pink   { background: #f7c1d6; color: inherit; padding: 0 2px; }
+
+    /* === VOCAB POPUP === */
+    .vocab-popup {
+      position: absolute;
+      display: none;
+      width: 340px;
+      max-width: calc(100vw - 24px);
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      padding: 1.2rem 1.3rem 1rem;
+      z-index: 2000;
+      font-family: var(--font-body, Georgia, serif);
+    }
+    .vocab-popup.show { display: block; }
+
+    .vocab-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .vocab-word {
+      font-family: var(--font-display, Georgia, serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text, #1A2230);
+      line-height: 1.2;
+      margin: 0;
+      flex: 1;
+    }
+    .vocab-actions { display: flex; gap: 0.3rem; align-items: center; }
+    .vocab-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 50%;
+      color: var(--text-muted, #888);
+      transition: background 0.15s, color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vocab-icon-btn:hover {
+      background: var(--bg-soft, #f0ece0);
+      color: var(--text, #333);
+    }
+    .vocab-divider {
+      height: 1px;
+      background: var(--line, #D9D2C4);
+      margin: 0.5rem 0 0.7rem;
+      opacity: 0.6;
+    }
+    .vocab-turkish {
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--text-soft, #555);
+      margin: 0 0 0.8rem;
+      line-height: 1.4;
+    }
+    .vocab-example {
+      font-style: italic;
+      font-size: 0.92rem;
+      color: var(--text, #1A2230);
+      margin: 0 0 0.4rem;
+      line-height: 1.45;
+    }
+    .vocab-translation {
+      font-size: 0.82rem;
+      color: var(--text-muted, #888);
+      margin: 0 0 1rem;
+      line-height: 1.4;
+    }
+    .vocab-save-btn {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: none;
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .vocab-save-btn:hover:not(:disabled) { opacity: 0.85; }
+    .vocab-save-btn:disabled { opacity: 0.6; cursor: default; }
+    .vocab-save-btn.saved {
+      background: #3c825a;
+      cursor: default;
+    }
+    .vocab-loading {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-muted, #888);
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 0.6rem 0;
+    }
+    .vocab-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--line, #ddd);
+      border-top-color: var(--teal, #2C5856);
+      border-radius: 50%;
+      animation: vocab-spin 0.8s linear infinite;
+    }
+    @keyframes vocab-spin { to { transform: rotate(360deg); } }
+    .vocab-error {
+      font-size: 0.88rem;
+      color: var(--text-soft, #555);
+      font-style: italic;
+      padding: 0.4rem 0;
+      line-height: 1.4;
+    }
+    .vocab-error a { color: var(--teal, #2C5856); text-decoration: underline; }
+
+    /* Mobil bottom sheet */
+    @media (max-width: 600px) {
+      .vocab-popup {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        padding: 1.5rem 1.3rem 1.2rem;
+        border-bottom: none;
+        animation: vocab-slide-up 0.2s ease-out;
+      }
+      .vocab-popup::before {
+        content: '';
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 38px;
+        height: 4px;
+        background: var(--line, #ddd);
+        border-radius: 2px;
+      }
+    }
+    @keyframes vocab-slide-up {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .vocab-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      z-index: 1990;
+      display: none;
+    }
+    .vocab-backdrop.show { display: block; }
+    @media (min-width: 601px) {
+      .vocab-backdrop { display: none !important; }
+    }
   </style>
 </head>
 <body data-cat="sat">
@@ -2127,6 +2293,12 @@
         <button type="button" class="hl-btn hl-blue" data-color="blue" title="Mavi"></button>
         <button type="button" class="hl-btn hl-pink" data-color="pink" title="Pembe"></button>
         <button type="button" class="hl-btn hl-clear" data-action="clear" title="Sil">×</button>
+        <button type="button" class="hl-btn hl-vocab" data-action="vocab" title="Sözlük" style="background: var(--bg-soft, #f0ece0); color: var(--text, #333); display: inline-flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </button>
       `;
       document.body.appendChild(toolbar);
 
@@ -2363,6 +2535,18 @@
         const btn = e.target.closest('.hl-btn');
         if (!btn) return;
         const slug = SUBCATEGORY_LIST[CURRENT_INDEX] && SUBCATEGORY_LIST[CURRENT_INDEX].slug;
+
+        // Sözlük: seçili metni al, popup aç
+        if (btn.dataset.action === 'vocab') {
+          const sel = window.getSelection();
+          const word = sel ? sel.toString().trim() : '';
+          if (word && window.GriVocab) {
+            window.GriVocab.openWithWord(word, toolbar.getBoundingClientRect());
+          }
+          hide();
+          return;
+        }
+
         if (btn.dataset.action === 'clear') {
           clearHighlightInSelection();
           persistClear(slug);
@@ -2378,6 +2562,238 @@
     }
 
     initHighlightTool();
+
+    // ===========================================================================
+    // VOCAB POPUP
+    // ===========================================================================
+    // - Highlight toolbar'daki kitap ikonu ile tetiklenir
+    // - Önce vocabulary cache'i sorgulanır (Edge Function üzerinden)
+    // - Cache miss + login varsa OpenAI çağrılır
+    // - "Listeme Ekle" → user_vocab tablosuna yazar
+    // ===========================================================================
+    function initVocabPopup() {
+      const popup = document.createElement('div');
+      popup.className = 'vocab-popup';
+      popup.innerHTML = '<div class="vocab-loading"><div class="vocab-spinner"></div><span>Aranıyor...</span></div>';
+      document.body.appendChild(popup);
+
+      const backdrop = document.createElement('div');
+      backdrop.className = 'vocab-backdrop';
+      document.body.appendChild(backdrop);
+
+      let currentVocabularyId = null;
+      let currentWord = null;
+      const isMobile = function () { return window.matchMedia('(max-width: 600px)').matches; };
+
+      function positionPopup(anchorRect) {
+        if (isMobile()) {
+          // Mobil: bottom sheet, CSS halleder
+          return;
+        }
+        // Desktop: anchor rect'in altına yerleştir
+        const ph = popup.offsetHeight || 200;
+        const pw = popup.offsetWidth || 340;
+        let left = anchorRect.left + anchorRect.width / 2 - pw / 2 + window.scrollX;
+        let top = anchorRect.bottom + 8 + window.scrollY;
+
+        // Ekran sağına taşmasın
+        const maxLeft = window.scrollX + window.innerWidth - pw - 12;
+        if (left > maxLeft) left = maxLeft;
+        if (left < window.scrollX + 12) left = window.scrollX + 12;
+
+        // Alta taşıyorsa üste flip et
+        if (top + ph > window.scrollY + window.innerHeight - 12) {
+          top = anchorRect.top - ph - 8 + window.scrollY;
+        }
+
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+      }
+
+      function show(anchorRect) {
+        popup.classList.add('show');
+        if (isMobile()) backdrop.classList.add('show');
+        // Render bittikten sonra konumlandır (boyut hesabı için)
+        setTimeout(function () { positionPopup(anchorRect); }, 0);
+      }
+
+      function hide() {
+        popup.classList.remove('show');
+        backdrop.classList.remove('show');
+        currentVocabularyId = null;
+        currentWord = null;
+      }
+
+      function renderLoading() {
+        popup.innerHTML = '<div class="vocab-loading"><div class="vocab-spinner"></div><span>Aranıyor...</span></div>';
+      }
+
+      function renderError(message) {
+        popup.innerHTML = [
+          '<div class="vocab-head">',
+          '  <h3 class="vocab-word">Hata</h3>',
+          '  <div class="vocab-actions">',
+          '    <button class="vocab-icon-btn" data-action="close" title="Kapat">',
+          '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+          '    </button>',
+          '  </div>',
+          '</div>',
+          '<div class="vocab-divider"></div>',
+          '<div class="vocab-error">' + escapeHtml(message) + '</div>'
+        ].join('');
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function renderResult(data, alreadySaved) {
+        currentVocabularyId = data.vocabulary_id;
+        currentWord = data.word;
+        const saveLabel = alreadySaved ? '✓ LİSTENDE' : '+ LİSTEME EKLE';
+        const saveClass = alreadySaved ? 'vocab-save-btn saved' : 'vocab-save-btn';
+        const saveDisabled = (alreadySaved || !GRI_USER_ID) ? 'disabled' : '';
+
+        popup.innerHTML = [
+          '<div class="vocab-head">',
+          '  <h3 class="vocab-word">' + escapeHtml(data.word) + '</h3>',
+          '  <div class="vocab-actions">',
+          '    <button class="vocab-icon-btn" data-action="speak" title="Telaffuz">',
+          '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+          '    </button>',
+          '    <button class="vocab-icon-btn" data-action="close" title="Kapat">',
+          '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+          '    </button>',
+          '  </div>',
+          '</div>',
+          '<div class="vocab-divider"></div>',
+          '<p class="vocab-turkish">' + escapeHtml(data.turkish || '') + '</p>',
+          data.example ? '<p class="vocab-example">"' + escapeHtml(data.example) + '"</p>' : '',
+          data.translation ? '<p class="vocab-translation">' + escapeHtml(data.translation) + '</p>' : '',
+          GRI_USER_ID
+            ? '<button class="' + saveClass + '" data-action="save" ' + saveDisabled + '>' + saveLabel + '</button>'
+            : '<div class="vocab-error">Listene kaydetmek için <a href="giris.html">giriş yap</a>.</div>'
+        ].join('');
+      }
+
+      async function checkIfSaved(vocabularyId) {
+        if (!GRI_USER_ID || !vocabularyId) return false;
+        try {
+          const res = await supabase.from('user_vocab')
+            .select('id')
+            .eq('user_id', GRI_USER_ID)
+            .eq('vocabulary_id', vocabularyId)
+            .maybeSingle();
+          return !!(res && res.data);
+        } catch (e) { return false; }
+      }
+
+      async function lookup(word) {
+        try {
+          const sessRes = await supabase.auth.getSession();
+          const token = sessRes && sessRes.data && sessRes.data.session
+            ? sessRes.data.session.access_token : null;
+
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = 'Bearer ' + token;
+
+          const res = await fetch(window.SUPABASE_URL + '/functions/v1/vocab-lookup', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ word: word })
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            if (data.error === 'login_required') {
+              renderError('Bu kelime henüz kayıtlı değil. Yeni kelime için giriş yapmalısın. ' +
+                '<a href="giris.html">Giriş Yap</a>');
+            } else if (data.error === 'ai_unavailable') {
+              renderError('Sözlük şu an erişilemez. Birazdan tekrar dene.');
+            } else {
+              renderError('Kelime bulunamadı: ' + (data.message || data.error || 'bilinmeyen hata'));
+            }
+            return;
+          }
+
+          const alreadySaved = await checkIfSaved(data.vocabulary_id);
+          renderResult(data, alreadySaved);
+        } catch (e) {
+          console.error('[vocab] lookup failed:', e);
+          renderError('Bağlantı hatası. İnternetini kontrol et.');
+        }
+      }
+
+      async function saveCurrentWord() {
+        if (!GRI_USER_ID || !currentVocabularyId) return;
+        try {
+          const res = await supabase.from('user_vocab').insert({
+            user_id: GRI_USER_ID,
+            vocabulary_id: currentVocabularyId,
+          });
+          if (res.error && res.error.code !== '23505') {
+            console.warn('[vocab] save failed:', res.error);
+            return;
+          }
+          const btn = popup.querySelector('.vocab-save-btn');
+          if (btn) {
+            btn.classList.add('saved');
+            btn.textContent = '✓ LİSTENDE';
+            btn.disabled = true;
+          }
+        } catch (e) {
+          console.error('[vocab] save error:', e);
+        }
+      }
+
+      function speakWord() {
+        if (!currentWord) return;
+        try {
+          const utter = new SpeechSynthesisUtterance(currentWord);
+          utter.lang = 'en-US';
+          utter.rate = 0.85;
+          window.speechSynthesis.speak(utter);
+        } catch (e) {}
+      }
+
+      // Popup içi tıklamalar
+      popup.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        if (action === 'close') hide();
+        else if (action === 'speak') speakWord();
+        else if (action === 'save') saveCurrentWord();
+      });
+
+      // Backdrop ve ESC ile kapat
+      backdrop.addEventListener('click', hide);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && popup.classList.contains('show')) hide();
+      });
+
+      // Dış tıklama ile kapat (desktop)
+      document.addEventListener('mousedown', function (e) {
+        if (!popup.classList.contains('show')) return;
+        if (popup.contains(e.target)) return;
+        if (isMobile()) return; // mobilde backdrop hallediyor
+        hide();
+      });
+
+      // Expose
+      window.GriVocab = {
+        openWithWord: function (word, anchorRect) {
+          if (!word || word.length > 80) return;
+          renderLoading();
+          show(anchorRect || { left: window.innerWidth / 2, right: window.innerWidth / 2, top: 100, bottom: 100, width: 0, height: 0 });
+          lookup(word);
+        },
+        close: hide,
+      };
+    }
+
+    initVocabPopup();
 
     loadQuestion();
   </script>

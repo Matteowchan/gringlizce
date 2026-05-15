@@ -466,6 +466,11 @@
       '<span>Gri\'ye Sor</span>'
     ].join('');
     btn.addEventListener('click', function () {
+      var grid = document.getElementById('qGrid');
+      if (grid && grid.classList.contains('show-gri')) {
+        closePanel();
+        return;
+      }
       buildPanel();
       openPanel();
       loadStateForCurrentQuestion();

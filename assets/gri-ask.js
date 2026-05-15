@@ -202,6 +202,15 @@
     var el = document.getElementById('gri-quota-text');
     if (el) el.textContent = text;
   }
+  function formatQuota(q) {
+    if (!q) return '';
+    var d = q.daily_remaining || 0;
+    var b = q.bonus_remaining || 0;
+    if (d > 0 && b > 0) return 'Bugün ' + d + ' · Bonus ' + b;
+    if (d > 0) return 'Bugün ' + d + ' / ' + (q.daily_limit || 10);
+    if (b > 0) return 'Bugün doldu · Bonus ' + b;
+    return 'Hak yok';
+  }
   function openPanel() {
     var grid = document.getElementById('qGrid');
     if (grid) grid.classList.add('show-gri');
@@ -228,15 +237,15 @@
     }).join('');
   }
 
-  function renderPromptState(remaining, turnsSoFar, prevTurns) {
-    setQuotaText('Kalan hak: ' + remaining);
+  function renderPromptState(quota, turnsSoFar, prevTurns) {
+    setQuotaText(formatQuota(quota));
     var turnsLeft = TURN_LIMIT - (turnsSoFar || 0);
     var prevHtml = (prevTurns && prevTurns.length) ? renderTurnsHtml(prevTurns) : '';
     setBody([
       prevHtml,
       '<div class="gri-prompt-area">',
       '  <textarea id="gri-prompt-input" placeholder="Bu soru hakkında ne sormak istersin? Örnek: B seçeneği neden yanlış?" maxlength="1000"></textarea>',
-      '  <p class="gri-prompt-hint">Bu soru için Gri\'ye ' + turnsLeft + ' kez ' + (turnsSoFar ? 'daha ' : '') + 'danışabilirsin (toplam ' + TURN_LIMIT + ' hak).</p>',
+      '  <p class="gri-prompt-hint">Bu soru için Gri\'ye ' + turnsLeft + ' kez ' + (turnsSoFar ? 'daha ' : '') + 'danışabilirsin. Günlük 10 hakkın var, paket alırsan üstüne bonus eklenir.</p>',
       '  <button class="gri-send" id="gri-send">Gri\'ye Sor</button>',
       '</div>'
     ].join(''));
@@ -262,9 +271,10 @@
   }
 
   function renderResponseState(data) {
-    setQuotaText('Kalan hak: ' + (data.remaining != null ? data.remaining : '?'));
+    var quota = data.quota || { daily_remaining: 0, bonus_remaining: 0, daily_limit: 10, total_remaining: 0 };
+    setQuotaText(formatQuota(quota));
     var turns = data.turns || [];
-    var canAskMore = data.can_ask_more && (data.remaining == null || data.remaining > 0);
+    var canAskMore = data.can_ask_more && quota.total_remaining > 0;
     var pieces = [];
 
     pieces.push(renderTurnsHtml(turns));
@@ -280,8 +290,8 @@
       ].join(''));
     } else if (turns.length >= TURN_LIMIT) {
       pieces.push('<div class="gri-cached-note">Bu soru için ' + TURN_LIMIT + ' hakkın da kullanıldı. Yeni sorulara geçebilirsin.</div>');
-    } else if (data.remaining === 0) {
-      pieces.push('<div class="gri-cached-note">AI sorgu hakkın bitti.</div>');
+    } else if (quota.total_remaining === 0) {
+      pieces.push('<div class="gri-cached-note">Günlük hakkın bitti, bonus da yok. Yarın yenilenir veya paket alabilirsin.</div>');
     }
 
     setBody(pieces.join(''));
@@ -299,7 +309,7 @@
   }
 
   function renderPaywallState(packs) {
-    setQuotaText('Kalan hak: 0');
+    setQuotaText('Hak yok');
     var packHtml = (packs || []).map(function (p) {
       return [
         '<a class="gri-pack" href="', escapeHtml(p.url), '" target="_blank" rel="noopener">',
@@ -310,8 +320,8 @@
     }).join('');
     setBody([
       '<div class="gri-paywall">',
-      '  <h4>AI sorgu hakkın bitti</h4>',
-      '  <p>Daha fazla soru için paket al. Ödeme sonrası hak otomatik tanımlanır.</p>',
+      '  <h4>Hakkın doldu</h4>',
+      '  <p>Günlük 10 hakkın bugün doldu. Yarın yenilenir veya paketle bonus hak ekleyebilirsin (bonus zaman sınırı yok).</p>',
       '  <div class="gri-packs">', packHtml, '</div>',
       '</div>'
     ].join(''));
@@ -409,32 +419,32 @@
           .eq('question_id', qid)
           .order('used_at', { ascending: true }),
         sb.from('ai_quota')
-          .select('total_quota, used_count')
+          .select('daily_limit, daily_used_count, last_used_date, bonus_quota, bonus_used')
           .eq('user_id', userId)
           .maybeSingle(),
       ]);
 
       var turns = turnsRes.data || [];
-      var remaining = 0;
-      if (quotaRes.data) {
-        remaining = Math.max(0, quotaRes.data.total_quota - quotaRes.data.used_count);
-      }
+      var quota = computeQuotaFromRow(quotaRes.data);
 
+      // 2 tur tamamlanmış
       if (turns.length >= TURN_LIMIT) {
-        renderResponseState({ turns: turns, remaining: remaining, can_ask_more: false });
+        renderResponseState({ turns: turns, quota: quota, can_ask_more: false });
         return;
       }
 
+      // 1 tur var
       if (turns.length > 0) {
-        if (remaining <= 0) {
-          renderResponseState({ turns: turns, remaining: 0, can_ask_more: false });
+        if (quota.total_remaining <= 0) {
+          renderResponseState({ turns: turns, quota: quota, can_ask_more: false });
           return;
         }
-        renderResponseState({ turns: turns, remaining: remaining, can_ask_more: true });
+        renderResponseState({ turns: turns, quota: quota, can_ask_more: true });
         return;
       }
 
-      if (remaining <= 0) {
+      // Tur yok
+      if (quota.total_remaining <= 0) {
         renderPaywallState([
           { name: '10 Soru Paketi', price: 100, url: 'https://www.shopier.com/SATquestionBank/47230429' },
           { name: '25 Soru Paketi', price: 225, url: 'https://www.shopier.com/SATquestionBank/47230479' },
@@ -443,11 +453,32 @@
         return;
       }
 
-      renderPromptState(remaining, 0, null);
+      renderPromptState(quota, 0, null);
     } catch (e) {
       console.error('[Gri] state load failed:', e);
       renderErrorState('Veriler yüklenemedi.');
     }
+  }
+
+  function computeQuotaFromRow(row) {
+    if (!row) {
+      return { daily_limit: 10, daily_remaining: 10, bonus_remaining: 0, total_remaining: 10 };
+    }
+    var dailyLimit = Number(row.daily_limit != null ? row.daily_limit : 10);
+    var dailyUsed = Number(row.daily_used_count || 0);
+    var lastDate = row.last_used_date || null;
+    var today = new Date().toISOString().slice(0, 10);
+    var effectiveUsed = (lastDate && String(lastDate) >= today) ? dailyUsed : 0;
+    var dailyRemaining = Math.max(0, dailyLimit - effectiveUsed);
+    var bonusQuota = Number(row.bonus_quota || 0);
+    var bonusUsed = Number(row.bonus_used || 0);
+    var bonusRemaining = Math.max(0, bonusQuota - bonusUsed);
+    return {
+      daily_limit: dailyLimit,
+      daily_remaining: dailyRemaining,
+      bonus_remaining: bonusRemaining,
+      total_remaining: dailyRemaining + bonusRemaining,
+    };
   }
 
   /* ===== Trigger butonu ===== */

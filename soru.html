@@ -1024,13 +1024,13 @@
     .vocab-popup {
       position: absolute;
       display: none;
-      width: 340px;
+      width: 360px;
       max-width: calc(100vw - 24px);
       background: var(--bg-card, #fff);
       border: 1px solid var(--line, #D9D2C4);
-      border-radius: 4px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      padding: 1.2rem 1.3rem 1rem;
+      border-radius: 6px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      padding: 1.3rem 1.4rem 1.2rem;
       z-index: 2000;
       font-family: var(--font-body, Georgia, serif);
     }
@@ -1041,18 +1041,39 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 0.5rem;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.2rem;
+    }
+    .vocab-word-block {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      flex-wrap: wrap;
     }
     .vocab-word {
       font-family: var(--font-display, Georgia, serif);
-      font-size: 1.5rem;
+      font-size: 1.55rem;
       font-weight: 600;
       color: var(--text, #1A2230);
-      line-height: 1.2;
+      line-height: 1.15;
       margin: 0;
-      flex: 1;
     }
-    .vocab-actions { display: flex; gap: 0.3rem; align-items: center; }
+    .vocab-level {
+      display: inline-block;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted, #888);
+      padding: 0.15rem 0.5rem;
+      background: var(--bg-soft, #f0ece0);
+      border-radius: 2px;
+      line-height: 1.2;
+    }
+    .vocab-level.advanced { color: var(--teal, #2C5856); background: rgba(44,88,86,0.1); }
+    .vocab-level.basic { color: var(--text-muted); }
+
+    .vocab-actions { display: flex; gap: 0.25rem; align-items: center; flex-shrink: 0; }
     .vocab-icon-btn {
       background: none;
       border: none;
@@ -1069,35 +1090,74 @@
       background: var(--bg-soft, #f0ece0);
       color: var(--text, #333);
     }
-    .vocab-divider {
-      height: 1px;
-      background: var(--line, #D9D2C4);
-      margin: 0.5rem 0 0.7rem;
-      opacity: 0.6;
-    }
-    .vocab-turkish {
+
+    .vocab-meanings {
+      font-family: var(--font-body, Georgia, serif);
       font-style: italic;
-      font-size: 1rem;
-      color: var(--text-soft, #555);
-      margin: 0 0 0.8rem;
-      line-height: 1.4;
+      font-size: 1.05rem;
+      color: var(--text, #1A2230);
+      line-height: 1.45;
+      margin: 0.6rem 0 1rem;
+    }
+    .vocab-meanings .sep {
+      color: var(--text-muted, #999);
+      margin: 0 0.45rem;
+      font-style: normal;
+      opacity: 0.7;
+    }
+
+    .vocab-example-block {
+      background: var(--bg-soft, #f0ece0);
+      border-left: 3px solid var(--teal, #2C5856);
+      padding: 0.75rem 0.95rem 0.7rem;
+      margin: 0 0 1rem;
+      border-radius: 0 2px 2px 0;
     }
     .vocab-example {
       font-style: italic;
       font-size: 0.92rem;
       color: var(--text, #1A2230);
       margin: 0 0 0.4rem;
-      line-height: 1.45;
+      line-height: 1.5;
     }
     .vocab-translation {
       font-size: 0.82rem;
-      color: var(--text-muted, #888);
-      margin: 0 0 1rem;
+      color: var(--text-muted, #777);
+      margin: 0;
       line-height: 1.4;
+      padding-left: 0.7rem;
+      border-left: 1px solid rgba(0,0,0,0.08);
     }
+
+    .vocab-synonyms-block {
+      margin: 0 0 1.1rem;
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .vocab-syn-label {
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted, #888);
+      flex-shrink: 0;
+    }
+    .vocab-syn-list {
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--teal, #2C5856);
+    }
+    .vocab-syn-list .sep {
+      color: var(--text-muted, #aaa);
+      margin: 0 0.35rem;
+      font-style: normal;
+    }
+
     .vocab-save-btn {
       width: 100%;
-      padding: 0.7rem;
+      padding: 0.75rem;
       background: var(--teal, #2C5856);
       color: #F4EFE3;
       border: none;
@@ -1116,13 +1176,20 @@
       background: #3c825a;
       cursor: default;
     }
+
+    .vocab-divider {
+      height: 1px;
+      background: var(--line, #D9D2C4);
+      margin: 0.6rem 0 0.8rem;
+      opacity: 0.5;
+    }
     .vocab-loading {
       display: flex;
       align-items: center;
       gap: 0.6rem;
       color: var(--text-muted, #888);
       font-style: italic;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       padding: 0.6rem 0;
     }
     .vocab-spinner {
@@ -1135,13 +1202,13 @@
     }
     @keyframes vocab-spin { to { transform: rotate(360deg); } }
     .vocab-error {
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       color: var(--text-soft, #555);
       font-style: italic;
       padding: 0.4rem 0;
-      line-height: 1.4;
+      line-height: 1.5;
     }
-    .vocab-error a { color: var(--teal, #2C5856); text-decoration: underline; }
+    .vocab-error a { color: var(--teal, #2C5856); text-decoration: underline; font-style: normal; }
 
     /* Mobil bottom sheet */
     @media (max-width: 600px) {
@@ -1153,15 +1220,15 @@
         top: auto;
         width: 100%;
         max-width: 100%;
-        border-radius: 12px 12px 0 0;
-        padding: 1.5rem 1.3rem 1.2rem;
+        border-radius: 14px 14px 0 0;
+        padding: 1.7rem 1.4rem 1.4rem;
         border-bottom: none;
-        animation: vocab-slide-up 0.2s ease-out;
+        animation: vocab-slide-up 0.22s ease-out;
       }
       .vocab-popup::before {
         content: '';
         position: absolute;
-        top: 0.5rem;
+        top: 0.55rem;
         left: 50%;
         transform: translateX(-50%);
         width: 38px;
@@ -2690,13 +2757,47 @@
       function renderResult(data, alreadySaved) {
         currentVocabularyId = data.vocabulary_id;
         currentWord = data.word;
+
+        // Backward compat: eski cache entries 'turkish' string ile gelir, yenisi 'meanings' array
+        const meanings = Array.isArray(data.meanings) && data.meanings.length
+          ? data.meanings.slice(0, 3)
+          : (data.turkish ? [data.turkish] : []);
+        const synonyms = Array.isArray(data.synonyms) && data.synonyms.length
+          ? data.synonyms.slice(0, 3)
+          : [];
+        const level = (data.level || '').toLowerCase();
+
         const saveLabel = alreadySaved ? '✓ LİSTENDE' : '+ LİSTEME EKLE';
         const saveClass = alreadySaved ? 'vocab-save-btn saved' : 'vocab-save-btn';
         const saveDisabled = (alreadySaved || !GRI_USER_ID) ? 'disabled' : '';
 
+        const meaningsHtml = meanings.map(function (m, i) {
+          return (i > 0 ? '<span class="sep">·</span>' : '') + escapeHtml(m);
+        }).join('');
+
+        const synonymsHtml = synonyms.length
+          ? '<div class="vocab-synonyms-block">' +
+            '  <span class="vocab-syn-label">Benzer</span>' +
+            '  <span class="vocab-syn-list">' + synonyms.map(function (s, i) {
+              return (i > 0 ? '<span class="sep">·</span>' : '') + escapeHtml(s);
+            }).join('') + '</span>' +
+            '</div>'
+          : '';
+
+        const levelLabel = level === 'advanced' ? 'İleri'
+          : level === 'intermediate' ? 'Orta'
+          : level === 'basic' ? 'Temel'
+          : '';
+        const levelHtml = levelLabel
+          ? '<span class="vocab-level ' + escapeHtml(level) + '">' + escapeHtml(levelLabel) + '</span>'
+          : '';
+
         popup.innerHTML = [
           '<div class="vocab-head">',
-          '  <h3 class="vocab-word">' + escapeHtml(data.word) + '</h3>',
+          '  <div class="vocab-word-block">',
+          '    <h3 class="vocab-word">' + escapeHtml(data.word) + '</h3>',
+          '    ' + levelHtml,
+          '  </div>',
           '  <div class="vocab-actions">',
           '    <button class="vocab-icon-btn" data-action="speak" title="Telaffuz">',
           '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
@@ -2706,10 +2807,12 @@
           '    </button>',
           '  </div>',
           '</div>',
-          '<div class="vocab-divider"></div>',
-          '<p class="vocab-turkish">' + escapeHtml(data.turkish || '') + '</p>',
-          data.example ? '<p class="vocab-example">"' + escapeHtml(data.example) + '"</p>' : '',
-          data.translation ? '<p class="vocab-translation">' + escapeHtml(data.translation) + '</p>' : '',
+          meanings.length ? '<p class="vocab-meanings">' + meaningsHtml + '</p>' : '',
+          data.example ? '<div class="vocab-example-block">' +
+            '  <p class="vocab-example">"' + escapeHtml(data.example) + '"</p>' +
+            (data.translation ? '  <p class="vocab-translation">' + escapeHtml(data.translation) + '</p>' : '') +
+            '</div>' : '',
+          synonymsHtml,
           GRI_USER_ID
             ? '<button class="' + saveClass + '" data-action="save" ' + saveDisabled + '>' + saveLabel + '</button>'
             : '<div class="vocab-error">Listene kaydetmek için <a href="giris.html">giriş yap</a>.</div>'

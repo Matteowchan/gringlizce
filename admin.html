@@ -165,6 +165,56 @@
       .products-table th:nth-child(1), .products-table td:nth-child(1) { display: none; }
       .products-table th:nth-child(3), .products-table td:nth-child(3) { display: none; }
     }
+
+    .reverify-box {
+      max-width: 420px; margin: 4rem auto;
+      background: var(--bg-card); border: 1px solid var(--line);
+      padding: 2rem 1.8rem;
+    }
+    .reverify-box h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem; margin: 0 0 0.5rem;
+    }
+    .reverify-box .reverify-sub {
+      color: var(--text-muted); font-size: 0.9rem;
+      margin-bottom: 1.4rem;
+    }
+    .reverify-box .reverify-email {
+      font-family: var(--font-mono, monospace);
+      font-size: 0.85rem; color: var(--text-soft);
+      background: var(--bg); border: 1px solid var(--line);
+      padding: 0.5rem 0.7rem; margin-bottom: 1rem;
+      display: block;
+    }
+    .reverify-box input[type="password"] {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg); border: 1px solid var(--line);
+      color: var(--text); padding: 0.65rem 0.7rem;
+      font-family: var(--font-body); font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .reverify-box input[type="password"]:focus {
+      outline: none; border-color: var(--teal);
+    }
+    .reverify-box button {
+      width: 100%; padding: 0.7rem 1rem;
+      background: var(--teal); color: var(--bg);
+      border: none; cursor: pointer;
+      font-family: var(--font-ui); font-size: 11px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      font-weight: 600;
+    }
+    .reverify-box button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .reverify-error {
+      color: #c44; font-size: 0.85rem;
+      min-height: 1.2em; margin-top: 0.6rem;
+    }
+    .reverify-locked-notice {
+      background: rgba(196, 68, 68, 0.08);
+      border: 1px solid rgba(196, 68, 68, 0.3);
+      padding: 0.6rem 0.8rem; font-size: 0.85rem;
+      margin-bottom: 1rem; color: #c44;
+    }
   </style>
 </head>
 <body data-cat="admin">
@@ -200,6 +250,18 @@
       <h2>Erişim Yok</h2>
       <p>Bu sayfa yalnızca admin kullanıcılar içindir.</p>
       <p style="margin-top:1.5rem;"><a href="index.html" class="btn btn-primary">Anasayfa</a></p>
+    </div>
+
+    <div id="reverify-prompt" class="reverify-box" style="display:none;">
+      <h2>Yönetim Erişimi</h2>
+      <p class="reverify-sub">Devam etmek için şifreni tekrar gir.</p>
+      <div id="reverify-locked-notice" class="reverify-locked-notice" style="display:none;">
+        Boşta kaldığın için kilitlendi.
+      </div>
+      <span class="reverify-email" id="reverify-email"></span>
+      <input type="password" id="reverify-password" placeholder="Şifre" autocomplete="current-password">
+      <button id="reverify-submit">Doğrula</button>
+      <div class="reverify-error" id="reverify-error"></div>
     </div>
 
     <div id="admin-content" style="display:none;">
@@ -300,6 +362,25 @@
     var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
 
+    // Admin idle timeout (kullanmak istediğin değeri saniye cinsinden ayarla)
+    var IDLE_TIMEOUT_MIN = 15;
+    var IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MIN * 60 * 1000;
+    var REVERIFY_KEY = 'gri_admin_verified_until';
+
+    function isReverified() {
+      try {
+        var t = sessionStorage.getItem(REVERIFY_KEY);
+        if (!t) return false;
+        return Date.now() < parseInt(t, 10);
+      } catch (e) { return false; }
+    }
+    function setReverified() {
+      try { sessionStorage.setItem(REVERIFY_KEY, String(Date.now() + IDLE_TIMEOUT_MS)); } catch (e) {}
+    }
+    function clearReverified() {
+      try { sessionStorage.removeItem(REVERIFY_KEY); } catch (e) {}
+    }
+
     if (!window.supabase || !window.supabase.createClient) {
       document.getElementById('loading').innerHTML = '<p>supabase-js yüklenemedi.</p>';
       return;
@@ -344,10 +425,31 @@
         if (!state.session) { hide('loading'); show('not-logged-in'); return; }
 
         var profRes = await sb.from('profiles').select('id, email, role').eq('id', state.session.user.id).single();
-        if (profRes.error || !profRes.data) { hide('loading'); show('not-logged-in'); return; }
+        if (profRes.error || !profRes.data) {
+          hide('loading');
+          $('not-logged-in').innerHTML = '<h2>Hata</h2><p>Profil okunamadı: ' + (profRes.error && profRes.error.message ? profRes.error.message : 'bilinmeyen hata') + '</p>';
+          show('not-logged-in');
+          return;
+        }
         state.profile = profRes.data;
         if (state.profile.role !== 'admin') { hide('loading'); show('not-admin'); return; }
 
+        // Reverification gate
+        if (!isReverified()) {
+          hide('loading');
+          showReverifyPrompt(false);
+          return;
+        }
+
+        await loadAdminData();
+      } catch (e) {
+        $('loading').innerHTML = '<p style="color:#c44;">Hata: ' + (e.message || e) + '</p>';
+        console.error(e);
+      }
+    }
+
+    async function loadAdminData() {
+      try {
         var results = await Promise.all([
           sb.from('site_config').select('*'),
           sb.from('products').select('*').order('exam_type').order('slug')
@@ -355,6 +457,7 @@
         if (results[0].error) throw results[0].error;
         if (results[1].error) throw results[1].error;
 
+        state.cfg = {};
         (results[0].data || []).forEach(function (row) { state.cfg[row.key] = row.value; });
         state.products = (results[1].data || []).map(function (p) {
           if (typeof p.variants === 'string') {
@@ -363,15 +466,79 @@
           return p;
         });
 
+        hide('reverify-prompt');
         hide('loading');
         show('admin-content');
         renderBanner();
         renderDiscount();
         renderProducts();
+        startIdleWatcher();
       } catch (e) {
-        $('loading').innerHTML = '<p style="color:#c44;">Hata: ' + (e.message || e) + '</p>';
+        $('loading').innerHTML = '<p style="color:#c44;">Veri yüklenemedi: ' + (e.message || e) + '</p>';
+        show('loading');
         console.error(e);
       }
+    }
+
+    function showReverifyPrompt(wasIdle) {
+      $('reverify-email').textContent = state.session.user.email;
+      $('reverify-password').value = '';
+      $('reverify-error').textContent = '';
+      $('reverify-locked-notice').style.display = wasIdle ? '' : 'none';
+      hide('admin-content');
+      show('reverify-prompt');
+      setTimeout(function () {
+        var inp = $('reverify-password');
+        if (inp) inp.focus();
+      }, 50);
+    }
+
+    async function attemptReverify() {
+      var pw = $('reverify-password').value;
+      if (!pw) return;
+      var btn = $('reverify-submit');
+      var errEl = $('reverify-error');
+      errEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Doğrulanıyor...';
+      try {
+        var res = await sb.auth.signInWithPassword({
+          email: state.session.user.email,
+          password: pw
+        });
+        if (res.error) throw res.error;
+        setReverified();
+        await loadAdminData();
+      } catch (e) {
+        errEl.textContent = 'Şifre hatalı veya doğrulama başarısız.';
+        $('reverify-password').focus();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Doğrula';
+      }
+    }
+
+    // Idle watcher
+    var idleTimer = null;
+    var idleListenersAttached = false;
+    function startIdleWatcher() {
+      resetIdle();
+      if (idleListenersAttached) return;
+      ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (ev) {
+        document.addEventListener(ev, resetIdle, { passive: true });
+      });
+      idleListenersAttached = true;
+    }
+    function resetIdle() {
+      if (idleTimer) clearTimeout(idleTimer);
+      // Extend reverify window on each activity
+      if (isReverified()) setReverified();
+      idleTimer = setTimeout(lockPanel, IDLE_TIMEOUT_MS);
+    }
+    function lockPanel() {
+      clearReverified();
+      if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+      showReverifyPrompt(true);
     }
 
     function renderBanner() {
@@ -630,8 +797,13 @@
     document.addEventListener('DOMContentLoaded', function () {
       $('save-banner').addEventListener('click', saveBanner);
       $('save-discount').addEventListener('click', saveDiscount);
+      $('reverify-submit').addEventListener('click', attemptReverify);
+      $('reverify-password').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') attemptReverify();
+      });
       $('logout-link').addEventListener('click', async function (e) {
         e.preventDefault();
+        clearReverified();
         await sb.auth.signOut();
         try { localStorage.removeItem('gri_cache'); } catch (err) {}
         location.href = 'index.html';

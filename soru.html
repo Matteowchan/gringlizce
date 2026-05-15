@@ -951,6 +951,44 @@
     }
     .q-modal-feedback.success { color: #3c825a; }
     .q-modal-feedback.error { color: #b45046; }
+    /* === HIGHLIGHT TOOL === */
+    .hl-toolbar {
+      position: absolute;
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.45rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #ddd);
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      z-index: 1500;
+    }
+    .hl-toolbar.show { display: inline-flex; }
+    .hl-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.1s, border-color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .hl-btn:hover { transform: scale(1.12); border-color: var(--text); }
+    .hl-btn.hl-yellow { background: #fdef82; }
+    .hl-btn.hl-blue   { background: #b8dcf5; }
+    .hl-btn.hl-pink   { background: #f7c1d6; }
+    .hl-btn.hl-clear  { background: var(--bg-soft, #f0ece0); color: var(--text-muted, #888); font-weight: 600; }
+
+    /* Mark renkleri (uygulanan vurgular) */
+    mark.hl-yellow { background: #fdef82; color: inherit; padding: 0 2px; }
+    mark.hl-blue   { background: #b8dcf5; color: inherit; padding: 0 2px; }
+    mark.hl-pink   { background: #f7c1d6; color: inherit; padding: 0 2px; }
   </style>
 </head>
 <body data-cat="sat">
@@ -1185,6 +1223,9 @@
 
     const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
+    // Auth state — login kullanıcının user_id'si, anonim ise null
+    let GRI_USER_ID = null;
+
     // Tag taksonomisi sözlüğü (slug -> human readable label)
     const SECTION_LABELS = {
       'rw': 'Reading & Writing',
@@ -1288,9 +1329,41 @@
     }
     function setAnswerStatus(slug, status) {
       sessionStorage.setItem('gri.answer.' + slug, status);
+      // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
+      if (GRI_USER_ID) {
+        supabase.from('user_answers').upsert({
+          user_id: GRI_USER_ID,
+          question_slug: slug,
+          status: status,
+          answered_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,question_slug' }).then(function (r) {
+          if (r.error) console.warn('[answers] persist failed:', r.error.message);
+        });
+      }
     }
     function clearAnswersForSet(slugs) {
       slugs.forEach(s => sessionStorage.removeItem('gri.answer.' + s));
+    }
+
+    // Login kullanıcının son 12 saatteki cevaplarını DB'den yükle, sessionStorage'a serp
+    async function preloadAnswersFromDb() {
+      if (!GRI_USER_ID) return;
+      try {
+        const cutoff = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+        const res = await supabase.from('user_answers')
+          .select('question_slug, status')
+          .eq('user_id', GRI_USER_ID)
+          .gte('answered_at', cutoff);
+        if (res && res.data) {
+          res.data.forEach(function (row) {
+            if (!sessionStorage.getItem('gri.answer.' + row.question_slug)) {
+              sessionStorage.setItem('gri.answer.' + row.question_slug, row.status);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('[answers] preload failed:', e);
+      }
     }
 
     // Timer — counts up from 00:00 on each question load
@@ -1317,6 +1390,17 @@
     }
 
     async function loadQuestion() {
+      // Auth state'i bir kez yakala (session varsa user_id'yi kaydet, cevapları DB'den preload et)
+      if (GRI_USER_ID === null) {
+        try {
+          const sessRes = await supabase.auth.getSession();
+          if (sessRes && sessRes.data && sessRes.data.session) {
+            GRI_USER_ID = sessRes.data.session.user.id;
+            await preloadAnswersFromDb();
+          }
+        } catch (e) { console.warn('[auth] init failed:', e); }
+      }
+
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('q');
       const id = params.get('id');
@@ -1660,6 +1744,11 @@
       }
       tagsBarEl.innerHTML = tagsHtml.join('');
 
+      // Highlight restore (login kullanıcı + 12 saatlik kayıt varsa)
+      if (window.GriHighlights && q.slug) {
+        window.GriHighlights.restoreHighlights(q.slug);
+      }
+
       // Navigator is now populated by renderNavigator() from real DB data
     }
 
@@ -1995,6 +2084,276 @@
     }
 
     // Kick off
+    // ===========================================================================
+    // HIGHLIGHT TOOL
+    // ===========================================================================
+    // - Pasaj veya soru metninde seçim yapınca floating toolbar çıkar
+    // - 3 renk + sil
+    // - Login kullanıcı için DB'ye 12 saat persist
+    // - Anonim için sadece geçici (sayfa yenileninde kaybolur)
+    // ===========================================================================
+
+    function initHighlightTool() {
+      // Toolbar oluştur
+      const toolbar = document.createElement('div');
+      toolbar.className = 'hl-toolbar';
+      toolbar.innerHTML = `
+        <button type="button" class="hl-btn hl-yellow" data-color="yellow" title="Sarı"></button>
+        <button type="button" class="hl-btn hl-blue" data-color="blue" title="Mavi"></button>
+        <button type="button" class="hl-btn hl-pink" data-color="pink" title="Pembe"></button>
+        <button type="button" class="hl-btn hl-clear" data-action="clear" title="Sil">×</button>
+      `;
+      document.body.appendChild(toolbar);
+
+      function hide() { toolbar.classList.remove('show'); }
+      function show(rect) {
+        toolbar.classList.add('show');
+        const tw = toolbar.offsetWidth || 140;
+        const left = Math.max(8, rect.left + rect.width / 2 - tw / 2 + window.scrollX);
+        const top = Math.max(8, rect.top - toolbar.offsetHeight - 8 + window.scrollY);
+        toolbar.style.left = left + 'px';
+        toolbar.style.top = top + 'px';
+      }
+
+      // Hangi kapsayıcılarda highlight çalışır
+      function getTargetRoot(node) {
+        if (!node) return null;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (!el) return null;
+        return el.closest('#qTexts, #qPrompt');
+      }
+
+      function getTargetKey(root) {
+        if (root.id === 'qPrompt') return 'qPrompt';
+        if (root.id === 'qTexts') return 'qTexts';
+        return null;
+      }
+
+      // Selection ile text offset hesapla (root içinde)
+      function getOffsetWithin(root, node, offsetInNode) {
+        let offset = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let current = walker.nextNode();
+        while (current && current !== node) {
+          offset += current.textContent.length;
+          current = walker.nextNode();
+        }
+        return offset + offsetInNode;
+      }
+
+      // Belirli text offset aralığını root içinde wrap et
+      function wrapRangeByOffset(root, startOffset, endOffset, color) {
+        if (startOffset >= endOffset) return;
+        let offset = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const nodesToWrap = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          const len = node.textContent.length;
+          if (offset + len > startOffset && offset < endOffset) {
+            const localStart = Math.max(0, startOffset - offset);
+            const localEnd = Math.min(len, endOffset - offset);
+            nodesToWrap.push({ node, localStart, localEnd });
+          }
+          offset += len;
+          if (offset >= endOffset) break;
+        }
+        nodesToWrap.forEach(function (item) {
+          try {
+            const range = document.createRange();
+            range.setStart(item.node, item.localStart);
+            range.setEnd(item.node, item.localEnd);
+            const mark = document.createElement('mark');
+            mark.className = 'hl-' + color;
+            mark.dataset.color = color;
+            range.surroundContents(mark);
+          } catch (e) { /* skip if cross-boundary */ }
+        });
+      }
+
+      // Selection'ı highlight ile sar
+      function applyHighlight(color) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return null;
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) return null;
+
+        const root = getTargetRoot(range.startContainer);
+        if (!root || root !== getTargetRoot(range.endContainer)) return null;
+
+        const startOffset = getOffsetWithin(root, range.startContainer, range.startOffset);
+        const endOffset = getOffsetWithin(root, range.endContainer, range.endOffset);
+        const selectedText = range.toString();
+
+        wrapRangeByOffset(root, startOffset, endOffset, color);
+        sel.removeAllRanges();
+
+        return {
+          target: getTargetKey(root),
+          color: color,
+          start_offset: startOffset,
+          end_offset: endOffset,
+          selected_text: selectedText,
+        };
+      }
+
+      // Selection içindeki mark'ları temizle
+      function clearHighlightInSelection() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return [];
+        const range = sel.getRangeAt(0);
+        const root = getTargetRoot(range.startContainer);
+        if (!root) return [];
+
+        const removed = [];
+        const marks = Array.from(root.querySelectorAll('mark'));
+        marks.forEach(function (mark) {
+          if (sel.containsNode(mark, true)) {
+            const parent = mark.parentNode;
+            while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+            parent.removeChild(mark);
+            removed.push(mark);
+          }
+        });
+        sel.removeAllRanges();
+        // Adjacent text node'ları birleştir
+        if (root.normalize) root.normalize();
+        return removed;
+      }
+
+      // DB persist
+      function persistHighlight(payload, slug) {
+        if (!GRI_USER_ID || !slug) return;
+        supabase.from('user_highlights').insert({
+          user_id: GRI_USER_ID,
+          question_slug: slug,
+          target: payload.target,
+          color: payload.color,
+          start_offset: payload.start_offset,
+          end_offset: payload.end_offset,
+          selected_text: payload.selected_text,
+        }).then(function (r) {
+          if (r.error) console.warn('[hl] persist failed:', r.error.message);
+        });
+      }
+
+      function persistClear(slug) {
+        if (!GRI_USER_ID || !slug) return;
+        // Tüm highlight'ları silip yeniden ekleyeceğiz (basitlik için)
+        const root = document.getElementById('qTexts');
+        const root2 = document.getElementById('qPrompt');
+        const remaining = [];
+        [root, root2].forEach(function (r) {
+          if (!r) return;
+          const target = r.id;
+          r.querySelectorAll('mark').forEach(function (mark) {
+            // Bu mark için offset hesapla
+            const color = mark.dataset.color || mark.className.replace('hl-', '');
+            // Re-walk to find offsets (yeniden hesaplama)
+            const walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT);
+            let offset = 0;
+            let startOff = -1;
+            let node;
+            while ((node = walker.nextNode())) {
+              if (mark.contains(node)) {
+                if (startOff === -1) startOff = offset;
+              }
+              offset += node.textContent.length;
+            }
+            if (startOff >= 0) {
+              const len = mark.textContent.length;
+              remaining.push({
+                user_id: GRI_USER_ID,
+                question_slug: slug,
+                target: target,
+                color: color,
+                start_offset: startOff,
+                end_offset: startOff + len,
+                selected_text: mark.textContent,
+              });
+            }
+          });
+        });
+
+        supabase.from('user_highlights')
+          .delete()
+          .eq('user_id', GRI_USER_ID)
+          .eq('question_slug', slug)
+          .then(function () {
+            if (remaining.length) {
+              supabase.from('user_highlights').insert(remaining).then(function () {});
+            }
+          });
+      }
+
+      // DB'den yükle ve uygula
+      async function restoreHighlights(slug) {
+        if (!GRI_USER_ID || !slug) return;
+        try {
+          const cutoff = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+          const res = await supabase.from('user_highlights')
+            .select('target, color, start_offset, end_offset')
+            .eq('user_id', GRI_USER_ID)
+            .eq('question_slug', slug)
+            .gte('created_at', cutoff)
+            .order('created_at', { ascending: true });
+          if (!res || !res.data) return;
+          res.data.forEach(function (hl) {
+            const root = document.getElementById(hl.target);
+            if (root) wrapRangeByOffset(root, hl.start_offset, hl.end_offset, hl.color);
+          });
+        } catch (e) { console.warn('[hl] restore failed:', e); }
+      }
+
+      // Selection değişimini izle
+      document.addEventListener('mouseup', function (e) {
+        // Toolbar tıklamasından sonra mouseup gelirse görmezden gel
+        if (toolbar.contains(e.target)) return;
+        setTimeout(function () {
+          const sel = window.getSelection();
+          if (!sel.rangeCount || sel.toString().trim().length === 0) {
+            hide();
+            return;
+          }
+          const range = sel.getRangeAt(0);
+          const root = getTargetRoot(range.startContainer);
+          if (!root || root !== getTargetRoot(range.endContainer)) {
+            hide();
+            return;
+          }
+          show(range.getBoundingClientRect());
+        }, 10);
+      });
+
+      document.addEventListener('selectionchange', function () {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.toString().trim().length === 0) {
+          hide();
+        }
+      });
+
+      // Toolbar tıklaması
+      toolbar.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      toolbar.addEventListener('click', function (e) {
+        const btn = e.target.closest('.hl-btn');
+        if (!btn) return;
+        const slug = SUBCATEGORY_LIST[CURRENT_INDEX] && SUBCATEGORY_LIST[CURRENT_INDEX].slug;
+        if (btn.dataset.action === 'clear') {
+          clearHighlightInSelection();
+          persistClear(slug);
+        } else if (btn.dataset.color) {
+          const payload = applyHighlight(btn.dataset.color);
+          if (payload) persistHighlight(payload, slug);
+        }
+        hide();
+      });
+
+      // Expose
+      window.GriHighlights = { restoreHighlights: restoreHighlights };
+    }
+
+    initHighlightTool();
+
     loadQuestion();
   </script>
 

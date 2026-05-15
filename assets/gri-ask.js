@@ -31,18 +31,14 @@
 
   /* ===== CSS injection ===== */
   var css = `
-    .gri-trigger {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: var(--bg-card, #fff); border: 1px solid var(--line, #ddd);
-      padding: 0.45rem 0.85rem; cursor: pointer;
-      font-family: var(--font-ui); font-size: 11px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--text, #222); transition: background 0.15s, border-color 0.15s;
-      border-radius: 999px;
+    .gri-trigger-btn .gri-trigger-icon {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
     }
-    .gri-trigger:hover { background: var(--bg-soft, #f5f5f5); border-color: var(--teal, #2a7a7a); }
-    .gri-trigger img { width: 24px; height: 24px; border-radius: 50%; }
-    .gri-trigger .gri-trigger-label { font-weight: 600; }
+    .q-btn.gri-trigger-btn { gap: 0.4rem; }
 
     .gri-overlay {
       position: fixed; inset: 0;
@@ -445,28 +441,30 @@
 
   /* ===== Trigger butonu enjeksiyonu ===== */
   function ensureTrigger() {
-    var expHead = document.querySelector('.exp-head');
-    if (!expHead) return false;
-    if (expHead.querySelector('.gri-trigger')) return true;
+    var actions = document.querySelector('.q-actions');
+    if (!actions) return false;
+    if (actions.querySelector('.gri-trigger-btn')) return true;
 
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'gri-trigger';
+    btn.className = 'q-btn gri-trigger-btn';
+    btn.id = 'griBtn';
+    btn.setAttribute('aria-label', "Gri'ye Sor");
     btn.innerHTML = [
-      '<img src="assets/gri-mascot.png" alt="Gri">',
-      '<span class="gri-trigger-label">Gri\'ye Sor</span>'
+      '<img class="gri-trigger-icon" src="assets/gri-mascot.png" alt="">',
+      '<span>Gri\'ye Sor</span>'
     ].join('');
     btn.addEventListener('click', function () {
       openModal();
       loadStateForCurrentQuestion();
     });
 
-    // Close butonunun soluna ekle, yoksa sona ekle
-    var closeBtn = expHead.querySelector('.exp-close');
-    if (closeBtn) {
-      expHead.insertBefore(btn, closeBtn);
+    // Açıklama butonunun hemen yanına ekle, yoksa sona
+    var explainBtn = actions.querySelector('#explainBtn');
+    if (explainBtn) {
+      explainBtn.parentNode.insertBefore(btn, explainBtn.nextSibling);
     } else {
-      expHead.appendChild(btn);
+      actions.appendChild(btn);
     }
     return true;
   }

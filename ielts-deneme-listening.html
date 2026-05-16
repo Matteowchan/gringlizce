@@ -25,7 +25,7 @@
     .audio-error-banner code { background: rgba(0,0,0,0.2); padding: 0.15rem 0.4rem; border-radius: 2px; word-break: break-all; }
     .audio-error-banner a { color: #fff; text-decoration: underline; margin-left: 0.5rem; }
 
-    .timer-bar { position: sticky; top: 67px; z-index: 99; background: #fff; border-bottom: 1px solid #d8d2c4; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto; }
+    .timer-bar { position: sticky; top: 67px; z-index: 99; background: #fff; border-bottom: 1px solid #d8d2c4; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: flex-end; max-width: 1100px; margin: 0 auto; }
     .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; color: #1a2a28; }
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #c63838; }
@@ -148,7 +148,6 @@
     </div>
 
     <div class="timer-bar">
-      <div class="timer" id="timerDisplay">Süre: <strong>30:00</strong></div>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
 
@@ -235,7 +234,6 @@
       document.getElementById('testContainer').style.display = 'block';
       renderTest();
       setupAudio();
-      setupTimer();
       buildTabs();
       setActivePart(state.currentPart);
     }
@@ -529,17 +527,6 @@
     function formatTime(s) {
       if (!s || isNaN(s)) return '00:00';
       return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(Math.floor(s%60)).padStart(2,'0');
-    }
-
-    function setupTimer() {
-      const d = document.getElementById('timerDisplay').querySelector('strong');
-      const t = document.getElementById('timerDisplay');
-      state.timerInterval = setInterval(() => {
-        const r = state.duration - Math.floor((Date.now() - state.startedAt) / 1000);
-        if (r <= 0) { d.textContent = '00:00'; t.classList.add('warning'); clearInterval(state.timerInterval); return; }
-        if (r <= 60) t.classList.add('warning');
-        d.textContent = String(Math.floor(r/60)).padStart(2,'0') + ':' + String(r%60).padStart(2,'0');
-      }, 1000);
     }
 
     document.getElementById('submitBtn').addEventListener('click', () => {

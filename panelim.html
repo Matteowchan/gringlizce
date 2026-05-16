@@ -573,7 +573,7 @@
         var userId = sess.data.session.user.id;
 
         var res = await sbCli.from('ielts_writing_submissions')
-          .select('id, task1_essay, task1_word_count, task1_band, task1_feedback, task2_essay, task2_word_count, task2_band, task2_feedback, overall_writing_band, package_type, payment_status, submitted_at, reviewed_at, test:test_id (slug, name)')
+          .select('id, test_id, task1_essay, task1_word_count, task1_band, task1_feedback, task2_essay, task2_word_count, task2_band, task2_feedback, overall_writing_band, package_type, payment_status, submitted_at, reviewed_at, test:test_id (slug, name)')
           .eq('user_id', userId)
           .order('submitted_at', { ascending: false });
 
@@ -592,6 +592,35 @@
           elEmpty.style.display = 'block';
           return;
         }
+
+        // Test'lerin writing parts'larını çek (task_prompt + task_image_url için)
+        var testIds = Array.from(new Set(rows.map(function (r) { return r.test_id; }).filter(Boolean)));
+        var partsByTestId = {};
+        if (testIds.length > 0) {
+          try {
+            var secRes = await sbCli.from('ielts_sections')
+              .select('id, test_id')
+              .in('test_id', testIds)
+              .eq('section', 'writing');
+            var sections = (secRes.data) || [];
+            var sectionToTest = {};
+            sections.forEach(function (s) { sectionToTest[s.id] = s.test_id; });
+
+            if (sections.length > 0) {
+              var partsRes = await sbCli.from('ielts_parts')
+                .select('section_id, part_number, task_prompt, task_image_url')
+                .in('section_id', sections.map(function (s) { return s.id; }))
+                .order('part_number');
+              (partsRes.data || []).forEach(function (p) {
+                var tid = sectionToTest[p.section_id];
+                if (!tid) return;
+                if (!partsByTestId[tid]) partsByTestId[tid] = {};
+                partsByTestId[tid][p.part_number] = p;
+              });
+            }
+          } catch (e) { /* parts yüklenemezse sessiz geç */ }
+        }
+        rows.forEach(function (r) { r._parts = partsByTestId[r.test_id] || {}; });
 
         elEmpty.style.display = 'none';
         elCount.textContent = rows.length + ' kayıt';
@@ -663,6 +692,37 @@
           return '<div style="margin-top:0.9rem; padding:1rem; background:var(--bg-soft); border-radius:3px; border-left:3px solid var(--teal);">' + rows + overall + '</div>';
         }
 
+        function renderTaskPanel(taskNum, r, fbHtml) {
+          var essay = taskNum === 1 ? (r.task1_essay || '(boş)') : (r.task2_essay || '(boş)');
+          var words = taskNum === 1 ? (r.task1_word_count || 0) : (r.task2_word_count || 0);
+          var band = taskNum === 1 ? r.task1_band : r.task2_band;
+          var part = (r._parts || {})[taskNum] || {};
+          var promptText = part.task_prompt || '';
+          var imageUrl = part.task_image_url || '';
+          var minWords = taskNum === 1 ? 150 : 250;
+          var recommendedMin = taskNum === 1 ? 20 : 40;
+
+          var promptBlock = promptText ? [
+            '<div style="margin-bottom:1rem; padding:1rem 1.1rem; background:var(--bg-soft); border-left:3px solid var(--text-muted); border-radius:3px;">',
+            '  <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Soru Kökü</div>',
+            '  <p style="font-style:italic; color:var(--text-soft); font-size:0.9rem; margin:0 0 0.6rem;">You should spend about ' + recommendedMin + ' minutes on this task.</p>',
+            '  <div style="font-size:0.95rem; line-height:1.65; color:var(--text);">' + escHtml(promptText) + '</div>',
+            imageUrl ? '<img src="' + escHtml(imageUrl) + '" alt="Task ' + taskNum + ' görseli" style="display:block; max-width:100%; margin:0.9rem 0 0; border:1px solid var(--line);">' : '',
+            '  <p style="font-style:italic; color:var(--text-soft); font-size:0.9rem; margin:0.6rem 0 0;">You should write at least ' + minWords + ' words.</p>',
+            '</div>'
+          ].join('') : '';
+
+          return [
+            '<div style="margin-top:0.5rem;">',
+            '  <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Task ' + taskNum + ' · ' + words + ' kelime' + (band ? ' · Band ' + band : '') + '</div>',
+            promptBlock,
+            '  <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin:1rem 0 0.4rem;">Öğrenci Yazısı</div>',
+            '  <div style="white-space:pre-wrap; line-height:1.7; font-size:0.95rem; padding:1rem 1.1rem; background:var(--bg-soft); border-radius:3px;">' + escHtml(essay) + '</div>',
+            fbHtml,
+            '</div>'
+          ].join('');
+        }
+
         elGrid.innerHTML = rows.map(function (r) {
           var testName = (r.test && r.test.name) || 'IELTS Mock';
           var t1Words = r.task1_word_count || 0;
@@ -670,6 +730,26 @@
           var bandLine = r.overall_writing_band ? '<div style="font-family:var(--font-display); color:var(--teal); font-size:1.4rem; margin-top:0.4rem;">Band ' + r.overall_writing_band + '</div>' : '';
           var t1FbHtml = renderFeedback(1, r.task1_feedback);
           var t2FbHtml = renderFeedback(2, r.task2_feedback);
+
+          var showT1 = r.package_type !== 'task2_only';
+          var showT2 = r.package_type !== 'task1_only';
+          var firstTask = showT1 ? 1 : 2;
+
+          var tabsHtml = '';
+          if (showT1 && showT2) {
+            tabsHtml = [
+              '<div class="writing-tabs" data-id="' + escHtml(r.id) + '" style="display:flex; gap:0; border-bottom:1px solid var(--line); margin-bottom:1rem; position:sticky; top:0; background:var(--bg-card); z-index:2;">',
+              '  <button class="writing-tab active" data-id="' + escHtml(r.id) + '" data-task="1" style="flex:1; background:transparent; border:none; padding:0.8rem 1rem; font-family:var(--font-display); font-size:1rem; cursor:pointer; border-bottom:3px solid var(--teal); color:var(--text); font-weight:600;">Task 1</button>',
+              '  <button class="writing-tab" data-id="' + escHtml(r.id) + '" data-task="2" style="flex:1; background:transparent; border:none; padding:0.8rem 1rem; font-family:var(--font-display); font-size:1rem; cursor:pointer; border-bottom:3px solid transparent; color:var(--text-soft);">Task 2</button>',
+              '</div>'
+            ].join('');
+          } else {
+            tabsHtml = '<div style="margin-bottom:1rem; font-family:var(--font-display); font-size:1rem; color:var(--text);">Task ' + firstTask + '</div>';
+          }
+
+          var t1Pane = showT1 ? '<div class="writing-task-pane" data-id="' + escHtml(r.id) + '" data-task="1" style="display:' + (firstTask === 1 ? 'block' : 'none') + ';">' + renderTaskPanel(1, r, t1FbHtml) + '</div>' : '';
+          var t2Pane = showT2 ? '<div class="writing-task-pane" data-id="' + escHtml(r.id) + '" data-task="2" style="display:' + (firstTask === 2 ? 'block' : 'none') + ';">' + renderTaskPanel(2, r, t2FbHtml) + '</div>' : '';
+
           return [
             '<div class="writing-card" id="yazi-' + escHtml(r.id) + '" style="background:var(--bg-card); border:1px solid var(--line); border-radius:4px; overflow:hidden;">',
             '  <div class="writing-card-head" data-id="' + escHtml(r.id) + '" style="padding:1.1rem 1.3rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:1rem;">',
@@ -684,20 +764,37 @@
             '    <div class="writing-toggle" style="font-family:var(--font-ui); font-size:1.4rem; color:var(--text-muted);">+</div>',
             '  </div>',
             '  <div class="writing-card-body" data-id="' + escHtml(r.id) + '" style="display:none; padding:0 1.3rem 1.3rem; border-top:1px solid var(--line);">',
-            '    <div style="margin-top:1rem;">',
-            '      <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.4rem;">Task 1 · ' + t1Words + ' kelime' + (r.task1_band ? ' · Band ' + r.task1_band : '') + '</div>',
-            '      <div style="white-space:pre-wrap; line-height:1.65; font-size:0.95rem; padding:0.9rem 1rem; background:var(--bg-soft); border-radius:3px;">' + escHtml(r.task1_essay || '(boş)') + '</div>',
-            '      ' + t1FbHtml,
-            '    </div>',
-            '    <div style="margin-top:1.2rem;">',
-            '      <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.4rem;">Task 2 · ' + t2Words + ' kelime' + (r.task2_band ? ' · Band ' + r.task2_band : '') + '</div>',
-            '      <div style="white-space:pre-wrap; line-height:1.65; font-size:0.95rem; padding:0.9rem 1rem; background:var(--bg-soft); border-radius:3px;">' + escHtml(r.task2_essay || '(boş)') + '</div>',
-            '      ' + t2FbHtml,
-            '    </div>',
+            '    ' + tabsHtml,
+            '    ' + t1Pane,
+            '    ' + t2Pane,
             '  </div>',
             '</div>'
           ].join('');
         }).join('');
+
+        // Tab switching
+        elGrid.querySelectorAll('.writing-tab').forEach(function (tab) {
+          tab.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var id = tab.dataset.id;
+            var task = tab.dataset.task;
+            var tabsContainer = tab.parentElement;
+            tabsContainer.querySelectorAll('.writing-tab').forEach(function (t) {
+              t.classList.remove('active');
+              t.style.borderBottom = '3px solid transparent';
+              t.style.color = 'var(--text-soft)';
+              t.style.fontWeight = '400';
+            });
+            tab.classList.add('active');
+            tab.style.borderBottom = '3px solid var(--teal)';
+            tab.style.color = 'var(--text)';
+            tab.style.fontWeight = '600';
+
+            elGrid.querySelectorAll('.writing-task-pane[data-id="' + id + '"]').forEach(function (pane) {
+              pane.style.display = pane.dataset.task === task ? 'block' : 'none';
+            });
+          });
+        });
 
         // Expand/collapse
         elGrid.querySelectorAll('.writing-card-head').forEach(function (head) {

@@ -41,6 +41,94 @@
       margin: 0 auto;
     }
 
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #555;
+      text-decoration: none;
+      font-size: 0.95rem;
+      margin: 1.5rem 0 0;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .back-link:hover {
+      color: #1a2a28;
+      border-bottom-color: var(--accent, #c89a3c);
+    }
+
+    /* Test list (step 1) */
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      max-width: 980px;
+      margin: 2rem auto 4rem;
+      padding: 0 1.5rem;
+    }
+    .test-card {
+      background: #fff;
+      border: 1px solid var(--rule, #d8d2c4);
+      padding: 1.75rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+    .test-card:hover {
+      border-color: var(--accent, #c89a3c);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .test-card .test-date {
+      color: #888;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .test-card h2 {
+      font-family: Georgia, serif;
+      font-size: 1.4rem;
+      margin: 0 0 0.5rem;
+      color: #1a2a28;
+    }
+    .test-card .test-desc {
+      color: #666;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+      flex-grow: 1;
+    }
+    .test-card .test-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #4a7a4a;
+      margin-top: auto;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f0ede5;
+    }
+    .test-card .test-progress.empty { color: #888; }
+    .test-card .test-cta {
+      display: inline-block;
+      background: #1a2a28;
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 2px;
+      margin-top: 1rem;
+      transition: background 0.15s;
+    }
+    .test-card:hover .test-cta { background: var(--accent, #c89a3c); }
+    .test-card.completed .test-cta { background: #4a7a4a; }
+
+    /* Section grid (step 2) */
     .sections-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -52,7 +140,6 @@
     @media (max-width: 760px) {
       .sections-grid { grid-template-columns: 1fr; }
     }
-
     .section-card {
       background: #fff;
       border: 1px solid var(--rule, #d8d2c4);
@@ -62,7 +149,6 @@
       text-decoration: none;
       color: inherit;
       transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-      position: relative;
     }
     .section-card:hover {
       border-color: var(--accent, #c89a3c);
@@ -111,7 +197,6 @@
     }
     .section-card .stats li:last-child { border-bottom: none; }
     .section-card .stats li strong { color: #1a2a28; font-weight: 600; }
-
     .section-card .cta {
       display: inline-block;
       background: #1a2a28;
@@ -124,7 +209,6 @@
       transition: background 0.15s;
     }
     .section-card:hover .cta { background: var(--accent, #c89a3c); }
-    .section-card.completed { opacity: 0.85; }
     .section-card.completed .cta { background: #4a7a4a; }
     .section-card .status {
       margin-top: 0.6rem;
@@ -145,6 +229,20 @@
     .auth-warning a {
       color: #1a2a28;
       font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      max-width: 580px;
+      margin: 0 auto;
+      color: #888;
+    }
+    .empty-state h3 {
+      font-family: Georgia, serif;
+      font-size: 1.4rem;
+      color: #1a2a28;
+      margin-bottom: 0.5rem;
     }
 
     .tam-deneme-link {
@@ -168,6 +266,8 @@
       padding-bottom: 2px;
     }
     .tam-deneme-link a:hover { color: var(--accent, #c89a3c); }
+
+    .loading { text-align: center; padding: 4rem 2rem; color: #888; }
   </style>
   <script src="assets/theme.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -190,7 +290,7 @@
           <li><a href="ydt.html">YDT</a></li>
           <li><a href="yds.html">YDS</a></li>
           <li class="nav-dropdown" data-dropdown="bank">
-            <a href="soru-bankasi.html" class="nav-dropdown-trigger" aria-expanded="false" data-dropdown-toggle>
+            <a href="soru-bankasi.html" class="nav-dropdown-trigger" data-dropdown-toggle>
               <span>Soru Bankası</span>
               <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor"><path d="M2 4l4 4 4-4z"/></svg>
             </a>
@@ -208,69 +308,92 @@
       <span class="sep">&rsaquo;</span>
       <a href="ielts-soru-bankasi.html">IELTS Soru Bankası</a>
       <span class="sep">&rsaquo;</span>
-      <span>Bölüm Bazlı Çalışma</span>
+      <span id="breadcrumbCurrent">Bölüm Bazlı Çalışma</span>
     </div>
   </div>
 
   <main>
 
-    <section class="hero-section">
-      <div class="eyebrow">IELTS &middot; Bölüm Bazlı Çalışma</div>
-      <h1>Bölüm Seç</h1>
-      <p class="sub">Tek bir bölüme odaklan. Tam denemenin baskısı olmadan Listening, Reading veya Writing'i ayrı ayrı çöz.</p>
-    </section>
-
     <div class="auth-warning" id="authWarning" style="display:none;">
       Çalışmaya başlamak için <a href="giris.html?next=ielts-bolum-calisma.html">giriş yapmalısın</a>.
     </div>
 
-    <div class="sections-grid">
+    <!-- STEP 1: Test selection -->
+    <div id="step1" style="display:none;">
+      <section class="hero-section">
+        <div class="eyebrow">IELTS &middot; Bölüm Bazlı Çalışma</div>
+        <h1>Sınav Seç</h1>
+        <p class="sub">Çalışmak istediğin sınavı seç. Her sınav Listening, Reading ve Writing bölümlerini içerir.</p>
+      </section>
 
-      <a href="ielts-deneme-listening.html?test=ielts-mock-2025-january-1" class="section-card" id="card-listening">
-        <span class="badge">Bölüm 1</span>
-        <h2>Listening</h2>
-        <p class="card-desc">4 part, monolog ve diyalog formatında resmi IELTS Listening sınavı.</p>
-        <ul class="stats">
-          <li><span>Süre</span><strong>30 dakika</strong></li>
-          <li><span>Soru</span><strong>40</strong></li>
-          <li><span>Değerlendirme</span><strong>Otomatik</strong></li>
-        </ul>
-        <span class="cta">Başla</span>
-        <div class="status" id="status-listening"></div>
-      </a>
+      <div class="test-grid" id="testGrid"></div>
 
-      <a href="ielts-deneme-reading.html?test=ielts-mock-2025-january-1" class="section-card" id="card-reading">
-        <span class="badge">Bölüm 2</span>
-        <h2>Reading</h2>
-        <p class="card-desc">3 passage, çeşitli soru tipleri. Academic Reading formatında.</p>
-        <ul class="stats">
-          <li><span>Süre</span><strong>60 dakika</strong></li>
-          <li><span>Soru</span><strong>40</strong></li>
-          <li><span>Değerlendirme</span><strong>Otomatik</strong></li>
-        </ul>
-        <span class="cta">Başla</span>
-        <div class="status" id="status-reading"></div>
-      </a>
-
-      <a href="ielts-deneme-writing.html?test=ielts-mock-2025-january-1" class="section-card" id="card-writing">
-        <span class="badge">Bölüm 3</span>
-        <h2>Writing</h2>
-        <p class="card-desc">Task 1 görsel betimleme, Task 2 argümantatif kompozisyon.</p>
-        <ul class="stats">
-          <li><span>Süre</span><strong>60 dakika</strong></li>
-          <li><span>Task</span><strong>2</strong></li>
-          <li><span>Değerlendirme</span><strong>Uzman geri bildirim</strong></li>
-        </ul>
-        <span class="cta">Başla</span>
-        <div class="status" id="status-writing"></div>
-      </a>
-
+      <div id="emptyTests" class="empty-state" style="display:none;">
+        <h3>Henüz sınav yok</h3>
+        <p>Yakında yeni IELTS denemeleri yayınlanacak.</p>
+      </div>
     </div>
 
-    <div class="tam-deneme-link">
-      <p>Üç bölümü sınav formatında birlikte çözmek için</p>
-      <a href="ielts-deneme.html">Tam Deneme'ye Geç →</a>
+    <!-- STEP 2: Section selection for chosen test -->
+    <div id="step2" style="display:none;">
+      <div class="wrap" style="max-width: 980px; padding: 0 1.5rem;">
+        <a href="ielts-bolum-calisma.html" class="back-link">← Başka sınav seç</a>
+      </div>
+
+      <section class="hero-section">
+        <div class="eyebrow" id="step2Eyebrow">IELTS · —</div>
+        <h1>Bölüm Seç</h1>
+        <p class="sub" id="step2Sub">Tek bir bölüme odaklan. Tam denemenin baskısı olmadan ayrı ayrı çöz.</p>
+      </section>
+
+      <div class="sections-grid">
+        <a href="#" class="section-card" id="card-listening">
+          <span class="badge">Bölüm 1</span>
+          <h2>Listening</h2>
+          <p class="card-desc">4 part, monolog ve diyalog formatında resmi IELTS Listening sınavı.</p>
+          <ul class="stats">
+            <li><span>Süre</span><strong>30 dakika</strong></li>
+            <li><span>Soru</span><strong>40</strong></li>
+            <li><span>Değerlendirme</span><strong>Otomatik</strong></li>
+          </ul>
+          <span class="cta">Başla</span>
+          <div class="status" id="status-listening"></div>
+        </a>
+
+        <a href="#" class="section-card" id="card-reading">
+          <span class="badge">Bölüm 2</span>
+          <h2>Reading</h2>
+          <p class="card-desc">3 passage, çeşitli soru tipleri. Academic Reading formatında.</p>
+          <ul class="stats">
+            <li><span>Süre</span><strong>60 dakika</strong></li>
+            <li><span>Soru</span><strong>40</strong></li>
+            <li><span>Değerlendirme</span><strong>Otomatik</strong></li>
+          </ul>
+          <span class="cta">Başla</span>
+          <div class="status" id="status-reading"></div>
+        </a>
+
+        <a href="#" class="section-card" id="card-writing">
+          <span class="badge">Bölüm 3</span>
+          <h2>Writing</h2>
+          <p class="card-desc">Task 1 görsel betimleme, Task 2 argümantatif kompozisyon.</p>
+          <ul class="stats">
+            <li><span>Süre</span><strong>60 dakika</strong></li>
+            <li><span>Task</span><strong>2</strong></li>
+            <li><span>Değerlendirme</span><strong>Uzman geri bildirim</strong></li>
+          </ul>
+          <span class="cta">Başla</span>
+          <div class="status" id="status-writing"></div>
+        </a>
+      </div>
+
+      <div class="tam-deneme-link">
+        <p>Üç bölümü sınav formatında birlikte çözmek için</p>
+        <a id="tamDenemeLink" href="ielts-deneme.html">Tam Deneme'ye Geç →</a>
+      </div>
     </div>
+
+    <div id="loading" class="loading">Yükleniyor…</div>
 
   </main>
 
@@ -285,26 +408,146 @@
 
     const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
-    const TEST_SLUG = 'ielts-mock-2025-january-1';
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        return new Date(dateStr).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+      } catch (e) { return ''; }
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.supabase) return;
+      if (!window.supabase) {
+        document.getElementById('loading').textContent = 'Bağlantı hatası';
+        return;
+      }
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+      const params = new URLSearchParams(window.location.search);
+      const testSlug = params.get('test');
+
       const { data: { user } } = await sb.auth.getUser();
+
       if (!user) {
+        document.getElementById('loading').style.display = 'none';
         document.getElementById('authWarning').style.display = 'block';
-        document.querySelectorAll('.section-card').forEach(card => {
-          const target = card.getAttribute('href');
-          card.setAttribute('href', 'giris.html?next=' + encodeURIComponent(target));
-        });
+        // Show step1 layout but no test loading
+        document.getElementById('step1').style.display = 'block';
+        document.getElementById('emptyTests').style.display = 'block';
+        document.getElementById('testGrid').style.display = 'none';
         return;
       }
 
-      const { data: test } = await sb.from('ielts_tests').select('id').eq('slug', TEST_SLUG).maybeSingle();
-      if (!test) return;
+      if (testSlug) {
+        await renderStep2(sb, user, testSlug);
+      } else {
+        await renderStep1(sb, user);
+      }
+    });
 
-      const { data: attempts } = await sb.from('ielts_attempts')
+    // ====================================================================
+    // STEP 1 — Test selection
+    // ====================================================================
+    async function renderStep1(sb, user) {
+      const { data: tests, error } = await sb
+        .from('ielts_tests')
+        .select('*')
+        .eq('is_published', true)
+        .order('test_date', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('step1').style.display = 'block';
+      document.getElementById('breadcrumbCurrent').textContent = 'Bölüm Bazlı Çalışma';
+
+      if (error || !tests || !tests.length) {
+        document.getElementById('emptyTests').style.display = 'block';
+        return;
+      }
+
+      // For each test, count completed sections
+      const testIds = tests.map(t => t.id);
+      const { data: attempts } = await sb
+        .from('ielts_attempts')
+        .select('test_id, section')
+        .eq('user_id', user.id)
+        .in('test_id', testIds)
+        .not('completed_at', 'is', null);
+
+      const { data: writingSubs } = await sb
+        .from('ielts_writing_submissions')
+        .select('test_id, payment_status')
+        .eq('user_id', user.id)
+        .in('test_id', testIds);
+
+      // Group: test_id -> Set of sections completed
+      const completedBy = {};
+      (attempts || []).forEach(a => {
+        if (!completedBy[a.test_id]) completedBy[a.test_id] = new Set();
+        completedBy[a.test_id].add(a.section);
+      });
+      (writingSubs || []).forEach(w => {
+        if (!completedBy[w.test_id]) completedBy[w.test_id] = new Set();
+        completedBy[w.test_id].add('writing');
+      });
+
+      const grid = document.getElementById('testGrid');
+      let h = '';
+      for (const t of tests) {
+        const done = completedBy[t.id] ? completedBy[t.id].size : 0;
+        const progressClass = done === 0 ? 'empty' : '';
+        const progressText = done === 0
+          ? `Henüz başlanmadı`
+          : `${done}/3 bölüm tamamlandı`;
+        const completedAll = done === 3 ? ' completed' : '';
+
+        h += `<a href="ielts-bolum-calisma.html?test=${encodeURIComponent(t.slug)}" class="test-card${completedAll}">
+                <div class="test-date">${formatDate(t.test_date) || 'Tam Deneme'}</div>
+                <h2>${escapeHtml(t.name)}</h2>
+                <p class="test-desc">${escapeHtml(t.description || 'Listening, Reading ve Writing bölümleri.')}</p>
+                <div class="test-progress ${progressClass}">${done === 3 ? '✓ ' : ''}${progressText}</div>
+                <span class="test-cta">Bölüm Seç →</span>
+              </a>`;
+      }
+      grid.innerHTML = h;
+    }
+
+    // ====================================================================
+    // STEP 2 — Section cards for chosen test
+    // ====================================================================
+    async function renderStep2(sb, user, testSlug) {
+      const { data: test, error } = await sb
+        .from('ielts_tests')
+        .select('*')
+        .eq('slug', testSlug)
+        .eq('is_published', true)
+        .maybeSingle();
+
+      document.getElementById('loading').style.display = 'none';
+
+      if (error || !test) {
+        document.getElementById('step1').style.display = 'block';
+        document.getElementById('emptyTests').style.display = 'block';
+        document.getElementById('emptyTests').innerHTML = '<h3>Sınav bulunamadı</h3><p>Geçersiz sınav linki. <a href="ielts-bolum-calisma.html">Tüm sınavlara dön</a>.</p>';
+        return;
+      }
+
+      document.getElementById('step2').style.display = 'block';
+      document.getElementById('breadcrumbCurrent').textContent = test.name;
+
+      const dateStr = formatDate(test.test_date);
+      document.getElementById('step2Eyebrow').textContent = dateStr ? `IELTS · ${dateStr}` : `IELTS · ${test.name}`;
+      document.getElementById('step2Sub').textContent = test.description || 'Tek bir bölüme odaklan. Tam denemenin baskısı olmadan ayrı ayrı çöz.';
+
+      // Set card links with this test slug
+      document.getElementById('card-listening').href = `ielts-deneme-listening.html?test=${encodeURIComponent(testSlug)}`;
+      document.getElementById('card-reading').href = `ielts-deneme-reading.html?test=${encodeURIComponent(testSlug)}`;
+      document.getElementById('card-writing').href = `ielts-deneme-writing.html?test=${encodeURIComponent(testSlug)}`;
+      document.getElementById('tamDenemeLink').href = `ielts-deneme.html?test=${encodeURIComponent(testSlug)}`;
+
+      // Completion status
+      const { data: attempts } = await sb
+        .from('ielts_attempts')
         .select('section, band, raw_score, total_questions, completed_at')
         .eq('test_id', test.id).eq('user_id', user.id)
         .not('completed_at', 'is', null)
@@ -324,7 +567,8 @@
         }
       }
 
-      const { data: writingSubs } = await sb.from('ielts_writing_submissions')
+      const { data: writingSubs } = await sb
+        .from('ielts_writing_submissions')
         .select('payment_status, overall_writing_band, submitted_at')
         .eq('test_id', test.id).eq('user_id', user.id)
         .order('submitted_at', { ascending: false }).limit(1);
@@ -342,7 +586,12 @@
           stat.innerHTML = `📝 Taslak kaydedildi`;
         }
       }
-    });
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
   </script>
 
 </body>

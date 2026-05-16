@@ -2018,39 +2018,75 @@
       const contentEl = document.getElementById('expContent');
       const correctLetter = q.correct_answer;
 
-      tabsEl.innerHTML = q.options.map(opt => `
-        <button class="exp-tab${opt.letter === correctLetter ? ' active' : ''}" data-opt="${esc(opt.letter)}">
-          Seçenek ${esc(opt.letter)}
-        </button>
-      `).join('');
+      // Detect explanation format:
+      //   "single"  → explanations.answer.steps  (one solution path, no per-option tabs)
+      //   "perOpt"  → explanations.A/B/C/D.steps (one explanation per option)
+      const hasPerOptExp = q.explanations && (
+        q.explanations.A || q.explanations.B || q.explanations.C || q.explanations.D
+      );
+      const hasSingleExp = q.explanations && q.explanations.answer && q.explanations.answer.steps;
 
-      contentEl.innerHTML = q.options.map(opt => {
-        const explanation = q.explanations[opt.letter];
-        if (!explanation) return '';
-        const isCorrect = opt.letter === correctLetter;
-        const boxClass = isCorrect ? 'correct' : 'incorrect';
-        const statusLabel = isCorrect ? 'Doğru Cevap' : 'Yanlış Cevap';
-        const stepsHtml = (explanation.steps || []).map(step => `
+      if (!hasPerOptExp && hasSingleExp) {
+        // SINGLE EXPLANATION MODE — no tabs
+        tabsEl.innerHTML = '';
+        tabsEl.style.display = 'none';
+        const correctOpt = q.options.find(o => o.letter === correctLetter) || {};
+        const stepsHtml = (q.explanations.answer.steps || []).map(step => `
           <div class="exp-step">
             <h4>${esc(step.title || '')}</h4>
             ${step.body ? `<p>${safeHtml(step.body)}</p>` : ''}
             ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
           </div>
         `).join('');
-
-        return `
-          <div class="exp-panel${isCorrect ? ' active' : ''}" data-opt="${esc(opt.letter)}">
-            <div class="exp-answer-box ${boxClass}">
-              <span class="exp-answer-letter">${esc(opt.letter)}</span>
+        contentEl.innerHTML = `
+          <div class="exp-panel active">
+            <div class="exp-answer-box correct">
+              <span class="exp-answer-letter">${esc(correctLetter)}</span>
               <div class="exp-answer-text">
-                <span class="exp-answer-status">${statusLabel}</span>
-                ${safeHtml(opt.text)}
+                <span class="exp-answer-status">Doğru Cevap</span>
+                ${safeHtml(correctOpt.text || '')}
               </div>
             </div>
             ${stepsHtml}
           </div>
         `;
-      }).join('');
+      } else {
+        // PER-OPTION EXPLANATION MODE — A/B/C/D tabs
+        tabsEl.style.display = '';
+        tabsEl.innerHTML = q.options.map(opt => `
+          <button class="exp-tab${opt.letter === correctLetter ? ' active' : ''}" data-opt="${esc(opt.letter)}">
+            Seçenek ${esc(opt.letter)}
+          </button>
+        `).join('');
+
+        contentEl.innerHTML = q.options.map(opt => {
+          const explanation = q.explanations[opt.letter];
+          if (!explanation) return '';
+          const isCorrect = opt.letter === correctLetter;
+          const boxClass = isCorrect ? 'correct' : 'incorrect';
+          const statusLabel = isCorrect ? 'Doğru Cevap' : 'Yanlış Cevap';
+          const stepsHtml = (explanation.steps || []).map(step => `
+            <div class="exp-step">
+              <h4>${esc(step.title || '')}</h4>
+              ${step.body ? `<p>${safeHtml(step.body)}</p>` : ''}
+              ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
+            </div>
+          `).join('');
+
+          return `
+            <div class="exp-panel${isCorrect ? ' active' : ''}" data-opt="${esc(opt.letter)}">
+              <div class="exp-answer-box ${boxClass}">
+                <span class="exp-answer-letter">${esc(opt.letter)}</span>
+                <div class="exp-answer-text">
+                  <span class="exp-answer-status">${statusLabel}</span>
+                  ${safeHtml(opt.text)}
+                </div>
+              </div>
+              ${stepsHtml}
+            </div>
+          `;
+        }).join('');
+      }
 
       // Tags chip bar (category + subcategory only; difficulty shown via grid colors)
       const tagsBarEl = document.getElementById('qTagsBar');

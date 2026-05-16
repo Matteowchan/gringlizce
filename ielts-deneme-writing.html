@@ -10,7 +10,7 @@
   <style>
     body { background: #fafaf7; margin: 0; }
 
-    .timer-bar { position: sticky; top: 0; z-index: 99; background: #1a2a28; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .timer-bar { position: sticky; top: 0; z-index: 99; background: #1a2a28; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: flex-end; }
     .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; }
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #ff9090; }
@@ -118,7 +118,6 @@
 
   <div id="testContainer" style="display:none;">
     <div class="timer-bar">
-      <div class="timer" id="timerDisplay">Süre: <strong>60:00</strong></div>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
 
@@ -219,7 +218,6 @@
       document.getElementById('testContainer').style.display = 'block';
       buildTabs();
       renderTasks();
-      setupTimer();
       setActiveTask(state.currentTask);
     }
 
@@ -323,17 +321,6 @@
       localStorage.setItem('ielts_writing_' + TEST_SLUG, JSON.stringify({
         essays: state.essays, startedAt: state.startedAt, currentTask: state.currentTask,
       }));
-    }
-
-    function setupTimer() {
-      const d = document.getElementById('timerDisplay').querySelector('strong');
-      const t = document.getElementById('timerDisplay');
-      state.timerInterval = setInterval(() => {
-        const r = state.duration - Math.floor((Date.now() - state.startedAt) / 1000);
-        if (r <= 0) { d.textContent = '00:00'; t.classList.add('warning'); clearInterval(state.timerInterval); return; }
-        if (r <= 300) t.classList.add('warning');
-        d.textContent = String(Math.floor(r/60)).padStart(2,'0') + ':' + String(r%60).padStart(2,'0');
-      }, 1000);
     }
 
     document.getElementById('submitBtn').addEventListener('click', () => {

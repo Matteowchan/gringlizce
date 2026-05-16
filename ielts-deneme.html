@@ -30,6 +30,98 @@
       max-width: 680px;
     }
 
+    .test-selector {
+      position: relative;
+      margin: 1.75rem 0 0;
+      max-width: 480px;
+    }
+    .test-selector-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      background: #fff;
+      border: 1px solid var(--rule, #d8d2c4);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      color: var(--ink, #1a2a28);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .test-selector-btn:hover {
+      border-color: var(--accent, #c89a3c);
+    }
+    .test-selector-btn .selector-label {
+      font-family: var(--font-ui, system-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #888;
+      margin-right: 0.6rem;
+    }
+    .test-selector-btn .selector-name {
+      flex: 1;
+      text-align: left;
+      font-weight: 600;
+    }
+    .test-selector-btn .selector-chevron {
+      margin-left: 0.6rem;
+      color: #888;
+      transition: transform 0.2s;
+    }
+    .test-selector.open .test-selector-btn .selector-chevron {
+      transform: rotate(180deg);
+    }
+    .test-selector-list {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--rule, #d8d2c4);
+      border-radius: 4px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      z-index: 20;
+      display: none;
+      overflow: hidden;
+    }
+    .test-selector.open .test-selector-list { display: block; }
+    .test-selector-item {
+      display: block;
+      padding: 0.85rem 1.1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--rule, #d8d2c4);
+      transition: background 0.12s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .test-selector-item:last-child { border-bottom: none; }
+    .test-selector-item:hover { background: #fafaf7; }
+    .test-selector-item.active {
+      background: #fafaf7;
+      cursor: default;
+    }
+    .test-selector-item.active .item-name { color: var(--accent, #c89a3c); }
+    .test-selector-item .item-name {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink, #1a2a28);
+      margin-bottom: 0.15rem;
+    }
+    .test-selector-item .item-meta {
+      font-size: 0.8rem;
+      color: #888;
+      letter-spacing: 0.04em;
+    }
+    .test-selector-item.active .item-meta::after {
+      content: ' · Aktif';
+      color: var(--accent, #c89a3c);
+      font-weight: 600;
+    }
+
     .test-card {
       background: #fff;
       border: 1px solid var(--rule, #d8d2c4);
@@ -275,6 +367,15 @@
     <section class="hero-deneme">
       <h1>IELTS Deneme</h1>
       <p class="sub">Resmi sınav formatında tam simülasyon veya tek bölüme odaklı çalışma. Listening ve Reading otomatik puanlanır, Writing için uzman geri bildirim alabilirsin.</p>
+
+      <div class="test-selector" id="testSelector" style="display: none;">
+        <button class="test-selector-btn" id="testSelectorBtn" type="button">
+          <span class="selector-label">Sınav</span>
+          <span class="selector-name" id="testSelectorName">—</span>
+          <span class="selector-chevron">▾</span>
+        </button>
+        <div class="test-selector-list" id="testSelectorList"></div>
+      </div>
     </section>
 
     <article class="test-card" id="testCard">
@@ -357,7 +458,8 @@
 
     const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
-    const TEST_SLUG = 'ielts-mock-1';
+    const urlParams = new URLSearchParams(window.location.search);
+    const REQUESTED_SLUG = urlParams.get('test');
 
     document.addEventListener('DOMContentLoaded', async () => {
       if (!window.supabase) {
@@ -366,18 +468,65 @@
       }
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      const { data: test, error } = await sb
+      // Yayında olan tüm testleri çek
+      const { data: allTests, error: allErr } = await sb
         .from('ielts_tests')
         .select('*')
-        .eq('slug', TEST_SLUG)
         .eq('is_published', true)
-        .maybeSingle();
+        .order('test_date', { ascending: false });
 
-      if (error || !test) {
+      if (allErr || !allTests || allTests.length === 0) {
         document.getElementById('testMeta').textContent = 'Test bulunamadı';
         document.getElementById('testName').textContent = 'Yakında';
-        document.getElementById('testDesc').textContent = 'Bu deneme henüz yayında değil.';
+        document.getElementById('testDesc').textContent = 'Henüz yayında olan deneme yok.';
         return;
+      }
+
+      // Aktif test: URL'de slug varsa onu, yoksa en yeni olanı
+      const test = (REQUESTED_SLUG && allTests.find(t => t.slug === REQUESTED_SLUG)) || allTests[0];
+
+      // URL'i temizle (slug yokken hub'da en yeni testin slug'ı görünsün ama browser history bozulmasın)
+      if (!REQUESTED_SLUG) {
+        history.replaceState(null, '', 'ielts-deneme.html?test=' + test.slug);
+      }
+
+      // Test selector'ı doldur (1'den fazla yayında test varsa göster)
+      if (allTests.length > 1) {
+        const selector = document.getElementById('testSelector');
+        const list = document.getElementById('testSelectorList');
+        document.getElementById('testSelectorName').textContent = test.name;
+        selector.style.display = 'block';
+
+        list.innerHTML = allTests.map(function (t) {
+          const dateLabel = t.test_date
+            ? new Date(t.test_date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })
+            : 'Tam Deneme';
+          return '<a class="test-selector-item ' + (t.slug === test.slug ? 'active' : '') + '" '
+               + 'href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
+               + '<div class="item-name">' + escapeHtml(t.name) + '</div>'
+               + '<div class="item-meta">' + escapeHtml(dateLabel) + '</div>'
+               + '</a>';
+        }).join('');
+
+        document.getElementById('testSelectorBtn').addEventListener('click', function (e) {
+          e.stopPropagation();
+          selector.classList.toggle('open');
+        });
+        document.addEventListener('click', function (e) {
+          if (!selector.contains(e.target)) selector.classList.remove('open');
+        });
+      }
+
+      // Start butonlarını seçilen teste göre güncelle
+      document.querySelectorAll('.section-card .start-btn').forEach(function (btn) {
+        const oldHref = btn.getAttribute('href');
+        const newHref = oldHref.replace(/[?&]test=[^&]*/, '') + (oldHref.includes('?') ? '&' : '?') + 'test=' + encodeURIComponent(test.slug);
+        btn.setAttribute('href', newHref);
+      });
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
 
       document.getElementById('testMeta').textContent = test.test_date

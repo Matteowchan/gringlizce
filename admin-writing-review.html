@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Değerlendirme | Yönetim</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <meta name="theme-color" content="#1a2a28">
+  <link rel="stylesheet" href="assets/main.css">
+  <style>
+    body { background: var(--bg); }
+
+    .review-topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg-card); border-bottom: 1px solid var(--line);
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .review-topbar a.back {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none;
+    }
+    .review-topbar a.back:hover { color: var(--text); }
+    .review-topbar .meta { font-size: 0.9rem; color: var(--text-soft); text-align: center; flex: 1; }
+    .review-topbar .meta strong { color: var(--text); font-weight: 600; }
+
+    .review-wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+    .review-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1000px) { .review-grid { grid-template-columns: 1fr; } }
+
+    .review-col h3 {
+      font-family: var(--font-display); font-size: 1.2rem;
+      margin: 0 0 0.4rem; padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--teal);
+    }
+    .essay-block {
+      background: var(--bg-card); border: 1px solid var(--line);
+      padding: 1.2rem; margin-bottom: 1.2rem; border-radius: 4px;
+    }
+    .essay-block .essay-meta {
+      font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;
+    }
+    .essay-block .essay-prompt {
+      font-style: italic; color: var(--text-soft); font-size: 0.9rem;
+      margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dashed var(--line);
+      line-height: 1.5;
+    }
+    .essay-block .essay-text {
+      white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem; color: var(--text);
+    }
+
+    .form-block {
+      background: var(--bg-card); border: 1px solid var(--line);
+      padding: 1.2rem; margin-bottom: 1.2rem; border-radius: 4px;
+    }
+    .form-block .form-block-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line);
+    }
+    .form-block h4 {
+      font-family: var(--font-display); font-size: 1.05rem; margin: 0;
+    }
+    .form-block .computed-band {
+      font-family: var(--font-display); font-size: 1.4rem; color: var(--teal);
+    }
+    .criterion {
+      margin-bottom: 0.9rem;
+      display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 1rem;
+      align-items: start;
+    }
+    .criterion .crit-label {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-soft); padding-top: 0.4rem;
+    }
+    .criterion select {
+      font-family: var(--font-display); font-size: 1rem;
+      padding: 0.35rem 0.6rem; min-width: 80px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 2px;
+    }
+    .criterion textarea {
+      grid-column: 1 / -1;
+      width: 100%; min-height: 60px; resize: vertical;
+      padding: 0.55rem 0.7rem;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 2px;
+      font-family: inherit; font-size: 0.9rem; line-height: 1.5;
+      box-sizing: border-box;
+    }
+
+    .overall-row {
+      background: var(--bg-card); border: 1px solid var(--teal);
+      padding: 1.2rem; border-radius: 4px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .overall-row .lbl {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--text-soft);
+    }
+    .overall-row .val {
+      font-family: var(--font-display); font-size: 1.8rem; color: var(--teal);
+    }
+    .overall-row .manual-override {
+      display: flex; gap: 0.5rem; align-items: center; font-size: 0.85rem; color: var(--text-soft);
+    }
+    .overall-row .manual-override select {
+      font-family: var(--font-display); font-size: 1rem;
+      padding: 0.3rem 0.5rem;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 2px;
+    }
+
+    .save-row { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+    .save-row button {
+      padding: 0.7rem 1.4rem; border: none; border-radius: 2px;
+      font-weight: 600; font-size: 0.95rem; cursor: pointer;
+    }
+    .save-row .btn-save { background: var(--teal); color: var(--bg); }
+    .save-row .btn-save:hover { opacity: 0.9; }
+    .save-row .btn-save:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
+    .save-row .btn-secondary { background: var(--bg-soft); color: var(--text); }
+
+    .status-line { padding: 0.5rem 0; font-size: 0.9rem; }
+    .status-line.ok { color: var(--teal); }
+    .status-line.err { color: #c63838; }
+
+    .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+</head>
+<body>
+
+  <div class="review-topbar">
+    <a class="back" href="admin.html">‹ Yönetim Paneline Dön</a>
+    <div class="meta" id="topMeta">—</div>
+    <div style="width: 180px;"></div>
+  </div>
+
+  <div class="review-wrap">
+    <div id="loadingState" class="loading-state">Yükleniyor…</div>
+
+    <div id="reviewContent" style="display: none;">
+      <div class="review-grid">
+
+        <div class="review-col">
+          <h3>Öğrenci Yazıları</h3>
+
+          <div class="essay-block" id="task1Essay">
+            <div class="essay-meta" id="task1Meta">Task 1</div>
+            <div class="essay-prompt" id="task1Prompt"></div>
+            <div class="essay-text" id="task1Text"></div>
+          </div>
+
+          <div class="essay-block" id="task2Essay">
+            <div class="essay-meta" id="task2Meta">Task 2</div>
+            <div class="essay-prompt" id="task2Prompt"></div>
+            <div class="essay-text" id="task2Text"></div>
+          </div>
+        </div>
+
+        <div class="review-col">
+          <h3>Geri Bildirim</h3>
+
+          <div class="form-block" id="task1Form">
+            <div class="form-block-head">
+              <h4>Task 1</h4>
+              <span class="computed-band" id="task1ComputedBand">—</span>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Task Achievement</div>
+              <select data-task="1" data-crit="task_achievement"></select>
+              <textarea data-task="1" data-crit="task_achievement" placeholder="Task Achievement notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Coherence & Cohesion</div>
+              <select data-task="1" data-crit="coherence"></select>
+              <textarea data-task="1" data-crit="coherence" placeholder="Coherence notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Lexical Resource</div>
+              <select data-task="1" data-crit="lexical"></select>
+              <textarea data-task="1" data-crit="lexical" placeholder="Lexical notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Grammatical Range & Accuracy</div>
+              <select data-task="1" data-crit="grammar"></select>
+              <textarea data-task="1" data-crit="grammar" placeholder="Grammar notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Genel Notlar</div>
+              <div></div>
+              <textarea data-task="1" data-crit="overall_notes" placeholder="Task 1 genel değerlendirmesi"></textarea>
+            </div>
+          </div>
+
+          <div class="form-block" id="task2Form">
+            <div class="form-block-head">
+              <h4>Task 2</h4>
+              <span class="computed-band" id="task2ComputedBand">—</span>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Task Response</div>
+              <select data-task="2" data-crit="task_response"></select>
+              <textarea data-task="2" data-crit="task_response" placeholder="Task Response notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Coherence & Cohesion</div>
+              <select data-task="2" data-crit="coherence"></select>
+              <textarea data-task="2" data-crit="coherence" placeholder="Coherence notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Lexical Resource</div>
+              <select data-task="2" data-crit="lexical"></select>
+              <textarea data-task="2" data-crit="lexical" placeholder="Lexical notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Grammatical Range & Accuracy</div>
+              <select data-task="2" data-crit="grammar"></select>
+              <textarea data-task="2" data-crit="grammar" placeholder="Grammar notları"></textarea>
+            </div>
+            <div class="criterion">
+              <div class="crit-label">Genel Notlar</div>
+              <div></div>
+              <textarea data-task="2" data-crit="overall_notes" placeholder="Task 2 genel değerlendirmesi"></textarea>
+            </div>
+          </div>
+
+          <div class="overall-row">
+            <div>
+              <div class="lbl">Overall Writing Band</div>
+              <div class="val" id="overallBandDisplay">—</div>
+            </div>
+            <div class="manual-override">
+              <label for="overallBandOverride">Manuel:</label>
+              <select id="overallBandOverride">
+                <option value="">Otomatik</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="status-line" id="saveStatus"></div>
+
+          <div class="save-row">
+            <button class="btn-secondary" id="cancelBtn">Geri Dön</button>
+            <button class="btn-save" id="saveBtn">Kaydet ve Yayınla</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+    var params = new URLSearchParams(window.location.search);
+    var SUB_ID = params.get('id');
+
+    if (!SUB_ID) {
+      document.getElementById('loadingState').innerHTML = '<p>Submission ID parametresi (?id=...) eksik.</p>';
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (!SUB_ID) return;
+      if (!window.supabase || !window.supabase.createClient) {
+        document.getElementById('loadingState').innerHTML = '<p>supabase-js yüklenemedi.</p>';
+        return;
+      }
+      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+
+      // Auth kontrolü
+      var sess = await sb.auth.getSession();
+      if (!sess || !sess.data || !sess.data.session) {
+        window.location.href = 'giris.html?next=' + encodeURIComponent(location.pathname + location.search);
+        return;
+      }
+      var session = sess.data.session;
+      var ADMIN_EMAILS = ['mertatasal@gmail.com', 'atasal@gringlizce.com'];
+      if (ADMIN_EMAILS.indexOf(session.user.email) === -1) {
+        document.getElementById('loadingState').innerHTML = '<p>Bu sayfaya erişim yetkin yok.</p>';
+        return;
+      }
+
+      // Band options
+      var BAND_VALUES = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
+      document.querySelectorAll('.criterion select').forEach(function (sel) {
+        sel.innerHTML = '<option value="">—</option>' + BAND_VALUES.map(function (v) {
+          return '<option value="' + v + '">' + v + '</option>';
+        }).join('');
+      });
+      var overrideSel = document.getElementById('overallBandOverride');
+      overrideSel.innerHTML = '<option value="">Otomatik</option>' + BAND_VALUES.map(function (v) {
+        return '<option value="' + v + '">' + v + '</option>';
+      }).join('');
+
+      // Submission'ı yükle
+      var subRes = await sb.from('ielts_writing_submissions')
+        .select('*, test:test_id (slug, name)')
+        .eq('id', SUB_ID)
+        .maybeSingle();
+
+      if (subRes.error || !subRes.data) {
+        document.getElementById('loadingState').innerHTML = '<p>Submission bulunamadı: ' + (subRes.error ? subRes.error.message : 'kayıt yok') + '</p>';
+        return;
+      }
+      var sub = subRes.data;
+
+      // Parts'ı yükle (task_prompt için)
+      var partsRes = await sb.from('ielts_parts')
+        .select('part_number, task_prompt')
+        .eq('section_id', (await sb.from('ielts_sections')
+          .select('id')
+          .eq('test_id', sub.test_id)
+          .eq('section', 'writing')
+          .maybeSingle()).data.id)
+        .order('part_number');
+      var parts = (partsRes.data) || [];
+      var prompt1 = (parts.find(function (p) { return p.part_number === 1; }) || {}).task_prompt || '';
+      var prompt2 = (parts.find(function (p) { return p.part_number === 2; }) || {}).task_prompt || '';
+
+      // Öğrenci bilgisi
+      var userLabel = '—';
+      try {
+        var profRes = await sb.from('profiles').select('email, full_name').eq('id', sub.user_id).maybeSingle();
+        if (profRes.data) userLabel = profRes.data.full_name || profRes.data.email || '—';
+      } catch (e) {}
+
+      // Topbar
+      var testName = (sub.test && sub.test.name) || 'IELTS Mock';
+      var pkgMap = { task1_only: 'Sadece Task 1', task2_only: 'Sadece Task 2', both: 'Task 1 + Task 2', draft: 'Taslak' };
+      document.getElementById('topMeta').innerHTML =
+        '<strong>' + escHtml(userLabel) + '</strong> · ' +
+        escHtml(testName) + ' · ' +
+        escHtml(pkgMap[sub.package_type] || sub.package_type || '—');
+
+      // Essay alanlarını doldur
+      document.getElementById('task1Meta').textContent = 'Task 1 · ' + (sub.task1_word_count || 0) + ' kelime';
+      document.getElementById('task1Prompt').textContent = prompt1;
+      document.getElementById('task1Text').textContent = sub.task1_essay || '(boş)';
+
+      document.getElementById('task2Meta').textContent = 'Task 2 · ' + (sub.task2_word_count || 0) + ' kelime';
+      document.getElementById('task2Prompt').textContent = prompt2;
+      document.getElementById('task2Text').textContent = sub.task2_essay || '(boş)';
+
+      // Paket task1_only ise Task 2 formunu, task2_only ise Task 1 formunu gizle
+      if (sub.package_type === 'task1_only') {
+        document.getElementById('task2Form').style.display = 'none';
+        document.getElementById('task2Essay').style.opacity = '0.5';
+      } else if (sub.package_type === 'task2_only') {
+        document.getElementById('task1Form').style.display = 'none';
+        document.getElementById('task1Essay').style.opacity = '0.5';
+      }
+
+      // Mevcut feedback varsa formu doldur
+      function fillFeedback(taskNum, fb) {
+        if (!fb || typeof fb !== 'object') return;
+        Object.keys(fb).forEach(function (key) {
+          var v = fb[key];
+          if (v == null) return;
+          if (key === 'overall_notes') {
+            var ta = document.querySelector('textarea[data-task="' + taskNum + '"][data-crit="overall_notes"]');
+            if (ta) ta.value = typeof v === 'string' ? v : '';
+          } else if (typeof v === 'object') {
+            var sel = document.querySelector('select[data-task="' + taskNum + '"][data-crit="' + key + '"]');
+            var ta2 = document.querySelector('textarea[data-task="' + taskNum + '"][data-crit="' + key + '"]');
+            if (sel && v.band != null) sel.value = v.band;
+            if (ta2 && v.notes) ta2.value = v.notes;
+          }
+        });
+      }
+      fillFeedback(1, sub.task1_feedback);
+      fillFeedback(2, sub.task2_feedback);
+      if (sub.overall_writing_band != null) {
+        // Manuel override seçili kabul et (otomatik değil)
+        overrideSel.value = sub.overall_writing_band;
+      }
+
+      // Band hesaplama (yarım banda yuvarla)
+      function roundHalf(n) {
+        return Math.round(n * 2) / 2;
+      }
+
+      function computeTaskBand(taskNum) {
+        var crits = taskNum === 1
+          ? ['task_achievement', 'coherence', 'lexical', 'grammar']
+          : ['task_response', 'coherence', 'lexical', 'grammar'];
+        var sum = 0, count = 0;
+        crits.forEach(function (c) {
+          var sel = document.querySelector('select[data-task="' + taskNum + '"][data-crit="' + c + '"]');
+          if (sel && sel.value !== '') {
+            sum += parseFloat(sel.value);
+            count++;
+          }
+        });
+        return count === 4 ? roundHalf(sum / 4) : null;
+      }
+
+      function recomputeBands() {
+        var t1 = (sub.package_type === 'task2_only') ? null : computeTaskBand(1);
+        var t2 = (sub.package_type === 'task1_only') ? null : computeTaskBand(2);
+        document.getElementById('task1ComputedBand').textContent = t1 != null ? 'Band ' + t1 : '—';
+        document.getElementById('task2ComputedBand').textContent = t2 != null ? 'Band ' + t2 : '—';
+
+        var overall = null;
+        if (sub.package_type === 'task1_only') overall = t1;
+        else if (sub.package_type === 'task2_only') overall = t2;
+        else if (t1 != null && t2 != null) overall = roundHalf((t1 + 2 * t2) / 3);
+
+        var override = overrideSel.value;
+        var displayBand = override !== '' ? parseFloat(override) : overall;
+        document.getElementById('overallBandDisplay').textContent = displayBand != null ? 'Band ' + displayBand : '—';
+      }
+
+      document.querySelectorAll('.criterion select').forEach(function (s) {
+        s.addEventListener('change', recomputeBands);
+      });
+      overrideSel.addEventListener('change', recomputeBands);
+      recomputeBands();
+
+      // Save
+      document.getElementById('saveBtn').addEventListener('click', async function () {
+        var btn = this;
+        btn.disabled = true;
+        var status = document.getElementById('saveStatus');
+        status.className = 'status-line';
+        status.textContent = 'Kaydediliyor…';
+
+        function collectFeedback(taskNum) {
+          var crits = taskNum === 1
+            ? ['task_achievement', 'coherence', 'lexical', 'grammar']
+            : ['task_response', 'coherence', 'lexical', 'grammar'];
+          var out = {};
+          crits.forEach(function (c) {
+            var sel = document.querySelector('select[data-task="' + taskNum + '"][data-crit="' + c + '"]');
+            var ta = document.querySelector('textarea[data-task="' + taskNum + '"][data-crit="' + c + '"]');
+            out[c] = {
+              band: sel && sel.value !== '' ? parseFloat(sel.value) : null,
+              notes: ta ? ta.value : ''
+            };
+          });
+          var ovTa = document.querySelector('textarea[data-task="' + taskNum + '"][data-crit="overall_notes"]');
+          out.overall_notes = ovTa ? ovTa.value : '';
+          return out;
+        }
+
+        var t1Band = (sub.package_type === 'task2_only') ? null : computeTaskBand(1);
+        var t2Band = (sub.package_type === 'task1_only') ? null : computeTaskBand(2);
+
+        var override = overrideSel.value;
+        var overall;
+        if (override !== '') overall = parseFloat(override);
+        else if (sub.package_type === 'task1_only') overall = t1Band;
+        else if (sub.package_type === 'task2_only') overall = t2Band;
+        else if (t1Band != null && t2Band != null) overall = roundHalf((t1Band + 2 * t2Band) / 3);
+        else overall = null;
+
+        var payload = {
+          task1_feedback: (sub.package_type === 'task2_only') ? sub.task1_feedback : collectFeedback(1),
+          task1_band: t1Band,
+          task2_feedback: (sub.package_type === 'task1_only') ? sub.task2_feedback : collectFeedback(2),
+          task2_band: t2Band,
+          overall_writing_band: overall,
+          reviewed_by: session.user.id,
+          reviewed_at: new Date().toISOString()
+        };
+        if (sub.payment_status === 'paid') payload.payment_status = 'reviewed';
+
+        var upd = await sb.from('ielts_writing_submissions')
+          .update(payload)
+          .eq('id', SUB_ID);
+
+        if (upd.error) {
+          status.className = 'status-line err';
+          status.textContent = 'Hata: ' + upd.error.message;
+          btn.disabled = false;
+        } else {
+          status.className = 'status-line ok';
+          status.textContent = 'Kaydedildi. Öğrenci panelinde değerlendirme görünür.';
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('cancelBtn').addEventListener('click', function () {
+        window.location.href = 'admin.html';
+      });
+
+      // Görünür yap
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('reviewContent').style.display = 'block';
+    });
+
+    function escHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+  </script>
+
+</body>
+</html>

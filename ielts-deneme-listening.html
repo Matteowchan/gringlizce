@@ -307,7 +307,7 @@
         el.innerHTML = h;
         c.appendChild(el);
       }
-      c.querySelectorAll('input.q-input, input[type="radio"], input[type="checkbox"]').forEach(el => {
+      c.querySelectorAll('input.q-input, select.q-input, input[type="radio"], input[type="checkbox"]').forEach(el => {
         el.addEventListener('change', handleAnswerChange);
         if (el.type === 'text') el.addEventListener('input', handleAnswerChange);
       });
@@ -324,9 +324,45 @@
         case 'mcq_multi': h += renderMcqMulti(g); break;
         case 'notes_completion': h += renderNotes(g); break;
         case 'fill_blank_chart': h += renderChart(g); break;
+        case 'paragraph_matching': h += renderMatching(g); break;
+        case 'map_labeling': h += renderMapLabeling(g); break;
         default: h += `<p style="color:#c63838;">Bilinmeyen tip: ${g.question_type}</p>`;
       }
       return h + `</div>`;
+    }
+
+    function renderMatching(g) {
+      const sc = g.shared_content || {};
+      const labels = sc.paragraph_labels || ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+      const items = sc.items || null; // optional: array of {letter, text} to show as legend
+      let h = '';
+      if (items && items.length) {
+        h += `<div class="matching-legend" style="background:#f5f1e8; border:1px solid #d8d2c4; padding:0.8rem 1rem; margin-bottom:1rem; border-radius:3px;">`;
+        for (const it of items) {
+          h += `<div style="display:flex; gap:0.6rem; align-items:baseline; margin:0.25rem 0;"><strong style="min-width:1.5rem;">${escapeHtml(it.letter)}</strong><span>${escapeHtml(it.text)}</span></div>`;
+        }
+        h += `</div>`;
+      }
+      for (const q of g.questions) {
+        const opts = labels.map(L => `<option value="${L}">${L}</option>`).join('');
+        h += `<div class="sentence-q" style="display:flex; gap:0.6rem; align-items:center;"><span class="q-num-prefix">${q.question_number}</span><select class="q-input" data-q="${q.question_number}" data-mode="single"><option value="">—</option>${opts}</select><span>${escapeHtml(q.stem)}</span></div>`;
+      }
+      return h;
+    }
+
+    function renderMapLabeling(g) {
+      const sc = g.shared_content || {};
+      const labels = sc.paragraph_labels || ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+      const imageUrl = sc.image_url || '';
+      let h = '';
+      if (imageUrl) {
+        h += `<div style="margin-bottom:1rem; text-align:center;"><img src="${imageUrl}" alt="Map" style="max-width:100%; max-height:400px; border:1px solid #d8d2c4;"></div>`;
+      }
+      for (const q of g.questions) {
+        const opts = labels.map(L => `<option value="${L}">${L}</option>`).join('');
+        h += `<div class="sentence-q" style="display:flex; gap:0.6rem; align-items:center;"><span class="q-num-prefix">${q.question_number}</span><select class="q-input" data-q="${q.question_number}" data-mode="single"><option value="">—</option>${opts}</select><span>${escapeHtml(q.stem)}</span></div>`;
+      }
+      return h;
     }
 
     function renderForm(g) {
@@ -415,7 +451,11 @@
       const el = e.target;
       const mode = el.dataset.mode;
       const qNum = parseInt(el.dataset.q, 10);
-      if (el.type === 'text') {
+      if (el.tagName === 'SELECT') {
+        const v = el.value;
+        if (v) state.answers[qNum] = v; else delete state.answers[qNum];
+        el.classList.toggle('answered', !!v);
+      } else if (el.type === 'text') {
         const v = el.value.trim();
         if (v) state.answers[qNum] = v; else delete state.answers[qNum];
         el.classList.toggle('answered', !!v);
@@ -437,6 +477,8 @@
       for (const [k, v] of Object.entries(state.answers)) {
         const n = parseInt(k, 10);
         if (typeof v === 'string') {
+          const sel = document.querySelector(`select.q-input[data-q="${n}"]`);
+          if (sel) { sel.value = v; sel.classList.add('answered'); continue; }
           const t = document.querySelector(`input.q-input[data-q="${n}"]`);
           if (t) { t.value = v; t.classList.add('answered'); continue; }
           const r = document.querySelector(`input[type="radio"][data-q="${n}"][value="${v}"]`);

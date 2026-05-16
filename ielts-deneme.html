@@ -122,6 +122,19 @@
       font-weight: 600;
     }
 
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #888;
+      font-style: italic;
+      font-size: 1rem;
+      border: 1px dashed var(--rule, #d8d2c4);
+      border-radius: 4px;
+      margin: 2.5rem 0;
+      background: #fafaf7;
+    }
+    .empty-state p { margin: 0; }
+
     .test-card {
       background: #fff;
       border: 1px solid var(--rule, #d8d2c4);
@@ -378,7 +391,11 @@
       </div>
     </section>
 
-    <article class="test-card" id="testCard">
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <p>Başlamak için yukarıdaki menüden bir deneme sınavı seç.</p>
+    </div>
+
+    <article class="test-card" id="testCard" style="display: none;">
       <div class="meta" id="testMeta">Yükleniyor…</div>
       <h2 id="testName">—</h2>
       <p class="test-desc" id="testDesc">—</p>
@@ -476,46 +493,56 @@
         .order('test_date', { ascending: false });
 
       if (allErr || !allTests || allTests.length === 0) {
+        document.getElementById('testCard').style.display = 'block';
         document.getElementById('testMeta').textContent = 'Test bulunamadı';
         document.getElementById('testName').textContent = 'Yakında';
         document.getElementById('testDesc').textContent = 'Henüz yayında olan deneme yok.';
         return;
       }
 
-      // Aktif test: URL'de slug varsa onu, yoksa en yeni olanı
-      const test = (REQUESTED_SLUG && allTests.find(t => t.slug === REQUESTED_SLUG)) || allTests[0];
+      // Test selector'ı her zaman göster
+      const selector = document.getElementById('testSelector');
+      const list = document.getElementById('testSelectorList');
+      selector.style.display = 'block';
 
-      // URL'i temizle (slug yokken hub'da en yeni testin slug'ı görünsün ama browser history bozulmasın)
-      if (!REQUESTED_SLUG) {
-        history.replaceState(null, '', 'ielts-deneme.html?test=' + test.slug);
+      // Aktif test: URL'de slug varsa onu, yoksa null (henüz seçilmedi)
+      const test = (REQUESTED_SLUG && allTests.find(t => t.slug === REQUESTED_SLUG)) || null;
+
+      // Selector başlığı: seçili test varsa ad, yoksa placeholder
+      document.getElementById('testSelectorName').textContent = test ? test.name : 'Sınav Seçiniz';
+      if (!test) {
+        document.getElementById('testSelectorName').style.color = '#888';
+        document.getElementById('testSelectorName').style.fontWeight = '400';
       }
 
-      // Test selector'ı doldur (1'den fazla yayında test varsa göster)
-      if (allTests.length > 1) {
-        const selector = document.getElementById('testSelector');
-        const list = document.getElementById('testSelectorList');
-        document.getElementById('testSelectorName').textContent = test.name;
-        selector.style.display = 'block';
+      // Selector liste'sini doldur
+      list.innerHTML = allTests.map(function (t) {
+        const dateLabel = t.test_date
+          ? new Date(t.test_date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })
+          : 'Tam Deneme';
+        return '<a class="test-selector-item ' + (test && t.slug === test.slug ? 'active' : '') + '" '
+             + 'href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
+             + '<div class="item-name">' + escapeHtml(t.name) + '</div>'
+             + '<div class="item-meta">' + escapeHtml(dateLabel) + '</div>'
+             + '</a>';
+      }).join('');
 
-        list.innerHTML = allTests.map(function (t) {
-          const dateLabel = t.test_date
-            ? new Date(t.test_date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })
-            : 'Tam Deneme';
-          return '<a class="test-selector-item ' + (t.slug === test.slug ? 'active' : '') + '" '
-               + 'href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
-               + '<div class="item-name">' + escapeHtml(t.name) + '</div>'
-               + '<div class="item-meta">' + escapeHtml(dateLabel) + '</div>'
-               + '</a>';
-        }).join('');
+      document.getElementById('testSelectorBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        selector.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (!selector.contains(e.target)) selector.classList.remove('open');
+      });
 
-        document.getElementById('testSelectorBtn').addEventListener('click', function (e) {
-          e.stopPropagation();
-          selector.classList.toggle('open');
-        });
-        document.addEventListener('click', function (e) {
-          if (!selector.contains(e.target)) selector.classList.remove('open');
-        });
+      // Test seçilmediyse boş durumu göster ve çık
+      if (!test) {
+        document.getElementById('emptyState').style.display = 'block';
+        return;
       }
+
+      // Test seçildiyse test kartını göster
+      document.getElementById('testCard').style.display = 'block';
 
       // Start butonlarını seçilen teste göre güncelle
       document.querySelectorAll('.section-card .start-btn').forEach(function (btn) {

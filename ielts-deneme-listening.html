@@ -9,546 +9,129 @@
   <link rel="stylesheet" href="assets/main.css">
   <style>
     body { background: #fafaf7; }
-
-    /* === Audio Player === */
-    .audio-bar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #1a2a28;
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    }
-    .audio-bar .wrap {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .audio-bar button {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .audio-bar { position: sticky; top: 0; z-index: 100; background: #1a2a28; color: #fff; padding: 0.75rem 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+    .audio-bar .wrap { display: flex; align-items: center; gap: 1rem; max-width: 1100px; margin: 0 auto; }
+    .audio-bar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 14px; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
     .audio-bar button:hover { background: rgba(255,255,255,0.2); }
-    .audio-bar button.play-btn {
-      background: var(--accent, #c89a3c);
-      border-color: var(--accent, #c89a3c);
-      width: 44px;
-      height: 44px;
-      font-size: 16px;
-    }
-    .audio-bar button.play-btn:hover { background: #d4a649; }
-    .audio-bar .skip-label {
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      color: rgba(255,255,255,0.6);
-    }
-    .audio-bar .progress-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .audio-bar .scrub {
-      flex: 1;
-      height: 6px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 3px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .audio-bar .scrub-fill {
-      height: 100%;
-      background: var(--accent, #c89a3c);
-      width: 0%;
-      transition: width 0.1s linear;
-    }
-    .audio-bar .time {
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      min-width: 90px;
-      text-align: right;
-      color: rgba(255,255,255,0.85);
-    }
-    .audio-bar .vol-wrap {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .audio-bar .vol-slider {
-      width: 80px;
-      cursor: pointer;
-    }
+    .audio-bar button.play-btn { background: var(--accent, #c89a3c); border-color: var(--accent, #c89a3c); width: 44px; height: 44px; font-size: 16px; }
+    .audio-bar .progress-wrap { flex: 1; display: flex; align-items: center; gap: 0.75rem; }
+    .audio-bar .scrub { flex: 1; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; cursor: pointer; overflow: hidden; }
+    .audio-bar .scrub-fill { height: 100%; background: var(--accent, #c89a3c); width: 0%; transition: width 0.1s linear; }
+    .audio-bar .time { font-family: monospace; font-size: 0.9rem; min-width: 90px; text-align: right; color: rgba(255,255,255,0.85); }
+    .audio-bar .vol-wrap { display: flex; align-items: center; gap: 0.5rem; }
+    .audio-bar .vol-slider { width: 80px; cursor: pointer; }
+    .audio-error-banner { background: #c63838; color: #fff; padding: 0.75rem 1.5rem; font-size: 0.9rem; display: none; line-height: 1.5; }
+    .audio-error-banner.show { display: block; }
+    .audio-error-banner code { background: rgba(0,0,0,0.2); padding: 0.15rem 0.4rem; border-radius: 2px; word-break: break-all; }
+    .audio-error-banner a { color: #fff; text-decoration: underline; margin-left: 0.5rem; }
 
-    /* === Timer === */
-    .timer-bar {
-      position: sticky;
-      top: 67px;
-      z-index: 99;
-      background: #fff;
-      border-bottom: 1px solid #d8d2c4;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .timer-bar .timer {
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      color: #1a2a28;
-    }
-    .timer-bar .timer strong {
-      font-family: 'Courier New', monospace;
-      font-size: 1.3rem;
-      margin-left: 0.5rem;
-    }
+    .timer-bar { position: sticky; top: 67px; z-index: 99; background: #fff; border-bottom: 1px solid #d8d2c4; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto; }
+    .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; color: #1a2a28; }
+    .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #c63838; }
-    .timer-bar .submit-btn {
-      background: #1a2a28;
-      color: #fff;
-      border: none;
-      padding: 0.6rem 1.4rem;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: background 0.15s;
-    }
+    .timer-bar .submit-btn { background: #1a2a28; color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
     .timer-bar .submit-btn:hover { background: var(--accent, #c89a3c); }
 
-    /* === Content === */
-    .test-content {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 8rem;
-    }
+    .tab-bar { position: sticky; top: 124px; z-index: 98; background: #fff; border-bottom: 1px solid #d8d2c4; max-width: 1100px; margin: 0 auto; display: flex; overflow-x: auto; }
+    .tab-btn { background: transparent; border: none; padding: 1rem 1.5rem; cursor: pointer; font-family: Georgia, serif; font-size: 1rem; color: #555; border-bottom: 3px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
+    .tab-btn:hover { color: #1a2a28; background: #fafaf7; }
+    .tab-btn.active { color: #1a2a28; border-bottom-color: var(--accent, #c89a3c); font-weight: 700; }
+    .tab-btn .tab-progress { font-size: 0.75rem; background: #f0ede5; color: #555; padding: 0.15rem 0.5rem; border-radius: 10px; font-family: monospace; font-weight: normal; }
+    .tab-btn.active .tab-progress { background: var(--accent, #c89a3c); color: #fff; }
+    .tab-btn.completed .tab-progress { background: #4a7a4a; color: #fff; }
 
-    .part-section {
-      background: #fff;
-      border: 1px solid #d8d2c4;
-      border-radius: 4px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-    }
-    .part-section h2 {
-      font-family: Georgia, serif;
-      font-size: 1.6rem;
-      margin: 0 0 0.25rem;
-      color: #1a2a28;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--accent, #c89a3c);
-    }
-    .part-section .part-context {
-      color: #555;
-      font-style: italic;
-      margin: 1rem 0 1.5rem;
-      padding: 0.75rem 1rem;
-      background: #fafaf7;
-      border-left: 3px solid #c89a3c;
-    }
+    .test-content { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+    .part-section { background: #fff; border: 1px solid #d8d2c4; border-radius: 4px; padding: 2rem; margin-bottom: 1.5rem; display: none; }
+    .part-section.active { display: block; }
+    .part-section h2 { font-family: Georgia, serif; font-size: 1.6rem; margin: 0 0 0.25rem; color: #1a2a28; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent, #c89a3c); }
+    .part-section .part-context { color: #555; font-style: italic; margin: 1rem 0 1.5rem; padding: 0.75rem 1rem; background: #fafaf7; border-left: 3px solid #c89a3c; }
+    .next-part-btn { display: block; margin: 2.5rem 0 1rem; background: #fff; border: 1px solid #1a2a28; color: #1a2a28; padding: 0.9rem 1.5rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; font-size: 1rem; border-radius: 2px; }
+    .next-part-btn:hover { background: #1a2a28; color: #fff; }
 
-    .question-group {
-      margin: 2rem 0;
-      padding-top: 1.25rem;
-      border-top: 1px dashed #ddd;
-    }
-    .question-group:first-of-type {
-      border-top: none;
-      padding-top: 0;
-    }
-    .group-header {
-      margin-bottom: 1rem;
-    }
-    .group-header .q-range {
-      font-family: Georgia, serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #1a2a28;
-      margin-bottom: 0.4rem;
-    }
-    .group-header .instructions {
-      font-style: italic;
-      color: #555;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
+    .question-group { margin: 2rem 0; padding-top: 1.25rem; border-top: 1px dashed #ddd; }
+    .question-group:first-of-type { border-top: none; padding-top: 0; }
+    .group-header { margin-bottom: 1rem; }
+    .group-header .q-range { font-family: Georgia, serif; font-size: 1.15rem; font-weight: 700; color: #1a2a28; margin-bottom: 0.4rem; }
+    .group-header .instructions { font-style: italic; color: #555; font-size: 0.95rem; line-height: 1.5; }
 
-    /* === Form completion === */
-    .form-completion {
-      border-collapse: collapse;
-      width: 100%;
-      margin: 1rem 0;
-      background: #fff;
-    }
-    .form-completion caption {
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      padding: 0.75rem;
-      background: #1a2a28;
-      color: #fff;
-      text-align: left;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-    }
-    .form-completion td {
-      border: 1px solid #d8d2c4;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-    }
-    .form-completion td:first-child {
-      width: 40%;
-      color: #444;
-    }
-    .form-completion td:nth-child(2) {
-      width: 60%;
-    }
+    .form-completion { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #fff; }
+    .form-completion caption { font-weight: 700; letter-spacing: 0.08em; padding: 0.75rem; background: #1a2a28; color: #fff; text-align: left; text-transform: uppercase; font-size: 0.85rem; }
+    .form-completion td { border: 1px solid #d8d2c4; padding: 0.75rem 1rem; font-size: 0.95rem; }
+    .form-completion td:first-child { width: 40%; color: #444; }
 
-    /* === Input fields === */
-    .q-input {
-      border: none;
-      border-bottom: 2px solid #1a2a28;
-      background: transparent;
-      padding: 0.25rem 0.5rem;
-      font-size: 1rem;
-      font-family: inherit;
-      min-width: 160px;
-      transition: border-color 0.15s;
-    }
-    .q-input:focus {
-      outline: none;
-      border-bottom-color: var(--accent, #c89a3c);
-      background: #fffae5;
-    }
+    .q-input { border: none; border-bottom: 2px solid #1a2a28; background: transparent; padding: 0.25rem 0.5rem; font-size: 1rem; font-family: inherit; min-width: 160px; }
+    .q-input:focus { outline: none; border-bottom-color: var(--accent, #c89a3c); background: #fffae5; }
     .q-input.answered { background: #f0f5f0; }
-    .q-num-prefix {
-      display: inline-block;
-      background: #1a2a28;
-      color: #fff;
-      padding: 0.15rem 0.5rem;
-      border-radius: 3px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      margin-right: 0.4rem;
-      min-width: 28px;
-      text-align: center;
-    }
+    .q-num-prefix { display: inline-block; background: #1a2a28; color: #fff; padding: 0.15rem 0.5rem; border-radius: 3px; font-weight: 700; font-size: 0.85rem; margin-right: 0.4rem; min-width: 28px; text-align: center; }
+    .sentence-q { margin: 0.85rem 0; line-height: 1.9; font-size: 1rem; }
 
-    /* === Sentence completion === */
-    .sentence-q {
-      margin: 0.85rem 0;
-      line-height: 1.9;
-      font-size: 1rem;
-    }
-    .sentence-q .stem {
-      display: inline;
-    }
-
-    /* === MCQ === */
-    .mcq-question {
-      margin: 1.25rem 0;
-      padding: 1rem 1.25rem;
-      background: #fafaf7;
-      border-left: 3px solid #d8d2c4;
-    }
-    .mcq-question .q-stem {
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
-    .mcq-options {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .mcq-options li {
-      margin: 0.4rem 0;
-      cursor: pointer;
-    }
-    .mcq-options label {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.65rem;
-      padding: 0.5rem 0.75rem;
-      cursor: pointer;
-      border-radius: 3px;
-      transition: background 0.15s;
-    }
+    .mcq-question { margin: 1.25rem 0; padding: 1rem 1.25rem; background: #fafaf7; border-left: 3px solid #d8d2c4; }
+    .mcq-question .q-stem { font-weight: 600; margin-bottom: 0.75rem; line-height: 1.5; }
+    .mcq-options { list-style: none; padding: 0; margin: 0; }
+    .mcq-options li { margin: 0.4rem 0; }
+    .mcq-options label { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 3px; }
     .mcq-options label:hover { background: #fff; }
-    .mcq-options input[type="radio"],
-    .mcq-options input[type="checkbox"] {
-      margin-top: 0.2rem;
-      cursor: pointer;
-    }
-    .mcq-options .opt-letter {
-      font-weight: 700;
-      color: #1a2a28;
-      min-width: 1.2rem;
-    }
+    .mcq-options input { margin-top: 0.2rem; cursor: pointer; }
+    .mcq-options .opt-letter { font-weight: 700; color: #1a2a28; min-width: 1.2rem; }
 
-    /* === Notes completion === */
-    .notes-box {
-      border: 2px solid #1a2a28;
-      background: #fff;
-      padding: 0;
-      margin: 1rem 0;
-    }
-    .notes-box .notes-title {
-      background: #1a2a28;
-      color: #fff;
-      padding: 0.6rem 1rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-    }
-    .notes-box .notes-body {
-      padding: 1rem 1.25rem;
-    }
-    .notes-box .section-heading {
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.05em;
-      margin: 1rem 0 0.5rem;
-      padding-bottom: 0.25rem;
-      border-bottom: 1px solid #d8d2c4;
-      color: #1a2a28;
-    }
+    .notes-box { border: 2px solid #1a2a28; background: #fff; margin: 1rem 0; }
+    .notes-box .notes-title { background: #1a2a28; color: #fff; padding: 0.6rem 1rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.85rem; }
+    .notes-box .notes-body { padding: 1rem 1.25rem; }
+    .notes-box .section-heading { font-weight: 700; font-size: 0.95rem; letter-spacing: 0.05em; margin: 1rem 0 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid #d8d2c4; color: #1a2a28; }
     .notes-box .section-heading:first-child { margin-top: 0; }
-    .notes-box .note-line {
-      margin: 0.6rem 0;
-      line-height: 1.7;
-      font-size: 0.95rem;
-    }
+    .notes-box .note-line { margin: 0.6rem 0; line-height: 1.7; font-size: 0.95rem; }
 
-    /* === Chart === */
-    .chart-block {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 1.5rem;
-      align-items: center;
-      margin: 1rem 0;
-      padding: 1rem;
-      background: #fafaf7;
-      border: 1px solid #d8d2c4;
-    }
-    @media (max-width: 600px) {
-      .chart-block { grid-template-columns: 1fr; }
-    }
+    .chart-block { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center; margin: 1rem 0; padding: 1rem; background: #fafaf7; border: 1px solid #d8d2c4; }
+    @media (max-width: 600px) { .chart-block { grid-template-columns: 1fr; } }
     .chart-block svg { width: 100%; }
-    .chart-block table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .chart-block td {
-      padding: 0.6rem 0.75rem;
-      border: 1px solid #d8d2c4;
-      font-size: 0.95rem;
-      background: #fff;
-    }
-    .chart-block .swatch {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      vertical-align: middle;
-      margin-right: 0.5rem;
-      border-radius: 2px;
-    }
+    .chart-block table { width: 100%; border-collapse: collapse; }
+    .chart-block td { padding: 0.6rem 0.75rem; border: 1px solid #d8d2c4; font-size: 0.95rem; background: #fff; }
+    .chart-block .swatch { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 0.5rem; border-radius: 2px; }
 
-    /* === Part navigation footer === */
-    .part-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
-      border-top: 1px solid #d8d2c4;
-      padding: 0.75rem 1rem;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
-      z-index: 90;
-    }
-    .part-nav-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .part-nav .pn-group {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .part-nav .pn-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #1a2a28;
-      margin-right: 0.4rem;
-    }
-    .part-nav .pn-q {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 28px;
-      border: 1px solid #d8d2c4;
-      background: #fff;
-      color: #555;
-      text-decoration: none;
-      font-size: 0.85rem;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .part-nav .pn-q:hover {
-      border-color: #1a2a28;
-    }
-    .part-nav .pn-q.answered {
-      background: #1a2a28;
-      color: #fff;
-      border-color: #1a2a28;
-    }
-    .part-nav .pn-q.active {
-      outline: 2px solid var(--accent, #c89a3c);
-      outline-offset: 1px;
-    }
-
-    /* === Modal === */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 200; }
     .modal-overlay.show { display: flex; }
-    .modal {
-      background: #fff;
-      padding: 2rem;
-      max-width: 480px;
-      width: 90%;
-      border-radius: 4px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    }
-    .modal h3 {
-      font-family: Georgia, serif;
-      margin-top: 0;
-      color: #1a2a28;
-    }
+    .modal { background: #fff; padding: 2rem; max-width: 480px; width: 90%; border-radius: 4px; }
+    .modal h3 { font-family: Georgia, serif; margin-top: 0; color: #1a2a28; }
     .modal p { color: #555; line-height: 1.5; }
-    .modal .btn-row {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-    }
-    .modal button {
-      flex: 1;
-      padding: 0.7rem;
-      border: none;
-      border-radius: 2px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
+    .modal .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .modal button { flex: 1; padding: 0.7rem; border: none; border-radius: 2px; font-weight: 600; cursor: pointer; }
     .modal .btn-cancel { background: #f0ede5; color: #444; }
     .modal .btn-confirm { background: #1a2a28; color: #fff; }
-    .modal .btn-confirm:hover { background: var(--accent, #c89a3c); }
 
-    /* === Start screen === */
-    .start-screen {
-      background: #fff;
-      max-width: 600px;
-      margin: 4rem auto;
-      padding: 3rem 2rem;
-      border: 1px solid #d8d2c4;
-      text-align: center;
-    }
-    .start-screen h1 {
-      font-family: Georgia, serif;
-      margin-bottom: 0.5rem;
-      color: #1a2a28;
-    }
-    .start-screen .meta {
-      color: #888;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-      margin-bottom: 2rem;
-    }
-    .start-screen ul {
-      text-align: left;
-      max-width: 380px;
-      margin: 1.5rem auto;
-      color: #555;
-      line-height: 1.8;
-    }
-    .start-screen .start-btn {
-      background: #1a2a28;
-      color: #fff;
-      border: none;
-      padding: 0.9rem 2.5rem;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 2px;
-      margin-top: 1rem;
-    }
-    .start-screen .start-btn:hover { background: var(--accent, #c89a3c); }
-
-    .loading {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: #888;
-    }
+    .start-screen { background: #fff; max-width: 600px; margin: 4rem auto; padding: 3rem 2rem; border: 1px solid #d8d2c4; text-align: center; }
+    .start-screen h1 { font-family: Georgia, serif; color: #1a2a28; }
+    .start-screen .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+    .start-screen ul { text-align: left; max-width: 380px; margin: 1.5rem auto; color: #555; line-height: 1.8; }
+    .start-screen .start-btn { background: #1a2a28; color: #fff; border: none; padding: 0.9rem 2.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
+    .loading { text-align: center; padding: 4rem 2rem; color: #888; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
   <div id="loading" class="loading">Yükleniyor…</div>
 
-  <!-- START SCREEN -->
   <div id="startScreen" style="display:none;">
     <div class="start-screen">
       <div class="meta" id="startTestName">—</div>
       <h1>Listening</h1>
-      <p style="color:#555;">4 part, 40 soru, 30 dakika. Ses bir kez başladığında geri sarabilir, durdurabilir ve istediğin yerden tekrar dinleyebilirsin.</p>
+      <p style="color:#555;">4 part, 40 soru, 30 dakika. Her part kendi sekmesinde. Ses kontrolü her zaman erişilebilir.</p>
       <ul>
         <li>Cevapların otomatik kaydedilir</li>
-        <li>Süre dolunca otomatik gönderim yok, kendin bitirmelisin</li>
+        <li>Süre dolunca otomatik gönderim yok</li>
         <li>Sayfa yenilenirse kaldığın yerden devam edersin</li>
       </ul>
       <button class="start-btn" id="startBtn">Sınava Başla</button>
     </div>
   </div>
 
-  <!-- TEST CONTAINER -->
   <div id="testContainer" style="display:none;">
-    <!-- Audio Player -->
     <div class="audio-bar">
       <div class="wrap">
-        <button id="skipBack" title="5 saniye geri"><span>−5</span></button>
-        <button class="play-btn" id="playBtn" title="Oynat/Duraklat">▶</button>
-        <button id="skipFwd" title="5 saniye ileri"><span>+5</span></button>
+        <button id="skipBack">−5</button>
+        <button class="play-btn" id="playBtn">▶</button>
+        <button id="skipFwd">+5</button>
         <div class="progress-wrap">
-          <div class="scrub" id="scrub">
-            <div class="scrub-fill" id="scrubFill"></div>
-          </div>
+          <div class="scrub" id="scrub"><div class="scrub-fill" id="scrubFill"></div></div>
           <span class="time" id="timeDisplay">00:00 / 00:00</span>
         </div>
         <div class="vol-wrap">
@@ -556,32 +139,27 @@
           <input type="range" min="0" max="100" value="100" class="vol-slider" id="volSlider">
         </div>
       </div>
-      <audio id="audio" preload="metadata"></audio>
+      <audio id="audio" preload="auto"></audio>
+    </div>
+    <div class="audio-error-banner" id="audioErrorBanner">
+      <strong>Ses yüklenemedi.</strong>
+      <span id="audioErrorMsg"></span>
+      <a id="audioTestLink" href="#" target="_blank">URL'yi yeni sekmede aç</a>
     </div>
 
-    <!-- Timer -->
     <div class="timer-bar">
       <div class="timer" id="timerDisplay">Süre: <strong>30:00</strong></div>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
 
-    <!-- Test content -->
-    <div class="test-content" id="testContent">
-      <!-- Parts injected here -->
-    </div>
+    <div class="tab-bar" id="tabBar"></div>
 
-    <!-- Part navigation -->
-    <div class="part-nav">
-      <div class="part-nav-inner" id="partNav">
-        <!-- Generated by JS -->
-      </div>
-    </div>
+    <div class="test-content" id="testContent"></div>
   </div>
 
-  <!-- Submit Modal -->
   <div class="modal-overlay" id="submitModal">
     <div class="modal">
-      <h3>Sınavı bitirmek istediğinden emin misin?</h3>
+      <h3>Sınavı bitirmek istediğine emin misin?</h3>
       <p id="submitModalText">—</p>
       <div class="btn-row">
         <button class="btn-cancel" onclick="document.getElementById('submitModal').classList.remove('show')">Devam et</button>
@@ -593,448 +171,294 @@
   <script>
     const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
-
     const params = new URLSearchParams(window.location.search);
     const TEST_SLUG = params.get('test') || 'ielts-mock-2025-january-1';
-
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let state = {
-      test: null,
-      section: null,
-      parts: [],
-      answers: {},
-      startedAt: null,
-      duration: 30 * 60,
-      user: null,
-      timerInterval: null,
-      finished: false,
+      test: null, section: null, parts: [], answers: {},
+      startedAt: null, duration: 30 * 60, user: null,
+      timerInterval: null, finished: false, currentPart: 1,
     };
 
-    // ========================================================================
-    // LOAD
-    // ========================================================================
     async function loadTest() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) {
-        window.location.href = 'giris.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = 'giris.html?next=' + encodeURIComponent(location.pathname + location.search);
         return;
       }
       state.user = user;
 
-      const { data: test, error: testErr } = await sb
-        .from('ielts_tests')
-        .select('*')
-        .eq('slug', TEST_SLUG)
-        .eq('is_published', true)
-        .maybeSingle();
-
-      if (testErr || !test) {
-        document.getElementById('loading').textContent = 'Test bulunamadı.';
-        return;
-      }
+      const { data: test } = await sb.from('ielts_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
+      if (!test) { document.getElementById('loading').textContent = 'Test bulunamadı.'; return; }
       state.test = test;
 
-      const { data: section } = await sb
-        .from('ielts_sections')
-        .select('*')
-        .eq('test_id', test.id)
-        .eq('section', 'listening')
-        .single();
+      const { data: section } = await sb.from('ielts_sections').select('*').eq('test_id', test.id).eq('section', 'listening').single();
       state.section = section;
       state.duration = (section.duration_minutes || 30) * 60;
 
       const { data: parts } = await sb
         .from('ielts_parts')
         .select('*, question_groups:ielts_question_groups(*, questions:ielts_questions(*))')
-        .eq('section_id', section.id)
-        .order('part_number');
-
+        .eq('section_id', section.id).order('part_number');
       parts.forEach(p => {
         p.question_groups.sort((a, b) => a.group_order - b.group_order);
-        p.question_groups.forEach(g => {
-          g.questions.sort((a, b) => a.question_number - b.question_number);
-        });
+        p.question_groups.forEach(g => g.questions.sort((a, b) => a.question_number - b.question_number));
       });
       state.parts = parts;
 
-      // Restore from localStorage
       const stored = localStorage.getItem('ielts_listening_' + TEST_SLUG);
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
-          if (parsed.answers) state.answers = parsed.answers;
-          if (parsed.startedAt) state.startedAt = parsed.startedAt;
+          const p = JSON.parse(stored);
+          if (p.answers) state.answers = p.answers;
+          if (p.startedAt) state.startedAt = p.startedAt;
+          if (p.currentPart) state.currentPart = p.currentPart;
         } catch (e) {}
       }
 
       document.getElementById('loading').style.display = 'none';
       document.getElementById('startTestName').textContent = test.name;
 
-      if (state.startedAt) {
-        startTest(true);
-      } else {
-        document.getElementById('startScreen').style.display = 'block';
-      }
+      if (state.startedAt) startTest();
+      else document.getElementById('startScreen').style.display = 'block';
     }
 
-    document.getElementById('startBtn')?.addEventListener('click', () => {
+    document.getElementById('startBtn').addEventListener('click', () => {
       state.startedAt = Date.now();
       saveLocal();
-      startTest(false);
+      startTest();
     });
 
-    function startTest(resume) {
+    function startTest() {
       document.getElementById('startScreen').style.display = 'none';
       document.getElementById('testContainer').style.display = 'block';
-
-      const audio = document.getElementById('audio');
-      audio.src = state.section.audio_url;
-
       renderTest();
       setupAudio();
       setupTimer();
-      buildPartNav();
+      buildTabs();
+      setActivePart(state.currentPart);
     }
 
-    // ========================================================================
-    // RENDER
-    // ========================================================================
-    function renderTest() {
-      const container = document.getElementById('testContent');
-      container.innerHTML = '';
-
+    function buildTabs() {
+      const tabBar = document.getElementById('tabBar');
+      let h = '';
       for (const part of state.parts) {
-        const partEl = document.createElement('section');
-        partEl.className = 'part-section';
-        partEl.id = 'part-' + part.part_number;
-
-        let h = `<h2>Part ${part.part_number}</h2>`;
-        if (part.context) {
-          h += `<div class="part-context">${escapeHtml(part.context)}</div>`;
-        }
-
-        for (const group of part.question_groups) {
-          h += renderGroup(group);
-        }
-        partEl.innerHTML = h;
-        container.appendChild(partEl);
+        const total = countQuestionsInPart(part);
+        h += `<button class="tab-btn" data-part="${part.part_number}"><span>Part ${part.part_number}</span><span class="tab-progress" id="tab-progress-${part.part_number}">0/${total}</span></button>`;
       }
+      tabBar.innerHTML = h;
+      tabBar.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => setActivePart(parseInt(btn.dataset.part)));
+      });
+    }
 
-      // Bind events
-      container.querySelectorAll('input.q-input, input[type="radio"], input[type="checkbox"]').forEach(el => {
+    function setActivePart(n) {
+      state.currentPart = n;
+      saveLocal();
+      document.querySelectorAll('.part-section').forEach(el => el.classList.toggle('active', el.dataset.partNumber == n));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.part == n));
+      window.scrollTo({ top: document.querySelector('.timer-bar').offsetTop - 10, behavior: 'smooth' });
+    }
+
+    function countQuestionsInPart(part) {
+      let c = 0;
+      for (const g of part.question_groups) c += g.end_question_number - g.start_question_number + 1;
+      return c;
+    }
+
+    function countAnsweredInPart(part) {
+      let c = 0;
+      for (const g of part.question_groups) {
+        if (g.question_type === 'mcq_multi') {
+          const u = state.answers[g.start_question_number];
+          if (u && Array.isArray(u)) c += Math.min(u.length, g.end_question_number - g.start_question_number + 1);
+        } else {
+          for (let n = g.start_question_number; n <= g.end_question_number; n++) {
+            if (state.answers[n] != null && state.answers[n] !== '') c++;
+          }
+        }
+      }
+      return c;
+    }
+
+    function updateTabProgress() {
+      for (const part of state.parts) {
+        const a = countAnsweredInPart(part);
+        const t = countQuestionsInPart(part);
+        const el = document.getElementById('tab-progress-' + part.part_number);
+        if (el) el.textContent = a + '/' + t;
+        const btn = document.querySelector(`.tab-btn[data-part="${part.part_number}"]`);
+        if (btn) btn.classList.toggle('completed', a === t);
+      }
+    }
+
+    function renderTest() {
+      const c = document.getElementById('testContent');
+      c.innerHTML = '';
+      for (const part of state.parts) {
+        const el = document.createElement('section');
+        el.className = 'part-section';
+        el.dataset.partNumber = part.part_number;
+        let h = `<h2>Part ${part.part_number}</h2>`;
+        if (part.context) h += `<div class="part-context">${escapeHtml(part.context)}</div>`;
+        for (const g of part.question_groups) h += renderGroup(g);
+        if (part.part_number < state.parts.length) {
+          h += `<button class="next-part-btn" onclick="setActivePart(${part.part_number + 1})">Part ${part.part_number + 1}'e Geç →</button>`;
+        }
+        el.innerHTML = h;
+        c.appendChild(el);
+      }
+      c.querySelectorAll('input.q-input, input[type="radio"], input[type="checkbox"]').forEach(el => {
         el.addEventListener('change', handleAnswerChange);
         if (el.type === 'text') el.addEventListener('input', handleAnswerChange);
       });
-
-      // Restore answers visually
       restoreAnswers();
     }
 
-    function renderGroup(group) {
-      const range = group.start_question_number === group.end_question_number
-        ? `Question ${group.start_question_number}`
-        : `Questions ${group.start_question_number}–${group.end_question_number}`;
-
-      let h = `<div class="question-group" id="group-${group.id}">`;
-      h += `<div class="group-header">
-              <div class="q-range">${range}</div>
-              <div class="instructions">${escapeHtml(group.instructions)}</div>
-            </div>`;
-
-      switch (group.question_type) {
-        case 'form_completion':
-          h += renderFormCompletion(group);
-          break;
-        case 'sentence_completion':
-          h += renderSentenceCompletion(group);
-          break;
-        case 'mcq_single':
-          h += renderMcqSingle(group);
-          break;
-        case 'mcq_multi':
-          h += renderMcqMulti(group);
-          break;
-        case 'notes_completion':
-          h += renderNotesCompletion(group);
-          break;
-        case 'fill_blank_chart':
-          h += renderFillBlankChart(group);
-          break;
-        default:
-          h += `<p style="color:#c63838;">Bilinmeyen soru tipi: ${group.question_type}</p>`;
+    function renderGroup(g) {
+      const range = g.start_question_number === g.end_question_number ? `Question ${g.start_question_number}` : `Questions ${g.start_question_number}–${g.end_question_number}`;
+      let h = `<div class="question-group"><div class="group-header"><div class="q-range">${range}</div><div class="instructions">${escapeHtml(g.instructions)}</div></div>`;
+      switch (g.question_type) {
+        case 'form_completion': h += renderForm(g); break;
+        case 'sentence_completion': h += renderSentence(g); break;
+        case 'mcq_single': h += renderMcqSingle(g); break;
+        case 'mcq_multi': h += renderMcqMulti(g); break;
+        case 'notes_completion': h += renderNotes(g); break;
+        case 'fill_blank_chart': h += renderChart(g); break;
+        default: h += `<p style="color:#c63838;">Bilinmeyen tip: ${g.question_type}</p>`;
       }
-
-      h += `</div>`;
-      return h;
+      return h + `</div>`;
     }
 
-    function renderFormCompletion(group) {
-      const sc = group.shared_content || {};
-      const title = sc.form_title || '';
-      const rows = sc.rows || [];
-
+    function renderForm(g) {
+      const sc = g.shared_content || {};
       let h = `<table class="form-completion">`;
-      if (title) h += `<caption>${escapeHtml(title)}</caption>`;
-      for (const row of rows) {
+      if (sc.form_title) h += `<caption>${escapeHtml(sc.form_title)}</caption>`;
+      for (const row of (sc.rows || [])) {
         h += `<tr><td>${escapeHtml(row.label)}</td><td>`;
-        if (row.question_number) {
-          h += `<span class="q-num-prefix">${row.question_number}</span>`;
-          h += `<input type="text" class="q-input" data-q="${row.question_number}" autocomplete="off">`;
-        } else {
-          h += escapeHtml(row.value || '');
-        }
+        if (row.question_number) h += `<span class="q-num-prefix">${row.question_number}</span><input type="text" class="q-input" data-q="${row.question_number}" autocomplete="off">`;
+        else h += escapeHtml(row.value || '');
         h += `</td></tr>`;
       }
-      h += `</table>`;
-      return h;
+      return h + `</table>`;
     }
 
-    function renderSentenceCompletion(group) {
+    function renderSentence(g) {
       let h = '';
-      for (const q of group.questions) {
-        h += `<div class="sentence-q">
-                <span class="q-num-prefix">${q.question_number}</span>
-                <span class="stem">${renderStemWithBlank(q.stem, q.question_number)}</span>
-              </div>`;
+      for (const q of g.questions) {
+        h += `<div class="sentence-q"><span class="q-num-prefix">${q.question_number}</span>${stemWithBlank(q.stem, q.question_number)}</div>`;
       }
       return h;
     }
 
-    function renderStemWithBlank(stem, qNum) {
-      // Replace ___ in stem with input
-      const escaped = escapeHtml(stem || '');
-      const input = `<input type="text" class="q-input" data-q="${qNum}" autocomplete="off">`;
-      if (escaped.includes('___')) {
-        return escaped.replace('___', input);
-      }
-      // No blank placeholder, append at end
-      return escaped + ' ' + input;
+    function stemWithBlank(stem, n) {
+      const s = escapeHtml(stem || '');
+      const i = `<input type="text" class="q-input" data-q="${n}" autocomplete="off">`;
+      return s.includes('___') ? s.replace('___', i) : s + ' ' + i;
     }
 
-    function renderMcqSingle(group) {
+    function renderMcqSingle(g) {
       let h = '';
-      for (const q of group.questions) {
-        h += `<div class="mcq-question">
-                <div class="q-stem"><span class="q-num-prefix">${q.question_number}</span> ${escapeHtml(q.stem)}</div>
-                <ul class="mcq-options">`;
-        const opts = q.options || [];
-        for (const opt of opts) {
-          h += `<li>
-                  <label>
-                    <input type="radio" name="q${q.question_number}" value="${opt.letter}" data-q="${q.question_number}" data-mode="single">
-                    <span class="opt-letter">${opt.letter}</span>
-                    <span>${escapeHtml(opt.text)}</span>
-                  </label>
-                </li>`;
+      for (const q of g.questions) {
+        h += `<div class="mcq-question"><div class="q-stem"><span class="q-num-prefix">${q.question_number}</span> ${escapeHtml(q.stem)}</div><ul class="mcq-options">`;
+        for (const o of (q.options || [])) {
+          h += `<li><label><input type="radio" name="q${q.question_number}" value="${o.letter}" data-q="${q.question_number}" data-mode="single"><span class="opt-letter">${o.letter}</span><span>${escapeHtml(o.text)}</span></label></li>`;
         }
         h += `</ul></div>`;
       }
       return h;
     }
 
-    function renderMcqMulti(group) {
-      const span = group.end_question_number - group.start_question_number + 1;
-      let h = '';
-
-      // mcq_multi'de tek bir UI gösterilir, span > 1 olsa bile.
-      // Her group için tek bir question (ilkindeki) UI'da yer alır.
-      // User toplu seçim yapar. Cevaplar group.start_question_number altında saklanır.
-      const q = group.questions[0];
-      const correctCount = Array.isArray(q.correct_answer) ? q.correct_answer.length : span;
-      const instruction = span > 1
-        ? `${span} cevap seç`
-        : `${correctCount} cevap seç`;
-
-      h += `<div class="mcq-question">
-              <div class="q-stem">
-                <span class="q-num-prefix">${group.start_question_number === group.end_question_number ? group.start_question_number : group.start_question_number + '–' + group.end_question_number}</span>
-                ${escapeHtml(q.stem || '')}
-                <div style="margin-top:0.5rem;font-style:italic;font-size:0.85rem;color:#888;">(${instruction})</div>
-              </div>
-              <ul class="mcq-options">`;
-      const opts = q.options || [];
-      for (const opt of opts) {
-        h += `<li>
-                <label>
-                  <input type="checkbox" name="g${group.id}" value="${opt.letter}" data-group="${group.id}" data-q="${group.start_question_number}" data-mode="multi" data-max="${span === 1 ? correctCount : span}">
-                  <span class="opt-letter">${opt.letter}</span>
-                  <span>${escapeHtml(opt.text)}</span>
-                </label>
-              </li>`;
+    function renderMcqMulti(g) {
+      const span = g.end_question_number - g.start_question_number + 1;
+      const q = g.questions[0];
+      const cc = Array.isArray(q.correct_answer) ? q.correct_answer.length : span;
+      const max = span === 1 ? cc : span;
+      const inst = span > 1 ? `${span} cevap seç` : `${cc} cevap seç`;
+      const range = g.start_question_number === g.end_question_number ? g.start_question_number : g.start_question_number + '–' + g.end_question_number;
+      let h = `<div class="mcq-question"><div class="q-stem"><span class="q-num-prefix">${range}</span>${escapeHtml(q.stem || '')}<div style="margin-top:0.5rem;font-style:italic;font-size:0.85rem;color:#888;">(${inst})</div></div><ul class="mcq-options">`;
+      for (const o of (q.options || [])) {
+        h += `<li><label><input type="checkbox" name="g${g.id}" value="${o.letter}" data-group="${g.id}" data-q="${g.start_question_number}" data-mode="multi" data-max="${max}"><span class="opt-letter">${o.letter}</span><span>${escapeHtml(o.text)}</span></label></li>`;
       }
-      h += `</ul></div>`;
-      return h;
+      return h + `</ul></div>`;
     }
 
-    function renderNotesCompletion(group) {
-      const sc = group.shared_content || {};
-      const sections = sc.sections || [];
-      const title = sc.title || 'NOTES';
-
-      let h = `<div class="notes-box">
-                 <div class="notes-title">${escapeHtml(title)}</div>
-                 <div class="notes-body">`;
-
-      for (const sec of sections) {
-        if (sec.heading) {
-          h += `<div class="section-heading">${escapeHtml(sec.heading)}</div>`;
-        }
+    function renderNotes(g) {
+      const sc = g.shared_content || {};
+      let h = `<div class="notes-box"><div class="notes-title">${escapeHtml(sc.title || 'NOTES')}</div><div class="notes-body">`;
+      for (const sec of (sc.sections || [])) {
+        if (sec.heading) h += `<div class="section-heading">${escapeHtml(sec.heading)}</div>`;
         for (const line of (sec.lines || [])) {
-          h += `<div class="note-line">`;
-          h += escapeHtml(line.text || '');
-          if (line.blank_after) {
-            h += ` <span class="q-num-prefix">${line.blank_after}</span>`;
-            h += `<input type="text" class="q-input" data-q="${line.blank_after}" autocomplete="off">`;
-          }
-          if (line.text_after) {
-            h += ' ' + escapeHtml(line.text_after);
-          }
+          h += `<div class="note-line">${escapeHtml(line.text || '')}`;
+          if (line.blank_after) h += ` <span class="q-num-prefix">${line.blank_after}</span><input type="text" class="q-input" data-q="${line.blank_after}" autocomplete="off">`;
+          if (line.text_after) h += ' ' + escapeHtml(line.text_after);
           h += `</div>`;
         }
       }
-      h += `</div></div>`;
-      return h;
+      return h + `</div></div>`;
     }
 
-    function renderFillBlankChart(group) {
-      const sc = group.shared_content || {};
+    function renderChart(g) {
+      const sc = g.shared_content || {};
       const rows = sc.rows || [];
-
-      // Basit SVG pie chart (veri sabit, bu test için)
-      const pieSvg = `
-        <svg viewBox="0 0 100 100" style="max-width:220px;">
-          <circle cx="50" cy="50" r="50" fill="#4a90d9"/>
-          <path d="M 50 50 L 50 0 A 50 50 0 0 1 97.55 65.45 Z" fill="#7bbd6f"/>
-          <path d="M 50 50 L 97.55 65.45 A 50 50 0 0 1 79.39 95.11 Z" fill="#e07b7b"/>
-        </svg>`;
-
+      const pie = `<svg viewBox="0 0 100 100" style="max-width:220px;"><circle cx="50" cy="50" r="50" fill="#4a90d9"/><path d="M 50 50 L 50 0 A 50 50 0 0 1 97.55 65.45 Z" fill="#7bbd6f"/><path d="M 50 50 L 97.55 65.45 A 50 50 0 0 1 79.39 95.11 Z" fill="#e07b7b"/></svg>`;
       const colors = ['#4a90d9', '#e07b7b', '#7bbd6f'];
-
-      let h = `<div class="chart-block">
-                 ${pieSvg}
-                 <table>`;
+      let h = `<div class="chart-block">${pie}<table>`;
       rows.forEach((row, i) => {
-        const colorBox = `<span class="swatch" style="background:${colors[i % colors.length]};"></span>`;
-        const labelWithInput = row.label.replace('___',
-          `<span class="q-num-prefix">${row.question_number}</span><input type="text" class="q-input" data-q="${row.question_number}" autocomplete="off">`);
-        h += `<tr><td>${colorBox}${labelWithInput}</td></tr>`;
+        const sw = `<span class="swatch" style="background:${colors[i % 3]};"></span>`;
+        const inj = `<span class="q-num-prefix">${row.question_number}</span><input type="text" class="q-input" data-q="${row.question_number}" autocomplete="off">`;
+        h += `<tr><td>${sw}${row.label.replace('___', inj)}</td></tr>`;
       });
-      h += `</table></div>`;
-      return h;
+      return h + `</table></div>`;
     }
 
-    // ========================================================================
-    // ANSWER STATE
-    // ========================================================================
     function handleAnswerChange(e) {
       const el = e.target;
       const mode = el.dataset.mode;
       const qNum = parseInt(el.dataset.q, 10);
-
       if (el.type === 'text') {
-        const val = el.value.trim();
-        if (val) state.answers[qNum] = val;
-        else delete state.answers[qNum];
-        el.classList.toggle('answered', !!val);
+        const v = el.value.trim();
+        if (v) state.answers[qNum] = v; else delete state.answers[qNum];
+        el.classList.toggle('answered', !!v);
       } else if (mode === 'single') {
         state.answers[qNum] = el.value;
       } else if (mode === 'multi') {
-        const groupId = el.dataset.group;
+        const gid = el.dataset.group;
         const max = parseInt(el.dataset.max, 10) || 99;
-        const checkboxes = document.querySelectorAll(`input[data-group="${groupId}"]:checked`);
-        const values = Array.from(checkboxes).map(c => c.value);
-
-        // Enforce max
-        if (values.length > max) {
-          el.checked = false;
-          alert(`En fazla ${max} seçim yapabilirsin.`);
-          return;
-        }
-
-        if (values.length > 0) {
-          state.answers[qNum] = values;
-        } else {
-          delete state.answers[qNum];
-        }
+        const checks = document.querySelectorAll(`input[data-group="${gid}"]:checked`);
+        const vals = Array.from(checks).map(c => c.value);
+        if (vals.length > max) { el.checked = false; alert(`En fazla ${max} seçim.`); return; }
+        if (vals.length > 0) state.answers[qNum] = vals; else delete state.answers[qNum];
       }
-
       saveLocal();
-      updatePartNav();
+      updateTabProgress();
     }
 
     function restoreAnswers() {
-      for (const [qNum, val] of Object.entries(state.answers)) {
-        const qNumInt = parseInt(qNum, 10);
-        if (typeof val === 'string') {
-          // Could be text or single-letter
-          const textInput = document.querySelector(`input.q-input[data-q="${qNumInt}"]`);
-          if (textInput) {
-            textInput.value = val;
-            textInput.classList.add('answered');
-            continue;
-          }
-          const radio = document.querySelector(`input[type="radio"][data-q="${qNumInt}"][value="${val}"]`);
-          if (radio) radio.checked = true;
-        } else if (Array.isArray(val)) {
-          val.forEach(letter => {
-            const cb = document.querySelector(`input[type="checkbox"][data-q="${qNumInt}"][value="${letter}"]`);
+      for (const [k, v] of Object.entries(state.answers)) {
+        const n = parseInt(k, 10);
+        if (typeof v === 'string') {
+          const t = document.querySelector(`input.q-input[data-q="${n}"]`);
+          if (t) { t.value = v; t.classList.add('answered'); continue; }
+          const r = document.querySelector(`input[type="radio"][data-q="${n}"][value="${v}"]`);
+          if (r) r.checked = true;
+        } else if (Array.isArray(v)) {
+          v.forEach(l => {
+            const cb = document.querySelector(`input[type="checkbox"][data-q="${n}"][value="${l}"]`);
             if (cb) cb.checked = true;
           });
         }
       }
-      updatePartNav();
+      updateTabProgress();
     }
 
     function saveLocal() {
       localStorage.setItem('ielts_listening_' + TEST_SLUG, JSON.stringify({
-        answers: state.answers,
-        startedAt: state.startedAt,
+        answers: state.answers, startedAt: state.startedAt, currentPart: state.currentPart,
       }));
     }
 
-    // ========================================================================
-    // PART NAV
-    // ========================================================================
-    function buildPartNav() {
-      const nav = document.getElementById('partNav');
-      let h = '';
-      for (const part of state.parts) {
-        const min = part.question_groups[0]?.start_question_number || 1;
-        const max = Math.max(...part.question_groups.map(g => g.end_question_number));
-        h += `<div class="pn-group"><span class="pn-label">P${part.part_number}</span>`;
-        for (let q = min; q <= max; q++) {
-          h += `<a class="pn-q" data-q="${q}" href="#part-${part.part_number}">${q}</a>`;
-        }
-        h += `</div>`;
-      }
-      nav.innerHTML = h;
-
-      nav.querySelectorAll('.pn-q').forEach(a => {
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          const q = a.dataset.q;
-          const input = document.querySelector(`input[data-q="${q}"]`);
-          if (input) {
-            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (input.type === 'text') input.focus();
-          }
-        });
-      });
-
-      updatePartNav();
-    }
-
-    function updatePartNav() {
-      document.querySelectorAll('.pn-q').forEach(a => {
-        const qNum = parseInt(a.dataset.q, 10);
-        a.classList.toggle('answered', !!state.answers[qNum]);
-      });
-    }
-
-    // ========================================================================
-    // AUDIO PLAYER
-    // ========================================================================
     function setupAudio() {
       const audio = document.getElementById('audio');
       const playBtn = document.getElementById('playBtn');
@@ -1044,244 +468,164 @@
       const scrubFill = document.getElementById('scrubFill');
       const timeDisplay = document.getElementById('timeDisplay');
       const volSlider = document.getElementById('volSlider');
+      const errBan = document.getElementById('audioErrorBanner');
+      const errMsg = document.getElementById('audioErrorMsg');
+      const testLink = document.getElementById('audioTestLink');
 
-      playBtn.addEventListener('click', () => {
-        if (audio.paused) audio.play();
-        else audio.pause();
-      });
-      audio.addEventListener('play', () => playBtn.textContent = '⏸');
-      audio.addEventListener('pause', () => playBtn.textContent = '▶');
+      const url = state.section.audio_url;
+      console.log('[Audio] URL:', url);
 
-      skipBack.addEventListener('click', () => audio.currentTime = Math.max(0, audio.currentTime - 5));
-      skipFwd.addEventListener('click', () => audio.currentTime = Math.min(audio.duration, audio.currentTime + 5));
+      if (!url) {
+        errBan.classList.add('show');
+        errMsg.innerHTML = `Ses URL tanımsız. Database'de <code>ielts_sections.audio_url</code> alanını kontrol et.`;
+        return;
+      }
+      testLink.href = url;
 
-      audio.addEventListener('timeupdate', () => {
-        const pct = (audio.currentTime / audio.duration) * 100 || 0;
-        scrubFill.style.width = pct + '%';
-        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
-      });
-
-      scrub.addEventListener('click', (e) => {
-        const rect = scrub.getBoundingClientRect();
-        const pct = (e.clientX - rect.left) / rect.width;
-        audio.currentTime = pct * audio.duration;
-      });
-
-      volSlider.addEventListener('input', () => {
-        audio.volume = volSlider.value / 100;
+      audio.addEventListener('error', () => {
+        const e = audio.error;
+        const code = e ? e.code : 0;
+        const names = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
+        console.error('[Audio] Error:', code, names[code], 'URL:', audio.src);
+        errBan.classList.add('show');
+        errMsg.innerHTML = ` (Kod ${code} – ${names[code] || 'unknown'}) <code>${audio.src}</code><br>İpucu: Supabase bucket Public mı? Dosya MIME audio/mpeg mi?`;
       });
 
       audio.addEventListener('loadedmetadata', () => {
+        console.log('[Audio] Loaded, duration:', audio.duration);
         timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
       });
+
+      playBtn.addEventListener('click', async () => {
+        console.log('[Audio] Play click, readyState:', audio.readyState);
+        if (audio.paused) {
+          try { await audio.play(); }
+          catch (err) {
+            console.error('[Audio] Play err:', err);
+            errBan.classList.add('show');
+            errMsg.innerHTML = `Oynatma hatası: ${err.message}`;
+          }
+        } else audio.pause();
+      });
+
+      audio.addEventListener('play', () => playBtn.textContent = '⏸');
+      audio.addEventListener('pause', () => playBtn.textContent = '▶');
+      skipBack.addEventListener('click', () => audio.currentTime = Math.max(0, audio.currentTime - 5));
+      skipFwd.addEventListener('click', () => audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5));
+      audio.addEventListener('timeupdate', () => {
+        scrubFill.style.width = ((audio.currentTime / audio.duration) * 100 || 0) + '%';
+        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+      });
+      scrub.addEventListener('click', (e) => {
+        const r = scrub.getBoundingClientRect();
+        audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+      });
+      volSlider.addEventListener('input', () => audio.volume = volSlider.value / 100);
+
+      audio.src = url;
+      audio.load();
     }
 
     function formatTime(s) {
       if (!s || isNaN(s)) return '00:00';
-      const m = Math.floor(s / 60);
-      const sec = Math.floor(s % 60);
-      return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+      return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(Math.floor(s%60)).padStart(2,'0');
     }
 
-    // ========================================================================
-    // TIMER
-    // ========================================================================
     function setupTimer() {
-      const display = document.getElementById('timerDisplay').querySelector('strong');
-      const timerEl = document.getElementById('timerDisplay');
-
+      const d = document.getElementById('timerDisplay').querySelector('strong');
+      const t = document.getElementById('timerDisplay');
       state.timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-        const remaining = state.duration - elapsed;
-
-        if (remaining <= 0) {
-          display.textContent = '00:00';
-          timerEl.classList.add('warning');
-          clearInterval(state.timerInterval);
-          return;
-        }
-        if (remaining <= 60) timerEl.classList.add('warning');
-
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        display.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        const r = state.duration - Math.floor((Date.now() - state.startedAt) / 1000);
+        if (r <= 0) { d.textContent = '00:00'; t.classList.add('warning'); clearInterval(state.timerInterval); return; }
+        if (r <= 60) t.classList.add('warning');
+        d.textContent = String(Math.floor(r/60)).padStart(2,'0') + ':' + String(r%60).padStart(2,'0');
       }, 1000);
     }
 
-    // ========================================================================
-    // SUBMIT + GRADE
-    // ========================================================================
     document.getElementById('submitBtn').addEventListener('click', () => {
-      const answeredCount = Object.keys(state.answers).length;
-      const total = 40;
-      const modalText = document.getElementById('submitModalText');
-      modalText.innerHTML = `<strong>${answeredCount}/${total}</strong> soruyu cevapladın. ${answeredCount < total ? 'Boş bıraktığın sorular yanlış sayılır.' : ''} Sınavı bitirdikten sonra cevaplarını değiştiremezsin.`;
+      const a = Object.keys(state.answers).length;
+      document.getElementById('submitModalText').innerHTML = `<strong>${a}/40</strong> cevapladın. Boşlar yanlış sayılır. Bitirdikten sonra değişiklik yok.`;
       document.getElementById('submitModal').classList.add('show');
     });
 
     document.getElementById('confirmSubmit').addEventListener('click', async () => {
       if (state.finished) return;
       state.finished = true;
-      document.getElementById('confirmSubmit').textContent = 'Gönderiliyor…';
-      document.getElementById('confirmSubmit').disabled = true;
+      const btn = document.getElementById('confirmSubmit');
+      btn.textContent = 'Gönderiliyor…';
+      btn.disabled = true;
 
       const result = gradeTest();
       const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
 
-      const { data: attempt, error } = await sb
-        .from('ielts_attempts')
-        .insert({
-          user_id: state.user.id,
-          test_id: state.test.id,
-          section: 'listening',
-          started_at: new Date(state.startedAt).toISOString(),
-          completed_at: new Date().toISOString(),
-          answers: state.answers,
-          raw_score: result.score,
-          total_questions: result.total,
-          band: result.band,
-          time_spent_seconds: elapsed,
-        })
-        .select()
-        .single();
+      const { data: attempt, error } = await sb.from('ielts_attempts').insert({
+        user_id: state.user.id, test_id: state.test.id, section: 'listening',
+        started_at: new Date(state.startedAt).toISOString(),
+        completed_at: new Date().toISOString(),
+        answers: state.answers, raw_score: result.score,
+        total_questions: result.total, band: result.band,
+        time_spent_seconds: elapsed,
+      }).select().single();
 
       if (error) {
         alert('Gönderim hatası: ' + error.message);
         state.finished = false;
-        document.getElementById('confirmSubmit').textContent = 'Bitir ve Gönder';
-        document.getElementById('confirmSubmit').disabled = false;
+        btn.textContent = 'Bitir ve Gönder';
+        btn.disabled = false;
         return;
       }
 
-      // Clear local
       localStorage.removeItem('ielts_listening_' + TEST_SLUG);
-      // Redirect to results
       window.location.href = 'ielts-deneme-sonuc.html?attempt=' + attempt.id;
     });
 
     function gradeTest() {
-      let score = 0;
-      let total = 0;
-      const results = [];
-
+      let score = 0, total = 0;
       for (const part of state.parts) {
-        for (const group of part.question_groups) {
-          const span = group.end_question_number - group.start_question_number + 1;
-
-          if (group.question_type === 'mcq_multi') {
-            const firstQ = group.questions[0];
-            const correctSet = Array.isArray(firstQ.correct_answer) ? firstQ.correct_answer : [];
-            const userAns = state.answers[group.start_question_number] || [];
-            const userArr = Array.isArray(userAns) ? userAns : [];
-            const correctPicks = userArr.filter(l => correctSet.includes(l));
-            const wrongPicks = userArr.filter(l => !correctSet.includes(l));
-
-            if (span === 1) {
-              // Q6 style: all-or-nothing
-              const got = (correctPicks.length === correctSet.length && wrongPicks.length === 0) ? 1 : 0;
-              score += got;
-              total += 1;
-              results.push({
-                questionNumber: group.start_question_number,
-                type: group.question_type,
-                correct: correctSet,
-                userAnswer: userArr,
-                score: got,
-                max: 1
-              });
-            } else {
-              // Q28-30 style: each correct letter = 1 mark
-              const got = Math.min(correctPicks.length, span);
-              score += got;
-              total += span;
-              for (let i = 0; i < span; i++) {
-                const qnum = group.start_question_number + i;
-                const userLetter = correctPicks[i] || userArr[i] || null;
-                const isCorrect = userLetter && correctSet.includes(userLetter) && i < correctPicks.length;
-                results.push({
-                  questionNumber: qnum,
-                  type: group.question_type,
-                  correct: correctSet,
-                  userAnswer: userLetter,
-                  score: isCorrect ? 1 : 0,
-                  max: 1
-                });
-              }
-            }
+        for (const g of part.question_groups) {
+          const span = g.end_question_number - g.start_question_number + 1;
+          if (g.question_type === 'mcq_multi') {
+            const cs = Array.isArray(g.questions[0].correct_answer) ? g.questions[0].correct_answer : [];
+            const ua = Array.isArray(state.answers[g.start_question_number]) ? state.answers[g.start_question_number] : [];
+            const cp = ua.filter(l => cs.includes(l));
+            const wp = ua.filter(l => !cs.includes(l));
+            if (span === 1) { score += (cp.length === cs.length && wp.length === 0) ? 1 : 0; total += 1; }
+            else { score += Math.min(cp.length, span); total += span; }
           } else {
-            for (const q of group.questions) {
-              const userAns = state.answers[q.question_number];
+            for (const q of g.questions) {
+              const u = state.answers[q.question_number];
               let got = 0;
-
-              if (['mcq_single', 'tfng', 'paragraph_matching', 'heading_matching'].includes(group.question_type)) {
-                if (userAns === q.correct_answer) got = 1;
-              } else if (['sentence_completion', 'form_completion', 'notes_completion', 'fill_blank_chart'].includes(group.question_type)) {
-                if (userAns) {
-                  const cleaned = userAns.toString().toLowerCase().trim();
-                  const accepts = q.acceptable_answers || [q.correct_answer];
-                  if (accepts.some(a => a.toString().toLowerCase().trim() === cleaned)) {
-                    got = 1;
-                  }
+              if (['mcq_single','tfng','paragraph_matching','heading_matching'].includes(g.question_type)) {
+                if (u === q.correct_answer) got = 1;
+              } else if (['sentence_completion','form_completion','notes_completion','fill_blank_chart'].includes(g.question_type)) {
+                if (u) {
+                  const c = u.toString().toLowerCase().trim();
+                  const ac = q.acceptable_answers || [q.correct_answer];
+                  if (ac.some(a => a.toString().toLowerCase().trim() === c)) got = 1;
                 }
               }
-
-              score += got;
-              total += 1;
-              results.push({
-                questionNumber: q.question_number,
-                type: group.question_type,
-                correct: q.correct_answer,
-                acceptable: q.acceptable_answers,
-                userAnswer: userAns,
-                score: got,
-                max: 1
-              });
+              score += got; total += 1;
             }
           }
         }
       }
-
-      const band = bandFromRaw(score);
-      return { score, total, results, band };
+      return { score, total, band: bandFromRaw(score) };
     }
 
-    function bandFromRaw(raw) {
-      // IELTS Listening band conversion
-      if (raw >= 39) return 9.0;
-      if (raw >= 37) return 8.5;
-      if (raw >= 35) return 8.0;
-      if (raw >= 32) return 7.5;
-      if (raw >= 30) return 7.0;
-      if (raw >= 26) return 6.5;
-      if (raw >= 23) return 6.0;
-      if (raw >= 18) return 5.5;
-      if (raw >= 16) return 5.0;
-      if (raw >= 13) return 4.5;
-      if (raw >= 10) return 4.0;
-      if (raw >= 8) return 3.5;
-      if (raw >= 6) return 3.0;
-      if (raw >= 4) return 2.5;
-      return 2.0;
+    function bandFromRaw(r) {
+      if (r >= 39) return 9.0; if (r >= 37) return 8.5; if (r >= 35) return 8.0;
+      if (r >= 32) return 7.5; if (r >= 30) return 7.0; if (r >= 26) return 6.5;
+      if (r >= 23) return 6.0; if (r >= 18) return 5.5; if (r >= 16) return 5.0;
+      if (r >= 13) return 4.5; if (r >= 10) return 4.0; if (r >= 8) return 3.5;
+      if (r >= 6) return 3.0; if (r >= 4) return 2.5; return 2.0;
     }
 
-    // ========================================================================
-    // UTILS
-    // ========================================================================
     function escapeHtml(s) {
       if (s == null) return '';
-      return s.toString()
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
-    // ========================================================================
-    // INIT
-    // ========================================================================
     loadTest();
   </script>
-
 </body>
 </html>

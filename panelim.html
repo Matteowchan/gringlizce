@@ -58,11 +58,6 @@
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
-  <style>
-    /* Dropdown menü daraltma */
-    .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
-    .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
-  </style>
 </head>
 <body>
 
@@ -122,7 +117,7 @@
             </ul>
           </li>
           <li><a href="iletisim.html">İletişim</a></li>
-          <li><a href="giris.html" class="btn-nav-cta">Giriş</a></li>
+          <li><a href="giris.html" class="btn-nav-cta">Materyal Girişi</a></li>
         </ul>
       </nav>
     </div>
@@ -213,6 +208,19 @@
       </div>
     </div>
 
+    <div id="ielts-writing-area" style="padding: 1.5rem 0 3rem; display: none;">
+      <div class="section-head">
+        <span class="eyebrow">IELTS</span>
+        <h2>Writing Çalışmalarım</h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+      <div id="ielts-writing-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
+      <div id="ielts-writing-grid" style="display: grid; gap: 1rem; max-width: 920px; margin: 0 auto;"></div>
+      <div id="ielts-writing-empty" style="text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic; display: none;">
+        Henüz Writing denemesi göndermedin. IELTS Tam Deneme sayfasından Writing bölümünü tamamlayıp kaydedebilirsin.
+      </div>
+    </div>
+
     <div id="products-area" style="padding-bottom: 4rem;">
       <div class="loading-state">Materyaller yükleniyor...</div>
     </div>
@@ -265,7 +273,7 @@
           <h4>Bağlantı</h4>
           <ul>
             <li><a href="iletisim.html">İletişim</a></li>
-            <li><a href="giris.html">Giriş</a></li>
+            <li><a href="giris.html">Materyal Girişi</a></li>
           </ul>
         </div>
       </div>
@@ -548,6 +556,139 @@
         });
       } catch (e) {
         console.warn('[vocab list] load failed:', e);
+      }
+    })();
+
+    // IELTS Writing Çalışmalarım yükle
+    (async function loadIeltsWriting() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var res = await sbCli.from('ielts_writing_submissions')
+          .select('id, task1_essay, task1_word_count, task1_band, task1_feedback, task2_essay, task2_word_count, task2_band, task2_feedback, overall_writing_band, package_type, payment_status, submitted_at, reviewed_at, test:test_id (slug, name)')
+          .eq('user_id', userId)
+          .order('submitted_at', { ascending: false });
+
+        var elArea = document.getElementById('ielts-writing-area');
+        var elGrid = document.getElementById('ielts-writing-grid');
+        var elCount = document.getElementById('ielts-writing-count');
+        var elEmpty = document.getElementById('ielts-writing-empty');
+        if (!elArea || !elGrid) return;
+
+        elArea.style.display = 'block';
+        var rows = (res && res.data) || [];
+
+        if (rows.length === 0) {
+          elCount.textContent = '';
+          elGrid.innerHTML = '';
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        elEmpty.style.display = 'none';
+        elCount.textContent = rows.length + ' kayıt';
+
+        function escHtml(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function fmtDate(s) {
+          if (!s) return '';
+          try {
+            var d = new Date(s);
+            return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) { return s; }
+        }
+
+        function pkgLabel(p) {
+          if (p === 'task1_only') return 'Sadece Task 1';
+          if (p === 'task2_only') return 'Sadece Task 2';
+          if (p === 'both') return 'Task 1 + Task 2 Paketi';
+          if (p === 'draft') return 'Ücretsiz Kayıt';
+          return p || '—';
+        }
+
+        function statusBadge(payment, reviewed) {
+          if (reviewed) {
+            return '<span style="display:inline-block; padding:0.15rem 0.55rem; background:var(--teal); color:#fff; font-family:var(--font-ui); font-size:9px; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px;">Değerlendirildi</span>';
+          }
+          if (payment === 'paid') {
+            return '<span style="display:inline-block; padding:0.15rem 0.55rem; background:var(--gold); color:#fff; font-family:var(--font-ui); font-size:9px; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px;">İncelemede</span>';
+          }
+          if (payment === 'draft') {
+            return '<span style="display:inline-block; padding:0.15rem 0.55rem; background:var(--bg-soft); color:var(--text-muted); font-family:var(--font-ui); font-size:9px; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px;">Taslak</span>';
+          }
+          if (payment === 'unpaid') {
+            return '<span style="display:inline-block; padding:0.15rem 0.55rem; background:#c63838; color:#fff; font-family:var(--font-ui); font-size:9px; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px;">Ödeme Bekliyor</span>';
+          }
+          return '';
+        }
+
+        elGrid.innerHTML = rows.map(function (r) {
+          var testName = (r.test && r.test.name) || 'IELTS Mock';
+          var t1Words = r.task1_word_count || 0;
+          var t2Words = r.task2_word_count || 0;
+          var bandLine = r.overall_writing_band ? '<div style="font-family:var(--font-display); color:var(--teal); font-size:1.4rem; margin-top:0.4rem;">Band ' + r.overall_writing_band + '</div>' : '';
+          return [
+            '<div class="writing-card" id="yazi-' + escHtml(r.id) + '" style="background:var(--bg-card); border:1px solid var(--line); border-radius:4px; overflow:hidden;">',
+            '  <div class="writing-card-head" data-id="' + escHtml(r.id) + '" style="padding:1.1rem 1.3rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:1rem;">',
+            '    <div style="flex:1; min-width:0;">',
+            '      <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:0.3rem;">',
+            '        <span style="font-family:var(--font-display); font-size:1.1rem; color:var(--text);">' + escHtml(testName) + '</span>',
+            '        ' + statusBadge(r.payment_status, r.reviewed_at),
+            '      </div>',
+            '      <div style="font-size:0.85rem; color:var(--text-soft);">' + escHtml(fmtDate(r.submitted_at)) + ' · ' + escHtml(pkgLabel(r.package_type)) + ' · Task 1: ' + t1Words + ' kelime · Task 2: ' + t2Words + ' kelime</div>',
+            '      ' + bandLine,
+            '    </div>',
+            '    <div class="writing-toggle" style="font-family:var(--font-ui); font-size:1.4rem; color:var(--text-muted);">+</div>',
+            '  </div>',
+            '  <div class="writing-card-body" data-id="' + escHtml(r.id) + '" style="display:none; padding:0 1.3rem 1.3rem; border-top:1px solid var(--line);">',
+            '    <div style="margin-top:1rem;">',
+            '      <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.4rem;">Task 1 · ' + t1Words + ' kelime' + (r.task1_band ? ' · Band ' + r.task1_band : '') + '</div>',
+            '      <div style="white-space:pre-wrap; line-height:1.65; font-size:0.95rem; padding:0.9rem 1rem; background:var(--bg-soft); border-radius:3px;">' + escHtml(r.task1_essay || '(boş)') + '</div>',
+            '    </div>',
+            '    <div style="margin-top:1.2rem;">',
+            '      <div style="font-family:var(--font-ui); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.4rem;">Task 2 · ' + t2Words + ' kelime' + (r.task2_band ? ' · Band ' + r.task2_band : '') + '</div>',
+            '      <div style="white-space:pre-wrap; line-height:1.65; font-size:0.95rem; padding:0.9rem 1rem; background:var(--bg-soft); border-radius:3px;">' + escHtml(r.task2_essay || '(boş)') + '</div>',
+            '    </div>',
+            '  </div>',
+            '</div>'
+          ].join('');
+        }).join('');
+
+        // Expand/collapse
+        elGrid.querySelectorAll('.writing-card-head').forEach(function (head) {
+          head.addEventListener('click', function () {
+            var id = head.dataset.id;
+            var body = elGrid.querySelector('.writing-card-body[data-id="' + id + '"]');
+            var toggle = head.querySelector('.writing-toggle');
+            if (!body) return;
+            var open = body.style.display !== 'none';
+            body.style.display = open ? 'none' : 'block';
+            if (toggle) toggle.textContent = open ? '+' : '−';
+          });
+        });
+
+        // Eğer URL'de #yazi-X varsa o kartı aç
+        if (location.hash && location.hash.indexOf('#yazi-') === 0) {
+          var targetId = location.hash.replace('#yazi-', '');
+          var targetHead = elGrid.querySelector('.writing-card-head[data-id="' + targetId + '"]');
+          if (targetHead) {
+            targetHead.click();
+            targetHead.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      } catch (e) {
+        console.warn('[ielts writing] load failed:', e);
       }
     })();
 

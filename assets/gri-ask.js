@@ -43,6 +43,62 @@
     '}',
     '.q-grid.show-gri .q-gri { display: block; }',
     '@media (max-width: 1000px) { .q-gri { padding: 1.3rem 1.4rem; } }',
+
+    /* === MOBILE: bottom sheet === */
+    '@media (max-width: 768px) {',
+    '  .q-grid.show-gri .q-gri {',
+    '    position: fixed;',
+    '    bottom: 0; left: 0; right: 0; top: auto;',
+    '    width: 100%; max-width: 100%;',
+    '    max-height: 88vh;',
+    '    margin: 0;',
+    '    border-radius: 14px 14px 0 0;',
+    '    border: 1px solid var(--line);',
+    '    border-bottom: none;',
+    '    box-shadow: 0 -10px 30px rgba(0,0,0,0.22);',
+    '    padding: 1.6rem 1.3rem 1.3rem;',
+    '    z-index: 1500;',
+    '    overflow-y: auto;',
+    '    -webkit-overflow-scrolling: touch;',
+    '    animation: gri-slide-up 0.24s ease-out;',
+    '  }',
+    '  .q-grid.show-gri .q-gri::before {',
+    '    content: "";',
+    '    position: sticky; top: -1.6rem;',
+    '    display: block;',
+    '    width: 38px; height: 4px;',
+    '    background: var(--line, #ddd);',
+    '    border-radius: 2px;',
+    '    margin: -0.6rem auto 0.8rem;',
+    '  }',
+    '  body.gri-mobile-open { overflow: hidden; }',
+    '  .gri-mobile-backdrop {',
+    '    position: fixed; inset: 0;',
+    '    background: rgba(0,0,0,0.32);',
+    '    z-index: 1490;',
+    '    animation: gri-fade-in 0.22s ease-out;',
+    '  }',
+    '}',
+    '@keyframes gri-slide-up {',
+    '  from { transform: translateY(100%); }',
+    '  to { transform: translateY(0); }',
+    '}',
+    '@keyframes gri-fade-in {',
+    '  from { opacity: 0; } to { opacity: 1; }',
+    '}',
+    '@media (min-width: 769px) {',
+    '  .gri-mobile-backdrop { display: none !important; }',
+    '}',
+    '@media (max-width: 768px) {',
+    '  .q-grid.show-gri .q-gri .gri-head {',
+    '    position: sticky; top: 0;',
+    '    background: var(--bg-card);',
+    '    z-index: 5;',
+    '    padding: 0.6rem 0;',
+    '    margin: -0.6rem 0 1rem;',
+    '    border-bottom: 1px solid var(--line);',
+    '  }',
+    '}',
     '.gri-head {',
     '  display: flex; align-items: center; justify-content: space-between;',
     '  gap: 0.6rem; margin-bottom: 1.5rem;',
@@ -211,14 +267,41 @@
     if (b > 0) return 'Bugün doldu · Bonus ' + b;
     return 'Hak yok';
   }
+  function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+  function ensureBackdrop() {
+    var bd = document.getElementById('gri-mobile-backdrop');
+    if (bd) return bd;
+    bd = document.createElement('div');
+    bd.id = 'gri-mobile-backdrop';
+    bd.className = 'gri-mobile-backdrop';
+    bd.addEventListener('click', closePanel);
+    document.body.appendChild(bd);
+    return bd;
+  }
   function openPanel() {
     var grid = document.getElementById('qGrid');
     if (grid) grid.classList.add('show-gri');
+    if (isMobile()) {
+      ensureBackdrop();
+      document.body.classList.add('gri-mobile-open');
+    }
   }
   function closePanel() {
     var grid = document.getElementById('qGrid');
     if (grid) grid.classList.remove('show-gri');
+    document.body.classList.remove('gri-mobile-open');
+    var bd = document.getElementById('gri-mobile-backdrop');
+    if (bd) bd.remove();
   }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var grid = document.getElementById('qGrid');
+      if (grid && grid.classList.contains('show-gri')) closePanel();
+    }
+  });
 
   /* ===== Render ===== */
   function escapeHtml(s) {

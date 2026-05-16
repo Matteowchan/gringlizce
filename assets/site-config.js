@@ -38,6 +38,36 @@
 
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ---------- AUTH NAV ----------
+  // a[href="giris.html"] linklerini auth durumuna gore "Panelim" yapar.
+  // "giris.html#signup" linkleri auth varsa gizlenir.
+  function updateAuthNav(user) {
+    var loginLinks = document.querySelectorAll('a[href="giris.html"], a[href="/giris.html"]');
+    loginLinks.forEach(function (link) {
+      if (user) {
+        link.textContent = 'Panelim';
+        link.setAttribute('href', 'panelim.html');
+      } else {
+        link.textContent = link.classList.contains('btn-nav-cta') ? 'Giriş' : 'Materyal Girişi';
+        link.setAttribute('href', 'giris.html');
+      }
+    });
+    var signupLinks = document.querySelectorAll('a[href="giris.html#signup"], a[href="/giris.html#signup"]');
+    signupLinks.forEach(function (link) {
+      link.style.display = user ? 'none' : '';
+    });
+  }
+
+  sb.auth.getUser().then(function (res) {
+    updateAuthNav(res && res.data ? res.data.user : null);
+  }).catch(function () {
+    updateAuthNav(null);
+  });
+  sb.auth.onAuthStateChange(function (_event, session) {
+    updateAuthNav(session ? session.user : null);
+  });
+  // ---------- /AUTH NAV ----------
+
   function fmt(n) {
     return Number(n).toLocaleString('tr-TR');
   }

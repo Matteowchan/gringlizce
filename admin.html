@@ -330,7 +330,7 @@
           <button class="filter-chip" data-filter="ielts">IELTS</button>
           <button class="filter-chip" data-filter="ib">IB</button>
           <button class="filter-chip" data-filter="ydt">YDT</button>
-          <button class="filter-chip" data-filter="yds">YDS</button>
+          <button class="filter-chip" data-filter="yds">YDS/YÖKDİL</button>
         </div>
 
         <table class="products-table" id="products-table">
@@ -347,40 +347,6 @@
             </tr>
           </thead>
           <tbody id="products-tbody"></tbody>
-        </table>
-      </section>
-
-      <section class="admin-section">
-        <span class="sec-eyebrow">IELTS</span>
-        <h2>Writing Değerlendirme</h2>
-
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Ödemesi yapılmış henüz değerlendirilmemiş Writing gönderimleri. "Değerlendir" butonu detay sayfasını açar.
-        </p>
-
-        <div class="filter-row" id="writing-filter-row">
-          <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-right: 0.5rem;">Durum:</span>
-          <button class="filter-chip active" data-writing-filter="pending">Bekleyen</button>
-          <button class="filter-chip" data-writing-filter="reviewed">Değerlendirilmiş</button>
-          <button class="filter-chip" data-writing-filter="draft">Taslak</button>
-          <button class="filter-chip" data-writing-filter="all">Hepsi</button>
-        </div>
-
-        <table class="products-table" id="writing-table">
-          <thead>
-            <tr>
-              <th>Tarih</th>
-              <th>Öğrenci</th>
-              <th>Test</th>
-              <th>Paket</th>
-              <th>Durum</th>
-              <th>T1/T2 Band</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="writing-tbody">
-            <tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 1rem;">Yükleniyor…</td></tr>
-          </tbody>
         </table>
       </section>
 
@@ -486,14 +452,10 @@
       try {
         var results = await Promise.all([
           sb.from('site_config').select('*'),
-          sb.from('products').select('*').order('exam_type').order('slug'),
-          sb.from('ielts_writing_submissions')
-            .select('id, user_id, test_id, task1_word_count, task2_word_count, task1_band, task2_band, overall_writing_band, package_type, payment_status, submitted_at, reviewed_at, test:test_id (slug, name)')
-            .order('submitted_at', { ascending: false })
+          sb.from('products').select('*').order('exam_type').order('slug')
         ]);
         if (results[0].error) throw results[0].error;
         if (results[1].error) throw results[1].error;
-        if (results[2].error) console.warn('writing list load failed:', results[2].error);
 
         state.cfg = {};
         (results[0].data || []).forEach(function (row) { state.cfg[row.key] = row.value; });
@@ -503,22 +465,6 @@
           }
           return p;
         });
-        state.writingSubs = results[2].data || [];
-
-        // Öğrenci email'lerini ayrı çek (admin RPC veya foreign join yok, basit yaklaşım: profiles tablosu varsa join, yoksa user_id göster)
-        var userIds = state.writingSubs.map(function (w) { return w.user_id; }).filter(Boolean);
-        if (userIds.length > 0) {
-          try {
-            var profRes = await sb.from('profiles').select('id, email, full_name').in('id', userIds);
-            if (profRes.data) {
-              var byId = {};
-              profRes.data.forEach(function (p) { byId[p.id] = p; });
-              state.writingSubs.forEach(function (w) { w._user = byId[w.user_id] || null; });
-            }
-          } catch (e) { /* profiles tablosu yoksa sessiz geç */ }
-        }
-
-        state.currentWritingFilter = 'pending';
 
         hide('reverify-prompt');
         hide('loading');
@@ -526,81 +472,12 @@
         renderBanner();
         renderDiscount();
         renderProducts();
-        renderWritingList();
         startIdleWatcher();
       } catch (e) {
         $('loading').innerHTML = '<p style="color:#c44;">Veri yüklenemedi: ' + (e.message || e) + '</p>';
         show('loading');
         console.error(e);
       }
-    }
-
-    function renderWritingList() {
-      var tbody = $('writing-tbody');
-      if (!tbody) return;
-      var subs = state.writingSubs || [];
-      var filter = state.currentWritingFilter || 'pending';
-
-      function escHtml(s) {
-        if (s == null) return '';
-        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      }
-
-      function fmtDate(s) {
-        if (!s) return '—';
-        try {
-          var d = new Date(s);
-          return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-        } catch (e) { return s; }
-      }
-
-      function pkgLabel(p) {
-        if (p === 'task1_only') return 'Task 1';
-        if (p === 'task2_only') return 'Task 2';
-        if (p === 'both') return 'T1+T2';
-        if (p === 'draft') return 'Taslak';
-        return p || '—';
-      }
-
-      function statusLabel(payment, reviewed) {
-        if (reviewed) return '<span style="color: var(--teal); font-weight: 600;">Değerlendirildi</span>';
-        if (payment === 'paid') return '<span style="color: var(--gold); font-weight: 600;">İncelemede</span>';
-        if (payment === 'unpaid') return '<span style="color: #c63838;">Ödeme Bekliyor</span>';
-        if (payment === 'draft') return '<span style="color: var(--text-muted);">Taslak</span>';
-        return payment || '—';
-      }
-
-      var filtered = subs.filter(function (w) {
-        if (filter === 'all') return true;
-        if (filter === 'pending') return w.payment_status === 'paid' && !w.reviewed_at;
-        if (filter === 'reviewed') return !!w.reviewed_at;
-        if (filter === 'draft') return w.payment_status === 'draft';
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 1rem;">Bu filtrede kayıt yok.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(function (w) {
-        var userLabel = w._user ? (w._user.full_name || w._user.email || '—') : (w.user_id ? w.user_id.substring(0, 8) + '…' : '—');
-        var testName = (w.test && w.test.name) || 'IELTS Mock';
-        var bandCell = (w.task1_band != null || w.task2_band != null)
-          ? (w.task1_band != null ? w.task1_band : '—') + ' / ' + (w.task2_band != null ? w.task2_band : '—')
-          : '—';
-        return [
-          '<tr>',
-          '  <td>' + escHtml(fmtDate(w.submitted_at)) + '</td>',
-          '  <td>' + escHtml(userLabel) + '</td>',
-          '  <td>' + escHtml(testName) + '</td>',
-          '  <td>' + escHtml(pkgLabel(w.package_type)) + '</td>',
-          '  <td>' + statusLabel(w.payment_status, w.reviewed_at) + '</td>',
-          '  <td>' + escHtml(bandCell) + '</td>',
-          '  <td><a class="row-save-btn" href="admin-writing-review.html?id=' + escHtml(w.id) + '" style="text-decoration:none; display:inline-block;">Değerlendir</a></td>',
-          '</tr>'
-        ].join('');
-      }).join('');
     }
 
     function showReverifyPrompt(wasIdle) {
@@ -909,26 +786,8 @@
 
     document.addEventListener('click', function (ev) {
       var chip = ev.target.closest('.filter-chip');
-      if (!chip) return;
-
-      // Writing filter ayrı bir filter row, kendi filtresi
-      if (chip.dataset.writingFilter) {
-        var row = chip.closest('.filter-row');
-        if (row) row.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
-        chip.classList.add('active');
-        state.currentWritingFilter = chip.dataset.writingFilter;
-        renderWritingList();
-        return;
-      }
-
-      // Ürün filter (mevcut davranış)
-      if (chip.dataset.filter) {
-        var prodRow = chip.closest('#filter-row');
-        if (prodRow) {
-          prodRow.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
-        } else {
-          document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
-        }
+      if (chip) {
+        document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
         chip.classList.add('active');
         state.currentFilter = chip.dataset.filter;
         renderProducts();

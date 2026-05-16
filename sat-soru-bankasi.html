@@ -3,27 +3,113 @@
 <head>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
+  <script src="assets/site-config.js" defer></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital SAT Soru Bankası | Gri English</title>
-  <meta name="description" content="Digital SAT Reading & Writing ve Math bölümleri için kategori bazlı soru bankası. Her alt konuya odaklı çalışma imkanı.">
+  <title>Digital SAT — Soru Bankası | Gri English</title>
+  <meta name="description" content="Digital SAT Reading &amp; Writing ve Math bölümleri için tüm kategori ve alt konular tek sayfada. Belirli bir konuya odaklan veya seçili konulardan karışık bir set oluştur.">
   <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#7A3B3B">
   <link rel="canonical" href="https://gringlizce.com/sat-soru-bankasi.html">
   <link rel="stylesheet" href="assets/main.css">
   <style>
-    /* Dropdown menü daraltma */
-    .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
-    .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
+    /* Section nav (sticky inside page) */
+    .qb-section-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg, #F4EFE3);
+      border-bottom: 1px solid var(--line, #D9D2C4);
+      padding: 0.9rem 0;
+    }
+    .qb-section-nav-inner {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .qb-section-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.2rem;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--text-soft, #555);
+      text-decoration: none;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .qb-section-nav a:hover {
+      color: var(--text, #1A2230);
+      background: var(--bg-soft, #f0ece0);
+    }
+    .qb-section-nav a.active {
+      color: var(--text, #1A2230);
+      border-color: var(--cat-accent, #7A3B3B);
+    }
+    .qb-section-nav .count {
+      font-size: 10px;
+      opacity: 0.6;
+      letter-spacing: 0.1em;
+    }
+    .qb-section-divider {
+      max-width: 880px;
+      margin: 3rem auto 0;
+      padding: 0 1rem;
+    }
+    .qb-section-divider .label {
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted, #888);
+      text-align: center;
+      padding: 0 1rem;
+      background: var(--bg, #F4EFE3);
+      display: inline-block;
+      position: relative;
+      top: 0.55rem;
+    }
+    .qb-section-divider .line {
+      border-top: 1px solid var(--line, #D9D2C4);
+      text-align: center;
+      line-height: 0;
+    }
+    .qb-section-heading {
+      max-width: 880px;
+      margin: 2rem auto 1.5rem;
+      padding: 0 1rem;
+      text-align: center;
+    }
+    .qb-section-heading h2 {
+      font-family: var(--font-display, Georgia, serif);
+      font-size: 2.1rem;
+      margin: 0.4rem 0 0.6rem;
+    }
+    .qb-section-heading .eyebrow { color: var(--cat-accent, #7A3B3B); }
+    .qb-section-heading p {
+      color: var(--text-soft, #555);
+      max-width: 580px;
+      margin: 0 auto;
+      font-size: 0.98rem;
+      line-height: 1.6;
+    }
+    @media (max-width: 600px) {
+      .qb-section-nav a { padding: 0.5rem 0.8rem; font-size: 10px; }
+      .qb-section-heading h2 { font-size: 1.6rem; }
+    }
   </style>
 </head>
 <body data-cat="sat">
 
-  <!-- Launch discount banner -->
-  <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+  <div class="launch-banner" data-site-banner>Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
 
   <header class="site-header">
     <div class="wrap nav">
@@ -33,12 +119,11 @@
       <nav>
         <ul class="nav-links">
           <li><a href="sat.html">SAT</a></li>
-          <li><a href="act.html">ACT</a></li>
           <li><a href="ielts.html">IELTS</a></li>
           <li><a href="toefl.html">TOEFL</a></li>
           <li><a href="ib.html">IB</a></li>
           <li><a href="ydt.html">YDT</a></li>
-          <li><a href="yds.html">YDS</a></li>
+          <li><a href="yds.html">YDS/YÖKDİL</a></li>
           <li class="nav-dropdown" data-dropdown="bank">
             <a href="soru-bankasi.html" class="nav-dropdown-trigger active" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
               <span>Soru Bankası</span>
@@ -51,16 +136,13 @@
                   <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
                 </a>
                 <ul class="nav-submenu-list">
-                  <li><a href="sat-soru-bankasi-rw.html">Reading &amp; Writing</a></li>
-                  <li><a href="sat-soru-bankasi-math.html">Math</a></li>
+                  <li><a href="sat-soru-bankasi.html#rw">Reading &amp; Writing</a></li>
+                  <li><a href="sat-soru-bankasi.html#math">Math</a></li>
                 </ul>
               </li>
-              <li><a href="act-soru-bankasi.html">ACT</a></li>
               <li><a href="ielts-soru-bankasi.html">IELTS</a></li>
               <li><a href="toefl-soru-bankasi.html">TOEFL</a></li>
               <li><a href="ib-soru-bankasi.html">IB</a></li>
-              <li><a href="ydt-soru-bankasi.html">YDT</a></li>
-              <li><a href="yds-soru-bankasi.html">YDS</a></li>
             </ul>
           </li>
           <li class="nav-dropdown" data-dropdown="notes">
@@ -70,12 +152,11 @@
             </a>
             <ul class="nav-dropdown-menu">
               <li><a href="sat-ders-notlari.html">SAT</a></li>
-              <li><a href="act-ders-notlari.html">ACT</a></li>
               <li><a href="ielts-ders-notlari.html">IELTS</a></li>
               <li><a href="toefl-ders-notlari.html">TOEFL</a></li>
               <li><a href="ib-ders-notlari.html">IB</a></li>
               <li><a href="ydt-ders-notlari.html">YDT</a></li>
-              <li><a href="yds-ders-notlari.html">YDS</a></li>
+              <li><a href="yds-ders-notlari.html">YDS/YÖKDİL</a></li>
             </ul>
           </li>
           <li><a href="iletisim.html">İletişim</a></li>
@@ -89,112 +170,285 @@
     <div class="breadcrumb">
       <a href="index.html">Anasayfa</a>
       <span class="sep">&rsaquo;</span>
-      <a href="sat.html">Digital SAT</a>
+      <a href="soru-bankasi.html">Soru Bankası</a>
       <span class="sep">&rsaquo;</span>
-      <span>Soru Bankası</span>
+      <span>Digital SAT</span>
     </div>
   </div>
 
   <!-- HERO -->
-  <section style="padding: 3rem 0 1.5rem;">
+  <section style="padding: 2.5rem 0 1rem;">
     <div class="wrap" style="max-width: 760px; text-align: center;">
       <span class="eyebrow">Digital SAT</span>
-      <h1 style="font-size: 2.6rem; margin: 0.6rem 0 1rem;">Soru <span class="it cat-italic">Bankası</span></h1>
-      <div class="divider cat-divider" style="margin: 0 auto 1.5rem;"><span class="dia"></span></div>
-      <p style="font-size: 1.1rem; color: var(--text-soft); line-height: 1.7;">
-        Reading &amp; Writing ve Math bölümlerinin College Board tarafından tanımlanmış tüm kategori ve alt konularına göre sınıflandırılmış soru bankası. Belirli bir konuya odaklanmak veya seçili kategorilerden karışık bir sınav oluşturmak için kullanılır.
+      <h1 style="font-size: 2.4rem; margin: 0.5rem 0 0.9rem;">Soru <span class="it cat-italic">Bankası</span></h1>
+      <div class="divider cat-divider" style="margin: 0 auto 1.2rem;"><span class="dia"></span></div>
+      <p style="font-size: 1.05rem; color: var(--text-soft); line-height: 1.7;">
+        Reading &amp; Writing ve Math bölümlerinin College Board taksonomisine göre sınıflandırılmış tüm kategori ve alt konuları. Bir konuya odaklan ya da seçili konulardan karışık bir set oluştur.
       </p>
     </div>
   </section>
 
-  <!-- BÖLÜM KARTLARI -->
-  <section style="padding: 1rem 0 4rem;">
-    <div class="wrap" style="max-width: 980px;">
-      <div class="qb-section-grid">
+  <!-- SECTION NAV (sticky) -->
+  <nav class="qb-section-nav" aria-label="Bölüm seçimi">
+    <div class="qb-section-nav-inner">
+      <a href="#rw" data-section-link="rw">Reading &amp; Writing <span class="count">10 alt konu</span></a>
+      <a href="#math" data-section-link="math">Math <span class="count">19 alt konu</span></a>
+    </div>
+  </nav>
 
-        <a href="sat-soru-bankasi-rw.html" class="qb-section-card">
-          <div class="qb-section-icon" aria-hidden="true">
-            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="14" y="12" width="42" height="56" rx="3" stroke="currentColor" stroke-width="2" fill="none"/>
-              <line x1="22" y1="24" x2="48" y2="24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="22" y1="32" x2="48" y2="32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="22" y1="40" x2="48" y2="40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="22" y1="48" x2="40" y2="48" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M52 50 L68 34 L60 30 Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
-              <line x1="56" y1="46" x2="62" y2="40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="qb-section-body">
-            <span class="p-eyebrow">Bölüm 01</span>
-            <h2>Reading &amp; Writing</h2>
-            <p>Kelime, dilbilgisi, retorik beceriler, okuma ve metin yapısı. Dört ana kategori altında on alt konu.</p>
-            <div class="qb-section-meta">
-              <span><strong>4</strong> Ana Kategori</span>
-              <span class="sep"></span>
-              <span><strong>10</strong> Alt Konu</span>
-            </div>
-            <span class="qb-section-cta">Kategorileri Gör <span class="arrow">&rsaquo;</span></span>
-          </div>
-        </a>
+  <!-- RW SECTION HEADING -->
+  <div class="qb-section-heading" id="rw">
+    <span class="eyebrow">Bölüm 01</span>
+    <h2 lang="en">Reading &amp; Writing</h2>
+    <p>Kelime, dilbilgisi, retorik beceriler, okuma ve metin yapısı. Dört ana kategori altında on alt konu.</p>
+  </div>
 
-        <a href="sat-soru-bankasi-math.html" class="qb-section-card">
-          <div class="qb-section-icon" aria-hidden="true">
-            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 20 L40 12 L64 20 L40 28 Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
-              <path d="M16 20 L16 56 L40 64 L64 56 L64 20" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
-              <line x1="40" y1="28" x2="40" y2="64" stroke="currentColor" stroke-width="2"/>
-              <line x1="22" y1="38" x2="34" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="28" y1="32" x2="28" y2="44" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="46" y1="38" x2="58" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="46" y1="48" x2="58" y2="48" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+  <!-- RW CATEGORIES -->
+  <section style="padding: 0.5rem 0 2rem;">
+    <div class="wrap" style="max-width: 880px;">
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 01</span>
+          <h2 lang="en">Craft and Structure</h2>
+          <p>Metnin nasıl yapılandırıldığı, kelimelerin bağlam içindeki anlamları ve metinler arası ilişkilerin kurulması.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row qb-topic-active" data-subcategory="cross_text_connections">
+            <label class="qb-topic-check">
+              <input type="checkbox" data-subcategory="cross_text_connections">
+              <span class="qb-check-box" aria-hidden="true"></span>
+            </label>
+            <span class="qb-topic-name" lang="en">Cross-Text Connections</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <a class="qb-topic-status active" href="soru.html?subcategory=cross_text_connections">Başla</a>
           </div>
-          <div class="qb-section-body">
-            <span class="p-eyebrow">Bölüm 02</span>
-            <h2>Math</h2>
-            <p>Cebir, ileri matematik, problem çözme ve veri analizi, geometri ve trigonometri. Dört ana kategori altında on dokuz alt konu.</p>
-            <div class="qb-section-meta">
-              <span><strong>4</strong> Ana Kategori</span>
-              <span class="sep"></span>
-              <span><strong>19</strong> Alt Konu</span>
-            </div>
-            <span class="qb-section-cta">Kategorileri Gör <span class="arrow">&rsaquo;</span></span>
+          <div class="qb-topic-row" data-subcategory="text_structure_and_purpose">
+            <span class="qb-topic-name" lang="en">Text Structure and Purpose</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
           </div>
-        </a>
+          <div class="qb-topic-row" data-subcategory="words_in_context">
+            <span class="qb-topic-name" lang="en">Words in Context</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
+      </div>
 
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 02</span>
+          <h2 lang="en">Expression of Ideas</h2>
+          <p>Fikirlerin etkili biçimde aktarılması, geçişlerin doğru kullanımı ve retorik bütünlük.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="rhetorical_synthesis">
+            <span class="qb-topic-name" lang="en">Rhetorical Synthesis</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="transitions">
+            <span class="qb-topic-name" lang="en">Transitions</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 03</span>
+          <h2 lang="en">Information and Ideas</h2>
+          <p>Ana fikir tespiti, kanıt değerlendirmesi ve metinden çıkarsama yapma becerileri.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="central_ideas_and_details">
+            <span class="qb-topic-name" lang="en">Central Ideas and Details</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="command_of_evidence">
+            <span class="qb-topic-name" lang="en">Command of Evidence</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="inferences">
+            <span class="qb-topic-name" lang="en">Inferences</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 04</span>
+          <h2 lang="en">Standard English Conventions</h2>
+          <p>Cümle sınırları, noktalama ve standart İngilizce dil bilgisi kuralları.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="boundaries">
+            <span class="qb-topic-name" lang="en">Boundaries</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="form_structure_and_sense">
+            <span class="qb-topic-name" lang="en">Form, Structure, and Sense</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- NASIL ÇALIŞIR -->
-  <section style="padding: 3rem 0; border-top: 1px solid var(--line); background: var(--bg-soft);">
+  <!-- SECTION DIVIDER -->
+  <div class="qb-section-divider">
+    <div class="line"><span class="label">— Bölüm 02 —</span></div>
+  </div>
+
+  <!-- MATH SECTION HEADING -->
+  <div class="qb-section-heading" id="math">
+    <span class="eyebrow">Bölüm 02</span>
+    <h2 lang="en">Math</h2>
+    <p>Cebir, ileri matematik, problem çözme ve veri analizi, geometri ve trigonometri. Dört ana kategori altında on dokuz alt konu.</p>
+  </div>
+
+  <!-- MATH CATEGORIES -->
+  <section style="padding: 0.5rem 0 3rem;">
     <div class="wrap" style="max-width: 880px;">
-      <div class="section-head">
-        <span class="eyebrow">Nasıl Kullanılır</span>
-        <h2>Soru Bankası Çalışma Mantığı</h2>
-        <div class="divider cat-divider"><span class="dia"></span></div>
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 01</span>
+          <h2 lang="en">Algebra</h2>
+          <p>Doğrusal denklemler, fonksiyonlar ve eşitsizlikler. Tek veya iki değişkenli yapılar.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="linear_equations_one_variable">
+            <span class="qb-topic-name" lang="en">Linear equations in one variable</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="linear_functions">
+            <span class="qb-topic-name" lang="en">Linear functions</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="linear_equations_two_variables">
+            <span class="qb-topic-name" lang="en">Linear equations in two variables</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="systems_linear_equations_two_variables">
+            <span class="qb-topic-name" lang="en">Systems of two linear equations in two variables</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="linear_inequalities">
+            <span class="qb-topic-name" lang="en">Linear inequalities in one or two variables</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; margin-top: 2rem;">
-        <div style="text-align: center;">
-          <span class="eyebrow" style="color: var(--cat-accent);">01</span>
-          <h3 style="font-family: var(--font-display); font-size: 1.15rem; margin: 0.6rem 0;">Konu Seç</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-            Bölüm seç (R&amp;W veya Math), ardından ana kategori ve alt konuları belirle.
-          </p>
+
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 02</span>
+          <h2 lang="en">Advanced Math</h2>
+          <p>Eşdeğer ifadeler, doğrusal olmayan denklemler ve fonksiyonlar.</p>
         </div>
-        <div style="text-align: center;">
-          <span class="eyebrow" style="color: var(--cat-accent);">02</span>
-          <h3 style="font-family: var(--font-display); font-size: 1.15rem; margin: 0.6rem 0;">Sınav Oluştur</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-            Seçtiğin alt konulardan rastgele veya hedefli soru seti hazırlanır.
-          </p>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="equivalent_expressions">
+            <span class="qb-topic-name" lang="en">Equivalent expressions</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="nonlinear_equations_and_systems">
+            <span class="qb-topic-name" lang="en">Nonlinear equations in one variable and systems of equations in two variables</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="nonlinear_functions">
+            <span class="qb-topic-name" lang="en">Nonlinear functions</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
         </div>
-        <div style="text-align: center;">
-          <span class="eyebrow" style="color: var(--cat-accent);">03</span>
-          <h3 style="font-family: var(--font-display); font-size: 1.15rem; margin: 0.6rem 0;">Analiz</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-            Çözüm sonrası hangi konularda hata yapıldığı kategori bazında raporlanır.
-          </p>
+      </div>
+
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 03</span>
+          <h2 lang="en">Problem-Solving and Data Analysis</h2>
+          <p>Oran, yüzde, veri yorumlama, olasılık ve istatistiksel çıkarımlar.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="ratios_rates_proportions">
+            <span class="qb-topic-name" lang="en">Ratios, rates, proportional relationships, and units</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="percentages">
+            <span class="qb-topic-name" lang="en">Percentages</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="one_variable_data">
+            <span class="qb-topic-name" lang="en">One-variable data: Distributions and measures of center and spread</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="two_variable_data">
+            <span class="qb-topic-name" lang="en">Two-variable data: Models and scatterplots</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="probability">
+            <span class="qb-topic-name" lang="en">Probability and conditional probability</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="inference_and_margin_of_error">
+            <span class="qb-topic-name" lang="en">Inference from sample statistics and margin of error</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="evaluating_statistical_claims">
+            <span class="qb-topic-name" lang="en">Evaluating statistical claims: Observational studies and experiments</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-category">
+        <div class="qb-category-head">
+          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 04</span>
+          <h2 lang="en">Geometry and Trigonometry</h2>
+          <p>Alan, hacim, açılar, üçgenler, çemberler ve trigonometri.</p>
+        </div>
+        <div class="qb-topic-list">
+          <div class="qb-topic-row" data-subcategory="area_and_volume">
+            <span class="qb-topic-name" lang="en">Area and volume</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="lines_angles_triangles">
+            <span class="qb-topic-name" lang="en">Lines, angles, and triangles</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="right_triangles_trigonometry">
+            <span class="qb-topic-name" lang="en">Right triangles and trigonometry</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
+          <div class="qb-topic-row" data-subcategory="circles">
+            <span class="qb-topic-name" lang="en">Circles</span>
+            <span class="qb-topic-count" aria-live="polite">...</span>
+            <span class="qb-topic-status">Yakında</span>
+          </div>
         </div>
       </div>
     </div>
@@ -203,12 +457,117 @@
   <!-- CTA -->
   <section class="cta-strip">
     <div class="wrap" style="max-width: 760px; text-align: center;">
-      <span class="eyebrow">Yapım Aşamasında</span>
-      <h2 style="margin-top: 0.5rem;">Soru havuzu hazırlanıyor</h2>
-      <p class="lead">Tüm kategoriler için soru içerikleri sürekli güncellenmektedir. Hangi kategoride hangi soruların hazır olduğunu görmek için detay sayfalarına göz atın.</p>
-      <a href="iletisim.html" class="btn btn-outline">Bilgi Talep Et</a>
+      <span class="eyebrow">Soru Havuzu Hazırlanıyor</span>
+      <h2 style="margin-top: 0.5rem;">Her kategori için içerik girişi devam ediyor</h2>
+      <p class="lead">Hazır olan alt konularda doğrudan pratik yapabilirsin. Yeni içerikler eklendikçe burada güncellenecek.</p>
     </div>
   </section>
+
+  <!-- Floating multi-select bar -->
+  <div class="qb-multi-bar" id="multiBar" aria-hidden="true">
+    <span class="qb-multi-text"><strong id="multiCount">0</strong> alt konu seçili</span>
+    <button class="qb-multi-btn" type="button" id="multiStartBtn">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Karışık Başla
+    </button>
+  </div>
+
+  <script>
+    (function() {
+      const multiBar = document.getElementById('multiBar');
+      const multiCount = document.getElementById('multiCount');
+      const startBtn = document.getElementById('multiStartBtn');
+
+      function getSelected() {
+        return Array.from(document.querySelectorAll('.qb-topic-check input[type="checkbox"]'))
+          .filter(c => c.checked)
+          .map(c => c.dataset.subcategory)
+          .filter(Boolean);
+      }
+
+      function refresh() {
+        const sel = getSelected();
+        if (sel.length === 0) {
+          multiBar.classList.remove('visible');
+          multiBar.setAttribute('aria-hidden', 'true');
+        } else {
+          multiBar.classList.add('visible');
+          multiBar.setAttribute('aria-hidden', 'false');
+          multiCount.textContent = String(sel.length);
+        }
+      }
+
+      document.addEventListener('change', function(e) {
+        if (e.target.matches && e.target.matches('.qb-topic-check input[type="checkbox"]')) {
+          refresh();
+        }
+      });
+
+      startBtn.addEventListener('click', () => {
+        const sel = getSelected();
+        if (sel.length === 0) return;
+        const url = 'soru.html?subcategories=' + sel.join(',') + '&shuffle=1';
+        window.location.href = url;
+      });
+    })();
+
+    // Section nav active state (intersection observer)
+    (function() {
+      const rwSection = document.getElementById('rw');
+      const mathSection = document.getElementById('math');
+      const links = document.querySelectorAll('[data-section-link]');
+
+      function setActive(id) {
+        links.forEach(l => {
+          l.classList.toggle('active', l.dataset.sectionLink === id);
+        });
+      }
+
+      // Click handler — smooth scroll, no full-page hash jump
+      links.forEach(l => {
+        l.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = l.dataset.sectionLink;
+          const target = document.getElementById(id);
+          if (target) {
+            const navHeight = document.querySelector('.qb-section-nav').offsetHeight;
+            const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 12;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+            history.replaceState(null, '', '#' + id);
+          }
+        });
+      });
+
+      // Scroll observer for active state
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+              setActive(entry.target.id);
+            }
+          });
+        }, { rootMargin: '-25% 0px -65% 0px', threshold: [0.1] });
+        if (rwSection) observer.observe(rwSection);
+        if (mathSection) observer.observe(mathSection);
+      }
+
+      // Initial state from hash
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'math' || hash === 'rw') {
+        setActive(hash);
+        setTimeout(() => {
+          const target = document.getElementById(hash);
+          if (target) {
+            const navHeight = document.querySelector('.qb-section-nav').offsetHeight;
+            const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 12;
+            window.scrollTo({ top: top, behavior: 'instant' });
+          }
+        }, 100);
+      } else {
+        setActive('rw');
+      }
+    })();
+  </script>
 
   <footer class="footer">
     <div class="wrap">
@@ -221,12 +580,11 @@
           <h4>Sınavlar</h4>
           <ul>
             <li><a href="sat.html">Digital SAT</a></li>
-            <li><a href="act.html">ACT</a></li>
             <li><a href="ielts.html">IELTS</a></li>
             <li><a href="toefl.html">TOEFL iBT / Versant</a></li>
             <li><a href="ib.html">IB Diploma</a></li>
             <li><a href="ydt.html">YDT</a></li>
-            <li><a href="yds.html">YDS</a></li>
+            <li><a href="yds.html">YDS/YÖKDİL</a></li>
           </ul>
         </div>
         <div>

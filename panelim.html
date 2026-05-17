@@ -62,6 +62,75 @@
     .modal-box .err.show { display: block; }
     .modal-box .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
     .modal-box .ok.show { display: block; }
+
+    /* Question list cards (yer imi & yanlış yapılan) */
+    .qb-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.8rem;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .qb-list-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 1rem 1.1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .qb-list-card:hover { border-color: var(--gold, #C89A3C); transform: translateY(-2px); }
+    .qb-list-card .qb-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+    }
+    .qb-list-card .qb-badge {
+      font-family: var(--font-ui), Inter, system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal, #2C5856);
+      font-weight: 700;
+    }
+    .qb-list-card .qb-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .qb-list-card .qb-cat {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+    .qb-list-card .qb-prompt {
+      font-size: 0.83rem;
+      color: var(--text-soft);
+      line-height: 1.5;
+      margin-bottom: 0.6rem;
+      flex: 1;
+    }
+    .qb-list-card .qb-cta {
+      font-family: var(--font-ui), Inter, system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 600;
+      margin-top: auto;
+    }
+    .qb-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -207,6 +276,32 @@
           <div style="font-family: var(--font-display); font-size: 1.4rem; color: var(--teal); margin-bottom: 0.4rem;">₺425</div>
           <div style="font-size: 0.8rem; color: var(--text-soft);">₺8.5 / sorgu</div>
         </a>
+      </div>
+    </div>
+
+    <div id="wrong-answers-area" style="padding: 1.5rem 0 3rem; display: none;">
+      <div class="section-head">
+        <span class="eyebrow">Tekrar Çalış</span>
+        <h2>Yanlış Yaptıklarım</h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+      <div id="wrong-answers-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
+      <div id="wrong-answers-grid" class="qb-list-grid"></div>
+      <div id="wrong-answers-empty" class="qb-empty" style="display: none;">
+        Henüz yanlış cevapladığın soru yok. Soru bankasından çözmeye başla.
+      </div>
+    </div>
+
+    <div id="bookmarks-area" style="padding: 1.5rem 0 3rem; display: none;">
+      <div class="section-head">
+        <span class="eyebrow">Yer İmlerim</span>
+        <h2>İşaretli Sorular</h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+      <div id="bookmarks-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
+      <div id="bookmarks-grid" class="qb-list-grid"></div>
+      <div id="bookmarks-empty" class="qb-empty" style="display: none;">
+        Henüz yer imi eklemedin. Soru bankasında bir soruyu açtığında üst köşedeki yer imi butonuna bas.
       </div>
     </div>
 
@@ -472,6 +567,169 @@
     })();
 
     // Kelime Listem'i yükle
+    // ===== Yanlış Yapılanlar & Yer İmleri için yardımcılar =====
+    var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+    function escHtmlPanel(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function humanizeSubcat(slug) {
+      if (!slug) return '';
+      return String(slug).replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+
+    function formatRelativeDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      var now = Date.now();
+      var diff = now - d.getTime();
+      var min = Math.floor(diff / 60000);
+      if (min < 1) return 'şimdi';
+      if (min < 60) return min + ' dk önce';
+      var hour = Math.floor(min / 60);
+      if (hour < 24) return hour + ' saat önce';
+      var day = Math.floor(hour / 24);
+      if (day < 30) return day + ' gün önce';
+      var month = Math.floor(day / 30);
+      if (month < 12) return month + ' ay önce';
+      return d.toLocaleDateString('tr-TR');
+    }
+
+    function renderQuestionCard(q, date, type) {
+      var examLabels = { sat: 'SAT', ielts: 'IELTS', toefl: 'TOEFL', ib: 'IB', ydt: 'YDT', yds: 'YDS', 'yds-yokdil': 'YDS' };
+      var exam = examLabels[q.exam_type] || (q.exam_type || '').toUpperCase();
+      var section = q.section ? ' · ' + q.section.toUpperCase() : '';
+      var subcat = humanizeSubcat(q.subcategory);
+      var promptText = (q.prompt || '').replace(/<[^>]*>/g, '').trim();
+      var preview = promptText.slice(0, 110) + (promptText.length > 110 ? '…' : '');
+      var dateStr = formatRelativeDate(date);
+      var cta = type === 'wrong' ? 'Tekrar Çöz' : 'Aç';
+
+      return [
+        '<a href="soru.html?q=' + encodeURIComponent(q.slug) + '" class="qb-list-card">',
+        '  <div class="qb-head">',
+        '    <span class="qb-badge">' + escHtmlPanel(exam + section) + '</span>',
+        '    <span class="qb-date">' + escHtmlPanel(dateStr) + '</span>',
+        '  </div>',
+        '  <div class="qb-cat">' + escHtmlPanel(subcat) + '</div>',
+        '  <div class="qb-prompt">' + escHtmlPanel(preview) + '</div>',
+        '  <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '</a>'
+      ].join('');
+    }
+
+    (async function loadWrongAnswers() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var ansRes = await sbCli.from('user_answers')
+          .select('question_slug, answered_at')
+          .eq('user_id', userId)
+          .eq('status', 'incorrect')
+          .order('answered_at', { ascending: false })
+          .limit(60);
+
+        var elArea = document.getElementById('wrong-answers-area');
+        var elGrid = document.getElementById('wrong-answers-grid');
+        var elCount = document.getElementById('wrong-answers-count');
+        var elEmpty = document.getElementById('wrong-answers-empty');
+        if (!elArea || !elGrid) return;
+
+        elArea.style.display = 'block';
+        var rows = (ansRes && ansRes.data) || [];
+
+        if (rows.length === 0) {
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        var slugs = rows.map(function (r) { return r.question_slug; });
+        var qsRes = await sbCli.from('questions')
+          .select('slug, exam_type, section, subcategory, prompt')
+          .in('slug', slugs);
+
+        var qMap = new Map();
+        (qsRes.data || []).forEach(function (q) { qMap.set(q.slug, q); });
+
+        var validRows = rows.filter(function (r) { return qMap.has(r.question_slug); });
+
+        if (validRows.length === 0) {
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        elCount.textContent = validRows.length + ' soru tekrar çalışmayı bekliyor';
+        elGrid.innerHTML = validRows.map(function (r) {
+          return renderQuestionCard(qMap.get(r.question_slug), r.answered_at, 'wrong');
+        }).join('');
+      } catch (e) {
+        console.warn('[wrong-answers] load failed:', e);
+      }
+    })();
+
+    (async function loadBookmarks() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var bmRes = await sbCli.from('user_bookmarks')
+          .select('question_slug, bookmarked_at')
+          .eq('user_id', userId)
+          .order('bookmarked_at', { ascending: false })
+          .limit(60);
+
+        var elArea = document.getElementById('bookmarks-area');
+        var elGrid = document.getElementById('bookmarks-grid');
+        var elCount = document.getElementById('bookmarks-count');
+        var elEmpty = document.getElementById('bookmarks-empty');
+        if (!elArea || !elGrid) return;
+
+        elArea.style.display = 'block';
+        var rows = (bmRes && bmRes.data) || [];
+
+        if (rows.length === 0) {
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        var slugs = rows.map(function (r) { return r.question_slug; });
+        var qsRes = await sbCli.from('questions')
+          .select('slug, exam_type, section, subcategory, prompt')
+          .in('slug', slugs);
+
+        var qMap = new Map();
+        (qsRes.data || []).forEach(function (q) { qMap.set(q.slug, q); });
+
+        var validRows = rows.filter(function (r) { return qMap.has(r.question_slug); });
+
+        if (validRows.length === 0) {
+          elEmpty.style.display = 'block';
+          return;
+        }
+
+        elCount.textContent = validRows.length + ' soru işaretli';
+        elGrid.innerHTML = validRows.map(function (r) {
+          return renderQuestionCard(qMap.get(r.question_slug), r.bookmarked_at, 'bookmark');
+        }).join('');
+      } catch (e) {
+        console.warn('[bookmarks] load failed:', e);
+      }
+    })();
+
     (async function loadVocabList() {
       try {
         if (!window.supabase || !window.supabase.createClient) return;

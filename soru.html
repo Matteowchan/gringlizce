@@ -184,6 +184,12 @@
     }
     .q-tool-btn:hover { color: var(--text); border-color: var(--text-muted); }
     .q-tool-btn svg { width: 12px; height: 12px; }
+    .q-tool-btn.bookmarked {
+      color: var(--gold-deep);
+      border-color: var(--gold);
+      background: var(--gold-soft);
+    }
+    .q-tool-btn.bookmarked svg { fill: currentColor; }
 
     /* Timer (replaces İşaretle) */
     .q-timer {
@@ -1420,6 +1426,10 @@
               <svg class="q-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
+          <button class="q-tool-btn" type="button" id="bookmarkBtn" aria-label="Yer imine ekle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>Yer İmi</span>
+          </button>
           <button class="q-tool-btn" type="button" id="reportBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             <span>Bildir</span>
@@ -2009,6 +2019,7 @@
       // Gri AI için soru bilgisini global'e yaz
       window.GriCurrentQuestion = {
         id: q.id,
+        slug: q.slug,
         exam_type: q.exam_type,
         section: q.section,
         category: q.category,
@@ -2017,6 +2028,11 @@
       try {
         window.dispatchEvent(new CustomEvent('gri-question-change', { detail: window.GriCurrentQuestion }));
       } catch (e) {}
+
+      // Bookmark state'i yenile
+      if (typeof window.refreshBookmarkState === 'function') {
+        window.refreshBookmarkState();
+      }
 
       // Page title
       const examLabel = EXAM_LABELS[q.exam_type] || q.exam_type;
@@ -2434,6 +2450,68 @@
       const reportForm = document.getElementById('reportForm');
       const reportSubmit = document.getElementById('reportSubmit');
       const reportFeedback = document.getElementById('reportFeedback');
+
+      // Bookmark button setup
+      const bookmarkBtn = document.getElementById('bookmarkBtn');
+      let isCurrentBookmarked = false;
+
+      function getCurrentSlug() {
+        return (window.GriCurrentQuestion && window.GriCurrentQuestion.slug) || null;
+      }
+
+      window.refreshBookmarkState = async function () {
+        if (!bookmarkBtn) return;
+        const slug = getCurrentSlug();
+        if (!GRI_USER_ID || !slug) {
+          bookmarkBtn.classList.remove('bookmarked');
+          isCurrentBookmarked = false;
+          return;
+        }
+        try {
+          const res = await supabase.from('user_bookmarks')
+            .select('question_slug')
+            .eq('user_id', GRI_USER_ID)
+            .eq('question_slug', slug)
+            .maybeSingle();
+          isCurrentBookmarked = !!(res && res.data);
+          bookmarkBtn.classList.toggle('bookmarked', isCurrentBookmarked);
+        } catch (e) {
+          console.warn('[bookmark] load failed:', e);
+        }
+      };
+
+      async function toggleBookmark() {
+        if (!GRI_USER_ID) {
+          location.href = 'giris.html?return=' + encodeURIComponent(location.pathname + location.search);
+          return;
+        }
+        const slug = getCurrentSlug();
+        if (!slug) return;
+        bookmarkBtn.disabled = true;
+        try {
+          if (isCurrentBookmarked) {
+            const res = await supabase.from('user_bookmarks')
+              .delete()
+              .eq('user_id', GRI_USER_ID)
+              .eq('question_slug', slug);
+            if (res.error) throw res.error;
+            isCurrentBookmarked = false;
+          } else {
+            const res = await supabase.from('user_bookmarks')
+              .insert({ user_id: GRI_USER_ID, question_slug: slug });
+            if (res.error) throw res.error;
+            isCurrentBookmarked = true;
+          }
+          bookmarkBtn.classList.toggle('bookmarked', isCurrentBookmarked);
+        } catch (e) {
+          console.warn('[bookmark] toggle failed:', e);
+        }
+        bookmarkBtn.disabled = false;
+      }
+
+      if (bookmarkBtn) {
+        bookmarkBtn.addEventListener('click', toggleBookmark);
+      }
 
       function openReportModal() {
         reportFeedback.textContent = '';

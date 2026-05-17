@@ -535,6 +535,16 @@
     const REQUESTED_SLUG = urlParams.get('test');
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const showError = (title, detail) => {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('testSelector').style.display = 'none';
+        document.getElementById('testCard').style.display = 'block';
+        document.getElementById('testMeta').textContent = 'Tanı';
+        document.getElementById('testName').textContent = title;
+        document.getElementById('testDesc').textContent = detail || '';
+        console.error('[ielts-deneme]', title, detail);
+      };
+
       // Supabase script defer ile geç gelebilir — bekle
       async function waitForSupabase(maxWait = 5000) {
         const start = Date.now();
@@ -546,24 +556,32 @@
 
       const ready = await waitForSupabase();
       if (!ready) {
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('testSelector').style.display = 'none';
-        document.getElementById('testCard').style.display = 'block';
-        document.getElementById('testMeta').textContent = 'Bağlantı hatası';
-        document.getElementById('testName').textContent = 'Yüklenemedi';
-        document.getElementById('testDesc').textContent = 'Sayfa beklendiği gibi açılmadı. Sayfayı yenilemeyi dene veya panelinin altındaki desteğe yaz.';
-        return;
+        return showError('Supabase kütüphanesi yüklenmedi', 'CDN bağlantısı yok ya da bloklanmış. CDN: cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
       }
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      // Yayında olan tüm testleri çek
-      const { data: allTests, error: allErr } = await sb
-        .from('ielts_tests')
-        .select('*')
-        .eq('is_published', true)
-        .order('test_date', { ascending: false });
+      let sb;
+      try {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } catch (e) {
+        return showError('İstemci oluşturulamadı', e.message || String(e));
+      }
 
-      if (allErr || !allTests || allTests.length === 0) {
+      // Yayında olan tüm testleri çek (8sn timeout ile)
+      let allTests = null, allErr = null;
+      try {
+        const fetchPromise = sb.from('ielts_tests').select('*').eq('is_published', true).order('test_date', { ascending: false });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Sunucu yanıt vermedi (8sn)')), 8000));
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        allTests = result.data;
+        allErr = result.error;
+      } catch (e) {
+        return showError('Sorgu hatası', e.message || String(e));
+      }
+
+      if (allErr) {
+        return showError('Veritabanı hatası', allErr.message || JSON.stringify(allErr));
+      }
+      if (!allTests || allTests.length === 0) {
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('testSelector').style.display = 'none';
         document.getElementById('testCard').style.display = 'block';

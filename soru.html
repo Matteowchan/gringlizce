@@ -2052,7 +2052,32 @@
       // Texts (passage)
       const textsEl = document.getElementById('qTexts');
       if (q.passage && q.passage.texts) {
-        textsEl.innerHTML = q.passage.texts.map(t =>
+        // Smart split: bazı kayıtlarda Text 1 ve Text 2 tek bir content
+        // içine gömülüymüş gibi geliyor. Pattern bulunursa ikiye ayır.
+        const splitInlineTexts = function (txts) {
+          const out = [];
+          txts.forEach(function (t) {
+            const c = (t.content || '').toString();
+            const hasMarkers = /Text\s*1\s*[:.\)]/i.test(c) && /Text\s*2\s*[:.\)]/i.test(c);
+            if (hasMarkers) {
+              // Marker'lardan ayır
+              const parts = c.split(/(?=Text\s*\d+\s*[:.\)])/i).filter(Boolean);
+              parts.forEach(function (p) {
+                const m = p.match(/^(Text\s*\d+)\s*[:.\)]\s*([\s\S]*)$/i);
+                if (m) {
+                  out.push({ label: m[1].trim(), content: m[2].trim() });
+                } else {
+                  out.push({ label: t.label || '', content: p.trim() });
+                }
+              });
+            } else {
+              out.push(t);
+            }
+          });
+          return out;
+        };
+        const renderedTexts = splitInlineTexts(q.passage.texts);
+        textsEl.innerHTML = renderedTexts.map(t =>
           `<p class="text-label">${esc(t.label)}</p><p>${safeHtml(t.content)}</p>`
         ).join('') + '<p class="q-hint q-hint-texts">Vurgulamak için metnin bir kısmını seç</p>';
       } else {

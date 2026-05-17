@@ -747,6 +747,21 @@
       }
     })();
 
+    function renderMissingCard(slug, date, type) {
+      var cta = type === 'wrong' ? 'Soru bulunamadı' : 'Soru bulunamadı';
+      return [
+        '<div class="qb-list-card" style="opacity: 0.55; cursor: default;">',
+        '  <div class="qb-head">',
+        '    <span class="qb-badge" style="color: var(--text-muted);">—</span>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '  </div>',
+        '  <div class="qb-cat">Bu soru artık aktif değil</div>',
+        '  <div class="qb-prompt">' + escHtmlPanel(slug) + '</div>',
+        '  <span class="qb-cta" style="color: var(--text-muted);">' + cta + '</span>',
+        '</div>'
+      ].join('');
+    }
+
     (async function loadWrongAnswers() {
       try {
         if (!window.supabase || !window.supabase.createClient) return;
@@ -778,6 +793,9 @@
           return;
         }
 
+        elEmpty.style.display = 'none';
+        elCount.textContent = rows.length + ' soru tekrar çalışmayı bekliyor';
+
         var slugs = rows.map(function (r) { return r.question_slug; });
         var qsRes = await sbCli.from('questions')
           .select('slug, exam_type, section, subcategory, prompt')
@@ -786,16 +804,10 @@
         var qMap = new Map();
         (qsRes.data || []).forEach(function (q) { qMap.set(q.slug, q); });
 
-        var validRows = rows.filter(function (r) { return qMap.has(r.question_slug); });
-
-        if (validRows.length === 0) {
-          elEmpty.style.display = 'block';
-          return;
-        }
-
-        elCount.textContent = validRows.length + ' soru tekrar çalışmayı bekliyor';
-        elGrid.innerHTML = validRows.map(function (r) {
-          return renderQuestionCard(qMap.get(r.question_slug), r.answered_at, 'wrong');
+        elGrid.innerHTML = rows.map(function (r) {
+          var q = qMap.get(r.question_slug);
+          if (!q) return renderMissingCard(r.question_slug, r.answered_at, 'wrong');
+          return renderQuestionCard(q, r.answered_at, 'wrong');
         }).join('');
       } catch (e) {
         console.warn('[wrong-answers] load failed:', e);
@@ -832,6 +844,9 @@
           return;
         }
 
+        elEmpty.style.display = 'none';
+        elCount.textContent = rows.length + ' soru işaretli';
+
         var slugs = rows.map(function (r) { return r.question_slug; });
         var qsRes = await sbCli.from('questions')
           .select('slug, exam_type, section, subcategory, prompt')
@@ -840,16 +855,10 @@
         var qMap = new Map();
         (qsRes.data || []).forEach(function (q) { qMap.set(q.slug, q); });
 
-        var validRows = rows.filter(function (r) { return qMap.has(r.question_slug); });
-
-        if (validRows.length === 0) {
-          elEmpty.style.display = 'block';
-          return;
-        }
-
-        elCount.textContent = validRows.length + ' soru işaretli';
-        elGrid.innerHTML = validRows.map(function (r) {
-          return renderQuestionCard(qMap.get(r.question_slug), r.bookmarked_at, 'bookmark');
+        elGrid.innerHTML = rows.map(function (r) {
+          var q = qMap.get(r.question_slug);
+          if (!q) return renderMissingCard(r.question_slug, r.bookmarked_at, 'bookmark');
+          return renderQuestionCard(q, r.bookmarked_at, 'bookmark');
         }).join('');
       } catch (e) {
         console.warn('[bookmarks] load failed:', e);

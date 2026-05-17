@@ -388,17 +388,17 @@
       <h1>IELTS Deneme</h1>
       <p class="sub">Resmi sınav formatında tam simülasyon veya tek bölüme odaklı çalışma. Listening ve Reading otomatik puanlanır, Writing için uzman geri bildirim alabilirsin.</p>
 
-      <div class="test-selector" id="testSelector" style="display: none;">
+      <div class="test-selector" id="testSelector">
         <button class="test-selector-btn" id="testSelectorBtn" type="button">
           <span class="selector-label">Sınav</span>
-          <span class="selector-name" id="testSelectorName">—</span>
+          <span class="selector-name" id="testSelectorName">Yükleniyor…</span>
           <span class="selector-chevron">▾</span>
         </button>
         <div class="test-selector-list" id="testSelectorList"></div>
       </div>
     </section>
 
-    <div id="emptyState" class="empty-state" style="display: none;">
+    <div id="emptyState" class="empty-state">
       <p>Başlamak için yukarıdaki menüden bir deneme sınavı seç.</p>
     </div>
 
@@ -540,8 +540,23 @@
     const REQUESTED_SLUG = urlParams.get('test');
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.supabase) {
+      // Supabase script defer ile geç gelebilir — bekle
+      async function waitForSupabase(maxWait = 5000) {
+        const start = Date.now();
+        while (!window.supabase && Date.now() - start < maxWait) {
+          await new Promise(r => setTimeout(r, 50));
+        }
+        return !!window.supabase;
+      }
+
+      const ready = await waitForSupabase();
+      if (!ready) {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('testSelector').style.display = 'none';
+        document.getElementById('testCard').style.display = 'block';
         document.getElementById('testMeta').textContent = 'Bağlantı hatası';
+        document.getElementById('testName').textContent = 'Yüklenemedi';
+        document.getElementById('testDesc').textContent = 'Sayfa beklendiği gibi açılmadı. Sayfayı yenilemeyi dene veya panelinin altındaki desteğe yaz.';
         return;
       }
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -554,10 +569,12 @@
         .order('test_date', { ascending: false });
 
       if (allErr || !allTests || allTests.length === 0) {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('testSelector').style.display = 'none';
         document.getElementById('testCard').style.display = 'block';
-        document.getElementById('testMeta').textContent = 'Test bulunamadı';
+        document.getElementById('testMeta').textContent = 'Henüz yayında deneme yok';
         document.getElementById('testName').textContent = 'Yakında';
-        document.getElementById('testDesc').textContent = 'Henüz yayında olan deneme yok.';
+        document.getElementById('testDesc').textContent = 'Yeni denemeler yayına alındıkça burada görünecek.';
         return;
       }
 
@@ -596,13 +613,14 @@
         if (!selector.contains(e.target)) selector.classList.remove('open');
       });
 
-      // Test seçilmediyse boş durumu göster ve çık
+      // Test seçilmediyse boş durumu göster ve çık (selector zaten görünür)
       if (!test) {
         document.getElementById('emptyState').style.display = 'block';
         return;
       }
 
-      // Test seçildiyse test kartını göster
+      // Test seçildi: emptyState gizle, testCard göster
+      document.getElementById('emptyState').style.display = 'none';
       document.getElementById('testCard').style.display = 'block';
 
       // Start butonlarını seçilen teste göre güncelle

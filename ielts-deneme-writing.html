@@ -238,7 +238,7 @@
       const tb = document.getElementById('tabBar');
       let h = '';
       for (const part of state.parts) {
-        const minWords = part.part_number === 1 ? 150 : 250;
+        const minWords = part.word_min || (part.part_number === 1 ? 150 : 250);
         h += `<button class="tab-btn" data-part="${part.part_number}">
                 <span>Task ${part.part_number}</span>
                 <span class="word-count" id="word-count-${part.part_number}">0/${minWords}</span>
@@ -260,18 +260,21 @@
       const c = document.getElementById('tasksContainer');
       c.innerHTML = '';
       for (const part of state.parts) {
-        const minWords = part.part_number === 1 ? 150 : 250;
-        const recommendedMin = part.part_number === 1 ? 20 : 40;
+        const minWords = part.word_min || (part.part_number === 1 ? 150 : 250);
+        const recommendedMin = part.task_time_minutes || (part.part_number === 1 ? 20 : 40);
         const sec = document.createElement('section');
         sec.className = 'task-section';
         sec.dataset.partNumber = part.part_number;
 
+        const promptText = part.task_prompt || part.passage_html || escapeHtml(part.context || '');
+        const imgSrc = part.task_image_url || part.passage_image_url || part.image_url;
+
         let promptHtml = `<h2 class="task-title">Task ${part.part_number}</h2>
                           <div class="task-meta">${recommendedMin} dakika önerilen &middot; ${minWords}+ kelime</div>
-                          <div class="task-prompt-text">${part.passage_html || escapeHtml(part.context || '')}</div>`;
+                          <div class="task-prompt-text">${promptText}</div>`;
 
-        if (part.image_url) {
-          promptHtml += `<img src="${part.image_url}" alt="Task ${part.part_number} görseli" class="task-image">`;
+        if (imgSrc) {
+          promptHtml += `<img src="${imgSrc}" alt="Task ${part.part_number} görseli" class="task-image">`;
         }
 
         sec.innerHTML = `

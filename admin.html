@@ -1,828 +1,238 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
-  <!-- End Google Tag Manager -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yönetim Paneli | Gri English</title>
-  <meta name="robots" content="noindex, nofollow">
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="assets/main.css">
-  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
-  <script src="assets/theme.js" defer></script>
-  <style>
-    .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
-    .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
-    .admin-sub { color: var(--text-muted); margin-bottom: 2.5rem; font-size: 0.95rem; }
+/* ============================================================
+   GRINGLIZCE — SITE CONFIG RUNTIME
+   ============================================================
+   Sayfa açılışında Supabase'den site_config + products çeker,
+   banner'ı ve fiyatları DOM'a yansıtır. Admin paneli yazınca
+   tüm sayfalar bir sonraki sayfa yüklemesinde günceli görür.
 
-    .admin-section {
-      background: var(--bg-card);
-      border: 1px solid var(--line);
-      padding: 1.8rem 1.6rem;
-      margin-bottom: 1.6rem;
-    }
-    .admin-section h2 {
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      margin: 0 0 1.2rem;
-    }
-    .admin-section .sec-eyebrow {
-      font-family: var(--font-ui);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      display: block;
-      margin-bottom: 0.4rem;
-    }
+   Bağımlılık: supabase-js v2 BU dosyadan ÖNCE yüklenmiş olmalı.
 
-    .field-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-    .field-row label { font-size: 0.9rem; color: var(--text-soft); }
+   Markup sözleşmesi:
+   - <div class="launch-banner" data-site-banner></div>
+       inner HTML'i site_config.banner.text ile dolar,
+       banner.enabled false ise display: none.
 
-    .admin-input, .admin-textarea {
-      background: var(--bg);
-      border: 1px solid var(--line);
-      color: var(--text);
-      padding: 0.55rem 0.7rem;
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .admin-input:focus, .admin-textarea:focus { outline: none; border-color: var(--teal); }
-    .admin-textarea { min-height: 70px; resize: vertical; }
-    .admin-input.short { width: 110px; }
-    .admin-input.num { width: 90px; text-align: right; }
+   - <span class="product-price" data-price-slug="grammar-pack-1"></span>
+       Kategori sayfası kart fiyatı. has-discount sınıfı otomatik
+       eklenir/silinir. Service ürünlerde min-max aralığı gösterir.
 
-    .switch {
-      position: relative; display: inline-block; width: 44px; height: 24px;
-      vertical-align: middle;
-    }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .switch .slider {
-      position: absolute; cursor: pointer; inset: 0;
-      background: var(--line); transition: 0.2s;
-      border-radius: 24px;
-    }
-    .switch .slider::before {
-      content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px;
-      background: var(--bg); transition: 0.2s; border-radius: 50%;
-    }
-    .switch input:checked + .slider { background: var(--teal); }
-    .switch input:checked + .slider::before { transform: translateX(20px); }
+   - <div data-price-detail-slug="grammar-pack-1"></div>
+       Ürün detay sayfası price-box içeriği (discount badge + eski +
+       yeni). Tek ürün (variant'sız) ürünler için.
 
-    .save-btn {
-      background: var(--teal); color: var(--bg);
-      border: none; padding: 0.5rem 1.2rem;
-      font-family: var(--font-ui); font-size: 11px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      cursor: pointer; font-weight: 600;
-    }
-    .save-btn:hover { opacity: 0.9; }
-    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+   - <div class="tier-price" data-variant-slug="ielts-writing-feedback"
+          data-variant-index="0"></div>
+       Service ürün detay sayfasında her Seçenek için. Index 0,1,2
+       sırasıyla variants[0..2].price'i yansıtır. İndirim
+       uygulanmaz (has_discount FALSE service'lerde).
+   ============================================================ */
 
-    .status-line {
-      margin-top: 0.8rem; font-size: 0.85rem; min-height: 1.2em;
-      font-family: var(--font-ui); letter-spacing: 0.05em;
-    }
-    .status-line.ok { color: var(--teal); }
-    .status-line.err { color: #c44; }
+(function () {
+  var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
 
-    .products-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-    .products-table th, .products-table td {
-      padding: 0.65rem 0.5rem;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: middle;
-      font-size: 0.9rem;
-    }
-    .products-table th {
-      font-family: var(--font-ui); font-size: 10px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--text-muted); font-weight: 600;
-    }
-    .products-table tr.dirty { background: rgba(122, 59, 59, 0.06); }
-    .products-table .slug-cell { font-family: var(--font-mono, monospace); font-size: 0.8rem; color: var(--text-muted); }
-    .products-table .name-cell { font-weight: 500; }
-    .products-table .type-cell {
-      font-family: var(--font-ui); font-size: 10px;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-muted);
-    }
-    .products-table .exam-cell {
-      display: inline-block; padding: 0.15rem 0.5rem;
-      background: var(--bg); border: 1px solid var(--line);
-      font-family: var(--font-ui); font-size: 10px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--text-soft);
+  if (!window.supabase || !window.supabase.createClient) {
+    console.warn('[SiteConfig] supabase-js yok, runtime atlanıyor.');
+    return;
+  }
+
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function fmt(n) {
+    return Number(n).toLocaleString('tr-TR');
+  }
+
+  function discountedPrice(base, pct) {
+    return Math.round(Number(base) * (100 - Number(pct)) / 100);
+  }
+
+  function renderCardPrice(product, discountCfg) {
+    var price = Number(product.base_price);
+    var pct = Number(discountCfg.percentage || 0);
+    var applyDiscount = !!(product.has_discount && discountCfg.enabled && pct > 0);
+
+    // Service ürün varyasyonluysa min-max aralığı göster
+    if (product.product_type === 'service' && Array.isArray(product.variants) && product.variants.length > 0) {
+      var prices = product.variants.map(function (v) { return Number(v.price); });
+      var lo = Math.min.apply(null, prices);
+      var hi = Math.max.apply(null, prices);
+      return '<span class="price-new"><span class="currency">₺</span>' + fmt(lo) +
+             '</span><span class="price-range-sep" style="margin: 0 0.4rem; color: var(--text-muted);">—</span>' +
+             '<span class="price-new"><span class="currency">₺</span>' + fmt(hi) + '</span>';
     }
 
-    .filter-row {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
-      margin-bottom: 1rem; align-items: center;
+    if (applyDiscount) {
+      var d = discountedPrice(price, pct);
+      return '<span class="price-old">₺' + fmt(price) + '</span>' +
+             '<span class="price-new"><span class="currency">₺</span>' + fmt(d) + '</span>';
     }
-    .filter-chip {
-      padding: 0.35rem 0.8rem;
-      background: var(--bg); border: 1px solid var(--line);
-      font-family: var(--font-ui); font-size: 11px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      cursor: pointer; color: var(--text-soft);
+    return '<span class="price-new"><span class="currency">₺</span>' + fmt(price) + '</span>';
+  }
+
+  function renderDetailPrice(product, discountCfg) {
+    var price = Number(product.base_price);
+    var pct = Number(discountCfg.percentage || 0);
+    var applyDiscount = !!(product.has_discount && discountCfg.enabled && pct > 0);
+
+    if (applyDiscount) {
+      var d = discountedPrice(price, pct);
+      return '<div class="discount-badge">%' + pct + ' Açılış İndirimi</div>' +
+             '<span class="price-old">₺' + fmt(price) + '</span>' +
+             '<div class="price"><span class="currency">₺</span>' + fmt(d) + '</div>';
     }
-    .filter-chip.active { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+    return '<div class="price"><span class="currency">₺</span>' + fmt(price) + '</div>';
+  }
 
-    .variants-block {
-      background: var(--bg);
-      border: 1px solid var(--line);
-      padding: 0.8rem;
-      margin: 0.4rem 0;
-    }
-    .variants-block h4 {
-      font-family: var(--font-ui); font-size: 10px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--text-muted); margin: 0 0 0.6rem;
-    }
-    .variant-row { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.4rem; }
-    .variant-row input { flex: 1; }
-    .variant-row .v-price { width: 100px; }
+  function renderVariantPrice(variant) {
+    return '<span class="currency">₺</span>' + fmt(Number(variant.price));
+  }
 
-    .center-msg {
-      text-align: center; padding: 4rem 1rem;
-      color: var(--text-soft);
-    }
-    .center-msg h2 { margin-bottom: 1rem; }
-
-    .global-status {
-      position: fixed; bottom: 1.5rem; right: 1.5rem;
-      background: var(--bg-card); border: 1px solid var(--line);
-      padding: 0.8rem 1.2rem; font-size: 0.9rem;
-      transform: translateY(120%); transition: transform 0.3s;
-      z-index: 1000;
-    }
-    .global-status.show { transform: translateY(0); }
-    .global-status.ok { border-color: var(--teal); color: var(--teal); }
-    .global-status.err { border-color: #c44; color: #c44; }
-
-    @media (max-width: 720px) {
-      .products-table th:nth-child(1), .products-table td:nth-child(1) { display: none; }
-      .products-table th:nth-child(3), .products-table td:nth-child(3) { display: none; }
-    }
-
-    .reverify-box {
-      max-width: 420px; margin: 4rem auto;
-      background: var(--bg-card); border: 1px solid var(--line);
-      padding: 2rem 1.8rem;
-    }
-    .reverify-box h2 {
-      font-family: var(--font-display);
-      font-size: 1.6rem; margin: 0 0 0.5rem;
-    }
-    .reverify-box .reverify-sub {
-      color: var(--text-muted); font-size: 0.9rem;
-      margin-bottom: 1.4rem;
-    }
-    .reverify-box .reverify-email {
-      font-family: var(--font-mono, monospace);
-      font-size: 0.85rem; color: var(--text-soft);
-      background: var(--bg); border: 1px solid var(--line);
-      padding: 0.5rem 0.7rem; margin-bottom: 1rem;
-      display: block;
-    }
-    .reverify-box input[type="password"] {
-      width: 100%; box-sizing: border-box;
-      background: var(--bg); border: 1px solid var(--line);
-      color: var(--text); padding: 0.65rem 0.7rem;
-      font-family: var(--font-body); font-size: 0.95rem;
-      margin-bottom: 1rem;
-    }
-    .reverify-box input[type="password"]:focus {
-      outline: none; border-color: var(--teal);
-    }
-    .reverify-box button {
-      width: 100%; padding: 0.7rem 1rem;
-      background: var(--teal); color: var(--bg);
-      border: none; cursor: pointer;
-      font-family: var(--font-ui); font-size: 11px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      font-weight: 600;
-    }
-    .reverify-box button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .reverify-error {
-      color: #c44; font-size: 0.85rem;
-      min-height: 1.2em; margin-top: 0.6rem;
-    }
-    .reverify-locked-notice {
-      background: rgba(196, 68, 68, 0.08);
-      border: 1px solid rgba(196, 68, 68, 0.3);
-      padding: 0.6rem 0.8rem; font-size: 0.85rem;
-      margin-bottom: 1rem; color: #c44;
-    }
-  </style>
-</head>
-<body data-cat="admin">
-
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
-  <header class="site-header">
-    <div class="wrap nav">
-      <a href="index.html" class="brand">
-        Gri <span class="it">English</span>
-      </a>
-      <nav>
-        <ul class="nav-links">
-          <li><a href="index.html">Anasayfa</a></li>
-          <li><a href="panelim.html">Panelim</a></li>
-          <li><a href="#" id="logout-link">Çıkış</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <main class="admin-wrap">
-
-    <div id="loading" class="center-msg">
-      <p>Yükleniyor...</p>
-    </div>
-
-    <div id="not-logged-in" class="center-msg" style="display:none;">
-      <h2>Giriş Gerekli</h2>
-      <p>Bu sayfayı görmek için giriş yapmalısınız.</p>
-      <p style="margin-top:1.5rem;"><a href="giris.html" class="btn btn-primary">Giriş Yap</a></p>
-    </div>
-
-    <div id="not-admin" class="center-msg" style="display:none;">
-      <h2>Erişim Yok</h2>
-      <p>Bu sayfa yalnızca admin kullanıcılar içindir.</p>
-      <p style="margin-top:1.5rem;"><a href="index.html" class="btn btn-primary">Anasayfa</a></p>
-    </div>
-
-    <div id="reverify-prompt" class="reverify-box" style="display:none;">
-      <h2>Yönetim Erişimi</h2>
-      <p class="reverify-sub">Devam etmek için şifreni tekrar gir.</p>
-      <div id="reverify-locked-notice" class="reverify-locked-notice" style="display:none;">
-        Boşta kaldığın için kilitlendi.
-      </div>
-      <span class="reverify-email" id="reverify-email"></span>
-      <input type="password" id="reverify-password" placeholder="Şifre" autocomplete="current-password">
-      <button id="reverify-submit">Doğrula</button>
-      <div class="reverify-error" id="reverify-error"></div>
-    </div>
-
-    <div id="admin-content" style="display:none;">
-
-      <h1 class="admin-h1">Yönetim Paneli</h1>
-      <p class="admin-sub">Banner, indirim ve ürün fiyatlarını buradan yönetirsin. Değişiklikler kaydedildikten sonra siteye anında yansır.</p>
-
-      <section class="admin-section">
-        <span class="sec-eyebrow">Üst Şerit</span>
-        <h2>Açılış Banner'ı</h2>
-
-        <div class="field-row">
-          <label>Aktif:</label>
-          <span class="switch">
-            <input type="checkbox" id="banner-enabled">
-            <span class="slider"></span>
-          </span>
-        </div>
-
-        <div class="field-row" style="display:block;">
-          <label style="display:block; margin-bottom:0.4rem;">Metin (HTML kullanabilirsin, örneğin &lt;strong&gt;):</label>
-          <textarea class="admin-textarea" id="banner-text" placeholder="Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde"></textarea>
-        </div>
-
-        <button class="save-btn" id="save-banner">Banner'ı Kaydet</button>
-        <div class="status-line" id="banner-status"></div>
-      </section>
-
-      <section class="admin-section">
-        <span class="sec-eyebrow">Global Kampanya</span>
-        <h2>İndirim Ayarı</h2>
-
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Aktif olduğunda, "İndirimde" işaretli ürünlerde belirtilen yüzde otomatik uygulanır. Yeni fiyat eski fiyatın üstü çizili gösterilir.
-        </p>
-
-        <div class="field-row">
-          <label>Aktif:</label>
-          <span class="switch">
-            <input type="checkbox" id="discount-enabled">
-            <span class="slider"></span>
-          </span>
-
-          <label style="margin-left:1.5rem;">Yüzde:</label>
-          <input type="number" class="admin-input num" id="discount-percentage" min="0" max="90" step="1">
-          <span style="color: var(--text-muted);">%</span>
-        </div>
-
-        <button class="save-btn" id="save-discount">İndirimi Kaydet</button>
-        <div class="status-line" id="discount-status"></div>
-      </section>
-
-      <section class="admin-section">
-        <span class="sec-eyebrow">Katalog</span>
-        <h2>Ürünler</h2>
-
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Bir ürünün satırını değiştirdiğinde sağdaki "Kaydet" düğmesi aktifleşir. Tek tek kaydedebilirsin.
-        </p>
-
-        <div class="filter-row" id="filter-row">
-          <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-right: 0.5rem;">Sınav:</span>
-          <button class="filter-chip active" data-filter="all">Hepsi</button>
-          <button class="filter-chip" data-filter="sat">SAT</button>
-          <button class="filter-chip" data-filter="toefl">TOEFL</button>
-          <button class="filter-chip" data-filter="ielts">IELTS</button>
-          <button class="filter-chip" data-filter="ib">IB</button>
-          <button class="filter-chip" data-filter="ydt">YDT</button>
-          <button class="filter-chip" data-filter="yds">YDS/YÖKDİL</button>
-        </div>
-
-        <table class="products-table" id="products-table">
-          <thead>
-            <tr>
-              <th>Slug</th>
-              <th>Ad</th>
-              <th>Sınav</th>
-              <th>Tür</th>
-              <th>Fiyat (₺)</th>
-              <th>İndirimde</th>
-              <th>Aktif</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="products-tbody"></tbody>
-        </table>
-      </section>
-
-    </div>
-
-  </main>
-
-  <div class="global-status" id="global-status"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-  (function () {
-    var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
-    var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
-
-    // Admin idle timeout (kullanmak istediğin değeri saniye cinsinden ayarla)
-    var IDLE_TIMEOUT_MIN = 15;
-    var IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MIN * 60 * 1000;
-    var REVERIFY_KEY = 'gri_admin_verified_until';
-
-    function isReverified() {
-      try {
-        var t = sessionStorage.getItem(REVERIFY_KEY);
-        if (!t) return false;
-        return Date.now() < parseInt(t, 10);
-      } catch (e) { return false; }
-    }
-    function setReverified() {
-      try { sessionStorage.setItem(REVERIFY_KEY, String(Date.now() + IDLE_TIMEOUT_MS)); } catch (e) {}
-    }
-    function clearReverified() {
-      try { sessionStorage.removeItem(REVERIFY_KEY); } catch (e) {}
-    }
-
-    if (!window.supabase || !window.supabase.createClient) {
-      document.getElementById('loading').innerHTML = '<p>supabase-js yüklenemedi.</p>';
-      return;
-    }
-    var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true }
-    });
-
-    var state = {
-      session: null,
-      profile: null,
-      products: [],
-      cfg: {},
-      currentFilter: 'all'
-    };
-
-    function $(id) { return document.getElementById(id); }
-    function show(id) { var el = $(id); if (el) el.style.display = ''; }
-    function hide(id) { var el = $(id); if (el) el.style.display = 'none'; }
-
-    function setStatus(elId, message, kind) {
-      var el = $(elId);
-      if (!el) return;
-      el.textContent = message;
-      el.className = 'status-line ' + (kind || '');
-      if (message) setTimeout(function () {
-        if (el.textContent === message) { el.textContent = ''; el.className = 'status-line'; }
-      }, 4000);
-    }
-
-    function flash(message, kind) {
-      var el = $('global-status');
-      el.textContent = message;
-      el.className = 'global-status show ' + (kind || 'ok');
-      setTimeout(function () { el.className = 'global-status ' + (kind || 'ok'); }, 2500);
-    }
-
-    async function loadEverything() {
-      try {
-        var sessionRes = await sb.auth.getSession();
-        state.session = sessionRes && sessionRes.data && sessionRes.data.session;
-        if (!state.session) { hide('loading'); show('not-logged-in'); return; }
-
-        var profRes = await sb.from('profiles').select('id, email, role').eq('id', state.session.user.id).single();
-        if (profRes.error || !profRes.data) {
-          hide('loading');
-          $('not-logged-in').innerHTML = '<h2>Hata</h2><p>Profil okunamadı: ' + (profRes.error && profRes.error.message ? profRes.error.message : 'bilinmeyen hata') + '</p>';
-          show('not-logged-in');
-          return;
-        }
-        state.profile = profRes.data;
-        if (state.profile.role !== 'admin') { hide('loading'); show('not-admin'); return; }
-
-        // Reverification gate
-        if (!isReverified()) {
-          hide('loading');
-          showReverifyPrompt(false);
-          return;
-        }
-
-        await loadAdminData();
-      } catch (e) {
-        $('loading').innerHTML = '<p style="color:#c44;">Hata: ' + (e.message || e) + '</p>';
-        console.error(e);
-      }
-    }
-
-    async function loadAdminData() {
-      try {
-        var results = await Promise.all([
-          sb.from('site_config').select('*'),
-          sb.from('products').select('*').order('exam_type').order('slug')
-        ]);
-        if (results[0].error) throw results[0].error;
-        if (results[1].error) throw results[1].error;
-
-        state.cfg = {};
-        (results[0].data || []).forEach(function (row) { state.cfg[row.key] = row.value; });
-        state.products = (results[1].data || []).map(function (p) {
-          if (typeof p.variants === 'string') {
-            try { p.variants = JSON.parse(p.variants); } catch (e) { p.variants = null; }
-          }
-          return p;
-        });
-
-        hide('reverify-prompt');
-        hide('loading');
-        show('admin-content');
-        renderBanner();
-        renderDiscount();
-        renderProducts();
-        startIdleWatcher();
-      } catch (e) {
-        $('loading').innerHTML = '<p style="color:#c44;">Veri yüklenemedi: ' + (e.message || e) + '</p>';
-        show('loading');
-        console.error(e);
-      }
-    }
-
-    function showReverifyPrompt(wasIdle) {
-      $('reverify-email').textContent = state.session.user.email;
-      $('reverify-password').value = '';
-      $('reverify-error').textContent = '';
-      $('reverify-locked-notice').style.display = wasIdle ? '' : 'none';
-      hide('admin-content');
-      show('reverify-prompt');
-      setTimeout(function () {
-        var inp = $('reverify-password');
-        if (inp) inp.focus();
-      }, 50);
-    }
-
-    async function attemptReverify() {
-      var pw = $('reverify-password').value;
-      if (!pw) return;
-      var btn = $('reverify-submit');
-      var errEl = $('reverify-error');
-      errEl.textContent = '';
-      btn.disabled = true;
-      btn.textContent = 'Doğrulanıyor...';
-      try {
-        var res = await sb.auth.signInWithPassword({
-          email: state.session.user.email,
-          password: pw
-        });
-        if (res.error) throw res.error;
-        setReverified();
-        await loadAdminData();
-      } catch (e) {
-        errEl.textContent = 'Şifre hatalı veya doğrulama başarısız.';
-        $('reverify-password').focus();
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Doğrula';
-      }
-    }
-
-    // Idle watcher
-    var idleTimer = null;
-    var idleListenersAttached = false;
-    function startIdleWatcher() {
-      resetIdle();
-      if (idleListenersAttached) return;
-      ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (ev) {
-        document.addEventListener(ev, resetIdle, { passive: true });
-      });
-      idleListenersAttached = true;
-    }
-    function resetIdle() {
-      if (idleTimer) clearTimeout(idleTimer);
-      // Extend reverify window on each activity
-      if (isReverified()) setReverified();
-      idleTimer = setTimeout(lockPanel, IDLE_TIMEOUT_MS);
-    }
-    function lockPanel() {
-      clearReverified();
-      if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
-      showReverifyPrompt(true);
-    }
-
-    function renderBanner() {
-      var b = state.cfg.banner || { enabled: false, text: '' };
-      $('banner-enabled').checked = !!b.enabled;
-      $('banner-text').value = b.text || '';
-    }
-
-    function renderDiscount() {
-      var d = state.cfg.discount || { enabled: false, percentage: 0 };
-      $('discount-enabled').checked = !!d.enabled;
-      $('discount-percentage').value = Number(d.percentage || 0);
-    }
-
-    async function saveBanner() {
-      var btn = $('save-banner');
-      btn.disabled = true;
-      var payload = {
-        enabled: $('banner-enabled').checked,
-        text: $('banner-text').value.trim()
-      };
-      try {
-        var res = await sb.from('site_config').upsert({
-          key: 'banner',
-          value: payload,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-        if (res.error) throw res.error;
-        state.cfg.banner = payload;
-        setStatus('banner-status', 'Kaydedildi', 'ok');
-        flash('Banner kaydedildi', 'ok');
-      } catch (e) {
-        setStatus('banner-status', 'Hata: ' + (e.message || e), 'err');
-        flash('Kaydedilemedi', 'err');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    async function saveDiscount() {
-      var btn = $('save-discount');
-      btn.disabled = true;
-      var pct = parseInt($('discount-percentage').value, 10);
-      if (isNaN(pct) || pct < 0 || pct > 90) {
-        setStatus('discount-status', 'Yüzde 0 ile 90 arası olmalı', 'err');
-        btn.disabled = false;
-        return;
-      }
-      var payload = {
-        enabled: $('discount-enabled').checked,
-        percentage: pct
-      };
-      try {
-        var res = await sb.from('site_config').upsert({
-          key: 'discount',
-          value: payload,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-        if (res.error) throw res.error;
-        state.cfg.discount = payload;
-        setStatus('discount-status', 'Kaydedildi', 'ok');
-        flash('İndirim kaydedildi', 'ok');
-      } catch (e) {
-        setStatus('discount-status', 'Hata: ' + (e.message || e), 'err');
-        flash('Kaydedilemedi', 'err');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    function renderProducts() {
-      var tbody = $('products-tbody');
-      tbody.innerHTML = '';
-      var filtered = state.products.filter(function (p) {
-        return state.currentFilter === 'all' || p.exam_type === state.currentFilter;
-      });
-      filtered.forEach(function (p) { tbody.appendChild(buildProductRow(p)); });
-    }
-
-    function buildProductRow(p) {
-      var tr = document.createElement('tr');
-      tr.dataset.id = p.id;
-      tr.dataset.slug = p.slug;
-
-      var slugTd = document.createElement('td');
-      slugTd.className = 'slug-cell';
-      slugTd.textContent = p.slug;
-
-      var nameTd = document.createElement('td');
-      nameTd.className = 'name-cell';
-      nameTd.textContent = p.name;
-
-      var examTd = document.createElement('td');
-      var examSpan = document.createElement('span');
-      examSpan.className = 'exam-cell';
-      examSpan.textContent = p.exam_type;
-      examTd.appendChild(examSpan);
-
-      var typeTd = document.createElement('td');
-      typeTd.className = 'type-cell';
-      typeTd.textContent = p.product_type;
-
-      var priceTd = document.createElement('td');
-      if (p.product_type === 'service' && Array.isArray(p.variants) && p.variants.length > 0) {
-        var vb = document.createElement('div');
-        vb.className = 'variants-block';
-        var h4 = document.createElement('h4');
-        h4.textContent = 'Varyantlar';
-        vb.appendChild(h4);
-        p.variants.forEach(function (v, i) {
-          var row = document.createElement('div');
-          row.className = 'variant-row';
-          var nameIn = document.createElement('input');
-          nameIn.className = 'admin-input';
-          nameIn.value = v.name || '';
-          nameIn.dataset.kind = 'variant-name';
-          nameIn.dataset.index = i;
-          var priceIn = document.createElement('input');
-          priceIn.className = 'admin-input num v-price';
-          priceIn.type = 'number';
-          priceIn.value = Number(v.price || 0);
-          priceIn.dataset.kind = 'variant-price';
-          priceIn.dataset.index = i;
-          row.appendChild(nameIn);
-          row.appendChild(priceIn);
-          vb.appendChild(row);
-        });
-        priceTd.appendChild(vb);
+  function applyBanner(cfg) {
+    var banner = cfg.banner || { enabled: false, text: '' };
+    document.querySelectorAll('[data-site-banner]').forEach(function (el) {
+      if (banner.enabled && banner.text) {
+        el.innerHTML = banner.text;
+        el.style.display = '';
       } else {
-        var priceIn = document.createElement('input');
-        priceIn.className = 'admin-input num';
-        priceIn.type = 'number';
-        priceIn.value = Number(p.base_price || 0);
-        priceIn.dataset.kind = 'base-price';
-        priceTd.appendChild(priceIn);
-      }
-
-      var discTd = document.createElement('td');
-      var discSwitch = document.createElement('span');
-      discSwitch.className = 'switch';
-      var discInput = document.createElement('input');
-      discInput.type = 'checkbox';
-      discInput.checked = !!p.has_discount;
-      discInput.dataset.kind = 'has-discount';
-      var discSlider = document.createElement('span');
-      discSlider.className = 'slider';
-      discSwitch.appendChild(discInput);
-      discSwitch.appendChild(discSlider);
-      discTd.appendChild(discSwitch);
-
-      var activeTd = document.createElement('td');
-      var actSwitch = document.createElement('span');
-      actSwitch.className = 'switch';
-      var actInput = document.createElement('input');
-      actInput.type = 'checkbox';
-      actInput.checked = !!p.active;
-      actInput.dataset.kind = 'active';
-      var actSlider = document.createElement('span');
-      actSlider.className = 'slider';
-      actSwitch.appendChild(actInput);
-      actSwitch.appendChild(actSlider);
-      activeTd.appendChild(actSwitch);
-
-      var saveTd = document.createElement('td');
-      var saveBtn = document.createElement('button');
-      saveBtn.className = 'save-btn';
-      saveBtn.textContent = 'Kaydet';
-      saveBtn.disabled = true;
-      saveBtn.addEventListener('click', function () { saveProduct(tr, p, saveBtn); });
-      saveTd.appendChild(saveBtn);
-
-      tr.appendChild(slugTd);
-      tr.appendChild(nameTd);
-      tr.appendChild(examTd);
-      tr.appendChild(typeTd);
-      tr.appendChild(priceTd);
-      tr.appendChild(discTd);
-      tr.appendChild(activeTd);
-      tr.appendChild(saveTd);
-
-      tr.querySelectorAll('input').forEach(function (inp) {
-        inp.addEventListener('input', function () { tr.classList.add('dirty'); saveBtn.disabled = false; });
-        inp.addEventListener('change', function () { tr.classList.add('dirty'); saveBtn.disabled = false; });
-      });
-
-      return tr;
-    }
-
-    async function saveProduct(tr, product, btn) {
-      btn.disabled = true;
-      btn.textContent = 'Kaydediliyor...';
-
-      var update = { updated_at: new Date().toISOString() };
-
-      var basePriceInput = tr.querySelector('input[data-kind="base-price"]');
-      if (basePriceInput) {
-        var bp = parseFloat(basePriceInput.value);
-        if (isNaN(bp) || bp < 0) {
-          flash('Geçersiz fiyat', 'err');
-          btn.disabled = false; btn.textContent = 'Kaydet';
-          return;
-        }
-        update.base_price = bp;
-      }
-
-      var variantNameInputs = tr.querySelectorAll('input[data-kind="variant-name"]');
-      var variantPriceInputs = tr.querySelectorAll('input[data-kind="variant-price"]');
-      if (variantNameInputs.length > 0) {
-        var newVariants = [];
-        for (var i = 0; i < variantNameInputs.length; i++) {
-          var name = variantNameInputs[i].value.trim();
-          var price = parseFloat(variantPriceInputs[i].value);
-          if (!name || isNaN(price) || price < 0) {
-            flash('Geçersiz varyant', 'err');
-            btn.disabled = false; btn.textContent = 'Kaydet';
-            return;
-          }
-          newVariants.push({ name: name, price: price });
-        }
-        update.variants = newVariants;
-        update.base_price = Math.min.apply(null, newVariants.map(function (v) { return v.price; }));
-      }
-
-      var hasDiscount = tr.querySelector('input[data-kind="has-discount"]');
-      if (hasDiscount) update.has_discount = hasDiscount.checked;
-
-      var active = tr.querySelector('input[data-kind="active"]');
-      if (active) update.active = active.checked;
-
-      try {
-        var res = await sb.from('products').update(update).eq('id', product.id);
-        if (res.error) throw res.error;
-        Object.assign(product, update);
-        tr.classList.remove('dirty');
-        btn.textContent = 'Kaydedildi';
-        flash(product.name + ' kaydedildi', 'ok');
-        setTimeout(function () { btn.textContent = 'Kaydet'; btn.disabled = true; }, 2000);
-      } catch (e) {
-        btn.textContent = 'Hata';
-        flash('Hata: ' + (e.message || e), 'err');
-        setTimeout(function () { btn.textContent = 'Kaydet'; btn.disabled = false; }, 2000);
-        console.error(e);
-      }
-    }
-
-    document.addEventListener('click', function (ev) {
-      var chip = ev.target.closest('.filter-chip');
-      if (chip) {
-        document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
-        chip.classList.add('active');
-        state.currentFilter = chip.dataset.filter;
-        renderProducts();
+        el.style.display = 'none';
       }
     });
+  }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      $('save-banner').addEventListener('click', saveBanner);
-      $('save-discount').addEventListener('click', saveDiscount);
-      $('reverify-submit').addEventListener('click', attemptReverify);
-      $('reverify-password').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') attemptReverify();
-      });
-      $('logout-link').addEventListener('click', async function (e) {
-        e.preventDefault();
-        clearReverified();
-        await sb.auth.signOut();
-        try { localStorage.removeItem('gri_cache'); } catch (err) {}
-        location.href = 'index.html';
-      });
-      loadEverything();
+  function applyCardPrices(productsBySlug, discountCfg) {
+    document.querySelectorAll('[data-price-slug]').forEach(function (el) {
+      var slug = el.getAttribute('data-price-slug');
+      var p = productsBySlug[slug];
+      if (!p) { return; }
+      var applyDiscount = !!(p.has_discount && discountCfg.enabled && Number(discountCfg.percentage || 0) > 0);
+      var hasService = p.product_type === 'service' && Array.isArray(p.variants) && p.variants.length > 0;
+      el.classList.toggle('has-discount', applyDiscount && !hasService);
+      el.innerHTML = renderCardPrice(p, discountCfg);
     });
-  })();
-  </script>
+  }
 
-</body>
-</html>
+  function applyDetailPrices(productsBySlug, discountCfg) {
+    document.querySelectorAll('[data-price-detail-slug]').forEach(function (el) {
+      var slug = el.getAttribute('data-price-detail-slug');
+      var p = productsBySlug[slug];
+      if (!p) { return; }
+      el.innerHTML = renderDetailPrice(p, discountCfg);
+    });
+  }
+
+  function applyVariantPrices(productsBySlug) {
+    document.querySelectorAll('[data-variant-slug]').forEach(function (el) {
+      var slug = el.getAttribute('data-variant-slug');
+      var idx = parseInt(el.getAttribute('data-variant-index') || '0', 10);
+      var p = productsBySlug[slug];
+      if (!p || !Array.isArray(p.variants) || !p.variants[idx]) { return; }
+      el.innerHTML = renderVariantPrice(p.variants[idx]);
+    });
+  }
+
+  async function init() {
+    try {
+      var results = await Promise.all([
+        sb.from('site_config').select('*'),
+        sb.from('products').select('*')
+      ]);
+      var configRes = results[0];
+      var productsRes = results[1];
+
+      if (configRes.error) { throw configRes.error; }
+      if (productsRes.error) { throw productsRes.error; }
+
+      var cfg = {};
+      (configRes.data || []).forEach(function (row) { cfg[row.key] = row.value; });
+
+      var discountCfg = cfg.discount || { enabled: false, percentage: 0 };
+
+      var productsBySlug = {};
+      (productsRes.data || []).forEach(function (p) {
+        // variants JSONB Supabase'den geldiğinde array olarak parse edilmiş olmalı,
+        // string olarak gelirse parse edelim
+        if (typeof p.variants === 'string') {
+          try { p.variants = JSON.parse(p.variants); } catch (e) { p.variants = null; }
+        }
+        productsBySlug[p.slug] = p;
+      });
+
+      applyBanner(cfg);
+      applyCardPrices(productsBySlug, discountCfg);
+      applyDetailPrices(productsBySlug, discountCfg);
+      applyVariantPrices(productsBySlug);
+
+      window.GriSiteConfig = {
+        config: cfg,
+        productsBySlug: productsBySlug,
+        discount: discountCfg
+      };
+
+      document.dispatchEvent(new CustomEvent('gri-site-config-loaded'));
+    } catch (e) {
+      console.error('[SiteConfig] Yüklenemedi:', e);
+    }
+  }
+
+  // =============================================================
+  // ACTIVITY TRACKING — login olmuş kullanıcılar için
+  // user_activity tablosuna her sayfa açılışında + 5 dakikada bir update
+  // =============================================================
+  var ACTIVITY_INTERVAL_MS = 5 * 60 * 1000;
+  var activityUserId = null;
+
+  async function trackActivity() {
+    try {
+      if (!activityUserId) {
+        var userRes = await sb.auth.getUser();
+        if (!userRes || !userRes.data || !userRes.data.user) return;
+        activityUserId = userRes.data.user.id;
+      }
+      await sb.from('user_activity').upsert({
+        user_id: activityUserId,
+        last_active_at: new Date().toISOString()
+      });
+    } catch (e) {
+      // sessizce geç, tracking sayfa fonksiyonelliğini etkilemesin
+    }
+  }
+
+  // =============================================================
+  // REALTIME PRESENCE — anonim dahil tüm visitor'lar için
+  // site_presence channel'a join ol, admin paneli online sayar
+  // =============================================================
+  function joinPresence() {
+    try {
+      var presenceId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
+      var channel = sb.channel('site_presence', {
+        config: { presence: { key: presenceId } }
+      });
+      channel.subscribe(async function (status) {
+        if (status === 'SUBSCRIBED') {
+          try {
+            await channel.track({
+              id: presenceId,
+              joined_at: Date.now(),
+              page: location.pathname
+            });
+          } catch (e) {}
+        }
+      });
+      window.__griPresence = channel;
+    } catch (e) {}
+  }
+
+  function startTracking() {
+    trackActivity();
+    setInterval(trackActivity, ACTIVITY_INTERVAL_MS);
+    joinPresence();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', startTracking);
+  } else {
+    init();
+    startTracking();
+  }
+})();

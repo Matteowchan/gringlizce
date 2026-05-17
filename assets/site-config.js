@@ -38,36 +38,6 @@
 
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ---------- AUTH NAV ----------
-  // a[href="giris.html"] linklerini auth durumuna gore "Panelim" yapar.
-  // "giris.html#signup" linkleri auth varsa gizlenir.
-  function updateAuthNav(user) {
-    var loginLinks = document.querySelectorAll('a[href="giris.html"], a[href="/giris.html"]');
-    loginLinks.forEach(function (link) {
-      if (user) {
-        link.textContent = 'Panelim';
-        link.setAttribute('href', 'panelim.html');
-      } else {
-        link.textContent = link.classList.contains('btn-nav-cta') ? 'Giriş' : 'Materyal Girişi';
-        link.setAttribute('href', 'giris.html');
-      }
-    });
-    var signupLinks = document.querySelectorAll('a[href="giris.html#signup"], a[href="/giris.html#signup"]');
-    signupLinks.forEach(function (link) {
-      link.style.display = user ? 'none' : '';
-    });
-  }
-
-  sb.auth.getUser().then(function (res) {
-    updateAuthNav(res && res.data ? res.data.user : null);
-  }).catch(function () {
-    updateAuthNav(null);
-  });
-  sb.auth.onAuthStateChange(function (_event, session) {
-    updateAuthNav(session ? session.user : null);
-  });
-  // ---------- /AUTH NAV ----------
-
   function fmt(n) {
     return Number(n).toLocaleString('tr-TR');
   }
@@ -204,9 +174,65 @@
     }
   }
 
+  // =============================================================
+  // ACTIVITY TRACKING — login olmuş kullanıcılar için
+  // user_activity tablosuna her sayfa açılışında + 5 dakikada bir update
+  // =============================================================
+  var ACTIVITY_INTERVAL_MS = 5 * 60 * 1000;
+  var activityUserId = null;
+
+  async function trackActivity() {
+    try {
+      if (!activityUserId) {
+        var userRes = await sb.auth.getUser();
+        if (!userRes || !userRes.data || !userRes.data.user) return;
+        activityUserId = userRes.data.user.id;
+      }
+      await sb.from('user_activity').upsert({
+        user_id: activityUserId,
+        last_active_at: new Date().toISOString()
+      });
+    } catch (e) {
+      // sessizce geç, tracking sayfa fonksiyonelliğini etkilemesin
+    }
+  }
+
+  // =============================================================
+  // REALTIME PRESENCE — anonim dahil tüm visitor'lar için
+  // site_presence channel'a join ol, admin paneli online sayar
+  // =============================================================
+  function joinPresence() {
+    try {
+      var presenceId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
+      var channel = sb.channel('site_presence', {
+        config: { presence: { key: presenceId } }
+      });
+      channel.subscribe(async function (status) {
+        if (status === 'SUBSCRIBED') {
+          try {
+            await channel.track({
+              id: presenceId,
+              joined_at: Date.now(),
+              page: location.pathname
+            });
+          } catch (e) {}
+        }
+      });
+      window.__griPresence = channel;
+    } catch (e) {}
+  }
+
+  function startTracking() {
+    trackActivity();
+    setInterval(trackActivity, ACTIVITY_INTERVAL_MS);
+    joinPresence();
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', startTracking);
   } else {
     init();
+    startTracking();
   }
 })();

@@ -111,11 +111,140 @@
     .modal .btn-cancel { background: #f0ede5; color: #444; }
     .modal .btn-confirm { background: #1a2a28; color: #fff; }
 
-    .start-screen { background: #fff; max-width: 600px; margin: 4rem auto; padding: 3rem 2rem; border: 1px solid #d8d2c4; text-align: center; }
-    .start-screen h1 { font-family: Georgia, serif; color: #1a2a28; }
-    .start-screen .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
-    .start-screen ul { text-align: left; max-width: 380px; margin: 1.5rem auto; color: #555; line-height: 1.8; }
-    .start-screen .start-btn { background: #1a2a28; color: #fff; border: none; padding: 0.9rem 2.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
+    /* ============ START SCREEN ============ */
+    .start-screen {
+      max-width: 660px;
+      margin: 4rem auto;
+      padding: 2.5rem 2.5rem 2.25rem;
+      background: #fff;
+      border: 1px solid #ece8de;
+      border-radius: 4px;
+      box-shadow: 0 2px 24px rgba(26, 42, 40, 0.04);
+    }
+    .start-screen .start-meta {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #999;
+      text-align: center;
+      margin-bottom: 0.9rem;
+      font-weight: 500;
+    }
+    .start-screen h1 {
+      font-family: Georgia, serif;
+      font-size: 2.6rem;
+      font-weight: 600;
+      text-align: center;
+      margin: 0 0 0.4rem;
+      letter-spacing: -0.02em;
+      color: #1a2a28;
+    }
+    .start-overview {
+      font-family: Georgia, serif;
+      font-size: 1.02rem;
+      color: #666;
+      text-align: center;
+      margin: 0 0 2rem;
+      font-style: italic;
+    }
+    .start-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 1.5rem;
+    }
+    .start-card {
+      background: #fafaf7;
+      border: 1px solid #ece8de;
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+      text-align: left;
+    }
+    .start-card .label {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent, #c89a3c);
+      margin-bottom: 0.4rem;
+      font-weight: 700;
+    }
+    .start-card .title {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      color: #1a2a28;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .start-card .meta {
+      font-size: 0.82rem;
+      color: #666;
+      line-height: 1.55;
+    }
+    .start-notes {
+      margin: 0 0 1.75rem;
+      padding: 1.2rem 1.4rem;
+      background: rgba(200, 154, 60, 0.07);
+      border-left: 3px solid var(--accent, #c89a3c);
+      border-radius: 2px;
+    }
+    .start-notes-title {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #1a2a28;
+      font-weight: 700;
+      margin-bottom: 0.55rem;
+    }
+    .start-notes ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-width: none;
+    }
+    .start-notes li {
+      position: relative;
+      padding-left: 1.4rem;
+      margin: 0.35rem 0;
+      font-size: 0.88rem;
+      color: #444;
+      line-height: 1.55;
+    }
+    .start-notes li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent, #c89a3c);
+      font-weight: 700;
+    }
+    .start-cta { text-align: center; }
+    .start-screen .start-btn {
+      background: #1a2a28;
+      color: #fff;
+      border: none;
+      padding: 1rem 3rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .start-screen .start-btn:hover {
+      background: var(--accent, #c89a3c);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 600px) {
+      .start-screen { margin: 1.5rem auto; padding: 1.75rem 1.4rem; }
+      .start-screen h1 { font-size: 2rem; }
+    }
     .loading { text-align: center; padding: 4rem 2rem; color: #888; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -129,15 +258,46 @@
 
   <div id="startScreen" style="display:none;">
     <div class="start-screen">
-      <div class="meta" id="startTestName">—</div>
+      <div class="start-meta" id="startTestName">IELTS Mock</div>
       <h1>Listening</h1>
-      <p style="color:#555;">4 part, 40 soru, 30 dakika. Her part kendi sekmesinde. Ses kontrolü her zaman erişilebilir.</p>
-      <ul>
-        <li>Cevapların otomatik kaydedilir</li>
-        <li>Süre dolunca otomatik gönderim yok</li>
-        <li>Sayfa yenilenirse kaldığın yerden devam edersin</li>
-      </ul>
-      <button class="start-btn" id="startBtn">Sınava Başla</button>
+      <p class="start-overview">4 part &middot; 40 soru &middot; 30 dakika</p>
+
+      <div class="start-cards">
+        <div class="start-card">
+          <div class="label">Part 1</div>
+          <div class="title">Günlük Diyalog</div>
+          <div class="meta">10 soru &middot; İki konuşmacı</div>
+        </div>
+        <div class="start-card">
+          <div class="label">Part 2</div>
+          <div class="title">Sosyal Monolog</div>
+          <div class="meta">10 soru &middot; Tek konuşmacı</div>
+        </div>
+        <div class="start-card">
+          <div class="label">Part 3</div>
+          <div class="title">Akademik Tartışma</div>
+          <div class="meta">10 soru &middot; 2-4 konuşmacı</div>
+        </div>
+        <div class="start-card">
+          <div class="label">Part 4</div>
+          <div class="title">Akademik Konferans</div>
+          <div class="meta">10 soru &middot; Tek konuşmacı</div>
+        </div>
+      </div>
+
+      <div class="start-notes">
+        <div class="start-notes-title">Sınav öncesi notlar</div>
+        <ul>
+          <li>Cevapların otomatik kaydedilir, sayfayı yenileyebilirsin</li>
+          <li>Süre dolunca otomatik gönderim yok, sen Bitir dediğinde gönderilir</li>
+          <li>Audio kontrolü tam erişilebilir, ileri-geri sarabilirsin</li>
+          <li>Kulaklık veya hoparlör önerilir</li>
+        </ul>
+      </div>
+
+      <div class="start-cta">
+        <button class="start-btn" id="startBtn">Sınava Başla &rsaquo;</button>
+      </div>
     </div>
   </div>
 

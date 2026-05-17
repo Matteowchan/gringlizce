@@ -763,37 +763,88 @@
 
     /* Completion screen */
     .q-completion {
-      max-width: 560px;
-      margin: 4rem auto;
+      max-width: 620px;
+      margin: 3.5rem auto;
       padding: 2.5rem 2rem;
       text-align: center;
     }
-    .q-completion-icon {
-      color: #3c825a;
+    .q-completion-circle {
+      position: relative;
       display: inline-flex;
-      margin-bottom: 1.2rem;
+      align-items: center;
+      justify-content: center;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 1.5rem;
+    }
+    .q-completion-circle svg {
+      width: 150px;
+      height: 150px;
+      transform: rotate(-90deg);
+    }
+    .q-completion-circle .ring-bg {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 6;
+    }
+    .q-completion-circle .ring-fg {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    .q-completion-circle .ring-fg.high { stroke: #3c825a; }
+    .q-completion-circle .ring-fg.mid  { stroke: #c89a3c; }
+    .q-completion-circle .ring-fg.low  { stroke: #b45046; }
+    .q-completion-circle .pct {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .q-completion-circle .pct-num {
+      font-size: 2.4rem;
+      line-height: 1;
+      color: var(--text);
+    }
+    .q-completion-circle .pct-label {
+      font-family: var(--font-ui);
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      font-weight: 500;
     }
     .q-completion h2 {
       font-family: var(--font-display);
-      font-size: 2.4rem;
-      margin: 0 0 0.4rem;
+      font-size: 2rem;
+      margin: 0 0 0.3rem;
       color: var(--text);
       letter-spacing: -0.01em;
     }
     .q-completion-sub {
-      font-size: 1.05rem;
+      font-size: 1rem;
       color: var(--text-muted);
-      margin: 0 0 2rem;
+      margin: 0 0 2.2rem;
+      line-height: 1.5;
     }
     .q-completion-stats {
       display: flex;
       justify-content: center;
-      gap: 1.2rem;
-      margin-bottom: 2.2rem;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
     .q-stat {
+      flex: 1;
       min-width: 110px;
+      max-width: 160px;
       padding: 1.1rem 1.2rem;
       border-radius: 10px;
       background: var(--bg-soft);
@@ -805,25 +856,47 @@
     }
     .q-stat-num {
       font-family: var(--font-display);
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 600;
       line-height: 1;
       color: var(--text);
     }
     .q-stat-label {
       font-family: var(--font-ui);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text-muted);
       font-weight: 500;
     }
-    .q-stat-correct { border-color: rgba(60, 130, 90, 0.4); }
+    .q-stat-correct { border-color: rgba(60, 130, 90, 0.4); background: rgba(60, 130, 90, 0.05); }
     .q-stat-correct .q-stat-num { color: #3c825a; }
-    .q-stat-incorrect { border-color: rgba(180, 80, 70, 0.4); }
+    .q-stat-incorrect { border-color: rgba(180, 80, 70, 0.4); background: rgba(180, 80, 70, 0.05); }
     .q-stat-incorrect .q-stat-num { color: #b45046; }
-    .q-stat-skipped { border-color: var(--line); }
     .q-stat-skipped .q-stat-num { color: var(--text-muted); }
+
+    .q-completion-review {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #b45046;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.5rem 0.9rem;
+      border: 1px solid rgba(180, 80, 70, 0.3);
+      border-radius: 999px;
+      margin-bottom: 2.2rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .q-completion-review:hover {
+      background: rgba(180, 80, 70, 0.08);
+      border-color: #b45046;
+    }
+    .q-completion-review-hidden { display: none; }
 
     .q-completion-actions {
       display: flex;
@@ -832,11 +905,11 @@
       flex-wrap: wrap;
     }
     .q-comp-btn {
-      padding: 0.7rem 1.4rem;
+      padding: 0.75rem 1.6rem;
       border-radius: 999px;
       font-family: var(--font-ui);
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       font-weight: 600;
       cursor: pointer;
@@ -846,6 +919,7 @@
       align-items: center;
       transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
     }
+    .q-comp-btn:hover { transform: translateY(-1px); }
     .q-comp-btn-primary {
       background: var(--cat-accent);
       color: var(--bg);
@@ -860,10 +934,12 @@
     .q-comp-btn-ghost:hover { background: var(--bg-soft); border-color: var(--text); }
 
     @media (max-width: 640px) {
-      .q-completion { padding: 2rem 1.2rem; margin: 2rem auto; }
-      .q-completion h2 { font-size: 1.9rem; }
-      .q-stat { min-width: 90px; padding: 0.9rem 1rem; }
-      .q-stat-num { font-size: 1.8rem; }
+      .q-completion { padding: 2rem 1.2rem; margin: 1.5rem auto; }
+      .q-completion h2 { font-size: 1.6rem; }
+      .q-stat { min-width: 90px; padding: 0.85rem 0.9rem; }
+      .q-stat-num { font-size: 1.6rem; }
+      .q-completion-circle, .q-completion-circle svg { width: 125px; height: 125px; }
+      .q-completion-circle .pct-num { font-size: 2rem; }
     }
 
     /* Report modal */
@@ -1962,14 +2038,54 @@
         else if (v === 'incorrect') incorrect++;
       });
       const skipped = total - correct - incorrect;
+      const answered = correct + incorrect;
+      const pct = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+      // Dinamik başlık + alt mesaj
+      let title, sub, ringClass;
+      if (pct >= 85) {
+        title = 'Olağanüstü';
+        sub = 'Konuya hâkimsin. Daha zor setlerle test et.';
+        ringClass = 'high';
+      } else if (pct >= 70) {
+        title = 'Çok iyi';
+        sub = 'Sağlam ilerliyorsun. Yanlışlarına bakarak son cilayı çek.';
+        ringClass = 'high';
+      } else if (pct >= 50) {
+        title = 'İyi gidiyorsun';
+        sub = 'Yarısının üzerindesin. Yanlışları incelemek farkı kapatır.';
+        ringClass = 'mid';
+      } else if (answered > 0) {
+        title = 'Pratik gerek';
+        sub = 'Yanlışları gözden geçir, sonra başka bir setle dene.';
+        ringClass = 'low';
+      } else {
+        title = 'Tamamlandı';
+        sub = 'Hiç cevap yok. Tekrar başlamak ister misin?';
+        ringClass = 'mid';
+      }
+
+      // SVG dasharray hesaplama (r=66 → çevre ≈ 414.69)
+      const r = 66;
+      const circ = 2 * Math.PI * r;
+      const dashOffset = circ * (1 - pct / 100);
 
       const html = `
         <div class="q-completion">
-          <div class="q-completion-icon">
-            <svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="28"/><polyline points="20 33 28 41 44 25"/></svg>
+          <div class="q-completion-circle">
+            <svg viewBox="0 0 150 150">
+              <circle class="ring-bg" cx="75" cy="75" r="${r}"></circle>
+              <circle class="ring-fg ${ringClass}" cx="75" cy="75" r="${r}"
+                stroke-dasharray="${circ.toFixed(2)}"
+                stroke-dashoffset="${dashOffset.toFixed(2)}"></circle>
+            </svg>
+            <div class="pct">
+              <div class="pct-num">${pct}%</div>
+              <div class="pct-label">Doğruluk</div>
+            </div>
           </div>
-          <h2>Tebrikler</h2>
-          <p class="q-completion-sub">Çalışman tamamlandı.</p>
+          <h2>${title}</h2>
+          <p class="q-completion-sub">${sub}</p>
           <div class="q-completion-stats">
             <div class="q-stat q-stat-correct">
               <span class="q-stat-num">${correct}</span>
@@ -1985,6 +2101,10 @@
               <span class="q-stat-label">Atlanmış</span>
             </div>` : ''}
           </div>
+          ${incorrect > 0 ? `
+          <a class="q-completion-review" href="panelim.html#wrong" id="reviewWrongBtn">
+            Yanlışları İncele &rsaquo;
+          </a>` : ''}
           <div class="q-completion-actions">
             <button class="q-comp-btn q-comp-btn-primary" type="button" id="restartSetBtn">Tekrar Başla</button>
             <a class="q-comp-btn q-comp-btn-ghost" href="sat-soru-bankasi-rw.html">Soru Bankasına Dön</a>
@@ -1994,13 +2114,10 @@
 
       document.getElementById('qPageWrap').innerHTML = html;
       document.getElementById('qActionbar').style.display = 'none';
-      // Also hide breadcrumb if needed — keeping it for context
 
       document.getElementById('restartSetBtn').addEventListener('click', () => {
-        // Clear answers, regenerate shuffle if applicable, then go to first
         clearAnswersForSet(SUBCATEGORY_LIST.map(i => i.slug));
         if (SET_KEY) {
-          // For shuffled sets, generate a NEW order
           if (SET_URL_PARAMS.includes('shuffle=1')) {
             const slugsOnly = SUBCATEGORY_LIST.map(i => i.slug);
             shuffleInPlace(slugsOnly);

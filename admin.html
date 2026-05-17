@@ -503,7 +503,7 @@
       display: flex;
       gap: 0.7rem;
       margin-bottom: 1rem;
-      align-items: stretch;
+      align-items: center;
     }
     .users-search-input {
       flex: 1;
@@ -516,6 +516,14 @@
       border-radius: 2px;
     }
     .users-search-input:focus { outline: none; border-color: var(--gold); }
+    .users-count-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
     .btn-admin-action {
       background: var(--teal);
       color: #F4EFE3;
@@ -546,7 +554,7 @@
       font-size: 0.88rem;
     }
     .users-table th, .users-table td {
-      padding: 0.65rem 0.5rem;
+      padding: 0.7rem 0.6rem;
       border-bottom: 1px solid var(--line);
       text-align: left;
       vertical-align: middle;
@@ -559,9 +567,44 @@
       color: var(--text-muted);
       font-weight: 500;
     }
+    .users-table th.num, .users-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
     .users-table tbody tr { cursor: pointer; transition: background 0.1s; }
-    .users-table tbody tr:hover { background: rgba(200, 154, 60, 0.05); }
-    .users-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .users-table tbody tr:hover { background: rgba(200, 154, 60, 0.07); }
+    .users-table tbody tr.banned-row { background: rgba(179, 58, 58, 0.04); }
+    .users-table tbody tr.banned-row:hover { background: rgba(179, 58, 58, 0.09); }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .user-avatar.banned { background: #b33a3a; }
+    .user-cell-meta { min-width: 0; }
+    .user-cell-email {
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    .user-cell-name { font-size: 0.78rem; color: var(--text-muted); }
+
     .user-status-dot {
       display: inline-block;
       width: 8px;
@@ -571,7 +614,23 @@
       margin-right: 0.4rem;
     }
     .user-status-dot.banned { background: #b33a3a; }
-    .user-row-email { font-weight: 600; color: var(--text); }
+
+    @media (max-width: 720px) {
+      .users-table thead { display: none; }
+      .users-table tr { display: block; border: 1px solid var(--line); padding: 0.6rem; margin-bottom: 0.5rem; }
+      .users-table td { display: flex; justify-content: space-between; border: none; padding: 0.3rem 0; }
+      .users-table td:first-child { border-bottom: 1px solid var(--line); padding-bottom: 0.6rem; margin-bottom: 0.4rem; }
+      .users-table td:before {
+        content: attr(data-label);
+        font-family: var(--font-ui);
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .users-table td:first-child:before { content: none; }
+      .users-table td.num { text-align: right; }
+    }
 
     /* User detail modal */
     .user-modal-overlay {
@@ -700,6 +759,14 @@
     .um-msg.show { display: block; }
     .um-msg.success { background: rgba(46, 204, 113, 0.08); color: #2c8a4d; }
     .um-msg.error { background: rgba(179, 58, 58, 0.08); color: #b33a3a; }
+
+    .danger-zone {
+      background: rgba(179, 58, 58, 0.04);
+      margin: 0 -2rem -2rem;
+      padding: 1rem 2rem 1.5rem !important;
+      border-top: 2px solid #b33a3a !important;
+    }
+    .danger-zone h4 { letter-spacing: 0.2em; }
   </style>
 </head>
 <body data-cat="admin">
@@ -945,12 +1012,21 @@
           <span class="sec-eyebrow">Yönetim</span>
           <h2>Kullanıcılar</h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.2rem; line-height: 1.6;">
-            Kullanıcıyı seç, detayını aç, materyal-quota-cevap üzerinde işlem yap. Şifre / ban için "Hesap" sekmesi.
+            Kullanıcıyı seç, detayını aç, materyal-quota-cevap üzerinde işlem yap. Şifre / ban / silme için "Hesap" sekmesi.
           </p>
 
           <div class="users-controls">
-            <input type="text" id="users-search" placeholder="Email veya isim ile ara..." class="users-search-input">
-            <button id="users-refresh" class="btn-admin-action">Yenile</button>
+            <input type="text" id="users-search" placeholder="Email veya isim ile ara... (yazarken otomatik filtreler)" class="users-search-input">
+            <span id="users-count-label" class="users-count-label">—</span>
+          </div>
+
+          <div class="filter-row" style="margin-bottom: 1rem;">
+            <button class="filter-chip active" data-users-filter="all">Hepsi</button>
+            <button class="filter-chip" data-users-filter="active">Aktif</button>
+            <button class="filter-chip" data-users-filter="banned">Banlı</button>
+            <button class="filter-chip" data-users-filter="recent">Son 7 Gün</button>
+            <button class="filter-chip" data-users-filter="with_purchases">Materyali Var</button>
+            <button class="filter-chip" data-users-filter="ai_bonus">AI Bonuslu</button>
           </div>
 
           <div id="users-loading" style="text-align:center; padding:2rem; color: var(--text-muted);">Yükleniyor...</div>
@@ -958,13 +1034,12 @@
           <table class="users-table" id="users-table" style="display:none;">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>İsim</th>
+                <th>Kullanıcı</th>
                 <th>Kayıt</th>
                 <th>Son Aktif</th>
-                <th style="text-align:right;">Materyal</th>
-                <th style="text-align:right;">Cevap</th>
-                <th style="text-align:right;">AI Bonus</th>
+                <th class="num">Materyal</th>
+                <th class="num">Cevap</th>
+                <th class="num">AI Bonus</th>
                 <th>Durum</th>
                 <th></th>
               </tr>
@@ -1079,6 +1154,17 @@
           <button class="btn-admin-action outline" id="um-unban-btn">Banı Kaldır</button>
         </div>
         <div class="um-msg" id="um-account-msg"></div>
+      </div>
+
+      <div class="user-modal-section danger-zone">
+        <h4 style="color: #b33a3a;">Tehlikeli Bölge</h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.6rem; line-height: 1.5;">
+          Kullanıcıyı kalıcı olarak sil. Tüm verisi (cevaplar, materyal, bookmark, kelime, AI quota) cascade ile silinir. Geri alınamaz.
+        </p>
+        <div class="um-action-row">
+          <button class="btn-admin-action danger" id="um-delete-btn">Kullanıcıyı Kalıcı Sil</button>
+        </div>
+        <div class="um-msg" id="um-delete-msg"></div>
       </div>
     </div>
   </div>
@@ -1541,7 +1627,7 @@
         contents.forEach(function (c) { c.classList.toggle('active', c.dataset.tabContent === name); });
         try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
         if (name === 'users' && !state.usersLoaded) {
-          loadUsers('');
+          loadUsers();
           state.usersLoaded = true;
         }
       }
@@ -1692,6 +1778,9 @@
     // ============ USERS TAB ============
     var ADMIN_USER_ACTIONS_URL = SUPABASE_URL + '/functions/v1/admin-user-actions';
     var currentUserDetail = null;
+    var allUsersCache = [];      // tüm liste (server'dan gelen)
+    var usersActiveFilter = 'all';
+    var usersSearchTimer = null;
 
     function escHtmlAdmin(s) {
       if (s == null) return '';
@@ -1716,11 +1805,17 @@
       if (day < 30) return day + ' gün';
       return d.toLocaleDateString('tr-TR');
     }
+    function initialOf(s) {
+      if (!s) return '?';
+      var parts = String(s).split(/[@.\s]/).filter(Boolean);
+      if (parts.length === 0) return '?';
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
 
-    async function loadUsers(search) {
+    async function loadUsers() {
       var loadingEl = $('users-loading');
       var tableEl = $('users-table');
-      var tbodyEl = $('users-tbody');
       var emptyEl = $('users-empty');
 
       loadingEl.style.display = 'block';
@@ -1728,51 +1823,91 @@
       emptyEl.style.display = 'none';
 
       try {
-        var res = await sb.rpc('admin_list_users', { p_search: search || '', p_limit: 200 });
+        var res = await sb.rpc('admin_list_users', { p_search: '', p_limit: 500 });
         if (res.error) throw res.error;
-        var rows = res.data || [];
-
+        allUsersCache = res.data || [];
         loadingEl.style.display = 'none';
-
-        if (rows.length === 0) {
-          emptyEl.style.display = 'block';
-          return;
-        }
-
-        tbodyEl.innerHTML = rows.map(function (u) {
-          var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
-          var dot = '<span class="user-status-dot' + (isBanned ? ' banned' : '') + '"></span>';
-          var statusText = isBanned ? 'Banlı' : 'Aktif';
-          return [
-            '<tr data-user-id="' + escHtmlAdmin(u.user_id) + '">',
-            '  <td class="user-row-email">' + escHtmlAdmin(u.email || '—') + '</td>',
-            '  <td>' + escHtmlAdmin(u.display_name || '—') + '</td>',
-            '  <td>' + escHtmlAdmin(fmtDate(u.created_at)) + '</td>',
-            '  <td>' + escHtmlAdmin(fmtRelative(u.last_active_at)) + '</td>',
-            '  <td class="num">' + u.purchase_count + '</td>',
-            '  <td class="num">' + u.total_answered + '</td>',
-            '  <td class="num">' + u.ai_bonus_left + '</td>',
-            '  <td>' + dot + statusText + '</td>',
-            '  <td><button class="btn-admin-action outline" data-open-user="' + escHtmlAdmin(u.user_id) + '">Detay</button></td>',
-            '</tr>'
-          ].join('');
-        }).join('');
-        tableEl.style.display = 'table';
-
-        tbodyEl.querySelectorAll('[data-open-user]').forEach(function (btn) {
-          btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            openUserDetail(btn.dataset.openUser);
-          });
-        });
-        tbodyEl.querySelectorAll('tr[data-user-id]').forEach(function (row) {
-          row.addEventListener('click', function () {
-            openUserDetail(row.dataset.userId);
-          });
-        });
+        applyUsersFilters();
       } catch (e) {
         loadingEl.innerHTML = '<p style="color:#c44;">Hata: ' + escHtmlAdmin(e.message || String(e)) + '</p>';
       }
+    }
+
+    function applyUsersFilters() {
+      var search = ($('users-search').value || '').trim().toLowerCase();
+      var filter = usersActiveFilter;
+      var now = Date.now();
+      var sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      var filtered = allUsersCache.filter(function (u) {
+        // text search
+        if (search) {
+          var hay = (u.email || '') + ' ' + (u.display_name || '');
+          if (hay.toLowerCase().indexOf(search) === -1) return false;
+        }
+        // filter chip
+        var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+        if (filter === 'active' && isBanned) return false;
+        if (filter === 'banned' && !isBanned) return false;
+        if (filter === 'recent' && (!u.created_at || new Date(u.created_at).getTime() < sevenDaysAgo)) return false;
+        if (filter === 'with_purchases' && (u.purchase_count || 0) === 0) return false;
+        if (filter === 'ai_bonus' && (u.ai_bonus_left || 0) === 0) return false;
+        return true;
+      });
+
+      renderUsersTable(filtered);
+      $('users-count-label').textContent = filtered.length + ' / ' + allUsersCache.length;
+    }
+
+    function renderUsersTable(rows) {
+      var tableEl = $('users-table');
+      var tbodyEl = $('users-tbody');
+      var emptyEl = $('users-empty');
+
+      if (rows.length === 0) {
+        tableEl.style.display = 'none';
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      tbodyEl.innerHTML = rows.map(function (u) {
+        var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+        var initial = initialOf(u.display_name || u.email);
+        return [
+          '<tr data-user-id="' + escHtmlAdmin(u.user_id) + '" class="' + (isBanned ? 'banned-row' : '') + '">',
+          '  <td data-label="Kullanıcı">',
+          '    <div class="user-cell">',
+          '      <div class="user-avatar' + (isBanned ? ' banned' : '') + '">' + escHtmlAdmin(initial) + '</div>',
+          '      <div class="user-cell-meta">',
+          '        <div class="user-cell-email">' + escHtmlAdmin(u.email || '—') + '</div>',
+          (u.display_name ? '        <div class="user-cell-name">' + escHtmlAdmin(u.display_name) + '</div>' : ''),
+          '      </div>',
+          '    </div>',
+          '  </td>',
+          '  <td data-label="Kayıt">' + escHtmlAdmin(fmtDate(u.created_at)) + '</td>',
+          '  <td data-label="Son Aktif">' + escHtmlAdmin(fmtRelative(u.last_active_at)) + '</td>',
+          '  <td data-label="Materyal" class="num">' + (u.purchase_count || 0) + '</td>',
+          '  <td data-label="Cevap" class="num">' + (u.total_answered || 0) + '</td>',
+          '  <td data-label="AI Bonus" class="num">' + (u.ai_bonus_left || 0) + '</td>',
+          '  <td data-label="Durum"><span class="user-status-dot' + (isBanned ? ' banned' : '') + '"></span>' + (isBanned ? 'Banlı' : 'Aktif') + '</td>',
+          '  <td><button class="btn-admin-action outline" data-open-user="' + escHtmlAdmin(u.user_id) + '">Detay</button></td>',
+          '</tr>'
+        ].join('');
+      }).join('');
+      tableEl.style.display = 'table';
+
+      tbodyEl.querySelectorAll('[data-open-user]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openUserDetail(btn.dataset.openUser);
+        });
+      });
+      tbodyEl.querySelectorAll('tr[data-user-id]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          openUserDetail(row.dataset.userId);
+        });
+      });
     }
 
     async function openUserDetail(userId) {
@@ -1832,16 +1967,13 @@
           ' · Bonus kalan: <strong>' + bonusLeft + '</strong>' +
           ' · Toplam bonus: <strong>' + (q.bonus_quota || 0) + '</strong>';
 
-        // Ürünleri load et (combobox)
         await populateProductSelect();
 
-        // Reset messages
-        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg'].forEach(function (id) {
+        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg', 'um-delete-msg'].forEach(function (id) {
           var el = $(id);
           if (el) { el.classList.remove('show', 'success', 'error'); el.textContent = ''; }
         });
 
-        // Bind revoke buttons
         document.querySelectorAll('[data-revoke]').forEach(function (btn) {
           btn.addEventListener('click', function () { revokeMaterial(btn.dataset.revoke); });
         });
@@ -1889,7 +2021,8 @@
         umMsg('um-mat-msg', 'Materyal açıldı', 'ok');
         $('um-variant').value = '';
         $('um-product-select').value = '';
-        await openUserDetail(currentUserDetail.user_id); // refresh
+        await openUserDetail(currentUserDetail.user_id);
+        loadUsers();
       } catch (e) {
         umMsg('um-mat-msg', 'Hata: ' + (e.message || e), 'err');
       }
@@ -1902,6 +2035,7 @@
         if (r.error) throw r.error;
         umMsg('um-mat-msg', 'Materyal çıkarıldı', 'ok');
         await openUserDetail(currentUserDetail.user_id);
+        loadUsers();
       } catch (e) {
         umMsg('um-mat-msg', 'Hata: ' + (e.message || e), 'err');
       }
@@ -1921,6 +2055,7 @@
         umMsg('um-quota-msg', 'Güncellendi. Yeni bonus kalan: ' + leftover, 'ok');
         $('um-bonus').value = '';
         await openUserDetail(currentUserDetail.user_id);
+        loadUsers();
       } catch (e) {
         umMsg('um-quota-msg', 'Hata: ' + (e.message || e), 'err');
       }
@@ -1939,6 +2074,7 @@
         var d = r.data || {};
         umMsg('um-reset-msg', 'Silindi: cevap=' + d.deleted_answers + ', bookmark=' + d.deleted_bookmarks + ', progress=' + d.deleted_progress + ', highlight=' + d.deleted_highlights, 'ok');
         await openUserDetail(currentUserDetail.user_id);
+        loadUsers();
       } catch (e) {
         umMsg('um-reset-msg', 'Hata: ' + (e.message || e), 'err');
       }
@@ -1993,8 +2129,31 @@
         await callEdgeAction('set_ban', { banned: banned });
         umMsg('um-account-msg', banned ? 'Kullanıcı banlandı' : 'Ban kaldırıldı', 'ok');
         await openUserDetail(currentUserDetail.user_id);
+        loadUsers();
       } catch (e) {
         umMsg('um-account-msg', 'Hata: ' + (e.message || e), 'err');
+      }
+    }
+
+    async function deleteUser() {
+      if (!currentUserDetail) return;
+      var email = currentUserDetail.email;
+      var step1 = confirm('Bu kullanıcı KALICI olarak silinecek:\n\n' + email + '\n\nTüm verisi (cevaplar, materyal, bookmark, kelime, quota) cascade ile silinir. Geri alınamaz.\n\nDevam edilsin mi?');
+      if (!step1) return;
+      var typed = prompt('Onaylamak için kullanıcının email adresini tam olarak yaz:');
+      if (typed !== email) {
+        umMsg('um-delete-msg', 'Email eşleşmedi, iptal edildi', 'err');
+        return;
+      }
+      try {
+        await callEdgeAction('delete_user', {});
+        umMsg('um-delete-msg', 'Silindi: ' + email, 'ok');
+        setTimeout(function () {
+          closeUserModal();
+          loadUsers();
+        }, 800);
+      } catch (e) {
+        umMsg('um-delete-msg', 'Hata: ' + (e.message || e), 'err');
       }
     }
 
@@ -2004,10 +2163,21 @@
     }
 
     function initUsersTab() {
-      $('users-search').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') loadUsers(this.value);
+      // Debounced search
+      $('users-search').addEventListener('input', function () {
+        clearTimeout(usersSearchTimer);
+        usersSearchTimer = setTimeout(applyUsersFilters, 200);
       });
-      $('users-refresh').addEventListener('click', function () { loadUsers($('users-search').value); });
+      // Filter chips
+      document.querySelectorAll('[data-users-filter]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('[data-users-filter]').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+          usersActiveFilter = chip.dataset.usersFilter;
+          applyUsersFilters();
+        });
+      });
+      // Modal
       $('user-modal-close').addEventListener('click', closeUserModal);
       $('user-modal-overlay').addEventListener('click', function (e) {
         if (e.target === this) closeUserModal();
@@ -2019,6 +2189,7 @@
       $('um-set-pass-btn').addEventListener('click', setNewPassword);
       $('um-ban-btn').addEventListener('click', function () { setBan(true); });
       $('um-unban-btn').addEventListener('click', function () { setBan(false); });
+      $('um-delete-btn').addEventListener('click', deleteUser);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

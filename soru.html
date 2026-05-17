@@ -94,6 +94,16 @@
     }
     .q-grid.show-explanation { grid-template-columns: 1fr 1fr 1fr; }
 
+    @media (min-width: 1001px) {
+      .q-grid:not(.show-explanation) .q-content {
+        position: sticky;
+        top: 80px;
+        align-self: start;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+      }
+    }
+
     @media (max-width: 1000px) {
       .q-grid, .q-grid.show-explanation { grid-template-columns: 1fr; }
     }
@@ -230,31 +240,43 @@
       align-items: flex-start;
       gap: 0.85rem;
       padding: 0.9rem 1rem;
-      border: 1px solid var(--line);
+      border: 1.5px solid var(--line);
       border-radius: 6px;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
       background: var(--bg-card);
     }
-    .q-option:hover { border-color: var(--cat-accent); background: var(--bg-soft); }
+    .q-option:hover {
+      border-color: var(--cat-accent);
+      background: var(--bg-soft);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
     .q-option input { position: absolute; opacity: 0; pointer-events: none; }
-    .q-option.selected { border-color: var(--cat-accent); background: var(--cat-accent-soft); }
+    .q-option.selected {
+      border-color: var(--cat-accent);
+      background: var(--cat-accent-soft);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
 
     .q-letter {
       flex-shrink: 0;
-      width: 26px;
-      height: 26px;
-      border: 1.5px solid var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border: 2px solid var(--text-muted);
       border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-ui);
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--text-muted);
       background: var(--bg-card);
       transition: all 0.15s;
+    }
+    .q-option:hover .q-letter {
+      border-color: var(--cat-accent);
+      color: var(--cat-accent);
     }
     .q-option.selected .q-letter {
       background: var(--cat-accent);
@@ -534,6 +556,20 @@
     .q-btn-explain { background: var(--teal); color: var(--bg); border-color: var(--teal); }
     .q-btn-explain:hover { background: var(--teal-deep); border-color: var(--teal-deep); }
     .q-btn-explain.active { background: var(--bg); color: var(--teal); }
+
+    /* Tablet/intermediate: shrink secondary actions to icon-only first */
+    @media (max-width: 900px) and (min-width: 541px) {
+      .q-btn-vocab, .q-btn-remix {
+        font-size: 0;
+        gap: 0;
+        padding: 0.65rem 0.75rem;
+        letter-spacing: 0;
+      }
+      .q-btn-vocab svg, .q-btn-remix svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
 
     @media (max-width: 540px) {
       .q-actionbar {

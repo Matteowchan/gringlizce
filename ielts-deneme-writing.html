@@ -13,6 +13,7 @@
   <title>IELTS Writing | Gri English</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <meta name="theme-color" content="#1a2a28">
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <link rel="stylesheet" href="assets/main.css">
   <style>
     body { background: #fafaf7; margin: 0; }
@@ -88,6 +89,57 @@
     .modal h3 { font-family: Georgia, serif; margin-top: 0; color: #1a2a28; }
     .modal p { color: #555; line-height: 1.5; }
 
+    /* ============ THEME TOGGLE ============ */
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      padding: 0;
+      transition: background 0.15s;
+    }
+    .theme-toggle-btn:hover { background: rgba(255, 255, 255, 0.18); }
+    [data-theme="dark"] .theme-toggle-btn .icon-moon { display: none; }
+    [data-theme="light"] .theme-toggle-btn .icon-sun { display: none; }
+
+    /* ============ DARK MODE OVERRIDES ============ */
+    [data-theme="dark"] body { background: #0f1419; color: #d8d8d8; }
+    [data-theme="dark"] .tab-bar { background: #1a1f28; border-bottom-color: #2d3548; }
+    [data-theme="dark"] .tab-btn { color: #888; }
+    [data-theme="dark"] .tab-btn:hover { color: #e8e8e8; background: #1f2530; }
+    [data-theme="dark"] .tab-btn.active { color: #f0f0f0; }
+    [data-theme="dark"] .tab-btn .word-count { background: #2a3040; color: #aaa; }
+    [data-theme="dark"] .task-prompt,
+    [data-theme="dark"] .task-editor { background: #15191f; }
+    [data-theme="dark"] .task-prompt { border-right-color: #2d3548; }
+    @media (max-width: 900px) {
+      [data-theme="dark"] .task-prompt { border-bottom-color: #2d3548; }
+    }
+    [data-theme="dark"] .task-title { color: #f0f0f0; }
+    [data-theme="dark"] .task-meta { color: #888; }
+    [data-theme="dark"] .task-instructions { color: #aaa; }
+    [data-theme="dark"] .task-prompt-text { color: #d8d8d8; }
+    [data-theme="dark"] .task-image { background: #fff; border-color: #2d3548; }
+    [data-theme="dark"] .task-min-words { color: #f0f0f0; }
+    [data-theme="dark"] .editor-meta { color: #888; }
+    [data-theme="dark"] .editor-meta .word-display { background: #2a3040; color: #aaa; }
+    [data-theme="dark"] .editor-textarea {
+      background: #1a1f28;
+      color: #e8e8e8;
+      border-color: #2d3548;
+    }
+    [data-theme="dark"] .editor-saved { color: #777; }
+    [data-theme="dark"] .modal { background: #1a1f28; color: #d8d8d8; }
+    [data-theme="dark"] .modal h3 { color: #f0f0f0; }
+    [data-theme="dark"] .modal p { color: #bbb; }
+
     .package-options { margin: 1.5rem 0; }
     .package-option { border: 2px solid #d8d2c4; padding: 1rem 1.25rem; margin-bottom: 0.75rem; cursor: pointer; border-radius: 3px; transition: border-color 0.15s, background 0.15s; }
     .package-option:hover { border-color: #1a2a28; background: #fafaf7; }
@@ -139,6 +191,10 @@
     <div class="timer-bar">
       <div class="timer" id="timerDisplay">Süre: <strong>60:00</strong></div>
       <button class="timer-toggle-btn start" id="timerToggleBtn">Başlat</button>
+      <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Tema değiştir" title="Tema değiştir">
+        <span class="icon-moon">&#9790;</span>
+        <span class="icon-sun">&#9728;</span>
+      </button>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
 
@@ -505,6 +561,14 @@
         e.returnValue = '';
         return '';
       }
+    });
+
+    // Theme toggle
+    document.getElementById('themeToggleBtn').addEventListener('click', function () {
+      var current = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('gri-theme', next); } catch (e) {}
     });
 
     loadTest();

@@ -1919,6 +1919,7 @@
     }
 
     function gotoSlug(slug) {
+      if (typeof window.__setInternalNav === 'function') window.__setInternalNav();
       window.location.href = 'soru.html?q=' + encodeURIComponent(slug) + SET_URL_PARAMS;
     }
 
@@ -3206,15 +3207,32 @@
 
     initVocabPopup();
 
+    // === Internal navigation flag — sadece browser back/forward/refresh için uyar ===
+    let __isInternalNav = false;
+    // Tüm same-origin link click'lerinde flag set
+    document.addEventListener('click', function (e) {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') return;
+      try {
+        const url = new URL(href, location.href);
+        if (url.origin === location.origin) __isInternalNav = true;
+      } catch (err) {}
+    }, true);
+
     // === Yanlışlıkla geri / refresh / sekme kapatma uyarısı ===
-    // Soru ekrandaysa (yani user gerçekten çalışıyor) uyar
     window.addEventListener('beforeunload', function (e) {
+      if (__isInternalNav) return; // app içi navigation → uyarma
       if (window.GriCurrentQuestion && window.GriCurrentQuestion.slug) {
         e.preventDefault();
         e.returnValue = '';
         return '';
       }
     });
+
+    // Expose flag globally so gotoSlug ve diğer programatik navigation set edebilsin
+    window.__setInternalNav = function () { __isInternalNav = true; };
 
     loadQuestion();
   </script>

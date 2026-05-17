@@ -345,6 +345,65 @@
       text-transform: uppercase;
       color: var(--gold);
     }
+
+    /* ============ WRITING TABLE ============ */
+    .writing-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .writing-table th, .writing-table td {
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+    .writing-table th {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .writing-table tbody tr:hover { background: rgba(200, 154, 60, 0.04); }
+    .writing-empty {
+      text-align: center !important;
+      color: var(--text-muted) !important;
+      padding: 2.5rem 1rem !important;
+      font-style: italic;
+    }
+    .status-badge {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      display: inline-block;
+      border-radius: 2px;
+      font-weight: 500;
+    }
+    .status-badge.pending {
+      background: rgba(200, 154, 60, 0.15);
+      color: var(--gold);
+    }
+    .status-badge.done {
+      background: rgba(46, 204, 113, 0.15);
+      color: #2c8a4d;
+    }
+    .open-btn {
+      background: var(--teal);
+      color: var(--bg);
+      padding: 0.4rem 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .open-btn:hover { opacity: 0.9; }
   </style>
 </head>
 <body data-cat="admin">
@@ -560,10 +619,32 @@
         <section class="admin-section">
           <span class="sec-eyebrow">IELTS</span>
           <h2>Writing Değerlendirme</h2>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            Bekleyen IELTS Writing submission'larını ayrı bir panelde değerlendiriyorsun. Paragraph by paragraph notlar, 4 kriter ve otomatik band hesaplama orada.
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.2rem; line-height: 1.6;">
+            Bekleyen ve tamamlanmış IELTS Writing submission'larını burada görürsün. "Aç" butonu yeni sekmede değerlendirme sayfasını açar.
           </p>
-          <a href="admin-writing-review.html" class="save-btn" style="display: inline-block; text-decoration: none;">Writing Paneline Git</a>
+
+          <div class="filter-row" style="margin-bottom: 1rem;">
+            <button class="filter-chip active" data-writing-filter="pending">Beklemede</button>
+            <button class="filter-chip" data-writing-filter="reviewed">Tamamlandı</button>
+            <button class="filter-chip" data-writing-filter="all">Hepsi</button>
+          </div>
+
+          <table class="writing-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Öğrenci</th>
+                <th>Test</th>
+                <th>Paket</th>
+                <th>Kelime (T1/T2)</th>
+                <th>Durum</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="writing-tbody">
+              <tr><td colspan="7" class="writing-empty">Yükleniyor...</td></tr>
+            </tbody>
+          </table>
         </section>
       </div>
 
@@ -693,6 +774,8 @@
         loadStats();
         startPresenceListener();
         startStatsRefresh();
+        initWritingFilters();
+        loadWritingSubmissions('pending');
         startIdleWatcher();
       } catch (e) {
         $('loading').innerHTML = '<p style="color:#c44;">Veri yüklenemedi: ' + (e.message || e) + '</p>';
@@ -1094,6 +1177,76 @@
         console.warn('[Presence] dinleme başlatılamadı:', e);
         $('stat-online').textContent = '—';
       }
+    }
+
+    // ============ WRITING SUBMISSIONS ============
+    var currentWritingFilter = 'pending';
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      var d = new Date(iso);
+      var date = d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      var time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      return date + ' ' + time;
+    }
+
+    async function loadWritingSubmissions(filter) {
+      currentWritingFilter = filter;
+      document.querySelectorAll('[data-writing-filter]').forEach(function (el) {
+        el.classList.toggle('active', el.dataset.writingFilter === filter);
+      });
+
+      var tbody = $('writing-tbody');
+      tbody.innerHTML = '<tr><td colspan="7" class="writing-empty">Yükleniyor...</td></tr>';
+
+      try {
+        var res = await sb.rpc('get_writing_submissions', { filter: filter });
+        if (res.error) throw res.error;
+
+        var rows = res.data || [];
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="writing-empty">Bu filtrede submission yok.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        rows.forEach(function (r) {
+          var tr = document.createElement('tr');
+          var words = [];
+          if (r.task1_word_count) words.push('T1: ' + r.task1_word_count);
+          if (r.task2_word_count) words.push('T2: ' + r.task2_word_count);
+          var wordsStr = words.length ? words.join(' / ') : '—';
+
+          var badge = r.payment_status === 'paid'
+            ? '<span class="status-badge pending">Beklemede</span>'
+            : '<span class="status-badge done">Tamamlandı</span>';
+
+          tr.innerHTML =
+            '<td>' + formatDate(r.submitted_at) + '</td>' +
+            '<td>' + escapeHtml(r.email || '—') + '</td>' +
+            '<td>' + escapeHtml(r.test_name || r.test_slug || '—') + '</td>' +
+            '<td>' + escapeHtml(r.package_type) + '</td>' +
+            '<td>' + wordsStr + '</td>' +
+            '<td>' + badge + '</td>' +
+            '<td><a href="admin-writing-review.html?id=' + r.id + '" target="_blank" class="open-btn">Aç</a></td>';
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" class="writing-empty" style="color: #c44;">Yüklenemedi: ' + escapeHtml(e.message || String(e)) + '</td></tr>';
+      }
+    }
+
+    function initWritingFilters() {
+      document.querySelectorAll('[data-writing-filter]').forEach(function (el) {
+        el.addEventListener('click', function () { loadWritingSubmissions(el.dataset.writingFilter); });
+      });
     }
 
     document.addEventListener('DOMContentLoaded', function () {

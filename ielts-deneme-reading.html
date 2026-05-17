@@ -639,6 +639,14 @@
       return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
+    window.addEventListener('beforeunload', function (e) {
+      if (state.startedAt && !state.finished) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    });
+
     loadTest();
   </script>
 </body>

@@ -47,9 +47,11 @@
 
     .task-title { font-family: Georgia, serif; font-size: 1.5rem; margin: 0 0 0.5rem; color: #1a2a28; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent, #c89a3c); }
     .task-meta { color: #888; font-size: 0.85rem; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .task-instructions { font-style: italic; color: #444; margin: 0.75rem 0 1.25rem; font-size: 0.95rem; }
     .task-prompt-text { font-size: 1rem; line-height: 1.7; color: #2a2a2a; margin-bottom: 1.5rem; }
     .task-prompt-text p { margin: 0.85rem 0; }
     .task-image { width: 100%; max-width: 100%; border: 1px solid #d8d2c4; margin: 1rem 0; background: #fff; }
+    .task-min-words { font-weight: 700; margin: 1.5rem 0 0.5rem; font-size: 0.98rem; color: #1a2a28; }
 
     .editor-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.9rem; color: #555; }
     .editor-meta .word-target { font-family: monospace; }
@@ -269,13 +271,15 @@
         const promptText = part.task_prompt || part.passage_html || escapeHtml(part.context || '');
         const imgSrc = part.task_image_url || part.passage_image_url || part.image_url;
 
-        let promptHtml = `<h2 class="task-title">Task ${part.part_number}</h2>
-                          <div class="task-meta">${recommendedMin} dakika önerilen &middot; ${minWords}+ kelime</div>
+        let promptHtml = `<h2 class="task-title">Writing Task ${part.part_number}</h2>
+                          <p class="task-instructions">You should spend about ${recommendedMin} minutes on this task.</p>
                           <div class="task-prompt-text">${promptText}</div>`;
 
         if (imgSrc) {
           promptHtml += `<img src="${imgSrc}" alt="Task ${part.part_number} görseli" class="task-image">`;
         }
+
+        promptHtml += `<p class="task-min-words">You should write at least ${minWords} words.</p>`;
 
         sec.innerHTML = `
           <div class="task-wrapper">

@@ -541,8 +541,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.supabase) {
-        document.getElementById('loading').textContent = 'Bağlantı hatası';
+      // Supabase script defer ile geç gelebilir — bekle
+      async function waitForSupabase(maxWait = 5000) {
+        const start = Date.now();
+        while (!window.supabase && Date.now() - start < maxWait) {
+          await new Promise(r => setTimeout(r, 50));
+        }
+        return !!window.supabase;
+      }
+
+      const ready = await waitForSupabase();
+      if (!ready) {
+        document.getElementById('loading').textContent = 'Bağlantı hatası — sayfayı yenilemeyi dene';
         return;
       }
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);

@@ -254,39 +254,58 @@
     .admin-tab-content.active { display: block; }
 
     /* ============ STATS CARDS ============ */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--line);
-      padding: 1.4rem 1.3rem;
-      position: relative;
-    }
-    .stat-card .stat-label {
+    .stats-section-title {
       font-family: var(--font-ui);
       font-size: 10px;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 0.7rem;
+      margin: 1.5rem 0 0.9rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--line);
     }
-    .stat-card .stat-value {
-      font-family: var(--font-display);
-      font-size: 2.4rem;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1;
+
+    /* Hero stats — büyük üst sıra */
+    .stats-hero {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
     }
-    .stat-card .stat-sub {
-      margin-top: 0.5rem;
-      font-size: 0.82rem;
-      color: var(--text-muted);
+    .stat-hero {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 1.5rem 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      position: relative;
+      transition: border-color 0.2s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
     }
-    .stat-card.live::after {
+    a.stat-hero { cursor: pointer; }
+    a.stat-hero:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .stat-hero .stat-icon {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(200, 154, 60, 0.1);
+      color: var(--gold);
+      border-radius: 4px;
+    }
+    .stat-hero .stat-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 1.8;
+    }
+    .stat-hero.live .stat-icon {
+      background: rgba(46, 204, 113, 0.12);
+      color: #2c8a4d;
+    }
+    .stat-hero.live::after {
       content: '';
       position: absolute;
       top: 14px;
@@ -298,12 +317,86 @@
       box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
       animation: pulse-dot 2s infinite;
     }
+    .stat-hero.accent-teal .stat-icon {
+      background: rgba(44, 88, 86, 0.12);
+      color: var(--teal);
+    }
+    .stat-hero .stat-body { flex: 1; min-width: 0; }
+    .stat-hero .stat-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .stat-hero .stat-value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text);
+    }
+    .stat-hero .stat-sub {
+      margin-top: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .stat-hero .badge-pending {
+      display: inline-block;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+      background: var(--gold);
+      color: var(--bg);
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* Mini stats — kompakt aktivite metrikleri */
+    .stats-mini {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+    .stat-mini {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 0.95rem 1rem;
+      border-left: 3px solid var(--teal);
+    }
+    .stat-mini.accent-gold { border-left-color: var(--gold); }
+    .stat-mini .stat-label {
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .stat-mini .stat-value {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text);
+    }
+    .stat-mini .stat-sub {
+      margin-top: 0.3rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
     @keyframes pulse-dot {
       0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6); }
       70% { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
       100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
     }
-    .stat-loading { color: var(--text-muted); font-size: 1.6rem; }
+    .stat-loading { color: var(--text-muted); font-size: 1.5rem; }
 
     /* ============ DASHBOARD LINK CARDS ============ */
     .dash-links {
@@ -471,39 +564,67 @@
 
       <!-- ============ OVERVIEW TAB ============ -->
       <div class="admin-tab-content" data-tab-content="overview">
-        <div class="stats-grid">
-          <div class="stat-card live">
-            <div class="stat-label">Şu An Online</div>
-            <div class="stat-value" id="stat-online"><span class="stat-loading">—</span></div>
-            <div class="stat-sub">Realtime aktif visitor</div>
+
+        <div class="stats-hero">
+          <div class="stat-hero live">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-label">Şu An Online</div>
+              <div class="stat-value" id="stat-online"><span class="stat-loading">—</span></div>
+              <div class="stat-sub">Realtime aktif visitor</div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">Toplam Kayıtlı</div>
-            <div class="stat-value" id="stat-total"><span class="stat-loading">—</span></div>
-            <div class="stat-sub">Tüm kullanıcı sayısı</div>
+
+          <div class="stat-hero">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-label">Toplam Kayıtlı</div>
+              <div class="stat-value" id="stat-total"><span class="stat-loading">—</span></div>
+              <div class="stat-sub">Tüm kullanıcı sayısı</div>
+            </div>
           </div>
-          <div class="stat-card">
+
+          <a href="#" class="stat-hero accent-teal" data-tab-jump="writing">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-label">Bekleyen Writing <span class="badge-pending" id="stat-pending-badge" style="display:none;">YENİ</span></div>
+              <div class="stat-value" id="stat-pending"><span class="stat-loading">—</span></div>
+              <div class="stat-sub">İncelemeyi bekliyor</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="stats-section-title">Aktivite</div>
+        <div class="stats-mini">
+          <div class="stat-mini">
             <div class="stat-label">DAU</div>
             <div class="stat-value" id="stat-dau"><span class="stat-loading">—</span></div>
-            <div class="stat-sub">Son 24 saatte aktif</div>
+            <div class="stat-sub">Son 24 saat</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-mini">
             <div class="stat-label">WAU</div>
             <div class="stat-value" id="stat-wau"><span class="stat-loading">—</span></div>
-            <div class="stat-sub">Son 7 günde aktif</div>
+            <div class="stat-sub">Son 7 gün</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-mini">
             <div class="stat-label">MAU</div>
             <div class="stat-value" id="stat-mau"><span class="stat-loading">—</span></div>
-            <div class="stat-sub">Son 30 günde aktif</div>
+            <div class="stat-sub">Son 30 gün</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">Yeni Kullanıcı (30g)</div>
+          <div class="stat-mini accent-gold">
+            <div class="stat-label">Yeni Kullanıcı</div>
             <div class="stat-value" id="stat-new30"><span class="stat-loading">—</span></div>
             <div class="stat-sub">Son 30 günde kayıt</div>
           </div>
         </div>
 
+        <div class="stats-section-title">Hızlı Erişim</div>
         <div class="dash-links">
           <a href="#" class="dash-link-card" data-tab-jump="writing">
             <h3>Writing Değerlendirme</h3>
@@ -1142,13 +1263,17 @@
         $('stat-wau').textContent = fmt(s.wau);
         $('stat-mau').textContent = fmt(s.mau);
         $('stat-new30').textContent = fmt(s.new_users_30d);
+        $('stat-pending').textContent = fmt(s.pending_writing);
+
+        var badge = $('stat-pending-badge');
+        if (badge) {
+          badge.style.display = (Number(s.pending_writing) > 0) ? 'inline-block' : 'none';
+        }
       } catch (e) {
         console.warn('[Stats] yüklenemedi:', e);
-        $('stat-total').textContent = '—';
-        $('stat-dau').textContent = '—';
-        $('stat-wau').textContent = '—';
-        $('stat-mau').textContent = '—';
-        $('stat-new30').textContent = '—';
+        ['stat-total','stat-dau','stat-wau','stat-mau','stat-new30','stat-pending'].forEach(function (id) {
+          var el = $(id); if (el) el.textContent = '—';
+        });
       }
     }
 

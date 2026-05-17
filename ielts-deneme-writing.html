@@ -140,21 +140,186 @@
     [data-theme="dark"] .modal h3 { color: #f0f0f0; }
     [data-theme="dark"] .modal p { color: #bbb; }
 
-    .package-options { margin: 1.5rem 0; }
-    .package-option { border: 2px solid #d8d2c4; padding: 1rem 1.25rem; margin-bottom: 0.75rem; cursor: pointer; border-radius: 3px; transition: border-color 0.15s, background 0.15s; }
-    .package-option:hover { border-color: #1a2a28; background: #fafaf7; }
-    .package-option.selected { border-color: var(--accent, #c89a3c); background: #fffae5; }
-    .package-option .pkg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
-    .package-option .pkg-name { font-weight: 700; color: #1a2a28; font-size: 1rem; }
-    .package-option .pkg-price { font-family: Georgia, serif; font-size: 1.2rem; color: #1a2a28; font-weight: 700; }
-    .package-option .pkg-desc { color: #666; font-size: 0.9rem; }
-    .package-option .pkg-radio { display: none; }
+    /* ============ SUBMIT MODAL — premium ============ */
+    .modal-overlay { backdrop-filter: blur(3px); }
+    .modal { max-width: 640px; padding: 2.25rem 2.5rem 1.75rem; }
+    .modal h3 {
+      font-family: Georgia, serif;
+      font-size: 1.6rem;
+      margin: 0 0 0.5rem;
+      color: #1a2a28;
+      letter-spacing: -0.01em;
+    }
+    .modal .modal-sub {
+      color: #666;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin: 0 0 1.5rem;
+    }
 
-    .modal .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; }
-    .modal button { flex: 1; padding: 0.7rem; border: none; border-radius: 2px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-    .modal .btn-cancel { background: #f0ede5; color: #444; }
-    .modal .btn-confirm { background: #1a2a28; color: #fff; }
-    .modal .btn-confirm:disabled { background: #888; cursor: not-allowed; }
+    .package-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+      margin: 0 0 1.5rem;
+    }
+    .package-option {
+      position: relative;
+      border: 1.5px solid #d8d2c4;
+      padding: 1.1rem 1.15rem 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .package-option:hover {
+      border-color: #1a2a28;
+      transform: translateY(-1px);
+    }
+    .package-option.selected {
+      border-color: var(--accent, #c89a3c);
+      background: #fffbe8;
+      border-width: 2px;
+      padding: calc(1.1rem - 0.5px) calc(1.15rem - 0.5px) calc(1rem - 0.5px);
+    }
+    .package-option.full-width { grid-column: 1 / -1; }
+
+    .pkg-badge {
+      position: absolute;
+      top: -8px;
+      left: 1rem;
+      background: var(--accent, #c89a3c);
+      color: #fff;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 2px;
+    }
+    .pkg-badge.free {
+      background: #2c8a4d;
+    }
+    .pkg-badge.popular {
+      background: #1a2a28;
+    }
+
+    .pkg-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .pkg-name {
+      font-family: Georgia, serif;
+      font-weight: 600;
+      color: #1a2a28;
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+    .pkg-price {
+      font-family: Georgia, serif;
+      font-size: 1.35rem;
+      color: #1a2a28;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pkg-price.free { color: #2c8a4d; }
+    .pkg-old-price {
+      font-size: 0.85rem;
+      color: #999;
+      text-decoration: line-through;
+      margin-right: 0.4rem;
+      font-weight: 400;
+    }
+    .pkg-features {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0;
+      font-size: 0.82rem;
+      color: #555;
+      line-height: 1.55;
+    }
+    .pkg-features li {
+      padding-left: 1.15rem;
+      position: relative;
+      margin-bottom: 0.15rem;
+    }
+    .pkg-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent, #c89a3c);
+      font-weight: 700;
+    }
+    .pkg-radio { display: none; }
+
+    .modal .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #ece8de;
+      align-items: center;
+    }
+    .modal .btn-cancel {
+      background: none;
+      color: #888;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 500;
+      flex: 0;
+      transition: color 0.15s;
+    }
+    .modal .btn-cancel:hover { color: #1a2a28; }
+    .modal .btn-confirm {
+      background: #1a2a28;
+      color: #fff;
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 3px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      flex: 1;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .modal .btn-confirm:hover:not(:disabled) {
+      background: var(--accent, #c89a3c);
+      transform: translateY(-1px);
+    }
+    .modal .btn-confirm:disabled {
+      background: #d8d2c4;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      .package-options { grid-template-columns: 1fr; }
+      .modal { padding: 1.75rem 1.5rem 1.5rem; }
+    }
+
+    /* Dark mode overrides for modal */
+    [data-theme="dark"] .modal h3 { color: #f0f0f0; }
+    [data-theme="dark"] .modal .modal-sub { color: #aaa; }
+    [data-theme="dark"] .package-option { border-color: #2d3548; background: #1f2530; }
+    [data-theme="dark"] .package-option:hover { border-color: #c89a3c; }
+    [data-theme="dark"] .package-option.selected { background: rgba(200, 154, 60, 0.1); border-color: var(--accent, #c89a3c); }
+    [data-theme="dark"] .pkg-name { color: #f0f0f0; }
+    [data-theme="dark"] .pkg-price { color: #f0f0f0; }
+    [data-theme="dark"] .pkg-features { color: #aaa; }
+    [data-theme="dark"] .modal .btn-row { border-top-color: #2d3548; }
+    [data-theme="dark"] .modal .btn-cancel { color: #999; }
+    [data-theme="dark"] .modal .btn-cancel:hover { color: #f0f0f0; }
+    [data-theme="dark"] .modal .btn-confirm { background: var(--accent, #c89a3c); color: #1a2a28; }
+    [data-theme="dark"] .modal .btn-confirm:hover:not(:disabled) { background: #d4a649; }
+    [data-theme="dark"] .modal .btn-confirm:disabled { background: #2d3548; color: #666; }
 
     .start-screen { background: #fff; max-width: 600px; margin: 4rem auto; padding: 3rem 2rem; border: 1px solid #d8d2c4; text-align: center; }
     .start-screen h1 { font-family: Georgia, serif; color: #1a2a28; }
@@ -206,33 +371,69 @@
   <div class="modal-overlay" id="submitModal">
     <div class="modal">
       <h3>Writing'i Gönder</h3>
-      <p>Yazıların kaydedildi. Uzman geri bildirim almak istediğin paketi seç. Geri bildirim 3 iş günü içinde verilir.</p>
+      <p class="modal-sub">Yazıların kaydedildi. Geri bildirim için bir paket seç, 3 iş günü içinde puanlama ve gelişim önerileri panele düşer.</p>
 
       <div class="package-options">
         <label class="package-option" data-pkg="task1_only">
-          <div class="pkg-head"><span class="pkg-name">Sadece Task 1</span><span class="pkg-price">₺300</span></div>
-          <div class="pkg-desc">Task 1 için Task Achievement, Coherence, Lexical Resource ve Grammar üzerinden detaylı band ve gelişim önerileri.</div>
+          <div class="pkg-head">
+            <span class="pkg-name">Sadece Task 1</span>
+            <span class="pkg-price">₺300</span>
+          </div>
+          <ul class="pkg-features">
+            <li>Task Achievement</li>
+            <li>Coherence and Cohesion</li>
+            <li>Lexical Resource</li>
+            <li>Grammatical Range</li>
+          </ul>
           <input type="radio" name="package" value="task1_only" class="pkg-radio">
         </label>
+
         <label class="package-option" data-pkg="task2_only">
-          <div class="pkg-head"><span class="pkg-name">Sadece Task 2</span><span class="pkg-price">₺300</span></div>
-          <div class="pkg-desc">Task 2 için Task Response, Coherence, Lexical Resource ve Grammar üzerinden detaylı band ve gelişim önerileri.</div>
+          <div class="pkg-head">
+            <span class="pkg-name">Sadece Task 2</span>
+            <span class="pkg-price">₺300</span>
+          </div>
+          <ul class="pkg-features">
+            <li>Task Response</li>
+            <li>Coherence and Cohesion</li>
+            <li>Lexical Resource</li>
+            <li>Grammatical Range</li>
+          </ul>
           <input type="radio" name="package" value="task2_only" class="pkg-radio">
         </label>
-        <label class="package-option" data-pkg="both">
-          <div class="pkg-head"><span class="pkg-name">Task 1 + Task 2 Paketi</span><span class="pkg-price">₺500</span></div>
-          <div class="pkg-desc">Her iki task için tam değerlendirme, kombine Writing band score ve karşılaştırmalı analiz. ₺100 indirimli.</div>
+
+        <label class="package-option full-width" data-pkg="both">
+          <span class="pkg-badge popular">Popüler</span>
+          <div class="pkg-head">
+            <span class="pkg-name">Task 1 + Task 2 Paketi</span>
+            <span class="pkg-price"><span class="pkg-old-price">₺600</span>₺500</span>
+          </div>
+          <ul class="pkg-features">
+            <li>İki task için tam değerlendirme</li>
+            <li>Kombine Writing band skoru</li>
+            <li>Task'lar arası karşılaştırmalı analiz</li>
+            <li>₺100 indirim</li>
+          </ul>
           <input type="radio" name="package" value="both" class="pkg-radio">
         </label>
-        <label class="package-option" data-pkg="draft">
-          <div class="pkg-head"><span class="pkg-name">Sadece Kaydet (Ücretsiz)</span><span class="pkg-price">₺0</span></div>
-          <div class="pkg-desc">Yazıların kaydedilir, geri bildirim verilmez. Daha sonra panelden değerlendirme satın alabilirsin.</div>
+
+        <label class="package-option full-width" data-pkg="draft">
+          <span class="pkg-badge free">Ücretsiz</span>
+          <div class="pkg-head">
+            <span class="pkg-name">Sadece Kaydet</span>
+            <span class="pkg-price free">₺0</span>
+          </div>
+          <ul class="pkg-features">
+            <li>Yazıların panelde kaydedilir</li>
+            <li>Geri bildirim verilmez</li>
+            <li>İstersen sonradan panelden satın alabilirsin</li>
+          </ul>
           <input type="radio" name="package" value="draft" class="pkg-radio">
         </label>
       </div>
 
       <div class="btn-row">
-        <button class="btn-cancel" onclick="document.getElementById('submitModal').classList.remove('show')">Devam et</button>
+        <button class="btn-cancel" onclick="document.getElementById('submitModal').classList.remove('show')">İptal</button>
         <button class="btn-confirm" id="confirmSubmit" disabled>Devam Et</button>
       </div>
     </div>

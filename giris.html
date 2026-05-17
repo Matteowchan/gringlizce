@@ -23,35 +23,339 @@
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <style>
-    .login-shell { min-height: calc(100vh - 280px); display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
-    .login-card { background: var(--bg-card, #fff); border: 1px solid var(--line, #D9D2C4); padding: 2.5rem 2rem; max-width: 420px; width: 100%; }
-    .login-card h1 { font-family: var(--font-display, Georgia), serif; font-size: 1.8rem; margin: 0 0 0.4rem; color: var(--text, #1A2230); }
-    .login-card .sub { color: var(--text-muted, #6B6862); font-size: 0.95rem; margin-bottom: 2rem; }
-    .login-card label { display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); margin-bottom: 0.4rem; }
-    .login-card input { width: 100%; background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.85rem 1rem; font-family: var(--font-body, Georgia), serif; font-size: 1rem; color: var(--text, #1A2230); margin-bottom: 1.4rem; transition: border-color 0.2s; }
-    .login-card input:focus { outline: none; border-color: var(--teal, #2C5856); }
-    .login-card .btn-submit { width: 100%; padding: 0.9rem; background: var(--teal, #2C5856); color: #F4EFE3; border: none; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
-    .login-card .btn-submit:hover { opacity: 0.85; }
-    .login-card .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-    .login-card .err { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(179,58,58,0.07); border: 1px solid rgba(179,58,58,0.2); color: #b33a3a; font-size: 0.85rem; }
+    /* ============ LOGIN SHELL — premium two-panel ============ */
+    .login-shell {
+      min-height: calc(100vh - 280px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+    .login-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 6px;
+      max-width: 880px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(26, 34, 48, 0.06);
+    }
+
+    /* Sol panel: marka anlatımı */
+    .login-brand {
+      background: linear-gradient(135deg, #1a2230 0%, #2c5856 100%);
+      color: #F4EFE3;
+      padding: 2.75rem 2.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-brand::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(200, 154, 60, 0.08);
+    }
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      left: -100px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(244, 239, 227, 0.04);
+    }
+    .login-brand .lb-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(244, 239, 227, 0.65);
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 2rem;
+      line-height: 1.2;
+      margin: 0.8rem 0 1rem;
+      letter-spacing: -0.01em;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-title em {
+      font-style: italic;
+      color: #c89a3c;
+      font-weight: 500;
+    }
+    .login-brand .lb-desc {
+      font-family: Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(244, 239, 227, 0.85);
+      margin: 0 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-perks {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-perks li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+      font-size: 0.88rem;
+      color: rgba(244, 239, 227, 0.92);
+      line-height: 1.45;
+    }
+    .login-brand .lb-perks svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      color: #c89a3c;
+      margin-top: 1px;
+    }
+    .login-brand .lb-foot {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: rgba(244, 239, 227, 0.55);
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-foot strong { color: #c89a3c; font-weight: 600; }
+
+    /* Sağ panel: form */
+    .login-form-wrap {
+      padding: 2.75rem 2.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.6rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+    }
+    .auth-tab:hover { color: var(--text); }
+    .auth-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--teal, #2C5856);
+    }
+
+    .login-card h1 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.7rem;
+      margin: 0 0 0.4rem;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.01em;
+    }
+    .login-card .sub {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 1.7rem;
+    }
+    .login-card label {
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      margin-bottom: 0.4rem;
+    }
+    .login-card input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-body, Georgia), serif;
+      font-size: 1rem;
+      color: var(--text, #1A2230);
+      margin-bottom: 1.3rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      border-radius: 3px;
+    }
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 0 0 3px rgba(44, 88, 86, 0.1);
+    }
+    .login-card .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: none;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      border-radius: 3px;
+    }
+    .login-card .btn-submit:hover {
+      background: #234948;
+      transform: translateY(-1px);
+    }
+    .login-card .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-card .err {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(179,58,58,0.07);
+      border: 1px solid rgba(179,58,58,0.2);
+      color: #b33a3a;
+      font-size: 0.85rem;
+      border-radius: 3px;
+    }
     .login-card .err.show { display: block; }
-    .login-card .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
+    .login-card .ok {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(44,88,86,0.07);
+      border: 1px solid rgba(44,88,86,0.2);
+      color: #2C5856;
+      font-size: 0.88rem;
+      border-radius: 3px;
+    }
     .login-card .ok.show { display: block; }
-    .login-card .forgot { text-align: right; margin-top: -0.8rem; margin-bottom: 1.4rem; }
-    .login-card .forgot a { color: var(--text-muted, #6B6862); font-size: 0.82rem; text-decoration: none; }
-    .login-card .forgot a:hover { color: var(--teal, #2C5856); text-decoration: underline; }
-    .login-card .helper { margin-top: 1.8rem; padding-top: 1.5rem; border-top: 1px solid var(--line, #D9D2C4); font-size: 0.85rem; color: var(--text-muted, #6B6862); line-height: 1.6; }
-    .login-card .helper a { color: var(--teal, #2C5856); }
+    .login-card .forgot {
+      text-align: right;
+      margin-top: -0.7rem;
+      margin-bottom: 1.3rem;
+    }
+    .login-card .forgot a {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .login-card .forgot a:hover {
+      color: var(--teal, #2C5856);
+      text-decoration: underline;
+    }
+    .login-card .helper {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line, #D9D2C4);
+      font-size: 0.82rem;
+      color: var(--text-muted, #6B6862);
+      line-height: 1.6;
+    }
+    .login-card .helper a {
+      color: var(--teal, #2C5856);
+      font-weight: 600;
+    }
+
+    @media (max-width: 760px) {
+      .login-card { grid-template-columns: 1fr; }
+      .login-brand { padding: 2rem 1.75rem; }
+      .login-brand .lb-title { font-size: 1.6rem; }
+      .login-brand .lb-desc { margin-bottom: 1.3rem; }
+      .login-brand .lb-perks { display: none; }
+      .login-form-wrap { padding: 2rem 1.75rem 2.25rem; }
+    }
 
     /* Şifremi unuttum modal */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1.5rem; }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 34, 48, 0.55);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.5rem;
+    }
     .modal-backdrop.show { display: flex; }
-    .modal-box { background: var(--bg-card, #fff); border: 1px solid var(--line, #D9D2C4); padding: 2rem; max-width: 420px; width: 100%; }
-    .modal-box h2 { font-family: var(--font-display, Georgia), serif; font-size: 1.4rem; margin: 0 0 0.4rem; }
-    .modal-box .modal-sub { color: var(--text-muted, #6B6862); font-size: 0.9rem; margin-bottom: 1.4rem; }
-    .modal-actions { display: flex; gap: 0.8rem; margin-top: 0.5rem; }
-    .btn-cancel { flex: 1; padding: 0.9rem; background: transparent; color: var(--text-muted, #6B6862); border: 1px solid var(--line, #D9D2C4); font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
-    .btn-cancel:hover { color: var(--text, #1A2230); border-color: var(--text, #1A2230); }
+    .modal-box {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 6px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.2);
+    }
+    .modal-box h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      margin: 0 0 0.4rem;
+      color: var(--text);
+    }
+    .modal-box .modal-sub {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 1.4rem;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: 0.9rem;
+      background: transparent;
+      color: var(--text-muted, #6B6862);
+      border: 1px solid var(--line, #D9D2C4);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-cancel:hover {
+      color: var(--text, #1A2230);
+      border-color: var(--text, #1A2230);
+    }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -130,61 +434,96 @@
 
   <div class="login-shell">
     <div class="login-card">
-      <div class="auth-tabs" style="display: flex; gap: 0; margin-bottom: 1.8rem; border-bottom: 1px solid var(--line);">
-        <button type="button" class="auth-tab active" data-tab="login" style="flex:1; background: none; border: none; padding: 0.8rem 0.5rem; cursor: pointer; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; color: var(--text); border-bottom: 2px solid var(--teal); margin-bottom: -1px;">Giriş Yap</button>
-        <button type="button" class="auth-tab" data-tab="signup" style="flex:1; background: none; border: none; padding: 0.8rem 0.5rem; cursor: pointer; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px;">Kayıt Ol</button>
-      </div>
 
-      <div id="login-pane">
-        <h1>Materyallere Giriş</h1>
-        <p class="sub">E-posta ve şifre ile giriş yap.</p>
+      <aside class="login-brand">
+        <div>
+          <div class="lb-eyebrow">Gri English</div>
+          <h2 class="lb-title">Sınava değil, <em>ustalığa</em> hazırlanan platform.</h2>
+          <p class="lb-desc">SAT, IELTS, TOEFL ve IB için orijinal soru bankası, mock denemeler ve uzman geri bildirim. Hesap aç, tek bir yerden çalışmaya başla.</p>
 
-        <form id="login-form">
-          <label for="u">E-posta</label>
-          <input type="email" id="u" autocomplete="username" required autocapitalize="off" autocorrect="off">
+          <ul class="lb-perks">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Binlerce orijinal SAT, IELTS, TOEFL ve IB sorusu</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Yer imleri, yanlışlarınla ayrı çalışma, ilerleme takibi</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Gri AI mentor &mdash; günlük 10 ücretsiz hak</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>IELTS Writing için uzman geri bildirim seçeneği</span>
+            </li>
+          </ul>
+        </div>
 
-          <label for="p">Şifre</label>
-          <input type="password" id="p" autocomplete="current-password" required>
+        <div class="lb-foot">
+          Açılışa özel <strong>%30 indirim</strong> tüm materyallerde
+        </div>
+      </aside>
 
-          <div class="forgot"><a href="#" id="link-forgot">Şifremi unuttum</a></div>
+      <div class="login-form-wrap">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">Giriş Yap</button>
+          <button type="button" class="auth-tab" data-tab="signup">Kayıt Ol</button>
+        </div>
 
-          <button type="submit" class="btn-submit" id="btn-submit">Giriş Yap</button>
+        <div id="login-pane">
+          <h1>Tekrar hoş geldin</h1>
+          <p class="sub">E-posta ve şifren ile hesabına gir.</p>
 
-          <div class="err" id="err"></div>
-        </form>
+          <form id="login-form">
+            <label for="u">E-posta</label>
+            <input type="email" id="u" autocomplete="username" required autocapitalize="off" autocorrect="off">
 
-        <div class="helper">
-          Hesabın yok mu? Yukarıdaki <b>Kayıt Ol</b> sekmesinden ücretsiz aç. Materyal aldıysan otomatik hesap için gelen maildeki şifreyi kullan.
+            <label for="p">Şifre</label>
+            <input type="password" id="p" autocomplete="current-password" required>
+
+            <div class="forgot"><a href="#" id="link-forgot">Şifremi unuttum</a></div>
+
+            <button type="submit" class="btn-submit" id="btn-submit">Giriş Yap</button>
+
+            <div class="err" id="err"></div>
+          </form>
+
+          <div class="helper">
+            Hesabın yok mu? Yukarıdaki <b>Kayıt Ol</b> sekmesinden ücretsiz aç. Materyal aldıysan otomatik hesabın için gelen maildeki şifreyi kullan.
+          </div>
+        </div>
+
+        <div id="signup-pane" style="display: none;">
+          <h1>Ücretsiz hesap aç</h1>
+          <p class="sub">Soru bankasına ve Gri AI mentor'a günlük 10 ücretsiz hak ile başla.</p>
+
+          <form id="signup-form">
+            <label for="su-name">Ad Soyad</label>
+            <input type="text" id="su-name" autocomplete="name" required>
+
+            <label for="su-email">E-posta</label>
+            <input type="email" id="su-email" autocomplete="email" required autocapitalize="off" autocorrect="off">
+
+            <label for="su-pass">Şifre (en az 8 karakter)</label>
+            <input type="password" id="su-pass" autocomplete="new-password" required minlength="8">
+
+            <label for="su-pass2">Şifre Tekrar</label>
+            <input type="password" id="su-pass2" autocomplete="new-password" required minlength="8">
+
+            <button type="submit" class="btn-submit" id="btn-signup">Hesap Aç</button>
+
+            <div class="err" id="signup-err"></div>
+            <div class="ok" id="signup-ok"></div>
+          </form>
+
+          <div class="helper">
+            Kayıt olarak Gri English'in temel hizmet koşullarını kabul etmiş sayılırsın. Şifre ve e-posta dışında bilgi saklanmaz.
+          </div>
         </div>
       </div>
 
-      <div id="signup-pane" style="display: none;">
-        <h1>Ücretsiz Hesap Aç</h1>
-        <p class="sub">Hesap aç, soru bankasına ve Gri AI mentor'a günlük 10 ücretsiz hak ile başla.</p>
-
-        <form id="signup-form">
-          <label for="su-name">Ad Soyad</label>
-          <input type="text" id="su-name" autocomplete="name" required>
-
-          <label for="su-email">E-posta</label>
-          <input type="email" id="su-email" autocomplete="email" required autocapitalize="off" autocorrect="off">
-
-          <label for="su-pass">Şifre (en az 8 karakter)</label>
-          <input type="password" id="su-pass" autocomplete="new-password" required minlength="8">
-
-          <label for="su-pass2">Şifre Tekrar</label>
-          <input type="password" id="su-pass2" autocomplete="new-password" required minlength="8">
-
-          <button type="submit" class="btn-submit" id="btn-signup">Hesap Aç</button>
-
-          <div class="err" id="signup-err"></div>
-          <div class="ok" id="signup-ok"></div>
-        </form>
-
-        <div class="helper" style="font-size: 0.82rem;">
-          Kayıt olarak Gri English'in temel hizmet koşullarını kabul etmiş sayılırsınız. Şifre ve e-posta dışında bilgi saklanmaz.
-        </div>
-      </div>
     </div>
   </div>
 
@@ -356,8 +695,6 @@
         tabs.forEach(function (t) {
           var isActive = t.dataset.tab === name;
           t.classList.toggle('active', isActive);
-          t.style.color = isActive ? 'var(--text)' : 'var(--text-muted)';
-          t.style.borderBottomColor = isActive ? 'var(--teal)' : 'transparent';
         });
         loginPane.style.display = (name === 'login') ? 'block' : 'none';
         signupPane.style.display = (name === 'signup') ? 'block' : 'none';

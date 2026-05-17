@@ -17,10 +17,16 @@
   <style>
     body { background: #fafaf7; margin: 0; }
 
-    .timer-bar { position: sticky; top: 0; z-index: 99; background: #1a2a28; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
-    .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; }
+    .timer-bar { position: sticky; top: 0; z-index: 99; background: #1a2a28; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; flex: 1; }
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #ff9090; }
+    .timer-bar .timer.paused strong { color: #aaa; }
+    .timer-toggle-btn { border: none; padding: 0.55rem 1.3rem; font-weight: 600; cursor: pointer; border-radius: 2px; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+    .timer-toggle-btn.start { background: #2c8a4d; }
+    .timer-toggle-btn.start:hover { background: #34a05a; }
+    .timer-toggle-btn.stop { background: #b33a3a; }
+    .timer-toggle-btn.stop:hover { background: #c34646; }
     .timer-bar .submit-btn { background: var(--accent, #c89a3c); color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
     .timer-bar .submit-btn:hover { background: #d4a649; }
 
@@ -166,6 +172,7 @@
   <div id="testContainer" style="display:none;">
     <div class="timer-bar">
       <div class="timer" id="timerDisplay">Süre: <strong>60:00</strong></div>
+      <button class="timer-toggle-btn start" id="timerToggleBtn">Başlat</button>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
 
@@ -196,6 +203,10 @@
       test: null, section: null, parts: [], answers: {},
       startedAt: null, duration: 60 * 60, user: null,
       timerInterval: null, finished: false, currentPart: 1,
+      // Timer kontrolü
+      timerStartedAt: null,
+      timerElapsed: 0,
+      timerRunning: false,
     };
 
     async function loadTest() {
@@ -225,6 +236,9 @@
           if (p.answers) state.answers = p.answers;
           if (p.startedAt) state.startedAt = p.startedAt;
           if (p.currentPart) state.currentPart = p.currentPart;
+          if (p.timerStartedAt) state.timerStartedAt = p.timerStartedAt;
+          if (typeof p.timerElapsed === 'number') state.timerElapsed = p.timerElapsed;
+          if (typeof p.timerRunning === 'boolean') state.timerRunning = p.timerRunning;
         } catch (e) {}
       }
 
@@ -521,16 +535,77 @@
 
     function saveLocal() {
       localStorage.setItem('ielts_reading_' + TEST_SLUG, JSON.stringify({
-        answers: state.answers, startedAt: state.startedAt, currentPart: state.currentPart,
+        answers: state.answers,
+        startedAt: state.startedAt,
+        currentPart: state.currentPart,
+        timerStartedAt: state.timerStartedAt,
+        timerElapsed: state.timerElapsed,
+        timerRunning: state.timerRunning
       }));
+    }
+
+    function currentElapsed() {
+      if (state.timerRunning && state.timerStartedAt) {
+        return Math.floor((Date.now() - state.timerStartedAt) / 1000);
+      }
+      return state.timerElapsed || 0;
+    }
+
+    function startTimer() {
+      if (state.timerRunning) return;
+      const elapsed = state.timerElapsed || 0;
+      state.timerStartedAt = Date.now() - elapsed * 1000;
+      state.timerRunning = true;
+      saveLocal();
+      updateTimerUI();
+    }
+
+    function pauseTimer() {
+      if (!state.timerRunning) return;
+      state.timerElapsed = currentElapsed();
+      state.timerStartedAt = null;
+      state.timerRunning = false;
+      saveLocal();
+      updateTimerUI();
+    }
+
+    function updateTimerUI() {
+      const btn = document.getElementById('timerToggleBtn');
+      const t = document.getElementById('timerDisplay');
+      if (state.timerRunning) {
+        btn.textContent = 'Durdur';
+        btn.classList.remove('start');
+        btn.classList.add('stop');
+        t.classList.remove('paused');
+      } else {
+        btn.textContent = state.timerElapsed > 0 ? 'Devam' : 'Başlat';
+        btn.classList.remove('stop');
+        btn.classList.add('start');
+        if (state.timerElapsed > 0) t.classList.add('paused');
+      }
     }
 
     function setupTimer() {
       const d = document.getElementById('timerDisplay').querySelector('strong');
       const t = document.getElementById('timerDisplay');
+      const btn = document.getElementById('timerToggleBtn');
+
+      btn.addEventListener('click', () => {
+        if (state.timerRunning) pauseTimer();
+        else startTimer();
+      });
+
+      updateTimerUI();
+
       state.timerInterval = setInterval(() => {
-        const r = state.duration - Math.floor((Date.now() - state.startedAt) / 1000);
-        if (r <= 0) { d.textContent = '00:00'; t.classList.add('warning'); clearInterval(state.timerInterval); return; }
+        const elapsed = currentElapsed();
+        const r = state.duration - elapsed;
+        if (r <= 0) {
+          d.textContent = '00:00';
+          t.classList.add('warning');
+          if (state.timerRunning) pauseTimer();
+          return;
+        }
         if (r <= 300) t.classList.add('warning');
         d.textContent = String(Math.floor(r/60)).padStart(2,'0') + ':' + String(r%60).padStart(2,'0');
       }, 1000);
@@ -550,7 +625,7 @@
       btn.disabled = true;
 
       const result = gradeTest();
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+      const elapsed = currentElapsed();
 
       const { data: attempt, error } = await sb.from('ielts_attempts').insert({
         user_id: state.user.id, test_id: state.test.id, section: 'reading',

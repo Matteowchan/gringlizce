@@ -222,10 +222,38 @@
     } catch (e) {}
   }
 
+  // =============================================================
+  // NAV AUTH TOGGLE — login olmuş kullanıcı için Giriş → Panelim
+  // Tüm sayfalarda nav'daki giris.html linkini panelim.html'e çevirir
+  // =============================================================
+  async function updateAuthNav() {
+    try {
+      var userRes = await sb.auth.getUser();
+      if (!userRes || !userRes.data || !userRes.data.user) return;
+
+      var inSubdir = location.pathname.indexOf('/urun/') !== -1;
+      var panelimHref = inSubdir ? '../panelim.html' : 'panelim.html';
+
+      document.querySelectorAll('a').forEach(function (a) {
+        var href = a.getAttribute('href') || '';
+        // Login linklerini (giris.html ya da ../giris.html) Panelim'e çevir
+        if (href === 'giris.html' || href === '../giris.html' || href.endsWith('/giris.html')) {
+          // Sadece "Giriş", "Materyal Girişi" gibi nav CTA'larında değiştir;
+          // body içindeki "giriş yap" linklerini etkilemesin diye class kontrolü
+          if (a.classList.contains('btn-nav-cta')) {
+            a.textContent = 'Panelim';
+            a.setAttribute('href', panelimHref);
+          }
+        }
+      });
+    } catch (e) {}
+  }
+
   function startTracking() {
     trackActivity();
     setInterval(trackActivity, ACTIVITY_INTERVAL_MS);
     joinPresence();
+    updateAuthNav();
   }
 
   if (document.readyState === 'loading') {

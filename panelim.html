@@ -131,6 +131,54 @@
       color: var(--text-muted);
       font-style: italic;
     }
+
+    /* ============ USER STATS GRID ============ */
+    html { scroll-behavior: smooth; }
+    .us-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.7rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .us-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 1rem 1.1rem;
+      border-left: 3px solid var(--teal, #2C5856);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    a.us-card { cursor: pointer; }
+    a.us-card:hover {
+      border-left-color: var(--gold, #C89A3C);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .us-card .us-label {
+      font-family: var(--font-ui), Inter, system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .us-card .us-value {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text);
+    }
+    .us-card .us-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+    .us-card.accent-gold { border-left-color: var(--gold, #C89A3C); }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -229,6 +277,41 @@
         </div>
       </div>
     </section>
+
+    <div id="user-stats-area" style="padding: 0 0 2.5rem; display: none;">
+      <div class="us-grid">
+        <div class="us-card">
+          <div class="us-label">Çözülen Soru</div>
+          <div class="us-value" id="us-total">—</div>
+          <div class="us-sub">Toplam cevap</div>
+        </div>
+        <div class="us-card">
+          <div class="us-label">Doğru Oranı</div>
+          <div class="us-value" id="us-rate">—</div>
+          <div class="us-sub" id="us-rate-sub">İlk soruyu çöz</div>
+        </div>
+        <a href="#wrong-answers-area" class="us-card">
+          <div class="us-label">Yanlış</div>
+          <div class="us-value" id="us-wrong">—</div>
+          <div class="us-sub">Tekrar çalış</div>
+        </a>
+        <a href="#bookmarks-area" class="us-card">
+          <div class="us-label">Yer İmi</div>
+          <div class="us-value" id="us-bookmark">—</div>
+          <div class="us-sub">İşaretli soru</div>
+        </a>
+        <a href="#vocab-list-area" class="us-card">
+          <div class="us-label">Kelime</div>
+          <div class="us-value" id="us-vocab">—</div>
+          <div class="us-sub">Listemde</div>
+        </a>
+        <div class="us-card accent-gold">
+          <div class="us-label">Aktif Gün</div>
+          <div class="us-value" id="us-days">—</div>
+          <div class="us-sub">Toplam çalışma</div>
+        </div>
+      </div>
+    </div>
 
     <div id="access-error" class="access-error" style="display:none;"></div>
 
@@ -620,6 +703,49 @@
         '</a>'
       ].join('');
     }
+
+    // ===== User Stats Loader =====
+    (async function loadUserStats() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+
+        var res = await sbCli.rpc('get_user_stats');
+        if (res.error) {
+          console.warn('[user-stats]', res.error.message);
+          return;
+        }
+        var s = res.data || {};
+        var area = document.getElementById('user-stats-area');
+        if (!area) return;
+        area.style.display = 'block';
+
+        var fmt = function (n) { return (n == null) ? '—' : Number(n).toLocaleString('tr-TR'); };
+
+        document.getElementById('us-total').textContent = fmt(s.total_answered);
+        document.getElementById('us-wrong').textContent = fmt(s.wrong_count);
+        document.getElementById('us-bookmark').textContent = fmt(s.bookmark_count);
+        document.getElementById('us-vocab').textContent = fmt(s.vocab_count);
+        document.getElementById('us-days').textContent = fmt(s.active_days);
+
+        var rateEl = document.getElementById('us-rate');
+        var rateSubEl = document.getElementById('us-rate-sub');
+        if (s.total_answered > 0) {
+          var pct = Math.round((s.correct_count / s.total_answered) * 100);
+          rateEl.textContent = '%' + pct;
+          rateSubEl.textContent = fmt(s.correct_count) + ' / ' + fmt(s.total_answered) + ' doğru';
+        } else {
+          rateEl.textContent = '—';
+          rateSubEl.textContent = 'İlk soruyu çöz';
+        }
+      } catch (e) {
+        console.warn('[user-stats] failed:', e);
+      }
+    })();
 
     (async function loadWrongAnswers() {
       try {

@@ -63,31 +63,79 @@
     .modal-box .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
     .modal-box .ok.show { display: block; }
 
-    /* Question list cards (yer imi & yanlış yapılan) */
+    /* Question list - compact row layout + toggle */
+    .qb-toggle-bar {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin: 0 auto 1.2rem;
+      flex-wrap: wrap;
+      max-width: 980px;
+    }
+    .qb-toggle-count {
+      color: var(--text-soft);
+      font-size: 0.9rem;
+    }
+    .qb-toggle-btn {
+      background: none;
+      border: 1px solid var(--line);
+      padding: 0.45rem 1.1rem;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      border-radius: 2px;
+    }
+    .qb-toggle-btn:hover {
+      border-color: var(--gold, #C89A3C);
+      color: var(--text);
+      background: var(--bg-soft);
+    }
+
     .qb-list-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
       max-width: 980px;
       margin: 0 auto;
     }
+    .qb-list-grid.qb-collapsed { display: none; }
+
     .qb-list-card {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 1rem;
       background: var(--bg-card);
       border: 1px solid var(--line);
-      padding: 1rem 1.1rem;
+      padding: 0.7rem 1rem;
       text-decoration: none;
       color: var(--text);
-      transition: border-color 0.2s, transform 0.15s;
+      transition: border-color 0.15s, background 0.15s;
+      border-radius: 3px;
     }
-    .qb-list-card:hover { border-color: var(--gold, #C89A3C); transform: translateY(-2px); }
-    .qb-list-card .qb-head {
+    .qb-list-card:hover {
+      border-color: var(--gold, #C89A3C);
+      background: var(--bg-soft);
+    }
+    .qb-list-card.qb-missing { cursor: default; opacity: 0.55; }
+    .qb-list-card.qb-missing:hover { border-color: var(--line); background: var(--bg-card); }
+
+    .qb-list-card .qb-main {
+      min-width: 0;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      gap: 0.5rem;
+      flex-direction: column;
+      gap: 0.18rem;
+    }
+    .qb-list-card .qb-head-line {
+      display: flex;
+      align-items: baseline;
+      gap: 0.7rem;
+      flex-wrap: wrap;
     }
     .qb-list-card .qb-badge {
       font-family: var(--font-ui), Inter, system-ui, sans-serif;
@@ -96,35 +144,45 @@
       text-transform: uppercase;
       color: var(--teal, #2C5856);
       font-weight: 700;
+      flex-shrink: 0;
+    }
+    .qb-list-card .qb-cat {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 0.96rem;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--text);
+    }
+    .qb-list-card .qb-prompt {
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin: 0;
     }
     .qb-list-card .qb-date {
       font-size: 0.72rem;
       color: var(--text-muted);
       white-space: nowrap;
-    }
-    .qb-list-card .qb-cat {
-      font-family: var(--font-display, Georgia), serif;
-      font-size: 0.98rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-      line-height: 1.3;
-    }
-    .qb-list-card .qb-prompt {
-      font-size: 0.83rem;
-      color: var(--text-soft);
-      line-height: 1.5;
-      margin-bottom: 0.6rem;
-      flex: 1;
+      flex-shrink: 0;
     }
     .qb-list-card .qb-cta {
       font-family: var(--font-ui), Inter, system-ui, sans-serif;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--gold, #C89A3C);
       font-weight: 600;
-      margin-top: auto;
+      flex-shrink: 0;
     }
+    @media (max-width: 600px) {
+      .qb-list-card { grid-template-columns: minmax(0, 1fr) auto; }
+      .qb-list-card .qb-cta { display: none; }
+      .qb-list-card .qb-prompt { display: none; }
+    }
+
     .qb-empty {
       text-align: center;
       padding: 2rem;
@@ -518,8 +576,11 @@
         <h2>Yanlış Yaptıklarım</h2>
         <div class="divider"><span class="dia"></span></div>
       </div>
-      <div id="wrong-answers-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
-      <div id="wrong-answers-grid" class="qb-list-grid"></div>
+      <div class="qb-toggle-bar" id="wrong-answers-bar">
+        <span id="wrong-answers-count" class="qb-toggle-count"></span>
+        <button type="button" class="qb-toggle-btn" data-target="wrong-answers-grid">Listele &darr;</button>
+      </div>
+      <div id="wrong-answers-grid" class="qb-list-grid qb-collapsed"></div>
       <div id="wrong-answers-empty" class="qb-empty" style="display: none;">
         Henüz yanlış cevapladığın soru yok. Soru bankasından çözmeye başla.
       </div>
@@ -531,8 +592,11 @@
         <h2>İşaretli Sorular</h2>
         <div class="divider"><span class="dia"></span></div>
       </div>
-      <div id="bookmarks-count" style="text-align: center; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 1.2rem;"></div>
-      <div id="bookmarks-grid" class="qb-list-grid"></div>
+      <div class="qb-toggle-bar" id="bookmarks-bar">
+        <span id="bookmarks-count" class="qb-toggle-count"></span>
+        <button type="button" class="qb-toggle-btn" data-target="bookmarks-grid">Listele &darr;</button>
+      </div>
+      <div id="bookmarks-grid" class="qb-list-grid qb-collapsed"></div>
       <div id="bookmarks-empty" class="qb-empty" style="display: none;">
         Henüz yer imi eklemedin. Soru bankasında bir soruyu açtığında üst köşedeki yer imi butonuna bas.
       </div>
@@ -834,21 +898,23 @@
     function renderQuestionCard(q, date, type) {
       var examLabels = { sat: 'SAT', ielts: 'IELTS', toefl: 'TOEFL', ib: 'IB', ydt: 'YDT', yds: 'YDS', 'yds-yokdil': 'YDS' };
       var exam = examLabels[q.exam_type] || (q.exam_type || '').toUpperCase();
-      var section = q.section ? ' · ' + q.section.toUpperCase() : '';
+      var sectionLabel = q.section ? ' · ' + q.section.toUpperCase() : '';
       var subcat = humanizeSubcat(q.subcategory);
       var promptText = (q.prompt || '').replace(/<[^>]*>/g, '').trim();
-      var preview = promptText.slice(0, 110) + (promptText.length > 110 ? '…' : '');
+      var preview = promptText.slice(0, 90) + (promptText.length > 90 ? '…' : '');
       var dateStr = formatRelativeDate(date);
       var cta = type === 'wrong' ? 'Tekrar Çöz' : 'Aç';
 
       return [
         '<a href="soru.html?q=' + encodeURIComponent(q.slug) + '" class="qb-list-card">',
-        '  <div class="qb-head">',
-        '    <span class="qb-badge">' + escHtmlPanel(exam + section) + '</span>',
-        '    <span class="qb-date">' + escHtmlPanel(dateStr) + '</span>',
+        '  <div class="qb-main">',
+        '    <div class="qb-head-line">',
+        '      <span class="qb-badge">' + escHtmlPanel(exam + sectionLabel) + '</span>',
+        '      <span class="qb-cat">' + escHtmlPanel(subcat) + '</span>',
+        '    </div>',
+        preview ? '    <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>' : '',
         '  </div>',
-        '  <div class="qb-cat">' + escHtmlPanel(subcat) + '</div>',
-        '  <div class="qb-prompt">' + escHtmlPanel(preview) + '</div>',
+        '  <span class="qb-date">' + escHtmlPanel(dateStr) + '</span>',
         '  <span class="qb-cta">' + cta + ' &rsaquo;</span>',
         '</a>'
       ].join('');
@@ -898,19 +964,31 @@
     })();
 
     function renderMissingCard(slug, date, type) {
-      var cta = type === 'wrong' ? 'Soru bulunamadı' : 'Soru bulunamadı';
       return [
-        '<div class="qb-list-card" style="opacity: 0.55; cursor: default;">',
-        '  <div class="qb-head">',
-        '    <span class="qb-badge" style="color: var(--text-muted);">—</span>',
-        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '<div class="qb-list-card qb-missing">',
+        '  <div class="qb-main">',
+        '    <div class="qb-head-line">',
+        '      <span class="qb-badge" style="color: var(--text-muted);">—</span>',
+        '      <span class="qb-cat" style="color: var(--text-muted);">Bu soru artık aktif değil</span>',
+        '    </div>',
+        '    <p class="qb-prompt">' + escHtmlPanel(slug) + '</p>',
         '  </div>',
-        '  <div class="qb-cat">Bu soru artık aktif değil</div>',
-        '  <div class="qb-prompt">' + escHtmlPanel(slug) + '</div>',
-        '  <span class="qb-cta" style="color: var(--text-muted);">' + cta + '</span>',
+        '  <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '  <span class="qb-cta" style="color: var(--text-muted);">—</span>',
         '</div>'
       ].join('');
     }
+
+    // Toggle (Listele / Gizle) — delegated handler for both sections
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.qb-toggle-btn');
+      if (!btn) return;
+      var targetId = btn.dataset.target;
+      var grid = document.getElementById(targetId);
+      if (!grid) return;
+      var isCollapsed = grid.classList.toggle('qb-collapsed');
+      btn.innerHTML = isCollapsed ? 'Listele &darr;' : 'Gizle &uarr;';
+    });
 
     (async function loadWrongAnswers() {
       try {
@@ -930,6 +1008,7 @@
           .limit(60);
 
         var elArea = document.getElementById('wrong-answers-area');
+        var elBar = document.getElementById('wrong-answers-bar');
         var elGrid = document.getElementById('wrong-answers-grid');
         var elCount = document.getElementById('wrong-answers-count');
         var elEmpty = document.getElementById('wrong-answers-empty');
@@ -940,10 +1019,12 @@
 
         if (rows.length === 0) {
           elEmpty.style.display = 'block';
+          if (elBar) elBar.style.display = 'none';
           return;
         }
 
         elEmpty.style.display = 'none';
+        if (elBar) elBar.style.display = 'flex';
         elCount.textContent = rows.length + ' soru tekrar çalışmayı bekliyor';
 
         var slugs = rows.map(function (r) { return r.question_slug; });
@@ -981,6 +1062,7 @@
           .limit(60);
 
         var elArea = document.getElementById('bookmarks-area');
+        var elBar = document.getElementById('bookmarks-bar');
         var elGrid = document.getElementById('bookmarks-grid');
         var elCount = document.getElementById('bookmarks-count');
         var elEmpty = document.getElementById('bookmarks-empty');
@@ -991,10 +1073,12 @@
 
         if (rows.length === 0) {
           elEmpty.style.display = 'block';
+          if (elBar) elBar.style.display = 'none';
           return;
         }
 
         elEmpty.style.display = 'none';
+        if (elBar) elBar.style.display = 'flex';
         elCount.textContent = rows.length + ' soru işaretli';
 
         var slugs = rows.map(function (r) { return r.question_slug; });

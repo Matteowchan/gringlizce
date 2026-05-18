@@ -119,9 +119,9 @@
       <div class="divider"><span class="dia"></span></div>
       <p class="lead">Tam deneme veya bölüm bazlı çalış. Listening, Reading ve Writing için Cambridge formatında zamanlamalı simülasyon.</p>
       <div class="stats">
-        <div><span class="s-num">3</span><span class="s-lbl">Tam Deneme</span></div>
+        <div><span class="s-num" id="ieltsTestCount">3</span><span class="s-lbl">Tam Deneme</span></div>
         <div><span class="s-num">3</span><span class="s-lbl">Bölüm</span></div>
-        <div><span class="s-num">120+</span><span class="s-lbl">Soru</span></div>
+        <div><span class="s-num" id="ieltsQuestionCount">120+</span><span class="s-lbl">Soru</span></div>
       </div>
     </div>
   </section>
@@ -217,6 +217,68 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    (async function loadIeltsHubStats() {
+      const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+      // supabase-js defer ile gelir, bekle
+      const start = Date.now();
+      while (!window.supabase && Date.now() - start < 5000) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      if (!window.supabase) return;
+
+      let sb;
+      try {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } catch (e) {
+        console.warn('[ielts-hub] client init hatasi', e);
+        return;
+      }
+
+      // Yayinda olan testler
+      try {
+        const { count: testCount } = await sb
+          .from('ielts_tests')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_published', true);
+        const tEl = document.getElementById('ieltsTestCount');
+        if (tEl && typeof testCount === 'number') tEl.textContent = testCount;
+      } catch (e) {
+        console.warn('[ielts-hub] test count hatasi', e);
+      }
+
+      // Toplam soru sayisi (yayindaki testlere ait)
+      try {
+        const { data: tests } = await sb
+          .from('ielts_tests')
+          .select('id')
+          .eq('is_published', true);
+        const testIds = (tests || []).map(t => t.id);
+        if (testIds.length === 0) return;
+
+        const { data: sections } = await sb
+          .from('ielts_sections')
+          .select('id, ielts_parts(ielts_question_groups(ielts_questions(id)))')
+          .in('test_id', testIds);
+
+        let q = 0;
+        (sections || []).forEach(sec => {
+          (sec.ielts_parts || []).forEach(p => {
+            (p.ielts_question_groups || []).forEach(g => {
+              q += (g.ielts_questions || []).length;
+            });
+          });
+        });
+        const qEl = document.getElementById('ieltsQuestionCount');
+        if (qEl && q > 0) qEl.textContent = q;
+      } catch (e) {
+        console.warn('[ielts-hub] soru sayisi hatasi', e);
+      }
+    })();
+  </script>
 
 </body>
 </html>

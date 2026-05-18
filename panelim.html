@@ -64,6 +64,19 @@
     .modal-box .ok { display: none; margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(44,88,86,0.07); border: 1px solid rgba(44,88,86,0.2); color: #2C5856; font-size: 0.9rem; }
     .modal-box .ok.show { display: block; }
 
+    /* Reset modal: tehlikeli aksiyon, kırmızı buton */
+    .reset-options { margin: 0.6rem 0 1.2rem; }
+    .reset-option { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.6rem 0; cursor: pointer; }
+    .reset-option input[type=checkbox] { margin-top: 0.25rem; cursor: pointer; flex-shrink: 0; }
+    .reset-option .ro-label { font-family: var(--font-body, Georgia), serif; font-size: 0.95rem; color: var(--text, #1A2230); margin: 0; }
+    .reset-option .ro-hint { display: block; font-size: 0.8rem; color: var(--text-muted, #6B6862); margin-top: 0.15rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; letter-spacing: 0; text-transform: none; font-weight: 400; }
+    .reset-confirm { margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(179,58,58,0.05); border: 1px solid rgba(179,58,58,0.2); border-radius: 2px; }
+    .reset-confirm label { letter-spacing: 0 !important; text-transform: none !important; font-size: 0.85rem !important; font-weight: 400 !important; color: var(--text, #1A2230) !important; margin-bottom: 0.4rem !important; font-family: var(--font-body, Georgia), serif !important; }
+    .reset-confirm input { margin-bottom: 0 !important; }
+    .btn-danger { flex: 1; padding: 0.9rem; background: #b33a3a; color: #F4EFE3; border: none; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
+    .btn-danger:hover { background: #9a3030; }
+    .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+
     /* Question list - compact row layout + toggle */
     .qb-toggle-bar {
       display: none;
@@ -659,6 +672,7 @@
           <p class="sub">Satın aldığınız materyallere aşağıdan erişebilirsiniz.</p>
         </div>
         <div class="panel-actions">
+          <button class="btn-action" id="btn-reset-progress">İlerlememi Sıfırla</button>
           <button class="btn-action" id="btn-change-pw">Şifre Değiştir</button>
           <button class="btn-action" onclick="doLogout()">Çıkış Yap</button>
         </div>
@@ -839,6 +853,53 @@
 
         <div class="err" id="pw-err"></div>
         <div class="ok" id="pw-ok"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- İlerlemeyi sıfırla modal -->
+  <div class="modal-backdrop" id="modal-reset">
+    <div class="modal-box">
+      <h2>İlerlememi Sıfırla</h2>
+      <p class="modal-sub">Aşağıdan sıfırlamak istediklerinizi seçin. Bu işlem geri alınamaz.</p>
+
+      <form id="reset-form">
+        <div class="reset-options">
+          <label class="reset-option">
+            <input type="checkbox" id="reset-answers" checked>
+            <span>
+              <span class="ro-label">Çözülen sorular ve doğru oranı</span>
+              <span class="ro-hint">Tüm soru cevaplarınız, doğru/yanlış kayıtlarınız silinir. Soru bankası baştan başlar.</span>
+            </span>
+          </label>
+          <label class="reset-option">
+            <input type="checkbox" id="reset-bookmarks" checked>
+            <span>
+              <span class="ro-label">Yer imleri</span>
+              <span class="ro-hint">Yer imine eklediğiniz tüm sorular listeden çıkarılır.</span>
+            </span>
+          </label>
+          <label class="reset-option">
+            <input type="checkbox" id="reset-vocab">
+            <span>
+              <span class="ro-label">Kelime listesi</span>
+              <span class="ro-hint">Sözlüğe kaydettiğiniz tüm kelimeler silinir. Varsayılan kapalı.</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="reset-confirm">
+          <label for="reset-confirm-text">Onay için aşağıya <strong>SIFIRLA</strong> yazın</label>
+          <input type="text" id="reset-confirm-text" autocomplete="off" placeholder="SIFIRLA">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="btn-reset-cancel">Vazgeç</button>
+          <button type="submit" class="btn-danger" id="btn-reset-submit" disabled>Sıfırla</button>
+        </div>
+
+        <div class="err" id="reset-err"></div>
+        <div class="ok" id="reset-ok"></div>
       </form>
     </div>
   </div>
@@ -1519,6 +1580,121 @@
         modal.classList.remove('show');
         okBox.classList.remove('show');
       }, 2000);
+    });
+
+    // ===== İlerlemeyi Sıfırla =====
+    var rModal = document.getElementById('modal-reset');
+    var rConfirmInput = document.getElementById('reset-confirm-text');
+    var rSubmit = document.getElementById('btn-reset-submit');
+
+    function rResetUi() {
+      document.getElementById('reset-err').classList.remove('show');
+      document.getElementById('reset-ok').classList.remove('show');
+      document.getElementById('reset-answers').checked = true;
+      document.getElementById('reset-bookmarks').checked = true;
+      document.getElementById('reset-vocab').checked = false;
+      rConfirmInput.value = '';
+      rSubmit.disabled = true;
+      rSubmit.textContent = 'Sıfırla';
+    }
+
+    document.getElementById('btn-reset-progress').addEventListener('click', function () {
+      rResetUi();
+      rModal.classList.add('show');
+    });
+
+    document.getElementById('btn-reset-cancel').addEventListener('click', function () {
+      rModal.classList.remove('show');
+    });
+
+    rModal.addEventListener('click', function (e) {
+      if (e.target === rModal) rModal.classList.remove('show');
+    });
+
+    // Onay metni doğru yazılınca butonu aktifleştir
+    rConfirmInput.addEventListener('input', function () {
+      rSubmit.disabled = rConfirmInput.value.trim().toUpperCase() !== 'SIFIRLA';
+    });
+
+    document.getElementById('reset-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var errBox = document.getElementById('reset-err');
+      var okBox = document.getElementById('reset-ok');
+      errBox.classList.remove('show');
+      okBox.classList.remove('show');
+
+      var doAnswers = document.getElementById('reset-answers').checked;
+      var doBookmarks = document.getElementById('reset-bookmarks').checked;
+      var doVocab = document.getElementById('reset-vocab').checked;
+
+      if (!doAnswers && !doBookmarks && !doVocab) {
+        errBox.textContent = 'En az bir kategori seçmelisiniz.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      if (rConfirmInput.value.trim().toUpperCase() !== 'SIFIRLA') {
+        errBox.textContent = 'Onay için SIFIRLA yazmanız gerekiyor.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      rSubmit.disabled = true;
+      rSubmit.textContent = 'Siliniyor...';
+
+      try {
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) {
+          throw new Error('Oturum bulunamadı.');
+        }
+        var userId = sess.data.session.user.id;
+
+        var deletedParts = [];
+
+        if (doAnswers) {
+          var d1 = await sbCli.from('user_answers').delete().eq('user_id', userId);
+          if (d1.error) throw d1.error;
+          deletedParts.push('cevaplar');
+        }
+        if (doBookmarks) {
+          var d2 = await sbCli.from('user_bookmarks').delete().eq('user_id', userId);
+          if (d2.error) throw d2.error;
+          deletedParts.push('yer imleri');
+        }
+        if (doVocab) {
+          var d3 = await sbCli.from('user_vocab').delete().eq('user_id', userId);
+          if (d3.error) throw d3.error;
+          deletedParts.push('kelime listesi');
+        }
+
+        // sessionStorage temizliği (set order cache vb.)
+        try {
+          var toRemove = [];
+          for (var i = 0; i < sessionStorage.length; i++) {
+            var k = sessionStorage.key(i);
+            if (k && (k.indexOf('gri.set.') === 0 || k.indexOf('gri.answers.') === 0)) {
+              toRemove.push(k);
+            }
+          }
+          toRemove.forEach(function (k) { sessionStorage.removeItem(k); });
+        } catch (e) { /* sessions storage ignored */ }
+
+        okBox.textContent = 'Sıfırlama tamamlandı (' + deletedParts.join(', ') + '). Sayfa yeniden yükleniyor...';
+        okBox.classList.add('show');
+
+        setTimeout(function () {
+          window.location.reload();
+        }, 1500);
+      } catch (err) {
+        console.error('[reset]', err);
+        errBox.textContent = 'Sıfırlama başarısız oldu: ' + (err.message || 'Bilinmeyen hata');
+        errBox.classList.add('show');
+        rSubmit.disabled = false;
+        rSubmit.textContent = 'Sıfırla';
+      }
     });
   </script>
 

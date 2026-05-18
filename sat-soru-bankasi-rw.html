@@ -506,12 +506,13 @@
 
     async function loadCounts() {
       try {
-        const { data, error } = await supabase
+        const { data, count, error } = await supabase
           .from('questions')
-          .select('subcategory')
+          .select('subcategory', { count: 'exact' })
           .eq('active', true)
           .eq('exam_type', 'sat')
-          .eq('section', 'rw');
+          .eq('section', 'rw')
+          .range(0, 99999);
 
         if (error) {
           console.error('Soru sayısı çekilirken hata:', error);
@@ -521,9 +522,9 @@
           return;
         }
 
-        // Toplam soru sayısı banner'a
+        // Toplam soru sayısı banner'a (count header — 1000 limit'inden etkilenmez)
         const totalEl = document.getElementById('qbTotalCount');
-        if (totalEl) totalEl.textContent = data.length;
+        if (totalEl) totalEl.textContent = (count ?? data.length);
 
         // Group by subcategory
         const counts = {};

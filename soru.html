@@ -1959,24 +1959,37 @@
       const slug = params.get('q');
       const id = params.get('id');
       const subcatParam = params.get('subcategory');
+      const subcatParamAll = params.getAll('subcategory'); // for backward compat: ?subcategory=A&subcategory=B&...
       const subcatsParam = params.get('subcategories');
       const shuffleParam = params.get('shuffle') === '1';
 
       // Determine subcategory list defining the set (if any)
       let subcatList = [];
-      if (subcatsParam) subcatList = subcatsParam.split(',').map(s => s.trim()).filter(Boolean);
-      else if (subcatParam) subcatList = [subcatParam];
+      if (subcatsParam) {
+        subcatList = subcatsParam.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (subcatParamAll.length > 1) {
+        // Backward-compat: legacy URLs with repeated ?subcategory=X&subcategory=Y
+        subcatList = subcatParamAll.map(s => s.trim()).filter(Boolean);
+      } else if (subcatParam) {
+        subcatList = [subcatParam];
+      }
 
       // Build SET_URL_PARAMS to preserve across navigation
+      // Always normalize to subcategories=A,B,C form (modern, comma-separated)
       SET_URL_PARAMS = '';
-      if (subcatsParam) SET_URL_PARAMS = '&subcategories=' + encodeURIComponent(subcatsParam);
-      else if (subcatParam) SET_URL_PARAMS = '&subcategory=' + encodeURIComponent(subcatParam);
+      if (subcatList.length > 1) {
+        SET_URL_PARAMS = '&subcategories=' + encodeURIComponent(subcatList.join(','));
+      } else if (subcatList.length === 1) {
+        SET_URL_PARAMS = '&subcategory=' + encodeURIComponent(subcatList[0]);
+      }
       if (shuffleParam) SET_URL_PARAMS += '&shuffle=1';
 
       // SET_KEY identifies this set in sessionStorage
       SET_KEY = subcatList.length > 0
         ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '')
         : null;
+
+      console.log('[soru.html] set params:', { subcatList, shuffleParam, slug });
 
       let currentQuestion = null;
       let setSlugs = null;   // ordered list of slugs in this set

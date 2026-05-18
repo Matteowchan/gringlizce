@@ -491,11 +491,19 @@
       margin: 0 0 0.55rem;
       color: var(--cat-accent);
     }
-    .exp-step p {
+    .exp-step p,
+    .exp-step .exp-body p {
       font-size: 0.93rem;
       line-height: 1.65;
       color: var(--text-soft);
       margin: 0 0 0.6rem;
+    }
+    .exp-step .exp-body p:last-child {
+      margin-bottom: 0;
+    }
+    .exp-step .exp-body strong {
+      color: var(--text);
+      font-weight: 600;
     }
     .exp-step blockquote {
       margin: 0.7rem 0;
@@ -1802,7 +1810,7 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
       // Then selectively un-escape allowed tags
-      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br'];
+      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div'];
       allowed.forEach(function (tag) {
         var openRe = new RegExp('&lt;' + tag + '&gt;', 'gi');
         var closeRe = new RegExp('&lt;/' + tag + '&gt;', 'gi');
@@ -2340,7 +2348,7 @@
         const stepsHtml = (q.explanations.answer.steps || []).map(step => `
           <div class="exp-step">
             <h4>${esc(step.title || '')}</h4>
-            ${step.body ? `<p>${safeHtml(step.body)}</p>` : ''}
+            ${step.body ? `<div class="exp-body">${safeHtml(step.body)}</div>` : ''}
             ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
           </div>
         `).join('');
@@ -2374,7 +2382,7 @@
           const stepsHtml = (explanation.steps || []).map(step => `
             <div class="exp-step">
               <h4>${esc(step.title || '')}</h4>
-              ${step.body ? `<p>${safeHtml(step.body)}</p>` : ''}
+              ${step.body ? `<div class="exp-body">${safeHtml(step.body)}</div>` : ''}
               ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
             </div>
           `).join('');

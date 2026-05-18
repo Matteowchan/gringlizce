@@ -26,8 +26,12 @@
   var css = [
     '.q-grid.show-gri:not(.show-explanation) { grid-template-columns: 1fr 1fr 1fr; }',
     '.q-grid.show-explanation.show-gri { grid-template-columns: 1fr 1fr 1fr 1fr; }',
+    /* no-texts (YDS, kelime tipi) varken passage sütunu yok — 1 az sütun */
+    '.q-grid.no-texts.show-gri:not(.show-explanation) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); justify-content: stretch; max-width: 1200px; margin-left: auto; margin-right: auto; }',
+    '.q-grid.no-texts.show-explanation.show-gri { grid-template-columns: 1fr 1fr 1fr; max-width: 1400px; margin-left: auto; margin-right: auto; }',
     '@media (max-width: 1000px) {',
     '  .q-grid.show-gri, .q-grid.show-explanation.show-gri { grid-template-columns: 1fr; }',
+    '  .q-grid.no-texts.show-gri, .q-grid.no-texts.show-explanation.show-gri { grid-template-columns: 1fr; }',
     '}',
     '.q-btn.gri-trigger-btn { gap: 0.4rem; }',
     '.gri-trigger-btn .gri-trigger-icon {',

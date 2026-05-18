@@ -299,12 +299,20 @@
       </a>
       <nav>
         <ul class="nav-links">
-          <li><a href="sat.html">SAT</a></li>
-          <li><a href="ielts.html" class="active">IELTS</a></li>
-          <li><a href="toefl.html">TOEFL</a></li>
-          <li><a href="ib.html">IB</a></li>
-          <li><a href="ydt.html">YDT</a></li>
-          <li><a href="yds.html">YDS/YÖKDİL</a></li>
+          <li class="nav-dropdown" data-dropdown="exams">
+            <a href="sat.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Sınavlar</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="sat.html">SAT</a></li>
+              <li><a href="ielts.html">IELTS</a></li>
+              <li><a href="toefl.html">TOEFL</a></li>
+              <li><a href="ib.html">IB</a></li>
+              <li><a href="ydt.html">YDT</a></li>
+              <li><a href="yds.html">YDS/YÖKDİL</a></li>
+            </ul>
+          </li>
           <li class="nav-dropdown" data-dropdown="bank">
             <a href="soru-bankasi.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
               <span>Soru Bankası</span>
@@ -350,7 +358,7 @@
             </ul>
           </li>
           <li><a href="iletisim.html">İletişim</a></li>
-          <li><a href="giris.html" class="btn-nav-cta">Giriş</a></li>
+          <li id="navUserMount" class="nav-user-mount"></li>
         </ul>
       </nav>
     </div>
@@ -541,38 +549,60 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Supabase script defer ile geç gelebilir — bekle
-      async function waitForSupabase(maxWait = 5000) {
-        const start = Date.now();
-        while (!window.supabase && Date.now() - start < maxWait) {
-          await new Promise(r => setTimeout(r, 50));
+      const showError = (msg) => {
+        const l = document.getElementById('loading');
+        if (l) {
+          l.style.display = 'block';
+          l.style.color = '#b45046';
+          l.style.whiteSpace = 'pre-wrap';
+          l.textContent = '[Hata] ' + msg;
         }
-        return !!window.supabase;
-      }
+        console.error('[ielts-bolum-calisma]', msg);
+      };
 
-      const ready = await waitForSupabase();
-      if (!ready) {
-        document.getElementById('loading').textContent = 'Bağlantı hatası — sayfayı yenilemeyi dene';
-        return;
-      }
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      try {
+        // Supabase script defer ile geç gelebilir — bekle
+        async function waitForSupabase(maxWait = 5000) {
+          const start = Date.now();
+          while (!window.supabase && Date.now() - start < maxWait) {
+            await new Promise(r => setTimeout(r, 50));
+          }
+          return !!window.supabase;
+        }
 
-      const params = new URLSearchParams(window.location.search);
-      const bolum = params.get('bolum');
+        const ready = await waitForSupabase();
+        if (!ready) {
+          return showError('Supabase kütüphanesi yüklenmedi (CDN bloklanmış olabilir)');
+        }
 
-      const { data: { user } } = await sb.auth.getUser();
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const params = new URLSearchParams(window.location.search);
+        const bolum = params.get('bolum');
 
-      if (!user) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('authWarning').style.display = 'block';
-        document.getElementById('step1').style.display = 'block';
-        return;
-      }
+        let user = null;
+        try {
+          const r = await sb.auth.getUser();
+          user = r.data?.user || null;
+        } catch (e) {
+          return showError('Giriş kontrolü başarısız: ' + (e.message || String(e)));
+        }
 
-      if (bolum && SKILL_META[bolum]) {
-        await renderStep2(sb, user, bolum);
-      } else {
-        await renderStep1(sb, user);
+        if (!user) {
+          document.getElementById('loading').style.display = 'none';
+          const aw = document.getElementById('authWarning');
+          const s1 = document.getElementById('step1');
+          if (aw) aw.style.display = 'block';
+          if (s1) s1.style.display = 'block';
+          return;
+        }
+
+        if (bolum && SKILL_META && SKILL_META[bolum]) {
+          await renderStep2(sb, user, bolum);
+        } else {
+          await renderStep1(sb, user);
+        }
+      } catch (e) {
+        showError((e && e.message) ? e.message : String(e));
       }
     });
 

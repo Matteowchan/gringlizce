@@ -393,6 +393,7 @@
 
     .exp-tabs {
       display: flex; gap: 0.3rem;
+      flex-wrap: wrap;
       margin-bottom: 1.3rem;
       border-bottom: 1px solid var(--line);
     }
@@ -2302,9 +2303,9 @@
 
       // Detect explanation format:
       //   "single"  → explanations.answer.steps  (one solution path, no per-option tabs)
-      //   "perOpt"  → explanations.A/B/C/D.steps (one explanation per option)
-      const hasPerOptExp = q.explanations && (
-        q.explanations.A || q.explanations.B || q.explanations.C || q.explanations.D
+      //   "perOpt"  → explanations.{letter}.steps (one explanation per option, A-E or more)
+      const hasPerOptExp = q.explanations && q.options && q.options.some(o =>
+        q.explanations[o.letter]
       );
       const hasSingleExp = q.explanations && q.explanations.answer && q.explanations.answer.steps;
 
@@ -2333,7 +2334,7 @@
           </div>
         `;
       } else {
-        // PER-OPTION EXPLANATION MODE — A/B/C/D tabs
+        // PER-OPTION EXPLANATION MODE — one tab per option (A-E or any count)
         tabsEl.style.display = '';
         tabsEl.innerHTML = q.options.map(opt => `
           <button class="exp-tab${opt.letter === correctLetter ? ' active' : ''}" data-opt="${esc(opt.letter)}">

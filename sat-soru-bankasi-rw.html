@@ -200,10 +200,9 @@
   <section style="padding: 1rem 0 4rem;">
     <div class="wrap" style="max-width: 880px;">
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 01</span>
+        <div class="qb-category-head" data-cat-key="craft_structure">
           <h2 lang="en">Craft and Structure</h2>
-          <p>Metnin nasıl yapılandırıldığı, kelimelerin bağlam içindeki anlamları ve metinler arası ilişkilerin kurulması.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="cross_text_connections">
@@ -237,10 +236,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 02</span>
+        <div class="qb-category-head" data-cat-key="expression_of_ideas">
           <h2 lang="en">Expression of Ideas</h2>
-          <p>Fikirlerin etkili biçimde aktarılması, geçişlerin doğru kullanımı ve retorik bütünlük.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="rhetorical_synthesis">
@@ -265,10 +263,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 03</span>
+        <div class="qb-category-head" data-cat-key="information_and_ideas">
           <h2 lang="en">Information and Ideas</h2>
-          <p>Ana fikir tespiti, kanıt değerlendirmesi ve metinden çıkarsama yapma becerileri.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="central_ideas_and_details">
@@ -302,10 +299,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 04</span>
+        <div class="qb-category-head" data-cat-key="standard_english_conventions">
           <h2 lang="en">Standard English Conventions</h2>
-          <p>Cümle sınırları, noktalama ve standart İngilizce dil bilgisi kuralları.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="boundaries">
@@ -547,6 +543,25 @@
           // Auto-activate row if it has questions
           if (n > 0) {
             activateRow(row, sub);
+          }
+        });
+
+        // Update category meta: "X konu · Y soru"
+        document.querySelectorAll('.qb-category-head[data-cat-key]').forEach(head => {
+          const catEl = head.closest('.qb-category');
+          if (!catEl) return;
+          const rows = catEl.querySelectorAll('.qb-topic-row[data-subcategory]');
+          let topicCount = 0;
+          let total = 0;
+          rows.forEach(r => {
+            const sub = r.dataset.subcategory;
+            const n = counts[sub] || 0;
+            if (n > 0) topicCount++;
+            total += n;
+          });
+          const metaEl = head.querySelector('.qb-cat-meta');
+          if (metaEl) {
+            metaEl.textContent = topicCount + ' konu · ' + total + ' soru';
           }
         });
       } catch (err) {

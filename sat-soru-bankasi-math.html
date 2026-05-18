@@ -191,10 +191,9 @@
   <section style="padding: 1rem 0 4rem;">
     <div class="wrap" style="max-width: 880px;">
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 01</span>
+        <div class="qb-category-head" data-cat-key="algebra">
           <h2 lang="en">Algebra</h2>
-          <p>Doğrusal denklemler, fonksiyonlar ve eşitsizlikler. Tek veya iki değişkenli yapılar.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="linear_equations_one_variable">
@@ -246,10 +245,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 02</span>
+        <div class="qb-category-head" data-cat-key="advanced_math">
           <h2 lang="en">Advanced Math</h2>
-          <p>Eşdeğer ifadeler, doğrusal olmayan denklemler ve fonksiyonlar.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="equivalent_expressions">
@@ -283,10 +281,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 03</span>
+        <div class="qb-category-head" data-cat-key="problem_solving_data_analysis">
           <h2 lang="en">Problem-Solving and Data Analysis</h2>
-          <p>Oran, yüzde, veri yorumlama, olasılık ve istatistiksel çıkarımlar.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="ratios_rates_proportions">
@@ -348,10 +345,9 @@
       </div>
 
       <div class="qb-category">
-        <div class="qb-category-head">
-          <span class="eyebrow" style="color: var(--cat-accent);">Kategori 04</span>
+        <div class="qb-category-head" data-cat-key="geometry_trigonometry">
           <h2 lang="en">Geometry and Trigonometry</h2>
-          <p>Alan, hacim, açılar, üçgenler, çemberler ve trigonometri.</p>
+          <span class="qb-cat-meta">— soru</span>
         </div>
         <div class="qb-topic-list">
           <div class="qb-topic-row qb-topic-active" data-subcategory="area_and_volume">
@@ -609,6 +605,25 @@
           // Auto-activate row if it has questions
           if (n > 0) {
             activateRow(row, sub);
+          }
+        });
+
+        // Update category meta: "X konu · Y soru"
+        document.querySelectorAll('.qb-category-head[data-cat-key]').forEach(head => {
+          const catEl = head.closest('.qb-category');
+          if (!catEl) return;
+          const rows = catEl.querySelectorAll('.qb-topic-row[data-subcategory]');
+          let topicCount = 0;
+          let total = 0;
+          rows.forEach(r => {
+            const sub = r.dataset.subcategory;
+            const n = counts[sub] || 0;
+            if (n > 0) topicCount++;
+            total += n;
+          });
+          const metaEl = head.querySelector('.qb-cat-meta');
+          if (metaEl) {
+            metaEl.textContent = topicCount + ' konu · ' + total + ' soru';
           }
         });
       } catch (err) {

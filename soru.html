@@ -95,6 +95,19 @@
     }
     .q-grid.show-explanation { grid-template-columns: 1fr 1fr 1fr; }
 
+    /* Passage'sız sorular (YDS, vocabulary tipi): soru tek başına ortala */
+    .q-grid.no-texts {
+      grid-template-columns: minmax(0, 720px);
+      justify-content: center;
+    }
+    .q-grid.no-texts.show-explanation {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      justify-content: stretch;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     @media (min-width: 1001px) {
       .q-grid:not(.show-explanation) .q-content {
         position: sticky;
@@ -103,10 +116,16 @@
         max-height: calc(100vh - 180px);
         overflow-y: auto;
       }
+      .q-grid.no-texts:not(.show-explanation):not(.show-gri) .q-content {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+      }
     }
 
     @media (max-width: 1000px) {
       .q-grid, .q-grid.show-explanation { grid-template-columns: 1fr; }
+      .q-grid.no-texts, .q-grid.no-texts.show-explanation { grid-template-columns: 1fr; }
     }
 
     .q-texts {
@@ -2243,6 +2262,7 @@
 
       // Texts (passage)
       const textsEl = document.getElementById('qTexts');
+      const gridEl = document.getElementById('qGrid');
       if (q.passage && q.passage.texts) {
         // Smart split: bazı kayıtlarda Text 1 ve Text 2 tek bir content
         // içine gömülüymüş gibi geliyor. Pattern bulunursa ikiye ayır.
@@ -2272,8 +2292,11 @@
         textsEl.innerHTML = renderedTexts.map(t =>
           `<p class="text-label">${esc(t.label)}</p><p>${safeHtml(t.content)}</p>`
         ).join('') + '<p class="q-hint q-hint-texts">Vurgulamak için metnin bir kısmını seç</p>';
+        textsEl.style.display = '';
+        if (gridEl) gridEl.classList.remove('no-texts');
       } else {
         textsEl.style.display = 'none';
+        if (gridEl) gridEl.classList.add('no-texts');
       }
 
       // Prompt

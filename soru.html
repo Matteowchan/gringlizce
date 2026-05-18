@@ -2383,7 +2383,18 @@
       );
       const hasSingleExp = q.explanations && q.explanations.answer && q.explanations.answer.steps;
 
-      if (!hasPerOptExp && hasSingleExp) {
+      // Debug log: hangi format algılandı, explanations şekli ne
+      console.log('[soru.html] explanation diag:', {
+        slug: q.slug,
+        hasPerOptExp,
+        hasSingleExp,
+        explanationsType: typeof q.explanations,
+        explanationsKeys: q.explanations ? Object.keys(q.explanations) : null,
+        rawExplanations: q.explanations
+      });
+
+      try {
+        if (!hasPerOptExp && hasSingleExp) {
         // SINGLE EXPLANATION MODE — no tabs
         tabsEl.innerHTML = '';
         tabsEl.style.display = 'none';
@@ -2460,6 +2471,24 @@
             </div>
           `;
         }).join('');
+        }
+      } catch (renderErr) {
+        console.error('[soru.html] explanation render error:', renderErr, 'q.explanations:', q.explanations);
+        const correctOpt = q.options.find(o => o.letter === correctLetter) || {};
+        tabsEl.innerHTML = '';
+        tabsEl.style.display = 'none';
+        contentEl.innerHTML = `
+          <div class="exp-panel active">
+            <div class="exp-answer-box correct">
+              <span class="exp-answer-letter">${esc(correctLetter)}</span>
+              <div class="exp-answer-text">
+                <span class="exp-answer-status">Doğru Cevap</span>
+                ${safeHtml(correctOpt.text || '')}
+              </div>
+            </div>
+            <div class="exp-empty">Açıklama yüklenirken bir hata oluştu. Sayfayı yenile veya yöneticiye bildir.</div>
+          </div>
+        `;
       }
 
       // Tags chip bar (category + subcategory only; difficulty shown via grid colors)

@@ -484,6 +484,20 @@
       padding-left: 1.4rem;
       border-left: 2px solid var(--cat-accent);
     }
+    .yds-passage {
+      background: #f7f3e7;
+      border-left: 3px solid var(--cat-accent);
+      padding: 0.9rem 1.1rem;
+      margin-bottom: 1rem;
+      font-style: italic;
+      line-height: 1.6;
+      color: var(--text);
+      border-radius: 4px;
+    }
+    body.dark .yds-passage {
+      background: var(--bg-soft);
+      color: var(--text);
+    }
     .exp-step h4 {
       font-family: var(--font-display);
       font-size: 1.02rem;
@@ -1818,6 +1832,11 @@
         escaped = escaped.replace(openRe, '<' + tag + '>')
                          .replace(closeRe, '</' + tag + '>')
                          .replace(selfRe, '<' + tag + '/>');
+      });
+      // Allow safe class-only attributes on div, p (whitelist of class names only)
+      var safeClassRe = /&lt;(div|p)\s+class=&quot;([a-zA-Z][a-zA-Z0-9_\- ]{0,80})&quot;&gt;/g;
+      escaped = escaped.replace(safeClassRe, function (m, tag, cls) {
+        return '<' + tag + ' class="' + cls + '">';
       });
       return escaped;
     }

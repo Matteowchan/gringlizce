@@ -519,6 +519,17 @@
       color: var(--text);
       font-weight: 600;
     }
+    .exp-empty {
+      padding: 1rem 1.2rem;
+      margin-top: 0.8rem;
+      background: var(--bg-soft);
+      border-left: 3px solid var(--text-soft);
+      border-radius: 4px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-soft);
+      font-style: italic;
+    }
     .exp-step blockquote {
       margin: 0.7rem 0;
       padding: 0.7rem 0.95rem;
@@ -2381,6 +2392,23 @@
               </div>
             </div>
             ${stepsHtml}
+          </div>
+        `;
+      } else if (!hasPerOptExp && !hasSingleExp) {
+        // NO EXPLANATION AVAILABLE — show fallback with at least the correct answer
+        tabsEl.innerHTML = '';
+        tabsEl.style.display = 'none';
+        const correctOpt = q.options.find(o => o.letter === correctLetter) || {};
+        contentEl.innerHTML = `
+          <div class="exp-panel active">
+            <div class="exp-answer-box correct">
+              <span class="exp-answer-letter">${esc(correctLetter)}</span>
+              <div class="exp-answer-text">
+                <span class="exp-answer-status">Doğru Cevap</span>
+                ${safeHtml(correctOpt.text || '')}
+              </div>
+            </div>
+            <div class="exp-empty">Bu soru için adım adım açıklama henüz eklenmemiş.</div>
           </div>
         `;
       } else {

@@ -2,6 +2,133 @@
    GRI ENGLISH — Theme toggle + mobile nav
    ============================================================ */
 
+/* -------- Font size control (5 levels) -------- */
+(function() {
+  var FONT_KEY = 'gri-font-size';
+  var LEVELS = ['xs', 's', 'm', 'l', 'xl'];
+  var LABELS = { xs: 'Çok Küçük', s: 'Küçük', m: 'Normal', l: 'Büyük', xl: 'Çok Büyük' };
+
+  // Pre-apply saved level before paint to avoid flash
+  try {
+    var saved = localStorage.getItem(FONT_KEY);
+    if (saved && LEVELS.indexOf(saved) !== -1) {
+      document.documentElement.setAttribute('data-font', saved);
+    } else {
+      document.documentElement.setAttribute('data-font', 'm');
+    }
+  } catch (e) {
+    document.documentElement.setAttribute('data-font', 'm');
+  }
+
+  function injectFontControl() {
+    var navList = document.querySelector('.nav-links');
+    if (!navList) return;
+    if (document.getElementById('font-size-toggle')) return;
+
+    var li = document.createElement('li');
+    li.className = 'font-size-wrap';
+
+    var btn = document.createElement('button');
+    btn.id = 'font-size-toggle';
+    btn.className = 'font-size-toggle';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Yazı boyutu');
+    btn.setAttribute('title', 'Yazı boyutu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V8h6M4 13h5M14 19V8h6M14 13h5"></path></svg>';
+
+    var pop = document.createElement('div');
+    pop.className = 'font-size-pop';
+    pop.setAttribute('role', 'menu');
+    pop.setAttribute('aria-label', 'Yazı boyutu seçenekleri');
+    var html = '<div class="font-size-pop-title">Yazı boyutu</div><div class="font-size-pop-row">';
+    LEVELS.forEach(function(lv) {
+      html += '<button type="button" class="font-size-opt" data-lv="' + lv + '" aria-label="' + LABELS[lv] + '" title="' + LABELS[lv] + '">A</button>';
+    });
+    html += '</div><div class="font-size-pop-hint">Tüm site için geçerli.</div>';
+    pop.innerHTML = html;
+
+    li.appendChild(btn);
+    li.appendChild(pop);
+
+    var themeToggle = navList.querySelector('.theme-toggle-wrap');
+    if (themeToggle) {
+      navList.insertBefore(li, themeToggle);
+    } else {
+      var cta = navList.querySelector('.btn-nav-cta');
+      if (cta && cta.parentElement && cta.parentElement.tagName === 'LI') {
+        navList.insertBefore(li, cta.parentElement);
+      } else {
+        navList.appendChild(li);
+      }
+    }
+
+    function syncActive() {
+      var current = document.documentElement.getAttribute('data-font') || 'm';
+      pop.querySelectorAll('.font-size-opt').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.lv === current);
+      });
+    }
+    syncActive();
+
+    function openPop() {
+      pop.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+    function closePop() {
+      pop.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    function togglePop() {
+      if (pop.classList.contains('open')) closePop(); else openPop();
+    }
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      togglePop();
+    });
+
+    pop.addEventListener('click', function(e) {
+      var opt = e.target.closest('.font-size-opt');
+      if (!opt) return;
+      var lv = opt.dataset.lv;
+      if (LEVELS.indexOf(lv) === -1) return;
+      document.documentElement.setAttribute('data-font', lv);
+      try { localStorage.setItem(FONT_KEY, lv); } catch (err) {}
+      syncActive();
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!pop.classList.contains('open')) return;
+      if (li.contains(e.target)) return;
+      closePop();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && pop.classList.contains('open')) closePop();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectFontControl);
+  } else {
+    injectFontControl();
+  }
+
+  window.addEventListener('storage', function(e) {
+    if (e.key !== FONT_KEY || !e.newValue) return;
+    if (LEVELS.indexOf(e.newValue) === -1) return;
+    document.documentElement.setAttribute('data-font', e.newValue);
+    var pop = document.querySelector('.font-size-pop');
+    if (pop) {
+      pop.querySelectorAll('.font-size-opt').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.lv === e.newValue);
+      });
+    }
+  });
+})();
+
+
 /* -------- Theme toggle -------- */
 (function() {
   var THEME_KEY = 'gri-theme';

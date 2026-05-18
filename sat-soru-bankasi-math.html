@@ -560,6 +560,20 @@
         link.textContent = 'Başla';
         status.replaceWith(link);
       }
+
+      // Tüm kart tıklanabilir: Başla veya checkbox dışına basınca checkbox toggle
+      if (!row.dataset.clickBound) {
+        row.dataset.clickBound = '1';
+        row.addEventListener('click', function (e) {
+          // Başla linki veya checkbox label'i tıklandıysa kendi davranışını yapsın
+          if (e.target.closest('a.qb-topic-status')) return;
+          if (e.target.closest('.qb-topic-check')) return;
+          const cb = row.querySelector('.qb-topic-check input[type="checkbox"]');
+          if (!cb) return;
+          cb.checked = !cb.checked;
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
     }
 
     async function loadCounts() {

@@ -2275,75 +2275,108 @@ body[data-cat="yds"] {
 }
 
 .qb-category {
-  margin: 2.5rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--line);
+  margin: 2rem 0;
 }
 .qb-category:last-child { border-bottom: none; }
 
+/* Kategori basligi: tek satir, ayraç altta */
 .qb-category-head {
-  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--line);
 }
 .qb-category-head h2 {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 500;
-  margin: 0.3rem 0 0.6rem;
-  color: var(--text);
-}
-.qb-category-head p {
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  line-height: 1.6;
   margin: 0;
-  max-width: 680px;
+  color: var(--text);
+  flex: 1;
+}
+.qb-category-head .qb-cat-meta {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* Eski paragraph dadolari sayfada kalirsa gizle */
+.qb-category-head p { display: none; }
+.qb-category-head .eyebrow { display: none; }
+
+/* Alt konular: 2 kolon grid */
+.qb-topic-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
-.qb-topic-list {
+/* Her satir artik bir kart (anchor) */
+.qb-topic-row {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.95rem 1.05rem;
   background: var(--bg-card);
   border: 1px solid var(--line);
   border-radius: 4px;
-  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  min-height: 110px;
 }
-
-.qb-topic-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.2rem;
-  border-bottom: 1px solid var(--line);
-  transition: background 0.15s;
-}
-.qb-topic-row:last-child { border-bottom: none; }
+.qb-topic-row:last-child { border-bottom: 1px solid var(--line); }
 .qb-topic-row:hover {
   background: var(--bg-soft);
+  border-color: var(--cat-accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Üst satir: konu adi + count */
 .qb-topic-name {
-  font-size: 0.97rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
   color: var(--text);
-  line-height: 1.4;
+  line-height: 1.3;
+  padding-right: 2rem;
+  display: block;
+}
+.qb-topic-count {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  display: block;
+  margin-top: -0.2rem;
 }
 
+/* Basla butonu kartin alt kismi */
 .qb-topic-status {
   flex-shrink: 0;
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
   background: var(--bg-soft);
   border: 1px solid var(--line);
-  padding: 0.3rem 0.7rem;
-  border-radius: 4px;
-  font-weight: 500;
+  padding: 0.35rem 0.8rem;
+  border-radius: 3px;
+  font-weight: 600;
+  align-self: flex-start;
 }
 
-/* Active topic row (with checkbox + standalone link button) */
 .qb-topic-row.qb-topic-active {
   background: var(--bg-card);
 }
@@ -2351,13 +2384,16 @@ body[data-cat="yds"] {
   background: var(--bg-soft);
 }
 
-/* Checkbox label */
+/* Checkbox: kartin sag ust kösesinde */
 .qb-topic-check {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
   display: inline-flex;
   align-items: center;
   cursor: pointer;
   padding: 0.2rem;
+  z-index: 2;
   margin: -0.2rem 0;
   margin-right: -0.4rem;
 }
@@ -2478,16 +2514,34 @@ a.qb-topic-status.active:hover {
   transform: translateY(1px);
 }
 
+@media (max-width: 720px) {
+  .qb-topic-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 540px) {
+  .qb-topic-list {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
   .qb-topic-row {
     padding: 0.85rem 1rem;
+    min-height: auto;
   }
   .qb-topic-name {
-    font-size: 0.92rem;
+    font-size: 0.93rem;
   }
   .qb-topic-status {
     font-size: 0.65rem;
-    padding: 0.25rem 0.55rem;
+    padding: 0.3rem 0.7rem;
+  }
+  .qb-category-head {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .qb-category-head h2 {
+    font-size: 1.18rem;
   }
   .qb-multi-bar {
     padding: 0.5rem 0.5rem 0.5rem 1rem;

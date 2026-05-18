@@ -226,27 +226,112 @@
   // NAV AUTH TOGGLE — login olmuş kullanıcı için Giriş → Panelim
   // Tüm sayfalarda nav'daki giris.html linkini panelim.html'e çevirir
   // =============================================================
+  // NAV AUTH MOUNT — #navUserMount içine login durumuna göre içerik bas
+  // - Login değilse: "Giriş" CTA → giris.html
+  // - Login ise: dairesel avatar (email/isim ilk harfi) + dropdown (Panelim / Şifre / Çıkış)
+  // =============================================================
+  function inSubdir() {
+    return location.pathname.indexOf('/urun/') !== -1;
+  }
+  function pageHref(name) {
+    return inSubdir() ? ('../' + name) : name;
+  }
+
+  function renderGuestCta(mount) {
+    var a = document.createElement('a');
+    a.href = pageHref('giris.html');
+    a.className = 'btn-nav-cta';
+    a.textContent = 'Giriş';
+    mount.innerHTML = '';
+    mount.appendChild(a);
+  }
+
+  function renderUserAvatar(mount, user) {
+    var email = (user && user.email) || '';
+    var meta = (user && user.user_metadata) || {};
+    var displayName = meta.full_name || meta.name || email;
+    var initial = (displayName || 'U').trim().charAt(0).toUpperCase();
+
+    mount.innerHTML = '';
+    mount.classList.add('nav-user-mount-active');
+
+    var wrap = document.createElement('div');
+    wrap.className = 'nav-user';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nav-user-btn';
+    btn.setAttribute('aria-label', 'Hesap menüsü');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('title', displayName);
+    btn.textContent = initial;
+
+    var menu = document.createElement('div');
+    menu.className = 'nav-user-menu';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML =
+      '<div class="nav-user-head">' +
+        '<div class="nav-user-name">' + escapeHtml(displayName) + '</div>' +
+        (displayName !== email ? '<div class="nav-user-email">' + escapeHtml(email) + '</div>' : '') +
+      '</div>' +
+      '<a href="' + pageHref('panelim.html') + '" role="menuitem">Panelim</a>' +
+      '<a href="' + pageHref('sifre-sifirla.html') + '" role="menuitem">Şifre değiştir</a>' +
+      '<button type="button" class="nav-user-logout" role="menuitem">Çıkış yap</button>';
+
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+    mount.appendChild(wrap);
+
+    function open() { menu.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+    function close() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.classList.contains('open')) close(); else open();
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.classList.contains('open')) return;
+      if (wrap.contains(e.target)) return;
+      close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menu.classList.contains('open')) close();
+    });
+
+    var logoutBtn = menu.querySelector('.nav-user-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async function () {
+        try {
+          await sb.auth.signOut();
+        } catch (e) {}
+        location.href = pageHref('index.html');
+      });
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   async function updateAuthNav() {
+    var mount = document.getElementById('navUserMount');
+    if (!mount) return;
+
+    var user = null;
     try {
       var userRes = await sb.auth.getUser();
-      if (!userRes || !userRes.data || !userRes.data.user) return;
-
-      var inSubdir = location.pathname.indexOf('/urun/') !== -1;
-      var panelimHref = inSubdir ? '../panelim.html' : 'panelim.html';
-
-      document.querySelectorAll('a').forEach(function (a) {
-        var href = a.getAttribute('href') || '';
-        // Login linklerini (giris.html ya da ../giris.html) Panelim'e çevir
-        if (href === 'giris.html' || href === '../giris.html' || href.endsWith('/giris.html')) {
-          // Sadece "Giriş", "Materyal Girişi" gibi nav CTA'larında değiştir;
-          // body içindeki "giriş yap" linklerini etkilemesin diye class kontrolü
-          if (a.classList.contains('btn-nav-cta')) {
-            a.textContent = 'Panelim';
-            a.setAttribute('href', panelimHref);
-          }
-        }
-      });
+      if (userRes && userRes.data && userRes.data.user) {
+        user = userRes.data.user;
+      }
     } catch (e) {}
+
+    if (user) {
+      renderUserAvatar(mount, user);
+    } else {
+      renderGuestCta(mount);
+    }
   }
 
   function startTracking() {

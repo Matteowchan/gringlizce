@@ -35,7 +35,7 @@
     btn.setAttribute('aria-label', 'Yazı boyutu');
     btn.setAttribute('title', 'Yazı boyutu');
     btn.setAttribute('aria-expanded', 'false');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V8h6M4 13h5M14 19V8h6M14 13h5"></path></svg>';
+    btn.innerHTML = '<span class="font-size-toggle-label" aria-hidden="true"><span class="fs-a-small">A</span><span class="fs-a-big">a</span></span>';
 
     var pop = document.createElement('div');
     pop.className = 'font-size-pop';

@@ -158,26 +158,29 @@
 
       // Login email
       var userEmail = (emailEl.value || '').trim() || null;
-      var userId = null;
       try {
         var sess = await sb.auth.getSession();
         if (sess && sess.data && sess.data.session && sess.data.session.user) {
-          userId = sess.data.session.user.id;
           if (!userEmail) userEmail = sess.data.session.user.email || null;
         }
       } catch (e) { /* sessiz gec */ }
 
+      // Bağlam bilgisini detail'ın başına ekle ki mail içeriğinde de görünsün
+      var contextLines = [];
+      if (ctx.testSlug) contextLines.push('Test: ' + ctx.testSlug);
+      if (ctx.section) contextLines.push('Bolum: ' + ctx.section);
+      if (userEmail) contextLines.push('E-posta: ' + userEmail);
+      var fullDetail = (contextLines.length ? contextLines.join('\n') + '\n\n' : '') + description;
+
       var payload = {
-        user_id: userId,
-        user_email: userEmail,
-        page_url: ctx.url,
-        test_slug: ctx.testSlug || null,
-        section: ctx.section || null,
-        description: description,
+        kategori: 'IELTS hata bildirimi' + (ctx.section ? ' (' + ctx.section + ')' : ''),
+        detay: fullDetail,
+        soru_slug: ctx.testSlug || null,
+        soru_url: ctx.url,
         user_agent: navigator.userAgent || null
       };
 
-      var res = await sb.from('bug_reports').insert(payload);
+      var res = await sb.from('soru_bildirimleri').insert(payload);
       if (res.error) {
         console.error('[bug-report]', res.error);
         statusEl.className = 'gri-bug-status err';

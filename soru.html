@@ -210,6 +210,19 @@
       background: var(--gold-soft);
     }
     .q-tool-btn.bookmarked svg { fill: currentColor; }
+    .q-tool-btn.noted {
+      color: var(--gold-deep);
+      border-color: var(--gold);
+      background: var(--gold-soft);
+    }
+    .q-tool-btn.noted::after {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold-deep);
+      margin-left: 0.15rem;
+    }
 
     /* Timer (replaces İşaretle) */
     .q-timer {
@@ -1604,6 +1617,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             <span>Bildir</span>
           </button>
+          <button class="q-tool-btn" type="button" id="noteBtn" aria-label="Not al">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Not</span>
+          </button>
         </div>
 
         <p class="q-prompt" id="qPrompt"></p>
@@ -1719,6 +1736,30 @@
         <button type="submit" class="q-modal-btn-primary" id="reportSubmit">Gönder</button>
       </div>
       <div class="q-modal-feedback" id="reportFeedback" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <!-- Not Al modal -->
+  <div class="q-modal-overlay" id="noteOverlay" aria-hidden="true"></div>
+  <div class="q-modal" id="noteModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="noteTitle">
+    <div class="q-modal-head">
+      <h3 id="noteTitle">Bu soru için not</h3>
+      <button class="q-modal-close" type="button" id="noteClose" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form class="q-modal-form" id="noteForm" novalidate>
+      <label class="q-modal-label">
+        <span>Notun <span id="noteCounter" style="font-weight:400;color:var(--text-muted);font-size:0.78rem;">0 / 2000</span></span>
+        <textarea name="note" id="noteText" rows="7" placeholder="Bu soruyla ilgili düşüncelerini, hatırlamak istediğin ipuçlarını veya kelimeleri buraya yaz..." maxlength="2000"></textarea>
+      </label>
+
+      <div class="q-modal-actions">
+        <button type="button" class="q-modal-btn-ghost" id="noteDelete" style="display:none;">Sil</button>
+        <button type="button" class="q-modal-btn-ghost" id="noteCancel">Vazgeç</button>
+        <button type="submit" class="q-modal-btn-primary" id="noteSubmit">Kaydet</button>
+      </div>
+      <div class="q-modal-feedback" id="noteFeedback" aria-live="polite"></div>
     </form>
   </div>
 
@@ -1899,15 +1940,13 @@
       slugs.forEach(s => sessionStorage.removeItem('gri.answer.' + s));
     }
 
-    // Login kullanıcının son 12 saatteki cevaplarını DB'den yükle, sessionStorage'a serp
+    // Login kullanıcının tüm cevaplarını DB'den yükle, sessionStorage'a serp
     async function preloadAnswersFromDb() {
       if (!GRI_USER_ID) return;
       try {
-        const cutoff = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
         const res = await supabase.from('user_answers')
           .select('question_slug, status')
-          .eq('user_id', GRI_USER_ID)
-          .gte('answered_at', cutoff);
+          .eq('user_id', GRI_USER_ID);
         if (res && res.data) {
           res.data.forEach(function (row) {
             if (!sessionStorage.getItem('gri.answer.' + row.question_slug)) {
@@ -2294,6 +2333,10 @@
       // Bookmark state'i yenile
       if (typeof window.refreshBookmarkState === 'function') {
         window.refreshBookmarkState();
+      }
+      // Not state'i yenile
+      if (typeof window.refreshNoteState === 'function') {
+        window.refreshNoteState();
       }
 
       // Page title
@@ -2920,6 +2963,164 @@
           }
         });
         reportForm.dataset.bound = '1';
+      }
+
+      // ===========================================================================
+      // NOT AL (Question Notes) modal
+      // ===========================================================================
+      const noteBtn = document.getElementById('noteBtn');
+      const noteOverlay = document.getElementById('noteOverlay');
+      const noteModal = document.getElementById('noteModal');
+      const noteClose = document.getElementById('noteClose');
+      const noteCancel = document.getElementById('noteCancel');
+      const noteDelete = document.getElementById('noteDelete');
+      const noteForm = document.getElementById('noteForm');
+      const noteSubmit = document.getElementById('noteSubmit');
+      const noteText = document.getElementById('noteText');
+      const noteFeedback = document.getElementById('noteFeedback');
+      const noteCounter = document.getElementById('noteCounter');
+
+      let currentNote = null; // null = yok, string = mevcut not
+
+      function updateNoteCounter() {
+        if (!noteText || !noteCounter) return;
+        const len = noteText.value.length;
+        noteCounter.textContent = len + ' / 2000';
+      }
+      if (noteText) noteText.addEventListener('input', updateNoteCounter);
+
+      window.refreshNoteState = async function () {
+        if (!noteBtn) return;
+        const slug = getCurrentSlug();
+        currentNote = null;
+        noteBtn.classList.remove('noted');
+        if (!GRI_USER_ID || !slug) return;
+        try {
+          const res = await supabase.from('user_question_notes')
+            .select('note')
+            .eq('user_id', GRI_USER_ID)
+            .eq('question_slug', slug)
+            .maybeSingle();
+          if (res && res.data && res.data.note) {
+            currentNote = res.data.note;
+            noteBtn.classList.add('noted');
+          }
+        } catch (e) {
+          console.warn('[note] load failed:', e);
+        }
+      };
+
+      function openNoteModal() {
+        if (!GRI_USER_ID) {
+          location.href = 'giris.html?return=' + encodeURIComponent(location.pathname + location.search);
+          return;
+        }
+        const slug = getCurrentSlug();
+        if (!slug) return;
+        noteFeedback.textContent = '';
+        noteFeedback.className = 'q-modal-feedback';
+        noteSubmit.disabled = false;
+        noteSubmit.textContent = 'Kaydet';
+        noteText.value = currentNote || '';
+        noteDelete.style.display = currentNote ? 'inline-flex' : 'none';
+        updateNoteCounter();
+        noteOverlay.classList.add('open');
+        noteModal.classList.add('open');
+        noteModal.setAttribute('aria-hidden', 'false');
+        setTimeout(function () { try { noteText.focus(); } catch (e) {} }, 80);
+      }
+
+      function closeNoteModal() {
+        noteOverlay.classList.remove('open');
+        noteModal.classList.remove('open');
+        noteModal.setAttribute('aria-hidden', 'true');
+      }
+
+      if (noteBtn) noteBtn.addEventListener('click', openNoteModal);
+      if (noteClose) noteClose.addEventListener('click', closeNoteModal);
+      if (noteCancel) noteCancel.addEventListener('click', closeNoteModal);
+      if (noteOverlay) noteOverlay.addEventListener('click', closeNoteModal);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && noteModal && noteModal.classList.contains('open')) closeNoteModal();
+      });
+
+      if (noteForm && !noteForm.dataset.bound) {
+        noteForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const slug = getCurrentSlug();
+          const text = (noteText.value || '').trim();
+          if (!slug) {
+            noteFeedback.textContent = 'Soru bilgisi alınamadı.';
+            noteFeedback.className = 'q-modal-feedback error';
+            return;
+          }
+          if (!text) {
+            noteFeedback.textContent = 'Not boş olamaz. Silmek istiyorsan Sil tuşunu kullan.';
+            noteFeedback.className = 'q-modal-feedback error';
+            return;
+          }
+          if (text.length > 2000) {
+            noteFeedback.textContent = 'Not 2000 karakteri aşamaz.';
+            noteFeedback.className = 'q-modal-feedback error';
+            return;
+          }
+          noteSubmit.disabled = true;
+          noteSubmit.textContent = 'Kaydediliyor...';
+          try {
+            const { error } = await supabase
+              .from('user_question_notes')
+              .upsert({
+                user_id: GRI_USER_ID,
+                question_slug: slug,
+                note: text
+              }, { onConflict: 'user_id,question_slug' });
+            if (error) throw error;
+            currentNote = text;
+            noteBtn.classList.add('noted');
+            noteFeedback.textContent = 'Not kaydedildi.';
+            noteFeedback.className = 'q-modal-feedback success';
+            noteDelete.style.display = 'inline-flex';
+            setTimeout(closeNoteModal, 1200);
+          } catch (err) {
+            console.error('[note] save error:', err);
+            noteFeedback.textContent = 'Kaydedilemedi: ' + (err.message || 'bilinmeyen hata');
+            noteFeedback.className = 'q-modal-feedback error';
+            noteSubmit.disabled = false;
+            noteSubmit.textContent = 'Kaydet';
+          }
+        });
+        noteForm.dataset.bound = '1';
+      }
+
+      if (noteDelete && !noteDelete.dataset.bound) {
+        noteDelete.addEventListener('click', async function () {
+          const slug = getCurrentSlug();
+          if (!slug || !GRI_USER_ID) return;
+          if (!confirm('Bu sorudaki notu silmek istiyor musun?')) return;
+          noteDelete.disabled = true;
+          try {
+            const { error } = await supabase
+              .from('user_question_notes')
+              .delete()
+              .eq('user_id', GRI_USER_ID)
+              .eq('question_slug', slug);
+            if (error) throw error;
+            currentNote = null;
+            noteBtn.classList.remove('noted');
+            noteText.value = '';
+            updateNoteCounter();
+            noteDelete.style.display = 'none';
+            noteFeedback.textContent = 'Not silindi.';
+            noteFeedback.className = 'q-modal-feedback success';
+            setTimeout(closeNoteModal, 1000);
+          } catch (err) {
+            console.error('[note] delete error:', err);
+            noteFeedback.textContent = 'Silinemedi: ' + (err.message || 'bilinmeyen hata');
+            noteFeedback.className = 'q-modal-feedback error';
+          }
+          noteDelete.disabled = false;
+        });
+        noteDelete.dataset.bound = '1';
       }
     }
 

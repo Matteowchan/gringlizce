@@ -185,6 +185,17 @@
       margin: 0 auto;
     }
     .qb-list-grid.qb-collapsed { display: none; }
+    .qb-grid-inline-empty {
+      padding: 1rem 1.2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      border: 1px dashed var(--line);
+      border-radius: 6px;
+    }
+    .qb-grid-inline-empty a { color: var(--text); text-decoration: underline; }
+    .qb-grid-inline-empty a:hover { color: var(--cat-accent, #c89a3c); }
 
     .qb-list-card {
       display: grid;
@@ -1425,8 +1436,10 @@
         var rows = (ansRes && ansRes.data) || [];
 
         if (rows.length === 0) {
-          elEmpty.style.display = 'block';
-          if (elBar) elBar.style.display = 'none';
+          elEmpty.style.display = 'none';
+          if (elBar) elBar.style.display = 'flex';
+          elCount.textContent = '0 soru';
+          elGrid.innerHTML = '<div class="qb-grid-inline-empty">Henüz yanlış cevapladığın soru yok. <a href="soru-bankasi.html">Soru bankasına git</a> ve çözmeye başla.</div>';
           return;
         }
 
@@ -1477,8 +1490,10 @@
         var rows = (bmRes && bmRes.data) || [];
 
         if (rows.length === 0) {
-          elEmpty.style.display = 'block';
-          if (elBar) elBar.style.display = 'none';
+          elEmpty.style.display = 'none';
+          if (elBar) elBar.style.display = 'flex';
+          elCount.textContent = '0 soru';
+          elGrid.innerHTML = '<div class="qb-grid-inline-empty">Henüz yer im yok. <a href="soru-bankasi.html">Soru bankasında</a> bir soruyu aç ve yer imi butonuna bas.</div>';
           return;
         }
 
@@ -1530,10 +1545,10 @@
         var rows = (res && res.data) || [];
 
         if (rows.length === 0) {
-          elCount.textContent = '';
-          elGrid.innerHTML = '';
-          elEmpty.style.display = 'block';
-          if (elBar) elBar.style.display = 'none';
+          elEmpty.style.display = 'none';
+          if (elBar) elBar.style.display = 'flex';
+          elCount.textContent = '0 kelime';
+          elGrid.innerHTML = '<div class="qb-grid-inline-empty">Kelime listen boş. <a href="soru-bankasi.html">Soru bankasında</a> bir kelimeyi seç, toolbar\'dan kitap simgesine bas ve listene ekle.</div>';
           return;
         }
 
@@ -1615,9 +1630,8 @@
               // Sayım güncelle
               var remaining = elGrid.querySelectorAll('.vocab-card').length;
               if (remaining === 0) {
-                elCount.textContent = '';
-                elEmpty.style.display = 'block';
-                if (elBar) elBar.style.display = 'none';
+                elCount.textContent = '0 kelime';
+                elGrid.innerHTML = '<div class="qb-grid-inline-empty">Kelime listen boş. <a href="soru-bankasi.html">Soru bankasında</a> bir kelimeyi seç, toolbar\'dan kitap simgesine bas ve listene ekle.</div>';
               } else {
                 elCount.textContent = remaining + ' kelime kayıtlı';
               }
@@ -1703,10 +1717,10 @@
         elArea.style.display = 'block';
 
         if (!subs.length) {
-          elCount.textContent = '';
-          elGrid.innerHTML = '';
-          if (elBar) elBar.style.display = 'none';
-          elEmpty.style.display = 'block';
+          elEmpty.style.display = 'none';
+          if (elBar) elBar.style.display = 'flex';
+          elCount.textContent = '0 çalışma';
+          elGrid.innerHTML = '<div class="qb-grid-inline-empty">Henüz writing çalışman yok. <a href="ielts-deneme.html">IELTS Denemesi</a> yap, Writing bölümünü tamamla ve kaydet.</div>';
           return;
         }
 
@@ -1999,11 +2013,10 @@
         var remaining = Object.keys(WRITING_SUBS_DATA).length;
         var elCount = document.getElementById('writing-submissions-count');
         var elBar = document.getElementById('writing-submissions-bar');
-        var elEmpty = document.getElementById('writing-submissions-empty');
+        var elGridRef = document.getElementById('writing-submissions-grid');
         if (remaining === 0) {
-          if (elCount) elCount.textContent = '';
-          if (elBar) elBar.style.display = 'none';
-          if (elEmpty) elEmpty.style.display = 'block';
+          if (elCount) elCount.textContent = '0 çalışma';
+          if (elGridRef) elGridRef.innerHTML = '<div class="qb-grid-inline-empty">Henüz writing çalışman yok. <a href="ielts-deneme.html">IELTS Denemesi</a> yap, Writing bölümünü tamamla ve kaydet.</div>';
         } else {
           if (elCount) elCount.textContent = remaining + ' çalışma';
         }

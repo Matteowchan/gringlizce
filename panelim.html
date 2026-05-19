@@ -89,6 +89,13 @@
     .mw-status-chip.s-paid { background: rgba(44,88,86,0.08); color: #2C5856; border-color: rgba(44,88,86,0.3); }
     .mw-status-chip.s-reviewed { background: rgba(29,94,58,0.08); color: #1D5E3A; border-color: rgba(29,94,58,0.3); }
 
+    .mw-footer { padding: 1rem 2rem; border-top: 1px solid var(--line, #D9D2C4); display: none; justify-content: space-between; align-items: center; gap: 1rem; flex-shrink: 0; flex-wrap: wrap; }
+    .mw-footer.show { display: flex; }
+    .mw-delete-hint { font-size: 0.8rem; color: var(--text-muted, #6B6862); flex: 1; min-width: 200px; }
+    .mw-delete-btn { background: transparent; border: 1px solid #b33a3a; color: #b33a3a; padding: 0.55rem 1.1rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.8rem; cursor: pointer; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+    .mw-delete-btn:hover:not(:disabled) { background: rgba(179,58,58,0.07); }
+    .mw-delete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
     /* Writing card status badge in list */
     .qb-list-card.qb-writing-card { cursor: pointer; }
     .qb-list-card .qb-status-pill { display: inline-block; padding: 0.18rem 0.55rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 999px; margin-left: 0.6rem; vertical-align: middle; }
@@ -971,6 +978,10 @@
         <button type="button" class="mw-close-btn" id="mw-close" aria-label="Kapat">&times;</button>
       </div>
       <div class="mw-body" id="mw-content"></div>
+      <div class="mw-footer" id="mw-footer">
+        <span class="mw-delete-hint">Bu çalışmayı sildiğinde geri alamazsın.</span>
+        <button type="button" class="mw-delete-btn" id="mw-delete">Sil</button>
+      </div>
     </div>
   </div>
 
@@ -1770,6 +1781,21 @@
       }
 
       document.getElementById('mw-content').innerHTML = html.join('');
+
+      // Show delete option only for draft/unpaid
+      var allowDelete = (sub.payment_status === 'draft' || sub.payment_status === 'unpaid');
+      var elFooter = document.getElementById('mw-footer');
+      var elDelete = document.getElementById('mw-delete');
+      if (allowDelete) {
+        elFooter.classList.add('show');
+        elDelete.dataset.subId = sub.id;
+        elDelete.disabled = false;
+        elDelete.textContent = 'Sil';
+      } else {
+        elFooter.classList.remove('show');
+        elDelete.dataset.subId = '';
+      }
+
       document.getElementById('modal-writing-detail').classList.add('show');
     });
 
@@ -1782,6 +1808,71 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         document.getElementById('modal-writing-detail').classList.remove('show');
+      }
+    });
+
+    document.getElementById('mw-delete').addEventListener('click', async function () {
+      var btn = this;
+      var subId = btn.dataset.subId;
+      if (!subId) return;
+      if (!confirm('Bu yazılı çalışmayı silmek istediğine emin misin? Bu işlem geri alınamaz.')) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Siliniyor...';
+
+      try {
+        if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase yüklenmedi');
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) {
+          alert('Oturum süresi doldu. Lütfen tekrar giriş yap.');
+          btn.disabled = false;
+          btn.textContent = 'Sil';
+          return;
+        }
+
+        var delRes = await sbCli.from('ielts_writing_submissions')
+          .delete()
+          .eq('id', subId)
+          .eq('user_id', sess.data.session.user.id);
+
+        if (delRes.error) {
+          alert('Silme hatası: ' + delRes.error.message);
+          btn.disabled = false;
+          btn.textContent = 'Sil';
+          return;
+        }
+
+        // Remove from cache
+        delete WRITING_SUBS_DATA[subId];
+
+        // Remove card from DOM
+        var card = document.querySelector('.qb-writing-card[data-sub-id="' + subId + '"]');
+        if (card) card.remove();
+
+        // Update count or show empty
+        var remaining = Object.keys(WRITING_SUBS_DATA).length;
+        var elCount = document.getElementById('writing-submissions-count');
+        var elBar = document.getElementById('writing-submissions-bar');
+        var elEmpty = document.getElementById('writing-submissions-empty');
+        if (remaining === 0) {
+          if (elCount) elCount.textContent = '';
+          if (elBar) elBar.style.display = 'none';
+          if (elEmpty) elEmpty.style.display = 'block';
+        } else {
+          if (elCount) elCount.textContent = remaining + ' çalışma';
+        }
+
+        // Close modal
+        document.getElementById('modal-writing-detail').classList.remove('show');
+        btn.disabled = false;
+        btn.textContent = 'Sil';
+      } catch (err) {
+        alert('Silme hatası: ' + (err.message || err));
+        btn.disabled = false;
+        btn.textContent = 'Sil';
       }
     });
 

@@ -96,6 +96,32 @@
     .mw-delete-btn:hover:not(:disabled) { background: rgba(179,58,58,0.07); }
     .mw-delete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    /* Task image in writing modal */
+    .mw-task-image { display: block; max-width: 100%; height: auto; margin: 0.4rem 0 1rem; border: 1px solid var(--line, #D9D2C4); background: #fff; }
+
+    /* Overall band block at top of modal body */
+    .mw-overall-band-block { background: linear-gradient(135deg, #2C5856 0%, #1d403e 100%); color: #fff; padding: 1.3rem 1.6rem; margin: 0 0 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .mw-overall-band-block .mw-ob-label { font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.82; margin-bottom: 0.25rem; }
+    .mw-overall-band-block .mw-ob-text { font-size: 0.85rem; opacity: 0.85; }
+    .mw-overall-band-block .mw-ob-band { font-family: var(--font-display, Georgia), serif; font-size: 2.6rem; line-height: 1; font-weight: 400; }
+
+    /* Feedback block under each task */
+    .mw-feedback { background: #FAF6E8; border: 1px solid rgba(192,153,71,0.45); border-left: 4px solid #C09947; padding: 1.1rem 1.3rem; margin: 1.2rem 0 0; }
+    .mw-feedback-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.85rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(192,153,71,0.3); }
+    .mw-feedback-head h4 { font-family: var(--font-display, Georgia), serif; font-size: 1.05rem; margin: 0; color: var(--text, #1A2230); }
+    .mw-band-badge { background: #2C5856; color: #fff; padding: 0.35rem 0.95rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.92rem; font-weight: 700; letter-spacing: 0.04em; display: inline-flex; align-items: baseline; gap: 0.4rem; }
+    .mw-band-badge .lbl { opacity: 0.7; font-weight: 500; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    .mw-crit { padding: 0.7rem 0; border-bottom: 1px dashed rgba(192,153,71,0.3); }
+    .mw-crit:last-child { border-bottom: none; padding-bottom: 0; }
+    .mw-crit-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; margin-bottom: 0.35rem; }
+    .mw-crit-name { font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B6862; }
+    .mw-crit-band { font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.95rem; font-weight: 700; color: #2C5856; flex-shrink: 0; }
+    .mw-crit-notes { font-size: 0.9rem; line-height: 1.55; color: #4F4D49; white-space: pre-wrap; margin: 0; font-family: var(--font-body, Georgia), serif; }
+    .mw-crit-empty { font-size: 0.85rem; color: var(--text-muted, #6B6862); font-style: italic; margin: 0; }
+    .mw-overall-notes { background: #FBFAF6; border-left: 3px solid #2C5856; padding: 0.9rem 1.1rem; margin-top: 1rem; }
+    .mw-overall-notes-label { font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #6B6862; margin-bottom: 0.4rem; }
+    .mw-overall-notes p { margin: 0; white-space: pre-wrap; line-height: 1.55; font-family: var(--font-body, Georgia), serif; font-size: 0.92rem; color: var(--text, #1A2230); }
+
     /* Writing card status badge in list */
     .qb-list-card.qb-writing-card { cursor: pointer; }
     .qb-list-card .qb-status-pill { display: inline-block; padding: 0.18rem 0.55rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 999px; margin-left: 0.6rem; vertical-align: middle; }
@@ -1648,7 +1674,7 @@
         if (!elArea || !elGrid) return;
 
         var subsRes = await sbCli.from('ielts_writing_submissions')
-          .select('id, test_id, task1_essay, task2_essay, task1_word_count, task2_word_count, package_type, payment_status, overall_writing_band, submitted_at, time_spent_seconds, test:test_id (slug, name)')
+          .select('id, test_id, task1_essay, task2_essay, task1_word_count, task2_word_count, package_type, payment_status, overall_writing_band, submitted_at, time_spent_seconds, task1_feedback, task2_feedback, task1_band, task2_band, reviewed_at, test:test_id (slug, name)')
           .eq('user_id', userId)
           .order('submitted_at', { ascending: false });
 
@@ -1690,13 +1716,16 @@
         var promptsByTest = {};
         if (sectIds.length) {
           var partsRes = await sbCli.from('ielts_parts')
-            .select('section_id, part_number, task_prompt')
+            .select('section_id, part_number, task_prompt, task_image_url, passage_image_url, image_url')
             .in('section_id', sectIds);
           ((partsRes && partsRes.data) || []).forEach(function (p) {
             var tid = sectIdToTestId[p.section_id];
             if (!tid) return;
             if (!promptsByTest[tid]) promptsByTest[tid] = {};
-            promptsByTest[tid][p.part_number] = p.task_prompt || '';
+            promptsByTest[tid][p.part_number] = {
+              text: p.task_prompt || '',
+              image: p.task_image_url || p.passage_image_url || p.image_url || ''
+            };
           });
         }
 
@@ -1712,6 +1741,61 @@
       }
     })();
 
+    // Render feedback block (criteria + notes) for a given task
+    function renderFeedbackBlock(taskNum, fb, band) {
+      if (!fb || typeof fb !== 'object') return '';
+      var critLabels = taskNum === 1 ? {
+        task_achievement: 'Task Achievement',
+        coherence: 'Coherence & Cohesion',
+        lexical: 'Lexical Resource',
+        grammar: 'Grammatical Range & Accuracy'
+      } : {
+        task_response: 'Task Response',
+        coherence: 'Coherence & Cohesion',
+        lexical: 'Lexical Resource',
+        grammar: 'Grammatical Range & Accuracy'
+      };
+
+      var hasAnyCrit = false;
+      var critHtml = Object.keys(critLabels).map(function (k) {
+        var item = fb[k] || {};
+        if (item.band == null && !item.notes) return '';
+        hasAnyCrit = true;
+        var b = (item.band != null) ? item.band : '—';
+        var notes = item.notes || '';
+        return [
+          '<div class="mw-crit">',
+          '  <div class="mw-crit-head">',
+          '    <span class="mw-crit-name">' + escHtmlPanel(critLabels[k]) + '</span>',
+          '    <span class="mw-crit-band">Band ' + escHtmlPanel(b) + '</span>',
+          '  </div>',
+          notes ? '<p class="mw-crit-notes">' + escHtmlPanel(notes) + '</p>' : '<p class="mw-crit-empty">Yorum girilmedi.</p>',
+          '</div>'
+        ].join('');
+      }).join('');
+
+      var overallNotes = fb.overall_notes || '';
+      var overallNotesHtml = overallNotes ? [
+        '<div class="mw-overall-notes">',
+        '  <div class="mw-overall-notes-label">Genel Yorum</div>',
+        '  <p>' + escHtmlPanel(overallNotes) + '</p>',
+        '</div>'
+      ].join('') : '';
+
+      if (!hasAnyCrit && !overallNotes) return '';
+
+      return [
+        '<div class="mw-feedback">',
+        '  <div class="mw-feedback-head">',
+        '    <h4>Task ' + taskNum + ' Geri Bildirimi</h4>',
+        (band != null) ? '<span class="mw-band-badge"><span class="lbl">Band</span>' + escHtmlPanel(band) + '</span>' : '',
+        '  </div>',
+        critHtml,
+        overallNotesHtml,
+        '</div>'
+      ].join('');
+    }
+
     // Writing modal open/close
     document.addEventListener('click', function (e) {
       var card = e.target.closest('.qb-writing-card');
@@ -1723,6 +1807,7 @@
 
       var sub = data.sub;
       var prompts = data.prompts || {};
+      var isReviewed = !!sub.reviewed_at;
 
       var testName = (sub.test && sub.test.name) || 'IELTS Writing';
       var pkg = WRITING_PKG_LABELS[sub.package_type] || sub.package_type || '—';
@@ -1734,23 +1819,47 @@
 
       var statusBar = ['<span class="mw-status-chip ' + statusClass + '">' + escHtmlPanel(status) + '</span>'];
       if (sub.overall_writing_band) {
-        statusBar.push('<span class="mw-status-chip s-reviewed">Band ' + escHtmlPanel(sub.overall_writing_band) + '</span>');
+        statusBar.push('<span class="mw-status-chip s-reviewed">Genel Band ' + escHtmlPanel(sub.overall_writing_band) + '</span>');
       }
       document.getElementById('mw-status-bar').innerHTML = statusBar.join('');
 
       var html = [];
+
+      // Overall band block on top if reviewed
+      if (isReviewed && sub.overall_writing_band != null) {
+        html.push('<div class="mw-overall-band-block">');
+        html.push('  <div>');
+        html.push('    <div class="mw-ob-label">Genel Writing Band</div>');
+        html.push('    <div class="mw-ob-text">Değerlendirme tamamlandı &middot; ' + escHtmlPanel(formatRelativeDate(sub.reviewed_at)) + '</div>');
+        html.push('  </div>');
+        html.push('  <div class="mw-ob-band">' + escHtmlPanel(sub.overall_writing_band) + '</div>');
+        html.push('</div>');
+      }
+
       var showT1 = sub.package_type !== 'task2_only';
       var showT2 = sub.package_type !== 'task1_only';
 
+      function getPromptData(num) {
+        var p = prompts[num];
+        if (!p) return { text: '', image: '' };
+        // Backward compatibility: if prompts stored as plain string
+        if (typeof p === 'string') return { text: p, image: '' };
+        return { text: p.text || '', image: p.image || '' };
+      }
+
       if (showT1) {
+        var p1 = getPromptData(1);
         html.push('<div class="mw-task">');
         html.push('  <div class="mw-task-head">');
         html.push('    <h3>Task 1</h3>');
         html.push('    <span class="mw-task-words">' + (sub.task1_word_count || 0) + ' kelime</span>');
         html.push('  </div>');
-        if (prompts[1]) {
+        if (p1.text) {
           html.push('  <div class="mw-prompt-label">Soru</div>');
-          html.push('  <div class="mw-prompt">' + escHtmlPanel(prompts[1]) + '</div>');
+          html.push('  <div class="mw-prompt">' + escHtmlPanel(p1.text) + '</div>');
+        }
+        if (p1.image) {
+          html.push('  <img src="' + escHtmlPanel(p1.image) + '" alt="Task 1 görseli" class="mw-task-image" loading="lazy">');
         }
         html.push('  <div class="mw-prompt-label">Yazılan</div>');
         if (sub.task1_essay && sub.task1_essay.trim()) {
@@ -1758,24 +1867,34 @@
         } else {
           html.push('  <div class="mw-essay-empty">(boş)</div>');
         }
+        if (isReviewed) {
+          html.push(renderFeedbackBlock(1, sub.task1_feedback, sub.task1_band));
+        }
         html.push('</div>');
       }
 
       if (showT2) {
+        var p2 = getPromptData(2);
         html.push('<div class="mw-task">');
         html.push('  <div class="mw-task-head">');
         html.push('    <h3>Task 2</h3>');
         html.push('    <span class="mw-task-words">' + (sub.task2_word_count || 0) + ' kelime</span>');
         html.push('  </div>');
-        if (prompts[2]) {
+        if (p2.text) {
           html.push('  <div class="mw-prompt-label">Soru</div>');
-          html.push('  <div class="mw-prompt">' + escHtmlPanel(prompts[2]) + '</div>');
+          html.push('  <div class="mw-prompt">' + escHtmlPanel(p2.text) + '</div>');
+        }
+        if (p2.image) {
+          html.push('  <img src="' + escHtmlPanel(p2.image) + '" alt="Task 2 görseli" class="mw-task-image" loading="lazy">');
         }
         html.push('  <div class="mw-prompt-label">Yazılan</div>');
         if (sub.task2_essay && sub.task2_essay.trim()) {
           html.push('  <div class="mw-essay">' + escHtmlPanel(sub.task2_essay) + '</div>');
         } else {
           html.push('  <div class="mw-essay-empty">(boş)</div>');
+        }
+        if (isReviewed) {
+          html.push(renderFeedbackBlock(2, sub.task2_feedback, sub.task2_band));
         }
         html.push('</div>');
       }

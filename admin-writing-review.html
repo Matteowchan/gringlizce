@@ -55,6 +55,9 @@
     .essay-block .essay-text {
       white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem; color: var(--text);
     }
+    .essay-block .essay-image {
+      display: block; max-width: 100%; height: auto; margin: 0 0 0.9rem; border: 1px solid var(--line); background: #fff;
+    }
 
     .form-block {
       background: var(--bg-card); border: 1px solid var(--line);
@@ -156,12 +159,14 @@
           <div class="essay-block" id="task1Essay">
             <div class="essay-meta" id="task1Meta">Task 1</div>
             <div class="essay-prompt" id="task1Prompt"></div>
+            <img id="task1Image" class="essay-image" style="display:none" alt="Task 1 görseli" loading="lazy">
             <div class="essay-text" id="task1Text"></div>
           </div>
 
           <div class="essay-block" id="task2Essay">
             <div class="essay-meta" id="task2Meta">Task 2</div>
             <div class="essay-prompt" id="task2Prompt"></div>
+            <img id="task2Image" class="essay-image" style="display:none" alt="Task 2 görseli" loading="lazy">
             <div class="essay-text" id="task2Text"></div>
           </div>
         </div>
@@ -316,9 +321,9 @@
       }
       var sub = subRes.data;
 
-      // Parts'ı yükle (task_prompt için)
+      // Parts'ı yükle (task_prompt + image için)
       var partsRes = await sb.from('ielts_parts')
-        .select('part_number, task_prompt')
+        .select('part_number, task_prompt, task_image_url, passage_image_url, image_url')
         .eq('section_id', (await sb.from('ielts_sections')
           .select('id')
           .eq('test_id', sub.test_id)
@@ -326,8 +331,12 @@
           .maybeSingle()).data.id)
         .order('part_number');
       var parts = (partsRes.data) || [];
-      var prompt1 = (parts.find(function (p) { return p.part_number === 1; }) || {}).task_prompt || '';
-      var prompt2 = (parts.find(function (p) { return p.part_number === 2; }) || {}).task_prompt || '';
+      var part1 = parts.find(function (p) { return p.part_number === 1; }) || {};
+      var part2 = parts.find(function (p) { return p.part_number === 2; }) || {};
+      var prompt1 = part1.task_prompt || '';
+      var prompt2 = part2.task_prompt || '';
+      var image1 = part1.task_image_url || part1.passage_image_url || part1.image_url || '';
+      var image2 = part2.task_image_url || part2.passage_image_url || part2.image_url || '';
 
       // Öğrenci bilgisi
       var userLabel = '—';
@@ -347,10 +356,14 @@
       // Essay alanlarını doldur
       document.getElementById('task1Meta').textContent = 'Task 1 · ' + (sub.task1_word_count || 0) + ' kelime';
       document.getElementById('task1Prompt').textContent = prompt1;
+      var t1Img = document.getElementById('task1Image');
+      if (image1) { t1Img.src = image1; t1Img.style.display = 'block'; } else { t1Img.style.display = 'none'; }
       document.getElementById('task1Text').textContent = sub.task1_essay || '(boş)';
 
       document.getElementById('task2Meta').textContent = 'Task 2 · ' + (sub.task2_word_count || 0) + ' kelime';
       document.getElementById('task2Prompt').textContent = prompt2;
+      var t2Img = document.getElementById('task2Image');
+      if (image2) { t2Img.src = image2; t2Img.style.display = 'block'; } else { t2Img.style.display = 'none'; }
       document.getElementById('task2Text').textContent = sub.task2_essay || '(boş)';
 
       // Paket task1_only ise Task 2 formunu, task2_only ise Task 1 formunu gizle

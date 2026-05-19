@@ -1716,15 +1716,22 @@
         var promptsByTest = {};
         if (sectIds.length) {
           var partsRes = await sbCli.from('ielts_parts')
-            .select('section_id, part_number, task_prompt, task_image_url, passage_image_url, image_url')
+            .select('*')
             .in('section_id', sectIds);
-          ((partsRes && partsRes.data) || []).forEach(function (p) {
+          if (partsRes && partsRes.error) console.warn('[writing-parts]', partsRes.error.message);
+          var rows = (partsRes && partsRes.data) || [];
+          console.log('[writing-modal] parts loaded:', rows.length, rows);
+          rows.forEach(function (p) {
             var tid = sectIdToTestId[p.section_id];
             if (!tid) return;
             if (!promptsByTest[tid]) promptsByTest[tid] = {};
+            // Try every known image column name; first non-empty wins
+            var image = p.task_image_url || p.passage_image_url || p.image_url
+                     || p.prompt_image_url || p.chart_url || p.diagram_url
+                     || p.image || p.task_image || '';
             promptsByTest[tid][p.part_number] = {
-              text: p.task_prompt || '',
-              image: p.task_image_url || p.passage_image_url || p.image_url || ''
+              text: p.task_prompt || p.passage_html || p.context || '',
+              image: image
             };
           });
         }

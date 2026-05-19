@@ -323,7 +323,7 @@
 
       // Parts'ı yükle (task_prompt + image için)
       var partsRes = await sb.from('ielts_parts')
-        .select('part_number, task_prompt, task_image_url, passage_image_url, image_url')
+        .select('*')
         .eq('section_id', (await sb.from('ielts_sections')
           .select('id')
           .eq('test_id', sub.test_id)
@@ -331,12 +331,17 @@
           .maybeSingle()).data.id)
         .order('part_number');
       var parts = (partsRes.data) || [];
+      console.log('[admin-writing-review] parts loaded:', parts);
       var part1 = parts.find(function (p) { return p.part_number === 1; }) || {};
       var part2 = parts.find(function (p) { return p.part_number === 2; }) || {};
-      var prompt1 = part1.task_prompt || '';
-      var prompt2 = part2.task_prompt || '';
-      var image1 = part1.task_image_url || part1.passage_image_url || part1.image_url || '';
-      var image2 = part2.task_image_url || part2.passage_image_url || part2.image_url || '';
+      var prompt1 = part1.task_prompt || part1.passage_html || part1.context || '';
+      var prompt2 = part2.task_prompt || part2.passage_html || part2.context || '';
+      var image1 = part1.task_image_url || part1.passage_image_url || part1.image_url
+                 || part1.prompt_image_url || part1.chart_url || part1.diagram_url
+                 || part1.image || part1.task_image || '';
+      var image2 = part2.task_image_url || part2.passage_image_url || part2.image_url
+                 || part2.prompt_image_url || part2.chart_url || part2.diagram_url
+                 || part2.image || part2.task_image || '';
 
       // Öğrenci bilgisi
       var userLabel = '—';

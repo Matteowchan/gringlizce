@@ -506,6 +506,12 @@
     function renderGroup(g) {
       const range = g.start_question_number === g.end_question_number ? `Question ${g.start_question_number}` : `Questions ${g.start_question_number}–${g.end_question_number}`;
       let h = `<div class="question-group"><div class="group-header"><div class="q-range">${range}</div><div class="instructions">${escapeHtml(g.instructions)}</div></div>`;
+      // Group-level image (skip for renderers that handle image themselves)
+      const sc = g.shared_content || {};
+      const handlesImage = g.question_type === 'map_labeling';
+      if (sc.image_url && !handlesImage) {
+        h += `<div style="margin-bottom:1rem; text-align:center;"><img src="${sc.image_url}" alt="Görsel" style="max-width:100%; max-height:480px; border:1px solid #d8d2c4;"></div>`;
+      }
       switch (g.question_type) {
         case 'form_completion': h += renderForm(g); break;
         case 'sentence_completion': h += renderSentence(g); break;

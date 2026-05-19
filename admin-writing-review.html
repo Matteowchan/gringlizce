@@ -494,17 +494,27 @@
           payment_status: 'reviewed'
         };
 
+        console.log('[admin-save] payload:', payload);
+        console.log('[admin-save] SUB_ID:', SUB_ID);
+
         var upd = await sb.from('ielts_writing_submissions')
           .update(payload)
-          .eq('id', SUB_ID);
+          .eq('id', SUB_ID)
+          .select();
+
+        console.log('[admin-save] response:', upd);
 
         if (upd.error) {
           status.className = 'status-line err';
           status.textContent = 'Hata: ' + upd.error.message;
           btn.disabled = false;
+        } else if (!upd.data || upd.data.length === 0) {
+          status.className = 'status-line err';
+          status.textContent = 'UYARI: Hiç satır güncellenmedi. RLS politikası update\'i engelliyor olabilir. Konsolu kontrol et.';
+          btn.disabled = false;
         } else {
           status.className = 'status-line ok';
-          status.textContent = 'Kaydedildi. Öğrenci panelinde değerlendirme görünür.';
+          status.textContent = 'Kaydedildi (' + upd.data.length + ' satır). Öğrenci panelinde değerlendirme görünür.';
           btn.disabled = false;
         }
       });

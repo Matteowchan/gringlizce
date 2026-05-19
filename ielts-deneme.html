@@ -100,8 +100,15 @@
       font-size: 1.25rem;
       font-weight: 600;
       color: var(--ink, #1a2a28);
-      margin: 0 0 0.4rem;
+      margin: 0 0 0.5rem;
       line-height: 1.3;
+    }
+    .deneme-card .topics {
+      font-size: 0.78rem;
+      color: #888;
+      line-height: 1.5;
+      margin: 0 0 0.5rem;
+      padding-right: 1.2rem;
     }
 
     .deneme-card .status-dot {
@@ -691,10 +698,14 @@
           }
         }
         const dotHtml = dotClass ? '<span class="status-dot ' + dotClass + '"></span>' : '';
+        const topics = Array.isArray(t.topic_tags) && t.topic_tags.length
+          ? '<div class="topics">' + t.topic_tags.map(escapeHtml).join(' · ') + '</div>'
+          : '';
         return '<a class="deneme-card' + cardClass + '" href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
              + dotHtml
              + '<div class="eyebrow">' + escapeHtml(date) + '</div>'
              + '<div class="name">' + escapeHtml(t.name) + '</div>'
+             + topics
              + '<div class="detail"><span>' + escapeHtml(detailText) + '</span><span class="arrow">→</span></div>'
              + '</a>';
       }).join('');

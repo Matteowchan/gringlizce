@@ -775,40 +775,75 @@
     }
 
     /* Progress group accordion */
+    .progress-group {
+      margin-bottom: 0.7rem;
+    }
     .progress-group-head {
       width: 100%;
-      background: transparent;
-      border: none;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--gold, #c89a3c);
       cursor: pointer;
       text-align: left;
-      padding: 0.85rem 0;
+      padding: 0.95rem 1.1rem 0.95rem 1rem;
       font-family: inherit;
-      transition: padding 0.2s ease;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.7rem;
     }
-    .progress-group-head:hover .progress-group-name { color: var(--gold, #c89a3c); }
-    .progress-group-head .progress-group-name { transition: color 0.15s; }
+    .progress-group-head:hover {
+      background: rgba(200, 154, 60, 0.07);
+      border-left-color: var(--teal, #2C5856);
+    }
+    .progress-group-head:hover .progress-group-name { color: var(--teal, #2C5856); }
+    .progress-group-head .progress-group-name {
+      transition: color 0.15s;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .progress-group[data-expanded="true"] .progress-group-head {
+      background: rgba(44, 88, 86, 0.05);
+      border-left-color: var(--teal, #2C5856);
+    }
+    .progress-group[data-expanded="true"] .progress-group-head .progress-group-name {
+      color: var(--teal, #2C5856);
+    }
     .progress-group-caret {
       font-family: var(--font-display);
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--text-muted);
-      margin-left: 0.7rem;
+      margin-left: 0.5rem;
       transition: transform 0.25s ease, color 0.15s;
       display: inline-block;
       line-height: 1;
+      flex-shrink: 0;
     }
     .progress-group[data-expanded="true"] .progress-group-caret {
       transform: rotate(180deg);
       color: var(--teal, #2C5856);
     }
+    .progress-group-meta {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-left: auto;
+    }
     .progress-group-body {
       overflow: hidden;
       max-height: 0;
       transition: max-height 0.35s ease, padding 0.2s ease;
-      padding: 0;
+      padding: 0 1rem;
+      background: transparent;
     }
     .progress-group[data-expanded="true"] .progress-group-body {
       max-height: 4000px;
-      padding: 0.6rem 0 1rem;
+      padding: 1rem 1rem 1.2rem;
     }
 
 
@@ -1757,16 +1792,35 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
 
         // Map category names to higher-level exam grouping
         function categoryToExam(category) {
-          var c = String(category || '').toLowerCase().trim();
+          // Normalize: lowercase, replace -/_ with spaces, collapse whitespace
+          var c = String(category || '').toLowerCase()
+            .replace(/[-_]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          // Direct exam code matches (sat rw, sat math, ielts, etc.)
+          if (c === 'sat rw' || c === 'sat reading and writing' || c === 'sat r w') {
+            return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
+          }
+          if (c === 'sat math' || c === 'sat mathematics') {
+            return { code: 'sat_math', display: 'SAT · Math', order: 1 };
+          }
+          if (c === 'sat') {
+            return { code: 'sat', display: 'SAT', order: 0 };
+          }
+
+          // SAT Math domains
           if (['algebra', 'advanced math', 'advanced mathematics',
-               'problem-solving and data analysis', 'problem solving and data analysis',
+               'problem solving and data analysis',
                'geometry and trigonometry', 'geometry'].indexOf(c) !== -1) {
             return { code: 'sat_math', display: 'SAT · Math', order: 1 };
           }
+          // SAT RW domains
           if (['craft and structure', 'information and ideas',
                'expression of ideas', 'standard english conventions'].indexOf(c) !== -1) {
             return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
           }
+          // YDS / YDT
           if (['cloze test', 'dialogue completion',
                'english to turkish translation', 'turkish to english translation',
                'sentence completion', 'most comprehensive', 'irrelevant sentence',
@@ -1774,10 +1828,16 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
                'reading comprehension'].indexOf(c) !== -1) {
             return { code: 'yds_ydt', display: 'YDS / YDT', order: 3 };
           }
+          if (c === 'yds' || c === 'ydt' || c === 'yds ydt' || c === 'yds ydt mini') {
+            return { code: 'yds_ydt', display: 'YDS / YDT', order: 3 };
+          }
+
+          // Exam prefix matches
           if (c.indexOf('ielts') === 0) return { code: 'ielts', display: 'IELTS', order: 2 };
           if (c.indexOf('toefl') === 0) return { code: 'toefl', display: 'TOEFL', order: 4 };
-          if (c.indexOf('ib ') === 0 || c === 'ib') return { code: 'ib', display: 'IB English B', order: 5 };
-          return { code: 'other', display: 'Diğer', order: 99 };
+          if (c === 'ib' || c.indexOf('ib ') === 0) return { code: 'ib', display: 'IB English B', order: 5 };
+
+          return { code: 'other', display: 'Diğer (' + category + ')', order: 99 };
         }
         function humanize(s) {
           var STOP = { 'and': 1, 'or': 1, 'of': 1, 'in': 1, 'on': 1, 'the': 1, 'to': 1, 'for': 1, 'at': 1, 'by': 1, 'with': 1, 'a': 1, 'an': 1, 'vs': 1, 'as': 1 };
@@ -1792,6 +1852,12 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         }
 
         // Re-group by exam (instead of category). Subcategories become rows.
+        // Debug: log unique categories so we can see exactly what's in the DB
+        console.log('[progress] DB categories:', Object.keys(groups));
+        console.log('[progress] mappings:', Object.keys(groups).map(function (c) {
+          return c + ' -> ' + categoryToExam(c).code;
+        }));
+
         var examGroups = {};
         Object.keys(groups).forEach(function (cat) {
           var exam = categoryToExam(cat);

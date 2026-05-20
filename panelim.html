@@ -1792,24 +1792,34 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
 
         // Map category names to higher-level exam grouping
         function categoryToExam(category) {
-          // Normalize: lowercase, replace -/_ with spaces, collapse whitespace
-          var c = String(category || '').toLowerCase()
-            .replace(/[-_]+/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
+          var raw = String(category || '');
+          // Normalize: lowercase, hyphens/underscores -> spaces, collapse whitespace
+          var c = raw.toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-          // Direct exam code matches (sat rw, sat math, ielts, etc.)
-          if (c === 'sat rw' || c === 'sat reading and writing' || c === 'sat r w') {
+          // ===== Prefix-based detection (catches slug-style like 'yds-yokdil-...') =====
+          // SAT RW (must check before generic SAT)
+          if (/^sat\s+(rw|r w|reading)/.test(c)) {
             return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
           }
-          if (c === 'sat math' || c === 'sat mathematics') {
+          if (/^sat\s+math/.test(c)) {
             return { code: 'sat_math', display: 'SAT · Math', order: 1 };
           }
-          if (c === 'sat') {
-            return { code: 'sat', display: 'SAT', order: 0 };
+          if (c === 'sat' || /^sat\s/.test(c)) {
+            return { code: 'sat', display: 'SAT', order: 1 };
           }
+          if (/^ielts/.test(c)) return { code: 'ielts', display: 'IELTS', order: 2 };
+          if (/^toefl/.test(c)) return { code: 'toefl', display: 'TOEFL', order: 5 };
+          if (/^ydt/.test(c)) return { code: 'ydt', display: 'YDT', order: 3 };
+          if (/^yds/.test(c) || /^yokdil/.test(c) || /\byokdil\b/.test(c)) {
+            return { code: 'yds', display: 'YDS / YÖKDİL', order: 4 };
+          }
+          if (c === 'ib' || /^ib\s/.test(c) || /^ib english/.test(c)) {
+            return { code: 'ib', display: 'IB English B', order: 6 };
+          }
+          if (/^act/.test(c)) return { code: 'act', display: 'ACT', order: 7 };
 
-          // SAT Math domains
+          // ===== Named topic detection (for unprefixed category names) =====
+          // SAT Math topics
           if (['algebra', 'advanced math', 'advanced mathematics',
                'problem solving and data analysis',
                'geometry and trigonometry', 'geometry'].indexOf(c) !== -1) {
@@ -1820,24 +1830,22 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
                'expression of ideas', 'standard english conventions'].indexOf(c) !== -1) {
             return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
           }
-          // YDS / YDT
+          // YDT question types
           if (['cloze test', 'dialogue completion',
                'english to turkish translation', 'turkish to english translation',
                'sentence completion', 'most comprehensive', 'irrelevant sentence',
                'paragraph completion', 'restatement', 'paragraph',
                'reading comprehension'].indexOf(c) !== -1) {
-            return { code: 'yds_ydt', display: 'YDS / YDT', order: 3 };
-          }
-          if (c === 'yds' || c === 'ydt' || c === 'yds ydt' || c === 'yds ydt mini') {
-            return { code: 'yds_ydt', display: 'YDS / YDT', order: 3 };
+            return { code: 'ydt', display: 'YDT', order: 3 };
           }
 
-          // Exam prefix matches
-          if (c.indexOf('ielts') === 0) return { code: 'ielts', display: 'IELTS', order: 2 };
-          if (c.indexOf('toefl') === 0) return { code: 'toefl', display: 'TOEFL', order: 4 };
-          if (c === 'ib' || c.indexOf('ib ') === 0) return { code: 'ib', display: 'IB English B', order: 5 };
-
-          return { code: 'other', display: 'Diğer (' + category + ')', order: 99 };
+          // ===== Last resort: humanize raw and create a per-category group =====
+          var humanized = raw.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim()
+            .split(' ').map(function (w) {
+              return w.length > 0 ? w.charAt(0).toUpperCase() + w.slice(1) : '';
+            }).join(' ');
+          var slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+          return { code: 'cat_' + slug, display: humanized || raw, order: 90 };
         }
         function humanize(s) {
           var STOP = { 'and': 1, 'or': 1, 'of': 1, 'in': 1, 'on': 1, 'the': 1, 'to': 1, 'for': 1, 'at': 1, 'by': 1, 'with': 1, 'a': 1, 'an': 1, 'vs': 1, 'as': 1 };
@@ -1852,11 +1860,13 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         }
 
         // Re-group by exam (instead of category). Subcategories become rows.
-        // Debug: log unique categories so we can see exactly what's in the DB
-        console.log('[progress] DB categories:', Object.keys(groups));
-        console.log('[progress] mappings:', Object.keys(groups).map(function (c) {
-          return c + ' -> ' + categoryToExam(c).code;
-        }));
+        // Log unmapped categories only (debugging)
+        var unmapped = Object.keys(groups).filter(function (c) {
+          return categoryToExam(c).code.indexOf('cat_') === 0;
+        });
+        if (unmapped.length > 0) {
+          console.log('[progress] unmapped categories:', unmapped);
+        }
 
         var examGroups = {};
         Object.keys(groups).forEach(function (cat) {

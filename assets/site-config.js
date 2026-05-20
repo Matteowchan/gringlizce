@@ -231,7 +231,11 @@
   // - Login ise: dairesel avatar (email/isim ilk harfi) + dropdown (Panelim / Şifre / Çıkış)
   // =============================================================
   function inSubdir() {
-    return location.pathname.indexOf('/urun/') !== -1;
+    // True if the page sits inside any one-level subdirectory (e.g. /urun/, /sat-ders-notlari/)
+    var path = location.pathname.replace(/\/+$/, '');
+    var parts = path.split('/').filter(Boolean);
+    // If there are 2+ parts, last is the file, second-to-last is the subdir
+    return parts.length >= 2;
   }
   function pageHref(name) {
     return inSubdir() ? ('../' + name) : name;

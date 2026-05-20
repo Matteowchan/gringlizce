@@ -644,6 +644,89 @@
       .vocab-card { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; }
       .vocab-card-level { display: none; }
     }
+
+    /* ============ Progress per subcategory ============ */
+    .progress-area-content { padding: 0; }
+    .progress-avg-wrap {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 0.7rem;
+      margin-bottom: 1.5rem;
+    }
+    .progress-avg-value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      color: #5a8a3a;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .progress-avg-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .progress-group { margin-bottom: 2.2rem; }
+    .progress-group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1rem;
+      padding-bottom: 0.55rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .progress-group-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .progress-group-meta {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+    }
+    .progress-row.untouched { opacity: 0.5; }
+    .progress-label { color: var(--text); font-weight: 600; }
+    .progress-val { color: #5a8a3a; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.04em; }
+    .progress-val.muted {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-style: italic;
+      letter-spacing: 0;
+    }
+    .progress-track {
+      width: 100%;
+      height: 7px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.95rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #5a8a3a;
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .progress-row.untouched + .progress-track .progress-fill {
+      background: var(--text-muted);
+      opacity: 0.3;
+    }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -798,15 +881,28 @@
         </div>
         <a href="#gri-quota-area" class="us-card accent-gold">
           <div class="us-label">Gri Bugün</div>
-          <div class="us-value" id="us-gri-daily">—</div>
-          <div class="us-sub" id="us-gri-daily-sub">— / 10 hak</div>
+          <div class="us-value" id="gri-daily-remaining">—</div>
+          <div class="us-sub" id="gri-daily-line">— / 10</div>
         </a>
         <a href="#gri-quota-area" class="us-card accent-gold">
           <div class="us-label">Gri Bonus</div>
-          <div class="us-value" id="us-gri-bonus">—</div>
+          <div class="us-value" id="gri-bonus-remaining">—</div>
           <div class="us-sub">paketten birikmiş</div>
         </a>
       </div>
+    </div>
+
+    <div id="progress-area" style="padding: 1.5rem 0 2.5rem; display: none;">
+      <div class="section-head">
+        <span class="eyebrow">İlerleme</span>
+        <h2>Hangi Konuda Ne Kadar Çalıştın</h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+      <div class="progress-avg-wrap">
+        <div class="progress-avg-value" id="progress-avg">—</div>
+        <div class="progress-avg-label">Ortalama</div>
+      </div>
+      <div id="progress-groups"></div>
     </div>
 
     <div id="access-error" class="access-error" style="display:none;"></div>
@@ -1285,6 +1381,144 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
     })();
 
     // Kelime Listem'i yükle
+    // ===== Progress per (category, subcategory) =====
+    (async function loadProgress() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        // Build universe: distinct (category, subcategory) from published questions
+        var qRes = await sbCli
+          .from('questions')
+          .select('category, subcategory')
+          .eq('is_published', true)
+          .not('subcategory', 'is', null)
+          .not('category', 'is', null)
+          .limit(20000);
+        if (qRes.error) { console.warn('[progress] questions fetch failed:', qRes.error.message); return; }
+
+        var universe = {};
+        (qRes.data || []).forEach(function (r) {
+          var k = String(r.category) + '||' + String(r.subcategory);
+          if (!universe[k]) universe[k] = { category: r.category, subcategory: r.subcategory, total: 0, correct: 0 };
+        });
+
+        // Fetch user's answers with embedded question category/subcategory
+        var aRes = await sbCli
+          .from('user_answers')
+          .select('is_correct, questions(category, subcategory)')
+          .eq('user_id', userId);
+        if (aRes.error) { console.warn('[progress] answers fetch failed:', aRes.error.message); return; }
+
+        var totalAll = 0, correctAll = 0;
+        (aRes.data || []).forEach(function (r) {
+          var q = r.questions;
+          if (!q || !q.category || !q.subcategory) return;
+          var k = String(q.category) + '||' + String(q.subcategory);
+          if (!universe[k]) universe[k] = { category: q.category, subcategory: q.subcategory, total: 0, correct: 0 };
+          universe[k].total += 1;
+          if (r.is_correct) universe[k].correct += 1;
+          totalAll += 1;
+          if (r.is_correct) correctAll += 1;
+        });
+
+        // Group by category
+        var groups = {};
+        Object.keys(universe).forEach(function (k) {
+          var t = universe[k];
+          if (!groups[t.category]) groups[t.category] = [];
+          var pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+          groups[t.category].push({
+            subcategory: t.subcategory,
+            total: t.total,
+            correct: t.correct,
+            pct: pct,
+            attempted: t.total > 0
+          });
+        });
+
+        var catOrder = ['sat-rw', 'sat_rw', 'sat-math', 'sat_math', 'sat', 'ielts', 'toefl', 'ydt', 'yds', 'ib'];
+        var catDisplayMap = {
+          'sat-rw': 'SAT · Reading & Writing',
+          'sat_rw': 'SAT · Reading & Writing',
+          'sat-math': 'SAT · Math',
+          'sat_math': 'SAT · Math',
+          'sat': 'SAT',
+          'ielts': 'IELTS',
+          'toefl': 'TOEFL',
+          'ydt': 'YDT',
+          'yds': 'YDS',
+          'ib': 'IB English B'
+        };
+        function catDisplay(c) {
+          var lc = String(c).toLowerCase();
+          return catDisplayMap[lc] || c.toUpperCase().replace(/[-_]/g, ' ');
+        }
+        function humanize(s) {
+          return String(s).replace(/[_-]/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+        function escHtml(s) {
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        var catKeys = Object.keys(groups).sort(function (a, b) {
+          var ia = catOrder.indexOf(String(a).toLowerCase());
+          var ib = catOrder.indexOf(String(b).toLowerCase());
+          if (ia === -1) ia = 100;
+          if (ib === -1) ib = 100;
+          if (ia !== ib) return ia - ib;
+          return String(a).localeCompare(String(b));
+        });
+
+        catKeys.forEach(function (c) {
+          groups[c].sort(function (a, b) {
+            if (a.attempted !== b.attempted) return a.attempted ? -1 : 1;
+            if (b.total !== a.total) return b.total - a.total;
+            return String(a.subcategory).localeCompare(String(b.subcategory));
+          });
+        });
+
+        var html = '';
+        catKeys.forEach(function (c) {
+          var topics = groups[c];
+          var attemptedCount = topics.filter(function (t) { return t.attempted; }).length;
+          html += '<div class="progress-group">';
+          html += '<div class="progress-group-head">';
+          html += '<span class="progress-group-name">' + escHtml(catDisplay(c)) + '</span>';
+          html += '<span class="progress-group-meta">' + attemptedCount + ' / ' + topics.length + ' konu</span>';
+          html += '</div>';
+          topics.forEach(function (t) {
+            var rowClass = t.attempted ? '' : ' untouched';
+            var valHtml = t.attempted
+              ? '<span class="progress-val">%' + t.pct + ' · ' + t.total + ' soru</span>'
+              : '<span class="progress-val muted">çözülmedi</span>';
+            html += '<div class="progress-row' + rowClass + '">';
+            html += '<span class="progress-label">' + escHtml(humanize(t.subcategory)) + '</span>';
+            html += valHtml;
+            html += '</div>';
+            html += '<div class="progress-track"><div class="progress-fill" style="width:' + t.pct + '%"></div></div>';
+          });
+          html += '</div>';
+        });
+
+        var groupsEl = document.getElementById('progress-groups');
+        var avgEl = document.getElementById('progress-avg');
+        var areaEl = document.getElementById('progress-area');
+        if (groupsEl) groupsEl.innerHTML = html;
+        if (avgEl) avgEl.textContent = totalAll > 0 ? '%' + Math.round((correctAll / totalAll) * 100) : '—';
+        if (areaEl) areaEl.style.display = 'block';
+      } catch (e) {
+        console.warn('[progress] load failed:', e);
+      }
+    })();
+
     // ===== Yanlış Yapılanlar & Yer İmleri için yardımcılar =====
     var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
@@ -2227,25 +2461,5 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
   </script>
 
 
-<script>
-(function () {
-  function mirror(srcId, destId, transform) {
-    var src = document.getElementById(srcId);
-    var dest = document.getElementById(destId);
-    if (!src || !dest) return;
-    var sync = function () {
-      var v = src.textContent;
-      dest.textContent = transform ? transform(v) : v;
-    };
-    sync();
-    new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true });
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    mirror('gri-daily-remaining', 'us-gri-daily');
-    mirror('gri-bonus-remaining', 'us-gri-bonus');
-    mirror('gri-daily-line', 'us-gri-daily-sub', function (v) { return v + ' hak'; });
-  });
-})();
-</script>
 </body>
 </html>

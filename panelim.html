@@ -1755,22 +1755,29 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
           });
         });
 
-        var catOrder = ['sat-rw', 'sat_rw', 'sat-math', 'sat_math', 'sat', 'ielts', 'toefl', 'ydt', 'yds', 'ib'];
-        var catDisplayMap = {
-          'sat-rw': 'SAT · Reading & Writing',
-          'sat_rw': 'SAT · Reading & Writing',
-          'sat-math': 'SAT · Math',
-          'sat_math': 'SAT · Math',
-          'sat': 'SAT',
-          'ielts': 'IELTS',
-          'toefl': 'TOEFL',
-          'ydt': 'YDT',
-          'yds': 'YDS',
-          'ib': 'IB English B'
-        };
-        function catDisplay(c) {
-          var lc = String(c).toLowerCase();
-          return catDisplayMap[lc] || c.toUpperCase().replace(/[-_]/g, ' ');
+        // Map category names to higher-level exam grouping
+        function categoryToExam(category) {
+          var c = String(category || '').toLowerCase().trim();
+          if (['algebra', 'advanced math', 'advanced mathematics',
+               'problem-solving and data analysis', 'problem solving and data analysis',
+               'geometry and trigonometry', 'geometry'].indexOf(c) !== -1) {
+            return { code: 'sat_math', display: 'SAT · Math', order: 1 };
+          }
+          if (['craft and structure', 'information and ideas',
+               'expression of ideas', 'standard english conventions'].indexOf(c) !== -1) {
+            return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
+          }
+          if (['cloze test', 'dialogue completion',
+               'english to turkish translation', 'turkish to english translation',
+               'sentence completion', 'most comprehensive', 'irrelevant sentence',
+               'paragraph completion', 'restatement', 'paragraph',
+               'reading comprehension'].indexOf(c) !== -1) {
+            return { code: 'yds_ydt', display: 'YDS / YDT', order: 3 };
+          }
+          if (c.indexOf('ielts') === 0) return { code: 'ielts', display: 'IELTS', order: 2 };
+          if (c.indexOf('toefl') === 0) return { code: 'toefl', display: 'TOEFL', order: 4 };
+          if (c.indexOf('ib ') === 0 || c === 'ib') return { code: 'ib', display: 'IB English B', order: 5 };
+          return { code: 'other', display: 'Diğer', order: 99 };
         }
         function humanize(s) {
           var STOP = { 'and': 1, 'or': 1, 'of': 1, 'in': 1, 'on': 1, 'the': 1, 'to': 1, 'for': 1, 'at': 1, 'by': 1, 'with': 1, 'a': 1, 'an': 1, 'vs': 1, 'as': 1 };
@@ -1784,17 +1791,24 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
           return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        var catKeys = Object.keys(groups).sort(function (a, b) {
-          var ia = catOrder.indexOf(String(a).toLowerCase());
-          var ib = catOrder.indexOf(String(b).toLowerCase());
-          if (ia === -1) ia = 100;
-          if (ib === -1) ib = 100;
-          if (ia !== ib) return ia - ib;
-          return String(a).localeCompare(String(b));
+        // Re-group by exam (instead of category). Subcategories become rows.
+        var examGroups = {};
+        Object.keys(groups).forEach(function (cat) {
+          var exam = categoryToExam(cat);
+          if (!examGroups[exam.code]) {
+            examGroups[exam.code] = { display: exam.display, order: exam.order, topics: [] };
+          }
+          groups[cat].forEach(function (t) { examGroups[exam.code].topics.push(t); });
         });
 
-        catKeys.forEach(function (c) {
-          groups[c].sort(function (a, b) {
+        var examKeys = Object.keys(examGroups).sort(function (a, b) {
+          var oa = examGroups[a].order, ob = examGroups[b].order;
+          if (oa !== ob) return oa - ob;
+          return examGroups[a].display.localeCompare(examGroups[b].display);
+        });
+
+        examKeys.forEach(function (k) {
+          examGroups[k].topics.sort(function (a, b) {
             if (a.attempted !== b.attempted) return a.attempted ? -1 : 1;
             if (b.total !== a.total) return b.total - a.total;
             return String(a.subcategory).localeCompare(String(b.subcategory));
@@ -1802,12 +1816,13 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         });
 
         var html = '';
-        catKeys.forEach(function (c, gIdx) {
-          var topics = groups[c];
+        examKeys.forEach(function (k) {
+          var exam = examGroups[k];
+          var topics = exam.topics;
           var attemptedCount = topics.filter(function (t) { return t.attempted; }).length;
           html += '<div class="progress-group" data-expanded="false">';
           html += '<button type="button" class="progress-group-head" aria-expanded="false">';
-          html += '<span class="progress-group-name">' + escHtml(catDisplay(c)) + '</span>';
+          html += '<span class="progress-group-name">' + escHtml(exam.display) + '</span>';
           html += '<span class="progress-group-meta">' + attemptedCount + ' / ' + topics.length + ' konu</span>';
           html += '<span class="progress-group-caret">↓</span>';
           html += '</button>';

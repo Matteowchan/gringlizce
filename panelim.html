@@ -1736,17 +1736,17 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         while (keepGoing) {
           var qIdRes = await sbCli
             .from('questions')
-            .select('slug, category, subcategory')
+            .select('slug, exam_type, section, subcategory')
             .not('subcategory', 'is', null)
-            .not('category', 'is', null)
+            .not('exam_type', 'is', null)
             .range(offset, offset + pageSize - 1);
           if (qIdRes.error) { console.warn('[progress] question lookup failed:', qIdRes.error.message); return; }
           var batch = qIdRes.data || [];
           batch.forEach(function (r) {
             if (!r.slug) return;
-            qLookup[r.slug] = { category: r.category, subcategory: r.subcategory };
-            var k = String(r.category) + '||' + String(r.subcategory);
-            if (!universe[k]) universe[k] = { category: r.category, subcategory: r.subcategory, total: 0, correct: 0 };
+            qLookup[r.slug] = { exam_type: r.exam_type, section: r.section, subcategory: r.subcategory };
+            var k = String(r.exam_type) + '|' + String(r.section || '') + '|' + String(r.subcategory);
+            if (!universe[k]) universe[k] = { exam_type: r.exam_type, section: r.section, subcategory: r.subcategory, total: 0, correct: 0 };
           });
           if (batch.length < pageSize) keepGoing = false;
           else offset += pageSize;
@@ -1766,8 +1766,8 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         (aRes.data || []).forEach(function (r) {
           var q = qLookup[r.question_slug];
           if (!q) return;
-          var k = String(q.category) + '||' + String(q.subcategory);
-          if (!universe[k]) universe[k] = { category: q.category, subcategory: q.subcategory, total: 0, correct: 0 };
+          var k = String(q.exam_type) + '|' + String(q.section || '') + '|' + String(q.subcategory);
+          if (!universe[k]) universe[k] = { exam_type: q.exam_type, section: q.section, subcategory: q.subcategory, total: 0, correct: 0 };
           var isCorrect = r.status === 'correct';
           universe[k].total += 1;
           if (isCorrect) universe[k].correct += 1;
@@ -1775,78 +1775,26 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
           if (isCorrect) correctAll += 1;
         });
 
-        // Group by category
-        var groups = {};
-        Object.keys(universe).forEach(function (k) {
-          var t = universe[k];
-          if (!groups[t.category]) groups[t.category] = [];
-          var pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
-          groups[t.category].push({
-            subcategory: t.subcategory,
-            total: t.total,
-            correct: t.correct,
-            pct: pct,
-            attempted: t.total > 0
-          });
-        });
-
-        // Map category names to higher-level exam grouping
-        function categoryToExam(category) {
-          var raw = String(category || '');
-          // Normalize: lowercase, hyphens/underscores -> spaces, collapse whitespace
-          var c = raw.toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-
-          // ===== Prefix-based detection (catches slug-style like 'yds-yokdil-...') =====
-          // SAT RW (must check before generic SAT)
-          if (/^sat\s+(rw|r w|reading)/.test(c)) {
-            return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
-          }
-          if (/^sat\s+math/.test(c)) {
-            return { code: 'sat_math', display: 'SAT · Math', order: 1 };
-          }
-          if (c === 'sat' || /^sat\s/.test(c)) {
-            return { code: 'sat', display: 'SAT', order: 1 };
-          }
-          if (/^ielts/.test(c)) return { code: 'ielts', display: 'IELTS', order: 2 };
-          if (/^toefl/.test(c)) return { code: 'toefl', display: 'TOEFL', order: 5 };
-          if (/^ydt/.test(c)) return { code: 'ydt', display: 'YDT', order: 3 };
-          if (/^yds/.test(c) || /^yokdil/.test(c) || /\byokdil\b/.test(c)) {
-            return { code: 'yds', display: 'YDS / YÖKDİL', order: 4 };
-          }
-          if (c === 'ib' || /^ib\s/.test(c) || /^ib english/.test(c)) {
-            return { code: 'ib', display: 'IB English B', order: 6 };
-          }
-          if (/^act/.test(c)) return { code: 'act', display: 'ACT', order: 7 };
-
-          // ===== Named topic detection (for unprefixed category names) =====
-          // SAT Math topics
-          if (['algebra', 'advanced math', 'advanced mathematics',
-               'problem solving and data analysis',
-               'geometry and trigonometry', 'geometry'].indexOf(c) !== -1) {
-            return { code: 'sat_math', display: 'SAT · Math', order: 1 };
-          }
-          // SAT RW domains
-          if (['craft and structure', 'information and ideas',
-               'expression of ideas', 'standard english conventions'].indexOf(c) !== -1) {
-            return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
-          }
-          // YDT question types
-          if (['cloze test', 'dialogue completion',
-               'english to turkish translation', 'turkish to english translation',
-               'sentence completion', 'most comprehensive', 'irrelevant sentence',
-               'paragraph completion', 'restatement', 'paragraph',
-               'reading comprehension'].indexOf(c) !== -1) {
-            return { code: 'ydt', display: 'YDT', order: 3 };
-          }
-
-          // ===== Last resort: humanize raw and create a per-category group =====
-          var humanized = raw.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim()
-            .split(' ').map(function (w) {
-              return w.length > 0 ? w.charAt(0).toUpperCase() + w.slice(1) : '';
-            }).join(' ');
-          var slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-          return { code: 'cat_' + slug, display: humanized || raw, order: 90 };
+        // Map exam_type + section to display group
+        function getGroupInfo(exam_type, section) {
+          var e = String(exam_type || '').toLowerCase();
+          var s = String(section || '').toLowerCase();
+          if (e === 'sat' && s === 'rw') return { code: 'sat_rw', display: 'SAT · Reading & Writing', order: 0 };
+          if (e === 'sat' && s === 'math') return { code: 'sat_math', display: 'SAT · Math', order: 1 };
+          if (e === 'sat') return { code: 'sat', display: 'SAT', order: 0 };
+          if (e === 'ielts') return { code: 'ielts', display: 'IELTS', order: 2 };
+          if (e === 'toefl') return { code: 'toefl', display: 'TOEFL', order: 5 };
+          if (e === 'ydt') return { code: 'ydt', display: 'YDT', order: 3 };
+          if (e === 'yds' && s === 'yds') return { code: 'yds', display: 'YDS', order: 4 };
+          if (e === 'yds' && s === 'yokdil-fen') return { code: 'yokdil_fen', display: 'YÖKDİL Fen', order: 6 };
+          if (e === 'yds' && s === 'yokdil-sosyal') return { code: 'yokdil_sosyal', display: 'YÖKDİL Sosyal', order: 7 };
+          if (e === 'yds' && s === 'yokdil-saglik') return { code: 'yokdil_saglik', display: 'YÖKDİL Sağlık', order: 8 };
+          if (e === 'yds') return { code: 'yds_other', display: 'YDS / YÖKDİL', order: 4 };
+          if (e === 'ib') return { code: 'ib', display: 'IB English B', order: 9 };
+          if (e === 'act') return { code: 'act', display: 'ACT', order: 10 };
+          return { code: e + '_' + s, display: (exam_type || '').toString().toUpperCase() + (section ? ' (' + section + ')' : ''), order: 90 };
         }
+
         function humanize(s) {
           var STOP = { 'and': 1, 'or': 1, 'of': 1, 'in': 1, 'on': 1, 'the': 1, 'to': 1, 'for': 1, 'at': 1, 'by': 1, 'with': 1, 'a': 1, 'an': 1, 'vs': 1, 'as': 1 };
           var words = String(s).replace(/[-_]+/g, ' ').toLowerCase().split(/\s+/).filter(function (w) { return w.length > 0; });
@@ -1859,22 +1807,22 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
           return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        // Re-group by exam (instead of category). Subcategories become rows.
-        // Log unmapped categories only (debugging)
-        var unmapped = Object.keys(groups).filter(function (c) {
-          return categoryToExam(c).code.indexOf('cat_') === 0;
-        });
-        if (unmapped.length > 0) {
-          console.log('[progress] unmapped categories:', unmapped);
-        }
-
+        // Group universe by (exam_type, section)
         var examGroups = {};
-        Object.keys(groups).forEach(function (cat) {
-          var exam = categoryToExam(cat);
-          if (!examGroups[exam.code]) {
-            examGroups[exam.code] = { display: exam.display, order: exam.order, topics: [] };
+        Object.keys(universe).forEach(function (k) {
+          var t = universe[k];
+          var info = getGroupInfo(t.exam_type, t.section);
+          if (!examGroups[info.code]) {
+            examGroups[info.code] = { display: info.display, order: info.order, topics: [] };
           }
-          groups[cat].forEach(function (t) { examGroups[exam.code].topics.push(t); });
+          var pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+          examGroups[info.code].topics.push({
+            subcategory: t.subcategory,
+            total: t.total,
+            correct: t.correct,
+            pct: pct,
+            attempted: t.total > 0
+          });
         });
 
         var examKeys = Object.keys(examGroups).sort(function (a, b) {
@@ -1918,7 +1866,7 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
           html += '</div>';
         });
 
-        var groupsEl = document.getElementById('progress-groups');
+                var groupsEl = document.getElementById('progress-groups');
         var avgEl = document.getElementById('progress-avg');
         if (groupsEl) groupsEl.innerHTML = html;
         if (avgEl) avgEl.textContent = totalAll > 0 ? '%' + Math.round((correctAll / totalAll) * 100) : '—';

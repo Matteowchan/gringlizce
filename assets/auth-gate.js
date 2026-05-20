@@ -20,9 +20,12 @@
   function waitForSupabase(cb, tries) {
     tries = tries || 0;
     if (tries > 100) return; // give up after ~10s
-    if (window.supabase && window.SUPABASE_URL && window.SUPABASE_KEY) {
+    // Fallback to hardcoded publishable keys if site-config.js didn't run
+    var sbUrl = window.SUPABASE_URL || 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var sbKey = window.SUPABASE_KEY || 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+    if (window.supabase && sbUrl && sbKey) {
       try {
-        var c = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+        var c = window.supabase.createClient(sbUrl, sbKey);
         cb(c);
         return;
       } catch (e) { /* fall through */ }

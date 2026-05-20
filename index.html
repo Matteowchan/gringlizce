@@ -532,7 +532,249 @@
     .exam-card.cat-ib    { --cat-tint: #6b4a8a; }
     .exam-card.cat-ydt   { --cat-tint: #8a5a3a; }
     .exam-card.cat-yds   { --cat-tint: #5a8a3a; }
-  </style>
+  
+/* ============ PANELIM SHOWCASE ============ */
+.panelim-showcase { position: relative; overflow: hidden; }
+.panelim-showcase .ps-watermark {
+  position: absolute; top: 3rem; right: -2rem;
+  font-family: var(--font-display); font-style: italic;
+  font-size: 22rem; font-weight: 400; line-height: 0.9;
+  color: rgba(26, 34, 48, 0.025);
+  pointer-events: none; user-select: none;
+  letter-spacing: -0.04em; z-index: 0;
+}
+@media (max-width: 900px) {
+  .panelim-showcase .ps-watermark { font-size: 12rem; top: 2rem; right: -1rem; }
+}
+.panelim-grid {
+  display: grid; grid-template-columns: 1fr 1.2fr;
+  gap: 3.5rem; align-items: start;
+  position: relative; z-index: 1;
+}
+@media (max-width: 960px) {
+  .panelim-grid { grid-template-columns: 1fr; gap: 3rem; }
+}
+.panelim-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.pf-item {
+  background: transparent; border: 1px solid transparent;
+  border-radius: 5px; padding: 0.95rem 1.1rem;
+  cursor: pointer; transition: background 0.25s, border-color 0.25s, transform 0.2s;
+  display: flex; gap: 1rem; align-items: flex-start;
+  text-align: left; width: 100%; font-family: inherit;
+}
+.pf-item:hover { background: rgba(255, 255, 255, 0.45); }
+.pf-item.active {
+  background: var(--bg-card); border-color: var(--line);
+  transform: translateX(4px); box-shadow: 0 2px 16px rgba(26, 34, 48, 0.05);
+}
+.pf-icon-wrap {
+  flex-shrink: 0; width: 36px; height: 36px;
+  border-radius: 50%; background: rgba(26, 34, 48, 0.05);
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.25s, color 0.25s;
+}
+.pf-item.active .pf-icon-wrap { background: var(--pf-color, var(--teal)); color: #fff; }
+.pf-icon-wrap svg { width: 17px; height: 17px; }
+.pf-text { flex: 1; min-width: 0; }
+.pf-text strong {
+  display: block; font-family: var(--font-display);
+  font-weight: 600; font-size: 1.05rem; color: var(--text);
+  margin-bottom: 0.18rem; line-height: 1.25;
+}
+.pf-text span { color: var(--text-muted); font-family: var(--font-ui); font-size: 0.82rem; line-height: 1.4; }
+.pf-item.active .pf-text span { color: var(--text-soft); }
+.pf-marker {
+  flex-shrink: 0; font-family: var(--font-ui);
+  font-size: 10px; letter-spacing: 0.15em;
+  color: var(--text-muted); font-weight: 700;
+  align-self: center; opacity: 0; transition: opacity 0.25s;
+}
+.pf-item.active .pf-marker { opacity: 1; color: var(--pf-color, var(--teal)); }
+.panelim-cta-bottom {
+  display: flex; gap: 0.7rem; flex-wrap: wrap;
+  margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+}
+.panelim-stage { position: relative; padding: 1.2rem 1.2rem 0.8rem; }
+.panelim-stage::before, .panelim-stage::after {
+  content: ''; position: absolute;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: 8px; pointer-events: none;
+}
+.panelim-stage::before { inset: -0.6rem 1.6rem 1.6rem -0.6rem; transform: rotate(-1.2deg); z-index: 0; opacity: 0.5; }
+.panelim-stage::after { inset: -0.2rem 0.6rem 1.1rem 0.4rem; transform: rotate(0.6deg); z-index: 1; opacity: 0.75; }
+.panelim-window {
+  position: relative; z-index: 2;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 14px 50px rgba(26, 34, 48, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.panelim-window:hover { transform: translateY(-3px); box-shadow: 0 22px 60px rgba(26, 34, 48, 0.14); }
+.pw-titlebar {
+  background: var(--bg-soft); border-bottom: 1px solid var(--line);
+  padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.8rem;
+}
+.pw-dots { display: flex; gap: 0.4rem; }
+.pw-dots span { width: 11px; height: 11px; border-radius: 50%; }
+.pw-dots span:nth-child(1) { background: #e26a5b; }
+.pw-dots span:nth-child(2) { background: #e2bb4f; }
+.pw-dots span:nth-child(3) { background: #5fb86c; }
+.pw-urlbar {
+  flex: 1; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 4px; padding: 0.32rem 0.7rem;
+  font-family: 'SF Mono', Menlo, monospace; font-size: 11px;
+  color: var(--text-muted); text-align: center;
+}
+.pw-urlbar strong { color: var(--text); font-weight: 600; }
+.pw-viewport { position: relative; aspect-ratio: 16 / 11; background: var(--bg); }
+.pw-slide {
+  position: absolute; inset: 0;
+  padding: 1.3rem 1.7rem;
+  display: flex; flex-direction: column;
+  opacity: 0; transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.pw-slide.active { opacity: 1; pointer-events: auto; }
+.pw-slide::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--slide-color, var(--teal));
+}
+.slide-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 1.1rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--line);
+}
+.slide-tag {
+  font-family: var(--font-ui); font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  font-weight: 700; color: var(--slide-color, var(--teal));
+}
+.slide-title {
+  font-family: var(--font-display); font-size: 1.15rem;
+  font-weight: 600; color: var(--text);
+  margin: 0.15rem 0 0; line-height: 1.2;
+}
+.slide-stat {
+  font-family: var(--font-ui); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 700;
+}
+.slide-stat strong {
+  color: var(--slide-color, var(--teal));
+  font-size: 1.05rem; font-weight: 700;
+}
+.slide-body { flex: 1; overflow: hidden; }
+.mock-bookmark-row {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.6rem 0.8rem; border: 1px solid var(--line);
+  border-radius: 4px; background: #fff;
+  margin-bottom: 0.45rem; font-family: var(--font-ui); font-size: 0.8rem;
+}
+.mock-bookmark-row .tag {
+  background: rgba(122, 59, 59, 0.1); color: #7a3b3b;
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-weight: 700; white-space: nowrap;
+}
+.mock-bookmark-row .tag.t-ielts { background: rgba(44, 88, 86, 0.1); color: var(--teal); }
+.mock-bookmark-row .tag.t-ydt { background: rgba(138, 90, 58, 0.1); color: #8a5a3a; }
+.mock-bookmark-row .title { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mock-bookmark-row .num { font-family: monospace; color: var(--text-muted); font-size: 0.76rem; }
+.mock-bookmark-row .star { color: var(--gold); font-size: 0.9rem; }
+.mock-wrong-card {
+  background: #fff; border: 1px solid var(--line);
+  border-left: 3px solid #7a3b3b; border-radius: 0 4px 4px 0;
+  padding: 0.65rem 0.85rem; margin-bottom: 0.5rem;
+  font-family: var(--font-body); font-size: 0.82rem;
+  color: var(--text); line-height: 1.45;
+}
+.mock-wrong-card .wc-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-ui); font-size: 9.5px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 700;
+}
+.mock-wrong-card .wc-meta .badge {
+  background: #7a3b3b; color: #fff;
+  padding: 0.1rem 0.5rem; border-radius: 2px;
+}
+.mock-vocab-table { width: 100%; border-collapse: collapse; }
+.mock-vocab-table td {
+  padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--line);
+  font-family: var(--font-body); font-size: 0.86rem;
+}
+.mock-vocab-table td.en { font-weight: 600; color: var(--text); }
+.mock-vocab-table td.tr { color: var(--text-soft); font-style: italic; }
+.mock-vocab-table td.count {
+  text-align: right; color: var(--text-muted);
+  font-family: var(--font-ui); font-size: 10px; font-weight: 700;
+}
+.mock-vocab-table td.count span {
+  background: var(--bg); border: 1px solid var(--line);
+  padding: 0.12rem 0.45rem; border-radius: 999px;
+}
+.mock-progress-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.4rem; font-family: var(--font-ui); font-size: 0.82rem;
+}
+.mock-progress-row .label { color: var(--text); font-weight: 600; }
+.mock-progress-row .val { color: #5a8a3a; font-weight: 700; font-size: 0.78rem; }
+.mock-progress-track {
+  width: 100%; height: 6px; background: var(--bg);
+  border-radius: 999px; overflow: hidden; margin-bottom: 0.75rem;
+}
+.mock-progress-fill { height: 100%; background: #5a8a3a; border-radius: 999px; }
+.mock-ai-msg { display: flex; gap: 0.55rem; margin-bottom: 0.55rem; }
+.mock-ai-msg.user { flex-direction: row-reverse; }
+.mock-ai-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: #6b4a8a; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+}
+.mock-ai-msg.user .mock-ai-avatar { background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+.mock-ai-bubble {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  padding: 0.5rem 0.8rem; font-family: var(--font-body);
+  font-size: 0.82rem; line-height: 1.45; max-width: 82%;
+}
+.mock-ai-msg.user .mock-ai-bubble { background: #6b4a8a; color: #fff; border-color: #6b4a8a; }
+.mock-note {
+  background: #fff; border: 1px solid var(--line);
+  border-top: 3px solid #4a6a8a; border-radius: 0 0 4px 4px;
+  padding: 0.7rem 0.9rem; margin-bottom: 0.55rem;
+  font-family: var(--font-body); font-size: 0.85rem;
+}
+.mock-note .nt-title { font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.mock-note .nt-body { color: var(--text-soft); font-size: 0.8rem; line-height: 1.45; }
+.mock-note .nt-date {
+  font-family: var(--font-ui); font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-top: 0.4rem; font-weight: 700;
+}
+.pw-tabs {
+  background: var(--bg-soft); border-top: 1px solid var(--line);
+  display: flex; overflow-x: auto; scrollbar-width: none;
+}
+.pw-tabs::-webkit-scrollbar { display: none; }
+.pw-tab {
+  flex: 1; min-width: max-content;
+  background: transparent; border: none;
+  padding: 0.7rem 0.8rem;
+  font-family: var(--font-ui); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 700; color: var(--text-muted);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.pw-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.4); }
+.pw-tab.active {
+  color: var(--text); border-bottom-color: var(--tab-color, var(--teal));
+  background: var(--bg-card);
+}
+
+</style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -762,7 +1004,182 @@
     </div>
   </section>
 
-  <section id="soru-bankasi" style="border-top: 1px solid var(--line);">
+  <section class="panelim-showcase" style="border-top: 1px solid var(--line); background: var(--bg-soft);">
+  <span class="ps-watermark">Panelim</span>
+  <div class="wrap">
+    <div class="section-head reveal-scroll">
+      <span class="eyebrow">Kisisel Calisma Alani</span>
+      <h2>Panelim, calismani <span class="it">kayit altinda</span> tutar</h2>
+      <div class="divider"><span class="dia"></span></div>
+      <p style="max-width: 720px; margin: 1.2rem auto 0; color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;">Hesap ac, her soru, her kelime, her yanlis, her not panelinde birikir. Sinava giderken nereden devam edecegini bilirsin.</p>
+    </div>
+    <div class="panelim-grid reveal-scroll">
+      <div>
+        <ul class="panelim-features">
+          <li><button class="pf-item active" data-go="0" style="--pf-color: #c89a3c;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="pf-text"><strong>Yer Imlerim</strong><span>Isaretledigin sorulara tek tikla don.</span></div>
+            <span class="pf-marker">01</span>
+          </button></li>
+          <li><button class="pf-item" data-go="1" style="--pf-color: #7a3b3b;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="pf-text"><strong>Yanlislarim</strong><span>Hatalarini ayri calis, kapatana kadar.</span></div>
+            <span class="pf-marker">02</span>
+          </button></li>
+          <li><button class="pf-item" data-go="2" style="--pf-color: #2c5856;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+            <div class="pf-text"><strong>Kelime Listesi</strong><span>Yeni kelimeleri Turkcesiyle biriktir.</span></div>
+            <span class="pf-marker">03</span>
+          </button></li>
+          <li><button class="pf-item" data-go="3" style="--pf-color: #5a8a3a;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
+            <div class="pf-text"><strong>Ilerleme Grafigi</strong><span>Hangi konuya ne kadar calistin.</span></div>
+            <span class="pf-marker">04</span>
+          </button></li>
+          <li><button class="pf-item" data-go="4" style="--pf-color: #6b4a8a;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="pf-text"><strong>Gri Aciklamalari</strong><span>Dogru sikkin neden dogru, yanlislarin neden eleyici oldugu.</span></div>
+            <span class="pf-marker">05</span>
+          </button></li>
+          <li><button class="pf-item" data-go="5" style="--pf-color: #4a6a8a;">
+            <div class="pf-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <div class="pf-text"><strong>Notlarim</strong><span>Kendi kisa notlarini ekle, duzenle.</span></div>
+            <span class="pf-marker">06</span>
+          </button></li>
+        </ul>
+        <div class="panelim-cta-bottom">
+          <a href="panelim.html" class="btn btn-primary">Panelime Git</a>
+          <a href="giris.html#signup" class="btn btn-ghost">Ucretsiz Hesap Ac</a>
+        </div>
+      </div>
+      <div class="panelim-stage">
+        <div class="panelim-window" data-panelim-slideshow>
+          <div class="pw-titlebar">
+            <div class="pw-dots"><span></span><span></span><span></span></div>
+            <div class="pw-urlbar">gringlizce.com<strong>/panelim</strong></div>
+          </div>
+          <div class="pw-viewport">
+            <div class="pw-slide active" data-slide="0" style="--slide-color: #c89a3c;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Yer Imlerim</div><h4 class="slide-title">Kaldigin yerden devam et</h4></div>
+                <div class="slide-stat"><strong>84</strong><br>Kayitli</div>
+              </div>
+              <div class="slide-body">
+                <div class="mock-bookmark-row"><span class="tag">SAT &middot; RW</span><span class="title">Studied placement of each pause...</span><span class="star">&starf;</span><span class="num">#142</span></div>
+                <div class="mock-bookmark-row"><span class="tag t-ielts">IELTS</span><span class="title">Reading Passage 2 &mdash; Question 14</span><span class="star">&starf;</span><span class="num">#67</span></div>
+                <div class="mock-bookmark-row"><span class="tag">SAT &middot; Math</span><span class="title">Linear functions &mdash; slope from table</span><span class="star">&starf;</span><span class="num">#208</span></div>
+                <div class="mock-bookmark-row"><span class="tag t-ydt">YDT</span><span class="title">Relative clauses &mdash; practice 5</span><span class="star">&starf;</span><span class="num">#33</span></div>
+              </div>
+            </div>
+            <div class="pw-slide" data-slide="1" style="--slide-color: #7a3b3b;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Yanlislarim</div><h4 class="slide-title">Hatalarini ayri calis</h4></div>
+                <div class="slide-stat"><strong>23</strong><br>Acik</div>
+              </div>
+              <div class="slide-body">
+                <div class="mock-wrong-card"><div class="wc-meta"><span>SAT &middot; Transitions</span><span class="badge">Yanlis</span></div>The committee initially rejected the proposal; ______, after extensive revisions, they approved it.</div>
+                <div class="mock-wrong-card"><div class="wc-meta"><span>IELTS &middot; Reading</span><span class="badge">Yanlis</span></div>According to paragraph 3, the author suggests that climate adaptation strategies...</div>
+                <div class="mock-wrong-card"><div class="wc-meta"><span>SAT &middot; Words in Context</span><span class="badge">Yanlis</span></div>As used in the text, the word "studied" most nearly means...</div>
+              </div>
+            </div>
+            <div class="pw-slide" data-slide="2" style="--slide-color: #2c5856;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Kelime Listem</div><h4 class="slide-title">Kendi sozlugunu olustur</h4></div>
+                <div class="slide-stat"><strong>247</strong><br>Kelime</div>
+              </div>
+              <div class="slide-body">
+                <table class="mock-vocab-table">
+                  <tr><td class="en">meticulous</td><td class="tr">titiz, ozenli</td><td class="count"><span>3x</span></td></tr>
+                  <tr><td class="en">deceptive</td><td class="tr">aldatici</td><td class="count"><span>2x</span></td></tr>
+                  <tr><td class="en">substantiate</td><td class="tr">desteklemek, kanitlamak</td><td class="count"><span>1x</span></td></tr>
+                  <tr><td class="en">underscore</td><td class="tr">vurgulamak</td><td class="count"><span>4x</span></td></tr>
+                  <tr><td class="en">refute</td><td class="tr">curutmek</td><td class="count"><span>2x</span></td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="pw-slide" data-slide="3" style="--slide-color: #5a8a3a;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Ilerleme</div><h4 class="slide-title">Hangi konuda ne kadar calistin</h4></div>
+                <div class="slide-stat"><strong>62%</strong><br>Ortalama</div>
+              </div>
+              <div class="slide-body">
+                <div class="mock-progress-row"><span class="label">Words in Context</span><span class="val">82%</span></div>
+                <div class="mock-progress-track"><div class="mock-progress-fill" style="width:82%"></div></div>
+                <div class="mock-progress-row"><span class="label">Transitions</span><span class="val">64%</span></div>
+                <div class="mock-progress-track"><div class="mock-progress-fill" style="width:64%"></div></div>
+                <div class="mock-progress-row"><span class="label">Text Structure &amp; Purpose</span><span class="val">47%</span></div>
+                <div class="mock-progress-track"><div class="mock-progress-fill" style="width:47%"></div></div>
+                <div class="mock-progress-row"><span class="label">Command of Evidence</span><span class="val">28%</span></div>
+                <div class="mock-progress-track"><div class="mock-progress-fill" style="width:28%"></div></div>
+              </div>
+            </div>
+            <div class="pw-slide" data-slide="4" style="--slide-color: #6b4a8a;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Gri'nin Aciklamalari</div><h4 class="slide-title">Dogru ve yanlis siklar analiz edilir</h4></div>
+                <div class="slide-stat"><strong>47</strong><br>Aciklama</div>
+              </div>
+              <div class="slide-body">
+                <div class="mock-ai-msg user"><div class="mock-ai-avatar">S</div><div class="mock-ai-bubble">A sikki neden yanlis?</div></div>
+                <div class="mock-ai-msg"><div class="mock-ai-avatar">G</div><div class="mock-ai-bubble">"Educated" anlami baglamla uyusmuyor. "Studied" burada egitimli degil, hesaplanmis, ozenle yerlestirilmis demek.</div></div>
+                <div class="mock-ai-msg user"><div class="mock-ai-avatar">S</div><div class="mock-ai-bubble">Peki "deliberate" nasil uyuyor?</div></div>
+              </div>
+            </div>
+            <div class="pw-slide" data-slide="5" style="--slide-color: #4a6a8a;">
+              <div class="slide-head">
+                <div><div class="slide-tag">Notlarim</div><h4 class="slide-title">Kendi kisa notlarin</h4></div>
+                <div class="slide-stat"><strong>12</strong><br>Not</div>
+              </div>
+              <div class="slide-body">
+                <div class="mock-note"><div class="nt-title">Transition sorulari</div><div class="nt-body">Iki cumle arasi iliskiyi belirle. "However" gibi cevap her zaman tezat anlamini tasimali.</div><div class="nt-date">12 Kasim 2025</div></div>
+                <div class="mock-note"><div class="nt-title">IELTS Task 1 &mdash; kelime havuzu</div><div class="nt-body">"Witness a sharp increase" yerine "rise dramatically" daha dogal. Cumle cesitliligi icin donusumlu kullan.</div><div class="nt-date">8 Kasim 2025</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="pw-tabs" role="tablist">
+            <button class="pw-tab active" data-go="0" style="--tab-color: #c89a3c;">Yer Imleri</button>
+            <button class="pw-tab" data-go="1" style="--tab-color: #7a3b3b;">Yanlislar</button>
+            <button class="pw-tab" data-go="2" style="--tab-color: #2c5856;">Kelimeler</button>
+            <button class="pw-tab" data-go="3" style="--tab-color: #5a8a3a;">Ilerleme</button>
+            <button class="pw-tab" data-go="4" style="--tab-color: #6b4a8a;">Aciklamalar</button>
+            <button class="pw-tab" data-go="5" style="--tab-color: #4a6a8a;">Notlar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  var section = document.querySelector('.panelim-showcase');
+  if (!section) return;
+  var slides = section.querySelectorAll('.pw-slide');
+  var tabs = section.querySelectorAll('.pw-tab');
+  var features = section.querySelectorAll('.pf-item');
+  var idx = 0, total = slides.length, timer = null;
+  function go(n) {
+    idx = (n + total) % total;
+    slides.forEach(function (s, i) { s.classList.toggle('active', i === idx); });
+    tabs.forEach(function (t, i) { t.classList.toggle('active', i === idx); });
+    features.forEach(function (f, i) { f.classList.toggle('active', i === idx); });
+  }
+  function autoplay() { stop(); timer = setInterval(function () { go(idx + 1); }, 5500); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function bind(els) {
+    els.forEach(function (el) {
+      el.addEventListener('click', function () {
+        var n = parseInt(this.getAttribute('data-go'), 10);
+        if (!isNaN(n)) { go(n); autoplay(); }
+      });
+    });
+  }
+  bind(tabs); bind(features);
+  section.addEventListener('mouseenter', stop);
+  section.addEventListener('mouseleave', autoplay);
+  autoplay();
+})();
+</script>
+
+<section id="soru-bankasi" style="border-top: 1px solid var(--line);">
     <div class="wrap">
       <div class="section-head reveal-scroll">
         <span class="eyebrow">Ücretsiz Başla</span>

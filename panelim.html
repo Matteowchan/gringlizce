@@ -1680,51 +1680,54 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         var userId = sess.data.session.user.id;
 
         // Build universe: distinct (category, subcategory) from published questions
-        // Universe of (category, subcategory) — without is_published filter to be resilient
-        var qRes = await sbCli
-          .from('questions')
-          .select('category, subcategory')
-          .not('subcategory', 'is', null)
-          .not('category', 'is', null)
-          .limit(20000);
-        if (qRes.error) { console.warn('[progress] questions fetch failed:', qRes.error.message, qRes.error); return; }
-        console.log('[progress] universe size:', (qRes.data || []).length);
-
+        // Universe of (category, subcategory) — built from qLookup below; declared early so it's hoisted
         var universe = {};
-        (qRes.data || []).forEach(function (r) {
-          var k = String(r.category) + '||' + String(r.subcategory);
-          if (!universe[k]) universe[k] = { category: r.category, subcategory: r.subcategory, total: 0, correct: 0 };
-        });
 
-        // Build question_id -> (category, subcategory) lookup from universe
+        // Build slug -> (category, subcategory) lookup, paginated to bypass 1000-row default cap
         var qLookup = {};
-        var qIdRes = await sbCli
-          .from('questions')
-          .select('id, category, subcategory')
-          .not('subcategory', 'is', null)
-          .not('category', 'is', null)
-          .limit(20000);
-        if (qIdRes.error) { console.warn('[progress] question lookup failed:', qIdRes.error.message); return; }
-        (qIdRes.data || []).forEach(function (r) { qLookup[r.id] = { category: r.category, subcategory: r.subcategory }; });
+        var pageSize = 1000;
+        var offset = 0;
+        var keepGoing = true;
+        while (keepGoing) {
+          var qIdRes = await sbCli
+            .from('questions')
+            .select('slug, category, subcategory')
+            .not('subcategory', 'is', null)
+            .not('category', 'is', null)
+            .range(offset, offset + pageSize - 1);
+          if (qIdRes.error) { console.warn('[progress] question lookup failed:', qIdRes.error.message); return; }
+          var batch = qIdRes.data || [];
+          batch.forEach(function (r) {
+            if (!r.slug) return;
+            qLookup[r.slug] = { category: r.category, subcategory: r.subcategory };
+            var k = String(r.category) + '||' + String(r.subcategory);
+            if (!universe[k]) universe[k] = { category: r.category, subcategory: r.subcategory, total: 0, correct: 0 };
+          });
+          if (batch.length < pageSize) keepGoing = false;
+          else offset += pageSize;
+          if (offset > 20000) keepGoing = false;
+        }
+        console.log('[progress] qLookup size:', Object.keys(qLookup).length);
 
-        // User's answers (simple, no embed)
+        // User's answers — actual columns are question_slug + status ('correct'/'incorrect')
         var aRes = await sbCli
           .from('user_answers')
-          .select('question_id, is_correct')
+          .select('question_slug, status')
           .eq('user_id', userId);
         if (aRes.error) { console.warn('[progress] answers fetch failed:', aRes.error.message); return; }
         console.log('[progress] user answer count:', (aRes.data || []).length);
 
         var totalAll = 0, correctAll = 0;
         (aRes.data || []).forEach(function (r) {
-          var q = qLookup[r.question_id];
+          var q = qLookup[r.question_slug];
           if (!q) return;
           var k = String(q.category) + '||' + String(q.subcategory);
           if (!universe[k]) universe[k] = { category: q.category, subcategory: q.subcategory, total: 0, correct: 0 };
+          var isCorrect = r.status === 'correct';
           universe[k].total += 1;
-          if (r.is_correct) universe[k].correct += 1;
+          if (isCorrect) universe[k].correct += 1;
           totalAll += 1;
-          if (r.is_correct) correctAll += 1;
+          if (isCorrect) correctAll += 1;
         });
 
         // Group by category

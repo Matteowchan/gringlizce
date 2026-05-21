@@ -1592,8 +1592,10 @@
       <a href="soru-bankasi.html">Soru Bankası</a>
       <span class="sep">&rsaquo;</span>
       <a href="" id="bcExam"></a>
-      <span class="sep">&rsaquo;</span>
-      <a href="" id="bcSection" lang="en"></a>
+      <span id="bcSectionWrap">
+        <span class="sep">&rsaquo;</span>
+        <a href="" id="bcSection" lang="en"></a>
+      </span>
       <span class="sep">&rsaquo;</span>
       <span class="current" id="bcCurrent" lang="en"></span>
     </nav>
@@ -2364,11 +2366,26 @@
       // Breadcrumb
       const examPage = q.exam_type + '.html';
       const bankPage = q.exam_type + '-soru-bankasi.html';
-      const sectionPage = q.section ? `${q.exam_type}-soru-bankasi-${q.section}.html` : bankPage;
       document.getElementById('bcExam').textContent = examLabel;
       document.getElementById('bcExam').href = bankPage;
-      document.getElementById('bcSection').textContent = SECTION_LABELS[q.section] || q.section || '';
-      document.getElementById('bcSection').href = sectionPage;
+
+      // Section breadcrumb: sadece gerçekten section sayfası olan sınavlarda göster
+      // Diğerleri (TOEFL, IB, IELTS, UDSP) tek soru bankası sayfasına sahip, section item gerekmez
+      const SECTION_PAGES = {
+        'sat': ['rw', 'math'],
+        'yds': ['yds', 'yokdil-fen', 'yokdil-sosyal', 'yokdil-saglik']
+      };
+      const sectionWrap = document.getElementById('bcSectionWrap');
+      const hasSectionPage = SECTION_PAGES[q.exam_type] && SECTION_PAGES[q.exam_type].includes(q.section);
+      if (hasSectionPage) {
+        const sectionPage = `${q.exam_type}-soru-bankasi-${q.section}.html`;
+        document.getElementById('bcSection').textContent = SECTION_LABELS[q.section] || q.section || '';
+        document.getElementById('bcSection').href = sectionPage;
+        sectionWrap.style.display = '';
+      } else {
+        sectionWrap.style.display = 'none';
+      }
+
       document.getElementById('bcCurrent').textContent = subLabel;
 
       // Texts (passage)

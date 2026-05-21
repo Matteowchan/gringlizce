@@ -2313,20 +2313,22 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
       task1_only: 'Sadece Task 1',
       task2_only: 'Sadece Task 2',
       both: 'Task 1 + Task 2',
-      draft: 'Taslak'
+      draft: 'Taslak',
+      gri_ai: 'Gri AI'
     };
     var WRITING_STATUS_LABELS = {
       draft: 'Taslak',
       unpaid: 'Ödeme bekleniyor',
       paid: 'İnceleme bekliyor',
-      reviewed: 'İncelendi'
+      reviewed: 'İncelendi',
+      gri_evaluated: 'Gri tarafından değerlendirildi'
     };
     var WRITING_SUBS_DATA = {};
 
     function renderWritingCard(sub) {
       var testName = (sub.test && sub.test.name) || 'IELTS Mock';
       var pkg = WRITING_PKG_LABELS[sub.package_type] || sub.package_type || '—';
-      var effectiveStatus = sub.reviewed_at ? 'reviewed' : (sub.payment_status || 'draft');
+      var effectiveStatus = sub.reviewed_at ? 'reviewed' : (sub.gri_evaluated ? 'gri_evaluated' : (sub.payment_status || 'draft'));
       var status = WRITING_STATUS_LABELS[effectiveStatus] || effectiveStatus;
       var statusClass = 's-' + effectiveStatus;
       var bandPart = sub.overall_writing_band ? ' &middot; Band ' + sub.overall_writing_band : '';
@@ -2369,7 +2371,7 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
         if (!elArea || !elGrid) return;
 
         var subsRes = await sbCli.from('ielts_writing_submissions')
-          .select('id, test_id, task1_essay, task2_essay, task1_word_count, task2_word_count, package_type, payment_status, overall_writing_band, submitted_at, time_spent_seconds, task1_feedback, task2_feedback, task1_band, task2_band, reviewed_at, test:test_id (slug, name)')
+          .select('id, test_id, task1_essay, task2_essay, task1_word_count, task2_word_count, package_type, payment_status, overall_writing_band, submitted_at, time_spent_seconds, task1_feedback, task2_feedback, task1_band, task2_band, reviewed_at, gri_evaluated, gri_evaluated_at, gri_evaluation_json, test:test_id (slug, name)')
           .eq('user_id', userId)
           .order('submitted_at', { ascending: false });
 
@@ -2508,12 +2510,19 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
       if (!data) return;
 
       var sub = data.sub;
+
+      // Gri ile değerlendirilmiş submissionlar → feedback sayfasına yönlendir
+      if (sub.gri_evaluated && !sub.reviewed_at) {
+        window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + encodeURIComponent(subId);
+        return;
+      }
+
       var prompts = data.prompts || {};
       var isReviewed = !!sub.reviewed_at;
 
       var testName = (sub.test && sub.test.name) || 'IELTS Writing';
       var pkg = WRITING_PKG_LABELS[sub.package_type] || sub.package_type || '—';
-      var effectiveStatus = sub.reviewed_at ? 'reviewed' : (sub.payment_status || 'draft');
+      var effectiveStatus = sub.reviewed_at ? 'reviewed' : (sub.gri_evaluated ? 'gri_evaluated' : (sub.payment_status || 'draft'));
       var status = WRITING_STATUS_LABELS[effectiveStatus] || effectiveStatus;
       var statusClass = 's-' + effectiveStatus;
 
@@ -2605,7 +2614,7 @@ Günlük 10 hak yetmediğinde paket al. Bonus haklar zaman sınırı olmadan bir
       document.getElementById('mw-content').innerHTML = html.join('');
 
       // Show delete option only for non-reviewed draft/unpaid
-      var allowDelete = !sub.reviewed_at && (sub.payment_status === 'draft' || sub.payment_status === 'unpaid');
+      var allowDelete = !sub.reviewed_at && !sub.gri_evaluated && (sub.payment_status === 'draft' || sub.payment_status === 'unpaid');
       var elFooter = document.getElementById('mw-footer');
       var elDelete = document.getElementById('mw-delete');
       if (allowDelete) {

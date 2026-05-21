@@ -621,9 +621,9 @@
           </div>
           <ul class="pkg-features">
             <li>Anında AI değerlendirme (band 0-9 her kriter için)</li>
-            <li>Task Achievement, Coherence, Lexical, Grammar</li>
-            <li>Spesifik hataların ve geliştirme önerileri</li>
-            <li>Günlük 1 ücretsiz, sonrası 10 Gri jetonu</li>
+            <li>Task 1 + Task 2 tek pakette, IELTS resmi formül</li>
+            <li>Spesifik hatalar ve geliştirme önerileri</li>
+            <li>Günde 1 ücretsiz, sonrası 10 jeton</li>
           </ul>
           <input type="radio" name="package" value="gri_ai" class="pkg-radio">
         </label>
@@ -996,16 +996,17 @@
         const lbl = document.getElementById('griPriceLabel');
         if (!lbl || !state.user) return;
         const { data: q } = await sb.from('ai_quota')
-          .select('ielts_eval_daily_used_count, ielts_eval_last_used_date, ielts_eval_daily_limit, bonus_quota, bonus_used')
+          .select('writing_daily_used_count, writing_last_used_date, writing_daily_limit, bonus_quota, bonus_used')
           .eq('user_id', state.user.id)
           .maybeSingle();
         const today = new Date().toISOString().slice(0, 10);
-        const dailyLimit = (q && q.ielts_eval_daily_limit != null) ? q.ielts_eval_daily_limit : 1;
-        const usedToday = (q && q.ielts_eval_last_used_date === today) ? (q.ielts_eval_daily_used_count || 0) : 0;
-        const dailyLeft = Math.max(0, dailyLimit - usedToday);
+        const dailyLimit = (q && q.writing_daily_limit != null) ? q.writing_daily_limit : 10;
+        const usedToday = (q && q.writing_last_used_date === today) ? (q.writing_daily_used_count || 0) : 0;
+        const remainingTokens = Math.max(0, dailyLimit - usedToday);
+        const dailyEvalsAvailable = Math.floor(remainingTokens / 10);
         const bonusRemaining = q ? Math.max(0, (q.bonus_quota || 0) - (q.bonus_used || 0)) : 0;
         const bonusEvals = Math.floor(bonusRemaining / 10);
-        if (dailyLeft > 0) {
+        if (dailyEvalsAvailable > 0) {
           lbl.innerHTML = '<span style="color: #2c8a4d;">Ücretsiz</span>';
         } else if (bonusEvals > 0) {
           lbl.innerHTML = '<span style="font-size: 0.85em; color: var(--text-soft);">10 jeton</span>';

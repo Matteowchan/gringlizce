@@ -395,98 +395,75 @@
         const sub = state.submission;
         const jwt = (await sb.auth.getSession()).data.session.access_token;
 
-        let task1Result = null, task2Result = null;
-        let costSource = 'daily';
+        // Atomik IELTS değerlendirmesi: Task 1 + Task 2 tek pakette
+        const combinedText =
+          '## TASK 1\n\n' + (sub.task1_essay || '(boş)') + '\n\n' +
+          '## TASK 2\n\n' + (sub.task2_essay || '(boş)');
 
-        // Task 1
-        if (sub.task1_essay && sub.task1_word_count >= 50) {
-          const r1 = await callEdge({
-            text_type_id: 'ielts-task1-academic',
-            level: null,
-            prompt_id: null,
-            prompt_snapshot: 'IELTS Academic Task 1: Describe the visual information in your own words. Use the prompt provided in the test.',
-            text: sub.task1_essay,
-            word_count: sub.task1_word_count,
-          }, jwt, 50000);
-          if (r1.status === 402) {
-            const errBody = await r1.json();
-            showPaywall(errBody.error || 'Hakkın bitti');
-            return;
-          }
-          if (!r1.ok) {
-            const errBody = await r1.json().catch(() => ({}));
-            throw new Error(errBody.error || ('HTTP ' + r1.status));
-          }
-          const j1 = await r1.json();
-          task1Result = j1.evaluation;
-          task1Result.__total_score = j1.total_score;
-          task1Result.__total_max = j1.total_max;
-          costSource = j1.cost_source;
+        const combinedWordCount = (sub.task1_word_count || 0) + (sub.task2_word_count || 0);
+
+        const r = await callEdge({
+          text_type_id: 'ielts-writing-complete',
+          level: null,
+          prompt_id: null,
+          prompt_snapshot: 'IELTS Writing test: Task 1 (visual description, 150-200 words) and Task 2 (argumentative essay, 250-300 words). Evaluate both tasks separately using IELTS Band Descriptors (0-9). Provide separate band scores for each criterion of each task.',
+          text: combinedText,
+          word_count: combinedWordCount,
+        }, jwt, 60000);
+
+        if (r.status === 402) {
+          const errBody = await r.json();
+          showPaywall(errBody.error || 'Yazı havuzun bitti');
+          return;
         }
-
-        // Task 2
-        if (sub.task2_essay && sub.task2_word_count >= 50) {
-          const r2 = await callEdge({
-            text_type_id: 'ielts-task2',
-            level: null,
-            prompt_id: null,
-            prompt_snapshot: 'IELTS Task 2 Essay: Present a clear argument with reasoning and examples. Use the prompt provided in the test.',
-            text: sub.task2_essay,
-            word_count: sub.task2_word_count,
-          }, jwt, 50000);
-          if (r2.status === 402) {
-            const errBody = await r2.json();
-            await saveResults({ task1: task1Result, task2: null, partial: true });
-            renderFeedback({ task1: task1Result, task2: null, partial: true });
-            return;
-          }
-          if (!r2.ok) {
-            const errBody = await r2.json().catch(() => ({}));
-            throw new Error(errBody.error || ('HTTP ' + r2.status));
-          }
-          const j2 = await r2.json();
-          task2Result = j2.evaluation;
-          task2Result.__total_score = j2.total_score;
-          task2Result.__total_max = j2.total_max;
+        if (!r.ok) {
+          const errBody = await r.json().catch(() => ({}));
+          throw new Error(errBody.error || ('HTTP ' + r.status));
         }
+        const j = await r.json();
+        const evaluation = j.evaluation;
+        evaluation.__total_score = j.total_score;
+        evaluation.__total_max = j.total_max;
+        evaluation.__cost_source = j.cost_source;
 
-        const combined = { task1: task1Result, task2: task2Result, cost_source: costSource };
-        await saveResults(combined);
-        renderFeedback(combined);
+        await saveResults(evaluation);
+        renderFeedback(evaluation);
       } catch (e) {
         console.error(e);
         const isTimeout = e.name === 'AbortError';
         showError(
           isTimeout ? 'Zaman aşımı' : 'Değerlendirme hatası',
           isTimeout
-            ? 'İstek 50 saniye içinde tamamlanmadı. Sunucu yoğun olabilir, lütfen tekrar dene.'
+            ? 'İstek 60 saniye içinde tamamlanmadı. Sunucu yoğun olabilir, lütfen tekrar dene.'
             : (e.message || String(e))
         );
       }
     }
 
-    async function saveResults(results) {
-      // Compute overall band: weighted Task 1 (1x) + Task 2 (2x) / 3, IELTS standard
+    async function saveResults(evaluation) {
+      // Task 1 ve Task 2 için ortalama band hesapla (4 kriter ayrı)
+      const scores = evaluation.scores || {};
+      const t1Keys = ['task1_achievement', 'task1_coherence', 'task1_lexical', 'task1_grammar'];
+      const t2Keys = ['task2_response', 'task2_coherence', 'task2_lexical', 'task2_grammar'];
+      const avg = (keys) => {
+        const vals = keys.map(k => Number(scores[k])).filter(v => !isNaN(v));
+        return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 2) / 2 : null;
+      };
+      const t1Band = avg(t1Keys);
+      const t2Band = avg(t2Keys);
+      // IELTS overall: (T1 + 2*T2) / 3, rounded to 0.5
       let overall = null;
-      const t1Score = results.task1 ? Number(results.task1.__total_score) : null;
-      const t2Score = results.task2 ? Number(results.task2.__total_score) : null;
-      if (t1Score != null && t2Score != null) {
-        overall = (t1Score + 2 * t2Score) / 3;
-        // IELTS rounding: .25 → .5, .75 → 1.0
-        overall = Math.round(overall * 2) / 2;
-      } else if (t2Score != null) {
-        overall = t2Score;
-      } else if (t1Score != null) {
-        overall = t1Score;
+      if (t1Band != null && t2Band != null) {
+        overall = Math.round(((t1Band + 2 * t2Band) / 3) * 2) / 2;
       }
 
       try {
         await sb.from('ielts_writing_submissions').update({
           gri_evaluated: true,
-          gri_evaluation_json: results,
+          gri_evaluation_json: evaluation,
           gri_evaluated_at: new Date().toISOString(),
-          task1_band: t1Score,
-          task2_band: t2Score,
+          task1_band: t1Band,
+          task2_band: t2Band,
           overall_writing_band: overall,
           payment_status: 'paid',
         }).eq('id', state.submission.id);
@@ -539,18 +516,27 @@
         '</div>';
     }
 
-    function renderFeedback(results) {
+    function renderFeedback(evaluation) {
       const el = document.getElementById('fbContent');
-      let html = '';
+      const sub = state.submission;
+      const scores = evaluation.scores || {};
+      const comments = evaluation.comments || {};
 
-      // Overall band card
-      const t1 = results.task1, t2 = results.task2;
+      // Split scores by task
+      const t1Keys = ['task1_achievement', 'task1_coherence', 'task1_lexical', 'task1_grammar'];
+      const t2Keys = ['task2_response', 'task2_coherence', 'task2_lexical', 'task2_grammar'];
+      const avg = (keys) => {
+        const vals = keys.map(k => Number(scores[k])).filter(v => !isNaN(v));
+        return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 2) / 2 : null;
+      };
+      const t1Band = avg(t1Keys);
+      const t2Band = avg(t2Keys);
       let overall = null;
-      if (t1 && t2) {
-        const s1 = Number(t1.__total_score), s2 = Number(t2.__total_score);
-        overall = Math.round(((s1 + 2 * s2) / 3) * 2) / 2;
-      } else if (t2) overall = Number(t2.__total_score);
-      else if (t1) overall = Number(t1.__total_score);
+      if (t1Band != null && t2Band != null) {
+        overall = Math.round(((t1Band + 2 * t2Band) / 3) * 2) / 2;
+      }
+
+      let html = '';
 
       if (overall != null) {
         html += '<div class="fb-overall-band-card">' +
@@ -561,18 +547,35 @@
           '</div></div>';
       }
 
-      // Each task
-      if (t1) html += renderTaskCard(1, 'Academic Task 1', t1, state.submission.task1_essay, state.submission.task1_word_count);
-      if (t2) html += renderTaskCard(2, 'Task 2 Essay', t2, state.submission.task2_essay, state.submission.task2_word_count);
+      // Task 1 card
+      html += renderTaskCard(1, 'Academic Task 1', t1Band, t1Keys, scores, comments, sub.task1_essay, sub.task1_word_count);
+      // Task 2 card
+      html += renderTaskCard(2, 'Task 2 Essay', t2Band, t2Keys, scores, comments, sub.task2_essay, sub.task2_word_count);
 
-      if (results.partial) {
-        html += '<div class="fb-status error" style="background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem;">' +
-          '<h3>Task 2 değerlendirilemedi</h3>' +
-          '<p>Günlük hakkın Task 1 sırasında tükendi. Task 2\'yi değerlendirmek için yarın gel veya Gri jetonu satın al.</p>' +
+      // Specific mistakes (kombine, üstte küçük bir kart)
+      if (evaluation.specificMistakes && evaluation.specificMistakes.length > 0) {
+        html += '<div class="fb-task-card">' +
+          '<div class="fb-section-title">Spesifik Hatalar (' + evaluation.specificMistakes.length + ')</div>' +
+          '<div class="fb-mistakes">';
+        evaluation.specificMistakes.forEach(function(m) {
+          html += '<div class="fb-mistake ' + escapeHtml(m.type || '') + '">' +
+            '<span class="fb-mistake-type">' + escapeHtml(m.type || 'note') + '</span>' +
+            '<div class="orig">' + escapeHtml(m.original || '') + '</div>' +
+            '<div class="corr">' + escapeHtml(m.correction || '') + '</div>' +
+            '<p class="expl">' + escapeHtml(m.explanation || '') + '</p>' +
+            '</div>';
+        });
+        html += '</div></div>';
+      }
+
+      // Gri'nin Yorumu (kombine)
+      if (evaluation.improvementAdvice) {
+        html += '<div class="fb-advice">' +
+          '<div class="fb-advice-label">Gri&rsquo;nin Yorumu</div>' +
+          '<p>' + escapeHtml(evaluation.improvementAdvice) + '</p>' +
           '</div>';
       }
 
-      // Actions
       html += '<div class="fb-actions">' +
         '<a href="ielts-deneme.html" class="fb-btn">Denemelere dön</a>' +
         '<a href="panelim.html" class="fb-btn primary">Panele git</a>' +
@@ -580,7 +583,6 @@
 
       el.innerHTML = html;
 
-      // Attach essay toggle handlers
       document.querySelectorAll('.fb-essay-toggle').forEach(function(btn) {
         btn.addEventListener('click', function() {
           const tgt = document.getElementById(this.getAttribute('data-target'));
@@ -592,68 +594,36 @@
       });
     }
 
-    function renderTaskCard(taskNum, title, ev, essay, wc) {
-      const score = Number(ev.__total_score).toFixed(1);
-      const max = ev.__total_max;
+    function renderTaskCard(taskNum, title, band, keys, scores, comments, essay, wc) {
+      const bandStr = (band != null) ? band.toFixed(1) : '–';
       let html = '<div class="fb-task-card">' +
         '<div class="fb-task-head">' +
         '<div>' +
-        '<h2>' + escapeHtml(title) + '</h2>' +
+        '<h2 lang="en">' + escapeHtml(title) + '</h2>' +
         '<div class="meta"><span>' + (wc || 0) + ' kelime</span></div>' +
         '</div>' +
-        '<div class="fb-band-display"><span class="num">' + score + '</span><span class="lbl">Band</span></div>' +
+        '<div class="fb-band-display"><span class="num">' + bandStr + '</span><span class="lbl">Band</span></div>' +
         '</div>';
 
-      // Overall comment
-      if (ev.overallComment) {
-        html += '<div class="fb-overall-card"><p>' + escapeHtml(ev.overallComment) + '</p></div>';
-      }
-
       // Per-criterion
-      if (ev.scores && ev.comments) {
-        html += '<div class="fb-section">' +
-          '<div class="fb-section-title">Kriter Detayları</div>' +
-          '<div class="fb-criteria">';
-        Object.keys(ev.scores).forEach(function(key) {
-          const s = ev.scores[key];
-          const c = ev.comments[key] || '';
-          const lbl = formatCriterionLabel(key);
-          html += '<div class="fb-crit-item">' +
-            '<div class="fb-crit-band">' +
-            '<span class="num">' + Number(s).toFixed(1) + '</span>' +
-            '<span class="lbl">Band</span>' +
-            '</div>' +
-            '<div class="fb-crit-body">' +
-            '<h4>' + escapeHtml(lbl) + '</h4>' +
-            '<p>' + escapeHtml(c) + '</p>' +
-            '</div></div>';
-        });
-        html += '</div></div>';
-      }
-
-      // Specific mistakes
-      if (ev.specificMistakes && ev.specificMistakes.length > 0) {
-        html += '<div class="fb-section">' +
-          '<div class="fb-section-title">Spesifik Hatalar (' + ev.specificMistakes.length + ')</div>' +
-          '<div class="fb-mistakes">';
-        ev.specificMistakes.forEach(function(m) {
-          html += '<div class="fb-mistake ' + escapeHtml(m.type || '') + '">' +
-            '<span class="fb-mistake-type">' + escapeHtml(m.type || 'note') + '</span>' +
-            '<div class="orig">' + escapeHtml(m.original || '') + '</div>' +
-            '<div class="corr">' + escapeHtml(m.correction || '') + '</div>' +
-            '<p class="expl">' + escapeHtml(m.explanation || '') + '</p>' +
-            '</div>';
-        });
-        html += '</div></div>';
-      }
-
-      // Improvement advice (Gri'nin Yorumu)
-      if (ev.improvementAdvice) {
-        html += '<div class="fb-advice">' +
-          '<div class="fb-advice-label">Gri&rsquo;nin Yorumu</div>' +
-          '<p>' + escapeHtml(ev.improvementAdvice) + '</p>' +
-          '</div>';
-      }
+      html += '<div class="fb-section">' +
+        '<div class="fb-section-title">Kriter Detayları</div>' +
+        '<div class="fb-criteria">';
+      keys.forEach(function(key) {
+        const s = scores[key];
+        const c = comments[key] || '';
+        const lbl = formatCriterionLabel(key);
+        html += '<div class="fb-crit-item">' +
+          '<div class="fb-crit-band">' +
+          '<span class="num">' + (s != null ? Number(s).toFixed(1) : '–') + '</span>' +
+          '<span class="lbl">Band</span>' +
+          '</div>' +
+          '<div class="fb-crit-body">' +
+          '<h4 lang="en">' + escapeHtml(lbl) + '</h4>' +
+          '<p>' + escapeHtml(c) + '</p>' +
+          '</div></div>';
+      });
+      html += '</div></div>';
 
       // Essay toggle
       if (essay) {
@@ -662,17 +632,20 @@
           '<div class="fb-essay-text" id="' + targetId + '" lang="en">' + escapeHtml(essay) + '</div>';
       }
 
-      html += '</div>'; // /fb-task-card
+      html += '</div>';
       return html;
     }
 
     function formatCriterionLabel(key) {
       const labels = {
-        'task_achievement': 'Task Achievement',
-        'task_response': 'Task Response',
-        'coherence_cohesion': 'Coherence and Cohesion',
-        'lexical_resource': 'Lexical Resource',
-        'grammatical_range': 'Grammatical Range and Accuracy',
+        'task1_achievement': 'Task Achievement',
+        'task1_coherence': 'Coherence and Cohesion',
+        'task1_lexical': 'Lexical Resource',
+        'task1_grammar': 'Grammatical Range and Accuracy',
+        'task2_response': 'Task Response',
+        'task2_coherence': 'Coherence and Cohesion',
+        'task2_lexical': 'Lexical Resource',
+        'task2_grammar': 'Grammatical Range and Accuracy',
       };
       return labels[key] || key;
     }

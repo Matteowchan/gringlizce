@@ -70,7 +70,12 @@
       box-shadow: 0 4px 12px rgba(44,88,86,0.1);
     }
     .fb-paywall .pkg-card .pkg-q { font-family: var(--font-display); font-size: 1.4rem; }
-    .fb-paywall .pkg-card .pkg-p { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .fb-paywall .pkg-card .pkg-eq {
+      font-size: 0.72rem; color: var(--cat-accent-deep); font-weight: 500;
+      margin: 0.4rem 0; padding: 0.2rem 0.45rem; background: var(--cat-accent-soft);
+      border-radius: 4px; display: inline-block;
+    }
+    .fb-paywall .pkg-card .pkg-p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 600; }
     @media (max-width: 540px) { .fb-paywall .pkg-grid { grid-template-columns: 1fr; } }
 
     .fb-task-card {
@@ -496,21 +501,24 @@
     function showPaywall(msg) {
       const el = document.getElementById('fbContent');
       const PACKAGES = [
-        { name: '10 Soru', price: 100, url: 'https://www.shopier.com/47211439' },
-        { name: '25 Soru', price: 225, url: 'https://www.shopier.com/47211439' },
-        { name: '50 Soru', price: 425, url: 'https://www.shopier.com/47211439' }
+        { name: '10 Soru Paketi', price: 100, tokens: 10, writings: 1, url: 'https://www.shopier.com/SATquestionBank/47230429' },
+        { name: '25 Soru Paketi', price: 225, tokens: 25, writings: 2, url: 'https://www.shopier.com/SATquestionBank/47230479' },
+        { name: '50 Soru Paketi', price: 425, tokens: 50, writings: 5, url: 'https://www.shopier.com/SATquestionBank/47230505' }
       ];
       let pkgHtml = '<div class="pkg-grid">';
       PACKAGES.forEach(function(p) {
+        const wLbl = p.writings === 1 ? '1 yazı' : p.writings + ' yazı';
+        const subtitle = wLbl + ' veya ' + p.tokens + ' soru';
         pkgHtml += '<a class="pkg-card" href="' + p.url + '" target="_blank" rel="noopener">' +
           '<div class="pkg-q">' + escapeHtml(p.name) + '</div>' +
+          '<div class="pkg-eq">' + escapeHtml(subtitle) + '</div>' +
           '<div class="pkg-p">₺' + p.price + '</div>' +
           '</a>';
       });
       pkgHtml += '</div>';
       el.innerHTML = '<div class="fb-paywall">' +
-        '<h3>Günlük hakkın bitti</h3>' +
-        '<p>' + escapeHtml(msg) + ' Yarın saat 03:00\'te (UTC midnight) ücretsiz hakkın yenilenir. Şimdi devam etmek için Gri jeton paketi alabilirsin (Task değerlendirme başına 10 jeton).</p>' +
+        '<h3>Günlük yazı havuzun bitti</h3>' +
+        '<p>' + escapeHtml(msg) + ' Yarın saat 03:00\'te (UTC midnight) ücretsiz hakkın yenilenir. Şimdi devam etmek için jeton paketi alabilirsin (1 yazı = 10 jeton).</p>' +
         pkgHtml +
         '<a href="ielts-deneme.html" class="fb-btn" style="margin-top: 1.5rem;">Sonra dön</a>' +
         '</div>';

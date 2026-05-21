@@ -227,6 +227,9 @@
     .pkg-badge.popular {
       background: #1a2a28;
     }
+    .pkg-badge.gri {
+      background: linear-gradient(135deg, #2C5856 0%, #1a3a38 100%);
+    }
 
     .pkg-head {
       display: flex;
@@ -610,6 +613,21 @@
           <input type="radio" name="package" value="both" class="pkg-radio">
         </label>
 
+        <label class="package-option full-width" data-pkg="gri_ai">
+          <span class="pkg-badge gri">Yeni · AI</span>
+          <div class="pkg-head">
+            <span class="pkg-name">Gri ile Değerlendir</span>
+            <span class="pkg-price" id="griPriceLabel">Yükleniyor...</span>
+          </div>
+          <ul class="pkg-features">
+            <li>Anında AI değerlendirme (band 0-9 her kriter için)</li>
+            <li>Task Achievement, Coherence, Lexical, Grammar</li>
+            <li>Spesifik hataların ve geliştirme önerileri</li>
+            <li>Günlük 1 ücretsiz, sonrası 10 Gri jetonu</li>
+          </ul>
+          <input type="radio" name="package" value="gri_ai" class="pkg-radio">
+        </label>
+
         <label class="package-option full-width" data-pkg="draft">
           <span class="pkg-badge free">Ücretsiz</span>
           <div class="pkg-head">
@@ -654,6 +672,9 @@
       const { data: { user } } = await sb.auth.getUser();
       if (!user) { window.location.href = 'giris.html?next=' + encodeURIComponent(location.pathname + location.search); return; }
       state.user = user;
+
+      // Fetch Gri quota for IELTS evaluation (asynchronous, doesn't block)
+      updateGriPriceLabel();
 
       const { data: test } = await sb.from('ielts_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
       if (!test) { document.getElementById('loading').textContent = 'Test bulunamadı.'; return; }
@@ -936,6 +957,9 @@
       if (state.selectedPackage === 'draft') {
         // Sadece kaydet
         window.location.href = 'ielts-deneme.html?saved=' + sub.id;
+      } else if (state.selectedPackage === 'gri_ai') {
+        // Gri AI değerlendirme — yeni feedback sayfasına git
+        window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
       } else {
         // Tüm ücretli paketler Shopier'a yönlendirilir (Task 1, Task 2, Task 1+2)
         window.location.href = 'https://www.shopier.com/47211439';
@@ -965,6 +989,31 @@
     });
 
     loadTest();
+
+    // ========== GRI QUOTA LABEL ==========
+    async function updateGriPriceLabel() {
+      try {
+        const lbl = document.getElementById('griPriceLabel');
+        if (!lbl || !state.user) return;
+        const { data: q } = await sb.from('ai_quota')
+          .select('ielts_eval_daily_used_count, ielts_eval_last_used_date, ielts_eval_daily_limit, bonus_quota, bonus_used')
+          .eq('user_id', state.user.id)
+          .maybeSingle();
+        const today = new Date().toISOString().slice(0, 10);
+        const dailyLimit = (q && q.ielts_eval_daily_limit != null) ? q.ielts_eval_daily_limit : 1;
+        const usedToday = (q && q.ielts_eval_last_used_date === today) ? (q.ielts_eval_daily_used_count || 0) : 0;
+        const dailyLeft = Math.max(0, dailyLimit - usedToday);
+        const bonusRemaining = q ? Math.max(0, (q.bonus_quota || 0) - (q.bonus_used || 0)) : 0;
+        const bonusEvals = Math.floor(bonusRemaining / 10);
+        if (dailyLeft > 0) {
+          lbl.innerHTML = '<span style="color: #2c8a4d;">Ücretsiz</span>';
+        } else if (bonusEvals > 0) {
+          lbl.innerHTML = '<span style="font-size: 0.85em; color: var(--text-soft);">10 jeton</span>';
+        } else {
+          lbl.innerHTML = '<span style="font-size: 0.85em; color: var(--text-muted);">Jeton gerekli</span>';
+        }
+      } catch (e) { console.warn('Gri quota fetch:', e); }
+    }
   </script>
   <script>
     // Inline font zoom — passage + textarea scale, ayrı localStorage anahtarı

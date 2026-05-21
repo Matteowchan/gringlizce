@@ -235,6 +235,55 @@
     .wiz-btn:hover:not(:disabled) { background: var(--cat-accent-deep); }
     .wiz-btn:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
 
+    .wiz-btn-sec {
+      background: transparent; color: var(--text-soft);
+      font-family: var(--font-ui); font-size: 0.72rem;
+      font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.6rem 0.95rem; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .wiz-btn-sec:hover {
+      background: var(--bg-soft); color: var(--text);
+      border-color: var(--text-muted);
+    }
+    .wiz-btn-sec#undoBtn {
+      background: var(--cat-accent-soft);
+      color: var(--cat-accent-deep);
+      border-color: var(--cat-accent);
+    }
+    .wiz-btn-sec#undoBtn:hover {
+      background: var(--cat-accent);
+      color: white;
+      border-color: var(--cat-accent);
+    }
+
+    .wiz-editor-actions {
+      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+    }
+    @media (max-width: 720px) {
+      .wiz-editor-footer { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .wiz-editor-actions { justify-content: stretch; }
+      .wiz-editor-actions button { flex: 1; }
+    }
+
+    .wiz-toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--text); color: var(--bg);
+      padding: 0.8rem 1.4rem; border-radius: var(--radius-md);
+      font-family: var(--font-ui); font-size: 0.88rem; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      opacity: 0; transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 10000; pointer-events: none;
+      max-width: 90vw;
+    }
+    .wiz-toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+    .wiz-toast.success { background: var(--cat-accent-deep); }
+    .wiz-toast.error { background: #A03A2F; }
+
     .wiz-error {
       margin-top: 0.5rem; padding: 0.9rem 1.1rem;
       background: rgba(160, 58, 47, 0.08); border-left: 3px solid #A03A2F;
@@ -698,7 +747,12 @@
               <span class="wiz-wc-label">Kelime Sayısı</span>
               <span class="wiz-wc-num" id="wcNum">0 <span class="target" id="wcTarget">/ ...</span></span>
             </div>
-            <button class="wiz-btn" id="evalBtn" disabled>Değerlendir</button>
+            <div class="wiz-editor-actions">
+              <button class="wiz-btn-sec" id="undoBtn" type="button" style="display:none;">Geri Al</button>
+              <button class="wiz-btn-sec" id="clearBtn" type="button">Yazıyı Sıfırla</button>
+              <button class="wiz-btn-sec" id="saveBtn" type="button">Yazıyı Kaydet</button>
+              <button class="wiz-btn" id="evalBtn" disabled>Değerlendir</button>
+            </div>
           </div>
         </div>
 
@@ -796,6 +850,8 @@
     </div>
   </footer>
 
+  <div id="wizToast" class="wiz-toast"></div>
+
   <script>
     // ========================================================
     // CONFIG
@@ -842,6 +898,7 @@
       user: null,
       quota: null,
       isAnalyzing: false,
+      lastClearedText: '',   // undo için son silinen yazı
     };
 
     var EXAM_LABELS = {
@@ -1045,6 +1102,10 @@
       if (fb) {
         fb.innerHTML = '<div class="wiz-empty">Henüz değerlendirme yok. Yazını gönderdiğinde geri bildirim burada görünecek.</div>';
       }
+      // Undo state'i de temizle (yeni text type için eski yazı geri yüklenmesin)
+      state.lastClearedText = '';
+      var undoEl = document.getElementById('undoBtn');
+      if (undoEl) undoEl.style.display = 'none';
     }
 
     function showLoginBanner() {
@@ -1331,13 +1392,118 @@
         });
       });
 
-      // New prompt button
+      // New prompt button — yazı varsa önce undo belleğine al, sonra sıfırla
       document.getElementById('newPromptBtn').addEventListener('click', function() {
+        var taEl = document.getElementById('wizText');
+        if (taEl.value.trim()) {
+          state.lastClearedText = taEl.value;
+          taEl.value = '';
+          saveDraft();
+          updateWordCount();
+          document.getElementById('undoBtn').style.display = 'inline-flex';
+        }
         loadRandomPrompt();
       });
 
+      // Clear (Yazıyı Sıfırla)
+      document.getElementById('clearBtn').addEventListener('click', function() {
+        var taEl = document.getElementById('wizText');
+        if (!taEl.value.trim()) {
+          toast('Zaten boş', 'error');
+          return;
+        }
+        state.lastClearedText = taEl.value;
+        taEl.value = '';
+        saveDraft();
+        updateWordCount();
+        document.getElementById('undoBtn').style.display = 'inline-flex';
+        toast('Yazı sıfırlandı. Geri Al ile kurtarabilirsin.');
+      });
+
+      // Undo (Geri Al)
+      document.getElementById('undoBtn').addEventListener('click', function() {
+        if (!state.lastClearedText) {
+          toast('Geri alınacak bir şey yok', 'error');
+          return;
+        }
+        var taEl = document.getElementById('wizText');
+        taEl.value = state.lastClearedText;
+        state.lastClearedText = '';
+        saveDraft();
+        updateWordCount();
+        document.getElementById('undoBtn').style.display = 'none';
+        toast('Yazı geri yüklendi', 'success');
+      });
+
+      // Save (Yazıyı Kaydet)
+      document.getElementById('saveBtn').addEventListener('click', saveWritingToDb);
+
       // Eval button
       document.getElementById('evalBtn').addEventListener('click', evaluateWriting);
+    }
+
+    // ========================================================
+    // TOAST
+    // ========================================================
+    function toast(msg, kind) {
+      var t = document.getElementById('wizToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.remove('success', 'error');
+      if (kind === 'success') t.classList.add('success');
+      if (kind === 'error') t.classList.add('error');
+      t.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(function() {
+        t.classList.remove('show');
+      }, 3000);
+    }
+
+    // ========================================================
+    // SAVE WRITING TO DB
+    // ========================================================
+    async function saveWritingToDb() {
+      if (!state.user) {
+        toast('Kaydetmek için giriş yap', 'error');
+        return;
+      }
+      var taEl = document.getElementById('wizText');
+      var text = taEl.value.trim();
+      if (!text) {
+        toast('Boş yazı kaydedilemez', 'error');
+        return;
+      }
+      if (!state.textType) {
+        toast('Önce bir text type seç', 'error');
+        return;
+      }
+      var wc = countWords(text);
+      var saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Kaydediliyor...';
+      try {
+        var res = await sb.from('user_saved_writings').insert({
+          user_id: state.user.id,
+          exam: state.textType.exam,
+          text_type: state.textType.text_type,
+          level: state.exam === 'ib' ? state.level : null,
+          prompt_id: state.currentPrompt ? state.currentPrompt.id : null,
+          prompt_title: state.currentPrompt ? state.currentPrompt.title : null,
+          prompt_snapshot: document.getElementById('promptText').dataset.raw || '',
+          text: text,
+          word_count: wc
+        });
+        if (res.error) {
+          toast('Kaydetme başarısız: ' + res.error.message, 'error');
+        } else {
+          toast('Yazı kaydedildi. Panelimden erişebilirsin.', 'success');
+        }
+      } catch (e) {
+        toast('Hata: ' + (e.message || e), 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Yazıyı Kaydet';
+      }
     }
 
     // ========================================================

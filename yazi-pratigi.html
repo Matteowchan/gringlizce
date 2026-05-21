@@ -69,6 +69,12 @@
     .wiz-selectors .level-toggle button.active {
       background: var(--cat-accent); color: white;
     }
+    .wiz-selectors .level-toggle button:disabled {
+      opacity: 0.35; cursor: not-allowed; color: var(--text-muted);
+    }
+    .wiz-selectors .level-toggle button:disabled:hover {
+      color: var(--text-muted); background: transparent;
+    }
     #levelWrap.hidden { display: none; }
     @media (max-width: 720px) {
       .wiz-selectors { padding: 1rem; gap: 0.9rem; }
@@ -1086,7 +1092,9 @@
       filtered.forEach(function(t) {
         var opt = document.createElement('option');
         opt.value = t.id;
-        opt.textContent = t.display_name + (t.is_coming_soon ? ' (Yakında)' : '');
+        var suffix = '';
+        if (t.is_coming_soon) suffix = ' (Yakında)';
+        opt.textContent = t.display_name + suffix;
         opt.disabled = !!t.is_coming_soon;
         sel.appendChild(opt);
       });
@@ -1102,13 +1110,39 @@
     function updateLevelVisibility() {
       var wrap = document.getElementById('levelWrap');
       if (!wrap) return;
-      // Sadece IB için level toggle göster
-      if (state.exam === 'ib') {
-        wrap.classList.remove('hidden');
-      } else {
+      // IB değilse level gizli
+      if (state.exam !== 'ib') {
         wrap.classList.add('hidden');
-        state.level = 'sl'; // IB değilse SL'e sabitle (rubric için fark etmez)
+        state.level = 'sl';
+        return;
       }
+      wrap.classList.remove('hidden');
+
+      // Text type'ın level_restriction'ı varsa, level'ı zorla ona getir ve butonları disable et
+      var restriction = state.textType && state.textType.level_restriction;
+      var slBtn = document.querySelector('#levelWrap [data-level="sl"]');
+      var hlBtn = document.querySelector('#levelWrap [data-level="hl"]');
+      if (!slBtn || !hlBtn) return;
+
+      slBtn.disabled = false;
+      hlBtn.disabled = false;
+      slBtn.title = '';
+      hlBtn.title = '';
+
+      if (restriction === 'hl') {
+        state.level = 'hl';
+        slBtn.disabled = true;
+        slBtn.title = 'Bu text type yalnızca HL içindir';
+      } else if (restriction === 'sl') {
+        state.level = 'sl';
+        hlBtn.disabled = true;
+        hlBtn.title = 'Bu text type yalnızca SL içindir';
+      }
+
+      // Active class'ı senkronla
+      [slBtn, hlBtn].forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-level') === state.level);
+      });
     }
 
     function attachSelectorHandlers() {
@@ -1141,15 +1175,18 @@
         state.typeId = this.value;
         updateURL();
         await loadTextType();
+        updateLevelVisibility();
         await loadRandomPrompt();
         document.getElementById('wizText').value = '';
         restoreDraft();
         updateWordCount();
+        updateWordCountTarget();
         resetFeedbackTab();
       });
 
       Array.prototype.forEach.call(levelBtns, function(btn) {
         btn.addEventListener('click', function() {
+          if (this.disabled) return;
           Array.prototype.forEach.call(levelBtns, function(b) { b.classList.remove('active'); });
           this.classList.add('active');
           state.level = this.getAttribute('data-level');

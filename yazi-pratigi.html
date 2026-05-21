@@ -127,6 +127,29 @@
       font-family: var(--font-body); font-size: 1rem; line-height: 1.65;
       color: var(--text-soft); margin: 0;
     }
+    .wiz-prompt-body p {
+      font-family: var(--font-body); font-size: 1rem; line-height: 1.65;
+      color: var(--text-soft); margin: 0 0 0.8rem;
+    }
+    .wiz-prompt-body p:last-child { margin-bottom: 0; }
+    .wiz-prompt-body .wiz-prompt-list {
+      margin: 0.5rem 0 1rem; padding-left: 1.4rem;
+      list-style: disc;
+    }
+    .wiz-prompt-body .wiz-prompt-list li {
+      font-family: var(--font-body); font-size: 1rem; line-height: 1.6;
+      color: var(--text-soft); margin-bottom: 0.4rem;
+    }
+    .wiz-prompt-body .wiz-prompt-list li:last-child { margin-bottom: 0; }
+    .wiz-prompt-body .wiz-prompt-speaker {
+      margin: 0 0 0.9rem;
+      padding-left: 0.7rem;
+      border-left: 2px solid var(--cat-accent-soft);
+    }
+    .wiz-prompt-body .wiz-prompt-speaker strong {
+      color: var(--cat-accent-deep);
+      font-weight: 700;
+    }
     .wiz-prompt-actions {
       margin-top: 0.9rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
     }
@@ -656,7 +679,7 @@
             </div>
           </div>
           <h2 id="promptTitle">Yükleniyor...</h2>
-          <p id="promptText">Lütfen bekle...</p>
+          <div id="promptText" class="wiz-prompt-body">Lütfen bekle...</div>
 
           <div class="wiz-prompt-actions">
             <button class="wiz-prompt-newbtn" id="newPromptBtn" type="button">Yeni soru getir</button>
@@ -1124,7 +1147,58 @@
       state.currentPrompt = prompts[randomIdx];
 
       document.getElementById('promptTitle').textContent = state.currentPrompt.title;
-      document.getElementById('promptText').textContent = state.currentPrompt.prompt;
+      var ptEl = document.getElementById('promptText');
+      ptEl.innerHTML = formatPromptHTML(state.currentPrompt.prompt);
+      // Düz metin snapshot için dataset'te sakla (submit'te kullanılır)
+      ptEl.dataset.raw = state.currentPrompt.prompt;
+    }
+
+    // ========================================================
+    // PROMPT FORMATTER — bullets, speakers, line breaks
+    // ========================================================
+    function formatPromptHTML(text) {
+      if (!text) return '';
+      var escaped = String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+      var lines = escaped.split('\n');
+      var html = '';
+      var inList = false;
+
+      function closeListIfOpen() {
+        if (inList) { html += '</ul>'; inList = false; }
+      }
+
+      lines.forEach(function(line) {
+        var trimmed = line.trim();
+        if (!trimmed) {
+          closeListIfOpen();
+          return;
+        }
+        // Bullet satırı: "* " veya "- " ile başlıyor
+        if (/^[*\-]\s+/.test(trimmed)) {
+          if (!inList) {
+            html += '<ul class="wiz-prompt-list">';
+            inList = true;
+          }
+          html += '<li>' + trimmed.replace(/^[*\-]\s+/, '') + '</li>';
+          return;
+        }
+        closeListIfOpen();
+        // Konuşmacı pattern: "Professor:", "Dr. Mitchell:", "Sarah:" vb.
+        // Başta büyük harfle başlayan, ':' ile biten kelime grubu
+        var m = trimmed.match(/^([A-Z][A-Za-z. ]{1,40}):\s*(.*)$/);
+        if (m) {
+          html += '<p class="wiz-prompt-speaker"><strong>' + m[1] + ':</strong> ' + m[2] + '</p>';
+        } else {
+          html += '<p>' + trimmed + '</p>';
+        }
+      });
+      closeListIfOpen();
+      return html;
     }
 
     // ========================================================
@@ -1331,7 +1405,7 @@
             text_type_id: state.typeId,
             level: state.level,
             prompt_id: state.currentPrompt ? state.currentPrompt.id : null,
-            prompt_snapshot: document.getElementById('promptText').textContent + ' (Title: ' + document.getElementById('promptTitle').textContent + ')',
+            prompt_snapshot: (document.getElementById('promptText').dataset.raw || '') + ' (Title: ' + document.getElementById('promptTitle').textContent + ')',
             text: text,
             word_count: wc,
           }),

@@ -21,6 +21,7 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/site-config.js" defer></script>
   <style>
     .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
     .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
@@ -331,39 +332,107 @@
     }
     .wiz-rubric-item {
       border: 1px solid var(--line); border-radius: var(--radius-md);
-      padding: 1rem 1.2rem; margin-bottom: 0.8rem;
+      padding: 1.1rem 1.2rem; margin-bottom: 0.7rem;
+      background: var(--bg-card);
+      transition: box-shadow 0.15s ease;
     }
+    .wiz-rubric-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     .wiz-rubric-head {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.6rem;
+      gap: 0.6rem; margin-bottom: 0.55rem; flex-wrap: wrap;
     }
     .wiz-rubric-head h4 {
-      font-family: var(--font-display); font-size: 1.02rem;
+      font-family: var(--font-display); font-size: 1.04rem;
       font-weight: 600; margin: 0; color: var(--text);
     }
     .wiz-rubric-pts {
       font-family: var(--font-ui); font-size: 0.7rem;
       letter-spacing: 0.12em; text-transform: uppercase;
-      font-weight: 600; padding: 0.25rem 0.55rem;
+      font-weight: 600; padding: 0.3rem 0.65rem;
       background: var(--cat-accent-soft); color: var(--cat-accent-deep);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-sm); white-space: nowrap;
     }
-    .wiz-rubric-item p {
+    .wiz-rubric-item > p,
+    .wiz-rubric-summary {
       font-family: var(--font-body); font-size: 0.92rem;
       line-height: 1.55; color: var(--text-soft); margin: 0;
     }
 
+    .wiz-rubric-toggle {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: transparent; border: 0; padding: 0.5rem 0;
+      font-family: var(--font-ui); font-size: 0.75rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--cat-accent-deep); cursor: pointer;
+      font-weight: 600; margin-top: 0.6rem;
+    }
+    .wiz-rubric-toggle:hover { color: var(--text); }
+    .wiz-rubric-toggle .chev {
+      display: inline-block; transition: transform 0.18s ease;
+      font-size: 0.7rem;
+    }
+    .wiz-rubric-toggle.open .chev { transform: rotate(180deg); }
+
+    .wiz-rubric-bands {
+      margin-top: 0.65rem; display: none;
+      flex-direction: column; gap: 0.35rem;
+      padding-top: 0.5rem; border-top: 1px dashed var(--line);
+    }
+    .wiz-rubric-bands.open { display: flex; }
+    .wiz-band {
+      display: grid; grid-template-columns: 50px 1fr; gap: 0.85rem;
+      align-items: start; padding: 0.5rem 0;
+    }
+    .wiz-band-label {
+      font-family: var(--font-ui); font-size: 0.72rem;
+      font-weight: 700; color: var(--cat-accent-deep);
+      padding: 0.22rem 0; background: var(--cat-accent-soft);
+      border-radius: 4px; text-align: center; letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .wiz-band-body {
+      font-family: var(--font-body); font-size: 0.87rem;
+      line-height: 1.55; color: var(--text-soft);
+    }
+    .wiz-band-body strong { color: var(--text); font-weight: 600; }
+
+    /* Format guide — numbered badge + compact body */
     .wiz-format-item {
-      border-left: 3px solid var(--cat-accent);
-      padding: 0.6rem 0 0.6rem 1rem; margin-bottom: 1rem;
+      display: grid; grid-template-columns: 36px 1fr; gap: 0.9rem;
+      align-items: start;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 0.85rem 1rem; margin-bottom: 0.5rem;
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .wiz-format-item h4 {
-      font-family: var(--font-display); font-size: 1rem;
+    .wiz-format-item:hover {
+      border-color: var(--cat-accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .wiz-format-num {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--cat-accent-soft); color: var(--cat-accent-deep);
+      border-radius: 50%; font-family: var(--font-ui);
+      font-weight: 700; font-size: 0.88rem;
+      flex-shrink: 0;
+    }
+    .wiz-format-body h4 {
+      font-family: var(--font-display); font-size: 0.97rem;
       font-weight: 600; margin: 0 0 0.3rem; color: var(--text);
+      line-height: 1.3;
     }
-    .wiz-format-item p {
-      font-family: var(--font-body); font-size: 0.92rem;
-      line-height: 1.6; color: var(--text-soft); margin: 0;
+    .wiz-format-body p {
+      font-family: var(--font-body); font-size: 0.88rem;
+      line-height: 1.55; color: var(--text-soft); margin: 0;
+    }
+    .wiz-format-body p code,
+    .wiz-format-body p em {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-style: normal; background: var(--bg-soft);
+      padding: 1px 5px; border-radius: 3px; font-size: 0.86em;
+      color: var(--cat-accent-deep);
     }
 
     .wiz-empty {
@@ -1097,6 +1166,49 @@
       window.history.replaceState({}, '', url.toString());
     }
 
+    // ========================================================
+    // PARSE RUBRIC BANDS
+    // ========================================================
+    // Description'u "SCORE 5: ...", "11-12: ...", "9-10: ..." gibi
+    // band'lara böler. Hiç band yoksa düz description döner.
+    function parseRubricBands(desc) {
+      if (!desc) return { summary: '', bands: [] };
+      var result = { summary: '', bands: [] };
+
+      // Pattern: "SCORE N (anything): ..." veya "N-N: ..." veya "N: ..."
+      // Bantları yakalamak için bunları konum olarak buluyoruz.
+      var bandRegex = /(SCORE\s+\d+\s*(?:\([^)]+\))?|\b\d{1,2}-\d{1,2}|\b\d{1,2}(?=:))(?:\s*:\s*)/g;
+      var matches = [];
+      var m;
+      while ((m = bandRegex.exec(desc)) !== null) {
+        matches.push({ idx: m.index, end: bandRegex.lastIndex, label: m[1].trim() });
+      }
+
+      if (matches.length === 0) {
+        return { summary: desc.trim(), bands: [] };
+      }
+
+      // İlk match'ten önceki kısım summary
+      result.summary = desc.substring(0, matches[0].idx).trim();
+      // Her match'ten sonraki içerik, bir sonraki match'in başına kadar
+      for (var i = 0; i < matches.length; i++) {
+        var bodyStart = matches[i].end;
+        var bodyEnd = (i + 1 < matches.length) ? matches[i + 1].idx : desc.length;
+        var body = desc.substring(bodyStart, bodyEnd).trim();
+        // Sondaki noktalı virgül veya virgülü temizle
+        body = body.replace(/[;,.]+$/, '').trim();
+        var label = matches[i].label.replace(/^SCORE\s+/i, '').trim();
+        // Parantezli açıklamayı label dışına çıkar
+        var parLabel = label.match(/^(\d+)\s*\(([^)]+)\)$/);
+        if (parLabel) {
+          label = parLabel[1];
+          body = '(' + parLabel[2] + ') ' + body;
+        }
+        result.bands.push({ label: label, body: body });
+      }
+      return result;
+    }
+
     function resetFeedbackTab() {
       var fb = document.getElementById('feedbackBody');
       if (fb) {
@@ -1158,26 +1270,84 @@
         examLabel + ' değerlendirmesi <strong>' + totalMax + ' puan</strong> üzerinden yapılır.';
       var rubricEl = document.getElementById('rubricItems');
       rubricEl.innerHTML = '';
-      (rubric.criteria || []).forEach(function(c) {
+      (rubric.criteria || []).forEach(function(c, idx) {
         var item = document.createElement('div');
         item.className = 'wiz-rubric-item';
-        item.innerHTML = '<div class="wiz-rubric-head"><h4></h4><span class="wiz-rubric-pts"></span></div><p></p>';
-        item.querySelector('h4').textContent = c.label;
-        item.querySelector('.wiz-rubric-pts').textContent = c.max_points + ' Puan';
-        item.querySelector('p').textContent = c.description;
+
+        var head = document.createElement('div');
+        head.className = 'wiz-rubric-head';
+        var h4 = document.createElement('h4');
+        h4.textContent = c.label;
+        var pts = document.createElement('span');
+        pts.className = 'wiz-rubric-pts';
+        pts.textContent = c.max_points + ' Puan';
+        head.appendChild(h4); head.appendChild(pts);
+        item.appendChild(head);
+
+        var parsed = parseRubricBands(c.description || '');
+        if (parsed.summary) {
+          var sumEl = document.createElement('p');
+          sumEl.className = 'wiz-rubric-summary';
+          sumEl.textContent = parsed.summary;
+          item.appendChild(sumEl);
+        }
+        if (parsed.bands.length > 0) {
+          // Toggle button
+          var toggleBtn = document.createElement('button');
+          toggleBtn.className = 'wiz-rubric-toggle';
+          toggleBtn.type = 'button';
+          toggleBtn.innerHTML = 'Bant açıklamalarını gör <span class="chev">▾</span>';
+          var bandsEl = document.createElement('div');
+          bandsEl.className = 'wiz-rubric-bands';
+          parsed.bands.forEach(function(b) {
+            var bandEl = document.createElement('div');
+            bandEl.className = 'wiz-band';
+            var labelEl = document.createElement('span');
+            labelEl.className = 'wiz-band-label';
+            labelEl.textContent = b.label;
+            var bodyEl = document.createElement('span');
+            bodyEl.className = 'wiz-band-body';
+            bodyEl.textContent = b.body;
+            bandEl.appendChild(labelEl); bandEl.appendChild(bodyEl);
+            bandsEl.appendChild(bandEl);
+          });
+          toggleBtn.addEventListener('click', function() {
+            var isOpen = bandsEl.classList.toggle('open');
+            this.classList.toggle('open', isOpen);
+            this.firstChild.textContent = isOpen ? 'Bant açıklamalarını gizle ' : 'Bant açıklamalarını gör ';
+          });
+          item.appendChild(toggleBtn);
+          item.appendChild(bandsEl);
+        }
+        if (!parsed.summary && parsed.bands.length === 0) {
+          var p = document.createElement('p');
+          p.textContent = c.description;
+          item.appendChild(p);
+        }
         rubricEl.appendChild(item);
       });
 
-      // Format guide
+      // Format guide — numbered badge + title + content
       var formatEl = document.getElementById('formatItems');
       formatEl.innerHTML = '';
       var formatGuide = state.textType.format_guide_json || [];
-      formatGuide.forEach(function(g) {
+      formatGuide.forEach(function(g, idx) {
         var item = document.createElement('div');
         item.className = 'wiz-format-item';
-        item.innerHTML = '<h4></h4><p></p>';
-        item.querySelector('h4').textContent = g.title;
-        item.querySelector('p').textContent = g.content;
+        var num = document.createElement('div');
+        num.className = 'wiz-format-num';
+        // Title'da "1. Headline" gibi numara varsa onu kullan, yoksa idx+1
+        var titleText = g.title || '';
+        var numMatch = titleText.match(/^(\d+)\.\s*/);
+        num.textContent = numMatch ? numMatch[1] : (idx + 1);
+        var body = document.createElement('div');
+        body.className = 'wiz-format-body';
+        var h = document.createElement('h4');
+        h.textContent = numMatch ? titleText.replace(/^\d+\.\s*/, '') : titleText;
+        var p = document.createElement('p');
+        p.textContent = g.content;
+        body.appendChild(h); body.appendChild(p);
+        item.appendChild(num); item.appendChild(body);
         formatEl.appendChild(item);
       });
 

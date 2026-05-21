@@ -334,6 +334,15 @@
         showError('Geçersiz bağlantı', 'Submission ID eksik. Lütfen denemeyi tekrar gönder.');
         return;
       }
+      // Wait up to 3s for supabase-js to load (defer attribute)
+      let tries = 30;
+      while (!window.supabase && tries-- > 0) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+      if (!window.supabase) {
+        showError('Yükleme hatası', 'Supabase kütüphanesi yüklenemedi. Sayfayı yenile.');
+        return;
+      }
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
         auth: { persistSession: true, autoRefreshToken: true }
       });
@@ -365,6 +374,22 @@
       await evaluateBothTasks();
     }
 
+    async function callEdge(payload, jwt, timeoutMs) {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), timeoutMs || 50000);
+      try {
+        const r = await fetch(EVAL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        return r;
+      } finally {
+        clearTimeout(tid);
+      }
+    }
+
     async function evaluateBothTasks() {
       try {
         const sub = state.submission;
@@ -375,18 +400,14 @@
 
         // Task 1
         if (sub.task1_essay && sub.task1_word_count >= 50) {
-          const r1 = await fetch(EVAL_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
-            body: JSON.stringify({
-              text_type_id: 'ielts-task1-academic',
-              level: null,
-              prompt_id: null,
-              prompt_snapshot: 'IELTS Academic Task 1: Describe the visual information in your own words. Use the prompt provided in the test.',
-              text: sub.task1_essay,
-              word_count: sub.task1_word_count,
-            })
-          });
+          const r1 = await callEdge({
+            text_type_id: 'ielts-task1-academic',
+            level: null,
+            prompt_id: null,
+            prompt_snapshot: 'IELTS Academic Task 1: Describe the visual information in your own words. Use the prompt provided in the test.',
+            text: sub.task1_essay,
+            word_count: sub.task1_word_count,
+          }, jwt, 50000);
           if (r1.status === 402) {
             const errBody = await r1.json();
             showPaywall(errBody.error || 'Hakkın bitti');
@@ -405,21 +426,16 @@
 
         // Task 2
         if (sub.task2_essay && sub.task2_word_count >= 50) {
-          const r2 = await fetch(EVAL_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
-            body: JSON.stringify({
-              text_type_id: 'ielts-task2',
-              level: null,
-              prompt_id: null,
-              prompt_snapshot: 'IELTS Task 2 Essay: Present a clear argument with reasoning and examples. Use the prompt provided in the test.',
-              text: sub.task2_essay,
-              word_count: sub.task2_word_count,
-            })
-          });
+          const r2 = await callEdge({
+            text_type_id: 'ielts-task2',
+            level: null,
+            prompt_id: null,
+            prompt_snapshot: 'IELTS Task 2 Essay: Present a clear argument with reasoning and examples. Use the prompt provided in the test.',
+            text: sub.task2_essay,
+            word_count: sub.task2_word_count,
+          }, jwt, 50000);
           if (r2.status === 402) {
             const errBody = await r2.json();
-            // Task 1 değerlendirildi ama Task 2 için hak bitti — sadece Task 1 sonucu kaydet
             await saveResults({ task1: task1Result, task2: null, partial: true });
             renderFeedback({ task1: task1Result, task2: null, partial: true });
             return;
@@ -439,7 +455,13 @@
         renderFeedback(combined);
       } catch (e) {
         console.error(e);
-        showError('Değerlendirme hatası', e.message || String(e));
+        const isTimeout = e.name === 'AbortError';
+        showError(
+          isTimeout ? 'Zaman aşımı' : 'Değerlendirme hatası',
+          isTimeout
+            ? 'İstek 50 saniye içinde tamamlanmadı. Sunucu yoğun olabilir, lütfen tekrar dene.'
+            : (e.message || String(e))
+        );
       }
     }
 
@@ -475,9 +497,23 @@
       el.innerHTML = '<div class="fb-status error">' +
         '<h3>' + escapeHtml(title) + '</h3>' +
         '<p>' + escapeHtml(msg) + '</p>' +
-        '<a href="ielts-deneme.html" class="fb-btn" style="margin-top: 1.5rem;">IELTS denemelere dön</a>' +
+        '<div style="margin-top: 1.5rem; display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">' +
+          '<button class="fb-btn primary" onclick="retryEvaluation()">Tekrar Dene</button>' +
+          '<a href="ielts-deneme.html" class="fb-btn">Denemelere dön</a>' +
+        '</div>' +
         '</div>';
     }
+
+    function retryEvaluation() {
+      const el = document.getElementById('fbContent');
+      el.innerHTML = '<div class="fb-status">' +
+        '<div class="spinner"></div>' +
+        '<h3>Yazılarınız değerlendiriliyor</h3>' +
+        '<p>Bu işlem 10-20 saniye sürer. Sayfayı kapatma.</p>' +
+        '</div>';
+      evaluateBothTasks();
+    }
+    window.retryEvaluation = retryEvaluation;
 
     function showPaywall(msg) {
       const el = document.getElementById('fbContent');
@@ -645,7 +681,13 @@
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
-    init();
+    // Wait for deferred Supabase script before init
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      // Already loaded — still defer one tick to let supabase-js attach
+      setTimeout(init, 0);
+    }
   </script>
 </body>
 </html>

@@ -2406,7 +2406,7 @@
       var saved = 'overview';
       try { saved = localStorage.getItem(TAB_KEY) || 'overview'; } catch (e) {}
       // Doğrulama: kayıtlı tab gerçekten var mı
-      var valid = ['overview', 'users', 'settings', 'products', 'writing'];
+      var valid = ['overview', 'users', 'content', 'settings', 'products', 'writing', 'ai-health', 'gamification', 'comms', 'logs'];
       if (valid.indexOf(saved) === -1) saved = 'overview';
       activate(saved);
     }
@@ -2957,18 +2957,21 @@
     var NEW_TAB_LOADED = { content: false, 'ai-health': false, gamification: false, comms: false, logs: false };
 
     function initNewTabs() {
+      function triggerLoader(t) {
+        if (NEW_TAB_LOADED[t]) return;
+        NEW_TAB_LOADED[t] = true;
+        if (t === 'content')      loadContentTab();
+        if (t === 'ai-health')    loadAiHealthTab();
+        if (t === 'gamification') loadGamificationTab();
+        if (t === 'comms')        loadCommsTab();
+        if (t === 'logs')         loadLogsTab();
+      }
       document.querySelectorAll('.admin-tab').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var t = btn.dataset.tab;
-          if (NEW_TAB_LOADED[t]) return;
-          NEW_TAB_LOADED[t] = true;
-          if (t === 'content')      loadContentTab();
-          if (t === 'ai-health')    loadAiHealthTab();
-          if (t === 'gamification') loadGamificationTab();
-          if (t === 'comms')        loadCommsTab();
-          if (t === 'logs')         loadLogsTab();
-        });
+        btn.addEventListener('click', function () { triggerLoader(btn.dataset.tab); });
       });
+      // Also fire loader if a new tab is already active when this runs
+      var active = document.querySelector('.admin-tab.active');
+      if (active) triggerLoader(active.dataset.tab);
     }
 
     function escHtml(s) {
@@ -2990,7 +2993,11 @@
 
     // ---------- CONTENT ----------
     async function loadContentTab() {
+      var grid = $('content-grid');
+      var tbody = $('problem-q-tbody');
       try {
+        if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic;">Sorgulanıyor...</div>';
+
         var inv = await sb.rpc('admin_content_inventory');
         if (inv.error) throw inv.error;
         var data = inv.data || {};
@@ -3006,7 +3013,6 @@
         $('cnt-gap').textContent = gap;
         $('cnt-low').textContent = low;
 
-        var grid = $('content-grid');
         if (!cats.length) {
           grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic;">Henüz kategori verisi yok. Kullanıcılar soru çözmeye başladıkça dolar.</div>';
         } else {
@@ -3026,7 +3032,6 @@
         if (probRes.error) throw probRes.error;
         var probs = probRes.data || [];
         $('cnt-prob').textContent = probs.length;
-        var tbody = $('problem-q-tbody');
         if (!probs.length) {
           tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-style: italic;">Hiç problemli soru yok. İyi haber.</td></tr>';
         } else {
@@ -3041,7 +3046,10 @@
         }
       } catch (e) {
         console.error('[content tab]', e);
-        $('content-grid').innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #c44;">Hata: ' + (e.message || e) + '</div>';
+        var msg = e.message || e.hint || JSON.stringify(e);
+        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> SQL migration\'ları (16-20 numara) Supabase\'de çalıştırılmamış olabilir.</div>';
+        if (grid) grid.innerHTML = errHtml;
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: #b45046;">' + escHtml(msg) + '</td></tr>';
       }
     }
 
@@ -3100,8 +3108,9 @@
         }
       } catch (e) {
         console.error('[ai-health]', e);
+        var msg = e.message || e.hint || JSON.stringify(e);
         var box = $('ai-features');
-        if (box) box.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #c44;">Hata: ' + (e.message || e) + '</div>';
+        if (box) box.innerHTML = '<div style="padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 18 numaralı SQL (ai_call_log) Supabase\'de çalıştırılmamış olabilir.</div>';
       }
     }
 
@@ -3177,7 +3186,9 @@
         }
       } catch (e) {
         console.error('[gamification]', e);
-        $('badge-grid').innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #c44;">Hata: ' + (e.message || e) + '</div>';
+        var msg = e.message || e.hint || JSON.stringify(e);
+        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 16 numaralı SQL (gamification) Supabase\'de çalıştırılmamış olabilir.</div>';
+        $('badge-grid').innerHTML = errHtml;
       }
     }
     async function toggleBadge(id, btn) {
@@ -3305,6 +3316,9 @@
         }
       } catch (e) {
         console.error('[comms]', e);
+        var msg = e.message || e.hint || JSON.stringify(e);
+        var grid = $('template-grid');
+        if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 19 numaralı SQL (email schema) Supabase\'de çalıştırılmamış olabilir.</div>';
       }
     }
     async function refreshAudiencePreview() {

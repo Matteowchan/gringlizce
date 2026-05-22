@@ -234,6 +234,109 @@
   }
 
   // =============================================================
+  // BADGE EVALUATION TRIGGER — Major aksiyon sonrası rozet kontrolü
+  // Debounce'lu, en fazla 30 saniyede bir çağrı yapılır.
+  // Yeni kazanılan rozet varsa toast notification (panelim'deki gibi)
+  // çıkacak şekilde tasarlı.
+  // =============================================================
+  var __badgeCheckBusy = false;
+  var __badgeCheckLastRun = 0;
+  var __badgeCheckMinInterval = 30000; // 30 sn
+  var __badgeCheckPending = false;
+
+  window.triggerBadgeCheck = async function (opts) {
+    opts = opts || {};
+    var force = opts.force === true;
+    var silent = opts.silent === true;
+
+    var now = Date.now();
+    if (!force && (now - __badgeCheckLastRun < __badgeCheckMinInterval)) {
+      __badgeCheckPending = true;
+      return null;
+    }
+    if (__badgeCheckBusy) return null;
+    __badgeCheckBusy = true;
+    __badgeCheckLastRun = now;
+    __badgeCheckPending = false;
+
+    try {
+      var sess = await sb.auth.getSession();
+      var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+      if (!uid) return null;
+
+      var res = await sb.rpc('evaluate_user_progress', { p_user_id: uid });
+      if (res.error) {
+        console.warn('[badge-eval] failed:', res.error);
+        return null;
+      }
+      var newBadges = res.data || [];
+      if (!silent && newBadges && newBadges.length) {
+        try { window.__showBadgeToast && window.__showBadgeToast(newBadges); } catch (e) {}
+      }
+      return newBadges;
+    } catch (e) {
+      console.warn('[badge-eval] exception:', e);
+      return null;
+    } finally {
+      __badgeCheckBusy = false;
+      // Pending varsa interval sonunda tekrar dene
+      if (__badgeCheckPending) {
+        setTimeout(function () { window.triggerBadgeCheck(); }, __badgeCheckMinInterval);
+      }
+    }
+  };
+
+  // Auto-trigger on tab close (best-effort)
+  window.addEventListener('beforeunload', function () {
+    if (__badgeCheckPending) {
+      try { window.triggerBadgeCheck({ force: true, silent: true }); } catch (e) {}
+    }
+  });
+
+  // =============================================================
+  // BADGE TOAST — Yeni kazanılan rozet için sağ alttan slide-in
+  // panelim.html dışındaki tüm sayfalarda kullanılır.
+  // panelim.html zaten kendi toast'unu çalıştırıyor, override etmez.
+  // =============================================================
+  window.__showBadgeToast = window.__showBadgeToast || function (badges) {
+    if (!badges || !badges.length) return;
+    // CSS'i bir kez enjekte et
+    if (!document.getElementById('gri-badge-toast-style')) {
+      var style = document.createElement('style');
+      style.id = 'gri-badge-toast-style';
+      style.textContent = [
+        '.gri-toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg-card,#fefcf7);border:1px solid var(--line,#d4c9ae);border-left:3px solid #c89a3c;padding:0.9rem 1.2rem;box-shadow:0 10px 28px rgba(26,34,48,0.15);z-index:99999;display:flex;align-items:center;gap:0.9rem;max-width:360px;transform:translateX(440px);transition:transform 0.55s cubic-bezier(0.4,0,0.2,1);font-family:Georgia,serif;}',
+        '.gri-toast.show{transform:translateX(0);}',
+        '.gri-toast-icon{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f0c060,#a8801f);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fefcf7;font-size:24px;}',
+        '.gri-toast-eyebrow{font-family:Inter,sans-serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#c89a3c;font-weight:700;}',
+        '.gri-toast-name{font-size:1.05rem;font-weight:500;color:#1a2230;line-height:1.2;margin-top:0.15rem;}',
+        '.gri-toast-desc{font-style:italic;font-size:0.82rem;color:#8a9099;margin-top:0.15rem;}'
+      ].join('');
+      document.head.appendChild(style);
+    }
+
+    badges.forEach(function (b, i) {
+      setTimeout(function () {
+        var el = document.createElement('div');
+        el.className = 'gri-toast';
+        el.innerHTML =
+          '<div class="gri-toast-icon">★</div>' +
+          '<div>' +
+            '<div class="gri-toast-eyebrow">Yeni Rozet</div>' +
+            '<div class="gri-toast-name">' + (b.name || 'Rozet kazandın') + '</div>' +
+            '<div class="gri-toast-desc">' + (b.description || '') + '</div>' +
+          '</div>';
+        document.body.appendChild(el);
+        setTimeout(function () { el.classList.add('show'); }, 50);
+        setTimeout(function () {
+          el.classList.remove('show');
+          setTimeout(function () { try { el.remove(); } catch (e) {} }, 600);
+        }, 5000);
+      }, i * 600);
+    });
+  };
+
+  // =============================================================
   // NAV AUTH TOGGLE — login olmuş kullanıcı için Giriş → Panelim
   // Tüm sayfalarda nav'daki giris.html linkini panelim.html'e çevirir
   // =============================================================

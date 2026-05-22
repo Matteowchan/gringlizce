@@ -925,29 +925,71 @@
       transition: transform 0.2s ease, box-shadow 0.25s ease;
     }
     .badge-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26,34,48,0.06); }
-    .badge-card.disabled { opacity: 0.55; }
-    .badge-icon {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #fefcf7;
-      margin-bottom: 0.7rem;
-      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), 0 2px 6px rgba(26,34,48,0.08);
+    .badge-card.disabled { opacity: 0.55; filter: grayscale(0.6); }
+
+    /* Cat + ornament composition stage (admin uses smaller 72px stage) */
+    .b-stage {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 0.7rem;
     }
-    .badge-icon svg { display: block; }
-    .badge-icon.tier-bronze  { background: linear-gradient(135deg, #b87333, #8a5520); }
-    .badge-icon.tier-silver  { background: linear-gradient(135deg, #a8a8a8, #6e6e6e); }
-    .badge-icon.tier-gold    { background: linear-gradient(135deg, #c89a3c, #a8801f); }
-    .badge-icon.tier-streak  { background: linear-gradient(135deg, #b45046, #6f3530); }
-    .badge-icon.tier-special { background: linear-gradient(135deg, #6b4a8a, #4a3a6a); }
+    .b-tier-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      padding: 2.5px;
+      background: var(--tier-grad, linear-gradient(135deg, #c89a3c, #a8801f));
+      box-shadow: 0 3px 9px var(--tier-shadow, rgba(200, 154, 60, 0.3));
+    }
+    .b-tier-ring::before {
+      content: '';
+      position: absolute;
+      inset: 2.5px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #fffbf0, #f4ecdb 70%);
+    }
+    .b-stage.tier-bronze  { --tier-grad: linear-gradient(135deg, #d18a4c, #8a5520 80%); --tier-shadow: rgba(138, 85, 32, 0.35); --tier-accent: #b87333; }
+    .b-stage.tier-silver  { --tier-grad: linear-gradient(135deg, #d8d8d8, #8a8a8a 80%); --tier-shadow: rgba(120, 120, 120, 0.35); --tier-accent: #909090; }
+    .b-stage.tier-gold    { --tier-grad: linear-gradient(135deg, #f0c060, #a8801f 80%); --tier-shadow: rgba(168, 128, 31, 0.4); --tier-accent: #c89a3c; }
+    .b-stage.tier-streak  { --tier-grad: linear-gradient(135deg, #d86848, #6f3530 80%); --tier-shadow: rgba(180, 80, 70, 0.4); --tier-accent: #b45046; }
+    .b-stage.tier-special { --tier-grad: linear-gradient(135deg, #9070b8, #4a3a6a 80%); --tier-shadow: rgba(107, 74, 138, 0.4); --tier-accent: #6b4a8a; }
+    .b-ornament {
+      position: absolute; inset: 5px;
+      pointer-events: none;
+      color: var(--tier-accent, #c89a3c);
+      opacity: 0.55;
+    }
+    .b-ornament svg { width: 100%; height: 100%; display: block; }
+    .b-cat {
+      position: absolute;
+      width: 44px; height: 44px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 3px rgba(26, 34, 48, 0.12));
+    }
+    .b-tier-mark {
+      position: absolute;
+      top: -1px; right: -1px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--tier-grad);
+      box-shadow: 0 2px 4px var(--tier-shadow);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3;
+      color: #fefcf7;
+    }
+    .b-tier-mark svg { width: 10px; height: 10px; }
+
+    /* Hide legacy icon class but keep selector compat */
+    .badge-icon { display: none; }
     .badge-name {
       font-family: var(--font-display);
       font-size: 0.95rem;
       font-weight: 500;
       margin: 0 0 0.2rem;
+      text-align: center;
     }
     .badge-criteria {
       font-family: var(--font-display);
@@ -956,6 +998,7 @@
       color: var(--text-muted);
       line-height: 1.4;
       margin-bottom: 0.55rem;
+      text-align: center;
     }
     .badge-stats {
       font-family: var(--font-ui);
@@ -963,6 +1006,7 @@
       color: var(--text-soft);
       padding-top: 0.5rem;
       border-top: 1px dashed var(--line, #d4c9ae);
+      text-align: center;
     }
     .badge-stats strong { color: var(--text); font-weight: 600; }
     .badge-toggle {
@@ -3326,37 +3370,51 @@
     // ---------- GAMIFICATION ----------
     // Badge icon SVG library (lucide-inspired, 24x24, white stroke).
     // Add new entries here when 24_badges_expanded.sql or future migrations introduce new icon_name values.
-    var BADGE_ICON_SVG = {
-      'sparkle':      '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>',
-      'medal-bronze': '<circle cx="12" cy="15" r="6"/><path d="M8 8l-3-6M16 8l3-6M9 5h6"/>',
-      'trophy':       '<path d="M8 21h8M12 17v4M6 4v6a6 6 0 0 0 12 0V4z"/><path d="M6 6H4a2 2 0 0 0-2 2 4 4 0 0 0 4 4M18 6h2a2 2 0 0 1 2 2 4 4 0 0 1-4 4"/>',
-      'flame':        '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1-2 0-4 2-6 1 2.5 2.5 4 4.5 6 1.5 1.5 2.5 3 2.5 5a7 7 0 1 1-14 0c0-1 .5-2 1-3a2.5 2.5 0 0 0 2 3z"/>',
-      'fire':         '<path d="M12 2c1 4 4 6 4 10a4 4 0 0 1-8 0c0-2 1-3 2-5M12 14a2 2 0 0 0 2-2c0-1-1-2-1-3 2 1 4 3 4 6a5 5 0 1 1-10 0c0-2 1-3 3-4 0 2 0 3 2 3z"/>',
-      'phoenix':      '<path d="M12 2l-3 8h6zM5 10l2 6h10l2-6M7 16l-2 6h14l-2-6M12 10v6"/>',
-      'ribbon':       '<path d="M8 2v7l4 3 4-3V2M6 22l6-5 6 5"/><circle cx="12" cy="14" r="3"/>',
-      'bookmark':     '<path d="M6 3h12v18l-6-4-6 4z"/>',
-      'feather':      '<path d="M20 4a6 6 0 0 0-8.5 0L5 10.5V19h8.5L20 12.5A6 6 0 0 0 20 4z"/><path d="M16 8L2 22M17 15H9"/>',
-      'shield':       '<path d="M12 2L4 6v6c0 4.5 3 8.5 8 10 5-1.5 8-5.5 8-10V6z"/><path d="M9 12l2 2 4-4"/>',
-      'crown':        '<path d="M2 6l3 13h14l3-13-6 5-4-8-4 8z"/><path d="M5 22h14"/>',
-      'mountain':     '<path d="M2 22l7-13 4 7 3-5 6 11z"/><circle cx="9" cy="6" r="2"/>',
-      'spark':        '<path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>',
-      'leaf':         '<path d="M11 20A7 7 0 0 1 4 13V4h9a7 7 0 0 1 7 7 9 9 0 0 1-9 9z"/><path d="M4 4l8 8"/>',
-      'torch':        '<path d="M9 2c-1 3-3 5-3 8a6 6 0 0 0 12 0c0-3-2-5-3-8M10 16v6M14 16v6"/>',
-      'sun':          '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
-      'pen':          '<path d="M14 2l8 8-12 12H2v-8L14 2z"/><path d="M12 4l8 8"/>',
-      'scroll':       '<path d="M5 2h13a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V5"/><path d="M3 5a2 2 0 0 1 4 0v3H3M9 8h8M9 12h8M9 16h5"/>',
-      'stack':        '<path d="M4 4h12v12H4zM8 8h12v12H8z"/>',
-      'medal':        '<circle cx="12" cy="14" r="6"/><path d="M8 8l-4-6h4l4 6M16 8l4-6h-4l-4 6M10 14l2 2 4-4"/>',
-      'star':         '<polygon points="12 2 15 9 22 10 17 15 18 22 12 18 6 22 7 15 2 10 9 9"/>',
-      'gem':          '<polygon points="6 3 18 3 22 9 12 22 2 9"/><path d="M11 3l-3 6M13 3l3 6M2 9h20"/>',
-      'note':         '<path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4M8 12h8M8 16h6"/>',
-      'book':         '<path d="M4 3h7a3 3 0 0 1 3 3v15a2 2 0 0 0-2-2H4z"/><path d="M20 3h-7a3 3 0 0 0-3 3v15a2 2 0 0 1 2-2h8z"/>',
-      'library':      '<path d="M3 3v18h3V3zM8 3v18h3V3zM13 3l4 17 3-1L16 2z"/>',
-      'brain':        '<path d="M12 5a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 0 4 3 3 0 0 0 3 4 3 3 0 0 0 5 0M12 5a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1 0 4 3 3 0 0 1-3 4 3 3 0 0 1-5 0M12 5v15"/>'
+    // ORNAMENTS: same 24 unique decorative SVGs used in panelim.
+    var ORNAMENTS = {
+      'sparkle-ring': '<g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="48" cy="48" r="38" stroke-dasharray="3 5" opacity="0.7"/><g opacity="0.9"><path d="M48 6 L50 13 L57 13 L51 17 L53 24 L48 20 L43 24 L45 17 L39 13 L46 13 Z" fill="currentColor"/><path d="M48 76 L49 81 L54 81 L50 84 L51 89 L48 86 L45 89 L46 84 L42 81 L47 81 Z" fill="currentColor" opacity="0.7"/><path d="M14 42 L15 46 L19 46 L16 49 L17 53 L14 50 L11 53 L12 49 L9 46 L13 46 Z" fill="currentColor" opacity="0.7"/><path d="M82 42 L83 46 L87 46 L84 49 L85 53 L82 50 L79 53 L80 49 L77 46 L81 46 Z" fill="currentColor" opacity="0.7"/></g></g>',
+      'compass':      '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="48" cy="48" r="38" opacity="0.6"/><circle cx="48" cy="48" r="30" stroke-dasharray="2 4" opacity="0.5"/><path d="M48 12 L52 48 L48 84 L44 48 Z M12 48 L48 44 L84 48 L48 52 Z" fill="currentColor" opacity="0.4"/></g>',
+      'laurel':       '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M14 50 Q10 30 22 18 Q28 22 30 30 Q34 24 40 22 Q42 30 38 36 Q44 32 50 34 M18 60 Q14 70 24 78 Q30 76 32 70 M82 50 Q86 30 74 18 Q68 22 66 30 Q62 24 56 22 Q54 30 58 36 Q52 32 46 34 M78 60 Q82 70 72 78 Q66 76 64 70" opacity="0.7"/><ellipse cx="22" cy="22" rx="5" ry="2.5" transform="rotate(-30 22 22)" fill="currentColor" opacity="0.5"/><ellipse cx="30" cy="32" rx="5" ry="2.5" transform="rotate(-15 30 32)" fill="currentColor" opacity="0.5"/><ellipse cx="74" cy="22" rx="5" ry="2.5" transform="rotate(30 74 22)" fill="currentColor" opacity="0.5"/><ellipse cx="66" cy="32" rx="5" ry="2.5" transform="rotate(15 66 32)" fill="currentColor" opacity="0.5"/></g>',
+      'sunburst':     '<g fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.65"><g stroke-width="1.8" fill="none"><line x1="48" y1="6" x2="48" y2="16"/><line x1="48" y1="80" x2="48" y2="90"/><line x1="6" y1="48" x2="16" y2="48"/><line x1="80" y1="48" x2="90" y2="48"/><line x1="18" y1="18" x2="25" y2="25"/><line x1="71" y1="71" x2="78" y2="78"/><line x1="78" y1="18" x2="71" y2="25"/><line x1="25" y1="71" x2="18" y2="78"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(22.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(67.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(112.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(157.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(202.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(247.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(292.5 48 48)"/><line x1="48" y1="10" x2="48" y2="18" transform="rotate(337.5 48 48)"/></g></g>',
+      'wreath-gold':  '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="48" cy="48" r="40" opacity="0.5"/><g opacity="0.7"><path d="M12 48 Q14 38 22 32 M14 56 Q14 66 22 72 M84 48 Q82 38 74 32 M82 56 Q82 66 74 72"/><ellipse cx="18" cy="34" rx="6" ry="3" transform="rotate(-50 18 34)" fill="currentColor"/><ellipse cx="20" cy="42" rx="6" ry="3" transform="rotate(-70 20 42)" fill="currentColor"/><ellipse cx="20" cy="54" rx="6" ry="3" transform="rotate(-110 20 54)" fill="currentColor"/><ellipse cx="18" cy="62" rx="6" ry="3" transform="rotate(-130 18 62)" fill="currentColor"/><ellipse cx="78" cy="34" rx="6" ry="3" transform="rotate(50 78 34)" fill="currentColor"/><ellipse cx="76" cy="42" rx="6" ry="3" transform="rotate(70 76 42)" fill="currentColor"/><ellipse cx="76" cy="54" rx="6" ry="3" transform="rotate(110 76 54)" fill="currentColor"/><ellipse cx="78" cy="62" rx="6" ry="3" transform="rotate(130 78 62)" fill="currentColor"/></g><circle cx="48" cy="14" r="3" fill="currentColor"/></g>',
+      'shield':       '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" opacity="0.6"><path d="M48 8 L82 18 L80 50 Q78 70 48 88 Q18 70 16 50 L14 18 Z"/><path d="M48 18 L72 24 L70 48 Q68 62 48 76 Q28 62 26 48 L24 24 Z" opacity="0.5"/></g>',
+      'halo':         '<g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="48" cy="48" r="42" stroke-width="2" opacity="0.5"/><circle cx="48" cy="48" r="36" stroke-width="1.2" stroke-dasharray="1 3" opacity="0.6"/><g stroke-width="2" opacity="0.85"><circle cx="48" cy="6" r="2" fill="currentColor"/><circle cx="76" cy="20" r="2" fill="currentColor"/><circle cx="90" cy="48" r="2" fill="currentColor"/><circle cx="76" cy="76" r="2" fill="currentColor"/><circle cx="48" cy="90" r="2" fill="currentColor"/><circle cx="20" cy="76" r="2" fill="currentColor"/><circle cx="6" cy="48" r="2" fill="currentColor"/><circle cx="20" cy="20" r="2" fill="currentColor"/></g></g>',
+      'flame':        '<g fill="currentColor" opacity="0.55"><path d="M48 8 Q40 22 38 32 Q36 42 42 46 Q38 38 44 30 Q50 22 48 8 Z"/><path d="M28 28 Q22 40 24 50 Q22 44 26 38 Z"/><path d="M68 28 Q74 40 72 50 Q74 44 70 38 Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.7" stroke-linecap="round"><path d="M48 88 Q44 80 48 74 Q52 80 48 88 M30 84 Q28 78 32 74 M66 84 Q68 78 64 74"/></g>',
+      'stars':        '<g fill="currentColor" opacity="0.75"><path d="M48 4 L51 12 L59 12 L53 17 L55 25 L48 20 L41 25 L43 17 L37 12 L45 12 Z"/><path d="M16 32 L18 38 L24 38 L19 41 L21 47 L16 44 L11 47 L13 41 L8 38 L14 38 Z"/><path d="M80 32 L82 38 L88 38 L83 41 L85 47 L80 44 L75 47 L77 41 L72 38 L78 38 Z"/><path d="M22 64 L24 70 L30 70 L25 73 L27 79 L22 76 L17 79 L19 73 L14 70 L20 70 Z" opacity="0.6"/><path d="M74 64 L76 70 L82 70 L77 73 L79 79 L74 76 L69 79 L71 73 L66 70 L72 70 Z" opacity="0.6"/></g>',
+      'torch':        '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><path d="M48 12 Q42 22 42 32 Q42 42 48 46 Q54 42 54 32 Q54 22 48 12 Z" fill="currentColor" opacity="0.4"/><path d="M36 18 Q32 24 32 32 Q34 26 38 22 M60 18 Q64 24 64 32 Q62 26 58 22"/><path d="M44 50 L52 50 L52 60 L44 60 Z" fill="currentColor" opacity="0.5"/><path d="M40 60 L56 60 L52 88 L44 88 Z" fill="currentColor" opacity="0.3"/></g>',
+      'phoenix':      '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><path d="M12 36 Q24 26 36 30 Q30 36 32 44 M84 36 Q72 26 60 30 Q66 36 64 44 M20 50 Q26 44 34 46 M76 50 Q70 44 62 46"/><path d="M48 14 L46 28 L48 36 L50 28 Z" fill="currentColor" opacity="0.5"/><circle cx="48" cy="14" r="3" fill="currentColor"/><path d="M30 70 Q38 76 48 76 Q58 76 66 70" stroke-dasharray="2 3"/></g>',
+      'comet':        '<g fill="none" stroke="currentColor" stroke-linecap="round" opacity="0.75"><path d="M8 80 Q40 50 78 18" stroke-width="2.2"/><path d="M18 72 Q42 56 64 36" stroke-width="1.4" opacity="0.6" stroke-dasharray="2 4"/><path d="M28 70 Q44 60 60 50" stroke-width="1" opacity="0.4" stroke-dasharray="1 3"/><circle cx="78" cy="18" r="5" fill="currentColor"/><circle cx="78" cy="18" r="9" fill="none" stroke-width="1.2" opacity="0.5"/></g>',
+      'zodiac':       '<g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="48" cy="48" r="40" stroke-width="1.8" opacity="0.6"/><circle cx="48" cy="48" r="30" stroke-width="1" opacity="0.4" stroke-dasharray="1 4"/><g stroke-width="1.4" opacity="0.7"><line x1="48" y1="8" x2="48" y2="14"/><line x1="48" y1="82" x2="48" y2="88"/><line x1="8" y1="48" x2="14" y2="48"/><line x1="82" y1="48" x2="88" y2="48"/><line x1="20" y1="20" x2="24" y2="24"/><line x1="72" y1="72" x2="76" y2="76"/><line x1="76" y1="20" x2="72" y2="24"/><line x1="24" y1="72" x2="20" y2="76"/></g><g fill="currentColor"><circle cx="48" cy="8" r="2"/><circle cx="48" cy="88" r="2"/><circle cx="8" cy="48" r="2"/><circle cx="88" cy="48" r="2"/></g></g>',
+      'wings':        '<g fill="currentColor" opacity="0.55"><path d="M48 30 Q20 20 6 36 Q14 38 20 42 Q12 44 8 52 Q18 50 26 50 Q18 56 16 64 Q26 58 34 56 Q30 64 30 72 Q38 64 44 58 Z"/><path d="M48 30 Q76 20 90 36 Q82 38 76 42 Q84 44 88 52 Q78 50 70 50 Q78 56 80 64 Q70 58 62 56 Q66 64 66 72 Q58 64 52 58 Z"/></g>',
+      'quill':        '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><path d="M20 84 Q40 64 60 44 Q72 32 78 18 Q74 28 68 36 Q56 50 38 70 Q26 80 20 84 Z" fill="currentColor" opacity="0.3"/><path d="M52 36 Q58 32 64 30 M48 44 Q54 40 60 38 M44 52 Q50 48 56 46"/><path d="M16 80 L24 88" stroke-width="2"/></g>',
+      'scroll':       '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"><path d="M14 24 Q14 16 22 16 L70 16 Q78 16 78 24 L78 72 Q78 80 70 80 L18 80 Q14 80 14 76" fill="currentColor" opacity="0.15"/><path d="M14 24 Q14 28 22 28 L74 28 M14 76 Q18 76 22 72 Q22 24 22 24"/><line x1="32" y1="40" x2="68" y2="40"/><line x1="32" y1="50" x2="68" y2="50"/><line x1="32" y1="60" x2="58" y2="60"/></g>',
+      'book-stack':   '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity="0.65"><path d="M12 24 L84 24 L84 32 L12 32 Z" fill="currentColor" opacity="0.25"/><path d="M16 38 L80 38 L80 46 L16 46 Z" fill="currentColor" opacity="0.2"/><path d="M12 52 L84 52 L84 60 L12 60 Z" fill="currentColor" opacity="0.25"/><path d="M16 66 L80 66 L80 74 L16 74 Z" fill="currentColor" opacity="0.2"/><line x1="20" y1="28" x2="76" y2="28" stroke-dasharray="2 3"/><line x1="20" y1="56" x2="76" y2="56" stroke-dasharray="2 3"/></g>',
+      'olive':        '<g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"><path d="M18 70 Q22 50 36 36 Q44 30 50 30 M78 70 Q74 50 60 36 Q52 30 46 30"/><ellipse cx="22" cy="58" rx="3.5" ry="2" transform="rotate(-35 22 58)" fill="currentColor"/><ellipse cx="28" cy="50" rx="3.5" ry="2" transform="rotate(-50 28 50)" fill="currentColor"/><ellipse cx="36" cy="42" rx="3.5" ry="2" transform="rotate(-65 36 42)" fill="currentColor"/><ellipse cx="74" cy="58" rx="3.5" ry="2" transform="rotate(35 74 58)" fill="currentColor"/><ellipse cx="68" cy="50" rx="3.5" ry="2" transform="rotate(50 68 50)" fill="currentColor"/><ellipse cx="60" cy="42" rx="3.5" ry="2" transform="rotate(65 60 42)" fill="currentColor"/></g>',
+      'crown':        '<g fill="currentColor" opacity="0.55"><path d="M14 30 L22 50 L30 22 L40 48 L48 16 L56 48 L66 22 L74 50 L82 30 L78 64 L18 64 Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity="0.8"/><circle cx="22" cy="50" r="3"/><circle cx="40" cy="48" r="3"/><circle cx="56" cy="48" r="3"/><circle cx="74" cy="50" r="3"/><circle cx="48" cy="16" r="4"/><rect x="14" y="68" width="68" height="4" fill="currentColor" opacity="0.7"/></g>',
+      'sigil':        '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><polygon points="48,8 84,30 70,72 26,72 12,30" fill="currentColor" opacity="0.15"/><polygon points="48,18 74,34 64,64 32,64 22,34"/><circle cx="48" cy="48" r="6" fill="currentColor" opacity="0.6"/><path d="M48 8 L48 18 M84 30 L74 34 M70 72 L64 64 M26 72 L32 64 M12 30 L22 34" stroke-width="1.2"/></g>',
+      'gems':         '<g fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" opacity="0.65"><polygon points="48,12 56,22 48,32 40,22"/><polygon points="22,40 30,50 22,60 14,50" opacity="0.8"/><polygon points="74,40 82,50 74,60 66,50" opacity="0.8"/><polygon points="48,64 56,74 48,84 40,74" opacity="0.7"/></g>',
+      'ribbon':       '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><path d="M24 14 L72 14 L66 50 L48 42 L30 50 Z" fill="currentColor" opacity="0.3"/><path d="M30 50 L20 82 L34 76 L38 88 L48 60 M66 50 L76 82 L62 76 L58 88 L48 60"/></g>',
+      'library':      '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity="0.65"><path d="M14 84 L14 28 L48 14 L82 28 L82 84 Z" fill="currentColor" opacity="0.15"/><path d="M22 84 L22 38 M30 84 L30 38 M38 84 L38 38 M58 84 L58 38 M66 84 L66 38 M74 84 L74 38" stroke-dasharray="2 2"/><path d="M14 38 L82 38" stroke-width="1.4"/><path d="M44 84 L44 60 L52 60 L52 84"/></g>',
+      'lightbeam':    '<g fill="none" stroke="currentColor" stroke-linecap="round" opacity="0.7"><circle cx="48" cy="48" r="14" stroke-width="2" fill="currentColor" fill-opacity="0.25"/><circle cx="48" cy="48" r="22" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.6"/><g stroke-width="1.8" opacity="0.7"><line x1="48" y1="8" x2="48" y2="22"/><line x1="48" y1="74" x2="48" y2="88"/><line x1="8" y1="48" x2="22" y2="48"/><line x1="74" y1="48" x2="88" y2="48"/><line x1="20" y1="20" x2="30" y2="30"/><line x1="66" y1="66" x2="76" y2="76"/><line x1="76" y1="20" x2="66" y2="30"/><line x1="30" y1="66" x2="20" y2="76"/></g></g>'
     };
-    function badgeIconSvg(iconName) {
-      var paths = BADGE_ICON_SVG[iconName] || BADGE_ICON_SVG['star'];
-      return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+    var TIER_MARKS = {
+      'bronze':  '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>',
+      'silver':  '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>',
+      'gold':    '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 10 17 15 18 22 12 18 6 22 7 15 2 10 9 9"/></svg>',
+      'streak':  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c0 4-4 5-4 9a4 4 0 0 0 8 0c0-2.5-2-3.5-2-6 2 1.5 4 3.5 4 7a6 6 0 0 1-12 0c0-5 6-6 6-10z"/></svg>',
+      'special': '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 14.5 9 22 9 16 13.5 18 21 12 17 6 21 8 13.5 2 9 9.5 9"/></svg>'
+    };
+    function renderBadgeStage(badge) {
+      var cat = badge.cat_name || 'content';
+      var ornament = ORNAMENTS[badge.ornament_name] || ORNAMENTS['sparkle-ring'];
+      var tier = badge.tier || 'gold';
+      var tierMark = TIER_MARKS[tier] || TIER_MARKS['gold'];
+      return '<div class="b-stage tier-' + tier + '">' +
+        '<div class="b-tier-ring"></div>' +
+        '<div class="b-ornament"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">' + ornament + '</svg></div>' +
+        '<img class="b-cat" src="assets/images/cat-' + cat + '.png" alt="" onerror="this.style.display=\'none\'">' +
+        '<div class="b-tier-mark">' + tierMark + '</div>' +
+        '</div>';
     }
 
     async function loadGamificationTab() {
@@ -3396,7 +3454,7 @@
             var on = b.active ? 'on' : '';
             return '<div class="badge-card ' + disabled + '">' +
               '<button class="badge-toggle ' + on + '" data-badge-id="' + escHtml(b.id) + '" aria-label="Toggle"></button>' +
-              '<div class="badge-icon tier-' + escHtml(b.tier) + '">' + badgeIconSvg(b.icon_name) + '</div>' +
+              renderBadgeStage(b) +
               '<div class="badge-name">' + escHtml(b.name) + '</div>' +
               '<div class="badge-criteria">' + escHtml(b.description) + '</div>' +
               '<div class="badge-stats"><strong>' + (b.earn_count || 0) + '</strong> kullanıcı kazandı</div>' +

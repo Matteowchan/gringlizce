@@ -969,6 +969,17 @@
       object-fit: contain;
       filter: drop-shadow(0 2px 3px rgba(26, 34, 48, 0.12));
     }
+    .b-stage.has-image .b-tier-ring { opacity: 0.7; }
+    .b-photo {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 92%;
+      height: 92%;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 2;
+    }
     .b-tier-mark {
       position: absolute;
       top: -1px; right: -1px;
@@ -3145,7 +3156,7 @@
           if (badgesEl) {
             badgesEl.innerHTML = '<div style="grid-column: 1/-1; padding: 0.5rem; color: var(--text-muted); font-style: italic; font-size: 0.82rem;">Yükleniyor...</div>';
             var ubRes = await sb.from('user_badges')
-              .select('badge_id, earned_at, badges(name, tier, cat_name, ornament_name)')
+              .select('badge_id, earned_at, badges(name, tier, cat_name, ornament_name, image_url)')
               .eq('user_id', userId)
               .order('earned_at', { ascending: false });
             if (!ubRes.error && ubRes.data) {
@@ -3624,6 +3635,14 @@
       'special': '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 14.5 9 22 9 16 13.5 18 21 12 17 6 21 8 13.5 2 9 9.5 9"/></svg>'
     };
     function renderBadgeStage(badge) {
+      // image_url varsa illustrated image, yoksa eski SVG fallback
+      if (badge.image_url) {
+        var tierA = badge.tier || 'gold';
+        return '<div class="b-stage tier-' + tierA + ' has-image">' +
+          '<div class="b-tier-ring"></div>' +
+          '<img class="b-photo" src="' + badge.image_url + '" alt="' + (badge.name || '') + '" onerror="this.style.display=\'none\'">' +
+          '</div>';
+      }
       var cat = badge.cat_name || 'content';
       var ornament = ORNAMENTS[badge.ornament_name] || ORNAMENTS['sparkle-ring'];
       var tier = badge.tier || 'gold';

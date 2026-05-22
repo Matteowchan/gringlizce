@@ -1711,6 +1711,18 @@
       object-fit: contain;
       filter: drop-shadow(0 2px 4px rgba(26, 34, 48, 0.12));
     }
+    /* When badge has its own illustrated image, fill the stage circle */
+    .ub-stage.has-image .ub-tier-ring { opacity: 0.7; }
+    .ub-photo {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 92%;
+      height: 92%;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 2;
+    }
     /* Tier corner star - small accent dot at top */
     .ub-tier-mark {
       position: absolute;
@@ -3950,6 +3962,14 @@
         };
 
         function renderBadgeStage(badge) {
+          // Eğer badges tablosunda image_url varsa onu kullan, yoksa eski SVG kompozisyonuna düş.
+          if (badge.image_url) {
+            var tierA = badge.tier || 'gold';
+            return '<div class="ub-stage tier-' + tierA + ' has-image">' +
+              '<div class="ub-tier-ring"></div>' +
+              '<img class="ub-photo" src="' + badge.image_url + '" alt="' + (badge.name || '') + '" onerror="this.style.display=\'none\'">' +
+              '</div>';
+          }
           var cat = badge.cat_name || 'content';
           var ornament = ORNAMENTS[badge.ornament_name] || ORNAMENTS['sparkle-ring'];
           var tier = badge.tier || 'gold';

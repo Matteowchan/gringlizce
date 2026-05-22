@@ -1284,6 +1284,96 @@
       color: var(--text-soft);
     }
     .info-banner strong { color: var(--text); font-weight: 600; font-style: normal; font-family: var(--font-ui); }
+
+    .user-picker {
+      margin: 0.5rem 0 0.8rem;
+      padding: 0.9rem 1rem;
+      background: var(--bg-soft, #e8e0cc);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cat-accent, #2C5856);
+    }
+    .up-search-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .up-search-row input {
+      flex: 1;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid var(--line);
+      background: var(--bg-card, #fefcf7);
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+    }
+    .up-count {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .up-results {
+      max-height: 220px;
+      overflow-y: auto;
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line);
+      margin-bottom: 0.7rem;
+    }
+    .up-result-row {
+      padding: 0.55rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      font-size: 0.88rem;
+    }
+    .up-result-row:last-child { border-bottom: none; }
+    .up-result-row:hover { background: var(--bg-soft); }
+    .up-result-row.selected { background: rgba(44, 88, 86, 0.08); }
+    .up-result-row input[type="checkbox"] {
+      width: 14px; height: 14px;
+      accent-color: var(--cat-accent, #2C5856);
+      cursor: pointer;
+    }
+    .up-result-row .up-email {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .up-result-row .up-name {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.82rem;
+      margin-left: auto;
+    }
+    .up-selected {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .up-selected:empty { display: none; }
+    .up-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--cat-accent, #2C5856);
+      color: #fefcf7;
+      padding: 0.22rem 0.6rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      border-radius: 2px;
+    }
+    .up-chip-x {
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.15s ease;
+      line-height: 1;
+      padding: 0 0.1rem;
+    }
+    .up-chip-x:hover { opacity: 1; }
     .info-banner.success {
       background: linear-gradient(135deg, rgba(90, 138, 58, 0.06), transparent);
       border-left-color: #5a8a3a;
@@ -1896,7 +1986,20 @@
               <span class="chip-select active" data-audience-key="activity" data-audience-val="all">Tüm kullanıcılar</span>
               <span class="chip-select" data-audience-key="activity" data-audience-val="active_30d">Son 30 günde aktif</span>
               <span class="chip-select" data-audience-key="activity" data-audience-val="inactive_30d">30 gün inactive</span>
+              <span class="chip-select" data-audience-key="activity" data-audience-val="specific">Belirli kişiler</span>
             </div>
+
+            <div class="user-picker" id="user-picker" style="display: none;">
+              <div class="up-search-row">
+                <input type="text" id="user-picker-search" placeholder="Email veya isim ile ara...">
+                <span class="up-count" id="up-selected-count">0 kişi seçildi</span>
+              </div>
+              <div class="up-results" id="user-picker-results">
+                <div style="padding: 0.7rem; color: var(--text-muted); font-style: italic; font-size: 0.85rem;">Yükleniyor...</div>
+              </div>
+              <div class="up-selected" id="user-picker-selected"></div>
+            </div>
+
             <div class="audience-summary" id="audience-summary">
               Bu kriterlere uyan <strong id="audience-count">—</strong> kullanıcı bulundu
             </div>
@@ -3376,6 +3479,101 @@
 
     // ---------- COMMS ----------
     var COMMS_AUDIENCE = { activity: 'all' };
+
+    // User picker state
+    var ALL_USERS = [];
+    var ALL_USERS_LOADED = false;
+    var SELECTED_USER_IDS = new Set();
+
+    async function loadAllUsersForPicker() {
+      var resultsEl = $('user-picker-results');
+      try {
+        var res = await sb.rpc('admin_list_users', { p_search: '', p_limit: 500 });
+        if (res.error) throw res.error;
+        ALL_USERS = (res.data || []).map(function (u) {
+          return {
+            id: u.id,
+            email: u.email || '',
+            name: u.display_name || u.full_name || ''
+          };
+        }).filter(function (u) { return u.email; });
+        ALL_USERS_LOADED = true;
+        renderUserPickerResults('');
+      } catch (e) {
+        console.warn('[user-picker] load failed:', e);
+        if (resultsEl) {
+          resultsEl.innerHTML = '<div style="padding: 0.7rem; color: #b45046; font-style: italic; font-size: 0.85rem;">Kullanıcılar yüklenemedi: ' + escHtml(e.message || String(e)) + '</div>';
+        }
+      }
+    }
+
+    function renderUserPickerResults(query) {
+      var resultsEl = $('user-picker-results');
+      if (!resultsEl) return;
+      var filtered = !query
+        ? ALL_USERS
+        : ALL_USERS.filter(function (u) {
+            return u.email.toLowerCase().includes(query) || u.name.toLowerCase().includes(query);
+          });
+      if (!filtered.length) {
+        resultsEl.innerHTML = '<div style="padding: 0.7rem; color: var(--text-muted); font-style: italic; font-size: 0.85rem;">Eşleşen kullanıcı yok.</div>';
+        return;
+      }
+      // Limit display to top 50 to avoid huge DOM
+      var display = filtered.slice(0, 50);
+      resultsEl.innerHTML = display.map(function (u) {
+        var sel = SELECTED_USER_IDS.has(u.id);
+        return '<label class="up-result-row ' + (sel ? 'selected' : '') + '" data-uid="' + escHtml(u.id) + '">' +
+          '<input type="checkbox" ' + (sel ? 'checked' : '') + '>' +
+          '<span class="up-email">' + escHtml(u.email) + '</span>' +
+          (u.name ? '<span class="up-name">' + escHtml(u.name) + '</span>' : '') +
+          '</label>';
+      }).join('') + (filtered.length > 50 ? '<div style="padding: 0.5rem 0.8rem; color: var(--text-muted); font-style: italic; font-size: 0.78rem;">İlk 50 sonuç gösteriliyor. Daraltmak için yazmaya devam et.</div>' : '');
+
+      resultsEl.querySelectorAll('.up-result-row').forEach(function (row) {
+        var uid = row.dataset.uid;
+        var cb = row.querySelector('input[type="checkbox"]');
+        row.addEventListener('click', function (e) {
+          if (e.target !== cb) cb.checked = !cb.checked;
+          if (cb.checked) {
+            SELECTED_USER_IDS.add(uid);
+            row.classList.add('selected');
+          } else {
+            SELECTED_USER_IDS.delete(uid);
+            row.classList.remove('selected');
+          }
+          syncUserPickerToAudience();
+        });
+      });
+    }
+
+    function syncUserPickerToAudience() {
+      COMMS_AUDIENCE.user_ids = Array.from(SELECTED_USER_IDS);
+      var countEl = $('up-selected-count');
+      if (countEl) countEl.textContent = SELECTED_USER_IDS.size + ' kişi seçildi';
+      renderSelectedChips();
+      refreshAudiencePreview();
+    }
+
+    function renderSelectedChips() {
+      var chipsEl = $('user-picker-selected');
+      if (!chipsEl) return;
+      var selectedUsers = ALL_USERS.filter(function (u) { return SELECTED_USER_IDS.has(u.id); });
+      chipsEl.innerHTML = selectedUsers.map(function (u) {
+        return '<span class="up-chip" data-uid="' + escHtml(u.id) + '">' +
+          escHtml(u.email) +
+          '<span class="up-chip-x" data-remove="' + escHtml(u.id) + '">×</span>' +
+          '</span>';
+      }).join('');
+      chipsEl.querySelectorAll('.up-chip-x').forEach(function (x) {
+        x.addEventListener('click', function () {
+          var uid = x.dataset.remove;
+          SELECTED_USER_IDS.delete(uid);
+          renderUserPickerResults($('user-picker-search').value.trim().toLowerCase());
+          syncUserPickerToAudience();
+        });
+      });
+    }
     async function loadCommsTab() {
       try {
         // First: check actual operational status
@@ -3451,10 +3649,31 @@
             c.parentElement.querySelectorAll('.chip-select').forEach(function (s) { s.classList.remove('active'); });
             c.classList.add('active');
             COMMS_AUDIENCE[key] = val;
+            // Show/hide user picker
+            var picker = $('user-picker');
+            if (val === 'specific') {
+              picker.style.display = 'block';
+              if (!ALL_USERS_LOADED) {
+                loadAllUsersForPicker();
+              }
+              // Initialize user_ids on COMMS_AUDIENCE if not present
+              if (!COMMS_AUDIENCE.user_ids) COMMS_AUDIENCE.user_ids = [];
+            } else {
+              picker.style.display = 'none';
+              delete COMMS_AUDIENCE.user_ids;
+            }
             refreshAudiencePreview();
           });
         });
         refreshAudiencePreview();
+
+        // User picker logic
+        var searchInput = $('user-picker-search');
+        if (searchInput) {
+          searchInput.addEventListener('input', function () {
+            renderUserPickerResults(searchInput.value.trim().toLowerCase());
+          });
+        }
 
         $('campaign-queue-btn').addEventListener('click', queueCampaign);
 
@@ -3527,6 +3746,11 @@
         st.style.color = '#c44';
         return;
       }
+      if (COMMS_AUDIENCE.activity === 'specific' && (!COMMS_AUDIENCE.user_ids || !COMMS_AUDIENCE.user_ids.length)) {
+        st.textContent = 'En az bir kullanıcı seç.';
+        st.style.color = '#c44';
+        return;
+      }
       try {
         var scheduledAt = when ? new Date(when).toISOString() : null;
         var res = await sb.rpc('admin_queue_campaign', {
@@ -3539,6 +3763,13 @@
         $('campaign-name').value = '';
         $('campaign-template').value = '';
         $('campaign-when').value = '';
+        // Reset selected users
+        SELECTED_USER_IDS.clear();
+        if (COMMS_AUDIENCE.user_ids) COMMS_AUDIENCE.user_ids = [];
+        var upCount = $('up-selected-count');
+        if (upCount) upCount.textContent = '0 kişi seçildi';
+        var upSel = $('user-picker-selected');
+        if (upSel) upSel.innerHTML = '';
         setTimeout(function () { NEW_TAB_LOADED.comms = false; loadCommsTab(); }, 800);
       } catch (e) {
         st.textContent = 'Hata: ' + (e.message || e);

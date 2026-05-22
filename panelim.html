@@ -1039,10 +1039,22 @@
       margin: 0 auto;
       line-height: 1.45;
     }
+    .ah-meta {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.85rem;
+    }
+    .ah-meta strong {
+      color: var(--text-soft);
+      font-weight: 600;
+    }
     @media (max-width: 600px) {
       .ah-value { font-size: 2.8rem; }
       .ah-value-unit { font-size: 1.25rem; }
       .ah-quote { font-size: 0.95rem; }
+      .ah-meta { font-size: 0.72rem; }
       .ah-ornament-l, .ah-ornament-r { display: none; }
       .aktivite-hero { padding: 1.5rem 1.2rem 1.4rem; }
     }
@@ -1220,6 +1232,7 @@
           <span class="ah-value-unit">gün</span>
         </div>
         <div class="ah-sub">üst üste çalıştın</div>
+        <div class="ah-meta">Toplam <strong id="us-total-days">—</strong> gün aktivite</div>
         <div class="ah-quote" id="us-days-quote">Defter açıldı. Asıl iş tekrarda.</div>
         <span class="ah-ornament-r">✦</span>
       </div>
@@ -2016,13 +2029,17 @@ Günlük 10 Gri Token yetmediğinde paket al. Bonus Gri Token zaman sınırı ol
         document.getElementById('us-wrong').textContent = fmt(s.wrong_count);
         document.getElementById('us-bookmark').textContent = fmt(s.bookmark_count);
         document.getElementById('us-vocab').textContent = fmt(s.vocab_count);
-        document.getElementById('us-days').textContent = fmt(s.active_days);
-        // Motivational quote based on streak/active days
-        var d = Number(s.active_days || 0);
+        document.getElementById('us-days').textContent = fmt(s.current_streak);
+        var totalDaysEl = document.getElementById('us-total-days');
+        if (totalDaysEl) totalDaysEl.textContent = fmt(s.active_days);
+        // Motivational quote based on current streak, with break-aware fallback
+        var d = Number(s.current_streak || 0);
+        var totalActive = Number(s.active_days || 0);
         var qEl = document.getElementById('us-days-quote');
         if (qEl) {
           var quote = '';
-          if (d <= 0) { quote = 'Çalışmaya başla. Disiplin ilk gün yazılır.'; }
+          if (d <= 0 && totalActive > 0) { quote = 'Mola verdin. Bugün geri dön ve seriyi yeniden başlat.'; }
+          else if (d <= 0) { quote = 'Çalışmaya başla. Disiplin ilk gün yazılır.'; }
           else if (d === 1) { quote = 'Defter açıldı. Asıl iş tekrarda.'; }
           else if (d < 7) { quote = 'Süreklilik kuruluyor. Hız bunun sonucudur.'; }
           else if (d < 30) { quote = 'Bir haftadan fazla disiplin. Sıra derinleşmede.'; }

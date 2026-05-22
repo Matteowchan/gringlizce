@@ -1659,6 +1659,22 @@
     .user-badge.earned { cursor: default; }
     .user-badge.earned:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(26, 34, 48, 0.08); }
     .user-badge.locked { opacity: 0.5; filter: grayscale(0.85); }
+    .user-badge.future { opacity: 0.6; filter: grayscale(0.6); cursor: default; }
+    .user-badge.future:hover { transform: none; box-shadow: none; }
+    .ub-future-pill {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      margin-top: 0.4rem;
+      background: rgba(200, 154, 60, 0.12);
+      border: 1px solid rgba(200, 154, 60, 0.4);
+      border-radius: 999px;
+      color: var(--gold, #c89a3c);
+      font-family: var(--font-ui, Inter), sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
 
     /* The "stage" is the circular composition holding cat + ornament + tier ring */
     .ub-stage {
@@ -3999,7 +4015,8 @@
         earnedList.forEach(function (e) { earnedMap[e.id] = e.earned_at; });
 
         document.getElementById('bcp-earned').textContent = earnedList.length;
-        document.getElementById('bcp-total').textContent = allBadges.length;
+        var earnableCount = allBadges.filter(function (b) { return !b.is_future; }).length;
+        document.getElementById('bcp-total').textContent = earnableCount;
 
         var grid = document.getElementById('user-badge-grid');
         if (!allBadges.length) {
@@ -4043,6 +4060,14 @@
               '<div class="ub-name">' + escHtmlPanel(b.name) + '</div>' +
               '<div class="ub-desc">' + escHtmlPanel(b.description) + '</div>' +
               '<div class="ub-earned-date">' + escHtmlPanel(fmtEarnedDate(earned)) + '</div>' +
+              '</div>';
+          }
+          if (b.is_future) {
+            return '<div class="user-badge future" title="Bu rozet platforma yeni özellik eklendiğinde aktifleşecek">' +
+              stage +
+              '<div class="ub-name">' + escHtmlPanel(b.name) + '</div>' +
+              '<div class="ub-desc">' + escHtmlPanel(b.description) + '</div>' +
+              '<span class="ub-future-pill">Yakında</span>' +
               '</div>';
           }
           var prog = progressFor(b);

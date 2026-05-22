@@ -1284,6 +1284,109 @@
       color: var(--text-soft);
     }
     .info-banner strong { color: var(--text); font-weight: 600; font-style: normal; font-family: var(--font-ui); }
+    .info-banner.success {
+      background: linear-gradient(135deg, rgba(90, 138, 58, 0.06), transparent);
+      border-left-color: #5a8a3a;
+    }
+    .info-banner.warning {
+      background: linear-gradient(135deg, rgba(200, 154, 60, 0.06), transparent);
+      border-left-color: var(--gold);
+    }
+    .info-banner.error {
+      background: linear-gradient(135deg, rgba(180, 80, 70, 0.06), transparent);
+      border-left-color: #b45046;
+    }
+
+    .row-actions {
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: center;
+    }
+    .row-act-btn {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text-soft);
+      width: 26px; height: 26px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.18s ease;
+    }
+    .row-act-btn:hover { color: var(--text); background: var(--bg-soft); border-color: var(--text-muted); }
+    .row-act-btn.danger:hover { color: #b45046; border-color: rgba(180, 80, 70, 0.5); background: rgba(180, 80, 70, 0.06); }
+    .row-act-btn svg { width: 14px; height: 14px; }
+    .row-act-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .reschedule-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(26, 34, 48, 0.4);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .reschedule-modal.show { display: flex; }
+    .reschedule-modal .rm-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 40px rgba(26, 34, 48, 0.18);
+      padding: 1.5rem 1.8rem;
+      max-width: 420px;
+      width: 100%;
+    }
+    .rm-card h3 {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 1.3rem;
+      margin: 0 0 0.4rem;
+    }
+    .rm-card .rm-sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      font-size: 0.92rem;
+    }
+    .rm-card input[type="datetime-local"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      margin-bottom: 1rem;
+    }
+    .rm-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .rm-actions button {
+      padding: 0.5rem 1rem;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text-soft);
+      transition: all 0.18s ease;
+    }
+    .rm-actions button:hover { color: var(--text); background: var(--bg-soft); }
+    .rm-actions button.primary { background: var(--cat-accent); color: #fefcf7; border-color: var(--cat-accent); }
+    .rm-actions button.primary:hover { background: var(--cat-accent-deep); }
+    .rm-error {
+      background: rgba(180, 80, 70, 0.08);
+      border-left: 2px solid #b45046;
+      padding: 0.5rem 0.8rem;
+      color: #6f3530;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+      display: none;
+    }
+    .rm-error.show { display: block; }
 
     @media (max-width: 720px) {
       .kpi-strip { grid-template-columns: repeat(2, 1fr); }
@@ -1763,6 +1866,7 @@
           <div id="comms-empty-banner" class="info-banner" style="display: none;">
             <strong>Email servisi henüz bağlı değil.</strong> Kampanyaları kuyruğa alabilirsin, gerçek gönderim için Resend gibi bir servis + send-queued-emails edge function gerekir. 19 numaralı SQL dosyasının altında setup adımları var.
           </div>
+          <div id="comms-status-banner" class="info-banner" style="display: none;"></div>
 
           <div class="kpi-strip">
             <div class="kpi-card tone-gold"><div class="kpi-label">Bu Ay Gönderilen</div><div class="kpi-value" id="cm-sent">—</div><div class="kpi-sub">email adedi</div></div>
@@ -1814,10 +1918,10 @@
           </div>
           <table class="users-table" style="display: table;">
             <thead>
-              <tr><th>Tarih</th><th>İsim</th><th>Hedef</th><th>Durum</th><th>Açılma</th><th>Tıklama</th></tr>
+              <tr><th>Tarih</th><th>İsim</th><th>Hedef</th><th>Durum</th><th>Açılma</th><th>Tıklama</th><th>İşlem</th></tr>
             </thead>
             <tbody id="campaigns-tbody">
-              <tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-style: italic;">Yükleniyor...</td></tr>
+              <tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-style: italic;">Yükleniyor...</td></tr>
             </tbody>
           </table>
         </section>
@@ -3274,6 +3378,35 @@
     var COMMS_AUDIENCE = { activity: 'all' };
     async function loadCommsTab() {
       try {
+        // First: check actual operational status
+        var statusBanner = $('comms-status-banner');
+        var oldBanner = $('comms-empty-banner');
+        if (oldBanner) oldBanner.style.display = 'none';
+        try {
+          var stRes = await sb.rpc('admin_email_status');
+          if (!stRes.error && stRes.data) {
+            var st = stRes.data;
+            if (st.is_operational) {
+              statusBanner.className = 'info-banner success';
+              statusBanner.style.display = 'block';
+              var lastSendStr = st.most_recent_send
+                ? new Date(st.most_recent_send).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                : (st.last_cron_run ? new Date(st.last_cron_run).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'henüz tetiklenmedi');
+              statusBanner.innerHTML = '<strong>Email servisi aktif.</strong> Cron zamanlanmış, ' + st.completed_count + ' kampanya tamamlandı. Son işlem: ' + lastSendStr + '.';
+            } else if (st.cron_scheduled) {
+              statusBanner.className = 'info-banner warning';
+              statusBanner.style.display = 'block';
+              statusBanner.innerHTML = '<strong>Cron zamanlanmış ama henüz gönderim yapılmadı.</strong> Bekleyen ' + st.scheduled_count + ' kampanya var. Cron her 5 dakikada bir tetiklenir, Resend API key ve verified domain doğru ise birazdan gönderim başlar.';
+            } else {
+              statusBanner.className = 'info-banner';
+              statusBanner.style.display = 'block';
+              statusBanner.innerHTML = '<strong>Email servisi henüz bağlı değil.</strong> Kampanyaları kuyruğa alabilirsin, gerçek gönderim için 23 numaralı SQL (pg_cron + service_role_key) çalıştırılmalı ve send-queued-emails edge function deploy edilmiş olmalı.';
+            }
+          }
+        } catch (statusErr) {
+          console.warn('[email-status]', statusErr);
+        }
+
         var sumRes = await sb.rpc('admin_email_summary');
         if (sumRes.error) throw sumRes.error;
         var s = sumRes.data || {};
@@ -3282,11 +3415,6 @@
         $('cm-open').textContent = fmtPct(s.open_rate);
         $('cm-click').textContent = fmtPct(s.click_rate);
         $('cm-sched').textContent = s.scheduled || 0;
-
-        if ((s.sent_month || 0) === 0) {
-          var eb = $('comms-empty-banner');
-          if (eb) eb.style.display = 'block';
-        }
 
         var tmplRes = await sb.rpc('admin_email_templates');
         if (tmplRes.error) throw tmplRes.error;
@@ -3339,8 +3467,17 @@
         } else {
           tbody.innerHTML = camps.map(function (c) {
             var when = c.sent_at || c.scheduled_at;
-            var whenStr = when ? new Date(when).toLocaleString('tr-TR', { day: '2-digit', month: 'short' }) : '—';
-            var statusCls = ({ sent: 'success', scheduled: 'scheduled', draft: 'pending', failed: 'overdue', cancelled: 'overdue' })[c.status] || 'pending';
+            var whenStr = when ? new Date(when).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+            var statusCls = ({ sent: 'success', completed: 'success', scheduled: 'scheduled', queued: 'scheduled', draft: 'pending', processing: 'pending', failed: 'overdue', cancelled: 'overdue' })[c.status] || 'pending';
+            var canEdit = (c.status === 'scheduled' || c.status === 'queued' || c.status === 'failed' || c.status === 'cancelled');
+            var canCancel = (c.status === 'scheduled' || c.status === 'queued' || c.status === 'failed');
+            var editBtn = canEdit
+              ? '<button class="row-act-btn" title="Yeniden zamanla" data-action="reschedule" data-id="' + c.id + '" data-name="' + escHtml(c.name) + '" data-when="' + (c.scheduled_at || '') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>'
+              : '<button class="row-act-btn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></button>';
+            var cancelBtn = canCancel
+              ? '<button class="row-act-btn" title="İptal et" data-action="cancel" data-id="' + c.id + '" data-name="' + escHtml(c.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></button>'
+              : '';
+            var deleteBtn = '<button class="row-act-btn danger" title="Sil" data-action="delete" data-id="' + c.id + '" data-name="' + escHtml(c.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
             return '<tr>' +
               '<td style="color: var(--text-muted); font-style: italic;">' + whenStr + '</td>' +
               '<td>' + escHtml(c.name) + '</td>' +
@@ -3348,8 +3485,21 @@
               '<td><span class="status-pill ' + statusCls + '">' + escHtml(c.status) + '</span></td>' +
               '<td>' + (c.opened_count || 0) + '</td>' +
               '<td>' + (c.clicked_count || 0) + '</td>' +
+              '<td><div class="row-actions">' + editBtn + cancelBtn + deleteBtn + '</div></td>' +
               '</tr>';
           }).join('');
+
+          // Wire up action buttons
+          tbody.querySelectorAll('.row-act-btn[data-action]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var action = btn.getAttribute('data-action');
+              var id = btn.getAttribute('data-id');
+              var name = btn.getAttribute('data-name');
+              if (action === 'cancel') return cancelCampaign(id, name);
+              if (action === 'delete') return deleteCampaign(id, name);
+              if (action === 'reschedule') return openRescheduleModal(id, name, btn.getAttribute('data-when'));
+            });
+          });
         }
       } catch (e) {
         console.error('[comms]', e);
@@ -3395,6 +3545,99 @@
         st.style.color = '#c44';
       }
     }
+
+    // ---------- Campaign Actions ----------
+    async function cancelCampaign(id, name) {
+      if (!confirm('"' + name + '" kampanyasını iptal etmek istediğine emin misin? Gönderim yapılmayacak.')) return;
+      try {
+        var res = await sb.rpc('admin_cancel_campaign', { p_campaign_id: id });
+        if (res.error) throw res.error;
+        if (res.data && res.data.ok === false) {
+          alert('İptal başarısız: ' + (res.data.reason || 'bilinmeyen hata'));
+          return;
+        }
+        NEW_TAB_LOADED.comms = false;
+        loadCommsTab();
+      } catch (e) {
+        alert('Hata: ' + (e.message || e));
+      }
+    }
+
+    async function deleteCampaign(id, name) {
+      if (!confirm('"' + name + '" kampanyasını kalıcı olarak silmek istediğine emin misin? Geri alınamaz.')) return;
+      try {
+        var res = await sb.rpc('admin_delete_campaign', { p_campaign_id: id });
+        if (res.error) throw res.error;
+        if (res.data && res.data.ok === false) {
+          alert('Silme başarısız: ' + (res.data.reason || 'bilinmeyen hata'));
+          return;
+        }
+        NEW_TAB_LOADED.comms = false;
+        loadCommsTab();
+      } catch (e) {
+        alert('Hata: ' + (e.message || e));
+      }
+    }
+
+    var RM_CURRENT_ID = null;
+    function openRescheduleModal(id, name, currentWhen) {
+      RM_CURRENT_ID = id;
+      $('rm-name').textContent = name;
+      $('rm-error').classList.remove('show');
+      $('rm-error').textContent = '';
+      // Default input value to current scheduled time or now + 1 hour
+      var d;
+      if (currentWhen) {
+        d = new Date(currentWhen);
+      } else {
+        d = new Date(); d.setHours(d.getHours() + 1);
+      }
+      // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      $('rm-when').value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+        'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      $('reschedule-modal').classList.add('show');
+    }
+    function closeRescheduleModal() {
+      $('reschedule-modal').classList.remove('show');
+      RM_CURRENT_ID = null;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      var cancelBtn = $('rm-cancel');
+      var saveBtn = $('rm-save');
+      var modal = $('reschedule-modal');
+      if (cancelBtn) cancelBtn.addEventListener('click', closeRescheduleModal);
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closeRescheduleModal(); });
+      if (saveBtn) saveBtn.addEventListener('click', async function () {
+        if (!RM_CURRENT_ID) return;
+        var when = $('rm-when').value;
+        var errBox = $('rm-error');
+        if (!when) {
+          errBox.textContent = 'Tarih ve saat seç.';
+          errBox.classList.add('show');
+          return;
+        }
+        try {
+          var iso = new Date(when).toISOString();
+          var res = await sb.rpc('admin_reschedule_campaign', {
+            p_campaign_id: RM_CURRENT_ID,
+            p_scheduled_at: iso
+          });
+          if (res.error) throw res.error;
+          if (res.data && res.data.ok === false) {
+            errBox.textContent = res.data.reason || 'Bilinmeyen hata';
+            errBox.classList.add('show');
+            return;
+          }
+          closeRescheduleModal();
+          NEW_TAB_LOADED.comms = false;
+          loadCommsTab();
+        } catch (e) {
+          errBox.textContent = 'Hata: ' + (e.message || e);
+          errBox.classList.add('show');
+        }
+      });
+    });
 
     // ---------- AUDIT LOG ----------
     var LOG_LEVEL_FILTER = null;
@@ -3478,6 +3721,20 @@
     });
   })();
   </script>
+
+<!-- Reschedule modal -->
+<div class="reschedule-modal" id="reschedule-modal">
+  <div class="rm-card">
+    <h3>Kampanyayı Yeniden Zamanla</h3>
+    <div class="rm-sub" id="rm-name">—</div>
+    <div class="rm-error" id="rm-error"></div>
+    <input type="datetime-local" id="rm-when">
+    <div class="rm-actions">
+      <button id="rm-cancel">İptal</button>
+      <button class="primary" id="rm-save">Kaydet</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

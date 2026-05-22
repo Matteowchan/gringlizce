@@ -1211,306 +1211,566 @@
      YAZI PRATIGI SHOWCASE — AI Writing Feedback
 ======================================================== -->
 <style>
+  /* ============ YAZI SHOWCASE — Cinematic v2 ============ */
   .yazi-showcase {
+    position: relative;
+    overflow: hidden;
     border-top: 1px solid var(--line);
     background: var(--bg);
-    padding: 5rem 0;
+    padding: 5rem 0 5.5rem;
   }
-  .yazi-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.05fr;
-    gap: 4rem;
-    align-items: center;
-    margin-top: 2.5rem;
+  .yazi-showcase::before {
+    content: ""; position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse 800px 400px at 15% 30%, rgba(44, 88, 86, 0.06), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 90% 80%, rgba(200, 154, 60, 0.05), transparent 65%);
+    pointer-events: none; z-index: 0;
   }
-  @media (max-width: 900px) {
-    .yazi-grid { grid-template-columns: 1fr; gap: 3rem; }
-  }
-  .yazi-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.9rem; }
-  .yf-item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1rem;
-    align-items: flex-start;
-    padding: 0.95rem 1.1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    transition: all 0.18s ease;
-  }
-  .yf-item:hover {
-    border-color: var(--cat-accent, #2C5856);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-  }
-  .yf-icon {
-    width: 38px; height: 38px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--cat-accent-soft, #e8eded);
-    color: var(--cat-accent, #2C5856);
-    border-radius: 9px;
-    flex-shrink: 0;
-  }
-  .yf-icon svg { width: 19px; height: 19px; }
-  .yf-text strong {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 1rem;
-    color: var(--text);
-    margin-bottom: 0.2rem;
-    font-weight: 600;
-  }
-  .yf-text span {
-    font-size: 0.91rem;
-    color: var(--text-soft);
-    line-height: 1.5;
-  }
+  .yazi-showcase .wrap { position: relative; z-index: 1; }
 
-  .yazi-cta-bottom {
-    display: flex;
-    gap: 0.7rem;
-    margin-top: 1.8rem;
-    flex-wrap: wrap;
-  }
-
-  /* Right-side mockup */
-  .yazi-stage { position: relative; padding: 1rem; }
-  .yazi-window {
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: 0 18px 50px rgba(26,34,48,0.12);
-    overflow: hidden;
-    transform: rotate(-0.5deg);
-    transition: all 0.3s ease;
-  }
-  .yazi-window:hover {
-    transform: rotate(0deg) translateY(-3px);
-    box-shadow: 0 22px 60px rgba(26,34,48,0.16);
-  }
-  .yw-titlebar {
-    background: var(--bg-soft);
-    padding: 0.6rem 0.95rem;
-    border-bottom: 1px solid var(--line);
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .yw-dots { display: flex; gap: 0.32rem; }
-  .yw-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .yw-dot.r { background: #e75d5d; }
-  .yw-dot.y { background: #e8b13c; }
-  .yw-dot.g { background: #5cb85c; }
-  .yw-url {
-    margin-left: 0.6rem;
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-  }
-  .yw-body { padding: 1.4rem 1.5rem 1.5rem; }
-  .yw-eyebrow {
-    font-family: var(--font-ui);
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--cat-accent, #2C5856);
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-    display: block;
-  }
-  .yw-task {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    margin: 0 0 0.7rem;
-    line-height: 1.3;
-    color: var(--text);
-  }
-  .yw-prompt {
-    font-size: 0.88rem;
-    color: var(--text-soft);
-    line-height: 1.55;
-    padding: 0.7rem 0.9rem;
-    background: var(--bg-soft);
-    border-radius: 8px;
-    border-left: 3px solid var(--cat-accent, #2C5856);
-    margin-bottom: 1.2rem;
-  }
-  .yw-band-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.55rem;
-    margin-bottom: 1rem;
-  }
-  .yw-band-pill {
-    padding: 0.6rem 0.75rem;
-    background: var(--bg-soft);
-    border-radius: 8px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .yw-band-pill .lbl {
-    font-family: var(--font-ui);
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    font-weight: 600;
-  }
-  .yw-band-pill .num {
-    font-family: var(--font-display);
-    font-size: 1.15rem;
-    color: var(--cat-accent, #2C5856);
-    font-weight: 700;
-  }
-  .yw-feedback-block {
-    padding: 0.95rem 1rem;
-    background: var(--cat-accent, #2C5856);
-    color: white;
-    border-radius: 9px;
-  }
-  .yw-feedback-block .fb-lbl {
-    font-family: var(--font-ui);
-    font-size: 0.62rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-weight: 700;
-    opacity: 0.85;
-    margin-bottom: 0.4rem;
-    display: block;
-  }
-  .yw-feedback-block p {
-    margin: 0;
-    font-size: 0.84rem;
-    line-height: 1.55;
-  }
   .yazi-divider {
     display: flex; align-items: center; gap: 0.8rem;
-    justify-content: center;
-    margin: 1.2rem auto 0;
-    max-width: 360px;
+    justify-content: center; margin: 1.2rem auto 0; max-width: 380px;
   }
   .yazi-divider .yd-line {
     flex: 1; height: 1px;
     background: linear-gradient(90deg, transparent, var(--line), transparent);
   }
   .yazi-divider .yd-label {
-    font-family: var(--font-ui);
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    font-weight: 600;
+    font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--text-muted); font-weight: 600;
+  }
+
+  .yazi-stats-row {
+    display: flex; justify-content: center; gap: 2.5rem;
+    margin: 2rem auto 0; flex-wrap: wrap;
+    font-family: var(--font-ui); font-size: 0.78rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 500;
+  }
+  .yazi-stats-row .stat strong {
+    color: #2C5856; font-family: var(--font-display);
+    font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
+    text-transform: none; display: block; line-height: 1;
+    margin-bottom: 0.2rem;
+  }
+
+  .yazi-main {
+    display: grid; grid-template-columns: 1fr 1.1fr; gap: 4rem;
+    margin-top: 4rem; align-items: center;
+  }
+  @media (max-width: 980px) {
+    .yazi-main { grid-template-columns: 1fr; gap: 3rem; }
+  }
+
+  /* ---- Sol kolon: features ---- */
+  .yazi-features-v2 {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 0.85rem;
+  }
+  .yf-card {
+    display: grid; grid-template-columns: 48px 1fr;
+    gap: 1.1rem; padding: 1.3rem 1.4rem;
+    background: var(--bg-card);
+    border: 1px solid var(--line); border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; overflow: hidden;
+    cursor: default;
+  }
+  .yf-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--cat-accent);
+    transform: scaleY(0); transform-origin: top;
+    transition: transform 0.35s ease;
+  }
+  .yf-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 24px rgba(44, 88, 86, 0.08);
+    border-color: var(--cat-accent);
+  }
+  .yf-card:hover::before { transform: scaleY(1); }
+  .yf-card.active {
+    box-shadow: 0 4px 16px rgba(44, 88, 86, 0.1);
+    border-color: var(--cat-accent);
+  }
+  .yf-card.active::before { transform: scaleY(1); }
+
+  .yf-icon-v2 {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, #2C5856 0%, #1a3a38 100%);
+    color: white; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; box-shadow: 0 4px 12px rgba(44, 88, 86, 0.2);
+  }
+  .yf-icon-v2 svg { width: 22px; height: 22px; }
+
+  .yf-text-v2 strong {
+    display: block; font-family: var(--font-display);
+    font-size: 1.08rem; font-weight: 600; color: var(--text);
+    margin-bottom: 0.25rem; line-height: 1.3;
+  }
+  .yf-text-v2 span {
+    font-family: var(--font-body); color: var(--text-soft);
+    font-size: 0.92rem; line-height: 1.55;
+  }
+
+  .yazi-cta-row {
+    margin-top: 1.8rem; display: flex; gap: 0.8rem; flex-wrap: wrap;
+  }
+
+  /* ---- Sağ kolon: cinematic feedback card ---- */
+  .yazi-cinema {
+    position: relative;
+  }
+  .yazi-cinema::before, .yazi-cinema::after {
+    content: ""; position: absolute;
+    border: 1px solid var(--line); border-radius: 16px;
+    background: var(--bg-card);
+  }
+  .yazi-cinema::before {
+    inset: -0.7rem 1.8rem 1.8rem -0.7rem;
+    transform: rotate(-1.5deg); z-index: 0; opacity: 0.5;
+  }
+  .yazi-cinema::after {
+    inset: -0.3rem 0.7rem 1.2rem 0.5rem;
+    transform: rotate(0.8deg); z-index: 1; opacity: 0.75;
+  }
+  .yazi-window {
+    position: relative; z-index: 2;
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(26, 34, 48, 0.12);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .yazi-window:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 28px 70px rgba(26, 34, 48, 0.16);
+  }
+
+  .yw-titlebar {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--bg-soft);
+    padding: 0.75rem 1.2rem; border-bottom: 1px solid var(--line);
+  }
+  .yw-dots { display: flex; gap: 0.4rem; }
+  .yw-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .yw-dot.r { background: #e75d5d; }
+  .yw-dot.y { background: #e8b13c; }
+  .yw-dot.g { background: #5cb85c; }
+  .yw-url {
+    flex: 1; font-family: var(--font-ui); font-size: 0.78rem;
+    color: var(--text-muted); letter-spacing: 0.02em;
+  }
+  .yw-url strong { color: var(--text); font-weight: 600; }
+
+  .yw-stage-container {
+    position: relative; min-height: 460px;
+  }
+  .yw-stage {
+    position: absolute; inset: 0;
+    padding: 1.5rem 1.7rem;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+    pointer-events: none;
+  }
+  .yw-stage.active {
+    opacity: 1; transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .yw-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-family: var(--font-ui); font-size: 0.66rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--cat-accent-deep); font-weight: 700;
+    padding: 0.32rem 0.8rem;
+    background: var(--cat-accent-soft);
+    border-radius: 999px; margin-bottom: 1rem;
+  }
+  .yw-eyebrow::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--cat-accent); 
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .yw-task {
+    font-family: var(--font-display); font-size: 1.05rem;
+    font-weight: 600; color: var(--text); margin: 0 0 0.5rem;
+    line-height: 1.35;
+  }
+  .yw-prompt {
+    font-family: var(--font-body); color: var(--text-soft);
+    font-size: 0.88rem; line-height: 1.55;
+    padding: 0.85rem 1rem; background: var(--bg-soft);
+    border-radius: 8px; border-left: 3px solid var(--cat-accent);
+    margin-bottom: 1.1rem;
+  }
+  .yw-prompt[lang="en"] { font-style: italic; }
+
+  /* Stage 1: typing */
+  .yw-typing-area {
+    font-family: var(--font-body); font-size: 0.9rem;
+    line-height: 1.7; color: var(--text);
+    padding: 0.9rem 1rem;
+    background: var(--bg-soft); border-radius: 8px;
+    border: 1px dashed var(--line);
+    min-height: 130px;
+    position: relative;
+  }
+  .yw-cursor {
+    display: inline-block; width: 1.5px; height: 1.05em;
+    background: var(--cat-accent); vertical-align: middle;
+    margin-left: 1px;
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .yw-wc {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 0.8rem;
+    font-family: var(--font-ui); font-size: 0.72rem;
+    color: var(--text-muted); letter-spacing: 0.05em;
+  }
+  .yw-wc strong { color: var(--text); font-weight: 700; font-size: 0.9rem; }
+
+  /* Stage 2: AI evaluating */
+  .yw-eval-pulse {
+    text-align: center; padding: 2.5rem 1rem;
+  }
+  .yw-eval-pulse .pulse-ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    margin: 0 auto 1.2rem;
+    background: var(--cat-accent);
+    animation: pulse-grow 1.4s ease-out infinite;
+    position: relative;
+  }
+  .yw-eval-pulse .pulse-ring::after {
+    content: ""; position: absolute; inset: 0;
+    border: 2px solid var(--cat-accent);
+    border-radius: 50%;
+    animation: ripple 1.4s ease-out infinite;
+  }
+  @keyframes pulse-grow {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  @keyframes ripple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+  .yw-eval-pulse h4 {
+    font-family: var(--font-display); font-size: 1.15rem;
+    margin: 0 0 0.4rem; color: var(--text);
+  }
+  .yw-eval-pulse p {
+    font-family: var(--font-body); color: var(--text-soft);
+    font-size: 0.9rem; margin: 0;
+  }
+
+  /* Stage 3: results */
+  .yw-band-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
+    margin-bottom: 1rem;
+  }
+  .yw-band-pill-v2 {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.55rem 0.85rem;
+    background: var(--bg-soft); border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .yw-band-pill-v2 .lbl {
+    font-family: var(--font-ui); font-size: 0.66rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 600;
+  }
+  .yw-band-pill-v2 .num {
+    font-family: var(--font-display); font-weight: 700;
+    color: var(--text); font-size: 0.95rem;
+  }
+  .yw-band-pill-v2.highlight {
+    background: linear-gradient(135deg, var(--cat-accent) 0%, var(--cat-accent-deep) 100%);
+    border-color: var(--cat-accent);
+    box-shadow: 0 4px 12px rgba(44, 88, 86, 0.2);
+  }
+  .yw-band-pill-v2.highlight .lbl,
+  .yw-band-pill-v2.highlight .num { color: white; }
+
+  .yw-feedback-block-v2 {
+    background: linear-gradient(135deg, var(--cat-accent) 0%, var(--cat-accent-deep) 100%);
+    color: white; padding: 1rem 1.1rem; border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(44, 88, 86, 0.18);
+  }
+  .yw-feedback-block-v2 .fb-lbl {
+    display: block; font-family: var(--font-ui);
+    font-size: 0.62rem; letter-spacing: 0.16em;
+    text-transform: uppercase; opacity: 0.85;
+    margin-bottom: 0.4rem; font-weight: 700;
+  }
+  .yw-feedback-block-v2 p {
+    margin: 0; font-family: var(--font-body); font-size: 0.85rem;
+    line-height: 1.55; color: white;
+  }
+
+  /* Stage indicator dots */
+  .yw-stage-dots {
+    display: flex; gap: 0.35rem; justify-content: center;
+    padding: 0.6rem 0 0.9rem;
+    background: var(--bg-soft); border-top: 1px solid var(--line);
+  }
+  .yw-stage-dot {
+    width: 24px; height: 4px; border-radius: 2px;
+    background: var(--line); transition: background 0.3s ease, width 0.3s ease;
+    cursor: pointer;
+  }
+  .yw-stage-dot.active {
+    background: var(--cat-accent);
+    width: 36px;
   }
 </style>
 
-<section class="yazi-showcase">
+<section class="yazi-showcase" id="yaziShowcase">
   <div class="wrap">
     <div class="section-head reveal-scroll">
-      <span class="eyebrow">Yazma + Anında Gri Geri Bildirim</span>
+      <span class="eyebrow">Yazma + Anında Geri Bildirim</span>
       <h2>Yazını yaz, Gri <span class="it">30 saniyede</span> değerlendirsin</h2>
       <div class="yazi-divider">
         <span class="yd-line"></span>
         <span class="yd-label" lang="en">Writing Practice</span>
         <span class="yd-line"></span>
       </div>
-      <p style="max-width: 720px; margin: 1.2rem auto 0; color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;">IB English B, TOEFL, IELTS. Rubric'e göre band bandına puan, spesifik hatalar, ne ekleyip ne çıkarman gerektiği. Hocalar 3 günde değerlendirir, Gri 30 saniyede.</p>
+      <p style="max-width: 720px; margin: 1.2rem auto 0; color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;">IB English B, TOEFL Email, Academic Discussion, IELTS Academic Task 1 ve Task 2. Rubric'e göre band bandına puan, spesifik hatalar, ne ekleyip ne çıkarman gerektiği. Hocalar 3 günde değerlendirir, Gri 30 saniyede.</p>
+
+      <div class="yazi-stats-row">
+        <div class="stat"><strong>15</strong>IB text type</div>
+        <div class="stat"><strong>4</strong>TOEFL + IELTS format</div>
+        <div class="stat"><strong>30s</strong>Ortalama süre</div>
+        <div class="stat"><strong>0-9</strong>Band score</div>
+      </div>
     </div>
 
-    <div class="yazi-grid reveal-scroll">
+    <div class="yazi-main reveal-scroll">
       <div>
-        <ul class="yazi-features">
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            <div class="yf-text"><strong>15 IB Paper 1 text type</strong><span>Article, Blog, Speech, Essay, Proposal, Diary, Review ve fazlası. SL ve HL için ayrı kelime hedefleri.</span></div>
+        <ul class="yazi-features-v2">
+          <li class="yf-card active" data-stage="0">
+            <div class="yf-icon-v2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+            </div>
+            <div class="yf-text-v2">
+              <strong>Gerçek sınav prompt'u</strong>
+              <span>IB Paper 1 mock exam, TOEFL ETS formatı, IELTS Academic Cambridge stili. Tam sınav gibi yaz.</span>
+            </div>
           </li>
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <div class="yf-text"><strong>TOEFL Email + Academic Discussion</strong><span>ETS holistic 0-5 rubric'ine göre değerlendirme, gerçek sınav formatlı promptlar.</span></div>
+          <li class="yf-card" data-stage="1">
+            <div class="yf-icon-v2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="yf-text-v2">
+              <strong>30 saniyede değerlendirme</strong>
+              <span>Gönderirsin, Gri okur, puanlar, yorumlar. Hocadan günler beklemek yok.</span>
+            </div>
           </li>
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg></div>
-            <div class="yf-text"><strong>IELTS Task 1 + Task 2 atomik</strong><span>İki task tek pakette, IELTS resmi formülle hesaplanan Genel Writing Band skoru.</span></div>
+          <li class="yf-card" data-stage="2">
+            <div class="yf-icon-v2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4"/><path d="M9 11V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/><path d="M9 11h6"/><path d="M15 11v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-4"/></svg>
+            </div>
+            <div class="yf-text-v2">
+              <strong>Rubric bandına puan</strong>
+              <span>IB Criterion A/B/C, IELTS Task Response/Coherence/Lexical/Grammar. Resmi sınav rubric'leri.</span>
+            </div>
           </li>
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-            <div class="yf-text"><strong>Kriter bazlı band skoru</strong><span>Task Achievement, Coherence, Lexical, Grammar. Her birine ayrı puan ve neden o puanı aldığın.</span></div>
+          <li class="yf-card" data-stage="2">
+            <div class="yf-icon-v2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div class="yf-text-v2">
+              <strong>Spesifik hata + düzeltme</strong>
+              <span>Hangi cümle hatalı, doğrusu ne, neden öyle olmalı. Gramer, ton, akademik stil.</span>
+            </div>
           </li>
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-            <div class="yf-text"><strong>Spesifik hata + düzeltme</strong><span>Hangi cümle hatalı, doğrusu ne, neden öyle olmalı. Gramer, ton, akademik stil.</span></div>
-          </li>
-          <li class="yf-item">
-            <div class="yf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
-            <div class="yf-text"><strong>Günde 1 ücretsiz değerlendirme</strong><span>10 Gri Token günlük. Tükenirse paket alarak devam et, jeton kalıcı.</span></div>
+          <li class="yf-card" data-stage="2">
+            <div class="yf-icon-v2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div class="yf-text-v2">
+              <strong>Günde 1 ücretsiz değerlendirme</strong>
+              <span>10 Gri Token günlük. Tükenirse paket alarak devam et, Gri Token kalıcı.</span>
+            </div>
           </li>
         </ul>
-        <div class="yazi-cta-bottom">
+        <div class="yazi-cta-row">
           <a href="yazi-pratigi.html" class="btn btn-primary">Yazı Pratiği'ne Git</a>
-          <a href="giris.html#signup" class="btn btn-ghost">Ücretsiz Hesap Aç</a>
+          <a href="giris.html#signup" class="btn btn-ghost">Ücretsiz Hesap Aç &rsaquo;</a>
         </div>
       </div>
 
-      <div class="yazi-stage">
-        <div class="yazi-window">
+      <div class="yazi-cinema">
+        <div class="yazi-window" data-yazi-showcase>
           <div class="yw-titlebar">
-            <div class="yw-dots"><span class="yw-dot r"></span><span class="yw-dot y"></span><span class="yw-dot g"></span></div>
-            <span class="yw-url" lang="en">gringlizce.com/yazi-pratigi</span>
+            <div class="yw-dots">
+              <span class="yw-dot r"></span>
+              <span class="yw-dot y"></span>
+              <span class="yw-dot g"></span>
+            </div>
+            <div class="yw-url" lang="en">gringlizce.com<strong>/yazi-pratigi</strong></div>
           </div>
-          <div class="yw-body">
-            <span class="yw-eyebrow" lang="en">IB Paper 1 · Article</span>
-            <h3 class="yw-task" lang="en">The Future of Work</h3>
-            <p class="yw-prompt" lang="en">Your school newspaper is featuring a section on "Future Careers". Write an article exploring how automation and AI will affect traditional job markets for young graduates.</p>
 
-            <div class="yw-band-row">
-              <div class="yw-band-pill">
-                <span class="lbl" lang="en">Language</span>
-                <span class="num">10/12</span>
+          <div class="yw-stage-container">
+            <!-- Stage 0: prompt + typing -->
+            <div class="yw-stage active" data-yw-stage="0">
+              <span class="yw-eyebrow" lang="en">IB English B · Article</span>
+              <h3 class="yw-task" lang="en">The Future of Work</h3>
+              <p class="yw-prompt" lang="en">Your school newspaper is featuring a section on "Future Careers". Write an article exploring how automation and AI will affect traditional job markets for young graduates.</p>
+              <div class="yw-typing-area" lang="en">
+                <span id="ywTypeText"></span><span class="yw-cursor"></span>
               </div>
-              <div class="yw-band-pill">
-                <span class="lbl" lang="en">Message</span>
-                <span class="num">9/12</span>
-              </div>
-              <div class="yw-band-pill">
-                <span class="lbl" lang="en">Conceptual</span>
-                <span class="num">5/6</span>
-              </div>
-              <div class="yw-band-pill" style="background: var(--cat-accent-soft, #e8eded);">
-                <span class="lbl" style="color: var(--cat-accent-deep, #1a3a38);">Toplam</span>
-                <span class="num">24/30</span>
+              <div class="yw-wc">
+                <span>Kelime sayısı</span>
+                <span><strong id="ywWcNum">0</strong> / 250-400</span>
               </div>
             </div>
 
-            <div class="yw-feedback-block">
-              <span class="fb-lbl">Gri'nin Yorumu</span>
-              <p>Argümanın net ve yapı iyi. Conclusion'da "in conclusion" yerine daha doğal bir geçiş dene. Lexical olarak "automation" tekrarı fazla, "AI-driven systems" gibi varyasyon koy. Article tonu için tam noktada.</p>
+            <!-- Stage 1: evaluating -->
+            <div class="yw-stage" data-yw-stage="1">
+              <span class="yw-eyebrow">Gri değerlendiriyor</span>
+              <div class="yw-eval-pulse">
+                <div class="pulse-ring"></div>
+                <h4>Yazın okunuyor</h4>
+                <p>Rubric'e göre bant skorları hesaplanıyor, hatalar tespit ediliyor.</p>
+              </div>
             </div>
+
+            <!-- Stage 2: results -->
+            <div class="yw-stage" data-yw-stage="2">
+              <span class="yw-eyebrow">Sonuç hazır</span>
+              <h3 class="yw-task" lang="en">The Future of Work · Article</h3>
+              <div class="yw-band-grid">
+                <div class="yw-band-pill-v2">
+                  <span class="lbl" lang="en">Language</span>
+                  <span class="num">10/12</span>
+                </div>
+                <div class="yw-band-pill-v2">
+                  <span class="lbl" lang="en">Message</span>
+                  <span class="num">9/12</span>
+                </div>
+                <div class="yw-band-pill-v2">
+                  <span class="lbl" lang="en">Conceptual</span>
+                  <span class="num">5/6</span>
+                </div>
+                <div class="yw-band-pill-v2 highlight">
+                  <span class="lbl">Toplam</span>
+                  <span class="num">24/30</span>
+                </div>
+              </div>
+              <div class="yw-feedback-block-v2">
+                <span class="fb-lbl">Gri&rsquo;nin Yorumu</span>
+                <p>Argümanın net ve yapı iyi. Conclusion'da "in conclusion" yerine daha doğal bir geçiş dene. Lexical olarak "automation" tekrarı fazla, "AI-driven systems" gibi varyasyon koy. Article tonu için tam noktada.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="yw-stage-dots">
+            <span class="yw-stage-dot active" data-go="0"></span>
+            <span class="yw-stage-dot" data-go="1"></span>
+            <span class="yw-stage-dot" data-go="2"></span>
           </div>
         </div>
       </div>
     </div>
   </div>
 </section>
-  var slides = section.querySelectorAll('.pw-slide');
-  var tabs = section.querySelectorAll('.pw-tab');
-  var features = section.querySelectorAll('.pf-item');
-  var idx = 0, total = slides.length, timer = null;
-  function go(n) {
-    idx = (n + total) % total;
-    slides.forEach(function (s, i) { s.classList.toggle('active', i === idx); });
-    tabs.forEach(function (t, i) { t.classList.toggle('active', i === idx); });
-    features.forEach(function (f, i) { f.classList.toggle('active', i === idx); });
-  }
-  function autoplay() { stop(); timer = setInterval(function () { go(idx + 1); }, 5500); }
-  function stop() { if (timer) { clearInterval(timer); timer = null; } }
-  function bind(els) {
-    els.forEach(function (el) {
-      el.addEventListener('click', function () {
-        var n = parseInt(this.getAttribute('data-go'), 10);
-        if (!isNaN(n)) { go(n); autoplay(); }
-      });
+
+<script>
+(function () {
+  var section = document.getElementById('yaziShowcase');
+  if (!section) return;
+  var stages = section.querySelectorAll('.yw-stage');
+  var dots = section.querySelectorAll('.yw-stage-dot');
+  var features = section.querySelectorAll('.yf-card');
+  var typeEl = document.getElementById('ywTypeText');
+  var wcEl = document.getElementById('ywWcNum');
+
+  var DEMO_TEXT = "Automation and AI are reshaping the careers that today's graduates can expect to enter. While anxiety about machines replacing entry-level roles is justified, the more interesting question is which human skills become more valuable when routine tasks are handled by algorithms.";
+  var idx = 0;
+  var totalStages = 3;
+  var stageTimer = null;
+  var typeTimer = null;
+
+  function setStage(n) {
+    idx = ((n % totalStages) + totalStages) % totalStages;
+    stages.forEach(function (s, i) { s.classList.toggle('active', i === idx); });
+    dots.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
+    features.forEach(function (f) {
+      var fStage = parseInt(f.getAttribute('data-stage'), 10);
+      f.classList.toggle('active', fStage === idx);
     });
+
+    if (idx === 0) startTyping();
+    else { stopTyping(); }
   }
-  bind(tabs); bind(features);
-  section.addEventListener('mouseenter', stop);
-  section.addEventListener('mouseleave', autoplay);
-  autoplay();
+
+  function startTyping() {
+    stopTyping();
+    var i = 0;
+    typeEl.textContent = '';
+    wcEl.textContent = '0';
+    typeTimer = setInterval(function () {
+      if (i >= DEMO_TEXT.length) {
+        stopTyping();
+        return;
+      }
+      typeEl.textContent = DEMO_TEXT.slice(0, i + 1);
+      var wc = typeEl.textContent.trim().split(/\s+/).filter(Boolean).length;
+      wcEl.textContent = wc;
+      i++;
+    }, 32);
+  }
+  function stopTyping() {
+    if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+  }
+
+  function startAutoplay() {
+    stopAutoplay();
+    stageTimer = setInterval(function () { setStage(idx + 1); }, 4800);
+  }
+  function stopAutoplay() {
+    if (stageTimer) { clearInterval(stageTimer); stageTimer = null; }
+  }
+
+  dots.forEach(function (d) {
+    d.addEventListener('click', function () {
+      var n = parseInt(this.getAttribute('data-go'), 10);
+      if (!isNaN(n)) { setStage(n); startAutoplay(); }
+    });
+  });
+
+  features.forEach(function (f) {
+    f.addEventListener('click', function () {
+      var n = parseInt(this.getAttribute('data-stage'), 10);
+      if (!isNaN(n)) { setStage(n); startAutoplay(); }
+    });
+  });
+
+  section.addEventListener('mouseenter', stopAutoplay);
+  section.addEventListener('mouseleave', startAutoplay);
+
+  // Start when section is visible
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          setStage(0);
+          startAutoplay();
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    io.observe(section);
+  } else {
+    setStage(0);
+    startAutoplay();
+  }
 })();
 </script>
 

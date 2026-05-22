@@ -935,7 +935,9 @@
       font-weight: 600;
       color: #fefcf7;
       margin-bottom: 0.7rem;
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), 0 2px 6px rgba(26,34,48,0.08);
     }
+    .badge-icon svg { display: block; }
     .badge-icon.tier-bronze  { background: linear-gradient(135deg, #b87333, #8a5520); }
     .badge-icon.tier-silver  { background: linear-gradient(135deg, #a8a8a8, #6e6e6e); }
     .badge-icon.tier-gold    { background: linear-gradient(135deg, #c89a3c, #a8801f); }
@@ -3115,6 +3117,41 @@
     }
 
     // ---------- GAMIFICATION ----------
+    // Badge icon SVG library (lucide-inspired, 24x24, white stroke).
+    // Add new entries here when 24_badges_expanded.sql or future migrations introduce new icon_name values.
+    var BADGE_ICON_SVG = {
+      'sparkle':      '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>',
+      'medal-bronze': '<circle cx="12" cy="15" r="6"/><path d="M8 8l-3-6M16 8l3-6M9 5h6"/>',
+      'trophy':       '<path d="M8 21h8M12 17v4M6 4v6a6 6 0 0 0 12 0V4z"/><path d="M6 6H4a2 2 0 0 0-2 2 4 4 0 0 0 4 4M18 6h2a2 2 0 0 1 2 2 4 4 0 0 1-4 4"/>',
+      'flame':        '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1-2 0-4 2-6 1 2.5 2.5 4 4.5 6 1.5 1.5 2.5 3 2.5 5a7 7 0 1 1-14 0c0-1 .5-2 1-3a2.5 2.5 0 0 0 2 3z"/>',
+      'fire':         '<path d="M12 2c1 4 4 6 4 10a4 4 0 0 1-8 0c0-2 1-3 2-5M12 14a2 2 0 0 0 2-2c0-1-1-2-1-3 2 1 4 3 4 6a5 5 0 1 1-10 0c0-2 1-3 3-4 0 2 0 3 2 3z"/>',
+      'phoenix':      '<path d="M12 2l-3 8h6zM5 10l2 6h10l2-6M7 16l-2 6h14l-2-6M12 10v6"/>',
+      'ribbon':       '<path d="M8 2v7l4 3 4-3V2M6 22l6-5 6 5"/><circle cx="12" cy="14" r="3"/>',
+      'bookmark':     '<path d="M6 3h12v18l-6-4-6 4z"/>',
+      'feather':      '<path d="M20 4a6 6 0 0 0-8.5 0L5 10.5V19h8.5L20 12.5A6 6 0 0 0 20 4z"/><path d="M16 8L2 22M17 15H9"/>',
+      'shield':       '<path d="M12 2L4 6v6c0 4.5 3 8.5 8 10 5-1.5 8-5.5 8-10V6z"/><path d="M9 12l2 2 4-4"/>',
+      'crown':        '<path d="M2 6l3 13h14l3-13-6 5-4-8-4 8z"/><path d="M5 22h14"/>',
+      'mountain':     '<path d="M2 22l7-13 4 7 3-5 6 11z"/><circle cx="9" cy="6" r="2"/>',
+      'spark':        '<path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>',
+      'leaf':         '<path d="M11 20A7 7 0 0 1 4 13V4h9a7 7 0 0 1 7 7 9 9 0 0 1-9 9z"/><path d="M4 4l8 8"/>',
+      'torch':        '<path d="M9 2c-1 3-3 5-3 8a6 6 0 0 0 12 0c0-3-2-5-3-8M10 16v6M14 16v6"/>',
+      'sun':          '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+      'pen':          '<path d="M14 2l8 8-12 12H2v-8L14 2z"/><path d="M12 4l8 8"/>',
+      'scroll':       '<path d="M5 2h13a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V5"/><path d="M3 5a2 2 0 0 1 4 0v3H3M9 8h8M9 12h8M9 16h5"/>',
+      'stack':        '<path d="M4 4h12v12H4zM8 8h12v12H8z"/>',
+      'medal':        '<circle cx="12" cy="14" r="6"/><path d="M8 8l-4-6h4l4 6M16 8l4-6h-4l-4 6M10 14l2 2 4-4"/>',
+      'star':         '<polygon points="12 2 15 9 22 10 17 15 18 22 12 18 6 22 7 15 2 10 9 9"/>',
+      'gem':          '<polygon points="6 3 18 3 22 9 12 22 2 9"/><path d="M11 3l-3 6M13 3l3 6M2 9h20"/>',
+      'note':         '<path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4M8 12h8M8 16h6"/>',
+      'book':         '<path d="M4 3h7a3 3 0 0 1 3 3v15a2 2 0 0 0-2-2H4z"/><path d="M20 3h-7a3 3 0 0 0-3 3v15a2 2 0 0 1 2-2h8z"/>',
+      'library':      '<path d="M3 3v18h3V3zM8 3v18h3V3zM13 3l4 17 3-1L16 2z"/>',
+      'brain':        '<path d="M12 5a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 0 4 3 3 0 0 0 3 4 3 3 0 0 0 5 0M12 5a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1 0 4 3 3 0 0 1-3 4 3 3 0 0 1-5 0M12 5v15"/>'
+    };
+    function badgeIconSvg(iconName) {
+      var paths = BADGE_ICON_SVG[iconName] || BADGE_ICON_SVG['star'];
+      return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+    }
+
     async function loadGamificationTab() {
       try {
         var bRes = await sb.rpc('admin_badge_stats');
@@ -3152,7 +3189,7 @@
             var on = b.active ? 'on' : '';
             return '<div class="badge-card ' + disabled + '">' +
               '<button class="badge-toggle ' + on + '" data-badge-id="' + escHtml(b.id) + '" aria-label="Toggle"></button>' +
-              '<div class="badge-icon tier-' + escHtml(b.tier) + '">' + escHtml(b.icon_label) + '</div>' +
+              '<div class="badge-icon tier-' + escHtml(b.tier) + '">' + badgeIconSvg(b.icon_name) + '</div>' +
               '<div class="badge-name">' + escHtml(b.name) + '</div>' +
               '<div class="badge-criteria">' + escHtml(b.description) + '</div>' +
               '<div class="badge-stats"><strong>' + (b.earn_count || 0) + '</strong> kullanıcı kazandı</div>' +

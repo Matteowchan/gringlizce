@@ -3038,11 +3038,21 @@
         const slug = getCurrentSlug();
         currentNote = null;
         noteBtn.classList.remove('noted');
-        if (!GRI_USER_ID || !slug) return;
+        if (!slug) return;
+        // Session'ı her seferinde fresh oku, GRI_USER_ID closure'ına güvenme
+        let uid = GRI_USER_ID;
+        if (!uid) {
+          try {
+            const sess = await supabase.auth.getSession();
+            uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+            if (uid) GRI_USER_ID = uid;
+          } catch (e) {}
+        }
+        if (!uid) return;
         try {
           const res = await supabase.from('user_question_notes')
             .select('note')
-            .eq('user_id', GRI_USER_ID)
+            .eq('user_id', uid)
             .eq('question_slug', slug)
             .maybeSingle();
           if (res && res.data && res.data.note) {
@@ -3054,19 +3064,46 @@
         }
       };
 
-      function openNoteModal() {
-        if (!GRI_USER_ID) {
+      async function openNoteModal() {
+        // Session fresh oku
+        let uid = GRI_USER_ID;
+        if (!uid) {
+          try {
+            const sess = await supabase.auth.getSession();
+            uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+            if (uid) GRI_USER_ID = uid;
+          } catch (e) {}
+        }
+        if (!uid) {
           location.href = 'giris.html?return=' + encodeURIComponent(location.pathname + location.search);
           return;
         }
         const slug = getCurrentSlug();
         if (!slug) return;
+
+        // Modal'ı açmadan DB'den notu fresh al, closure state'ine güvenme
+        let freshNote = '';
+        try {
+          const res = await supabase.from('user_question_notes')
+            .select('note')
+            .eq('user_id', uid)
+            .eq('question_slug', slug)
+            .maybeSingle();
+          if (res && res.data && res.data.note) {
+            freshNote = res.data.note;
+            currentNote = freshNote;
+            noteBtn.classList.add('noted');
+          }
+        } catch (e) {
+          console.warn('[note] modal open fetch failed:', e);
+        }
+
         noteFeedback.textContent = '';
         noteFeedback.className = 'q-modal-feedback';
         noteSubmit.disabled = false;
         noteSubmit.textContent = 'Kaydet';
-        noteText.value = currentNote || '';
-        noteDelete.style.display = currentNote ? 'inline-flex' : 'none';
+        noteText.value = freshNote;
+        noteDelete.style.display = freshNote ? 'inline-flex' : 'none';
         updateNoteCounter();
         noteOverlay.classList.add('open');
         noteModal.classList.add('open');

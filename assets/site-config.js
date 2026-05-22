@@ -199,7 +199,7 @@
 
   // =============================================================
   // REALTIME PRESENCE — anonim dahil tüm visitor'lar için
-  // site_presence channel'a join ol, admin paneli online sayar
+  // site_presence channel'a join ol, admin paneli online sayar + kim olduğunu görür
   // =============================================================
   function joinPresence() {
     try {
@@ -209,13 +209,24 @@
       });
       channel.subscribe(async function (status) {
         if (status === 'SUBSCRIBED') {
+          var trackData = {
+            id: presenceId,
+            joined_at: Date.now(),
+            page: location.pathname,
+            anon: true
+          };
+          // Eğer login olmuşsa, user_id + email + display_name'i de ekle
           try {
-            await channel.track({
-              id: presenceId,
-              joined_at: Date.now(),
-              page: location.pathname
-            });
+            var sess = await sb.auth.getSession();
+            var user = sess && sess.data && sess.data.session && sess.data.session.user;
+            if (user) {
+              trackData.user_id = user.id;
+              trackData.email = user.email;
+              trackData.display_name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || (user.email ? user.email.split('@')[0] : '');
+              trackData.anon = false;
+            }
           } catch (e) {}
+          try { await channel.track(trackData); } catch (e) {}
         }
       });
       window.__griPresence = channel;

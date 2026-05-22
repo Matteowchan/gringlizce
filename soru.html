@@ -1963,6 +1963,10 @@
         }, { onConflict: 'user_id,question_slug' }).then(function (r) {
           if (r.error) console.warn('[answers] persist failed:', r.error.message);
         });
+        // Rozet değerlendirmesi (debounced, 30 sn'de en fazla bir kez)
+        if (typeof window.triggerBadgeCheck === 'function') {
+          window.triggerBadgeCheck();
+        }
       }
     }
     function clearAnswersForSet(slugs) {
@@ -2927,6 +2931,10 @@
             isCurrentBookmarked = true;
           }
           bookmarkBtn.classList.toggle('bookmarked', isCurrentBookmarked);
+          // Rozet değerlendirmesi
+          if (typeof window.triggerBadgeCheck === 'function') {
+            window.triggerBadgeCheck();
+          }
         } catch (e) {
           console.warn('[bookmark] toggle failed:', e);
         }
@@ -3730,6 +3738,10 @@
             btn.classList.add('saved');
             btn.textContent = '✓ LİSTENDE';
             btn.disabled = true;
+          }
+          // Rozet değerlendirmesi
+          if (typeof window.triggerBadgeCheck === 'function') {
+            window.triggerBadgeCheck();
           }
         } catch (e) {
           console.error('[vocab] save error:', e);

@@ -1329,6 +1329,88 @@
     }
     .info-banner strong { color: var(--text); font-weight: 600; font-style: normal; font-family: var(--font-ui); }
 
+    .online-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .online-row:last-child { border-bottom: none; }
+    .online-row.anon { color: var(--text-muted); }
+    .online-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #5a8a3a;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(90, 138, 58, 0.5);
+    }
+    .online-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .online-email {
+      color: var(--text);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .online-meta {
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+    }
+    .online-page {
+      color: var(--text-soft);
+      font-family: var(--font-ui);
+      font-size: 0.76rem;
+      letter-spacing: 0.02em;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .badge-health-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-left: 3px solid #5a8a3a;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.8rem;
+    }
+    .badge-health-card.warning { border-left-color: var(--gold, #c89a3c); }
+    .badge-health-card.error { border-left-color: #b45046; }
+    .bhc-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .bhc-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .bhc-value {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-top: 0.2rem;
+    }
+    .bhc-sub {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      margin-top: 0.15rem;
+    }
+
     .user-picker {
       margin: 0.5rem 0 0.8rem;
       padding: 0.9rem 1rem;
@@ -1602,14 +1684,14 @@
       <div class="admin-tab-content" data-tab-content="overview">
 
         <div class="stats-hero">
-          <div class="stat-hero live">
+          <div class="stat-hero live" id="online-card" style="cursor: pointer;" title="Online kullanıcıları gör">
             <div class="stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10"/></svg>
             </div>
             <div class="stat-body">
               <div class="stat-label">Şu An Online</div>
               <div class="stat-value" id="stat-online"><span class="stat-loading">—</span></div>
-              <div class="stat-sub">Realtime aktif visitor</div>
+              <div class="stat-sub">Tıkla, kim online görüntüle</div>
             </div>
           </div>
 
@@ -1963,6 +2045,29 @@
             <div class="kpi-card tone-red"><div class="kpi-label">Dağıtılan Bonus</div><div class="kpi-value" id="gam-bonus">—</div><div class="kpi-sub">streak ödülü olarak</div></div>
           </div>
 
+          <div class="badge-health-card" id="badge-health-card">
+            <div class="bhc-item">
+              <div class="bhc-label">Sistem Durumu</div>
+              <div class="bhc-value" id="bh-status">—</div>
+              <div class="bhc-sub" id="bh-status-sub">kontrol ediliyor</div>
+            </div>
+            <div class="bhc-item">
+              <div class="bhc-label">Son Rozet Kazanımı</div>
+              <div class="bhc-value" id="bh-last">—</div>
+              <div class="bhc-sub" id="bh-last-sub"></div>
+            </div>
+            <div class="bhc-item">
+              <div class="bhc-label">Bu Hafta</div>
+              <div class="bhc-value" id="bh-week">—</div>
+              <div class="bhc-sub">rozet dağıtıldı</div>
+            </div>
+            <div class="bhc-item">
+              <div class="bhc-label">Toplam Üye</div>
+              <div class="bhc-value" id="bh-users">—</div>
+              <div class="bhc-sub" id="bh-users-sub">en az 1 rozet kazanan</div>
+            </div>
+          </div>
+
           <div class="section-row">
             <span class="section-eyebrow">Rozet Editörü</span>
             <span class="section-line"></span>
@@ -2112,6 +2217,11 @@
       <div class="user-modal-section">
         <h4>İstatistikler</h4>
         <div class="um-stats" id="um-stats"></div>
+      </div>
+
+      <div class="user-modal-section">
+        <h4>Kazandığı Rozetler</h4>
+        <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
       </div>
 
       <div class="user-modal-section">
@@ -2699,6 +2809,8 @@
 
     // ============ PRESENCE ============
     var presenceChannel = null;
+    var presenceUsers = []; // {id, email, display_name, page, joined_at, anon}
+
     function startPresenceListener() {
       try {
         if (presenceChannel) {
@@ -2708,8 +2820,28 @@
         presenceChannel
           .on('presence', { event: 'sync' }, function () {
             var state = presenceChannel.presenceState();
-            var count = Object.keys(state).length;
-            $('stat-online').textContent = count.toLocaleString('tr-TR');
+            var users = [];
+            Object.keys(state).forEach(function (key) {
+              var entries = state[key] || [];
+              entries.forEach(function (e) {
+                users.push({
+                  id: e.id || key,
+                  user_id: e.user_id || null,
+                  email: e.email || null,
+                  display_name: e.display_name || null,
+                  page: e.page || '/',
+                  joined_at: e.joined_at || null,
+                  anon: e.anon !== false
+                });
+              });
+            });
+            presenceUsers = users;
+            $('stat-online').textContent = users.length.toLocaleString('tr-TR');
+            // Modal açıksa yenile
+            var modal = $('online-modal');
+            if (modal && modal.classList.contains('show')) {
+              renderOnlineUsersList();
+            }
           })
           .subscribe();
       } catch (e) {
@@ -2717,6 +2849,59 @@
         $('stat-online').textContent = '—';
       }
     }
+
+    function renderOnlineUsersList() {
+      var listEl = $('online-list');
+      var subEl = $('online-modal-sub');
+      if (!listEl) return;
+      var users = (presenceUsers || []).slice();
+      // Anonim olmayanlar üstte
+      users.sort(function (a, b) {
+        if (a.anon !== b.anon) return a.anon ? 1 : -1;
+        return (b.joined_at || 0) - (a.joined_at || 0);
+      });
+      var loggedIn = users.filter(function (u) { return !u.anon; }).length;
+      var anonCount = users.length - loggedIn;
+      subEl.textContent = users.length + ' kişi online (' + loggedIn + ' üye, ' + anonCount + ' anonim ziyaretçi)';
+
+      if (users.length === 0) {
+        listEl.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-style: italic; text-align: center;">Şu an kimse online değil.</div>';
+        return;
+      }
+      listEl.innerHTML = users.map(function (u) {
+        var dur = u.joined_at ? Math.max(1, Math.round((Date.now() - u.joined_at) / 60000)) : null;
+        var durStr = dur ? (dur >= 60 ? Math.round(dur / 60) + ' saat' : dur + ' dk') : '';
+        var name = u.email || 'Anonim ziyaretçi';
+        var sub = u.display_name && u.display_name !== u.email ? u.display_name : '';
+        if (durStr) sub = sub ? sub + ' · ' + durStr + ' önce katıldı' : durStr + ' önce katıldı';
+        return '<div class="online-row ' + (u.anon ? 'anon' : '') + '">' +
+          '<span class="online-dot"></span>' +
+          '<div class="online-info">' +
+            '<div class="online-email">' + escHtmlAdmin(name) + '</div>' +
+            (sub ? '<div class="online-meta">' + escHtmlAdmin(sub) + '</div>' : '') +
+          '</div>' +
+          '<div class="online-page">' + escHtmlAdmin(u.page || '/') + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var card = $('online-card');
+      var modal = $('online-modal');
+      var closeBtn = $('online-close');
+      if (card && modal) {
+        card.addEventListener('click', function () {
+          renderOnlineUsersList();
+          modal.classList.add('show');
+        });
+      }
+      if (closeBtn && modal) {
+        closeBtn.addEventListener('click', function () { modal.classList.remove('show'); });
+      }
+      if (modal) {
+        modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('show'); });
+      }
+    });
 
     // ============ WRITING SUBMISSIONS ============
     var currentWritingFilter = 'pending';
@@ -2953,6 +3138,39 @@
         ].map(function (x) {
           return '<div class="um-stat"><div class="um-stat-label">' + x.label + '</div><div class="um-stat-value">' + x.val + '</div></div>';
         }).join('');
+
+        // Kullanıcının kazandığı rozetleri çek
+        try {
+          var badgesEl = $('um-badges');
+          if (badgesEl) {
+            badgesEl.innerHTML = '<div style="grid-column: 1/-1; padding: 0.5rem; color: var(--text-muted); font-style: italic; font-size: 0.82rem;">Yükleniyor...</div>';
+            var ubRes = await sb.from('user_badges')
+              .select('badge_id, earned_at, badges(name, tier, cat_name, ornament_name)')
+              .eq('user_id', userId)
+              .order('earned_at', { ascending: false });
+            if (!ubRes.error && ubRes.data) {
+              if (ubRes.data.length === 0) {
+                badgesEl.innerHTML = '<div style="grid-column: 1/-1; padding: 0.5rem; color: var(--text-muted); font-style: italic; font-size: 0.82rem;">Henüz hiç rozet kazanmamış.</div>';
+              } else {
+                badgesEl.innerHTML = ubRes.data.map(function (ub) {
+                  var b = ub.badges || {};
+                  var earnedDate = ub.earned_at ? new Date(ub.earned_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) : '';
+                  return '<div style="text-align: center;">' +
+                    '<div style="transform: scale(0.7); transform-origin: center top; margin-bottom: -1.5rem;">' +
+                      renderBadgeStage(b) +
+                    '</div>' +
+                    '<div style="font-family: var(--font-display); font-size: 0.78rem; font-weight: 500; color: var(--text); line-height: 1.2; margin-top: 0.4rem;">' + escHtmlAdmin(b.name || '—') + '</div>' +
+                    '<div style="font-family: var(--font-display); font-style: italic; font-size: 0.7rem; color: var(--text-muted);">' + earnedDate + '</div>' +
+                  '</div>';
+                }).join('');
+              }
+            } else {
+              badgesEl.innerHTML = '<div style="grid-column: 1/-1; padding: 0.5rem; color: #b45046; font-style: italic; font-size: 0.82rem;">Rozetler yüklenemedi.</div>';
+            }
+          }
+        } catch (badgeErr) {
+          console.warn('[um-badges]', badgeErr);
+        }
 
         var purchases = u.purchases || [];
         if (purchases.length === 0) {
@@ -3420,6 +3638,56 @@
 
     async function loadGamificationTab() {
       try {
+        // Önce sistem sağlık durumu
+        try {
+          var hRes = await sb.rpc('admin_badge_health');
+          if (!hRes.error && hRes.data) {
+            var h = hRes.data;
+            var card = $('badge-health-card');
+            var statusEl = $('bh-status');
+            var statusSub = $('bh-status-sub');
+            var lastEl = $('bh-last');
+            var lastSub = $('bh-last-sub');
+            var weekEl = $('bh-week');
+            var usersEl = $('bh-users');
+            var usersSub = $('bh-users-sub');
+
+            if (h.is_healthy) {
+              card.className = 'badge-health-card';
+              statusEl.textContent = 'Aktif';
+              statusSub.textContent = 'evaluate_user_progress çalışıyor';
+            } else if (h.last_earned) {
+              card.className = 'badge-health-card warning';
+              statusEl.textContent = 'Yavaş';
+              statusSub.textContent = '30 günden fazla aktivite yok';
+            } else {
+              card.className = 'badge-health-card error';
+              statusEl.textContent = 'Pasif';
+              statusSub.textContent = 'hiç rozet kazanılmamış';
+            }
+
+            if (h.last_earned) {
+              var d = new Date(h.last_earned);
+              lastEl.textContent = d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' });
+              var min = h.last_earned_minutes_ago || 0;
+              var ago;
+              if (min < 60) ago = min + ' dk önce';
+              else if (min < 1440) ago = Math.floor(min / 60) + ' saat önce';
+              else ago = Math.floor(min / 1440) + ' gün önce';
+              lastSub.textContent = ago;
+            } else {
+              lastEl.textContent = '—';
+              lastSub.textContent = 'henüz kazanılmadı';
+            }
+
+            weekEl.textContent = (h.week_count || 0).toLocaleString('tr-TR');
+            usersEl.textContent = (h.total_users_with_badges || 0) + ' / ' + (h.total_users || 0);
+            usersSub.textContent = (h.total_badges_awarded || 0) + ' rozet toplam';
+          }
+        } catch (healthErr) {
+          console.warn('[badge-health]', healthErr);
+        }
+
         var bRes = await sb.rpc('admin_badge_stats');
         if (bRes.error) throw bRes.error;
         var badges = bRes.data || [];
@@ -4082,6 +4350,18 @@
     });
   })();
   </script>
+
+<!-- Online users modal -->
+<div class="reschedule-modal" id="online-modal">
+  <div class="rm-card" style="max-width: 520px;">
+    <h3>Şu An Online</h3>
+    <div class="rm-sub" id="online-modal-sub">Yükleniyor...</div>
+    <div id="online-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 1rem;"></div>
+    <div class="rm-actions">
+      <button id="online-close">Kapat</button>
+    </div>
+  </div>
+</div>
 
 <!-- Reschedule modal -->
 <div class="reschedule-modal" id="reschedule-modal">

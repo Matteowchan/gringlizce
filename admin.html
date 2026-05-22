@@ -2054,6 +2054,7 @@
               </select>
               <input type="datetime-local" id="campaign-when">
               <button class="save-btn" id="campaign-queue-btn">Kuyruğa al</button>
+              <button class="save-btn" id="campaign-send-now-btn" style="background: var(--gold, #c89a3c); color: #fff; border-color: var(--gold);">Hemen Gönder</button>
             </div>
             <div class="status-line" id="campaign-status"></div>
           </div>
@@ -3733,6 +3734,7 @@
         }
 
         $('campaign-queue-btn').addEventListener('click', queueCampaign);
+        $('campaign-send-now-btn').addEventListener('click', sendCampaignNow);
 
         var campRes = await sb.rpc('admin_recent_campaigns', { p_limit: 20 });
         if (campRes.error) throw campRes.error;
@@ -3793,6 +3795,77 @@
         $('audience-count').textContent = '?';
       }
     }
+    async function sendCampaignNow() {
+      var name = $('campaign-name').value.trim();
+      var tmpl = $('campaign-template').value;
+      var st = $('campaign-status');
+      var queueBtn = $('campaign-queue-btn');
+      var sendBtn = $('campaign-send-now-btn');
+
+      if (!name || !tmpl) {
+        st.textContent = 'Kampanya adı ve şablon zorunlu.';
+        st.style.color = '#c44';
+        return;
+      }
+      if (COMMS_AUDIENCE.activity === 'specific' && (!COMMS_AUDIENCE.user_ids || !COMMS_AUDIENCE.user_ids.length)) {
+        st.textContent = 'En az bir kullanıcı seç.';
+        st.style.color = '#c44';
+        return;
+      }
+
+      // Disable buttons during send
+      queueBtn.disabled = true;
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Gönderiliyor...';
+      st.textContent = 'Kampanya kuyruğa alınıyor...';
+      st.style.color = 'var(--text-soft)';
+
+      try {
+        // Step 1: queue immediately (scheduled_at = now)
+        var nowIso = new Date().toISOString();
+        var qRes = await sb.rpc('admin_queue_campaign', {
+          p_name: name,
+          p_template_id: tmpl,
+          p_audience_filter: COMMS_AUDIENCE,
+          p_scheduled_at: nowIso
+        });
+        if (qRes.error) throw qRes.error;
+
+        st.textContent = 'Edge function tetikleniyor, gönderim başlıyor...';
+
+        // Step 2: invoke edge function directly via Supabase JS client
+        var fnRes = await sb.functions.invoke('send-queued-emails', { body: {} });
+        if (fnRes.error) throw fnRes.error;
+
+        var d = fnRes.data || {};
+        var processed = d.processed || 0;
+        var sent = d.sent || 0;
+        var failed = d.failed || 0;
+        st.textContent = 'Gönderim tamamlandı. İşlenen kampanya: ' + processed + ', gönderilen email: ' + sent + (failed ? ', başarısız: ' + failed : '') + '.';
+        st.style.color = '#5a8a3a';
+
+        // Reset form
+        $('campaign-name').value = '';
+        $('campaign-template').value = '';
+        $('campaign-when').value = '';
+        SELECTED_USER_IDS.clear();
+        if (COMMS_AUDIENCE.user_ids) COMMS_AUDIENCE.user_ids = [];
+        var upCount = $('up-selected-count');
+        if (upCount) upCount.textContent = '0 kişi seçildi';
+        var upSel = $('user-picker-selected');
+        if (upSel) upSel.innerHTML = '';
+
+        setTimeout(function () { NEW_TAB_LOADED.comms = false; loadCommsTab(); }, 1500);
+      } catch (e) {
+        st.textContent = 'Hata: ' + (e.message || e);
+        st.style.color = '#c44';
+      } finally {
+        queueBtn.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Hemen Gönder';
+      }
+    }
+
     async function queueCampaign() {
       var name = $('campaign-name').value.trim();
       var tmpl = $('campaign-template').value;

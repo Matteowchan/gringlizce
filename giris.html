@@ -825,6 +825,16 @@
         // Supabase'in email confirmation ayarı açıksa: kullanıcı maili onaylamadan login olmaz
         // Ayar kapalıysa: doğrudan session gelir
         if (result.data && result.data.session) {
+          // Google Ads conversion event (otomatik login durumu)
+          try {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+              event: 'gringlizce_signup',
+              signup_method: 'email',
+              signup_flow: 'auto_login'
+            });
+          } catch (e) { console.warn('[gtm signup event]', e); }
+
           // Otomatik giriş, panele yönlendir
           okBox.textContent = 'Hesabın açıldı, yönlendiriliyor...';
           okBox.classList.add('show');
@@ -832,6 +842,16 @@
             window.location.href = '/panelim.html';
           }, 1000);
         } else {
+          // Google Ads conversion event (email doğrulama gerekiyor)
+          try {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+              event: 'gringlizce_signup',
+              signup_method: 'email',
+              signup_flow: 'email_confirmation_pending'
+            });
+          } catch (e) { console.warn('[gtm signup event]', e); }
+
           okBox.textContent = 'Hesabın açıldı. E-postanı kontrol et, doğrulama bağlantısına tıkladıktan sonra giriş yapabilirsin.';
           okBox.classList.add('show');
           btn.disabled = false;

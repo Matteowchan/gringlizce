@@ -433,3 +433,46 @@
     initHoverDropdowns();
   }
 })();
+
+
+/* -------- Scroll to top button -------- */
+(function() {
+  function injectScrollToTop() {
+    if (document.getElementById('scroll-to-top')) return;
+    var btn = document.createElement('button');
+    btn.id = 'scroll-to-top';
+    btn.className = 'scroll-to-top';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Yukarı çık');
+    btn.setAttribute('title', 'Yukarı çık');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg>';
+    document.body.appendChild(btn);
+
+    var ticking = false;
+    function update() {
+      btn.classList.toggle('visible', window.scrollY > 400);
+      ticking = false;
+    }
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+    update();
+
+    btn.addEventListener('click', function() {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectScrollToTop);
+  } else {
+    injectScrollToTop();
+  }
+})();

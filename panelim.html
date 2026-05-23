@@ -217,6 +217,49 @@
     .qb-list-card.qb-missing { cursor: default; opacity: 0.55; }
     .qb-list-card.qb-missing:hover { border-color: var(--line); background: var(--bg-card); }
 
+    /* Wrapper: card + remove button */
+    .qb-list-card-wrap {
+      position: relative;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .qb-list-card-wrap.is-removing {
+      opacity: 0;
+      transform: translateX(8px);
+      pointer-events: none;
+    }
+    .qb-list-card-wrap .qb-list-card { padding-right: 2.6rem; }
+    .qb-card-remove {
+      position: absolute;
+      top: 50%;
+      right: 0.5rem;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 50%;
+      color: var(--text-muted, #6B6862);
+      font-size: 1.3rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-family: inherit;
+      padding: 0;
+    }
+    .qb-card-remove:hover {
+      background: rgba(179, 58, 58, 0.08);
+      border-color: rgba(179, 58, 58, 0.3);
+      color: #b33a3a;
+    }
+    .qb-card-remove:focus-visible {
+      outline: 2px solid rgba(179, 58, 58, 0.4);
+      outline-offset: 2px;
+    }
+    .qb-card-remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
     .qb-list-card .qb-main {
       min-width: 0;
       display: flex;
@@ -2903,20 +2946,27 @@
       var promptText = (q.prompt || '').replace(/<[^>]*>/g, '').trim();
       var preview = promptText.slice(0, 90) + (promptText.length > 90 ? '…' : '');
       var dateStr = formatRelativeDate(date);
-      var cta = type === 'wrong' ? 'Tekrar Çöz' : 'Aç';
+      var cta = type === 'wrong' ? 'Kategoriyi Çöz' : 'Kategoriyi Aç';
+      // Hedef: tek soru yerine subcategory'deki tüm sorular
+      var href = q.subcategory
+        ? 'soru.html?subcategory=' + encodeURIComponent(q.subcategory)
+        : 'soru.html?q=' + encodeURIComponent(q.slug);
 
       return [
-        '<a href="soru.html?q=' + encodeURIComponent(q.slug) + '" class="qb-list-card">',
-        '  <div class="qb-main">',
-        '    <div class="qb-head-line">',
-        '      <span class="qb-badge">' + escHtmlPanel(exam + sectionLabel) + '</span>',
-        '      <span class="qb-cat">' + escHtmlPanel(subcat) + '</span>',
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(q.slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <a href="' + href + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">' + escHtmlPanel(exam + sectionLabel) + '</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(subcat) + '</span>',
+        '      </div>',
+        preview ? '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>' : '',
         '    </div>',
-        preview ? '    <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>' : '',
-        '  </div>',
-        '  <span class="qb-date">' + escHtmlPanel(dateStr) + '</span>',
-        '  <span class="qb-cta">' + cta + ' &rsaquo;</span>',
-        '</a>'
+        '    <span class="qb-date">' + escHtmlPanel(dateStr) + '</span>',
+        '    <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '  </a>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+        '</div>'
       ].join('');
     }
 
@@ -3080,16 +3130,19 @@
 
     function renderMissingCard(slug, date, type) {
       return [
-        '<div class="qb-list-card qb-missing">',
-        '  <div class="qb-main">',
-        '    <div class="qb-head-line">',
-        '      <span class="qb-badge" style="color: var(--text-muted);">—</span>',
-        '      <span class="qb-cat" style="color: var(--text-muted);">Bu soru artık aktif değil</span>',
+        '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <div class="qb-list-card qb-missing">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge" style="color: var(--text-muted);">—</span>',
+        '        <span class="qb-cat" style="color: var(--text-muted);">Bu soru artık aktif değil</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(slug) + '</p>',
         '    </div>',
-        '    <p class="qb-prompt">' + escHtmlPanel(slug) + '</p>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '    <span class="qb-cta" style="color: var(--text-muted);">—</span>',
         '  </div>',
-        '  <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
-        '  <span class="qb-cta" style="color: var(--text-muted);">—</span>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
         '</div>'
       ].join('');
     }
@@ -3110,6 +3163,86 @@
       var header = e.target.closest('.collapse-card[data-collapse] > .cc-header');
       if (!header) return;
       header.parentElement.classList.toggle('open');
+    });
+
+    // X butonu: yer iminden veya yanlış listesinden çıkar
+    document.addEventListener('click', async function (e) {
+      var btn = e.target.closest('.qb-card-remove');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      var wrap = btn.closest('.qb-list-card-wrap');
+      if (!wrap) return;
+      var slug = wrap.dataset.slug;
+      var type = wrap.dataset.type;
+      if (!slug || !type) return;
+
+      btn.disabled = true;
+
+      try {
+        if (!window.supabase || !window.supabase.createClient) {
+          throw new Error('Supabase yüklü değil');
+        }
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) {
+          throw new Error('Oturum yok');
+        }
+        var userId = sess.data.session.user.id;
+
+        var delRes;
+        if (type === 'bookmark') {
+          delRes = await sbCli.from('user_bookmarks')
+            .delete()
+            .eq('user_id', userId)
+            .eq('question_slug', slug);
+        } else if (type === 'wrong') {
+          delRes = await sbCli.from('user_answers')
+            .delete()
+            .eq('user_id', userId)
+            .eq('question_slug', slug)
+            .eq('status', 'incorrect');
+        } else {
+          throw new Error('Bilinmeyen tip: ' + type);
+        }
+
+        if (delRes && delRes.error) {
+          throw delRes.error;
+        }
+
+        // DOM'dan kaldır
+        wrap.classList.add('is-removing');
+        setTimeout(function () {
+          var grid = wrap.parentElement;
+          wrap.remove();
+
+          // Sayacı güncelle ve boş duruma geç
+          if (grid && grid.id === 'bookmarks-grid') {
+            var remaining = grid.querySelectorAll('.qb-list-card-wrap').length;
+            var countEl = document.getElementById('bookmarks-count');
+            if (countEl) countEl.textContent = remaining > 0 ? remaining + ' soru işaretli' : '0 soru';
+            if (remaining === 0) {
+              var emptyEl = document.getElementById('bookmarks-empty');
+              if (emptyEl) emptyEl.style.display = 'flex';
+            }
+          } else if (grid && grid.id === 'wrong-answers-grid') {
+            var remaining2 = grid.querySelectorAll('.qb-list-card-wrap').length;
+            var countEl2 = document.getElementById('wrong-answers-count');
+            if (countEl2) countEl2.textContent = remaining2 > 0 ? remaining2 + ' soru tekrar çalışmayı bekliyor' : '0 soru';
+            if (remaining2 === 0) {
+              var emptyEl2 = document.getElementById('wrong-answers-empty');
+              if (emptyEl2) emptyEl2.style.display = 'flex';
+            }
+          }
+        }, 200);
+      } catch (err) {
+        console.warn('[qb-card-remove] failed:', err);
+        btn.disabled = false;
+        alert('Çıkarılamadı. Tekrar dene.');
+      }
     });
 
     (async function loadWrongAnswers() {

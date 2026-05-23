@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğretmen Paneli | Gri English</title>
+  <meta name="description" content="Öğretmen paneli — sınıflarını yönet, öğrencilerin ilerlemesini gör.">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="canonical" href="https://gringlizce.com/ogretmen.html">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/users.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/site-config.js" defer></script>
+  <style>
+    .ot-hero { padding: 2.5rem 0 1.5rem; }
+    .ot-hero .ot-eyebrow {
+      display: inline-block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    .ot-hero h1 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      margin: 0.1rem 0 0.4rem;
+      color: var(--text, #1A2230);
+    }
+    .ot-hero p.lead {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, #555);
+      font-size: 1.05rem;
+      margin: 0;
+      max-width: 60ch;
+    }
+
+    /* Onboarding (henüz öğretmen değilse) */
+    .ot-onboard {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 2.5rem 2rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .ot-onboard h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.6rem;
+      margin: 0 0 0.7rem;
+      color: var(--text);
+    }
+    .ot-onboard p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      max-width: 60ch;
+      margin: 0 auto 1.5rem;
+      line-height: 1.6;
+    }
+    .ot-onboard ul.ot-benefits {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.7rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ot-onboard ul.ot-benefits li {
+      padding: 0.7rem 0.9rem;
+      background: var(--bg-soft, #F0EBDE);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      text-align: left;
+    }
+    .ot-onboard-btn {
+      display: inline-block;
+      padding: 0.85rem 1.8rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .ot-onboard-btn:hover { background: #234644; }
+    .ot-onboard-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* Action bar */
+    .ot-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 1rem 0 1.2rem;
+      padding: 0.9rem 1.1rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+    }
+    .ot-actions .ot-summary {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+    }
+    .ot-actions .ot-summary strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .ot-btn-primary {
+      padding: 0.65rem 1.2rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .ot-btn-primary:hover { background: #234644; }
+    .ot-btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    /* Class grid */
+    .ot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .ot-class-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 1.3rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+    .ot-class-card:hover {
+      border-color: var(--gold, #C89A3C);
+    }
+    .ot-class-card .occ-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .ot-class-card .occ-name {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .ot-class-card .occ-menu-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      color: var(--text-muted, #8a9099);
+      border-radius: 3px;
+      font-size: 1.2rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ot-class-card .occ-menu-btn:hover {
+      background: var(--bg-soft);
+      color: var(--text);
+    }
+    .ot-class-card .occ-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .ot-class-card .occ-stats {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 0.4rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--line, #D9D2C4);
+    }
+    .ot-class-card .occ-stat {
+      flex: 1;
+    }
+    .ot-class-card .occ-stat .stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--teal, #2C5856);
+      line-height: 1;
+      display: block;
+    }
+    .ot-class-card .occ-stat .stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      display: block;
+    }
+    .ot-class-card .occ-join {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0.8rem;
+      background: var(--bg-soft, #F0EBDE);
+      border: 1px dashed var(--line, #D9D2C4);
+      border-radius: 3px;
+      margin-top: 0.4rem;
+    }
+    .ot-class-card .occ-join-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .ot-class-card .occ-join-code {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--teal);
+      letter-spacing: 0.15em;
+    }
+    .ot-class-card .occ-join-copy {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 0.3rem 0.65rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .ot-class-card .occ-join-copy:hover {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+    .ot-class-card .occ-join-copy.copied {
+      background: var(--gold);
+      color: #fff;
+      border-color: var(--gold);
+    }
+
+    /* Empty state */
+    .ot-empty {
+      background: var(--bg-card);
+      border: 1px dashed var(--line);
+      padding: 3rem 2rem;
+      text-align: center;
+      margin: 1rem 0 3rem;
+    }
+    .ot-empty h3 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.3rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    .ot-empty p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      max-width: 50ch;
+      margin: 0 auto;
+    }
+
+    /* Modal */
+    .ot-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 25, 40, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .ot-modal.show { display: flex; }
+    .ot-modal-box {
+      background: var(--bg, #F4EFE3);
+      border: 1px solid var(--line);
+      max-width: 460px;
+      width: 100%;
+      padding: 2rem 2rem 1.6rem;
+    }
+    .ot-modal-box h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    .ot-modal-box p.modal-sub {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      margin: 0 0 1.5rem;
+      font-size: 0.92rem;
+    }
+    .ot-modal-box label {
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+    .ot-modal-box input,
+    .ot-modal-box textarea {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line);
+      padding: 0.8rem 1rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+      box-sizing: border-box;
+    }
+    .ot-modal-box input:focus,
+    .ot-modal-box textarea:focus {
+      outline: none;
+      border-color: var(--teal);
+    }
+    .ot-modal-box textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    .ot-modal-actions {
+      display: flex;
+      gap: 0.7rem;
+      margin-top: 0.5rem;
+    }
+    .ot-modal-cancel {
+      flex: 0 0 auto;
+      padding: 0.9rem 1.4rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text-soft);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .ot-modal-submit {
+      flex: 1;
+      padding: 0.9rem;
+      background: var(--teal);
+      color: #F4EFE3;
+      border: 1px solid var(--teal);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .ot-modal-submit:hover { background: #234644; }
+    .ot-modal-submit:disabled { opacity: 0.5; cursor: default; }
+    .ot-modal .err {
+      color: #b45046;
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      margin-top: 0.3rem;
+      min-height: 1.3rem;
+    }
+
+    /* Created class success card */
+    .ot-created-banner {
+      background: linear-gradient(135deg, rgba(44,88,86,0.08), rgba(200,154,60,0.08));
+      border: 1px solid var(--teal);
+      padding: 1.2rem 1.4rem;
+      margin: 1.2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .ot-created-banner .ocb-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .ot-created-banner .ocb-text h4 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.1rem;
+      margin: 0 0 0.3rem;
+      color: var(--text);
+    }
+    .ot-created-banner .ocb-text p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .ot-created-banner .ocb-code {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--teal);
+      letter-spacing: 0.18em;
+      padding: 0.6rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--teal);
+      border-radius: 4px;
+    }
+    .ot-created-banner .ocb-close {
+      background: transparent;
+      border: 1px solid var(--line);
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 3px;
+      font-size: 1.1rem;
+    }
+    .ot-created-banner .ocb-close:hover {
+      color: var(--text);
+      border-color: var(--text);
+    }
+
+    @media (max-width: 600px) {
+      .ot-grid { grid-template-columns: 1fr; }
+      .ot-actions { flex-direction: column; align-items: stretch; }
+      .ot-btn-primary { width: 100%; }
+      .ot-onboard { padding: 1.8rem 1.2rem; }
+    }
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+</head>
+<body>
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="panelim.html">Panelim</a></li>
+          <li><a href="ogretmen.html" class="active">Öğretmen Paneli</a></li>
+          <li><a href="index.html">Anasayfa</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions"></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-bottom: 4rem;">
+
+    <!-- Hero -->
+    <section class="ot-hero">
+      <span class="ot-eyebrow">Öğretmen</span>
+      <h1>Öğretmen Paneli</h1>
+      <p class="lead">Sınıflarını yönet, öğrencilerinin ilerlemesini tek bakışta gör, ödev ata.</p>
+    </section>
+
+    <!-- Loading state -->
+    <div id="ot-loading" style="text-align:center; padding: 3rem 0; color: var(--text-muted);">
+      <p style="font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic;">Yükleniyor...</p>
+    </div>
+
+    <!-- Not logged in -->
+    <div id="ot-need-login" style="display:none;" class="ot-onboard">
+      <h2>Giriş yapmanız gerekiyor</h2>
+      <p>Öğretmen paneline erişebilmek için hesabınla giriş yap, ya da yoksa hesap aç.</p>
+      <a href="giris.html?return=/ogretmen.html" class="ot-onboard-btn">Giriş Yap</a>
+    </div>
+
+    <!-- Onboarding: not a teacher yet -->
+    <div id="ot-onboard" style="display:none;" class="ot-onboard">
+      <h2>Öğretmen Olarak Kayıt Ol</h2>
+      <p>Sınıflarını oluştur, öğrencilerini ekle, ödev ata. Tamamen ücretsiz, hemen başlayabilirsin.</p>
+      <ul class="ot-benefits">
+        <li>Sınıf oluştur, kod ile öğrenci davet et</li>
+        <li>Öğrenci ilerlemesini detaylı izle</li>
+        <li>Soru bankası, writing, reading ödevleri ata</li>
+        <li>Birden fazla sınav türünü tek sınıfta yönet</li>
+      </ul>
+      <button id="ot-become-btn" class="ot-onboard-btn" type="button">Öğretmen Olarak Devam Et</button>
+      <p id="ot-become-err" class="err" style="margin-top:1rem; color:#b45046;"></p>
+    </div>
+
+    <!-- Teacher dashboard -->
+    <div id="ot-dashboard" style="display:none;">
+
+      <!-- New class created banner (after create) -->
+      <div id="ot-created" class="ot-created-banner" style="display:none;">
+        <div class="ocb-text">
+          <h4>Sınıfın oluşturuldu</h4>
+          <p>Bu kodu öğrencilerinle paylaş. Panelim'den "Sınıfa Katıl" diyerek girebilirler.</p>
+        </div>
+        <div class="ocb-code" id="ot-created-code">A7B2X9</div>
+        <button class="ocb-close" type="button" id="ot-created-close" aria-label="Kapat">×</button>
+      </div>
+
+      <!-- Actions bar -->
+      <div class="ot-actions">
+        <div class="ot-summary">
+          <strong id="ot-class-count">0</strong> sınıf, toplam <strong id="ot-student-count">0</strong> öğrenci
+        </div>
+        <button id="ot-new-class-btn" class="ot-btn-primary" type="button">+ Yeni Sınıf</button>
+      </div>
+
+      <!-- Class grid -->
+      <div id="ot-class-grid" class="ot-grid"></div>
+
+      <!-- Empty state -->
+      <div id="ot-empty" class="ot-empty" style="display:none;">
+        <h3>Henüz sınıfın yok</h3>
+        <p>İlk sınıfını oluştur, sistemin verdiği kodu öğrencilerinle paylaş. Onlar sınıfa katılınca ilerlemelerini burada izleyebilirsin.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Create class modal -->
+  <div class="ot-modal" id="modal-create-class">
+    <div class="ot-modal-box">
+      <h2>Yeni Sınıf Oluştur</h2>
+      <p class="modal-sub">Sınıf adını ve kısa açıklamayı belirle. Sonra sistemin verdiği kodu öğrencilerine vereceksin.</p>
+
+      <form id="ocl-form">
+        <label for="ocl-name">Sınıf Adı</label>
+        <input type="text" id="ocl-name" autocomplete="off" maxlength="100" required placeholder="Örn. 10A SAT R/W">
+
+        <label for="ocl-desc">Açıklama (Opsiyonel)</label>
+        <textarea id="ocl-desc" rows="2" maxlength="300" placeholder="Örn. SAT R/W için kamp + soru çözümü"></textarea>
+
+        <div class="ot-modal-actions">
+          <button type="button" class="ot-modal-cancel" id="ocl-cancel">Vazgeç</button>
+          <button type="submit" class="ot-modal-submit" id="ocl-submit">Oluştur</button>
+        </div>
+
+        <div class="err" id="ocl-err"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+      var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+      if (!window.supabase || !window.supabase.createClient) {
+        console.error('Supabase yüklenemedi');
+        return;
+      }
+      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+
+      var elLoading   = document.getElementById('ot-loading');
+      var elNeedLogin = document.getElementById('ot-need-login');
+      var elOnboard   = document.getElementById('ot-onboard');
+      var elDashboard = document.getElementById('ot-dashboard');
+      var elBecomeBtn = document.getElementById('ot-become-btn');
+      var elBecomeErr = document.getElementById('ot-become-err');
+
+      function show(id) {
+        ['ot-loading','ot-need-login','ot-onboard','ot-dashboard'].forEach(function (i) {
+          var el = document.getElementById(i);
+          if (el) el.style.display = (i === id) ? '' : 'none';
+        });
+      }
+
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
+      function fmtDate(s) {
+        if (!s) return '';
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+      }
+
+      // 1. Session + role check
+      var sessRes = await sb.auth.getSession();
+      if (!sessRes || !sessRes.data || !sessRes.data.session) {
+        show('ot-need-login');
+        return;
+      }
+      var userId = sessRes.data.session.user.id;
+
+      var profRes = await sb.from('profiles').select('role').eq('id', userId).maybeSingle();
+      var role = (profRes && profRes.data && profRes.data.role) || 'customer';
+
+      if (role !== 'teacher' && role !== 'admin') {
+        // 2. Onboarding: become teacher
+        show('ot-onboard');
+
+        elBecomeBtn.addEventListener('click', async function () {
+          elBecomeBtn.disabled = true;
+          elBecomeErr.textContent = '';
+          try {
+            var rpc = await sb.rpc('teacher_become');
+            if (rpc.error) throw rpc.error;
+            // Yenile, dashboard'a geç
+            window.location.reload();
+          } catch (err) {
+            elBecomeErr.textContent = 'Bir sorun oluştu: ' + (err.message || err);
+            elBecomeBtn.disabled = false;
+          }
+        });
+        return;
+      }
+
+      // 3. Teacher dashboard
+      show('ot-dashboard');
+      await loadClasses();
+
+      // === Class list loading ===
+      async function loadClasses() {
+        var grid = document.getElementById('ot-class-grid');
+        var empty = document.getElementById('ot-empty');
+        try {
+          var res = await sb.rpc('list_my_classes');
+          if (res.error) throw res.error;
+          var classes = res.data || [];
+
+          // Summary
+          document.getElementById('ot-class-count').textContent = classes.length;
+          var totalStudents = classes.reduce(function (sum, c) {
+            return sum + (parseInt(c.member_count) || 0);
+          }, 0);
+          document.getElementById('ot-student-count').textContent = totalStudents;
+
+          if (classes.length === 0) {
+            grid.innerHTML = '';
+            empty.style.display = '';
+            return;
+          }
+          empty.style.display = 'none';
+
+          grid.innerHTML = classes.map(function (c) {
+            var descHtml = c.description
+              ? '<p class="occ-desc">' + esc(c.description) + '</p>'
+              : '';
+            return '<div class="ot-class-card" data-id="' + esc(c.class_id) + '">'
+              + '<div class="occ-head">'
+              + '<h3 class="occ-name">' + esc(c.name) + '</h3>'
+              + '<button class="occ-menu-btn" data-action="archive" data-id="' + esc(c.class_id) + '" title="Sınıfı arşivle">×</button>'
+              + '</div>'
+              + descHtml
+              + '<div class="occ-stats">'
+              + '<div class="occ-stat"><span class="stat-val">' + c.member_count + '</span><span class="stat-label">Öğrenci</span></div>'
+              + '<div class="occ-stat"><span class="stat-val">' + c.assignment_count + '</span><span class="stat-label">Ödev</span></div>'
+              + '</div>'
+              + '<div class="occ-join">'
+              + '<div><div class="occ-join-label">Sınıf Kodu</div><div class="occ-join-code">' + esc(c.join_code) + '</div></div>'
+              + '<button class="occ-join-copy" data-code="' + esc(c.join_code) + '" type="button">Kopyala</button>'
+              + '</div>'
+              + '</div>';
+          }).join('');
+
+          // Bind copy buttons
+          grid.querySelectorAll('.occ-join-copy').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var code = btn.dataset.code;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function () {
+                  btn.textContent = 'Kopyalandı';
+                  btn.classList.add('copied');
+                  setTimeout(function () {
+                    btn.textContent = 'Kopyala';
+                    btn.classList.remove('copied');
+                  }, 1500);
+                });
+              }
+            });
+          });
+
+          // Bind archive buttons
+          grid.querySelectorAll('[data-action="archive"]').forEach(function (btn) {
+            btn.addEventListener('click', async function (e) {
+              e.stopPropagation();
+              var id = btn.dataset.id;
+              if (!confirm('Bu sınıfı arşivlemek istiyor musun? Öğrenciler artık erişemez, ödevler korunur.')) return;
+              btn.disabled = true;
+              try {
+                var r = await sb.rpc('archive_class', { p_class_id: id });
+                if (r.error) throw r.error;
+                await loadClasses();
+              } catch (err) {
+                alert('Arşivleme başarısız: ' + (err.message || err));
+                btn.disabled = false;
+              }
+            });
+          });
+
+          // Click card → go to class detail (Phase 2 — for now disabled)
+          // grid.querySelectorAll('.ot-class-card').forEach(function (card) {
+          //   card.addEventListener('click', function () {
+          //     window.location.href = 'ogretmen-sinif.html?id=' + card.dataset.id;
+          //   });
+          // });
+        } catch (err) {
+          grid.innerHTML = '<p style="color:#b45046; font-style:italic;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      // === New class modal ===
+      var modal = document.getElementById('modal-create-class');
+      var modalForm = document.getElementById('ocl-form');
+      var modalCancel = document.getElementById('ocl-cancel');
+      var modalErr = document.getElementById('ocl-err');
+      var newBtn = document.getElementById('ot-new-class-btn');
+
+      function openModal() {
+        modalErr.textContent = '';
+        modalForm.reset();
+        modal.classList.add('show');
+        setTimeout(function () {
+          var nameInput = document.getElementById('ocl-name');
+          if (nameInput) nameInput.focus();
+        }, 50);
+      }
+      function closeModal() {
+        modal.classList.remove('show');
+      }
+
+      newBtn.addEventListener('click', openModal);
+      modalCancel.addEventListener('click', closeModal);
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+      });
+
+      modalForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var name = document.getElementById('ocl-name').value.trim();
+        var desc = document.getElementById('ocl-desc').value.trim();
+        if (!name) {
+          modalErr.textContent = 'Sınıf adı boş olamaz.';
+          return;
+        }
+        var submitBtn = document.getElementById('ocl-submit');
+        submitBtn.disabled = true;
+        modalErr.textContent = '';
+        try {
+          var r = await sb.rpc('create_class', { p_name: name, p_description: desc || null });
+          if (r.error) throw r.error;
+          var joinCode = (r.data && r.data.join_code) || '';
+          closeModal();
+          // Show created banner
+          var banner = document.getElementById('ot-created');
+          document.getElementById('ot-created-code').textContent = joinCode;
+          banner.style.display = '';
+          // Reload list
+          await loadClasses();
+        } catch (err) {
+          modalErr.textContent = 'Sınıf oluşturulamadı: ' + (err.message || err);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      document.getElementById('ot-created-close').addEventListener('click', function () {
+        document.getElementById('ot-created').style.display = 'none';
+      });
+
+      // ESC closes modal
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+      });
+    })();
+  </script>
+</body>
+</html>

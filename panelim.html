@@ -2207,17 +2207,62 @@
     }
     .cl-status.success { color: var(--teal); }
     .cl-status.error { color: #b45046; }
-    .cl-teacher-link {
+
+    /* Teacher CTA banner */
+    .cl-teacher-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      padding: 1.1rem 1.4rem;
+      background: linear-gradient(135deg, rgba(44,88,86,0.08), rgba(200,154,60,0.10));
+      border: 1px solid var(--gold, #C89A3C);
+      border-radius: 4px;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .cl-teacher-banner.cl-teacher-banner-empty { display: none; }
+    .cl-teacher-banner .ctb-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .cl-teacher-banner .ctb-text strong {
+      display: block;
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.05rem;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .cl-teacher-banner .ctb-text span {
+      display: block;
       font-family: var(--font-serif, 'Crimson Pro'), serif;
       font-style: italic;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin: 0.8rem 0 0;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      line-height: 1.4;
     }
-    .cl-teacher-link a {
-      color: var(--teal);
-      text-decoration: underline;
-      text-underline-offset: 2px;
+    .cl-teacher-banner-btn {
+      padding: 0.7rem 1.4rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .cl-teacher-banner-btn:hover { background: #234644; }
+    .cl-teacher-banner-btn:disabled { opacity: 0.5; cursor: default; }
+    @media (max-width: 600px) {
+      .cl-teacher-banner { flex-direction: column; align-items: stretch; }
+      .cl-teacher-banner-btn { width: 100%; text-align: center; }
     }
     .cl-list {
       display: flex;
@@ -2748,6 +2793,9 @@
       <h2>Sınıflarım</h2>
     </div>
 
+    <!-- Teacher CTA banner (içerik role'e göre JS ile doldurulur) -->
+    <div class="cl-teacher-banner" id="cl-teacher-banner"></div>
+
     <div class="dual-grid">
       <!-- Sınıfa Katıl kartı -->
       <div id="classes-join-area" class="collapse-card always-open">
@@ -2766,12 +2814,6 @@
             <button id="classes-join-btn" type="button" class="cl-join-btn">Katıl</button>
           </div>
           <p class="cl-status" id="classes-join-status"></p>
-          <p class="cl-teacher-link" id="classes-teacher-link" style="display:none;">
-            Sen bir öğretmen misin? <a href="ogretmen.html">Öğretmen Paneline Git →</a>
-          </p>
-          <p class="cl-teacher-link" id="classes-become-teacher-wrap">
-            Sen bir öğretmen misin? <a href="ogretmen.html">Öğretmen olarak kaydol →</a>
-          </p>
         </div></div>
       </div>
 
@@ -4347,14 +4389,52 @@
         if (!sess || !sess.data || !sess.data.session) return;
         var userId = sess.data.session.user.id;
 
-        // Rol kontrol et — öğretmen ise "Paneline Git" link'ini göster
+        // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
         var roleRes = await sbCli.from('profiles').select('role').eq('id', userId).maybeSingle();
         var userRole = (roleRes && roleRes.data && roleRes.data.role) || 'customer';
-        var teacherLinkEl = document.getElementById('classes-teacher-link');
-        var becomeTeacherEl = document.getElementById('classes-become-teacher-wrap');
+        var banner = document.getElementById('cl-teacher-banner');
+
+        function renderBannerForTeacher() {
+          banner.innerHTML = ''
+            + '<div class="ctb-text">'
+            + '<strong>Öğretmen Paneli</strong>'
+            + '<span>Sınıflarını oluştur, öğrenci ilerlemelerini gör, ödev ata.</span>'
+            + '</div>'
+            + '<a href="ogretmen.html" class="cl-teacher-banner-btn">Panele Git →</a>';
+        }
+
+        function renderBannerForCustomer() {
+          banner.innerHTML = ''
+            + '<div class="ctb-text">'
+            + '<strong>Sen bir öğretmen misin?</strong>'
+            + '<span>Sınıflar oluştur, ödev ata, öğrencilerini takip et. Tamamen ücretsiz.</span>'
+            + '</div>'
+            + '<button id="cl-become-teacher" class="cl-teacher-banner-btn" type="button">Öğretmen Olarak Kaydol</button>';
+
+          var becomeBtn = document.getElementById('cl-become-teacher');
+          if (becomeBtn) {
+            becomeBtn.addEventListener('click', async function () {
+              if (!confirm('Öğretmen olarak kaydolacaksın. Bu işlem geri alınabilir. Devam edilsin mi?')) return;
+              becomeBtn.disabled = true;
+              becomeBtn.textContent = 'Kaydediliyor...';
+              try {
+                var rpc = await sbCli.rpc('teacher_become');
+                if (rpc.error) throw rpc.error;
+                // Öğretmen paneline yönlendir
+                window.location.href = 'ogretmen.html';
+              } catch (err) {
+                alert('Bir sorun oluştu: ' + (err.message || err));
+                becomeBtn.disabled = false;
+                becomeBtn.textContent = 'Öğretmen Olarak Kaydol';
+              }
+            });
+          }
+        }
+
         if (userRole === 'teacher' || userRole === 'admin') {
-          if (teacherLinkEl) teacherLinkEl.style.display = '';
-          if (becomeTeacherEl) becomeTeacherEl.style.display = 'none';
+          renderBannerForTeacher();
+        } else {
+          renderBannerForCustomer();
         }
 
         // === Sınıfa katıl ===

@@ -55,6 +55,20 @@
     .modal-box label { display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); margin-bottom: 0.4rem; }
     .modal-box input { width: 100%; background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.85rem 1rem; font-family: var(--font-body, Georgia), serif; font-size: 1rem; color: var(--text, #1A2230); margin-bottom: 1.2rem; }
     .modal-box input:focus { outline: none; border-color: var(--teal, #2C5856); }
+    .modal-box textarea {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-body, Georgia), serif;
+      font-size: 1rem;
+      color: var(--text, #1A2230);
+      margin-bottom: 1.2rem;
+      resize: vertical;
+      min-height: 60px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .modal-box textarea:focus { outline: none; border-color: var(--teal, #2C5856); }
     .modal-actions { display: flex; gap: 0.8rem; margin-top: 0.5rem; }
     .btn-cancel { flex: 1; padding: 0.9rem; background: transparent; color: var(--text-muted, #6B6862); border: 1px solid var(--line, #D9D2C4); font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
     .btn-cancel:hover { color: var(--text, #1A2230); border-color: var(--text, #1A2230); }
@@ -565,6 +579,62 @@
       flex-shrink: 0;
     }
     .vocab-card-delete:hover { color: var(--text); background: var(--bg-card); }
+
+    /* Vocab review butonu (vocab_review + vocab_recurrence rozetleri için) */
+    .vocab-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+    .vocab-card-review {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.7rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .vocab-card-review:hover:not(:disabled) {
+      background: var(--bg-soft);
+      border-color: var(--teal, #2C5856);
+      color: var(--teal, #2C5856);
+    }
+    .vocab-card-review:disabled { opacity: 0.55; cursor: default; }
+    .vocab-card-review.vcr-just-clicked {
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border-color: var(--teal, #2C5856);
+      transform: scale(1.04);
+    }
+    .vocab-card-review .vcr-icon {
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+    .vocab-card-review .vcr-label {
+      font-size: 0.78rem;
+    }
+    .vocab-card-review .vcr-count {
+      display: inline-block;
+      min-width: 1.1rem;
+      padding: 0 0.32rem;
+      background: var(--gold, #C89A3C);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.35;
+    }
+    .vocab-card-review .vcr-count-zero { display: none; }
     .vocab-card-meaning {
       font-style: italic;
       color: var(--text-soft, #555);
@@ -686,6 +756,9 @@
     @media (max-width: 600px) {
       .vocab-card { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; }
       .vocab-card-level { display: none; }
+      .vocab-card-review .vcr-label { display: none; }
+      .vocab-card-review { padding: 0.32rem 0.5rem; }
+      .vocab-card-actions { gap: 0.3rem; }
     }
 
     /* ============ Progress per subcategory ============ */
@@ -1903,6 +1976,184 @@
       margin-top: 0.15rem;
     }
 
+    /* ============ Target Band UI ============ */
+    .tb-intro {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, #555);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin: 0 0 1rem;
+    }
+    .tb-form {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+    .tb-form label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-right: 0.25rem;
+    }
+    .tb-form select {
+      padding: 0.5rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      min-width: 7rem;
+    }
+    .tb-form select:focus {
+      outline: none;
+      border-color: var(--gold, #C89A3C);
+    }
+    .tb-save {
+      padding: 0.5rem 1.1rem;
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border: 1px solid var(--teal, #2C5856);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .tb-save:hover { background: #234644; }
+    .tb-save:disabled { opacity: 0.5; cursor: default; }
+    .tb-status {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      margin: 0;
+      min-height: 1.3rem;
+    }
+    .tb-status.tb-status-success { color: var(--teal, #2C5856); }
+    .tb-status.tb-status-error { color: #b45046; }
+
+    /* ============ Study Plans UI ============ */
+    .sp-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .sp-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      transition: border-color 0.15s;
+    }
+    .sp-card:hover { border-color: var(--gold, #C89A3C); }
+    .sp-card.sp-completed {
+      background: var(--bg-soft);
+      border-color: rgba(44, 88, 86, 0.3);
+    }
+    .sp-card.sp-completed .sp-name { text-decoration: line-through; color: var(--text-muted); }
+    .sp-main { min-width: 0; }
+    .sp-name {
+      font-family: var(--font-display, Georgia, serif);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 0.2rem;
+    }
+    .sp-meta {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    .sp-meta-sep { margin: 0 0.4rem; opacity: 0.5; }
+    .sp-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin: 0.35rem 0 0;
+      line-height: 1.4;
+    }
+    .sp-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-self: center;
+    }
+    .sp-btn {
+      padding: 0.32rem 0.7rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.77rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sp-btn:hover {
+      background: var(--bg-soft);
+      color: var(--text);
+    }
+    .sp-btn-complete {
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border-color: var(--teal, #2C5856);
+    }
+    .sp-btn-complete:hover { background: #234644; color: #fff; }
+    .sp-btn-delete:hover { color: #b45046; border-color: #b45046; }
+    .sp-completed-pill {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      background: rgba(44, 88, 86, 0.12);
+      color: var(--teal, #2C5856);
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sp-new-btn {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--bg);
+      border: 1px dashed var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sp-new-btn:hover {
+      background: var(--bg-soft);
+      color: var(--text);
+      border-color: var(--gold, #C89A3C);
+      border-style: solid;
+    }
+    @media (max-width: 600px) {
+      .sp-card { grid-template-columns: 1fr; }
+      .sp-actions { flex-direction: row; flex-wrap: wrap; }
+      .tb-form { flex-direction: column; align-items: stretch; }
+      .tb-form select, .tb-save { width: 100%; }
+    }
+
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -2297,6 +2548,71 @@
       </div>
     </div>
 
+    <!-- ============ HEDEFLERIM VE PLANLARIM (target_band + study_plan rozetleri için) ============ -->
+    <div class="zone-head">
+      <span class="zone-eyebrow">Hedef</span>
+      <span class="zone-line"></span>
+      <h2>Hedeflerim ve Planlarım</h2>
+    </div>
+
+    <div class="dual-grid">
+      <!-- Target Band -->
+      <div id="target-band-area" class="collapse-card" data-collapse>
+        <div class="cc-header">
+          <div class="cc-mark tone-gold"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">IELTS</div>
+            <div class="cc-title">Hedef Bandım</div>
+          </div>
+          <div class="cc-summary"><span id="target-band-summary">—</span></div>
+          <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <p class="tb-intro">IELTS Writing hedef bandını belirle. Writing değerlendirmelerinde bu band'e ulaştığında rozeti kazanırsın.</p>
+          <div class="tb-form">
+            <label for="target-band-select">Hedef Band</label>
+            <select id="target-band-select">
+              <option value="">Seç</option>
+              <option value="5.0">5.0</option>
+              <option value="5.5">5.5</option>
+              <option value="6.0">6.0</option>
+              <option value="6.5">6.5</option>
+              <option value="7.0">7.0</option>
+              <option value="7.5">7.5</option>
+              <option value="8.0">8.0</option>
+              <option value="8.5">8.5</option>
+              <option value="9.0">9.0</option>
+            </select>
+            <button id="target-band-save" type="button" class="tb-save">Kaydet</button>
+          </div>
+          <p class="tb-status" id="target-band-status"></p>
+        </div></div>
+      </div>
+
+      <!-- Study Plans -->
+      <div id="study-plans-area" class="collapse-card" data-collapse>
+        <div class="cc-header">
+          <div class="cc-mark tone-teal"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">Plan</div>
+            <div class="cc-title">Çalışma Planlarım</div>
+          </div>
+          <div class="cc-summary"><span id="study-plans-count">—</span></div>
+          <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <div id="study-plans-grid" class="sp-grid"></div>
+          <button id="study-plan-new" type="button" class="sp-new-btn">+ Yeni Plan Oluştur</button>
+          <div id="study-plans-empty" class="cc-empty" style="display: none;">
+            <div class="cc-empty-body">
+              <h4>Henüz çalışma planın yok</h4>
+              <p>Hedeflerini netleştir, deadline koy. Tamamladığın her plan için rozet kazanırsın.</p>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
     <div id="gri-quota-area" class="" style="padding: 0 0 3rem; display: none;">
 
       <div class="zone-head">
@@ -2346,6 +2662,32 @@
 
 <div id="products-area" style="padding-bottom: 4rem;">
       <div class="loading-state">Materyaller yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- Çalışma planı oluştur modal -->
+  <div class="modal-backdrop" id="modal-study-plan">
+    <div class="modal-box">
+      <h2 id="msp-title">Yeni Çalışma Planı</h2>
+      <p class="modal-sub">Hedefini belirle, tarihini koy. Tamamladığında listede "Tamamla" butonuna bas.</p>
+
+      <form id="msp-form">
+        <label for="msp-name">Plan Adı</label>
+        <input type="text" id="msp-name" autocomplete="off" maxlength="80" required placeholder="SAT Reading Sprint">
+
+        <label for="msp-desc">Açıklama (Opsiyonel)</label>
+        <textarea id="msp-desc" rows="2" maxlength="300" placeholder="100 soru çöz, her gün 10"></textarea>
+
+        <label for="msp-target">Hedef Tarih (Opsiyonel)</label>
+        <input type="date" id="msp-target">
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="msp-cancel">Vazgeç</button>
+          <button type="submit" class="btn-submit-modal" id="msp-submit">Oluştur</button>
+        </div>
+
+        <div class="err" id="msp-err"></div>
+      </form>
     </div>
   </div>
 
@@ -3407,7 +3749,7 @@
         var userId = sess.data.session.user.id;
 
         var res = await sbCli.from('user_vocab')
-          .select('id, custom_note, saved_at, vocabulary:vocabulary_id (id, word_display, definition_json)')
+          .select('id, custom_note, saved_at, review_count, last_reviewed_at, vocabulary:vocabulary_id (id, word_display, definition_json)')
           .eq('user_id', userId)
           .order('saved_at', { ascending: false });
 
@@ -3480,12 +3822,22 @@
             ? '<span class="vocab-card-level ' + escHtml(levelClass) + '">' + escHtml(levelRaw) + '</span>'
             : '<span></span>';
 
+          var reviewCount = Number(r.review_count || 0);
+          var reviewBtn = '<button class="vocab-card-review" data-vid="' + escHtml(vocab.id || '') + '" data-row-id="' + escHtml(r.id) + '" title="Bu kelimeyi tekrar ettim">'
+            + '<span class="vcr-icon" aria-hidden="true">✓</span>'
+            + '<span class="vcr-label">Tekrar Ettim</span>'
+            + (reviewCount > 0 ? '<span class="vcr-count">' + reviewCount + '</span>' : '<span class="vcr-count vcr-count-zero"></span>')
+            + '</button>';
+
           return [
             '<div class="vocab-card" data-id="' + escHtml(r.id) + '">',
             '  <div class="vocab-card-word">' + escHtml(word) + '</div>',
             '  ' + meaningCell,
             '  ' + levelCell,
-            '  <button class="vocab-card-delete" data-id="' + escHtml(r.id) + '" title="Listemden çıkar">×</button>',
+            '  <div class="vocab-card-actions">',
+            '    ' + reviewBtn,
+            '    <button class="vocab-card-delete" data-id="' + escHtml(r.id) + '" title="Listemden çıkar">×</button>',
+            '  </div>',
             '  <div class="vocab-card-tip">' + tipBody + '</div>',
             '</div>'
           ].join('');
@@ -3514,8 +3866,287 @@
             } catch (e) { console.error('[vocab delete]', e); }
           });
         });
+
+        // Review butonu — vocab_review_increment RPC çağrısı
+        elGrid.querySelectorAll('.vocab-card-review').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var vid = btn.dataset.vid;
+            if (!vid) return;
+            // Anti-spam: 2 saniye disable
+            if (btn.disabled) return;
+            btn.disabled = true;
+            try {
+              var rpcRes = await sbCli.rpc('vocab_review_increment', { p_vocabulary_id: vid });
+              if (rpcRes.error) throw rpcRes.error;
+              var newCount = (rpcRes.data && rpcRes.data.review_count) || 0;
+              // Sayacı güncelle (UI'da göster)
+              var countEl = btn.querySelector('.vcr-count');
+              if (countEl) {
+                countEl.textContent = newCount;
+                countEl.classList.remove('vcr-count-zero');
+              }
+              btn.classList.add('vcr-just-clicked');
+              setTimeout(function () { btn.classList.remove('vcr-just-clicked'); }, 800);
+            } catch (err) {
+              console.warn('[vocab review]', err);
+            } finally {
+              setTimeout(function () { btn.disabled = false; }, 1500);
+            }
+          });
+        });
       } catch (e) {
         console.warn('[vocab list] load failed:', e);
+      }
+    })();
+
+    // ============ TARGET BAND UI (target_band rozeti için) ============
+    (async function initTargetBand() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var area = document.getElementById('target-band-area');
+        var sel = document.getElementById('target-band-select');
+        var btn = document.getElementById('target-band-save');
+        var status = document.getElementById('target-band-status');
+        var summary = document.getElementById('target-band-summary');
+        if (!area || !sel || !btn) return;
+
+        // Mevcut hedefi yükle
+        var profRes = await sbCli.from('profiles').select('target_band_ielts').eq('id', userId).maybeSingle();
+        if (profRes && profRes.data && profRes.data.target_band_ielts) {
+          var val = String(profRes.data.target_band_ielts);
+          // Format normalize ("7" → "7.0")
+          if (!/\./.test(val)) val = val + '.0';
+          sel.value = val;
+          if (summary) summary.textContent = 'Band ' + val;
+          if (status) {
+            status.textContent = 'Mevcut hedefin: Band ' + val;
+            status.classList.remove('tb-status-error', 'tb-status-success');
+          }
+        } else {
+          if (summary) summary.textContent = 'set edilmedi';
+        }
+
+        btn.addEventListener('click', async function () {
+          var v = sel.value;
+          if (!v) {
+            if (status) {
+              status.textContent = 'Lütfen bir band seç.';
+              status.classList.remove('tb-status-success');
+              status.classList.add('tb-status-error');
+            }
+            return;
+          }
+          btn.disabled = true;
+          if (status) {
+            status.textContent = 'Kaydediliyor...';
+            status.classList.remove('tb-status-error', 'tb-status-success');
+          }
+          try {
+            var updRes = await sbCli.from('profiles')
+              .update({ target_band_ielts: parseFloat(v) })
+              .eq('id', userId);
+            if (updRes.error) throw updRes.error;
+            if (status) {
+              status.textContent = 'Hedef Band ' + v + ' olarak kaydedildi.';
+              status.classList.add('tb-status-success');
+            }
+            if (summary) summary.textContent = 'Band ' + v;
+            // Rozet kontrolünü tetikle
+            try { await sbCli.rpc('award_extra_badges'); } catch (e) {}
+          } catch (err) {
+            if (status) {
+              status.textContent = 'Kayıt başarısız: ' + (err.message || 'bilinmeyen hata');
+              status.classList.add('tb-status-error');
+            }
+            console.warn('[target band save]', err);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      } catch (e) {
+        console.warn('[target band] init failed:', e);
+      }
+    })();
+
+    // ============ STUDY PLANS UI (study_plan rozeti için) ============
+    (async function initStudyPlans() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var area = document.getElementById('study-plans-area');
+        var grid = document.getElementById('study-plans-grid');
+        var emptyEl = document.getElementById('study-plans-empty');
+        var countEl = document.getElementById('study-plans-count');
+        var newBtn = document.getElementById('study-plan-new');
+        if (!area || !grid || !newBtn) return;
+
+        var modal = document.getElementById('modal-study-plan');
+        var modalForm = document.getElementById('msp-form');
+        var modalCancel = document.getElementById('msp-cancel');
+        var modalErr = document.getElementById('msp-err');
+
+        function escSP(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function fmtDateSP(s) {
+          if (!s) return '';
+          var d = new Date(s);
+          var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        async function loadPlans() {
+          var res = await sbCli.from('study_plans')
+            .select('id, name, description, target_date, status, completed_at, created_at')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+          if (res.error) throw res.error;
+          var plans = res.data || [];
+          var activeCount = plans.filter(function (p) { return p.status === 'active'; }).length;
+          var completedCount = plans.filter(function (p) { return p.status === 'completed'; }).length;
+
+          if (countEl) {
+            countEl.textContent = plans.length === 0
+              ? '0 plan'
+              : activeCount + ' aktif' + (completedCount > 0 ? ', ' + completedCount + ' tamamlandı' : '');
+          }
+
+          if (plans.length === 0) {
+            grid.innerHTML = '';
+            if (emptyEl) emptyEl.style.display = 'flex';
+            return;
+          }
+          if (emptyEl) emptyEl.style.display = 'none';
+
+          grid.innerHTML = plans.map(function (p) {
+            var isCompleted = p.status === 'completed';
+            var metaParts = [];
+            if (p.target_date) metaParts.push('Hedef: ' + fmtDateSP(p.target_date));
+            if (isCompleted && p.completed_at) metaParts.push('Tamamlandı: ' + fmtDateSP(p.completed_at));
+            var metaHtml = metaParts.length
+              ? '<div class="sp-meta">' + metaParts.join('<span class="sp-meta-sep">·</span>') + '</div>'
+              : '';
+            var descHtml = p.description
+              ? '<p class="sp-desc">' + escSP(p.description) + '</p>'
+              : '';
+
+            var actionsHtml = isCompleted
+              ? '<span class="sp-completed-pill">Tamamlandı</span>'
+                + '<button class="sp-btn sp-btn-delete" data-id="' + escSP(p.id) + '" data-action="delete">Sil</button>'
+              : '<button class="sp-btn sp-btn-complete" data-id="' + escSP(p.id) + '" data-action="complete">Tamamla</button>'
+                + '<button class="sp-btn sp-btn-delete" data-id="' + escSP(p.id) + '" data-action="delete">Sil</button>';
+
+            return '<div class="sp-card' + (isCompleted ? ' sp-completed' : '') + '" data-id="' + escSP(p.id) + '">'
+              + '<div class="sp-main">'
+              + '<div class="sp-name">' + escSP(p.name) + '</div>'
+              + metaHtml
+              + descHtml
+              + '</div>'
+              + '<div class="sp-actions">' + actionsHtml + '</div>'
+              + '</div>';
+          }).join('');
+
+          // Action handlers
+          grid.querySelectorAll('.sp-btn').forEach(function (b) {
+            b.addEventListener('click', async function () {
+              var id = b.dataset.id;
+              var action = b.dataset.action;
+              if (!id || !action) return;
+              b.disabled = true;
+              try {
+                if (action === 'complete') {
+                  var upd = await sbCli.from('study_plans')
+                    .update({ status: 'completed', completed_at: new Date().toISOString() })
+                    .eq('id', id).eq('user_id', userId);
+                  if (upd.error) throw upd.error;
+                  // Rozet kontrolünü tetikle
+                  try { await sbCli.rpc('award_extra_badges'); } catch (e) {}
+                } else if (action === 'delete') {
+                  if (!confirm('Bu planı silmek istiyor musun?')) { b.disabled = false; return; }
+                  var del = await sbCli.from('study_plans').delete().eq('id', id).eq('user_id', userId);
+                  if (del.error) throw del.error;
+                }
+                await loadPlans();
+              } catch (err) {
+                console.warn('[study plan action]', err);
+                b.disabled = false;
+                alert('İşlem başarısız: ' + (err.message || 'bilinmeyen hata'));
+              }
+            });
+          });
+        }
+
+        // Modal handlers
+        function openModal() {
+          if (modalErr) modalErr.textContent = '';
+          if (modalForm) modalForm.reset();
+          if (modal) modal.classList.add('show');
+        }
+        function closeModal() {
+          if (modal) modal.classList.remove('show');
+        }
+        newBtn.addEventListener('click', openModal);
+        if (modalCancel) modalCancel.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', function (e) {
+          if (e.target === modal) closeModal();
+        });
+
+        if (modalForm) {
+          modalForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var name = document.getElementById('msp-name').value.trim();
+            var desc = document.getElementById('msp-desc').value.trim();
+            var target = document.getElementById('msp-target').value || null;
+            if (!name) {
+              if (modalErr) modalErr.textContent = 'Plan adı boş olamaz.';
+              return;
+            }
+            var submitBtn = document.getElementById('msp-submit');
+            if (submitBtn) submitBtn.disabled = true;
+            if (modalErr) modalErr.textContent = '';
+            try {
+              var insRes = await sbCli.from('study_plans').insert({
+                user_id: userId,
+                name: name,
+                description: desc || null,
+                target_date: target,
+                status: 'active'
+              });
+              if (insRes.error) throw insRes.error;
+              closeModal();
+              await loadPlans();
+            } catch (err) {
+              if (modalErr) modalErr.textContent = 'Kayıt başarısız: ' + (err.message || 'bilinmeyen hata');
+              console.warn('[study plan create]', err);
+            } finally {
+              if (submitBtn) submitBtn.disabled = false;
+            }
+          });
+        }
+
+        await loadPlans();
+      } catch (e) {
+        console.warn('[study plans] init failed:', e);
       }
     })();
 

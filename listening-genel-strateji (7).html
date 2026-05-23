@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş | Gri English</title>
+  <meta name="description" content="Gri English materyal erişimi için giriş yapın.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="canonical" href="https://gringlizce.com/giris.html">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/users.js"></script>
+  <script src="assets/auth.js"></script>
+  <style>
+    /* ============ LOGIN SHELL — premium two-panel ============ */
+    .login-shell {
+      min-height: calc(100vh - 280px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+    .login-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 6px;
+      max-width: 880px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(26, 34, 48, 0.06);
+    }
+
+    /* Sol panel: marka anlatımı */
+    .login-brand {
+      background: linear-gradient(135deg, #1a2230 0%, #2c5856 100%);
+      color: #F4EFE3;
+      padding: 2.75rem 2.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-brand * { color: inherit; }
+    .login-brand::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(200, 154, 60, 0.08);
+    }
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      left: -100px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(244, 239, 227, 0.04);
+    }
+    .login-brand .lb-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(244, 239, 227, 0.7) !important;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 2rem;
+      line-height: 1.25;
+      margin: 0.8rem 0 1rem;
+      letter-spacing: -0.01em;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+      color: #F4EFE3 !important;
+    }
+    .login-brand .lb-title em {
+      font-style: italic;
+      color: #e0b669 !important;
+      font-weight: 500;
+    }
+    .login-brand .lb-desc {
+      font-family: Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(244, 239, 227, 0.88) !important;
+      margin: 0 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-perks {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-perks li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+      font-size: 0.88rem;
+      color: rgba(244, 239, 227, 0.95) !important;
+      line-height: 1.45;
+    }
+    .login-brand .lb-perks svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      color: #e0b669 !important;
+      margin-top: 1px;
+    }
+    .login-brand .lb-foot {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: rgba(244, 239, 227, 0.6) !important;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand .lb-foot strong { color: #e0b669 !important; font-weight: 600; }
+
+    /* Sağ panel: form */
+    .login-form-wrap {
+      padding: 2.75rem 2.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.6rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+    }
+    .auth-tab:hover { color: var(--text); }
+    .auth-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--teal, #2C5856);
+    }
+
+    .login-card h1 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.7rem;
+      margin: 0 0 0.4rem;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.01em;
+    }
+    .login-card .sub {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 1.7rem;
+    }
+    .login-card label {
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      margin-bottom: 0.4rem;
+    }
+    .login-card input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-body, Georgia), serif;
+      font-size: 1rem;
+      color: var(--text, #1A2230);
+      margin-bottom: 1.3rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      border-radius: 3px;
+    }
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 0 0 3px rgba(44, 88, 86, 0.1);
+    }
+    .login-card .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: none;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      border-radius: 3px;
+    }
+    .login-card .btn-submit:hover {
+      background: #234948;
+      transform: translateY(-1px);
+    }
+    .login-card .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-card .err {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(179,58,58,0.07);
+      border: 1px solid rgba(179,58,58,0.2);
+      color: #b33a3a;
+      font-size: 0.85rem;
+      border-radius: 3px;
+    }
+    .login-card .err.show { display: block; }
+    .login-card .ok {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(44,88,86,0.07);
+      border: 1px solid rgba(44,88,86,0.2);
+      color: #2C5856;
+      font-size: 0.88rem;
+      border-radius: 3px;
+    }
+    .login-card .ok.show { display: block; }
+    .login-card .forgot {
+      text-align: right;
+      margin-top: -0.7rem;
+      margin-bottom: 1.3rem;
+    }
+    .login-card .forgot a {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .login-card .forgot a:hover {
+      color: var(--teal, #2C5856);
+      text-decoration: underline;
+    }
+    .login-card .helper {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line, #D9D2C4);
+      font-size: 0.82rem;
+      color: var(--text-muted, #6B6862);
+      line-height: 1.6;
+    }
+    .login-card .helper a {
+      color: var(--teal, #2C5856);
+      font-weight: 600;
+    }
+
+    @media (max-width: 760px) {
+      .login-card { grid-template-columns: 1fr; }
+      .login-brand { padding: 2rem 1.75rem; }
+      .login-brand .lb-title { font-size: 1.6rem; }
+      .login-brand .lb-desc { margin-bottom: 1.3rem; }
+      .login-brand .lb-perks { display: none; }
+      .login-form-wrap { padding: 2rem 1.75rem 2.25rem; }
+    }
+
+    /* Şifremi unuttum modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 34, 48, 0.55);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.5rem;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 6px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.2);
+    }
+    .modal-box h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      margin: 0 0 0.4rem;
+      color: var(--text);
+    }
+    .modal-box .modal-sub {
+      color: var(--text-muted, #6B6862);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 1.4rem;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: 0.9rem;
+      background: transparent;
+      color: var(--text-muted, #6B6862);
+      border: 1px solid var(--line, #D9D2C4);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-cancel:hover {
+      color: var(--text, #1A2230);
+      border-color: var(--text, #1A2230);
+    }
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+</head>
+<body>
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <div class="launch-banner">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-dropdown" data-dropdown="exams">
+            <a href="sat.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Sınavlar</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="sat.html">SAT</a></li>
+              <li><a href="ielts.html">IELTS</a></li>
+              <li><a href="toefl.html">TOEFL</a></li>
+              <li><a href="ib.html">IB</a></li>
+              <li><a href="udsp.html">UDSP</a></li>
+              <li><a href="ydt.html">YDT</a></li>
+              <li><a href="yds.html">YDS/YÖKDİL</a></li>
+            </ul>
+          </li>
+          <li class="nav-dropdown" data-dropdown="bank">
+            <a href="soru-bankasi.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Soru Bankası</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li class="nav-submenu">
+                <a href="sat-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>SAT</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="sat-soru-bankasi-rw.html">Reading &amp; Writing</a></li>
+                  <li><a href="sat-soru-bankasi-math.html">Math</a></li>
+                </ul>
+              </li>
+              <li class="nav-submenu">
+                <a href="ielts-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>IELTS</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="ielts-deneme.html">Tam Deneme</a></li>
+                  <li><a href="ielts-bolum-calisma.html">Bölüm Bazlı</a></li>
+                </ul>
+              </li>
+              <li><a href="toefl-soru-bankasi.html">TOEFL</a></li>
+              <li><a href="udsp-soru-bankasi.html">UDSP</a></li>
+              <li><a href="ydt-soru-bankasi.html">YDT</a></li>
+              <li class="nav-submenu">
+                <a href="yds-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>YDS/YÖKDİL</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="yds-soru-bankasi-yds.html">YDS</a></li>
+                  <li><a href="yds-soru-bankasi-yokdil-fen.html">YÖKDİL Fen</a></li>
+                  <li><a href="yds-soru-bankasi-yokdil-sosyal.html">YÖKDİL Sosyal</a></li>
+                  <li><a href="yds-soru-bankasi-yokdil-saglik.html">YÖKDİL Sağlık</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-dropdown" data-dropdown="notes">
+            <a href="ders-notlari.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle>
+              <span>Ders Notları</span>
+              <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg>
+            </a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="sat-ders-notlari.html">SAT</a></li>
+              <li><a href="ielts-ders-notlari.html">IELTS</a></li>
+              <li><a href="toefl-ders-notlari.html">TOEFL</a></li>
+              <li><a href="ib-ders-notlari.html">IB</a></li>
+              <li><a href="ydt-ders-notlari.html">YDT</a></li>
+              <li><a href="yds-ders-notlari.html">YDS/YÖKDİL</a></li>
+            </ul>
+          </li>
+          <li><a href="calisma-paketleri.html"><span style="color:#9C7F45;margin-right:0.35em;font-weight:700;" aria-hidden="true">•</span>Çalışma Paketleri</a></li>
+          <li><a href="yazi-pratigi.html">Yazı Pratiği</a></li>
+          <li><a href="iletisim.html">İletişim</a></li>
+          <li id="navUserMount" class="nav-user-mount"></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="login-shell">
+    <div class="login-card">
+
+      <aside class="login-brand">
+        <div>
+          <div class="lb-eyebrow">Gri English</div>
+          <h2 class="lb-title">Sınava değil, <em>başarıya</em> hazırlayan platform.</h2>
+          <p class="lb-desc">SAT, IELTS, TOEFL ve IB için orijinal soru bankası, mock denemeler ve uzman geri bildirim. Hesap aç, tek bir yerden çalışmaya başla.</p>
+
+          <ul class="lb-perks">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Binlerce orijinal SAT, IELTS, TOEFL ve IB sorusu</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Yer imleri, yanlışlarınla ayrı çalışma, ilerleme takibi</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Gri AI mentor &mdash; günlük 10 ücretsiz hak</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>IELTS Writing için uzman geri bildirim seçeneği</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="lb-foot">
+          Açılışa özel <strong>%30 indirim</strong> tüm materyallerde
+        </div>
+      </aside>
+
+      <div class="login-form-wrap">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">Giriş Yap</button>
+          <button type="button" class="auth-tab" data-tab="signup">Kayıt Ol</button>
+        </div>
+
+        <div id="login-pane">
+          <h1>Tekrar hoş geldin</h1>
+          <p class="sub">E-posta ve şifren ile hesabına gir.</p>
+
+          <form id="login-form">
+            <label for="u">E-posta</label>
+            <input type="email" id="u" autocomplete="username" required autocapitalize="off" autocorrect="off">
+
+            <label for="p">Şifre</label>
+            <input type="password" id="p" autocomplete="current-password" required>
+
+            <div class="forgot"><a href="#" id="link-forgot">Şifremi unuttum</a></div>
+
+            <button type="submit" class="btn-submit" id="btn-submit">Giriş Yap</button>
+
+            <div class="err" id="err"></div>
+          </form>
+
+          <div class="helper">
+            Hesabın yok mu? Yukarıdaki <b>Kayıt Ol</b> sekmesinden ücretsiz aç. Materyal aldıysan otomatik hesabın için gelen maildeki şifreyi kullan.
+          </div>
+        </div>
+
+        <div id="signup-pane" style="display: none;">
+          <h1>Ücretsiz hesap aç</h1>
+          <p class="sub">Soru bankasına ve Gri AI mentor'a günlük 10 ücretsiz hak ile başla.</p>
+
+          <form id="signup-form">
+            <label for="su-name">Ad Soyad</label>
+            <input type="text" id="su-name" autocomplete="name" required>
+
+            <label for="su-email">E-posta</label>
+            <input type="email" id="su-email" autocomplete="email" required autocapitalize="off" autocorrect="off">
+
+            <label for="su-pass">Şifre (en az 8 karakter)</label>
+            <input type="password" id="su-pass" autocomplete="new-password" required minlength="8">
+
+            <label for="su-pass2">Şifre Tekrar</label>
+            <input type="password" id="su-pass2" autocomplete="new-password" required minlength="8">
+
+            <button type="submit" class="btn-submit" id="btn-signup">Hesap Aç</button>
+
+            <div class="err" id="signup-err"></div>
+            <div class="ok" id="signup-ok"></div>
+          </form>
+
+          <div class="helper">
+            Kayıt olarak Gri English'in temel hizmet koşullarını kabul etmiş sayılırsın. Şifre ve e-posta dışında bilgi saklanmaz.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Şifremi unuttum modal -->
+  <div class="modal-backdrop" id="modal-forgot">
+    <div class="modal-box">
+      <h2>Şifre Sıfırlama</h2>
+      <p class="modal-sub">Hesabınızın e-posta adresini girin. Şifre sıfırlama bağlantısını e-posta ile göndereceğiz.</p>
+
+      <form id="forgot-form">
+        <label for="forgot-email">E-posta</label>
+        <input type="email" id="forgot-email" required>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel">Vazgeç</button>
+          <button type="submit" class="btn-submit" id="btn-forgot-submit" style="flex:1;width:auto">Gönder</button>
+        </div>
+
+        <div class="err" id="forgot-err"></div>
+        <div class="ok" id="forgot-ok"></div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid-v2">
+        <div class="footer-brand">
+          <div class="brand">Gri <span class="it">English</span></div>
+          <p>Sınav İngilizcesi için Türkçe açıklamalı soru bankası, IELTS mock denemeler ve AI mentor desteği.</p></div>
+        <div>
+          <h4>Çalış</h4>
+          <ul>
+            <li><a href="soru-bankasi.html">Soru Bankası</a></li>
+            <li><a href="ielts-deneme.html">IELTS Denemeleri</a></li>
+            <li><a href="ders-notlari.html">Ders Notları</a></li>
+            <li><a href="panelim.html">Panelim</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Sınavlar</h4>
+          <ul>
+            <li><a href="sat.html">Digital SAT</a></li>
+            <li><a href="ielts.html">IELTS Academic</a></li>
+            <li><a href="toefl.html">TOEFL iBT</a></li>
+            <li><a href="ib.html">IB Diploma</a></li>
+            <li><a href="udsp.html">UDSP</a></li>
+            <li><a href="ydt.html">YDT</a></li>
+            <li><a href="yds.html">YDS / YÖKDİL</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="hakkinda.html">Hakkımızda</a></li>
+            <li><a href="iletisim.html">İletişim</a></li>
+            <li><a href="giris.html">Giriş Yap</a></li>
+            <li><a href="giris.html#signup">Ücretsiz Hesap Aç</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-cat" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 5 L7.5 9 L9.5 7 Z"/>
+          <path d="M19 5 L16.5 9 L14.5 7 Z"/>
+          <ellipse cx="12" cy="13" rx="6" ry="5.5"/>
+          <circle cx="10" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+          <circle cx="14" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+          <path d="M10.5 16 Q11.2 16.8 12 16.4 Q12.8 16.8 13.5 16"/>
+        </svg>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 Gri English &middot; Mert Atasal</span>
+        <span class="footer-tagline">Focus &middot; Practice &middot; Succeed</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Zaten giriş yapılmışsa panele yönlendir
+    (function () {
+      var auth = window.GriAuth && window.GriAuth.verify();
+      if (auth) {
+        var ret = new URLSearchParams(window.location.search).get('return');
+        window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
+      }
+    })();
+
+    // Yönlendirmeyle gelen hata mesajı varsa göster
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var err = params.get('error');
+      if (err === 'expired') {
+        document.getElementById('err').textContent = 'Oturum sona erdi. Tekrar giriş yapın.';
+        document.getElementById('err').classList.add('show');
+      } else if (err === 'no-access') {
+        document.getElementById('err').textContent = 'Bu materyale erişiminiz yok. Sorunuz için mertatasal@gmail.com adresine yazın.';
+        document.getElementById('err').classList.add('show');
+      }
+    })();
+
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = document.getElementById('u').value;
+      var password = document.getElementById('p').value;
+      var errBox = document.getElementById('err');
+      var btn = document.getElementById('btn-submit');
+
+      errBox.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Giriş yapılıyor...';
+
+      try {
+        var result = await window.GriAuth.login(email, password);
+        if (!result.ok) {
+          errBox.textContent = result.error;
+          errBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Giriş Yap';
+          return;
+        }
+        var ret = new URLSearchParams(window.location.search).get('return');
+        window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
+      } catch (ex) {
+        console.error(ex);
+        errBox.textContent = 'Beklenmeyen bir hata oluştu, tekrar deneyin.';
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Giriş Yap';
+      }
+    });
+
+    // ===== Şifremi Unuttum =====
+    var modal = document.getElementById('modal-forgot');
+
+    document.getElementById('link-forgot').addEventListener('click', function (e) {
+      e.preventDefault();
+      var preEmail = document.getElementById('u').value;
+      if (preEmail) document.getElementById('forgot-email').value = preEmail;
+      modal.classList.add('show');
+    });
+
+    document.getElementById('btn-cancel').addEventListener('click', function () {
+      modal.classList.remove('show');
+      document.getElementById('forgot-err').classList.remove('show');
+      document.getElementById('forgot-ok').classList.remove('show');
+    });
+
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+        modal.classList.remove('show');
+      }
+    });
+
+    document.getElementById('forgot-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = document.getElementById('forgot-email').value;
+      var errBox = document.getElementById('forgot-err');
+      var okBox = document.getElementById('forgot-ok');
+      var btn = document.getElementById('btn-forgot-submit');
+
+      errBox.classList.remove('show');
+      okBox.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Gönderiliyor...';
+
+      var result = await window.GriAuth.sendPasswordReset(email);
+
+      if (!result.ok) {
+        errBox.textContent = result.error;
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Gönder';
+        return;
+      }
+
+      okBox.textContent = 'Sıfırlama bağlantısı e-postanıza gönderildi. Birkaç dakika içinde gelmezse spam klasörüne bakın.';
+      okBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Gönder';
+    });
+
+    // ===== Tab Toggle (Giriş / Kayıt) =====
+    (function () {
+      var tabs = document.querySelectorAll('.auth-tab');
+      var loginPane = document.getElementById('login-pane');
+      var signupPane = document.getElementById('signup-pane');
+
+      function activate(name) {
+        tabs.forEach(function (t) {
+          var isActive = t.dataset.tab === name;
+          t.classList.toggle('active', isActive);
+        });
+        loginPane.style.display = (name === 'login') ? 'block' : 'none';
+        signupPane.style.display = (name === 'signup') ? 'block' : 'none';
+      }
+
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () { activate(t.dataset.tab); });
+      });
+
+      // URL'de #signup varsa otomatik kayıt sekmesi açılsın
+      if (window.location.hash === '#signup') activate('signup');
+    })();
+
+    // ===== Signup — Supabase doğrudan =====
+    document.getElementById('signup-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var name = document.getElementById('su-name').value.trim();
+      var email = document.getElementById('su-email').value.trim().toLowerCase();
+      var pass = document.getElementById('su-pass').value;
+      var pass2 = document.getElementById('su-pass2').value;
+      var errBox = document.getElementById('signup-err');
+      var okBox = document.getElementById('signup-ok');
+      var btn = document.getElementById('btn-signup');
+
+      errBox.classList.remove('show');
+      okBox.classList.remove('show');
+
+      if (pass !== pass2) {
+        errBox.textContent = 'Şifreler eşleşmiyor.';
+        errBox.classList.add('show');
+        return;
+      }
+      if (pass.length < 8) {
+        errBox.textContent = 'Şifre en az 8 karakter olmalı.';
+        errBox.classList.add('show');
+        return;
+      }
+      if (!name) {
+        errBox.textContent = 'Ad soyad zorunlu.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Kayıt yapılıyor...';
+
+      try {
+        if (!window.supabase || !window.supabase.createClient) {
+          throw new Error('Supabase yüklenemedi');
+        }
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+
+        var result = await sbCli.auth.signUp({
+          email: email,
+          password: pass,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: window.location.origin + '/giris.html'
+          }
+        });
+
+        if (result.error) {
+          var msg = result.error.message || 'Kayıt başarısız.';
+          if (/already registered|already exists|duplicate/i.test(msg)) {
+            msg = 'Bu e-posta zaten kayıtlı. Giriş sekmesinden devam et veya şifreni sıfırla.';
+          }
+          errBox.textContent = msg;
+          errBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Hesap Aç';
+          return;
+        }
+
+        // Supabase'in email confirmation ayarı açıksa: kullanıcı maili onaylamadan login olmaz
+        // Ayar kapalıysa: doğrudan session gelir
+        if (result.data && result.data.session) {
+          // Otomatik giriş, panele yönlendir
+          okBox.textContent = 'Hesabın açıldı, yönlendiriliyor...';
+          okBox.classList.add('show');
+          setTimeout(function () {
+            window.location.href = '/panelim.html';
+          }, 1000);
+        } else {
+          okBox.textContent = 'Hesabın açıldı. E-postanı kontrol et, doğrulama bağlantısına tıkladıktan sonra giriş yapabilirsin.';
+          okBox.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Hesap Aç';
+        }
+      } catch (ex) {
+        console.error(ex);
+        errBox.textContent = 'Beklenmeyen bir hata oluştu: ' + (ex.message || ex);
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Hesap Aç';
+      }
+    });
+  </script>
+
+</body>
+</html>

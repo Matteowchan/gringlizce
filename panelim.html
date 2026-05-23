@@ -55,6 +55,20 @@
     .modal-box label { display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted, #6B6862); margin-bottom: 0.4rem; }
     .modal-box input { width: 100%; background: transparent; border: 1px solid var(--line, #D9D2C4); padding: 0.85rem 1rem; font-family: var(--font-body, Georgia), serif; font-size: 1rem; color: var(--text, #1A2230); margin-bottom: 1.2rem; }
     .modal-box input:focus { outline: none; border-color: var(--teal, #2C5856); }
+    .modal-box textarea {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-body, Georgia), serif;
+      font-size: 1rem;
+      color: var(--text, #1A2230);
+      margin-bottom: 1.2rem;
+      resize: vertical;
+      min-height: 60px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .modal-box textarea:focus { outline: none; border-color: var(--teal, #2C5856); }
     .modal-actions { display: flex; gap: 0.8rem; margin-top: 0.5rem; }
     .btn-cancel { flex: 1; padding: 0.9rem; background: transparent; color: var(--text-muted, #6B6862); border: 1px solid var(--line, #D9D2C4); font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; cursor: pointer; }
     .btn-cancel:hover { color: var(--text, #1A2230); border-color: var(--text, #1A2230); }
@@ -565,6 +579,62 @@
       flex-shrink: 0;
     }
     .vocab-card-delete:hover { color: var(--text); background: var(--bg-card); }
+
+    /* Vocab review butonu (vocab_review + vocab_recurrence rozetleri için) */
+    .vocab-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+    .vocab-card-review {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.7rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .vocab-card-review:hover:not(:disabled) {
+      background: var(--bg-soft);
+      border-color: var(--teal, #2C5856);
+      color: var(--teal, #2C5856);
+    }
+    .vocab-card-review:disabled { opacity: 0.55; cursor: default; }
+    .vocab-card-review.vcr-just-clicked {
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border-color: var(--teal, #2C5856);
+      transform: scale(1.04);
+    }
+    .vocab-card-review .vcr-icon {
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+    .vocab-card-review .vcr-label {
+      font-size: 0.78rem;
+    }
+    .vocab-card-review .vcr-count {
+      display: inline-block;
+      min-width: 1.1rem;
+      padding: 0 0.32rem;
+      background: var(--gold, #C89A3C);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.35;
+    }
+    .vocab-card-review .vcr-count-zero { display: none; }
     .vocab-card-meaning {
       font-style: italic;
       color: var(--text-soft, #555);
@@ -686,6 +756,9 @@
     @media (max-width: 600px) {
       .vocab-card { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; }
       .vocab-card-level { display: none; }
+      .vocab-card-review .vcr-label { display: none; }
+      .vocab-card-review { padding: 0.32rem 0.5rem; }
+      .vocab-card-actions { gap: 0.3rem; }
     }
 
     /* ============ Progress per subcategory ============ */
@@ -1903,6 +1976,563 @@
       margin-top: 0.15rem;
     }
 
+    /* ============ Target Band UI ============ */
+    .tb-intro {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, #555);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin: 0 0 1rem;
+    }
+    .tb-form {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+    .tb-form label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-right: 0.25rem;
+    }
+    .tb-form select {
+      padding: 0.5rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      min-width: 7rem;
+    }
+    .tb-form select:focus {
+      outline: none;
+      border-color: var(--gold, #C89A3C);
+    }
+    .tb-save {
+      padding: 0.5rem 1.1rem;
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border: 1px solid var(--teal, #2C5856);
+      border-radius: 3px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .tb-save:hover { background: #234644; }
+    .tb-save:disabled { opacity: 0.5; cursor: default; }
+    .tb-status {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      margin: 0;
+      min-height: 1.3rem;
+    }
+    .tb-status.tb-status-success { color: var(--teal, #2C5856); }
+    .tb-status.tb-status-error { color: #b45046; }
+
+    /* ============ Study Plans UI ============ */
+    .sp-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .sp-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      transition: border-color 0.15s;
+    }
+    .sp-card:hover { border-color: var(--gold, #C89A3C); }
+    .sp-card.sp-completed {
+      background: var(--bg-soft);
+      border-color: rgba(44, 88, 86, 0.3);
+    }
+    .sp-card.sp-completed .sp-name { text-decoration: line-through; color: var(--text-muted); }
+    .sp-main { min-width: 0; }
+    .sp-name {
+      font-family: var(--font-display, Georgia, serif);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 0.2rem;
+    }
+    .sp-meta {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    .sp-meta-sep { margin: 0 0.4rem; opacity: 0.5; }
+    .sp-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin: 0.35rem 0 0;
+      line-height: 1.4;
+    }
+    .sp-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-self: center;
+    }
+    .sp-btn {
+      padding: 0.32rem 0.7rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.77rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sp-btn:hover {
+      background: var(--bg-soft);
+      color: var(--text);
+    }
+    .sp-btn-complete {
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border-color: var(--teal, #2C5856);
+    }
+    .sp-btn-complete:hover { background: #234644; color: #fff; }
+    .sp-btn-delete:hover { color: #b45046; border-color: #b45046; }
+    .sp-completed-pill {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      background: rgba(44, 88, 86, 0.12);
+      color: var(--teal, #2C5856);
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sp-new-btn {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--bg);
+      border: 1px dashed var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sp-new-btn:hover {
+      background: var(--bg-soft);
+      color: var(--text);
+      border-color: var(--gold, #C89A3C);
+      border-style: solid;
+    }
+    @media (max-width: 600px) {
+      .sp-card { grid-template-columns: 1fr; }
+      .sp-actions { flex-direction: row; flex-wrap: wrap; }
+      .tb-form { flex-direction: column; align-items: stretch; }
+      .tb-form select, .tb-save { width: 100%; }
+    }
+
+    /* ============ Sınıflarım UI (Modern Editorial) ============ */
+    .cl-intro {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      margin: 0 0 1.1rem;
+    }
+    .cl-join-form {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+    .cl-join-form input {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.15rem;
+      color: var(--text);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      transition: border-color 0.15s ease;
+    }
+    .cl-join-form input:focus {
+      outline: none;
+      border-color: var(--teal);
+    }
+    .cl-join-btn {
+      padding: 0.8rem 1.6rem;
+      background: var(--teal);
+      color: #F4EFE3;
+      border: 1px solid var(--teal);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .cl-join-btn:hover { background: #234644; }
+    .cl-join-btn:disabled { opacity: 0.5; cursor: default; }
+    .cl-status {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      margin: 0 0 0.6rem;
+      min-height: 1.3rem;
+      color: var(--text-soft);
+    }
+    .cl-status.success { color: var(--teal); }
+    .cl-status.error { color: #b45046; }
+
+    /* Teacher CTA banner (editorial) */
+    .cl-teacher-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      padding: 1.3rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--gold, #C89A3C);
+      margin-bottom: 1.4rem;
+      flex-wrap: wrap;
+    }
+    .cl-teacher-banner.cl-teacher-banner-empty { display: none; }
+    .cl-teacher-banner .ctb-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .cl-teacher-banner .ctb-text::before {
+      content: 'Öğretmen';
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .cl-teacher-banner .ctb-text strong {
+      display: block;
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.15rem;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+    .cl-teacher-banner .ctb-text span {
+      display: block;
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.92rem;
+      color: var(--text-soft);
+      line-height: 1.45;
+    }
+    .cl-teacher-banner-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s ease;
+    }
+    .cl-teacher-banner-btn:hover { background: #234644; }
+    .cl-teacher-banner-btn:disabled { opacity: 0.5; cursor: default; }
+    @media (max-width: 600px) {
+      .cl-teacher-banner { flex-direction: column; align-items: stretch; }
+      .cl-teacher-banner-btn { width: 100%; text-align: center; }
+    }
+
+    /* Class cards in student panel (editorial tiles) */
+    .cl-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      margin-bottom: 0.6rem;
+    }
+    .cl-card {
+      display: grid;
+      grid-template-columns: 4px 1fr auto;
+      gap: 0.95rem;
+      padding: 1rem 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      align-items: center;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease;
+    }
+    .cl-card::before {
+      content: '';
+      width: 4px;
+      height: 28px;
+      background: var(--gold, #C89A3C);
+      border-radius: 2px;
+      transition: background 0.3s ease;
+    }
+    .cl-card:hover {
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 4px 14px rgba(26, 34, 48, 0.04);
+    }
+    .cl-card:hover::before { background: var(--teal, #2C5856); }
+    .cl-card .cl-main { min-width: 0; }
+    .cl-card .cl-name {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text);
+      margin: 0 0 0.25rem;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .cl-card .cl-meta {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .cl-card .cl-meta-sep { margin: 0 0.45rem; opacity: 0.5; }
+    .cl-card .cl-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      margin: 0.4rem 0 0;
+      line-height: 1.45;
+    }
+    .cl-leave-btn {
+      padding: 0.45rem 0.9rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .cl-leave-btn:hover {
+      color: #b45046;
+      border-color: #b45046;
+    }
+    @media (max-width: 600px) {
+      .cl-join-form { flex-direction: column; }
+      .cl-join-form input, .cl-join-btn { width: 100%; text-align: center; }
+      .cl-card { grid-template-columns: 4px 1fr; }
+      .cl-leave-btn { grid-column: 2; justify-self: end; }
+    }
+
+    /* ============ Ödevlerim (Student) — Modern Editorial ============ */
+    .my-assign-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 2rem;
+    }
+    .my-assign-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 1.1rem 1.3rem;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease;
+      position: relative;
+    }
+    .my-assign-card:hover {
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 4px 14px rgba(26, 34, 48, 0.04);
+    }
+    .my-assign-card.completed {
+      background: var(--bg-soft);
+      opacity: 0.78;
+    }
+    .my-assign-card.overdue {
+      border-left: 3px solid #b45046;
+      padding-left: 1.2rem;
+    }
+    .my-assign-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.8rem;
+      margin-bottom: 0.4rem;
+    }
+    .my-assign-titles { flex: 1; min-width: 0; }
+    .my-assign-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.18rem;
+      font-weight: 500;
+      color: var(--text);
+      margin: 0.3rem 0 0;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .my-assign-card.completed .my-assign-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .my-assign-type {
+      display: inline-block;
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .my-assign-type.type-questions { background: rgba(44,88,86,0.12); color: var(--teal); }
+    .my-assign-type.type-writing   { background: rgba(200,154,60,0.18); color: #8b6627; }
+    .my-assign-type.type-reading   { background: rgba(120,80,40,0.15); color: #6b4422; }
+
+    .my-assign-meta {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin: 0.4rem 0 0.55rem;
+    }
+    .my-assign-meta-sep { margin: 0 0.45rem; opacity: 0.5; }
+    .my-assign-meta .overdue-tag { color: #b45046; font-weight: 600; }
+    .my-assign-meta .class-name { color: var(--text-soft); font-weight: 600; }
+
+    .my-assign-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      margin: 0.4rem 0 0.75rem;
+      line-height: 1.5;
+    }
+
+    .my-assign-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin: 0.6rem 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--line);
+    }
+    .my-assign-progress-bar {
+      flex: 1;
+      height: 5px;
+      background: var(--bg-soft);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .my-assign-progress-fill {
+      height: 100%;
+      background: var(--teal);
+      transition: width 0.3s;
+    }
+    .my-assign-progress-fill.completed { background: var(--gold); }
+    .my-assign-progress-text {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--teal);
+      white-space: nowrap;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .my-assign-prompt {
+      background: var(--bg-soft);
+      border-left: 3px solid var(--gold);
+      padding: 0.8rem 1rem;
+      margin: 0.7rem 0;
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.92rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .my-assign-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.7rem;
+    }
+    .my-assign-btn {
+      padding: 0.6rem 1.2rem;
+      background: var(--teal);
+      color: #F4EFE3;
+      border: 1px solid var(--teal);
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s ease;
+    }
+    .my-assign-btn:hover { background: #234644; }
+    .my-assign-btn.secondary {
+      background: transparent;
+      color: var(--teal);
+      border-color: var(--teal);
+    }
+    .my-assign-btn.secondary:hover {
+      background: rgba(44, 88, 86, 0.08);
+    }
+    .my-assign-btn.outline {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--line);
+    }
+    .my-assign-btn.outline:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+    .my-assign-completed-pill {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      background: rgba(44, 88, 86, 0.12);
+      color: var(--teal, #2C5856);
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
@@ -2015,9 +2645,9 @@
     <section class="panel-hero">
       <div class="panel-head">
         <div>
-          <span class="eyebrow">Hoş Geldiniz</span>
+          <span class="eyebrow">Çalışma Masam</span>
           <h1 class="welcome">Merhaba, <span class="uname" id="uname">—</span></h1>
-          <p class="sub">Satın aldığınız materyallere aşağıdan erişebilirsiniz.</p>
+          <p class="sub">Çalışmaların, yanlışların, kelimelerin, ödevlerin. Her şey burada birikir.</p>
         </div>
         <div class="panel-actions">
           <button class="btn-action" id="btn-reset-progress">İlerlememi Sıfırla</button>
@@ -2297,6 +2927,141 @@
       </div>
     </div>
 
+    <!-- ============ HEDEFLERIM VE PLANLARIM (target_band + study_plan rozetleri için) ============ -->
+    <div class="zone-head">
+      <span class="zone-eyebrow">Hedef</span>
+      <span class="zone-line"></span>
+      <h2>Hedeflerim ve Planlarım</h2>
+    </div>
+
+    <div class="dual-grid">
+      <!-- Target Band -->
+      <div id="target-band-area" class="collapse-card" data-collapse>
+        <div class="cc-header">
+          <div class="cc-mark tone-gold"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">IELTS</div>
+            <div class="cc-title">Hedef Bandım</div>
+          </div>
+          <div class="cc-summary"><span id="target-band-summary">—</span></div>
+          <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <p class="tb-intro">IELTS Writing hedef bandını belirle. Writing değerlendirmelerinde bu band'e ulaştığında rozeti kazanırsın.</p>
+          <div class="tb-form">
+            <label for="target-band-select">Hedef Band</label>
+            <select id="target-band-select">
+              <option value="">Seç</option>
+              <option value="5.0">5.0</option>
+              <option value="5.5">5.5</option>
+              <option value="6.0">6.0</option>
+              <option value="6.5">6.5</option>
+              <option value="7.0">7.0</option>
+              <option value="7.5">7.5</option>
+              <option value="8.0">8.0</option>
+              <option value="8.5">8.5</option>
+              <option value="9.0">9.0</option>
+            </select>
+            <button id="target-band-save" type="button" class="tb-save">Kaydet</button>
+          </div>
+          <p class="tb-status" id="target-band-status"></p>
+        </div></div>
+      </div>
+
+      <!-- Study Plans -->
+      <div id="study-plans-area" class="collapse-card" data-collapse>
+        <div class="cc-header">
+          <div class="cc-mark tone-teal"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">Plan</div>
+            <div class="cc-title">Çalışma Planlarım</div>
+          </div>
+          <div class="cc-summary"><span id="study-plans-count">—</span></div>
+          <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <div id="study-plans-grid" class="sp-grid"></div>
+          <button id="study-plan-new" type="button" class="sp-new-btn">+ Yeni Plan Oluştur</button>
+          <div id="study-plans-empty" class="cc-empty" style="display: none;">
+            <div class="cc-empty-body">
+              <h4>Henüz çalışma planın yok</h4>
+              <p>Hedeflerini netleştir, deadline koy. Tamamladığın her plan için rozet kazanırsın.</p>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- ============ SINIFLARIM (Teacher Dashboard - Student side) ============ -->
+    <div class="zone-head">
+      <span class="zone-eyebrow">Sınıf</span>
+      <span class="zone-line"></span>
+      <h2>Sınıflarım</h2>
+    </div>
+
+    <!-- Teacher CTA banner (içerik role'e göre JS ile doldurulur) -->
+    <div class="cl-teacher-banner" id="cl-teacher-banner"></div>
+
+    <div class="dual-grid">
+      <!-- Sınıfa Katıl kartı -->
+      <div id="classes-join-area" class="collapse-card always-open">
+        <div class="cc-header">
+          <div class="cc-mark tone-gold"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">Katıl</div>
+            <div class="cc-title">Sınıfa Katıl</div>
+          </div>
+          <div class="cc-summary"><span id="classes-join-hint">6 haneli kod gerekli</span></div>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <p class="cl-intro">Öğretmeninin verdiği 6 karakterlik kodu gir, sınıfa katıl.</p>
+          <div class="cl-join-form">
+            <input type="text" id="classes-join-code" maxlength="6" autocomplete="off" placeholder="A7B2X9" spellcheck="false">
+            <button id="classes-join-btn" type="button" class="cl-join-btn">Katıl</button>
+          </div>
+          <p class="cl-status" id="classes-join-status"></p>
+        </div></div>
+      </div>
+
+      <!-- Kayıtlı sınıflar kartı -->
+      <div id="classes-list-area" class="collapse-card always-open">
+        <div class="cc-header">
+          <div class="cc-mark tone-teal"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">Kayıt</div>
+            <div class="cc-title">Kayıtlı Sınıflarım</div>
+          </div>
+          <div class="cc-summary"><span id="classes-list-count">—</span></div>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <div id="classes-list-grid" class="cl-list"></div>
+          <div id="classes-list-empty" class="cc-empty" style="display: none;">
+            <div class="cc-empty-body">
+              <h4>Henüz sınıfa katılmadın</h4>
+              <p>Öğretmeninden sınıf kodunu al, soldaki kutuya gir. Ödevlerini ve sınıf bildirimlerini burada göreceksin.</p>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- ============ ÖDEVLERIM (Student side, Phase 3) ============ -->
+    <div id="my-assignments-section" style="display: none;">
+      <div class="zone-head">
+        <span class="zone-eyebrow">Görev</span>
+        <span class="zone-line"></span>
+        <h2>Ödevlerim</h2>
+      </div>
+
+      <div id="my-assignments-list" class="my-assign-list"></div>
+      <div id="my-assignments-empty" class="cc-empty" style="display: none; margin-bottom: 2rem;">
+        <div class="cc-empty-body">
+          <h4>Aktif ödevin yok</h4>
+          <p>Sınıflarına yeni ödev geldiğinde burada görünür. Şimdilik istediğin gibi çalışmaya devam et.</p>
+        </div>
+      </div>
+    </div>
+
     <div id="gri-quota-area" class="" style="padding: 0 0 3rem; display: none;">
 
       <div class="zone-head">
@@ -2346,6 +3111,32 @@
 
 <div id="products-area" style="padding-bottom: 4rem;">
       <div class="loading-state">Materyaller yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- Çalışma planı oluştur modal -->
+  <div class="modal-backdrop" id="modal-study-plan">
+    <div class="modal-box">
+      <h2 id="msp-title">Yeni Çalışma Planı</h2>
+      <p class="modal-sub">Hedefini belirle, tarihini koy. Tamamladığında listede "Tamamla" butonuna bas.</p>
+
+      <form id="msp-form">
+        <label for="msp-name">Plan Adı</label>
+        <input type="text" id="msp-name" autocomplete="off" maxlength="80" required placeholder="SAT Reading Sprint">
+
+        <label for="msp-desc">Açıklama (Opsiyonel)</label>
+        <textarea id="msp-desc" rows="2" maxlength="300" placeholder="100 soru çöz, her gün 10"></textarea>
+
+        <label for="msp-target">Hedef Tarih (Opsiyonel)</label>
+        <input type="date" id="msp-target">
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="msp-cancel">Vazgeç</button>
+          <button type="submit" class="btn-submit-modal" id="msp-submit">Oluştur</button>
+        </div>
+
+        <div class="err" id="msp-err"></div>
+      </form>
     </div>
   </div>
 
@@ -3128,7 +3919,51 @@
       }
     })();
 
+    // SAT kamp soru slug'ı: sat-rw-kamp-d{D}-m{M}-q{Q}
+    var KAMP_DAY_PAGES = {
+      1: 'urun/day-1-information-and-ideas.html',
+      2: 'urun/day-2-inferences-quantitative.html',
+      3: 'urun/day-3-words-in-context.html',
+      4: 'urun/day-4-structure-and-connections.html',
+      5: 'urun/day-5-transitions.html',
+      6: 'urun/day-6-rhetorical-synthesis.html',
+      7: 'urun/day-7-mock-review.html',
+      8: 'urun/day-8-final-review.html'
+    };
+    function parseKampSlug(slug) {
+      var m = /^sat-rw-kamp-d(\d+)-m(\d+)-q(\d+)$/.exec(slug || '');
+      if (!m) return null;
+      return { day: parseInt(m[1], 10), module: parseInt(m[2], 10), q: parseInt(m[3], 10) };
+    }
+    function renderKampCard(slug, date, type) {
+      var info = parseKampSlug(slug);
+      if (!info) return renderMissingCard(slug, date, type);
+      var href = KAMP_DAY_PAGES[info.day] || 'urun/sat-rw-8-gunluk-kamp.html';
+      var catLabel = 'Kamp · Day ' + info.day + ' · Module ' + info.module;
+      var preview = 'Soru #' + info.q;
+      var available = !!KAMP_DAY_PAGES[info.day];
+      var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Day Sayfası';
+      return [
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">SAT R&amp;W</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(catLabel) + '</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>',
+        '    </div>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '    <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '  </a>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+        '</div>'
+      ].join('');
+    }
+
     function renderMissingCard(slug, date, type) {
+      // Kamp slug'ı ise kamp kartı dön
+      if (parseKampSlug(slug)) return renderKampCard(slug, date, type);
       return [
         '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <div class="qb-list-card qb-missing">',
@@ -3363,7 +4198,7 @@
         var userId = sess.data.session.user.id;
 
         var res = await sbCli.from('user_vocab')
-          .select('id, custom_note, saved_at, vocabulary:vocabulary_id (id, word_display, definition_json)')
+          .select('id, custom_note, saved_at, review_count, last_reviewed_at, vocabulary:vocabulary_id (id, word_display, definition_json)')
           .eq('user_id', userId)
           .order('saved_at', { ascending: false });
 
@@ -3436,12 +4271,22 @@
             ? '<span class="vocab-card-level ' + escHtml(levelClass) + '">' + escHtml(levelRaw) + '</span>'
             : '<span></span>';
 
+          var reviewCount = Number(r.review_count || 0);
+          var reviewBtn = '<button class="vocab-card-review" data-vid="' + escHtml(vocab.id || '') + '" data-row-id="' + escHtml(r.id) + '" title="Bu kelimeyi tekrar ettim">'
+            + '<span class="vcr-icon" aria-hidden="true">✓</span>'
+            + '<span class="vcr-label">Tekrar Ettim</span>'
+            + (reviewCount > 0 ? '<span class="vcr-count">' + reviewCount + '</span>' : '<span class="vcr-count vcr-count-zero"></span>')
+            + '</button>';
+
           return [
             '<div class="vocab-card" data-id="' + escHtml(r.id) + '">',
             '  <div class="vocab-card-word">' + escHtml(word) + '</div>',
             '  ' + meaningCell,
             '  ' + levelCell,
-            '  <button class="vocab-card-delete" data-id="' + escHtml(r.id) + '" title="Listemden çıkar">×</button>',
+            '  <div class="vocab-card-actions">',
+            '    ' + reviewBtn,
+            '    <button class="vocab-card-delete" data-id="' + escHtml(r.id) + '" title="Listemden çıkar">×</button>',
+            '  </div>',
             '  <div class="vocab-card-tip">' + tipBody + '</div>',
             '</div>'
           ].join('');
@@ -3470,8 +4315,703 @@
             } catch (e) { console.error('[vocab delete]', e); }
           });
         });
+
+        // Review butonu — vocab_review_increment RPC çağrısı
+        elGrid.querySelectorAll('.vocab-card-review').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var vid = btn.dataset.vid;
+            if (!vid) return;
+            // Anti-spam: 2 saniye disable
+            if (btn.disabled) return;
+            btn.disabled = true;
+            try {
+              var rpcRes = await sbCli.rpc('vocab_review_increment', { p_vocabulary_id: vid });
+              if (rpcRes.error) throw rpcRes.error;
+              var newCount = (rpcRes.data && rpcRes.data.review_count) || 0;
+              // Sayacı güncelle (UI'da göster)
+              var countEl = btn.querySelector('.vcr-count');
+              if (countEl) {
+                countEl.textContent = newCount;
+                countEl.classList.remove('vcr-count-zero');
+              }
+              btn.classList.add('vcr-just-clicked');
+              setTimeout(function () { btn.classList.remove('vcr-just-clicked'); }, 800);
+            } catch (err) {
+              console.warn('[vocab review]', err);
+            } finally {
+              setTimeout(function () { btn.disabled = false; }, 1500);
+            }
+          });
+        });
       } catch (e) {
         console.warn('[vocab list] load failed:', e);
+      }
+    })();
+
+    // ============ TARGET BAND UI (target_band rozeti için) ============
+    (async function initTargetBand() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var area = document.getElementById('target-band-area');
+        var sel = document.getElementById('target-band-select');
+        var btn = document.getElementById('target-band-save');
+        var status = document.getElementById('target-band-status');
+        var summary = document.getElementById('target-band-summary');
+        if (!area || !sel || !btn) return;
+
+        // Mevcut hedefi yükle
+        var profRes = await sbCli.from('profiles').select('target_band_ielts').eq('id', userId).maybeSingle();
+        if (profRes && profRes.data && profRes.data.target_band_ielts) {
+          var val = String(profRes.data.target_band_ielts);
+          // Format normalize ("7" → "7.0")
+          if (!/\./.test(val)) val = val + '.0';
+          sel.value = val;
+          if (summary) summary.textContent = 'Band ' + val;
+          if (status) {
+            status.textContent = 'Mevcut hedefin: Band ' + val;
+            status.classList.remove('tb-status-error', 'tb-status-success');
+          }
+        } else {
+          if (summary) summary.textContent = 'set edilmedi';
+        }
+
+        btn.addEventListener('click', async function () {
+          var v = sel.value;
+          if (!v) {
+            if (status) {
+              status.textContent = 'Lütfen bir band seç.';
+              status.classList.remove('tb-status-success');
+              status.classList.add('tb-status-error');
+            }
+            return;
+          }
+          btn.disabled = true;
+          if (status) {
+            status.textContent = 'Kaydediliyor...';
+            status.classList.remove('tb-status-error', 'tb-status-success');
+          }
+          try {
+            var updRes = await sbCli.from('profiles')
+              .update({ target_band_ielts: parseFloat(v) })
+              .eq('id', userId);
+            if (updRes.error) throw updRes.error;
+            if (status) {
+              status.textContent = 'Hedef Band ' + v + ' olarak kaydedildi.';
+              status.classList.add('tb-status-success');
+            }
+            if (summary) summary.textContent = 'Band ' + v;
+            // Rozet kontrolünü tetikle
+            try { await sbCli.rpc('award_extra_badges'); } catch (e) {}
+          } catch (err) {
+            if (status) {
+              status.textContent = 'Kayıt başarısız: ' + (err.message || 'bilinmeyen hata');
+              status.classList.add('tb-status-error');
+            }
+            console.warn('[target band save]', err);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      } catch (e) {
+        console.warn('[target band] init failed:', e);
+      }
+    })();
+
+    // ============ STUDY PLANS UI (study_plan rozeti için) ============
+    (async function initStudyPlans() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        var area = document.getElementById('study-plans-area');
+        var grid = document.getElementById('study-plans-grid');
+        var emptyEl = document.getElementById('study-plans-empty');
+        var countEl = document.getElementById('study-plans-count');
+        var newBtn = document.getElementById('study-plan-new');
+        if (!area || !grid || !newBtn) return;
+
+        var modal = document.getElementById('modal-study-plan');
+        var modalForm = document.getElementById('msp-form');
+        var modalCancel = document.getElementById('msp-cancel');
+        var modalErr = document.getElementById('msp-err');
+
+        function escSP(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function fmtDateSP(s) {
+          if (!s) return '';
+          var d = new Date(s);
+          var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        async function loadPlans() {
+          var res = await sbCli.from('study_plans')
+            .select('id, name, description, target_date, status, completed_at, created_at')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+          if (res.error) throw res.error;
+          var plans = res.data || [];
+          var activeCount = plans.filter(function (p) { return p.status === 'active'; }).length;
+          var completedCount = plans.filter(function (p) { return p.status === 'completed'; }).length;
+
+          if (countEl) {
+            countEl.textContent = plans.length === 0
+              ? '0 plan'
+              : activeCount + ' aktif' + (completedCount > 0 ? ', ' + completedCount + ' tamamlandı' : '');
+          }
+
+          if (plans.length === 0) {
+            grid.innerHTML = '';
+            if (emptyEl) emptyEl.style.display = 'flex';
+            return;
+          }
+          if (emptyEl) emptyEl.style.display = 'none';
+
+          grid.innerHTML = plans.map(function (p) {
+            var isCompleted = p.status === 'completed';
+            var metaParts = [];
+            if (p.target_date) metaParts.push('Hedef: ' + fmtDateSP(p.target_date));
+            if (isCompleted && p.completed_at) metaParts.push('Tamamlandı: ' + fmtDateSP(p.completed_at));
+            var metaHtml = metaParts.length
+              ? '<div class="sp-meta">' + metaParts.join('<span class="sp-meta-sep">·</span>') + '</div>'
+              : '';
+            var descHtml = p.description
+              ? '<p class="sp-desc">' + escSP(p.description) + '</p>'
+              : '';
+
+            var actionsHtml = isCompleted
+              ? '<span class="sp-completed-pill">Tamamlandı</span>'
+                + '<button class="sp-btn sp-btn-delete" data-id="' + escSP(p.id) + '" data-action="delete">Sil</button>'
+              : '<button class="sp-btn sp-btn-complete" data-id="' + escSP(p.id) + '" data-action="complete">Tamamla</button>'
+                + '<button class="sp-btn sp-btn-delete" data-id="' + escSP(p.id) + '" data-action="delete">Sil</button>';
+
+            return '<div class="sp-card' + (isCompleted ? ' sp-completed' : '') + '" data-id="' + escSP(p.id) + '">'
+              + '<div class="sp-main">'
+              + '<div class="sp-name">' + escSP(p.name) + '</div>'
+              + metaHtml
+              + descHtml
+              + '</div>'
+              + '<div class="sp-actions">' + actionsHtml + '</div>'
+              + '</div>';
+          }).join('');
+
+          // Action handlers
+          grid.querySelectorAll('.sp-btn').forEach(function (b) {
+            b.addEventListener('click', async function () {
+              var id = b.dataset.id;
+              var action = b.dataset.action;
+              if (!id || !action) return;
+              b.disabled = true;
+              try {
+                if (action === 'complete') {
+                  var upd = await sbCli.from('study_plans')
+                    .update({ status: 'completed', completed_at: new Date().toISOString() })
+                    .eq('id', id).eq('user_id', userId);
+                  if (upd.error) throw upd.error;
+                  // Rozet kontrolünü tetikle
+                  try { await sbCli.rpc('award_extra_badges'); } catch (e) {}
+                } else if (action === 'delete') {
+                  if (!confirm('Bu planı silmek istiyor musun?')) { b.disabled = false; return; }
+                  var del = await sbCli.from('study_plans').delete().eq('id', id).eq('user_id', userId);
+                  if (del.error) throw del.error;
+                }
+                await loadPlans();
+              } catch (err) {
+                console.warn('[study plan action]', err);
+                b.disabled = false;
+                alert('İşlem başarısız: ' + (err.message || 'bilinmeyen hata'));
+              }
+            });
+          });
+        }
+
+        // Modal handlers
+        function openModal() {
+          if (modalErr) modalErr.textContent = '';
+          if (modalForm) modalForm.reset();
+          if (modal) modal.classList.add('show');
+        }
+        function closeModal() {
+          if (modal) modal.classList.remove('show');
+        }
+        newBtn.addEventListener('click', openModal);
+        if (modalCancel) modalCancel.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', function (e) {
+          if (e.target === modal) closeModal();
+        });
+
+        if (modalForm) {
+          modalForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var name = document.getElementById('msp-name').value.trim();
+            var desc = document.getElementById('msp-desc').value.trim();
+            var target = document.getElementById('msp-target').value || null;
+            if (!name) {
+              if (modalErr) modalErr.textContent = 'Plan adı boş olamaz.';
+              return;
+            }
+            var submitBtn = document.getElementById('msp-submit');
+            if (submitBtn) submitBtn.disabled = true;
+            if (modalErr) modalErr.textContent = '';
+            try {
+              var insRes = await sbCli.from('study_plans').insert({
+                user_id: userId,
+                name: name,
+                description: desc || null,
+                target_date: target,
+                status: 'active'
+              });
+              if (insRes.error) throw insRes.error;
+              closeModal();
+              await loadPlans();
+            } catch (err) {
+              if (modalErr) modalErr.textContent = 'Kayıt başarısız: ' + (err.message || 'bilinmeyen hata');
+              console.warn('[study plan create]', err);
+            } finally {
+              if (submitBtn) submitBtn.disabled = false;
+            }
+          });
+        }
+
+        await loadPlans();
+      } catch (e) {
+        console.warn('[study plans] init failed:', e);
+      }
+    })();
+
+    // ============ SINIFLARIM UI ============
+    (async function initMyClasses() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+
+        // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
+        var roleRes = await sbCli.from('profiles').select('role').eq('id', userId).maybeSingle();
+        var userRole = (roleRes && roleRes.data && roleRes.data.role) || 'customer';
+        var banner = document.getElementById('cl-teacher-banner');
+
+        function renderBannerForTeacher() {
+          banner.innerHTML = ''
+            + '<div class="ctb-text">'
+            + '<strong>Öğretmen Paneli</strong>'
+            + '<span>Sınıflarını oluştur, öğrenci ilerlemelerini gör, ödev ata.</span>'
+            + '</div>'
+            + '<a href="ogretmen.html" class="cl-teacher-banner-btn">Öğretmen Paneline Git →</a>';
+        }
+
+        function renderBannerForCustomer() {
+          banner.innerHTML = ''
+            + '<div class="ctb-text">'
+            + '<strong>Sen bir öğretmen misin?</strong>'
+            + '<span>Sınıflar oluştur, ödev ata, öğrencilerini takip et. Tamamen ücretsiz.</span>'
+            + '</div>'
+            + '<button id="cl-become-teacher" class="cl-teacher-banner-btn" type="button">Öğretmen Olarak Kaydol</button>';
+
+          var becomeBtn = document.getElementById('cl-become-teacher');
+          if (becomeBtn) {
+            becomeBtn.addEventListener('click', async function () {
+              if (!confirm('Öğretmen olarak kaydolacaksın. Bu işlem geri alınabilir. Devam edilsin mi?')) return;
+              becomeBtn.disabled = true;
+              becomeBtn.textContent = 'Kaydediliyor...';
+              try {
+                var rpc = await sbCli.rpc('teacher_become');
+                if (rpc.error) throw rpc.error;
+                // Öğretmen paneline yönlendir
+                window.location.href = 'ogretmen.html';
+              } catch (err) {
+                alert('Bir sorun oluştu: ' + (err.message || err));
+                becomeBtn.disabled = false;
+                becomeBtn.textContent = 'Öğretmen Olarak Kaydol';
+              }
+            });
+          }
+        }
+
+        if (userRole === 'teacher' || userRole === 'admin') {
+          renderBannerForTeacher();
+        } else {
+          renderBannerForCustomer();
+        }
+
+        // === Sınıfa katıl ===
+        var codeInput = document.getElementById('classes-join-code');
+        var joinBtn = document.getElementById('classes-join-btn');
+        var joinStatus = document.getElementById('classes-join-status');
+
+        function setStatus(msg, kind) {
+          if (!joinStatus) return;
+          joinStatus.textContent = msg || '';
+          joinStatus.classList.remove('success', 'error');
+          if (kind) joinStatus.classList.add(kind);
+        }
+
+        // Input uppercase + limit
+        codeInput.addEventListener('input', function () {
+          var v = (codeInput.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+          if (v !== codeInput.value) codeInput.value = v;
+        });
+
+        joinBtn.addEventListener('click', async function () {
+          var code = (codeInput.value || '').trim().toUpperCase();
+          if (!code || code.length !== 6) {
+            setStatus('Kod 6 karakter olmalı.', 'error');
+            return;
+          }
+          joinBtn.disabled = true;
+          setStatus('Kontrol ediliyor...', null);
+          try {
+            var r = await sbCli.rpc('join_class', { p_join_code: code });
+            if (r.error) throw r.error;
+            var data = r.data || {};
+            if (data.was_already_member) {
+              setStatus('Zaten "' + (data.class_name || 'bu sınıf') + '" üyesisin.', 'success');
+            } else {
+              setStatus('"' + (data.class_name || 'Sınıfa') + '" katıldın.', 'success');
+            }
+            codeInput.value = '';
+            await loadMyClasses();
+          } catch (err) {
+            var msg = String(err.message || err);
+            if (/class_not_found/i.test(msg)) {
+              setStatus('Bu kod ile sınıf bulunamadı. Kontrol et veya öğretmeninle konuş.', 'error');
+            } else if (/teacher_cannot_join/i.test(msg)) {
+              setStatus('Kendi sınıfına öğrenci olarak katılamazsın.', 'error');
+            } else {
+              setStatus('Katılım başarısız: ' + msg, 'error');
+            }
+          } finally {
+            joinBtn.disabled = false;
+          }
+        });
+
+        // Enter ile submit
+        codeInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            joinBtn.click();
+          }
+        });
+
+        // === Sınıfları listele ===
+        var grid = document.getElementById('classes-list-grid');
+        var emptyEl = document.getElementById('classes-list-empty');
+        var countEl = document.getElementById('classes-list-count');
+
+        function escCl(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+        function fmtJoinDate(s) {
+          if (!s) return '';
+          var d = new Date(s);
+          var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        async function loadMyClasses() {
+          try {
+            var res = await sbCli.rpc('list_my_classes_student');
+            if (res.error) throw res.error;
+            var classes = res.data || [];
+
+            if (countEl) {
+              countEl.textContent = classes.length === 0
+                ? 'Henüz yok'
+                : classes.length + ' sınıf';
+            }
+
+            if (classes.length === 0) {
+              grid.innerHTML = '';
+              if (emptyEl) emptyEl.style.display = 'flex';
+              return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            grid.innerHTML = classes.map(function (c) {
+              var metaParts = ['Katılım: ' + fmtJoinDate(c.joined_at)];
+              if (c.teacher_email) metaParts.push('Öğretmen: ' + escCl(c.teacher_email));
+              if (parseInt(c.assignment_count) > 0) metaParts.push(c.assignment_count + ' ödev');
+              var descHtml = c.description
+                ? '<p class="cl-desc">' + escCl(c.description) + '</p>'
+                : '';
+              return '<div class="cl-card" data-id="' + escCl(c.class_id) + '">'
+                + '<div class="cl-main">'
+                + '<div class="cl-name">' + escCl(c.name) + '</div>'
+                + '<div class="cl-meta">' + metaParts.join('<span class="cl-meta-sep">·</span>') + '</div>'
+                + descHtml
+                + '</div>'
+                + '<button class="cl-leave-btn" data-id="' + escCl(c.class_id) + '" type="button">Ayrıl</button>'
+                + '</div>';
+            }).join('');
+
+            // Bind leave buttons
+            grid.querySelectorAll('.cl-leave-btn').forEach(function (btn) {
+              btn.addEventListener('click', async function () {
+                if (!confirm('Bu sınıftan ayrılmak istiyor musun? Tekrar katılmak için yeni kod gerekir.')) return;
+                btn.disabled = true;
+                try {
+                  var r = await sbCli.rpc('leave_class', { p_class_id: btn.dataset.id });
+                  if (r.error) throw r.error;
+                  await loadMyClasses();
+                } catch (err) {
+                  alert('Ayrılma başarısız: ' + (err.message || err));
+                  btn.disabled = false;
+                }
+              });
+            });
+          } catch (err) {
+            console.warn('[my classes] load failed:', err);
+            grid.innerHTML = '<p style="color:#b45046; font-style:italic;">Yüklenemedi.</p>';
+          }
+        }
+
+        await loadMyClasses();
+      } catch (e) {
+        console.warn('[my classes] init failed:', e);
+      }
+    })();
+
+    // ============ ÖDEVLERIM (Student Assignments) ============
+    (async function initMyAssignments() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+
+        var section = document.getElementById('my-assignments-section');
+        var list = document.getElementById('my-assignments-list');
+        var empty = document.getElementById('my-assignments-empty');
+        if (!section || !list) return;
+
+        var TYPE_LABELS_S = {
+          questions: 'Soru Bankası',
+          writing:   'Writing',
+          reading:   'Reading'
+        };
+
+        function escMA(s) {
+          if (s == null) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        function fmtDueMA(s) {
+          if (!s) return null;
+          var d = new Date(s);
+          var now = new Date();
+          var diffMs = d - now;
+          var diffDay = Math.floor(diffMs / 86400000);
+          var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          var date = d.getDate() + ' ' + months[d.getMonth()];
+          if (diffDay < 0) return date + ' (' + Math.abs(diffDay) + ' gün gecikti)';
+          if (diffDay === 0) return date + ' (bugün)';
+          if (diffDay === 1) return date + ' (yarın)';
+          if (diffDay <= 7) return date + ' (' + diffDay + ' gün kaldı)';
+          return date;
+        }
+
+        function humanizeMA(s) {
+          if (!s) return '';
+          return s.split(/[-_]/).map(function (w) {
+            return w.charAt(0).toUpperCase() + w.slice(1);
+          }).join(' ');
+        }
+
+        // exam_type → relevant question bank URL
+        function questionBankUrl(examType, category, subcategory) {
+          var base = '';
+          switch (examType) {
+            case 'sat-rw': base = 'sat-soru-bankasi-rw.html'; break;
+            case 'sat-math': base = 'sat-soru-bankasi-math.html'; break;
+            case 'toefl': base = 'toefl-soru-bankasi-reading.html'; break;
+            case 'udsp': base = 'udsp-soru-bankasi.html'; break;
+            case 'yds': base = 'yds-soru-bankasi-yds.html'; break;
+            case 'yokdil-fen': base = 'yds-soru-bankasi-yokdil-fen.html'; break;
+            case 'yokdil-sosyal': base = 'yds-soru-bankasi-yokdil-sosyal.html'; break;
+            case 'yokdil-saglik': base = 'yds-soru-bankasi-yokdil-saglik.html'; break;
+            case 'ydt': base = 'ydt-soru-bankasi.html'; break;
+            case 'ielts': base = 'ielts-deneme.html'; break;
+            case 'ib': base = 'ib-coaching.html'; break;
+            default: base = 'soru-bankasi.html';
+          }
+          var params = [];
+          if (category) params.push('category=' + encodeURIComponent(category));
+          if (subcategory) params.push('subcategory=' + encodeURIComponent(subcategory));
+          return params.length ? base + '?' + params.join('&') : base;
+        }
+
+        async function loadAssignments() {
+          try {
+            var res = await sbCli.rpc('list_my_assignments');
+            if (res.error) throw res.error;
+            var assignments = res.data || [];
+
+            if (assignments.length === 0) {
+              // Sadece kayıtlı sınıfı varsa "Ödevlerim" zone göster
+              var classRes = await sbCli.rpc('list_my_classes_student');
+              var hasClasses = classRes && classRes.data && classRes.data.length > 0;
+              if (hasClasses) {
+                section.style.display = '';
+                list.innerHTML = '';
+                empty.style.display = 'flex';
+              } else {
+                section.style.display = 'none';
+              }
+              return;
+            }
+
+            section.style.display = '';
+            empty.style.display = 'none';
+
+            list.innerHTML = assignments.map(function (a) {
+              var pct = a.progress_target > 0 ? Math.round(100 * a.progress_current / a.progress_target) : 0;
+              var isCompleted = a.status === 'completed';
+              var isOverdue = a.is_overdue && !isCompleted;
+              var cfg = a.config || {};
+
+              var meta = [];
+              meta.push('<span class="class-name">' + escMA(a.class_name) + '</span>');
+              if (a.due_date) {
+                meta.push('<span class="' + (isOverdue ? 'overdue-tag' : '') + '">Son: ' + escMA(fmtDueMA(a.due_date)) + '</span>');
+              }
+
+              var descHtml = a.description
+                ? '<p class="my-assign-desc">' + escMA(a.description) + '</p>'
+                : '';
+
+              // Type-specific content
+              var bodyHtml = '';
+              var actionsHtml = '';
+
+              if (a.type === 'questions') {
+                meta.push((cfg.exam_type ? humanizeMA(cfg.exam_type) : 'Soru'));
+                if (cfg.category) meta.push(humanizeMA(cfg.category));
+                bodyHtml = ''
+                  + '<div class="my-assign-progress">'
+                  + '<div class="my-assign-progress-bar"><div class="my-assign-progress-fill ' + (isCompleted ? 'completed' : '') + '" style="width:' + Math.min(pct, 100) + '%"></div></div>'
+                  + '<div class="my-assign-progress-text">' + a.progress_current + ' / ' + a.progress_target + '</div>'
+                  + '</div>';
+
+                if (!isCompleted) {
+                  var url = questionBankUrl(cfg.exam_type, cfg.category, cfg.subcategory);
+                  actionsHtml = '<a href="' + escMA(url) + '" class="my-assign-btn">Çözmeye Git →</a>';
+                } else {
+                  actionsHtml = '<span class="my-assign-completed-pill">Tamamlandı</span>';
+                }
+              } else if (a.type === 'writing') {
+                if (cfg.exam_type) meta.push(humanizeMA(cfg.exam_type) + ' Task ' + (cfg.task_number || ''));
+                if (cfg.min_words) meta.push(cfg.min_words + '+ kelime');
+
+                if (cfg.prompt) {
+                  bodyHtml = '<div class="my-assign-prompt">' + escMA(cfg.prompt) + '</div>';
+                }
+
+                if (!isCompleted) {
+                  actionsHtml = ''
+                    + '<a href="yazi-pratigi.html?assignment_id=' + escMA(a.assignment_id) + '" target="_blank" rel="noopener" class="my-assign-btn">Yazmaya Git →</a>'
+                    + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
+                } else {
+                  actionsHtml = ''
+                    + '<span class="my-assign-completed-pill">Tamamlandı</span>'
+                    + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              } else if (a.type === 'reading') {
+                if (cfg.url) {
+                  bodyHtml = '<p style="font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.85rem; color: var(--text-soft); margin: 0.4rem 0;"><a href="' + escMA(cfg.url) + '" target="_blank" rel="noopener" style="color: var(--teal); text-decoration: underline;">' + escMA(cfg.url) + '</a></p>';
+                }
+                if (cfg.follow_up_note) {
+                  bodyHtml += '<div class="my-assign-prompt">' + escMA(cfg.follow_up_note) + '</div>';
+                }
+
+                if (!isCompleted) {
+                  actionsHtml = ''
+                    + '<a href="' + escMA(cfg.url || '#') + '" target="_blank" rel="noopener" class="my-assign-btn">Okumaya Git →</a>'
+                    + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Okudum</button>';
+                } else {
+                  actionsHtml = ''
+                    + '<span class="my-assign-completed-pill">Tamamlandı</span>'
+                    + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              }
+
+              return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
+                + '<div class="my-assign-head">'
+                + '<div class="my-assign-titles">'
+                + '<span class="my-assign-type type-' + a.type + '">' + TYPE_LABELS_S[a.type] + '</span>'
+                + '<h4 class="my-assign-title">' + escMA(a.title) + '</h4>'
+                + (meta.length ? '<div class="my-assign-meta">' + meta.join('<span class="my-assign-meta-sep">·</span>') + '</div>' : '')
+                + '</div>'
+                + '</div>'
+                + descHtml
+                + bodyHtml
+                + (actionsHtml ? '<div class="my-assign-actions">' + actionsHtml + '</div>' : '')
+                + '</div>';
+            }).join('');
+
+            // Bind action buttons
+            list.querySelectorAll('[data-action]').forEach(function (btn) {
+              btn.addEventListener('click', async function () {
+                var action = btn.dataset.action;
+                var id = btn.dataset.id;
+                if (!id || !action) return;
+                btn.disabled = true;
+                var origText = btn.textContent;
+                btn.textContent = '...';
+                try {
+                  if (action === 'complete') {
+                    var r = await sbCli.rpc('mark_assignment_complete', { p_assignment_id: id });
+                    if (r.error) throw r.error;
+                  } else if (action === 'unmark') {
+                    var r2 = await sbCli.rpc('unmark_assignment_complete', { p_assignment_id: id });
+                    if (r2.error) throw r2.error;
+                  }
+                  await loadAssignments();
+                } catch (err) {
+                  alert('İşlem başarısız: ' + (err.message || err));
+                  btn.disabled = false;
+                  btn.textContent = origText;
+                }
+              });
+            });
+          } catch (err) {
+            console.warn('[my assignments] load failed:', err);
+          }
+        }
+
+        await loadAssignments();
+      } catch (e) {
+        console.warn('[my assignments] init failed:', e);
       }
     })();
 
@@ -4140,6 +5680,22 @@
         var metrics = (evalRes && evalRes.data && evalRes.data.metrics) || {};
         var newlyEarned = (evalRes && evalRes.data && evalRes.data.new_badges) || [];
 
+        // Yeni rozetlerin metriklerini al + yeni hak edilenleri ödüllendir
+        try {
+          var extraRes = await sbCli.rpc('award_extra_badges');
+          if (extraRes && extraRes.data) {
+            var extraMetrics = extraRes.data.metrics || {};
+            // Mevcut metrics'e ekle (override etmeden)
+            Object.keys(extraMetrics).forEach(function (k) {
+              if (metrics[k] === undefined) metrics[k] = extraMetrics[k];
+            });
+            var extraNew = extraRes.data.new_badges || [];
+            if (extraNew.length) newlyEarned = newlyEarned.concat(extraNew);
+          }
+        } catch (e) {
+          console.warn('[extra-badges]', e);
+        }
+
         // Fetch all active badges + which ones user has earned
         var allRes = await sbCli.from('badges').select('*').eq('active', true).order('display_order');
         if (allRes.error) throw allRes.error;
@@ -4164,17 +5720,27 @@
         function progressFor(b) {
           var current = 0;
           switch (b.criteria_type) {
-            case 'question_count': current = metrics.total_answers || 0; break;
-            case 'streak_days':    current = metrics.current_streak || 0; break;
-            case 'writing_count':  current = metrics.writing_count || 0; break;
-            case 'vocab_count':    current = metrics.vocab_count || 0; break;
-            case 'writing_band':   current = metrics.max_band || 0; break;
+            case 'question_count':   current = metrics.total_answers || 0; break;
+            case 'streak_days':      current = metrics.current_streak || 0; break;
+            case 'writing_count':    current = metrics.writing_count || 0; break;
+            case 'vocab_count':      current = metrics.vocab_count || 0; break;
+            case 'writing_band':     current = metrics.max_band || 0; break;
+            // Phase 1: 7 yeni criteria_type
+            case 'package':          current = metrics.package_count || 0; break;
+            case 'bonus_token':      current = metrics.bonus_token_count || 0; break;
+            case 'target_band':      current = metrics.target_band_reached || 0; break;
+            case 'vocab_review':     current = metrics.vocab_review_total || 0; break;
+            case 'vocab_recurrence': current = metrics.vocab_recurrence_days || 0; break;
+            case 'slow_correct':     current = metrics.slow_correct_count || 0; break;
+            case 'study_plan':       current = metrics.study_plan_completed || 0; break;
             default: return null;
           }
           var pct = Math.min(100, Math.round((current / b.criteria_value) * 100));
           var label;
           if (b.criteria_type === 'writing_band') {
             label = current > 0 ? 'Mevcut: ' + current + ' / Hedef: ' + b.criteria_value : 'Henüz değerlendirme yok';
+          } else if (b.criteria_type === 'target_band') {
+            label = current >= 1 ? 'Hedefe ulaşıldı' : 'Henüz hedef ulaşılmadı';
           } else {
             label = current.toLocaleString('tr-TR') + ' / ' + b.criteria_value.toLocaleString('tr-TR');
           }

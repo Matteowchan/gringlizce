@@ -1834,758 +1834,939 @@
      YAZI PRATIGI SHOWCASE — AI Writing Feedback
 ======================================================== -->
 <style>
-  /* ============ YAZI SHOWCASE — Cinematic v2 ============ */
-  .yazi-showcase {
-    position: relative;
-    overflow: hidden;
+  /* ===========================================================
+     SHARED TOKENS — bölüm/section system
+     =========================================================== */
+  .bolum {
+    padding: 5rem 0 4.5rem;
     border-top: 1px solid var(--line);
-    background: var(--bg);
-    padding: 5rem 0 5.5rem;
   }
-  .yazi-showcase::before {
-    content: ""; position: absolute; inset: 0;
-    background: 
-      radial-gradient(ellipse 800px 400px at 15% 30%, rgba(44, 88, 86, 0.06), transparent 60%),
-      radial-gradient(ellipse 600px 400px at 90% 80%, rgba(200, 154, 60, 0.05), transparent 65%);
-    pointer-events: none; z-index: 0;
+  .bolum.bolum-soft { background: var(--bg-soft); }
+  .bolum-head {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 2.8rem;
   }
-  .yazi-showcase .wrap { position: relative; z-index: 1; }
-
-  .yazi-divider {
-    display: flex; align-items: center; gap: 0.8rem;
-    justify-content: center; margin: 1.2rem auto 0; max-width: 380px;
+  .bolum-num {
+    display: inline-block;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--gold, #C89A3C);
+    margin-bottom: 0.7rem;
   }
-
-  .yazi-mascot-row {
-    display: flex; justify-content: center;
-    margin-bottom: 1.2rem;
+  .bolum-title {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.55rem;
+    color: var(--text, #1A2230);
   }
-  .yazi-mascot {
-    width: 88px; height: 88px;
-    border-radius: 50%;
-    object-fit: contain;
-    animation: mascot-float 4s ease-in-out infinite;
-    filter: drop-shadow(0 8px 20px rgba(44, 88, 86, 0.15));
-  }
-  @keyframes mascot-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  .yazi-divider .yd-line {
-    flex: 1; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--line), transparent);
-  }
-  .yazi-divider .yd-label {
-    font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--text-muted); font-weight: 600;
+  .bolum-lead {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    font-size: 1.08rem;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 60ch;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .yazi-stats-row {
-    display: flex; justify-content: center; gap: 2.5rem;
-    margin: 2rem auto 0; flex-wrap: wrap;
-    font-family: var(--font-ui); font-size: 0.78rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-muted); font-weight: 500;
-  }
-  .yazi-stats-row .stat strong {
-    color: #2C5856; font-family: var(--font-display);
-    font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
-    text-transform: none; display: block; line-height: 1;
-    margin-bottom: 0.2rem;
+  /* Reveal animation — gentle fade up on scroll */
+  .b-reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .b-reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .b-reveal { opacity: 1; transform: none; transition: none; }
   }
 
-  .yazi-main {
-    display: grid; grid-template-columns: 1fr 1.1fr; gap: 4rem;
-    margin-top: 4rem; align-items: center;
-  }
-  @media (max-width: 980px) {
-    .yazi-main { grid-template-columns: 1fr; gap: 3rem; }
-  }
-
-  /* ---- Sol kolon: features ---- */
-  .yazi-features-v2 {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: 0.85rem;
-  }
-  .yf-card {
-    display: grid; grid-template-columns: 48px 1fr;
-    gap: 1.1rem; padding: 1.3rem 1.4rem;
-    background: var(--bg-card);
-    border: 1px solid var(--line); border-radius: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative; overflow: hidden;
-    cursor: default;
-  }
-  .yf-card::before {
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
-    width: 3px; background: var(--cat-accent);
-    transform: scaleY(0); transform-origin: top;
-    transition: transform 0.35s ease;
-  }
-  .yf-card:hover {
-    transform: translateX(4px);
-    box-shadow: 0 8px 24px rgba(44, 88, 86, 0.08);
-    border-color: var(--cat-accent);
-  }
-  .yf-card:hover::before { transform: scaleY(1); }
-  .yf-card.active {
-    box-shadow: 0 4px 16px rgba(44, 88, 86, 0.1);
-    border-color: var(--cat-accent);
-  }
-  .yf-card.active::before { transform: scaleY(1); }
-
-  .yf-icon-v2 {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: linear-gradient(135deg, #2C5856 0%, #1a3a38 100%);
-    color: white; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; box-shadow: 0 4px 12px rgba(44, 88, 86, 0.2);
-  }
-  .yf-icon-v2 svg { width: 22px; height: 22px; }
-
-  .yf-text-v2 strong {
-    display: block; font-family: var(--font-display);
-    font-size: 1.08rem; font-weight: 600; color: var(--text);
-    margin-bottom: 0.25rem; line-height: 1.3;
-  }
-  .yf-text-v2 span {
-    font-family: var(--font-body); color: var(--text-soft);
-    font-size: 0.92rem; line-height: 1.55;
-  }
-
-  .yazi-cta-row {
-    margin-top: 1.8rem; display: flex; gap: 0.8rem; flex-wrap: wrap;
-  }
-
-  /* ---- Sağ kolon: cinematic feedback card ---- */
-  .yazi-cinema {
+  /* ===========================================================
+     HERO — Manifesto
+     =========================================================== */
+  .hero-manifesto {
     position: relative;
+    padding: 5rem 0 4.2rem;
+    background: var(--bg, #F4EFE3);
+    overflow: hidden;
   }
-  .yazi-cinema::before, .yazi-cinema::after {
-    content: ""; position: absolute;
-    border: 1px solid var(--line); border-radius: 16px;
-    background: var(--bg-card);
-  }
-  .yazi-cinema::before {
-    inset: -0.7rem 1.8rem 1.8rem -0.7rem;
-    transform: rotate(-1.5deg); z-index: 0; opacity: 0.5;
-  }
-  .yazi-cinema::after {
-    inset: -0.3rem 0.7rem 1.2rem 0.5rem;
-    transform: rotate(0.8deg); z-index: 1; opacity: 0.75;
-  }
-  .yazi-window {
-    position: relative; z-index: 2;
-    background: var(--bg-card); border: 1px solid var(--line);
-    border-radius: 16px; overflow: hidden;
-    box-shadow: 0 24px 60px rgba(26, 34, 48, 0.12);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-  }
-  .yazi-window:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 28px 70px rgba(26, 34, 48, 0.16);
-  }
-
-  .yw-titlebar {
-    display: flex; align-items: center; gap: 1rem;
-    background: var(--bg-soft);
-    padding: 0.75rem 1.2rem; border-bottom: 1px solid var(--line);
-  }
-  .yw-dots { display: flex; gap: 0.4rem; }
-  .yw-dot { width: 11px; height: 11px; border-radius: 50%; }
-  .yw-dot.r { background: #e75d5d; }
-  .yw-dot.y { background: #e8b13c; }
-  .yw-dot.g { background: #5cb85c; }
-  .yw-url {
-    flex: 1; font-family: var(--font-ui); font-size: 0.78rem;
-    color: var(--text-muted); letter-spacing: 0.02em;
-  }
-  .yw-url strong { color: var(--text); font-weight: 600; }
-
-  .yw-stage-container {
-    position: relative; min-height: 460px;
-  }
-  .yw-stage {
-    position: absolute; inset: 0;
-    padding: 1.5rem 1.7rem;
-    opacity: 0; transform: translateY(8px);
-    transition: opacity 0.55s ease, transform 0.55s ease;
+  .hero-manifesto::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 800px 400px at 50% 0%, rgba(200, 154, 60, 0.06), transparent 70%),
+      radial-gradient(ellipse 600px 400px at 50% 100%, rgba(44, 88, 86, 0.04), transparent 70%);
     pointer-events: none;
   }
-  .yw-stage.active {
-    opacity: 1; transform: translateY(0);
-    pointer-events: auto;
-  }
+  .hero-manifesto .wrap { position: relative; z-index: 1; text-align: center; max-width: 800px; }
 
-  .yw-eyebrow {
-    display: inline-flex; align-items: center; gap: 0.45rem;
-    font-family: var(--font-ui); font-size: 0.66rem;
-    letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--cat-accent-deep); font-weight: 700;
-    padding: 0.32rem 0.8rem;
-    background: var(--cat-accent-soft);
-    border-radius: 999px; margin-bottom: 1rem;
-  }
-  .yw-eyebrow::before {
-    content: ""; width: 5px; height: 5px; border-radius: 50%;
-    background: var(--cat-accent); 
-    animation: pulse 1.8s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.3); }
-  }
-
-  .yw-task {
-    font-family: var(--font-display); font-size: 1.05rem;
-    font-weight: 600; color: var(--text); margin: 0 0 0.5rem;
-    line-height: 1.35;
-  }
-  .yw-prompt {
-    font-family: var(--font-body); color: var(--text-soft);
-    font-size: 0.88rem; line-height: 1.55;
-    padding: 0.85rem 1rem; background: var(--bg-soft);
-    border-radius: 8px; border-left: 3px solid var(--cat-accent);
-    margin-bottom: 1.1rem;
-  }
-  .yw-prompt[lang="en"] { font-style: italic; }
-
-  /* Stage 1: typing */
-  .yw-typing-area {
-    font-family: var(--font-body); font-size: 0.9rem;
-    line-height: 1.7; color: var(--text);
-    padding: 0.9rem 1rem;
-    background: var(--bg-soft); border-radius: 8px;
-    border: 1px dashed var(--line);
-    min-height: 130px;
-    position: relative;
-  }
-  .yw-cursor {
-    display: inline-block; width: 1.5px; height: 1.05em;
-    background: var(--cat-accent); vertical-align: middle;
-    margin-left: 1px;
-    animation: blink 1s steps(2) infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-  .yw-wc {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 0.8rem;
-    font-family: var(--font-ui); font-size: 0.72rem;
-    color: var(--text-muted); letter-spacing: 0.05em;
-  }
-  .yw-wc strong { color: var(--text); font-weight: 700; font-size: 0.9rem; }
-
-  /* Stage 2: AI evaluating */
-  .yw-eval-pulse {
-    text-align: center; padding: 2.5rem 1rem;
-  }
-  .yw-eval-pulse .pulse-ring {
-    width: 64px; height: 64px; border-radius: 50%;
-    margin: 0 auto 1.2rem;
-    background: var(--cat-accent);
-    animation: pulse-grow 1.4s ease-out infinite;
-    position: relative;
-  }
-  .yw-eval-pulse .pulse-ring::after {
-    content: ""; position: absolute; inset: 0;
-    border: 2px solid var(--cat-accent);
-    border-radius: 50%;
-    animation: ripple 1.4s ease-out infinite;
-  }
-  @keyframes pulse-grow {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-  }
-  @keyframes ripple {
-    0% { transform: scale(1); opacity: 0.8; }
-    100% { transform: scale(1.8); opacity: 0; }
-  }
-  .yw-eval-pulse h4 {
-    font-family: var(--font-display); font-size: 1.15rem;
-    margin: 0 0 0.4rem; color: var(--text);
-  }
-  .yw-eval-pulse p {
-    font-family: var(--font-body); color: var(--text-soft);
-    font-size: 0.9rem; margin: 0;
-  }
-
-  /* Stage 3: results */
-  .yw-band-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
-    margin-bottom: 1rem;
-  }
-  .yw-band-pill-v2 {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.55rem 0.85rem;
-    background: var(--bg-soft); border-radius: 8px;
-    border: 1px solid var(--line);
-  }
-  .yw-band-pill-v2 .lbl {
-    font-family: var(--font-ui); font-size: 0.66rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-muted); font-weight: 600;
-  }
-  .yw-band-pill-v2 .num {
-    font-family: var(--font-display); font-weight: 700;
-    color: var(--text); font-size: 0.95rem;
-  }
-  .yw-band-pill-v2.highlight {
-    background: linear-gradient(135deg, var(--cat-accent) 0%, var(--cat-accent-deep) 100%);
-    border-color: var(--cat-accent);
-    box-shadow: 0 4px 12px rgba(44, 88, 86, 0.2);
-  }
-  .yw-band-pill-v2.highlight .lbl,
-  .yw-band-pill-v2.highlight .num { color: white; }
-
-  .yw-feedback-block-v2 {
-    background: linear-gradient(135deg, var(--cat-accent) 0%, var(--cat-accent-deep) 100%);
-    color: white; padding: 1rem 1.1rem; border-radius: 10px;
-    box-shadow: 0 4px 14px rgba(44, 88, 86, 0.18);
-  }
-  .yw-feedback-block-v2 .fb-lbl {
-    display: block; font-family: var(--font-ui);
-    font-size: 0.62rem; letter-spacing: 0.16em;
-    text-transform: uppercase; opacity: 0.85;
-    margin-bottom: 0.4rem; font-weight: 700;
-  }
-  .yw-feedback-block-v2 p {
-    margin: 0; font-family: var(--font-body); font-size: 0.85rem;
-    line-height: 1.55; color: white;
-  }
-
-  /* Stage description */
-  .yw-stage-desc {
-    font-family: var(--font-body); font-size: 0.85rem;
-    line-height: 1.55; color: var(--text-soft);
-    margin: 0 0 0.9rem;
-  }
-
-  /* Stage 0 — prompt meta */
-  .yw-prompt-meta {
-    display: flex; flex-direction: column; gap: 0.45rem;
-    margin-top: 0.9rem; padding: 0.85rem 1rem;
-    background: var(--bg-soft); border-radius: 8px;
-    border: 1px solid var(--line);
-  }
-  .ypm-row {
-    display: flex; justify-content: space-between; align-items: center;
-    font-family: var(--font-ui); font-size: 0.78rem;
-  }
-  .ypm-lbl {
-    color: var(--text-muted); letter-spacing: 0.08em;
-    text-transform: uppercase; font-weight: 500; font-size: 0.66rem;
-  }
-  .ypm-val {
-    color: var(--text); font-weight: 600;
-    font-family: var(--font-body); font-size: 0.85rem;
-  }
-
-  /* Stage 1 — mini pulse */
-  .yw-eval-pulse-mini {
-    display: flex; align-items: center; gap: 0.6rem;
-    margin-top: 1rem; padding: 0.7rem 0.9rem;
-    background: var(--cat-accent-soft); border-radius: 8px;
-    font-family: var(--font-body); font-size: 0.82rem;
-    color: var(--cat-accent-deep); font-weight: 500;
-  }
-  .pulse-ring-mini {
-    width: 12px; height: 12px; border-radius: 50%;
-    background: var(--cat-accent);
-    animation: pulse-grow 1.4s ease-out infinite;
-    flex-shrink: 0;
-  }
-
-  /* Stage 3 — mistake block */
-  .yw-mistake-block {
-    display: flex; flex-direction: column; gap: 0.65rem;
-  }
-  .ymb-original, .ymb-fixed {
-    padding: 0.85rem 1rem; border-radius: 10px;
-  }
-  .ymb-original {
-    background: rgba(232, 92, 92, 0.07);
-    border-left: 3px solid #d35e54;
-  }
-  .ymb-fixed {
-    background: var(--cat-accent-soft);
-    border-left: 3px solid var(--cat-accent);
-  }
-  .ymb-lbl {
-    display: block; font-family: var(--font-ui);
-    font-size: 0.6rem; letter-spacing: 0.14em;
-    text-transform: uppercase; font-weight: 700;
-    color: var(--text-muted); margin-bottom: 0.35rem;
-  }
-  .ymb-original .ymb-lbl { color: #b45046; }
-  .ymb-fixed .ymb-lbl { color: var(--cat-accent-deep); }
-  .ymb-original p, .ymb-fixed p {
-    margin: 0; font-family: var(--font-body);
-    font-size: 0.88rem; line-height: 1.5; color: var(--text);
-  }
-  .ymb-original p s { color: #b45046; text-decoration-thickness: 1.5px; }
-  .ymb-arrow {
-    text-align: center; font-size: 1.4rem;
-    color: var(--cat-accent); line-height: 1; margin: -0.15rem 0;
+  .hm-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold, #C89A3C);
     font-weight: 700;
+    margin-bottom: 2.2rem;
   }
-  .ymb-reason {
-    margin-top: 0.4rem; padding: 0.7rem 0.9rem;
-    background: var(--bg-soft); border-radius: 8px;
-    font-family: var(--font-body); font-size: 0.82rem;
-    line-height: 1.55; color: var(--text-soft);
+  .hm-eyebrow::before,
+  .hm-eyebrow::after {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--gold, #C89A3C);
+    opacity: 0.5;
   }
-  .ymb-reason strong { color: var(--text); font-weight: 700; }
 
-  /* Stage 4 — token panel */
-  .yw-token-panel {
-    display: flex; flex-direction: column; gap: 0.6rem;
-    margin-bottom: 1rem;
+  .hm-line {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: clamp(1.15rem, 2.4vw, 1.35rem);
+    line-height: 1.55;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    margin: 0 auto 0.5rem;
+    max-width: 560px;
+    opacity: 0;
+    animation: hm-line-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .ytp-row {
-    display: flex; align-items: center; gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    background: var(--bg-soft); border-radius: 10px;
-    border: 1px solid var(--line);
+  .hm-line.hm-line-3 {
+    color: var(--text, #1A2230);
+    font-weight: 500;
+    margin-bottom: 2.3rem;
   }
-  .ytp-icon {
-    width: 36px; height: 36px; border-radius: 9px;
-    background: linear-gradient(135deg, var(--cat-accent) 0%, var(--cat-accent-deep) 100%);
-    color: white; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+  .hm-line.hm-line-1 { animation-delay: 0.1s; }
+  .hm-line.hm-line-2 { animation-delay: 0.5s; }
+  .hm-line.hm-line-3 { animation-delay: 0.95s; }
+  @keyframes hm-line-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .ytp-text { flex: 1; }
-  .ytp-text strong {
-    display: block; font-family: var(--font-display);
-    font-size: 0.95rem; font-weight: 600; color: var(--text);
-    line-height: 1.3;
+  @media (prefers-reduced-motion: reduce) {
+    .hm-line { opacity: 1; animation: none; }
   }
-  .ytp-text span {
-    font-family: var(--font-ui); font-size: 0.72rem;
-    color: var(--text-muted); letter-spacing: 0.02em;
+
+  .hm-brand {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: clamp(3rem, 7vw, 4.6rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--text, #1A2230);
+    margin: 0 0 0.4rem;
+    opacity: 0;
+    animation: hm-brand-rise 1s 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .ytp-val {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: 1.4rem; color: var(--cat-accent-deep);
+  .hm-brand .hm-brand-it {
+    font-style: italic;
+    color: var(--teal, #2C5856);
+    font-weight: 400;
+  }
+  @keyframes hm-brand-rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hm-brand { opacity: 1; animation: none; }
+  }
+
+  .hm-tagline {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-muted, #6B6862);
+    letter-spacing: 0.06em;
+    margin: 0 0 2rem;
+  }
+  .hm-tagline .hm-dot {
+    color: var(--gold, #C89A3C);
+    margin: 0 0.5rem;
+  }
+
+  .hm-cta-row {
+    display: inline-flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2.8rem;
+  }
+  .hm-cta {
+    padding: 0.95rem 2rem;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--teal, #2C5856);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    text-align: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .hm-cta.hm-cta-primary {
+    background: var(--teal, #2C5856);
+    color: #F4EFE3;
+  }
+  .hm-cta.hm-cta-primary:hover {
+    background: #234644;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 88, 86, 0.18);
+  }
+  .hm-cta.hm-cta-ghost {
+    background: transparent;
+    color: var(--teal, #2C5856);
+  }
+  .hm-cta.hm-cta-ghost:hover {
+    background: rgba(44, 88, 86, 0.06);
+    transform: translateY(-1px);
+  }
+
+  .hm-exam-strip {
+    border-top: 1px solid var(--line, #D9D2C4);
+    padding-top: 1.5rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .hm-exam-eyebrow {
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--text-muted, #6B6862);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .hm-exam-list {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+    color: var(--text, #1A2230);
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+  .hm-exam-list .hm-exam-dot {
+    color: var(--gold, #C89A3C);
+    margin: 0 0.6em;
+    opacity: 0.65;
+  }
+
+  /* ===========================================================
+     BÖLÜM 01 — 2+1 Card Grid
+     =========================================================== */
+  .bolum-01 .b01-grid-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+  .b01-card {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 1.8rem 1.7rem 1.6rem;
+    transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .b01-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--gold, #C89A3C);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.4s ease;
+  }
+  .b01-card:hover {
+    border-color: var(--teal, #2C5856);
+    box-shadow: 0 10px 30px rgba(26, 34, 48, 0.06);
+    transform: translateY(-2px);
+  }
+  .b01-card:hover::before {
+    transform: scaleY(1);
+    background: var(--teal, #2C5856);
+  }
+  .b01-icon {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.2rem;
+    transition: transform 0.3s ease;
+  }
+  .b01-card:hover .b01-icon { transform: scale(1.05); }
+  .b01-icon svg { width: 22px; height: 22px; }
+  .b01-icon.tone-teal { background: rgba(44, 88, 86, 0.12); color: var(--teal, #2C5856); }
+  .b01-icon.tone-gold { background: rgba(200, 154, 60, 0.18); color: #8b6627; }
+  .b01-icon.tone-coral { background: rgba(179, 90, 60, 0.14); color: #993C1D; }
+  .b01-eyebrow {
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted, #6B6862);
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .b01-title {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--text, #1A2230);
+    margin: 0 0 0.65rem;
+  }
+  .b01-desc {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    margin: 0 0 1.4rem;
+    flex: 1;
+  }
+  .b01-cta {
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--teal, #2C5856);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: gap 0.25s ease;
+  }
+  .b01-card:hover .b01-cta { gap: 0.7rem; }
+  .b01-cta-arrow {
+    transition: transform 0.25s ease;
+  }
+  .b01-card:hover .b01-cta-arrow { transform: translateX(3px); }
+
+  .b01-card-wide {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 1.8rem 2rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .b01-card-wide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--gold, #C89A3C);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.4s ease;
+  }
+  .b01-card-wide:hover {
+    border-color: var(--teal, #2C5856);
+    box-shadow: 0 10px 30px rgba(26, 34, 48, 0.06);
+    transform: translateY(-2px);
+  }
+  .b01-card-wide:hover::before {
+    transform: scaleY(1);
+    background: var(--teal, #2C5856);
+  }
+  .b01-card-wide .b01-wide-text { min-width: 0; }
+  .b01-card-wide .b01-title { margin-bottom: 0.4rem; font-size: 1.3rem; }
+  .b01-card-wide .b01-desc { margin: 0; }
+  .b01-card-wide .b01-icon {
+    width: 52px; height: 52px;
+    margin-bottom: 0;
+    border-radius: 10px;
+  }
+  .b01-card-wide .b01-icon svg { width: 26px; height: 26px; }
+  .b01-card-wide .b01-cta { white-space: nowrap; }
+
+  /* ===========================================================
+     BÖLÜM 02 — 3-step Flow
+     =========================================================== */
+  .bolum-02 .b02-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0;
+    align-items: stretch;
+    max-width: 960px;
+    margin: 0 auto 2rem;
+  }
+  .b02-step {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 2rem 1.5rem 1.8rem;
+    text-align: center;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    position: relative;
+  }
+  .b02-step:hover {
+    border-color: var(--teal, #2C5856);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(26, 34, 48, 0.06);
+  }
+  .b02-num {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: rgba(60, 52, 137, 0.10);
+    color: #3C3489;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    border: 1px solid rgba(60, 52, 137, 0.25);
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+  .b02-step:hover .b02-num {
+    background: var(--teal, #2C5856);
+    color: #F4EFE3;
+    border-color: var(--teal, #2C5856);
+    transform: scale(1.05);
+  }
+  .b02-step-title {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--text, #1A2230);
+    margin: 0 0 0.5rem;
     letter-spacing: -0.01em;
   }
-  .yw-cost-line {
-    text-align: center; padding: 0.7rem 0.9rem;
-    background: var(--cat-accent-soft); border-radius: 8px;
-    font-family: var(--font-body); font-size: 0.85rem;
-    color: var(--cat-accent-deep);
+  .b02-step-desc {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    margin: 0;
   }
-  .yw-cost-line strong { color: var(--cat-accent-deep); font-weight: 700; }
+  .b02-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold, #C89A3C);
+    padding: 0 0.8rem;
+    opacity: 0.6;
+  }
+  .b02-arrow svg { width: 22px; height: 22px; }
+  .b02-cta-row { text-align: center; margin-top: 0.5rem; }
 
-  /* Stage indicator dots */
-  .yw-stage-dots {
-    display: flex; gap: 0.35rem; justify-content: center;
-    padding: 0.6rem 0 0.9rem;
-    background: var(--bg-soft); border-top: 1px solid var(--line);
+  /* ===========================================================
+     BÖLÜM 03 — Manifesto + Paket Galerisi
+     =========================================================== */
+  .bolum-03 .b03-free-card {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    flex-wrap: wrap;
+    border-left: 3px solid var(--teal, #2C5856);
   }
-  .yw-stage-dot {
-    width: 24px; height: 4px; border-radius: 2px;
-    background: var(--line); transition: background 0.3s ease, width 0.3s ease;
-    cursor: pointer;
+  .b03-free-badge {
+    display: inline-block;
+    background: rgba(44, 88, 86, 0.12);
+    color: var(--teal, #2C5856);
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    flex-shrink: 0;
   }
-  .yw-stage-dot.active {
-    background: var(--cat-accent);
-    width: 36px;
+  .b03-free-text {
+    flex: 1;
+    min-width: 240px;
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text, #1A2230);
+  }
+
+  .b03-paket-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .b03-paket-eyebrow {
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--gold, #C89A3C);
+  }
+  .b03-paket-hint {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+  }
+
+  .b03-paket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .b03-paket-card {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 1.2rem 1.3rem;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .b03-paket-card:hover {
+    border-color: var(--gold, #C89A3C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 34, 48, 0.05);
+  }
+  .b03-paket-exam {
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold, #C89A3C);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .b03-paket-title {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--text, #1A2230);
+    margin: 0 0 0.45rem;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .b03-paket-desc {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    margin: 0;
+    line-height: 1.5;
+  }
+  .b03-cta-row { text-align: right; }
+
+  /* ===========================================================
+     BÖLÜM 04 — Çalışırken Yanında Strip
+     =========================================================== */
+  .bolum-04 .b04-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .b04-card {
+    background: var(--bg-card, #fefcf7);
+    border: 1px solid var(--line, #D9D2C4);
+    padding: 1.5rem 1.5rem 1.4rem;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .b04-card:hover {
+    border-color: var(--teal, #2C5856);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26, 34, 48, 0.06);
+  }
+  .b04-icon {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .b04-icon svg { width: 20px; height: 20px; }
+  .b04-icon.tone-teal { background: rgba(44, 88, 86, 0.12); color: var(--teal, #2C5856); }
+  .b04-icon.tone-gold { background: rgba(200, 154, 60, 0.18); color: #8b6627; }
+  .b04-icon.tone-coral { background: rgba(179, 90, 60, 0.14); color: #993C1D; }
+  .b04-title {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--text, #1A2230);
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.005em;
+  }
+  .b04-desc {
+    font-family: var(--font-serif, 'Crimson Pro'), serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-soft, var(--text-muted, #6B6862));
+    margin: 0 0 1rem;
+  }
+  .b04-demo {
+    background: var(--bg-soft, #e8e0cc);
+    border-radius: 4px;
+    padding: 0.65rem 0.9rem;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 0.78rem;
+    color: var(--text, #1A2230);
+    line-height: 1.4;
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .b04-demo.b04-demo-typing { font-family: 'Menlo', 'Monaco', monospace; font-size: 0.75rem; }
+  .b04-demo-arrow { color: var(--gold, #C89A3C); margin: 0 0.4rem; }
+  .b04-demo strong { font-weight: 600; }
+  .b04-demo .b04-counter {
+    font-family: var(--font-display, Georgia), serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--teal, #2C5856);
+    margin-right: 0.5rem;
+    line-height: 1;
+  }
+
+  /* CSS animation — pulse counter on Tekrar Çalış card */
+  .b04-counter.is-pulse {
+    animation: b04-counter-pulse 3s ease-in-out infinite;
+  }
+  @keyframes b04-counter-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .b04-counter.is-pulse { animation: none; }
+  }
+
+  /* Cycle text in Gri demo (cycle through 3 example questions) */
+  .b04-demo-cycle {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+  }
+  .b04-demo-cycle .b04-cycle-item {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    opacity: 0;
+    animation: b04-cycle 12s linear infinite;
+  }
+  .b04-demo-cycle .b04-cycle-item:nth-child(1) { animation-delay: 0s; }
+  .b04-demo-cycle .b04-cycle-item:nth-child(2) { animation-delay: 4s; }
+  .b04-demo-cycle .b04-cycle-item:nth-child(3) { animation-delay: 8s; }
+  @keyframes b04-cycle {
+    0%, 25%, 100% { opacity: 0; }
+    3%, 22% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .b04-demo-cycle .b04-cycle-item { animation: none; opacity: 1; position: static; }
+    .b04-demo-cycle .b04-cycle-item:not(:first-child) { display: none; }
+  }
+
+  /* ===========================================================
+     MOBILE EXCELLENCE — <640px
+     =========================================================== */
+  @media (max-width: 700px) {
+    .bolum { padding: 3.5rem 0 3.2rem; }
+    .bolum-head { margin-bottom: 2rem; }
+
+    .hero-manifesto { padding: 3.5rem 0 3rem; }
+    .hm-eyebrow { margin-bottom: 1.6rem; font-size: 9px; }
+    .hm-eyebrow::before, .hm-eyebrow::after { width: 18px; }
+    .hm-line { font-size: 1.05rem; line-height: 1.5; }
+    .hm-brand { margin-bottom: 0.3rem; }
+    .hm-tagline { margin-bottom: 1.4rem; font-size: 0.88rem; }
+    .hm-cta-row { width: 100%; margin-bottom: 2rem; flex-direction: column; align-items: stretch; gap: 0.7rem; }
+    .hm-cta { width: 100%; padding: 1rem 1.2rem; }
+
+    .hm-exam-eyebrow { font-size: 8px; }
+    .hm-exam-list { font-size: 0.92rem; letter-spacing: 0.04em; line-height: 1.9; }
+
+    .bolum-01 .b01-grid-top { grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 0.9rem; }
+    .b01-card { padding: 1.5rem 1.4rem 1.3rem; }
+    .b01-card-wide { grid-template-columns: auto 1fr; padding: 1.4rem; gap: 1rem; }
+    .b01-card-wide .b01-cta { grid-column: 1 / -1; justify-self: start; padding-top: 0.5rem; }
+
+    .bolum-02 .b02-flow { grid-template-columns: 1fr; gap: 0.7rem; }
+    .b02-arrow { transform: rotate(90deg); padding: 0.3rem 0; }
+
+    .bolum-03 .b03-free-card { flex-direction: column; align-items: flex-start; gap: 1rem; padding: 1.5rem 1.4rem; }
+    .b03-free-badge { align-self: flex-start; }
+
+    .bolum-04 .b04-strip { grid-template-columns: 1fr; gap: 0.9rem; }
+  }
+
+  @media (min-width: 701px) and (max-width: 980px) {
+    .bolum-04 .b04-strip { grid-template-columns: 1fr; gap: 1rem; }
+    .b04-card { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: center; }
+    .b04-card .b04-icon { margin-bottom: 0; }
+    .b04-card .b04-title { margin-bottom: 0.2rem; }
+    .b04-card .b04-desc { margin-bottom: 0.6rem; }
+    .b04-card .b04-demo { grid-column: 1 / -1; }
   }
 </style>
 
-<section class="yazi-showcase" id="yaziShowcase">
+<!-- ===================================================================
+     HERO — Manifesto
+     =================================================================== -->
+<section class="hero hero-manifesto">
   <div class="wrap">
-    <div class="section-head reveal-scroll">
-      <div class="yazi-mascot-row">
-        <img src="assets/images/cat-writing.png" alt="Gri" class="yazi-mascot" loading="lazy">
-      </div>
-      <span class="eyebrow">Yazma + Anında Geri Bildirim</span>
-      <h2>Yazını yaz, Gri <span class="it">30 saniyede</span> değerlendirsin</h2>
-      <div class="yazi-divider">
-        <span class="yd-line"></span>
-        <span class="yd-label" lang="en">Writing Practice</span>
-        <span class="yd-line"></span>
-      </div>
-      <p style="max-width: 720px; margin: 1.2rem auto 0; color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;">IB English B, TOEFL Email, Academic Discussion, IELTS Academic Task 1 ve Task 2. Rubric'e göre band bandına puan, spesifik hatalar, ne ekleyip ne çıkarman gerektiği. Hocalar 3 günde değerlendirir, Gri 30 saniyede.</p>
+    <div class="hm-eyebrow">%100 Ücretsiz Çekirdek</div>
 
-      <div class="yazi-stats-row">
-        <div class="stat"><strong>15</strong>IB text type</div>
-        <div class="stat"><strong>4</strong>TOEFL + IELTS format</div>
-        <div class="stat"><strong>30s</strong>Ortalama süre</div>
-        <div class="stat"><strong>0-9</strong>Band score</div>
-      </div>
+    <p class="hm-line hm-line-1">Türkiye'de sınava hazırlanan öğrenci, çoğu zaman yalnızdır.</p>
+    <p class="hm-line hm-line-2">Öğretmenin elinde dijital bir sistem yoktur.</p>
+    <p class="hm-line hm-line-3">Biz ikisini de değiştiriyoruz.</p>
+
+    <h1 class="hm-brand">Gri <span class="hm-brand-it">English</span></h1>
+    <p class="hm-tagline">Focus <span class="hm-dot">·</span> Practice <span class="hm-dot">·</span> Succeed</p>
+
+    <div class="hm-cta-row">
+      <a href="giris.html?return=/soru-bankasi.html" class="hm-cta hm-cta-primary">Ücretsiz Başla</a>
+      <a href="ogretmen.html" class="hm-cta hm-cta-ghost">Öğretmensen Buradan</a>
     </div>
 
-    <div class="yazi-main reveal-scroll">
-      <div>
-        <ul class="yazi-features-v2">
-          <li class="yf-card active" data-stage="0">
-            <div class="yf-icon-v2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
-            </div>
-            <div class="yf-text-v2">
-              <strong>Gerçek sınav prompt'u</strong>
-              <span>IB Paper 1 mock exam, TOEFL ETS formatı, IELTS Academic Cambridge stili. Tam sınav gibi yaz.</span>
-            </div>
-          </li>
-          <li class="yf-card" data-stage="1">
-            <div class="yf-icon-v2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            </div>
-            <div class="yf-text-v2">
-              <strong>30 saniyede değerlendirme</strong>
-              <span>Gönderirsin, Gri okur, puanlar, yorumlar. Hocadan günler beklemek yok.</span>
-            </div>
-          </li>
-          <li class="yf-card" data-stage="2">
-            <div class="yf-icon-v2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4"/><path d="M9 11V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/><path d="M9 11h6"/><path d="M15 11v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-4"/></svg>
-            </div>
-            <div class="yf-text-v2">
-              <strong>Rubric bandına puan</strong>
-              <span>IB Criterion A/B/C, IELTS Task Response/Coherence/Lexical/Grammar. Resmi sınav rubric'leri.</span>
-            </div>
-          </li>
-          <li class="yf-card" data-stage="3">
-            <div class="yf-icon-v2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </div>
-            <div class="yf-text-v2">
-              <strong>Spesifik hata + düzeltme</strong>
-              <span>Hangi cümle hatalı, doğrusu ne, neden öyle olmalı. Gramer, ton, akademik stil.</span>
-            </div>
-          </li>
-          <li class="yf-card" data-stage="4">
-            <div class="yf-icon-v2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            </div>
-            <div class="yf-text-v2">
-              <strong>Günde 1 ücretsiz değerlendirme</strong>
-              <span>10 Gri Token günlük. Tükenirse paket alarak devam et, Gri Token kalıcı.</span>
-            </div>
-          </li>
-        </ul>
-        <div class="yazi-cta-row">
-          <a href="yazi-pratigi.html" class="btn btn-primary">Yazı Pratiği'ne Git</a>
-          <a href="giris.html#signup" class="btn btn-ghost">Ücretsiz Hesap Aç &rsaquo;</a>
-        </div>
-      </div>
-
-      <div class="yazi-cinema">
-        <div class="yazi-window" data-yazi-showcase>
-          <div class="yw-titlebar">
-            <div class="yw-dots">
-              <span class="yw-dot r"></span>
-              <span class="yw-dot y"></span>
-              <span class="yw-dot g"></span>
-            </div>
-            <div class="yw-url" lang="en">gringlizce.com<strong>/yazi-pratigi</strong></div>
-          </div>
-
-          <div class="yw-stage-container">
-            <!-- Stage 0: Gerçek sınav prompt'u -->
-            <div class="yw-stage active" data-yw-stage="0">
-              <span class="yw-eyebrow" lang="en">IB English B · Article</span>
-              <h3 class="yw-task" lang="en">The Future of Work</h3>
-              <p class="yw-prompt" lang="en">Your school newspaper is featuring a section on "Future Careers". Write an article exploring how automation and AI will affect traditional job markets for young graduates.</p>
-              <div class="yw-prompt-meta">
-                <div class="ypm-row"><span class="ypm-lbl">Format</span><span class="ypm-val" lang="en">Article</span></div>
-                <div class="ypm-row"><span class="ypm-lbl">Hedef</span><span class="ypm-val">250-400 kelime</span></div>
-                <div class="ypm-row"><span class="ypm-lbl">Süre</span><span class="ypm-val">Sınırsız</span></div>
-              </div>
-            </div>
-
-            <!-- Stage 1: 30 saniyede değerlendirme (typing → evaluating) -->
-            <div class="yw-stage" data-yw-stage="1">
-              <span class="yw-eyebrow">Yazıyorsun</span>
-              <h3 class="yw-task" lang="en">The Future of Work · Article</h3>
-              <div class="yw-typing-area" lang="en">
-                <span id="ywTypeText"></span><span class="yw-cursor"></span>
-              </div>
-              <div class="yw-wc">
-                <span>Kelime sayısı</span>
-                <span><strong id="ywWcNum">0</strong> / 250-400</span>
-              </div>
-              <div class="yw-eval-pulse-mini">
-                <div class="pulse-ring-mini"></div>
-                <span>Gönderdiğinde 30 saniyede değerlendirilir</span>
-              </div>
-            </div>
-
-            <!-- Stage 2: Rubric bandına puan -->
-            <div class="yw-stage" data-yw-stage="2">
-              <span class="yw-eyebrow">Rubric skorları</span>
-              <h3 class="yw-task" lang="en">The Future of Work · Article</h3>
-              <p class="yw-stage-desc">IB English B SL Paper 1 rubric'ine göre üç kriter, ayrı puanlar:</p>
-              <div class="yw-band-grid">
-                <div class="yw-band-pill-v2">
-                  <span class="lbl" lang="en">Language</span>
-                  <span class="num">10/12</span>
-                </div>
-                <div class="yw-band-pill-v2">
-                  <span class="lbl" lang="en">Message</span>
-                  <span class="num">9/12</span>
-                </div>
-                <div class="yw-band-pill-v2">
-                  <span class="lbl" lang="en">Conceptual</span>
-                  <span class="num">5/6</span>
-                </div>
-                <div class="yw-band-pill-v2 highlight">
-                  <span class="lbl">Toplam</span>
-                  <span class="num">24/30</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Stage 3: Spesifik hata + düzeltme -->
-            <div class="yw-stage" data-yw-stage="3">
-              <span class="yw-eyebrow">Hata + düzeltme</span>
-              <h3 class="yw-task">Cümle bazında öneriler</h3>
-              <div class="yw-mistake-block">
-                <div class="ymb-original">
-                  <span class="ymb-lbl">Senin cümlen</span>
-                  <p lang="en">In conclusion, <s>AI will replace many traditional jobs but also create new ones</s>.</p>
-                </div>
-                <div class="ymb-arrow">↓</div>
-                <div class="ymb-fixed">
-                  <span class="ymb-lbl">Daha akıcı</span>
-                  <p lang="en">Ultimately, AI will replace many traditional roles while also creating new ones.</p>
-                </div>
-                <div class="ymb-reason">
-                  <strong>Neden?</strong> "In conclusion" article tonunda çok mekanik, "ultimately" daha doğal. "Jobs" yerine "roles" lexical varyasyon.
-                </div>
-              </div>
-            </div>
-
-            <!-- Stage 4: Günde 1 ücretsiz değerlendirme -->
-            <div class="yw-stage" data-yw-stage="4">
-              <span class="yw-eyebrow">Gri Token</span>
-              <h3 class="yw-task">Günde 1 ücretsiz yazı</h3>
-              <p class="yw-stage-desc">Her hesap günde <strong>10 Gri Token</strong> ile başlar. Yazı değerlendirmesi 10 Token tüketir, yani günde 1 yazı ücretsiz.</p>
-              <div class="yw-token-panel">
-                <div class="ytp-row">
-                  <span class="ytp-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                  <div class="ytp-text">
-                    <strong>Günlük Token</strong>
-                    <span>Her gün UTC 03:00'te yenilenir</span>
-                  </div>
-                  <span class="ytp-val">10</span>
-                </div>
-                <div class="ytp-row">
-                  <span class="ytp-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4z"/></svg></span>
-                  <div class="ytp-text">
-                    <strong>Paket Token</strong>
-                    <span>Zaman sınırı yok, kalıcı</span>
-                  </div>
-                  <span class="ytp-val">+50</span>
-                </div>
-              </div>
-              <div class="yw-cost-line">1 yazı = <strong>10 Token</strong> &middot; Soru bankası 1 token/soru</div>
-            </div>
-          </div>
-
-          <div class="yw-stage-dots">
-            <span class="yw-stage-dot active" data-go="0"></span>
-            <span class="yw-stage-dot" data-go="1"></span>
-            <span class="yw-stage-dot" data-go="2"></span>
-            <span class="yw-stage-dot" data-go="3"></span>
-            <span class="yw-stage-dot" data-go="4"></span>
-          </div>
-        </div>
+    <div class="hm-exam-strip">
+      <div class="hm-exam-eyebrow">Tek Hesapla Hazır</div>
+      <div class="hm-exam-list">
+        SAT<span class="hm-exam-dot">·</span>IELTS<span class="hm-exam-dot">·</span>TOEFL<span class="hm-exam-dot">·</span>IB<span class="hm-exam-dot">·</span>YDT<span class="hm-exam-dot">·</span>UDSP<span class="hm-exam-dot">·</span>YDS<span class="hm-exam-dot">·</span>YÖKDİL
       </div>
     </div>
   </div>
 </section>
 
+<!-- ===================================================================
+     BÖLÜM 01 — Üç Çalışma Alanı (2+1 Card Grid)
+     =================================================================== -->
+<section class="bolum bolum-01">
+  <div class="wrap">
+    <div class="bolum-head b-reveal">
+      <div class="bolum-num">Bölüm 01 / Günlük Çalışma</div>
+      <h2 class="bolum-title">Üç ayrı çalışma alanı, tek hesapla</h2>
+      <p class="bolum-lead">Çöz, yaz, biriktir. Üçü de aynı masada birleşir.</p>
+    </div>
+
+    <div class="b01-grid-top b-reveal">
+      <a href="soru-bankasi.html" style="text-decoration: none; color: inherit; display: block;">
+        <article class="b01-card">
+          <div class="b01-icon tone-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div class="b01-eyebrow">01 / Çöz</div>
+          <h3 class="b01-title">Soru Bankası</h3>
+          <p class="b01-desc">1000+ Türkçe açıklamalı SAT, IELTS, TOEFL, IB ve YDT sorusu. Gri mentor destekli, yanlışlarını ayrı çalış.</p>
+          <span class="b01-cta">Çözmeye başla <span class="b01-cta-arrow">→</span></span>
+        </article>
+      </a>
+
+      <a href="yazi-pratigi.html" style="text-decoration: none; color: inherit; display: block;">
+        <article class="b01-card">
+          <div class="b01-icon tone-gold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="b01-eyebrow">02 / Yaz</div>
+          <h3 class="b01-title">Yazı Pratiği</h3>
+          <p class="b01-desc">IB English B, IELTS, TOEFL yazılarını gerçek rubric'le değerlendir. Kriter bazlı geri bildirim, AI mentor yorumu.</p>
+          <span class="b01-cta">Yazmaya başla <span class="b01-cta-arrow">→</span></span>
+        </article>
+      </a>
+    </div>
+
+    <a href="panelim.html" style="text-decoration: none; color: inherit; display: block;" class="b-reveal">
+      <article class="b01-card-wide">
+        <div class="b01-icon tone-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M12 7v14"/></svg>
+        </div>
+        <div class="b01-wide-text">
+          <div class="b01-eyebrow">03 / Biriktir</div>
+          <h3 class="b01-title">Çalışma Masam</h3>
+          <p class="b01-desc">Yaptığın her şey burada birleşir. Yanlışların, kelimelerin, yazıların, sınıf ödevlerin. Sınava giderken nereden devam edeceğini bilirsin.</p>
+        </div>
+        <span class="b01-cta">Masaya gel <span class="b01-cta-arrow">→</span></span>
+      </article>
+    </a>
+  </div>
+</section>
+
+<!-- ===================================================================
+     BÖLÜM 04 — Çalışırken Yanında (Strip + CSS Animasyon)
+     =================================================================== -->
+<section class="bolum bolum-04 bolum-soft">
+  <div class="wrap">
+    <div class="bolum-head b-reveal">
+      <div class="bolum-num">Bölüm 02 / Çalışırken Yanında</div>
+      <h2 class="bolum-title">Sor, ara, yanlışını topla</h2>
+      <p class="bolum-lead">Her sayfada arkanı kollayan üç araç. Çalışırken hiç yalnız değilsin.</p>
+    </div>
+
+    <div class="b04-strip b-reveal">
+      <article class="b04-card">
+        <div class="b04-icon tone-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="b04-title">Gri Mentor</h3>
+        <p class="b04-desc">Sor, anında Türkçe cevap. Günde 10 token, çekirdek hesapta ücretsiz.</p>
+        <div class="b04-demo b04-demo-typing" style="height: 2.4em;">
+          <div class="b04-demo-cycle">
+            <span class="b04-cycle-item">"Bu kelime burada ne demek?"</span>
+            <span class="b04-cycle-item">"Bu cümlenin yapısı nedir?"</span>
+            <span class="b04-cycle-item">"Neden A doğru, B yanlış?"</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="b04-card">
+        <div class="b04-icon tone-gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <h3 class="b04-title">Sözlük</h3>
+        <p class="b04-desc">Kelime ara, listele, tekrar et. Yeni kelimeler masandaki listeye düşer.</p>
+        <div class="b04-demo">
+          <strong>studied</strong>&nbsp;<span class="b04-demo-arrow">→</span>&nbsp;kasıtlı, özenle yapılmış
+        </div>
+      </article>
+
+      <article class="b04-card">
+        <div class="b04-icon tone-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </div>
+        <h3 class="b04-title">Tekrar Çalış</h3>
+        <p class="b04-desc">Yanlışların otomatik biriker. Sınıflandırılır, ayrı çalışırsın.</p>
+        <div class="b04-demo">
+          <span class="b04-counter is-pulse">14</span>soru bekliyor
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     BÖLÜM 02 — Öğretmen 3-Step Flow
+     =================================================================== -->
+<section class="bolum bolum-02">
+  <div class="wrap">
+    <div class="bolum-head b-reveal">
+      <div class="bolum-num" style="color: #3C3489;">Bölüm 03 / Öğretmen ve Mentorlar</div>
+      <h2 class="bolum-title">Bire bir veya grup, sen kur sen yönet</h2>
+      <p class="bolum-lead">Üç adım yeter. Ödevler herkesin çalışma masasına düşer, sen takipte kalırsın.</p>
+    </div>
+
+    <div class="b02-flow b-reveal">
+      <div class="b02-step">
+        <div class="b02-num">01</div>
+        <h3 class="b02-step-title">Sınıfını oluştur</h3>
+        <p class="b02-step-desc">Bire bir özel ders veya kalabalık sınıf, fark etmez.</p>
+      </div>
+      <div class="b02-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+      <div class="b02-step">
+        <div class="b02-num">02</div>
+        <h3 class="b02-step-title">Davet kodunu paylaş</h3>
+        <p class="b02-step-desc">6 harfli kod yeter. Öğrenci masasından kodla katılır.</p>
+      </div>
+      <div class="b02-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+      <div class="b02-step">
+        <div class="b02-num">03</div>
+        <h3 class="b02-step-title">Ödev ata, izle</h3>
+        <p class="b02-step-desc">Soru bankası, yazı veya okuma. İlerlemeyi anlık görürsün.</p>
+      </div>
+    </div>
+
+    <div class="b02-cta-row b-reveal">
+      <a href="ogretmen.html" class="hm-cta hm-cta-ghost" style="border-color: #3C3489; color: #3C3489;">Sınıfını Kur</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     BÖLÜM 03 — Premium Model + Paket Galerisi
+     =================================================================== -->
+<section class="bolum bolum-03 bolum-soft">
+  <div class="wrap">
+    <div class="bolum-head b-reveal">
+      <div class="bolum-num" style="color: #0C447C;">Bölüm 04 / İçerik Modeli</div>
+      <h2 class="bolum-title">Çekirdek bedava. Paketler, açığına göre.</h2>
+      <p class="bolum-lead">Aylık abonelik yok, kilit yok. Sitenin %90'ı tüm kullanıcılar için açık. Premium paketler ise yalnızca özelleşmiş çalışma için — bir kez al, ömür boyu kullan.</p>
+    </div>
+
+    <div class="b03-free-card b-reveal">
+      <span class="b03-free-badge">%90 Ücretsiz</span>
+      <div class="b03-free-text">1000+ soru, Gri AI Mentor, Yazı Pratiği rubric, Sözlük, Tekrar Çalış, Sınıf Sistemi. Hepsi çekirdekte, her gün açık.</div>
+    </div>
+
+    <div class="b03-paket-head b-reveal">
+      <div class="b03-paket-eyebrow">Premium Paketler</div>
+      <div class="b03-paket-hint">tek satınalma · ömür boyu erişim</div>
+    </div>
+
+    <div class="b03-paket-grid b-reveal">
+      <a href="calisma-paketleri.html" class="b03-paket-card">
+        <div class="b03-paket-exam">SAT R/W</div>
+        <h4 class="b03-paket-title">Tam Deneme Paketi</h4>
+        <p class="b03-paket-desc">Gerçek formatta tam denemeler, ayrıntılı sonuç analizi.</p>
+      </a>
+      <a href="calisma-paketleri.html" class="b03-paket-card">
+        <div class="b03-paket-exam">IELTS</div>
+        <h4 class="b03-paket-title">Tam Deneme Paketi</h4>
+        <p class="b03-paket-desc">Cambridge formatında deneme, otomatik puanlama ve geri bildirim.</p>
+      </a>
+      <a href="calisma-paketleri.html" class="b03-paket-card">
+        <div class="b03-paket-exam">YDT</div>
+        <h4 class="b03-paket-title">Grammar Pack</h4>
+        <p class="b03-paket-desc">YDT'ye özel gramer setleri, tense'ler, koşul cümleleri, modallar.</p>
+      </a>
+    </div>
+
+    <div class="b03-cta-row b-reveal">
+      <a href="calisma-paketleri.html" class="hm-cta hm-cta-ghost" style="border-color: #0C447C; color: #0C447C;">Tüm Paketleri Gör</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     Section reveal observer
+     =================================================================== -->
 <script>
 (function () {
-  var section = document.getElementById('yaziShowcase');
-  if (!section) return;
-  var stages = section.querySelectorAll('.yw-stage');
-  var dots = section.querySelectorAll('.yw-stage-dot');
-  var features = section.querySelectorAll('.yf-card');
-  var typeEl = document.getElementById('ywTypeText');
-  var wcEl = document.getElementById('ywWcNum');
-
-  var DEMO_TEXT = "Automation and AI are reshaping the careers that today's graduates can expect to enter. While anxiety about machines replacing entry-level roles is justified, the more interesting question is which human skills become more valuable when routine tasks are handled by algorithms.";
-  var idx = 0;
-  var totalStages = 5;
-  var stageTimer = null;
-  var typeTimer = null;
-
-  function setStage(n) {
-    idx = ((n % totalStages) + totalStages) % totalStages;
-    stages.forEach(function (s, i) { s.classList.toggle('active', i === idx); });
-    dots.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
-    features.forEach(function (f) {
-      var fStage = parseInt(f.getAttribute('data-stage'), 10);
-      f.classList.toggle('active', fStage === idx);
-    });
-
-    if (idx === 1) startTyping();
-    else { stopTyping(); }
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.b-reveal').forEach(function (el) { el.classList.add('in'); });
+    return;
   }
-
-  function startTyping() {
-    stopTyping();
-    var i = 0;
-    typeEl.textContent = '';
-    wcEl.textContent = '0';
-    typeTimer = setInterval(function () {
-      if (i >= DEMO_TEXT.length) {
-        stopTyping();
-        return;
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        obs.unobserve(entry.target);
       }
-      typeEl.textContent = DEMO_TEXT.slice(0, i + 1);
-      var wc = typeEl.textContent.trim().split(/\s+/).filter(Boolean).length;
-      wcEl.textContent = wc;
-      i++;
-    }, 32);
-  }
-  function stopTyping() {
-    if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
-  }
-
-  function startAutoplay() {
-    stopAutoplay();
-    stageTimer = setInterval(function () { setStage(idx + 1); }, 4800);
-  }
-  function stopAutoplay() {
-    if (stageTimer) { clearInterval(stageTimer); stageTimer = null; }
-  }
-
-  dots.forEach(function (d) {
-    d.addEventListener('click', function () {
-      var n = parseInt(this.getAttribute('data-go'), 10);
-      if (!isNaN(n)) { setStage(n); startAutoplay(); }
     });
-  });
-
-  features.forEach(function (f) {
-    f.addEventListener('click', function () {
-      var n = parseInt(this.getAttribute('data-stage'), 10);
-      if (!isNaN(n)) { setStage(n); startAutoplay(); }
-    });
-  });
-
-  section.addEventListener('mouseenter', stopAutoplay);
-  section.addEventListener('mouseleave', startAutoplay);
-
-  // Start when section is visible
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) {
-          setStage(0);
-          startAutoplay();
-          io.disconnect();
-        }
-      });
-    }, { threshold: 0.3 });
-    io.observe(section);
-  } else {
-    setStage(0);
-    startAutoplay();
-  }
+  }, { rootMargin: '0px 0px -80px 0px', threshold: 0.1 });
+  document.querySelectorAll('.b-reveal').forEach(function (el) { obs.observe(el); });
 })();
 </script>
 

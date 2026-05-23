@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sınıf | Gri English</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/users.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/site-config.js" defer></script>
+  <style>
+    /* ============ Shared with ogretmen.html ============ */
+    .btn-primary {
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      padding: 0.7rem 1.4rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: #234644; }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    .btn-action {
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.5rem 1rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted, #6B6862);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-action:hover { border-color: var(--text, #1A2230); color: var(--text, #1A2230); }
+
+    .loading-state {
+      text-align: center; padding: 3rem 2rem; color: var(--text-muted, #6B6862);
+      font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic; font-size: 1rem;
+    }
+
+    /* ============ Hero ============ */
+    .ks-hero { padding: 1.8rem 0 1.4rem; }
+    .ks-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      text-decoration: none;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .ks-back:hover { color: var(--text); }
+    .ks-eyebrow {
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .ks-hero h1 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 2.1rem;
+      font-weight: 500;
+      margin: 0 0 0.4rem;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.015em;
+    }
+    .ks-hero .lead {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted));
+      font-size: 1.05rem;
+      margin: 0;
+      max-width: 60ch;
+      line-height: 1.5;
+    }
+
+    /* ============ Stats bar (editorial) ============ */
+    .ks-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0;
+      padding: 1.4rem 0;
+      margin: 1rem 0 1.8rem;
+      border-top: 1px solid var(--line, #D9D2C4);
+      border-bottom: 1px solid var(--line, #D9D2C4);
+    }
+    .ks-stat {
+      padding: 0 1.2rem;
+      border-left: 1px solid var(--line, #D9D2C4);
+    }
+    .ks-stat:first-child { border-left: none; padding-left: 0; }
+    .ks-stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.9rem;
+      font-weight: 500;
+      color: var(--teal, #2C5856);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.45rem;
+    }
+    .ks-stat-val.is-date {
+      font-size: 1.1rem;
+      color: var(--text);
+      padding-top: 0.6rem;
+    }
+    .ks-stat-code {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--gold, #C89A3C);
+      letter-spacing: 0.18em;
+      cursor: pointer;
+      user-select: all;
+      transition: opacity 0.15s;
+      line-height: 1;
+      margin-bottom: 0.45rem;
+    }
+    .ks-stat-code:hover { opacity: 0.65; }
+    .ks-stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      font-weight: 700;
+    }
+
+    /* ============ Tabs ============ */
+    .ks-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--line, #D9D2C4);
+      margin-bottom: 1.5rem;
+    }
+    .ks-tab {
+      padding: 0.85rem 1.2rem;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted, #6B6862);
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .ks-tab:hover { color: var(--text); }
+    .ks-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--gold, #C89A3C);
+    }
+    .ks-tab .tab-count {
+      display: inline-block;
+      padding: 0.1rem 0.55rem;
+      background: var(--bg-soft, #e8e0cc);
+      color: var(--text-muted, #6B6862);
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .ks-tab.active .tab-count {
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+    }
+
+    /* ============ Roster (editorial table) ============ */
+    .ks-section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .ks-section-head h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.01em;
+    }
+    .ks-section-hint {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .ks-roster {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #D9D2C4);
+      overflow: hidden;
+    }
+    .ks-roster-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ks-roster-table thead tr { background: var(--bg-soft, #e8e0cc); }
+    .ks-roster-table th {
+      text-align: left;
+      padding: 0.8rem 1.3rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .ks-roster-table th.num { text-align: right; }
+    .ks-roster-table td {
+      padding: 1rem 1.3rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    .ks-roster-row {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .ks-roster-row:hover { background: rgba(44, 88, 86, 0.04); }
+    .ks-roster-row:last-child td { border-bottom: none; }
+    .col-email {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .col-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .col-accuracy {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--teal, #2C5856);
+      text-align: right;
+    }
+    .col-accuracy.low { color: #b33a3a; }
+    .col-accuracy.zero { color: var(--text-muted); }
+    .col-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .ks-remove-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.3rem 0.55rem;
+      font-size: 1rem;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+    .ks-remove-btn:hover { color: #b33a3a; border-color: #b33a3a; }
+
+    .ks-empty {
+      background: var(--bg-card, #fefcf7);
+      border: 1px dashed var(--line, #D9D2C4);
+      padding: 3.5rem 2.5rem;
+      text-align: center;
+      max-width: 640px;
+      margin: 1.5rem auto;
+    }
+    .ks-empty-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+    }
+    .ks-empty h3 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.45rem;
+      font-weight: 500;
+      margin: 0 0 0.6rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .ks-empty p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted));
+      max-width: 50ch;
+      margin: 0 auto 1.5rem;
+      line-height: 1.55;
+    }
+    .ks-empty-code {
+      display: inline-block;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--gold, #C89A3C);
+      letter-spacing: 0.18em;
+      margin-top: 0.6rem;
+      padding: 0.7rem 1.4rem;
+      background: var(--bg-soft, #e8e0cc);
+      border: 1px solid var(--gold);
+      user-select: all;
+    }
+
+    /* ============ Assignments tab ============ */
+    .ks-assign-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 2.5rem;
+    }
+    .ks-assign-card {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 1.1rem 1.3rem 1.1rem 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.25s;
+      position: relative;
+    }
+    .ks-assign-card:hover {
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 4px 14px rgba(26, 34, 48, 0.04);
+    }
+    .ks-assign-card.overdue { border-left: 3px solid #b33a3a; padding-left: 1.4rem; }
+    .ks-assign-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .ks-assign-titles { flex: 1; min-width: 0; }
+    .ks-assign-type {
+      display: inline-block;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .ks-assign-type.type-questions { background: rgba(44, 88, 86, 0.12); color: var(--teal); }
+    .ks-assign-type.type-writing { background: rgba(200, 154, 60, 0.18); color: #8b6627; }
+    .ks-assign-type.type-reading { background: rgba(120, 80, 40, 0.15); color: #6b4422; }
+    .ks-assign-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--text);
+      margin: 0;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .ks-assign-meta {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.45rem;
+    }
+    .ks-assign-meta-sep { margin: 0 0.45rem; opacity: 0.5; }
+    .ks-assign-meta .overdue-tag { color: #b33a3a; font-weight: 600; }
+    .ks-assign-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.92rem;
+      color: var(--text-soft, var(--text-muted));
+      margin: 0.5rem 0 0.6rem;
+      line-height: 1.5;
+    }
+    .ks-assign-delete {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem 0.55rem;
+      font-size: 1.05rem;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .ks-assign-delete:hover { color: #b33a3a; border-color: #b33a3a; }
+
+    .ks-assign-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-top: 0.6rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--line);
+    }
+    .ks-assign-progress-bar {
+      flex: 1;
+      height: 5px;
+      background: var(--bg-soft, #e8e0cc);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .ks-assign-progress-fill {
+      height: 100%;
+      background: var(--teal, #2C5856);
+      transition: width 0.3s;
+    }
+    .ks-assign-progress-text {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .ks-assign-progress-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ============ Drawer ============ */
+    .ks-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+    }
+    .ks-drawer.show { display: block; }
+    .ks-drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 25, 40, 0.45);
+    }
+    .ks-drawer-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 620px;
+      background: var(--bg, #F4EFE3);
+      border-left: 1px solid var(--line);
+      overflow-y: auto;
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+    }
+    .ks-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 1.7rem;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-card, #fefcf7);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .ks-drawer-header-titles { flex: 1; min-width: 0; }
+    .ks-drawer-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .ks-drawer-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .ks-drawer-close {
+      background: transparent;
+      border: 1px solid var(--line);
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      margin-left: 0.8rem;
+    }
+    .ks-drawer-close:hover { color: var(--text); border-color: var(--text); }
+    .ks-drawer-body { padding: 1.7rem; }
+
+    /* Student detail content */
+    .sd-meta {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.92rem;
+      color: var(--text-soft, var(--text-muted));
+      margin: 0 0 1.4rem;
+      line-height: 1.55;
+    }
+    .sd-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0;
+      margin-bottom: 1.8rem;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 1.1rem 0;
+    }
+    .sd-stat {
+      padding: 0 0.9rem;
+      border-left: 1px solid var(--line);
+      text-align: left;
+    }
+    .sd-stat:first-child { border-left: none; padding-left: 0; }
+    .sd-stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--teal, #2C5856);
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+    .sd-stat-val.low { color: #b33a3a; }
+    .sd-stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-top: 0.4rem;
+    }
+
+    .sd-section-title {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin: 1.8rem 0 0.9rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sd-cat-list, .sd-recent-list { list-style: none; padding: 0; margin: 0 0 1rem; }
+    .sd-cat-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.8rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .sd-cat-row:last-child { border-bottom: none; }
+    .sd-cat-name {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      min-width: 0;
+    }
+    .sd-exam-pill {
+      display: inline-block;
+      padding: 0.12rem 0.45rem;
+      background: var(--bg-soft, #e8e0cc);
+      border-radius: 999px;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-right: 0.4rem;
+    }
+    .sd-cat-count {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .sd-cat-acc {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--teal);
+      min-width: 50px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .sd-cat-acc.low { color: #b33a3a; }
+
+    .sd-recent-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.7rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+    .sd-recent-row:last-child { border-bottom: none; }
+    .sd-recent-status {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sd-recent-status.correct { background: var(--teal); }
+    .sd-recent-status.wrong { background: #b33a3a; }
+    .sd-recent-status.skipped { background: var(--text-muted); }
+    .sd-recent-info { min-width: 0; color: var(--text); }
+    .sd-recent-slug {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+    .sd-recent-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+    .sd-recent-time {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .sd-actions {
+      margin-top: 2rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--line);
+    }
+    .sd-remove-btn {
+      padding: 0.7rem 1.4rem;
+      background: transparent;
+      border: 1px solid #b33a3a;
+      color: #b33a3a;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sd-remove-btn:hover { background: #b33a3a; color: #fff; }
+
+    /* Assignment progress drawer */
+    .ad-list { list-style: none; padding: 0; margin: 0; }
+    .ad-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.9rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    .ad-row:last-child { border-bottom: none; }
+    .ad-email {
+      color: var(--text);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ad-email .ad-completed-at {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 0.15rem;
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+    }
+    .ad-progress {
+      font-family: var(--font-display, Georgia), serif;
+      font-weight: 500;
+      font-size: 1.05rem;
+      min-width: 60px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .ad-progress.progress-pending { color: var(--text-muted); }
+    .ad-progress.progress-in_progress { color: var(--gold); }
+    .ad-progress.progress-completed { color: var(--teal); }
+    .ad-status-pill {
+      display: inline-block;
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .ad-status-pill.status-pending { background: rgba(107, 104, 98, 0.15); color: var(--text-muted); }
+    .ad-status-pill.status-in_progress { background: rgba(200, 154, 60, 0.18); color: #8b6627; }
+    .ad-status-pill.status-completed { background: rgba(44, 88, 86, 0.18); color: var(--teal); }
+
+    /* ============ Create Assignment Modal ============ */
+    .t-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 25, 40, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.5rem;
+    }
+    .t-modal.show { display: flex; }
+    .t-modal-box {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #d4c9ae);
+      max-width: 560px;
+      width: 100%;
+      padding: 2.2rem 2rem 1.7rem;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .t-modal-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .t-modal-box h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.55rem;
+      font-weight: 500;
+      margin: 0 0 0.4rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .t-modal-box .modal-sub {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted));
+      margin: 0 0 1.6rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .t-modal-box label {
+      display: block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+    }
+    .t-modal-box input,
+    .t-modal-box textarea,
+    .t-modal-box select {
+      width: 100%;
+      background: var(--bg, #F4EFE3);
+      border: 1px solid var(--line);
+      padding: 0.72rem 0.95rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.93rem;
+      color: var(--text);
+      margin-bottom: 1.1rem;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .t-modal-box input:focus,
+    .t-modal-box textarea:focus,
+    .t-modal-box select:focus { outline: none; border-color: var(--teal); }
+    .t-modal-box textarea { resize: vertical; min-height: 70px; }
+    .t-modal-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .t-type-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.4rem;
+    }
+    .t-type-btn {
+      padding: 0.9rem 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .t-type-btn:hover {
+      border-color: var(--gold);
+      color: var(--text);
+    }
+    .t-type-btn.active {
+      background: var(--teal);
+      color: #F4EFE3;
+      border-color: var(--teal);
+    }
+    .t-type-btn .t-type-name {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+      letter-spacing: 0.08em;
+    }
+
+    .t-config-block { display: none; padding-top: 0.4rem; border-top: 1px dashed var(--line); }
+    .t-config-block.show { display: block; }
+    .t-config-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin: 1rem 0 0.8rem;
+    }
+    .t-config-note {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 0 0 1rem;
+      line-height: 1.4;
+    }
+
+    .t-modal-actions {
+      display: flex;
+      gap: 0.7rem;
+      margin-top: 0.5rem;
+    }
+    .t-modal-cancel {
+      padding: 0.8rem 1.3rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .t-modal-cancel:hover { border-color: var(--text); color: var(--text); }
+    .t-modal-submit {
+      flex: 1;
+      padding: 0.8rem;
+      background: var(--teal);
+      color: #F4EFE3;
+      border: 1px solid var(--teal);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .t-modal-submit:hover { background: #234644; }
+    .t-modal-submit:disabled { opacity: 0.5; cursor: default; }
+    .err {
+      color: #b33a3a;
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      margin-top: 0.7rem;
+      min-height: 1.3rem;
+    }
+
+    @media (max-width: 700px) {
+      .ks-roster-table th.col-vocab,
+      .ks-roster-table td.col-vocab,
+      .ks-roster-table th.col-joined,
+      .ks-roster-table td.col-joined { display: none; }
+      .ks-drawer-panel { max-width: 100%; }
+      .sd-summary { grid-template-columns: repeat(2, 1fr); padding: 1rem 0; }
+      .sd-stat:nth-child(odd) { border-left: none; padding-left: 0; }
+      .t-modal-row { grid-template-columns: 1fr; gap: 0; }
+      .t-type-picker { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+</head>
+<body>
+
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">Gri <span class="it">English</span></a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="panelim.html">Çalışma Masam</a></li>
+          <li><a href="ogretmen.html">Öğretmen Paneli</a></li>
+          <li><a href="index.html">Anasayfa</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions"></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-bottom: 4rem;">
+
+    <section class="ks-hero">
+      <a href="ogretmen.html" class="ks-back">← Tüm Sınıflar</a>
+      <span class="ks-eyebrow" id="ks-class-eyebrow">Sınıf</span>
+      <h1 id="ks-class-name">Yükleniyor...</h1>
+      <p class="lead" id="ks-class-desc"></p>
+    </section>
+
+    <div id="ks-loading" class="loading-state">Yükleniyor...</div>
+
+    <div id="ks-error" style="display:none; padding: 2rem; background: var(--bg-card); border: 1px solid #b33a3a; text-align: center; max-width: 540px; margin: 2rem auto;">
+      <p style="color: #b33a3a; font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic; margin: 0;" id="ks-error-msg"></p>
+      <p style="margin: 1rem 0 0;"><a href="ogretmen.html" class="btn-action">← Tüm sınıflara dön</a></p>
+    </div>
+
+    <div id="ks-content" style="display:none;">
+
+      <!-- Stats bar -->
+      <div class="ks-stats">
+        <div class="ks-stat">
+          <div class="ks-stat-val" id="ks-member-count">0</div>
+          <div class="ks-stat-label">Öğrenci</div>
+        </div>
+        <div class="ks-stat">
+          <div class="ks-stat-val" id="ks-assignment-count">0</div>
+          <div class="ks-stat-label">Ödev</div>
+        </div>
+        <div class="ks-stat">
+          <div class="ks-stat-code" id="ks-join-code" title="Kopyalamak için tıkla">A7B2X9</div>
+          <div class="ks-stat-label">Sınıf Kodu</div>
+        </div>
+        <div class="ks-stat">
+          <div class="ks-stat-val is-date" id="ks-created-date">—</div>
+          <div class="ks-stat-label">Oluşturuldu</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="ks-tabs">
+        <button class="ks-tab active" data-tab="students" type="button">
+          Öğrenciler <span class="tab-count" id="tab-count-students">0</span>
+        </button>
+        <button class="ks-tab" data-tab="assignments" type="button">
+          Ödevler <span class="tab-count" id="tab-count-assignments">0</span>
+        </button>
+      </div>
+
+      <!-- Tab: Students -->
+      <div class="ks-tab-content" data-tab-content="students">
+        <div class="ks-section-head">
+          <h2>Öğrenciler</h2>
+          <span class="ks-section-hint">Detay için satıra tıkla.</span>
+        </div>
+        <div id="ks-roster-body"></div>
+      </div>
+
+      <!-- Tab: Assignments -->
+      <div class="ks-tab-content" data-tab-content="assignments" style="display:none;">
+        <div class="ks-section-head">
+          <h2>Ödevler</h2>
+          <button id="ks-new-assign-btn" class="btn-primary" type="button">+ Yeni Ödev</button>
+        </div>
+        <div id="ks-assign-list" class="ks-assign-list"></div>
+        <div id="ks-assign-empty" class="ks-empty" style="display:none;">
+          <div class="ks-empty-eyebrow">Başla</div>
+          <h3>Henüz ödev yok</h3>
+          <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Student detail drawer -->
+  <div class="ks-drawer" id="student-drawer">
+    <div class="ks-drawer-backdrop" id="sd-backdrop"></div>
+    <div class="ks-drawer-panel">
+      <div class="ks-drawer-header">
+        <div class="ks-drawer-header-titles">
+          <div class="ks-drawer-eyebrow">Öğrenci</div>
+          <h2 class="ks-drawer-title" id="sd-title">Öğrenci Detayı</h2>
+        </div>
+        <button class="ks-drawer-close" id="sd-close" aria-label="Kapat">×</button>
+      </div>
+      <div class="ks-drawer-body" id="sd-body">
+        <p style="text-align: center; color: var(--text-muted); font-style: italic;">Yükleniyor...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignment progress drawer -->
+  <div class="ks-drawer" id="assign-drawer">
+    <div class="ks-drawer-backdrop" id="ad-backdrop"></div>
+    <div class="ks-drawer-panel">
+      <div class="ks-drawer-header">
+        <div class="ks-drawer-header-titles">
+          <div class="ks-drawer-eyebrow">Ödev İlerlemesi</div>
+          <h2 class="ks-drawer-title" id="ad-title">Ödev Detayı</h2>
+        </div>
+        <button class="ks-drawer-close" id="ad-close" aria-label="Kapat">×</button>
+      </div>
+      <div class="ks-drawer-body" id="ad-body">
+        <p style="text-align: center; color: var(--text-muted); font-style: italic;">Yükleniyor...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create assignment modal -->
+  <div class="t-modal" id="modal-create-assign">
+    <div class="t-modal-box">
+      <div class="t-modal-eyebrow">Yeni Ödev</div>
+      <h2>Ödev Oluştur</h2>
+      <p class="modal-sub">Soru bankası, writing veya reading ödevi seç. Öğrencilerinin panelinde anında görünür.</p>
+
+      <form id="ca-form">
+        <div class="t-type-picker">
+          <button type="button" class="t-type-btn active" data-type="questions">
+            <span class="t-type-name">Soru Bankası</span>
+          </button>
+          <button type="button" class="t-type-btn" data-type="writing">
+            <span class="t-type-name">Writing</span>
+          </button>
+          <button type="button" class="t-type-btn" data-type="reading">
+            <span class="t-type-name">Reading</span>
+          </button>
+        </div>
+
+        <label for="ca-title">Başlık</label>
+        <input type="text" id="ca-title" maxlength="120" required placeholder="Örn. 20 SAT R/W Words in Context">
+
+        <label for="ca-desc">Açıklama (Opsiyonel)</label>
+        <textarea id="ca-desc" rows="2" maxlength="500" placeholder="Bu hafta sonuna kadar bitir..."></textarea>
+
+        <label for="ca-due">Son Tarih (Opsiyonel)</label>
+        <input type="datetime-local" id="ca-due">
+
+        <!-- Questions config -->
+        <div class="t-config-block show" data-config="questions">
+          <div class="t-config-eyebrow">Soru Bankası Ayarları</div>
+          <label for="ca-q-exam">Sınav Türü</label>
+          <select id="ca-q-exam">
+            <option value="sat-rw">SAT Reading &amp; Writing</option>
+            <option value="sat-math">SAT Math</option>
+            <option value="ielts">IELTS</option>
+            <option value="toefl">TOEFL</option>
+            <option value="udsp">UDSP</option>
+            <option value="yds">YDS</option>
+            <option value="yokdil-fen">YÖKDİL Fen</option>
+            <option value="yokdil-sosyal">YÖKDİL Sosyal</option>
+            <option value="yokdil-saglik">YÖKDİL Sağlık</option>
+            <option value="ydt">YDT</option>
+            <option value="ib">IB English B</option>
+          </select>
+          <div class="t-modal-row">
+            <div>
+              <label for="ca-q-cat">Kategori (Opsiyonel)</label>
+              <input type="text" id="ca-q-cat" maxlength="80" placeholder="örn. words-in-context">
+            </div>
+            <div>
+              <label for="ca-q-count">Hedef Soru Sayısı</label>
+              <input type="number" id="ca-q-count" min="1" max="200" value="20" required>
+            </div>
+          </div>
+          <p class="t-config-note">İlerleme otomatik takip edilir. Öğrenci hedef sayıyı yakalayınca ödev tamamlanmış sayılır.</p>
+        </div>
+
+        <!-- Writing config -->
+        <div class="t-config-block" data-config="writing">
+          <div class="t-config-eyebrow">Writing Ayarları</div>
+          <div class="t-modal-row">
+            <div>
+              <label for="ca-w-exam">Sınav</label>
+              <select id="ca-w-exam">
+                <option value="ib">IB English B</option>
+                <option value="ielts">IELTS</option>
+                <option value="toefl">TOEFL</option>
+              </select>
+            </div>
+            <div>
+              <label for="ca-w-texttype">Text Type / Rubric</label>
+              <select id="ca-w-texttype">
+                <option value="">Yükleniyor...</option>
+              </select>
+            </div>
+          </div>
+          <p class="t-config-note">Seçilen text type'ın rubric'i değerlendirmede kullanılır. Öğrenci wizard'ı açtığında prompt ve rubric otomatik dolar.</p>
+
+          <label for="ca-w-prompt">Prompt</label>
+          <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
+          <label for="ca-w-minwords">Minimum Kelime (Opsiyonel)</label>
+          <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="250">
+          <p class="t-config-note">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanabilir.</p>
+        </div>
+
+        <!-- Reading config -->
+        <div class="t-config-block" data-config="reading">
+          <div class="t-config-eyebrow">Reading Ayarları</div>
+          <label for="ca-r-url">Okuma Linki (URL)</label>
+          <input type="url" id="ca-r-url" placeholder="https://...">
+          <label for="ca-r-followup">Açıklama / Hedef (Opsiyonel)</label>
+          <textarea id="ca-r-followup" rows="2" maxlength="500" placeholder="Okuduktan sonra 5 anahtar kelime not al"></textarea>
+          <p class="t-config-note">Öğrenci okuduğunda "Okudum" butonuyla işaretler.</p>
+        </div>
+
+        <div class="t-modal-actions">
+          <button type="button" class="t-modal-cancel" id="ca-cancel">Vazgeç</button>
+          <button type="submit" class="t-modal-submit" id="ca-submit">Ödevi Oluştur</button>
+        </div>
+        <div class="err" id="ca-err"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+      var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+      if (!window.supabase || !window.supabase.createClient) return;
+
+      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+
+      var loadingEl = document.getElementById('ks-loading');
+      var contentEl = document.getElementById('ks-content');
+      var errorEl = document.getElementById('ks-error');
+      var errorMsgEl = document.getElementById('ks-error-msg');
+
+      function showError(msg) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = '';
+        if (errorMsgEl) errorMsgEl.textContent = msg;
+      }
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+      function fmtDate(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+      }
+      function fmtDateShort(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        return d.getDate() + ' ' + months[d.getMonth()];
+      }
+      function fmtRelative(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var now = new Date();
+        var diffMs = now - d;
+        var diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'şimdi';
+        if (diffMin < 60) return diffMin + ' dk önce';
+        var diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return diffHour + ' sa önce';
+        var diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return diffDay + ' gün önce';
+        return fmtDateShort(s);
+      }
+      function fmtDueDate(s) {
+        if (!s) return null;
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        var datePart = d.getDate() + ' ' + months[d.getMonth()];
+        var hh = String(d.getHours()).padStart(2, '0');
+        var mm = String(d.getMinutes()).padStart(2, '0');
+        if (hh === '00' && mm === '00') return datePart;
+        return datePart + ' ' + hh + ':' + mm;
+      }
+      function humanize(s) {
+        if (!s) return '';
+        return s.split(/[-_]/).map(function (w) {
+          return w.charAt(0).toUpperCase() + w.slice(1);
+        }).join(' ');
+      }
+
+      var params = new URLSearchParams(window.location.search);
+      var classId = params.get('id');
+      if (!classId) { showError('Sınıf ID bulunamadı.'); return; }
+
+      var sess = await sb.auth.getSession();
+      if (!sess || !sess.data || !sess.data.session) {
+        window.location.href = 'giris.html?return=/ogretmen-sinif.html?id=' + classId;
+        return;
+      }
+
+      var classRes, rosterRes;
+      try {
+        [classRes, rosterRes] = await Promise.all([
+          sb.rpc('class_detail', { p_class_id: classId }),
+          sb.rpc('class_roster', { p_class_id: classId })
+        ]);
+        if (classRes.error) throw classRes.error;
+        if (rosterRes.error) throw rosterRes.error;
+      } catch (err) {
+        var msg = String(err.message || err);
+        if (/not_class_owner|not_found/i.test(msg)) {
+          showError('Bu sınıfı görüntülemek için yetkin yok ya da sınıf bulunamadı.');
+        } else {
+          showError('Yüklenemedi: ' + msg);
+        }
+        return;
+      }
+
+      var classInfo = classRes.data || {};
+      var students = rosterRes.data || [];
+
+      document.title = (classInfo.name || 'Sınıf') + ' | Gri English';
+      document.getElementById('ks-class-name').textContent = classInfo.name || 'Sınıf';
+      var descEl = document.getElementById('ks-class-desc');
+      if (classInfo.description) {
+        descEl.textContent = classInfo.description;
+      } else {
+        descEl.style.display = 'none';
+      }
+
+      document.getElementById('ks-member-count').textContent = classInfo.member_count || 0;
+      document.getElementById('ks-assignment-count').textContent = classInfo.assignment_count || 0;
+      document.getElementById('ks-created-date').textContent = fmtDateShort(classInfo.created_at);
+
+      var codeEl = document.getElementById('ks-join-code');
+      codeEl.textContent = classInfo.join_code || '—';
+      codeEl.addEventListener('click', function () {
+        if (navigator.clipboard && classInfo.join_code) {
+          navigator.clipboard.writeText(classInfo.join_code).then(function () {
+            var orig = codeEl.textContent;
+            codeEl.textContent = 'Kopyalandı';
+            setTimeout(function () { codeEl.textContent = orig; }, 1400);
+          });
+        }
+      });
+
+      // Roster
+      var rosterBody = document.getElementById('ks-roster-body');
+      document.getElementById('tab-count-students').textContent = students.length;
+
+      if (students.length === 0) {
+        rosterBody.innerHTML = ''
+          + '<div class="ks-empty">'
+          + '<div class="ks-empty-eyebrow">Davet</div>'
+          + '<h3>Henüz öğrenci yok</h3>'
+          + '<p>Bu kodu öğrencilerinle paylaş. Masam\'dan "Sınıfa Katıl" diyerek girebilirler.</p>'
+          + '<div class="ks-empty-code">' + esc(classInfo.join_code || '') + '</div>'
+          + '</div>';
+      } else {
+        var rows = students.map(function (s) {
+          var total = parseInt(s.total_answers) || 0;
+          var accPct = parseFloat(s.accuracy_pct) || 0;
+          var accClass = total === 0 ? 'zero' : (accPct < 50 ? 'low' : '');
+          var accText = total === 0 ? '—' : accPct + '%';
+          return ''
+            + '<tr class="ks-roster-row" data-id="' + esc(s.student_id) + '" data-email="' + esc(s.student_email) + '">'
+              + '<td class="col-email">' + esc(s.student_email || '(e-posta yok)') + '</td>'
+              + '<td class="col-num">' + total + '</td>'
+              + '<td class="col-accuracy ' + accClass + '">' + accText + '</td>'
+              + '<td class="col-meta">' + fmtRelative(s.last_active) + '</td>'
+              + '<td class="col-vocab col-num">' + (parseInt(s.vocab_count) || 0) + '</td>'
+              + '<td class="col-joined col-meta">' + fmtDateShort(s.joined_at) + '</td>'
+              + '<td><button class="ks-remove-btn" data-action="remove" data-id="' + esc(s.student_id) + '" data-email="' + esc(s.student_email) + '" title="Sınıftan çıkar">×</button></td>'
+            + '</tr>';
+        }).join('');
+
+        rosterBody.innerHTML = ''
+          + '<div class="ks-roster">'
+          + '<table class="ks-roster-table">'
+            + '<thead><tr>'
+              + '<th>E-posta</th>'
+              + '<th class="num">Cevap</th>'
+              + '<th class="num">Doğruluk</th>'
+              + '<th>Son Aktivite</th>'
+              + '<th class="col-vocab num">Kelime</th>'
+              + '<th class="col-joined">Katıldı</th>'
+              + '<th></th>'
+            + '</tr></thead>'
+            + '<tbody>' + rows + '</tbody>'
+          + '</table>'
+          + '</div>';
+
+        rosterBody.querySelectorAll('.ks-roster-row').forEach(function (row) {
+          row.addEventListener('click', function (e) {
+            if (e.target.closest('[data-action="remove"]')) return;
+            openStudentDrawer(row.dataset.id, row.dataset.email);
+          });
+        });
+        rosterBody.querySelectorAll('[data-action="remove"]').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var email = btn.dataset.email || 'bu öğrenci';
+            if (!confirm(email + ' adresli öğrenciyi sınıftan çıkarmak istiyor musun?')) return;
+            btn.disabled = true;
+            try {
+              var r = await sb.rpc('remove_student_from_class', {
+                p_class_id: classId, p_student_id: btn.dataset.id
+              });
+              if (r.error) throw r.error;
+              window.location.reload();
+            } catch (err) {
+              alert('Çıkarma başarısız: ' + (err.message || err));
+              btn.disabled = false;
+            }
+          });
+        });
+      }
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = '';
+
+      // ===== Student detail drawer =====
+      var sDrawer = document.getElementById('student-drawer');
+      var sdTitle = document.getElementById('sd-title');
+      var sdBody = document.getElementById('sd-body');
+      var sdClose = document.getElementById('sd-close');
+      var sdBackdrop = document.getElementById('sd-backdrop');
+
+      function closeStudentDrawer() {
+        sDrawer.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+      sdClose.addEventListener('click', closeStudentDrawer);
+      sdBackdrop.addEventListener('click', closeStudentDrawer);
+
+      async function openStudentDrawer(studentId, email) {
+        sdTitle.textContent = email || 'Öğrenci Detayı';
+        sdBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
+        sDrawer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        try {
+          var r = await sb.rpc('student_class_detail', {
+            p_class_id: classId, p_student_id: studentId
+          });
+          if (r.error) throw r.error;
+          renderStudentDetail(r.data || {}, studentId);
+        } catch (err) {
+          sdBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      function renderStudentDetail(d, studentId) {
+        var total = parseInt(d.total_answers) || 0;
+        var correct = parseInt(d.correct_count) || 0;
+        var wrong = parseInt(d.wrong_count) || 0;
+        var accPct = parseFloat(d.accuracy_pct) || 0;
+        var accClass = accPct < 50 ? 'low' : '';
+        var accText = total === 0 ? '—' : accPct + '%';
+        var categories = d.categories || [];
+        var recent = d.recent_answers || [];
+
+        var meta = 'Sınıfa katılım: ' + fmtDate(d.joined_at)
+          + ' · Son aktivite: ' + (d.last_active ? fmtRelative(d.last_active) : 'henüz yok');
+
+        var summary = ''
+          + '<div class="sd-summary">'
+          + '<div class="sd-stat"><div class="sd-stat-val">' + total + '</div><div class="sd-stat-label">Cevap</div></div>'
+          + '<div class="sd-stat"><div class="sd-stat-val ' + accClass + '">' + accText + '</div><div class="sd-stat-label">Doğruluk</div></div>'
+          + '<div class="sd-stat"><div class="sd-stat-val">' + correct + '</div><div class="sd-stat-label">Doğru</div></div>'
+          + '<div class="sd-stat"><div class="sd-stat-val">' + wrong + '</div><div class="sd-stat-label">Yanlış</div></div>'
+          + '<div class="sd-stat"><div class="sd-stat-val">' + (parseInt(d.vocab_count) || 0) + '</div><div class="sd-stat-label">Kelime</div></div>'
+          + '<div class="sd-stat"><div class="sd-stat-val">' + (parseInt(d.writing_count) || 0) + '</div><div class="sd-stat-label">Writing</div></div>'
+          + '</div>';
+
+        var catsHtml;
+        if (categories.length === 0) {
+          catsHtml = '<p style="color:var(--text-muted); font-style:italic; padding:0.5rem 0;">Henüz veri yok.</p>';
+        } else {
+          catsHtml = '<ul class="sd-cat-list">' + categories.map(function (c) {
+            var caccClass = (parseFloat(c.accuracy) || 0) < 50 ? 'low' : '';
+            var examPill = c.exam_type ? '<span class="sd-exam-pill">' + esc(c.exam_type) + '</span>' : '';
+            var nameText = humanize(c.category || '') + (c.subcategory ? ' · ' + humanize(c.subcategory) : '');
+            return '<li class="sd-cat-row">'
+              + '<div class="sd-cat-name">' + examPill + esc(nameText) + '</div>'
+              + '<div class="sd-cat-count">' + c.correct + '/' + c.total + '</div>'
+              + '<div class="sd-cat-acc ' + caccClass + '">' + c.accuracy + '%</div>'
+            + '</li>';
+          }).join('') + '</ul>';
+        }
+
+        var recentHtml;
+        if (recent.length === 0) {
+          recentHtml = '<p style="color:var(--text-muted); font-style:italic; padding:0.5rem 0;">Henüz cevap yok.</p>';
+        } else {
+          recentHtml = '<ul class="sd-recent-list">' + recent.map(function (a) {
+            var statusClass = a.status === 'correct' ? 'correct' : (a.status === 'wrong' ? 'wrong' : 'skipped');
+            var timeSpent = '';
+            if (a.time_spent_ms && a.time_spent_ms > 0) {
+              var sec = Math.round(a.time_spent_ms / 1000);
+              timeSpent = ' · ' + sec + 's';
+            }
+            var metaParts = [];
+            if (a.exam_type) metaParts.push(esc(a.exam_type));
+            if (a.category) metaParts.push(esc(humanize(a.category)));
+            return '<li class="sd-recent-row">'
+              + '<span class="sd-recent-status ' + statusClass + '"></span>'
+              + '<div class="sd-recent-info">'
+                + '<span class="sd-recent-slug">' + esc(a.question_slug || '—') + '</span>'
+                + '<div class="sd-recent-meta">' + metaParts.join(' · ') + timeSpent + '</div>'
+              + '</div>'
+              + '<div class="sd-recent-time">' + fmtRelative(a.answered_at) + '</div>'
+            + '</li>';
+          }).join('') + '</ul>';
+        }
+
+        sdBody.innerHTML = ''
+          + '<p class="sd-meta">' + meta + '</p>'
+          + summary
+          + '<div class="sd-section-title">Kategori Performansı</div>'
+          + catsHtml
+          + '<div class="sd-section-title">Son Cevaplar</div>'
+          + recentHtml
+          + '<div class="sd-actions">'
+            + '<button class="sd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
+          + '</div>';
+
+        sdBody.querySelector('.sd-remove-btn').addEventListener('click', async function () {
+          var email = d.student_email || 'bu öğrenci';
+          if (!confirm(email + ' adresli öğrenciyi sınıftan çıkarmak istiyor musun?')) return;
+          try {
+            var r = await sb.rpc('remove_student_from_class', {
+              p_class_id: classId, p_student_id: studentId
+            });
+            if (r.error) throw r.error;
+            closeStudentDrawer();
+            window.location.reload();
+          } catch (err) {
+            alert('Çıkarma başarısız: ' + (err.message || err));
+          }
+        });
+      }
+
+      // ===== Tabs =====
+      var tabBtns = document.querySelectorAll('.ks-tab');
+      var tabContents = document.querySelectorAll('.ks-tab-content');
+      var assignmentsLoaded = false;
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = btn.dataset.tab;
+          tabBtns.forEach(function (b) { b.classList.toggle('active', b === btn); });
+          tabContents.forEach(function (c) {
+            c.style.display = (c.dataset.tabContent === target) ? '' : 'none';
+          });
+          if (target === 'assignments' && !assignmentsLoaded) {
+            loadAssignments();
+            assignmentsLoaded = true;
+          }
+        });
+      });
+
+      // ===== Assignment drawer =====
+      var aDrawer = document.getElementById('assign-drawer');
+      var adTitle = document.getElementById('ad-title');
+      var adBody = document.getElementById('ad-body');
+      var adClose = document.getElementById('ad-close');
+      var adBackdrop = document.getElementById('ad-backdrop');
+
+      function closeAssignDrawer() {
+        aDrawer.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+      adClose.addEventListener('click', closeAssignDrawer);
+      adBackdrop.addEventListener('click', closeAssignDrawer);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          if (sDrawer.classList.contains('show')) closeStudentDrawer();
+          if (aDrawer.classList.contains('show')) closeAssignDrawer();
+          if (caModal.classList.contains('show')) closeCaModal();
+        }
+      });
+
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading' };
+
+      async function loadAssignments() {
+        var list = document.getElementById('ks-assign-list');
+        var empty = document.getElementById('ks-assign-empty');
+        list.innerHTML = '<p style="color:var(--text-muted); font-style:italic; text-align:center; padding:1rem;">Yükleniyor...</p>';
+        empty.style.display = 'none';
+
+        try {
+          var r = await sb.rpc('list_class_assignments', { p_class_id: classId });
+          if (r.error) throw r.error;
+          var assignments = r.data || [];
+
+          document.getElementById('tab-count-assignments').textContent = assignments.length;
+
+          if (assignments.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = '';
+            return;
+          }
+
+          list.innerHTML = assignments.map(function (a) {
+            var total = parseInt(a.total_students) || 0;
+            var completed = parseInt(a.completed_count) || 0;
+            var pct = total > 0 ? Math.round(100 * completed / total) : 0;
+            var isOverdue = a.due_date && new Date(a.due_date) < new Date();
+
+            var meta = [];
+            if (a.due_date) {
+              meta.push('<span class="' + (isOverdue ? 'overdue-tag' : '') + '">Son: ' + fmtDueDate(a.due_date) + (isOverdue ? ' (geçti)' : '') + '</span>');
+            }
+            if (a.type === 'questions' && a.config) {
+              if (a.config.exam_type) meta.push(a.config.exam_type);
+              if (a.config.category) meta.push(humanize(a.config.category));
+              meta.push('Hedef: ' + (a.config.count || 0) + ' soru');
+            } else if (a.type === 'writing' && a.config) {
+              meta.push((a.config.exam_type || '') + ' Task ' + (a.config.task_number || ''));
+              if (a.config.min_words) meta.push(a.config.min_words + '+ kelime');
+            }
+
+            var descHtml = a.description
+              ? '<p class="ks-assign-desc">' + esc(a.description) + '</p>'
+              : '';
+
+            return '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '">'
+              + '<div class="ks-assign-head-row">'
+                + '<div class="ks-assign-titles">'
+                  + '<span class="ks-assign-type type-' + a.type + '">' + TYPE_LABELS[a.type] + '</span>'
+                  + '<h3 class="ks-assign-title">' + esc(a.title) + '</h3>'
+                  + '<div class="ks-assign-meta">'
+                    + meta.join('<span class="ks-assign-meta-sep">·</span>')
+                  + '</div>'
+                + '</div>'
+                + '<button class="ks-assign-delete" data-action="delete-assign" data-id="' + esc(a.assignment_id) + '" type="button" title="Ödevi sil">×</button>'
+              + '</div>'
+              + descHtml
+              + '<div class="ks-assign-progress">'
+                + '<div class="ks-assign-progress-bar"><div class="ks-assign-progress-fill" style="width:' + pct + '%"></div></div>'
+                + '<div class="ks-assign-progress-text"><strong>' + completed + '</strong> / ' + total + ' tamamladı</div>'
+              + '</div>'
+            + '</article>';
+          }).join('');
+
+          list.querySelectorAll('.ks-assign-card').forEach(function (card) {
+            card.addEventListener('click', function (e) {
+              if (e.target.closest('[data-action="delete-assign"]')) return;
+              openAssignDrawer(card.dataset.id, card.dataset.title);
+            });
+          });
+
+          list.querySelectorAll('[data-action="delete-assign"]').forEach(function (btn) {
+            btn.addEventListener('click', async function (e) {
+              e.stopPropagation();
+              if (!confirm('Bu ödevi silmek istiyor musun? Öğrenci progress kayıtları da silinecek.')) return;
+              btn.disabled = true;
+              try {
+                var r = await sb.rpc('delete_assignment', { p_assignment_id: btn.dataset.id });
+                if (r.error) throw r.error;
+                await loadAssignments();
+              } catch (err) {
+                alert('Silme başarısız: ' + (err.message || err));
+                btn.disabled = false;
+              }
+            });
+          });
+        } catch (err) {
+          list.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      async function openAssignDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'Ödev Detayı';
+        adBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        try {
+          var r = await sb.rpc('assignment_progress', { p_assignment_id: assignmentId });
+          if (r.error) throw r.error;
+          var progress = r.data || [];
+
+          if (progress.length === 0) {
+            adBody.innerHTML = '<p style="color:var(--text-muted); font-style:italic; text-align:center;">Bu sınıfta henüz öğrenci yok.</p>';
+            return;
+          }
+
+          var STATUS_LABELS = { completed: 'Tamamlandı', in_progress: 'Devam Ediyor', pending: 'Başlamadı' };
+
+          var html = '<ul class="ad-list">' + progress.map(function (p) {
+            var completedAt = p.completed_at ? '<span class="ad-completed-at">' + fmtRelative(p.completed_at) + '</span>' : '';
+            return '<li class="ad-row">'
+              + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + completedAt + '</div>'
+              + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + '</div>'
+              + '<span class="ad-status-pill status-' + p.status + '">' + STATUS_LABELS[p.status] + '</span>'
+            + '</li>';
+          }).join('') + '</ul>';
+
+          adBody.innerHTML = html;
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      // ===== Create assignment modal =====
+      var caModal = document.getElementById('modal-create-assign');
+      var caForm = document.getElementById('ca-form');
+      var caCancel = document.getElementById('ca-cancel');
+      var caErr = document.getElementById('ca-err');
+      var caNewBtn = document.getElementById('ks-new-assign-btn');
+      var caTypeBtns = document.querySelectorAll('.t-type-btn');
+      var caCurrentType = 'questions';
+      var writingTextTypes = null; // cache
+
+      async function loadWritingTextTypes() {
+        if (writingTextTypes !== null) return writingTextTypes;
+        try {
+          var res = await sb.from('writing_text_types')
+            .select('id, exam, text_type, display_name, is_active, is_coming_soon, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+          if (res.error) throw res.error;
+          writingTextTypes = res.data || [];
+        } catch (err) {
+          console.error('[Modal] writing_text_types yüklenemedi:', err);
+          writingTextTypes = [];
+        }
+        return writingTextTypes;
+      }
+
+      function populateTextTypeSelect() {
+        var examSel = document.getElementById('ca-w-exam');
+        var ttSel = document.getElementById('ca-w-texttype');
+        if (!examSel || !ttSel || !writingTextTypes) return;
+        var exam = examSel.value;
+        var filtered = writingTextTypes.filter(function (t) { return t.exam === exam && !t.is_coming_soon; });
+        ttSel.innerHTML = '';
+        if (filtered.length === 0) {
+          var opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Bu sınav için text type yok';
+          opt.disabled = true;
+          ttSel.appendChild(opt);
+          return;
+        }
+        filtered.forEach(function (t) {
+          var opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.display_name;
+          opt.dataset.textType = t.text_type;
+          opt.dataset.displayName = t.display_name;
+          ttSel.appendChild(opt);
+        });
+      }
+
+      function setType(t) {
+        caCurrentType = t;
+        caTypeBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.type === t); });
+        document.querySelectorAll('.t-config-block').forEach(function (block) {
+          block.classList.toggle('show', block.dataset.config === t);
+        });
+        if (t === 'writing') {
+          loadWritingTextTypes().then(populateTextTypeSelect);
+        }
+      }
+      caTypeBtns.forEach(function (b) {
+        b.addEventListener('click', function () { setType(b.dataset.type); });
+      });
+
+      document.getElementById('ca-w-exam').addEventListener('change', populateTextTypeSelect);
+
+      function openCaModal() {
+        caErr.textContent = '';
+        caForm.reset();
+        setType('questions');
+        caModal.classList.add('show');
+        setTimeout(function () { document.getElementById('ca-title').focus(); }, 50);
+      }
+      function closeCaModal() { caModal.classList.remove('show'); }
+
+      caNewBtn.addEventListener('click', openCaModal);
+      caCancel.addEventListener('click', closeCaModal);
+      caModal.addEventListener('click', function (e) { if (e.target === caModal) closeCaModal(); });
+
+      caForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        caErr.textContent = '';
+        var title = document.getElementById('ca-title').value.trim();
+        var desc = document.getElementById('ca-desc').value.trim();
+        var dueRaw = document.getElementById('ca-due').value;
+        if (!title) { caErr.textContent = 'Başlık boş olamaz.'; return; }
+
+        var config = {};
+        if (caCurrentType === 'questions') {
+          config.exam_type = document.getElementById('ca-q-exam').value;
+          var cat = document.getElementById('ca-q-cat').value.trim();
+          if (cat) config.category = cat;
+          var cnt = parseInt(document.getElementById('ca-q-count').value);
+          if (!cnt || cnt < 1) { caErr.textContent = 'Hedef soru sayısı en az 1 olmalı.'; return; }
+          config.count = cnt;
+        } else if (caCurrentType === 'writing') {
+          config.exam_type = document.getElementById('ca-w-exam').value;
+          var ttSel = document.getElementById('ca-w-texttype');
+          var ttOpt = ttSel.options[ttSel.selectedIndex];
+          if (!ttOpt || !ttOpt.value) {
+            caErr.textContent = 'Text type / rubric seçmen gerekli.';
+            return;
+          }
+          config.text_type_id = ttOpt.value;
+          config.text_type = ttOpt.dataset.textType || '';
+          config.text_type_display = ttOpt.dataset.displayName || ttOpt.textContent;
+          var prompt = document.getElementById('ca-w-prompt').value.trim();
+          if (!prompt) { caErr.textContent = 'Prompt boş olamaz.'; return; }
+          config.prompt = prompt;
+          var minw = parseInt(document.getElementById('ca-w-minwords').value);
+          if (minw && minw > 0) config.min_words = minw;
+        } else if (caCurrentType === 'reading') {
+          var url = document.getElementById('ca-r-url').value.trim();
+          if (!url) { caErr.textContent = 'URL boş olamaz.'; return; }
+          config.url = url;
+          var followup = document.getElementById('ca-r-followup').value.trim();
+          if (followup) config.follow_up_note = followup;
+        }
+
+        var dueIso = dueRaw ? new Date(dueRaw).toISOString() : null;
+        var submitBtn = document.getElementById('ca-submit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Oluşturuluyor...';
+
+        try {
+          var r = await sb.rpc('create_assignment', {
+            p_class_id: classId,
+            p_type: caCurrentType,
+            p_title: title,
+            p_description: desc || null,
+            p_config: config,
+            p_due_date: dueIso
+          });
+          if (r.error) throw r.error;
+          closeCaModal();
+          assignmentsLoaded = false;
+          await loadAssignments();
+          assignmentsLoaded = true;
+          var cd = await sb.rpc('class_detail', { p_class_id: classId });
+          if (cd.data) {
+            document.getElementById('ks-assignment-count').textContent = cd.data.assignment_count || 0;
+          }
+        } catch (err) {
+          caErr.textContent = 'Oluşturulamadı: ' + (err.message || err);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Ödevi Oluştur';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

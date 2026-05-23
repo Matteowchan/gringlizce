@@ -433,3 +433,127 @@
     initHoverDropdowns();
   }
 })();
+
+
+/* -------- Scroll to top button -------- */
+(function() {
+  function injectScrollToTop() {
+    if (document.getElementById('scroll-to-top')) return;
+    var btn = document.createElement('button');
+    btn.id = 'scroll-to-top';
+    btn.className = 'scroll-to-top';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Yukarı çık');
+    btn.setAttribute('title', 'Yukarı çık');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg>';
+    document.body.appendChild(btn);
+
+    var ticking = false;
+    function update() {
+      btn.classList.toggle('visible', window.scrollY > 400);
+      ticking = false;
+    }
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+    update();
+
+    btn.addEventListener('click', function() {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectScrollToTop);
+  } else {
+    injectScrollToTop();
+  }
+})();
+
+
+/* ============================================================
+   Generic [data-collapsible] toggle handler
+   - Hero accordion (Neler Sunuyoruz, Örnek Soru Gör)
+   - Mobile qb-category accordion (on hub pages)
+   ============================================================ */
+(function() {
+  'use strict';
+
+  function initGenericCollapsibles() {
+    document.querySelectorAll('[data-collapsible]').forEach(function(c) {
+      if (c.dataset.collapseInit === 'true') return;
+      c.dataset.collapseInit = 'true';
+      var trigger = c.querySelector('.hero-collapse-trigger, .collapse-trigger');
+      if (!trigger) return;
+      trigger.addEventListener('click', function() {
+        var isExpanded = c.getAttribute('data-expanded') === 'true';
+        c.setAttribute('data-expanded', isExpanded ? 'false' : 'true');
+        trigger.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+      });
+    });
+  }
+
+  function initQbCategoryAccordion() {
+    var categories = document.querySelectorAll('.qb-category');
+    if (!categories.length) return;
+    var isMobile = window.matchMedia('(max-width: 720px)').matches;
+
+    categories.forEach(function(cat, idx) {
+      if (cat.dataset.qbCatInit === 'true') return;
+      cat.dataset.qbCatInit = 'true';
+
+      var head = cat.querySelector('.qb-category-head');
+      if (!head) return;
+
+      // İlk kategori mobilde açık başlasın, diğerleri kapalı
+      if (isMobile && idx > 0) {
+        cat.setAttribute('data-collapsed', 'true');
+      }
+
+      // Mobilde head'i tıklanabilir yap
+      head.style.cursor = 'pointer';
+      head.setAttribute('role', 'button');
+      head.setAttribute('aria-expanded', cat.getAttribute('data-collapsed') === 'true' ? 'false' : 'true');
+
+      head.addEventListener('click', function(e) {
+        // Sadece mobilde toggle çalışsın
+        var nowMobile = window.matchMedia('(max-width: 720px)').matches;
+        if (!nowMobile) return;
+        // Eğer kullanıcı bir input/link'e tıkladıysa toggle etme
+        if (e.target.closest('a, input, label')) return;
+        var collapsed = cat.getAttribute('data-collapsed') === 'true';
+        cat.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
+        head.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
+      });
+    });
+
+    // Viewport değişirse mobile/desktop davranışını güncelle
+    window.addEventListener('resize', function() {
+      var nowMobile = window.matchMedia('(max-width: 720px)').matches;
+      if (!nowMobile) {
+        // Desktop: hepsini aç
+        categories.forEach(function(cat) {
+          cat.removeAttribute('data-collapsed');
+        });
+      }
+    });
+  }
+
+  function initAll() {
+    initGenericCollapsibles();
+    initQbCategoryAccordion();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+})();

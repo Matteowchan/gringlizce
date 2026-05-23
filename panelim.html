@@ -4184,6 +4184,22 @@
         var metrics = (evalRes && evalRes.data && evalRes.data.metrics) || {};
         var newlyEarned = (evalRes && evalRes.data && evalRes.data.new_badges) || [];
 
+        // Yeni rozetlerin metriklerini al + yeni hak edilenleri ödüllendir
+        try {
+          var extraRes = await sbCli.rpc('award_extra_badges');
+          if (extraRes && extraRes.data) {
+            var extraMetrics = extraRes.data.metrics || {};
+            // Mevcut metrics'e ekle (override etmeden)
+            Object.keys(extraMetrics).forEach(function (k) {
+              if (metrics[k] === undefined) metrics[k] = extraMetrics[k];
+            });
+            var extraNew = extraRes.data.new_badges || [];
+            if (extraNew.length) newlyEarned = newlyEarned.concat(extraNew);
+          }
+        } catch (e) {
+          console.warn('[extra-badges]', e);
+        }
+
         // Fetch all active badges + which ones user has earned
         var allRes = await sbCli.from('badges').select('*').eq('active', true).order('display_order');
         if (allRes.error) throw allRes.error;
@@ -4208,17 +4224,27 @@
         function progressFor(b) {
           var current = 0;
           switch (b.criteria_type) {
-            case 'question_count': current = metrics.total_answers || 0; break;
-            case 'streak_days':    current = metrics.current_streak || 0; break;
-            case 'writing_count':  current = metrics.writing_count || 0; break;
-            case 'vocab_count':    current = metrics.vocab_count || 0; break;
-            case 'writing_band':   current = metrics.max_band || 0; break;
+            case 'question_count':   current = metrics.total_answers || 0; break;
+            case 'streak_days':      current = metrics.current_streak || 0; break;
+            case 'writing_count':    current = metrics.writing_count || 0; break;
+            case 'vocab_count':      current = metrics.vocab_count || 0; break;
+            case 'writing_band':     current = metrics.max_band || 0; break;
+            // Phase 1: 7 yeni criteria_type
+            case 'package':          current = metrics.package_count || 0; break;
+            case 'bonus_token':      current = metrics.bonus_token_count || 0; break;
+            case 'target_band':      current = metrics.target_band_reached || 0; break;
+            case 'vocab_review':     current = metrics.vocab_review_total || 0; break;
+            case 'vocab_recurrence': current = metrics.vocab_recurrence_days || 0; break;
+            case 'slow_correct':     current = metrics.slow_correct_count || 0; break;
+            case 'study_plan':       current = metrics.study_plan_completed || 0; break;
             default: return null;
           }
           var pct = Math.min(100, Math.round((current / b.criteria_value) * 100));
           var label;
           if (b.criteria_type === 'writing_band') {
             label = current > 0 ? 'Mevcut: ' + current + ' / Hedef: ' + b.criteria_value : 'Henüz değerlendirme yok';
+          } else if (b.criteria_type === 'target_band') {
+            label = current >= 1 ? 'Hedefe ulaşıldı' : 'Henüz hedef ulaşılmadı';
           } else {
             label = current.toLocaleString('tr-TR') + ' / ' + b.criteria_value.toLocaleString('tr-TR');
           }

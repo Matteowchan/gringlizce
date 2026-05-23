@@ -232,7 +232,56 @@ mark.hl-key{background:linear-gradient(transparent 60%,rgba(13,148,136,.22) 60%)
 <!-- Brand integration: Supabase + camp features -->
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/sat-camp-features.css">
+<!-- KAMP PAYWALL deps -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/site-config.js"></script>
+<script src="../assets/auth.js"></script>
+<!-- /KAMP PAYWALL deps -->
+<!-- KAMP PAYWALL: tek seferlik kontrol -->
+<script>
+(function() {
+  var KAMP_SLUG = 'sat-rw-8-gunluk-kamp';
+  var SPLASH = '/urun/sat-rw-8-gunluk-kamp.html';
+
+  // Sayfa kontrol bitene kadar görünmesin
+  document.documentElement.style.visibility = 'hidden';
+  function allow() { document.documentElement.style.visibility = 'visible'; }
+  function deny() { window.location.replace(SPLASH); }
+
+  function check() {
+    if (!window.GriAuth) {
+      setTimeout(check, 80);
+      return;
+    }
+    var auth = window.GriAuth.verify();
+    if (!auth) {
+      // Cache yoksa tazele, sonra tekrar bak
+      window.GriAuth.refreshCache().then(function () {
+        var a2 = window.GriAuth.verify();
+        if (a2 && window.GriAuth.hasAccess(a2.record, KAMP_SLUG)) {
+          allow();
+        } else {
+          deny();
+        }
+      }).catch(deny);
+      return;
+    }
+    if (window.GriAuth.hasAccess(auth.record, KAMP_SLUG)) {
+      allow();
+    } else {
+      deny();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
+})();
+</script>
+<!-- /KAMP PAYWALL -->
+
 <script>window.SAT_CAMP_DAY = 1;</script>
 <script src="../assets/sat-camp-features.js" defer></script>
 </head>

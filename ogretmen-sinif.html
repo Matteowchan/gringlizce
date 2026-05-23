@@ -1133,25 +1133,25 @@
             <div>
               <label for="ca-w-exam">Sınav</label>
               <select id="ca-w-exam">
+                <option value="ib">IB English B</option>
                 <option value="ielts">IELTS</option>
                 <option value="toefl">TOEFL</option>
-                <option value="ydt">YDT</option>
-                <option value="ib">IB English B</option>
               </select>
             </div>
             <div>
-              <label for="ca-w-task">Task</label>
-              <select id="ca-w-task">
-                <option value="1">Task 1</option>
-                <option value="2" selected>Task 2 / Essay</option>
+              <label for="ca-w-texttype">Text Type / Rubric</label>
+              <select id="ca-w-texttype">
+                <option value="">Yükleniyor...</option>
               </select>
             </div>
           </div>
+          <p class="t-config-note">Seçilen text type'ın rubric'i değerlendirmede kullanılır. Öğrenci wizard'ı açtığında prompt ve rubric otomatik dolar.</p>
+
           <label for="ca-w-prompt">Prompt</label>
           <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
           <label for="ca-w-minwords">Minimum Kelime (Opsiyonel)</label>
           <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="250">
-          <p class="t-config-note">Öğrenci writing'i tamamladığında manuel olarak "Tamamladım" butonuyla işaretler.</p>
+          <p class="t-config-note">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanabilir.</p>
         </div>
 
         <!-- Reading config -->
@@ -1665,6 +1665,48 @@
       var caNewBtn = document.getElementById('ks-new-assign-btn');
       var caTypeBtns = document.querySelectorAll('.t-type-btn');
       var caCurrentType = 'questions';
+      var writingTextTypes = null; // cache
+
+      async function loadWritingTextTypes() {
+        if (writingTextTypes !== null) return writingTextTypes;
+        try {
+          var res = await sb.from('writing_text_types')
+            .select('id, exam, text_type, display_name, is_active, is_coming_soon, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+          if (res.error) throw res.error;
+          writingTextTypes = res.data || [];
+        } catch (err) {
+          console.error('[Modal] writing_text_types yüklenemedi:', err);
+          writingTextTypes = [];
+        }
+        return writingTextTypes;
+      }
+
+      function populateTextTypeSelect() {
+        var examSel = document.getElementById('ca-w-exam');
+        var ttSel = document.getElementById('ca-w-texttype');
+        if (!examSel || !ttSel || !writingTextTypes) return;
+        var exam = examSel.value;
+        var filtered = writingTextTypes.filter(function (t) { return t.exam === exam && !t.is_coming_soon; });
+        ttSel.innerHTML = '';
+        if (filtered.length === 0) {
+          var opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Bu sınav için text type yok';
+          opt.disabled = true;
+          ttSel.appendChild(opt);
+          return;
+        }
+        filtered.forEach(function (t) {
+          var opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.display_name;
+          opt.dataset.textType = t.text_type;
+          opt.dataset.displayName = t.display_name;
+          ttSel.appendChild(opt);
+        });
+      }
 
       function setType(t) {
         caCurrentType = t;
@@ -1672,10 +1714,15 @@
         document.querySelectorAll('.t-config-block').forEach(function (block) {
           block.classList.toggle('show', block.dataset.config === t);
         });
+        if (t === 'writing') {
+          loadWritingTextTypes().then(populateTextTypeSelect);
+        }
       }
       caTypeBtns.forEach(function (b) {
         b.addEventListener('click', function () { setType(b.dataset.type); });
       });
+
+      document.getElementById('ca-w-exam').addEventListener('change', populateTextTypeSelect);
 
       function openCaModal() {
         caErr.textContent = '';
@@ -1708,7 +1755,15 @@
           config.count = cnt;
         } else if (caCurrentType === 'writing') {
           config.exam_type = document.getElementById('ca-w-exam').value;
-          config.task_number = parseInt(document.getElementById('ca-w-task').value);
+          var ttSel = document.getElementById('ca-w-texttype');
+          var ttOpt = ttSel.options[ttSel.selectedIndex];
+          if (!ttOpt || !ttOpt.value) {
+            caErr.textContent = 'Text type / rubric seçmen gerekli.';
+            return;
+          }
+          config.text_type_id = ttOpt.value;
+          config.text_type = ttOpt.dataset.textType || '';
+          config.text_type_display = ttOpt.dataset.displayName || ttOpt.textContent;
           var prompt = document.getElementById('ca-w-prompt').value.trim();
           if (!prompt) { caErr.textContent = 'Prompt boş olamaz.'; return; }
           config.prompt = prompt;

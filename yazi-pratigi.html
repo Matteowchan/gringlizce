@@ -27,6 +27,72 @@
     .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
 
     .wiz-wrap { max-width: 1320px; margin: 0 auto; padding: 1rem 1.5rem 4rem; }
+
+    /* Assignment banner (ödev modu) */
+    .wiz-assign-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--gold, #C89A3C);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .wiz-assign-banner .wab-text { flex: 1; min-width: 240px; }
+    .wiz-assign-banner .wab-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .wiz-assign-banner .wab-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--text);
+      margin: 0 0 0.3rem;
+      letter-spacing: -0.01em;
+    }
+    .wiz-assign-banner .wab-meta {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted));
+      font-size: 0.92rem;
+      margin: 0;
+      line-height: 1.45;
+    }
+    .wiz-assign-banner .wab-meta .wab-due-overdue { color: #b45046; font-style: normal; font-weight: 600; }
+    .wiz-assign-banner .wab-back {
+      padding: 0.55rem 1.1rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .wiz-assign-banner .wab-back:hover { color: var(--text); border-color: var(--text); }
+    .wiz-assign-banner.is-complete {
+      border-color: var(--teal, #2C5856);
+    }
+    .wiz-assign-banner.is-complete .wab-eyebrow {
+      color: var(--teal);
+    }
+    @media (max-width: 640px) {
+      .wiz-assign-banner { flex-direction: column; align-items: stretch; }
+      .wiz-assign-banner .wab-back { width: 100%; text-align: center; }
+    }
     .wiz-selectors {
       display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: end;
       padding: 1.1rem 1.4rem; background: var(--bg-card);
@@ -1158,6 +1224,16 @@
       </span>
     </div>
 
+    <!-- Ödev modu banner -->
+    <div id="assignBanner" class="wiz-assign-banner" style="display:none;">
+      <div class="wab-text">
+        <div class="wab-eyebrow" id="wabEyebrow">Ödev</div>
+        <h2 class="wab-title" id="wabTitle">—</h2>
+        <p class="wab-meta" id="wabMeta">—</p>
+      </div>
+      <a href="panelim.html" class="wab-back" id="wabBack">Panele Dön</a>
+    </div>
+
     <div class="wiz-selectors" id="selectorBar">
       <div class="wiz-sel-group">
         <label for="examSelect">Sınav</label>
@@ -1375,6 +1451,9 @@
       quota: null,
       isAnalyzing: false,
       lastClearedText: '',   // undo için son silinen yazı
+      assignmentId: null,    // ödev modu: assignment UUID
+      assignment: null,      // ödev modu: assignment objesi
+      assignmentMarkedComplete: false,
     };
 
     var EXAM_LABELS = {
@@ -1400,14 +1479,40 @@
       var params = new URLSearchParams(window.location.search);
       var examFromUrl = params.get('exam');
       var typeFromUrl = params.get('type');
+      var assignmentIdFromUrl = params.get('assignment_id');
       if (examFromUrl && EXAM_LABELS[examFromUrl]) state.exam = examFromUrl;
       if (typeFromUrl) state.typeId = typeFromUrl;
+      if (assignmentIdFromUrl) state.assignmentId = assignmentIdFromUrl;
 
       // Tüm aktif text type'ları çek
       await loadAllTextTypes();
 
+      // Ödev modu: assignment'ı çek, exam + typeId'yi öğretmen config'ine göre override et
+      if (state.assignmentId) {
+        try {
+          var aSessRes = await sb.auth.getSession();
+          if (aSessRes && aSessRes.data && aSessRes.data.session) {
+            var listRes = await sb.rpc('list_my_assignments');
+            if (!listRes.error && listRes.data) {
+              var found = listRes.data.find(function (a) { return a.assignment_id === state.assignmentId; });
+              if (found && found.type === 'writing' && found.config) {
+                state.assignment = found;
+                if (found.config.exam_type && EXAM_LABELS[found.config.exam_type]) {
+                  state.exam = found.config.exam_type;
+                }
+                if (found.config.text_type_id) {
+                  state.typeId = found.config.text_type_id;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[Wizard] Ödev yüklenemedi:', err);
+        }
+      }
+
       // Exam değiştiyse veya typeFromUrl yoksa default'u ayarla
-      if (!typeFromUrl) {
+      if (!state.typeId) {
         var firstOfExam = state.allTypes.find(function(t) {
           return t.exam === state.exam && !t.is_coming_soon;
         });
@@ -1804,9 +1909,107 @@
     }
 
     // ========================================================
+    // RENDER ASSIGNMENT BANNER (ödev modu)
+    // ========================================================
+    function renderAssignmentBanner() {
+      var a = state.assignment;
+      if (!a) return;
+
+      var banner = document.getElementById('assignBanner');
+      var titleEl = document.getElementById('wabTitle');
+      var metaEl = document.getElementById('wabMeta');
+      var eyebrowEl = document.getElementById('wabEyebrow');
+      if (!banner || !titleEl || !metaEl) return;
+
+      titleEl.textContent = a.title || 'Ödev';
+
+      var metaParts = [];
+      if (a.class_name) metaParts.push('Sınıf: ' + a.class_name);
+      if (a.config && a.config.text_type_display) metaParts.push(a.config.text_type_display);
+      if (a.config && a.config.min_words) metaParts.push(a.config.min_words + '+ kelime');
+
+      var dueText = '';
+      if (a.due_date) {
+        var d = new Date(a.due_date);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        var isOverdue = d < new Date();
+        var dateStr = d.getDate() + ' ' + months[d.getMonth()];
+        var hh = String(d.getHours()).padStart(2, '0');
+        var mm = String(d.getMinutes()).padStart(2, '0');
+        if (!(hh === '00' && mm === '00')) dateStr += ' ' + hh + ':' + mm;
+        if (isOverdue) {
+          dueText = '<span class="wab-due-overdue">Son tarih geçti: ' + dateStr + '</span>';
+        } else {
+          dueText = 'Son tarih: ' + dateStr;
+        }
+        metaParts.push(dueText);
+      }
+
+      if (a.status === 'completed') {
+        banner.classList.add('is-complete');
+        eyebrowEl.textContent = 'Tamamlandı';
+        metaParts.push('Yazını gönderdin, ödev kapandı');
+      } else {
+        eyebrowEl.textContent = 'Ödev';
+      }
+
+      if (a.description) {
+        metaParts.push(a.description);
+      }
+
+      metaEl.innerHTML = metaParts.join(' &middot; ');
+      banner.style.display = '';
+
+      // Selector bar'ı gizle — öğretmen seçimini zorla
+      var selBar = document.getElementById('selectorBar');
+      if (selBar) selBar.style.display = 'none';
+    }
+
+    // ========================================================
+    // MARK ASSIGNMENT COMPLETE (değerlendirme sonrası)
+    // ========================================================
+    async function markAssignmentCompleteIfApplicable() {
+      if (!state.assignmentId || state.assignmentMarkedComplete) return;
+      try {
+        var r = await sb.rpc('mark_assignment_complete', { p_assignment_id: state.assignmentId });
+        if (!r.error) {
+          state.assignmentMarkedComplete = true;
+          var banner = document.getElementById('assignBanner');
+          var eyebrow = document.getElementById('wabEyebrow');
+          if (banner) banner.classList.add('is-complete');
+          if (eyebrow) eyebrow.textContent = 'Tamamlandı';
+        }
+      } catch (err) {
+        console.error('[Wizard] mark_assignment_complete fail:', err);
+      }
+    }
+
+    // ========================================================
     // LOAD RANDOM PROMPT
     // ========================================================
     async function loadRandomPrompt() {
+      // Ödev modu: öğretmenin yazdığı prompt'u kullan, DB'den çekme
+      if (state.assignment && state.assignment.config && state.assignment.config.prompt) {
+        state.currentPrompt = {
+          id: null,
+          title: state.assignment.title || 'Ödev',
+          prompt: state.assignment.config.prompt,
+          _assignment: true
+        };
+        document.getElementById('promptTitle').textContent = state.currentPrompt.title;
+        var ptElA = document.getElementById('promptText');
+        ptElA.innerHTML = formatPromptHTML(state.currentPrompt.prompt);
+        ptElA.dataset.raw = state.currentPrompt.prompt;
+        // Yeni prompt butonunu gizle (öğretmen prompt'unu zorunlu kıl)
+        var npb = document.getElementById('newPromptBtn');
+        if (npb) {
+          npb.style.display = 'none';
+        }
+        // Banner göster
+        renderAssignmentBanner();
+        return;
+      }
+
       var res = await sb
         .from('writing_prompts')
         .select('*')
@@ -2209,6 +2412,11 @@
         if (data.quota) {
           state.quota = data.quota;
           renderQuotaPill();
+        }
+
+        // Ödev modu: değerlendirme başarılıysa otomatik tamamla
+        if (state.assignmentId) {
+          markAssignmentCompleteIfApplicable();
         }
 
       } catch (err) {

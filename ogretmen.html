@@ -742,12 +742,16 @@
             });
           });
 
-          // Click card → go to class detail (Phase 2 — for now disabled)
-          // grid.querySelectorAll('.ot-class-card').forEach(function (card) {
-          //   card.addEventListener('click', function () {
-          //     window.location.href = 'ogretmen-sinif.html?id=' + card.dataset.id;
-          //   });
-          // });
+          // Card click → class detail
+          grid.querySelectorAll('.ot-class-card').forEach(function (card) {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', function (e) {
+              // Copy / archive button'ları tetiklemesin
+              if (e.target.closest('.occ-join-copy')) return;
+              if (e.target.closest('[data-action="archive"]')) return;
+              window.location.href = 'ogretmen-sinif.html?id=' + card.dataset.id;
+            });
+          });
         } catch (err) {
           grid.innerHTML = '<p style="color:#b45046; font-style:italic;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
         }

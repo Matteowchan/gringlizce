@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sınıf | Gri English</title>
+  <meta name="description" content="Sınıf detayı ve öğrenci ilerlemeleri">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/users.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/site-config.js" defer></script>
+  <style>
+    .oks-hero { padding: 1.8rem 0 1rem; }
+    .oks-back {
+      display: inline-block;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--text-soft, #555);
+      text-decoration: none;
+      margin-bottom: 0.7rem;
+    }
+    .oks-back:hover { color: var(--teal); }
+    .oks-hero h1 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: clamp(1.8rem, 4vw, 2.3rem);
+      margin: 0 0 0.4rem;
+      color: var(--text, #1A2230);
+    }
+    .oks-hero .lead {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      font-size: 1rem;
+      margin: 0;
+      max-width: 60ch;
+    }
+
+    /* Stats bar */
+    .oks-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.8rem;
+      padding: 1rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line);
+      margin: 1.2rem 0;
+    }
+    .oks-stat {
+      text-align: center;
+      padding: 0.4rem;
+    }
+    .oks-stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.7rem;
+      font-weight: 600;
+      color: var(--teal, #2C5856);
+      line-height: 1;
+    }
+    .oks-stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+    .oks-stat-code {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gold, #C89A3C);
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      user-select: all;
+    }
+    .oks-stat-code:hover { opacity: 0.7; }
+
+    /* Roster table */
+    .oks-roster {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line);
+      margin-bottom: 3rem;
+    }
+    .oks-roster-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .oks-roster-head h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.25rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .oks-roster-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .oks-roster-table th {
+      text-align: left;
+      padding: 0.7rem 1.2rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+      background: var(--bg-soft, #F0EBDE);
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .oks-roster-table td {
+      padding: 0.8rem 1.2rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    .oks-roster-row {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .oks-roster-row:hover {
+      background: var(--bg-soft, #F0EBDE);
+    }
+    .oks-roster-row:last-child td { border-bottom: none; }
+    .oks-roster-table .col-email { font-weight: 500; }
+    .oks-roster-table .col-accuracy {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--teal);
+    }
+    .oks-roster-table .col-accuracy.low { color: #b45046; }
+    .oks-roster-table .col-accuracy.zero { color: var(--text-muted); }
+    .oks-roster-table .col-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .oks-remove-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.95rem;
+      border-radius: 3px;
+      line-height: 1;
+    }
+    .oks-remove-btn:hover {
+      color: #b45046;
+      border-color: #b45046;
+    }
+
+    .oks-empty {
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .oks-empty h3 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.2rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    .oks-empty p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft);
+      max-width: 50ch;
+      margin: 0 auto;
+    }
+    .oks-empty .oks-empty-code {
+      display: inline-block;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      margin-top: 1rem;
+      padding: 0.6rem 1.4rem;
+      background: var(--bg-soft);
+      border: 1px solid var(--gold);
+      user-select: all;
+    }
+
+    /* Drawer */
+    .oks-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+    }
+    .oks-drawer.show { display: block; }
+    .oks-drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 25, 40, 0.4);
+    }
+    .oks-drawer-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 600px;
+      background: var(--bg, #F4EFE3);
+      border-left: 1px solid var(--line);
+      overflow-y: auto;
+      box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+    }
+    .oks-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-card);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .oks-drawer-header h2 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.25rem;
+      margin: 0;
+      color: var(--text);
+      max-width: 80%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .oks-drawer-close {
+      background: transparent;
+      border: 1px solid var(--line);
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--text-soft);
+      border-radius: 3px;
+      line-height: 1;
+    }
+    .oks-drawer-close:hover {
+      color: var(--text);
+      border-color: var(--text);
+    }
+    .oks-drawer-body {
+      padding: 1.5rem;
+    }
+
+    /* Student detail content */
+    .osd-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    .osd-stat {
+      padding: 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+    .osd-stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--teal);
+      line-height: 1;
+    }
+    .osd-stat-val.accuracy-low { color: #b45046; }
+    .osd-stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+    .osd-meta-line {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin: 0 0 1.2rem;
+    }
+
+    .osd-section-title {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+      margin: 1.5rem 0 0.7rem;
+    }
+
+    .osd-cat-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+    }
+    .osd-cat-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.7rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .osd-cat-row:last-child { border-bottom: none; }
+    .osd-cat-name {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.85rem;
+      color: var(--text);
+      min-width: 0;
+    }
+    .osd-cat-name .exam-pill {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      background: var(--bg-soft);
+      border-radius: 999px;
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-right: 0.4rem;
+    }
+    .osd-cat-count {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .osd-cat-acc {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--teal);
+      min-width: 50px;
+      text-align: right;
+    }
+    .osd-cat-acc.low { color: #b45046; }
+
+    .osd-recent-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .osd-recent-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.7rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.82rem;
+    }
+    .osd-recent-row:last-child { border-bottom: none; }
+    .osd-recent-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .osd-recent-status.correct { background: var(--teal); }
+    .osd-recent-status.wrong { background: #b45046; }
+    .osd-recent-status.skipped { background: var(--text-muted); }
+    .osd-recent-info {
+      min-width: 0;
+      color: var(--text);
+    }
+    .osd-recent-slug {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+    .osd-recent-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+    .osd-recent-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .osd-actions {
+      margin-top: 2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--line);
+    }
+    .osd-remove-btn {
+      padding: 0.7rem 1.4rem;
+      background: transparent;
+      border: 1px solid #b45046;
+      color: #b45046;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .osd-remove-btn:hover {
+      background: #b45046;
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .oks-roster-table th.col-vocab,
+      .oks-roster-table td.col-vocab,
+      .oks-roster-table th.col-joined,
+      .oks-roster-table td.col-joined { display: none; }
+      .oks-drawer-panel { max-width: 100%; }
+      .osd-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
+</head>
+<body>
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a href="index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="panelim.html">Panelim</a></li>
+          <li><a href="ogretmen.html">Öğretmen Paneli</a></li>
+          <li><a href="index.html">Anasayfa</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions"></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-bottom: 4rem;">
+
+    <section class="oks-hero">
+      <a href="ogretmen.html" class="oks-back">← Tüm Sınıflar</a>
+      <h1 id="oks-class-name">Yükleniyor...</h1>
+      <p class="lead" id="oks-class-desc"></p>
+    </section>
+
+    <!-- Loading state -->
+    <div id="oks-loading" style="text-align:center; padding: 3rem 0; color: var(--text-muted);">
+      <p style="font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic;">Yükleniyor...</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="oks-error" style="display:none; padding: 2rem; background: var(--bg-card); border: 1px solid #b45046; text-align: center;">
+      <p style="color: #b45046; font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic;" id="oks-error-msg"></p>
+      <p style="margin-top: 1rem;"><a href="ogretmen.html" style="color: var(--teal);">← Tüm sınıflara dön</a></p>
+    </div>
+
+    <!-- Content -->
+    <div id="oks-content" style="display:none;">
+
+      <!-- Stats bar -->
+      <div class="oks-stats">
+        <div class="oks-stat">
+          <div class="oks-stat-val" id="oks-member-count">0</div>
+          <div class="oks-stat-label">Öğrenci</div>
+        </div>
+        <div class="oks-stat">
+          <div class="oks-stat-val" id="oks-assignment-count">0</div>
+          <div class="oks-stat-label">Ödev</div>
+        </div>
+        <div class="oks-stat">
+          <div class="oks-stat-code" id="oks-join-code" title="Kopyalamak için tıkla">A7B2X9</div>
+          <div class="oks-stat-label">Sınıf Kodu</div>
+        </div>
+        <div class="oks-stat">
+          <div class="oks-stat-val" id="oks-created-date" style="font-size: 1rem; padding-top: 0.3rem;">—</div>
+          <div class="oks-stat-label">Oluşturuldu</div>
+        </div>
+      </div>
+
+      <!-- Roster -->
+      <div class="oks-roster">
+        <div class="oks-roster-head">
+          <h2>Öğrenciler</h2>
+          <span style="font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.78rem; color: var(--text-muted);">Detay için satıra tıkla</span>
+        </div>
+        <div id="oks-roster-body">
+          <!-- Roster filled by JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Student detail drawer -->
+  <div class="oks-drawer" id="student-drawer">
+    <div class="oks-drawer-backdrop" id="osd-backdrop"></div>
+    <div class="oks-drawer-panel">
+      <div class="oks-drawer-header">
+        <h2 id="osd-title">Öğrenci Detayı</h2>
+        <button class="oks-drawer-close" id="osd-close" aria-label="Kapat">×</button>
+      </div>
+      <div class="oks-drawer-body" id="osd-body">
+        <p style="text-align: center; color: var(--text-muted); font-style: italic;">Yükleniyor...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+      var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+      if (!window.supabase || !window.supabase.createClient) {
+        console.error('Supabase yüklenemedi');
+        return;
+      }
+      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+
+      var loadingEl = document.getElementById('oks-loading');
+      var contentEl = document.getElementById('oks-content');
+      var errorEl = document.getElementById('oks-error');
+      var errorMsgEl = document.getElementById('oks-error-msg');
+
+      function showError(msg) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = '';
+        if (errorMsgEl) errorMsgEl.textContent = msg;
+      }
+
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
+      function fmtDate(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+      }
+
+      function fmtDateShort(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+        return d.getDate() + ' ' + months[d.getMonth()];
+      }
+
+      function fmtRelative(s) {
+        if (!s) return '—';
+        var d = new Date(s);
+        var now = new Date();
+        var diffMs = now - d;
+        var diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'şimdi';
+        if (diffMin < 60) return diffMin + ' dk önce';
+        var diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return diffHour + ' sa önce';
+        var diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return diffDay + ' gün önce';
+        return fmtDateShort(s);
+      }
+
+      function humanizeCategory(s) {
+        if (!s) return '';
+        return s.split(/[-_]/).map(function (w) {
+          return w.charAt(0).toUpperCase() + w.slice(1);
+        }).join(' ');
+      }
+
+      // 1. URL'den class_id al
+      var params = new URLSearchParams(window.location.search);
+      var classId = params.get('id');
+      if (!classId) {
+        showError('Sınıf ID bulunamadı.');
+        return;
+      }
+
+      // 2. Auth check
+      var sess = await sb.auth.getSession();
+      if (!sess || !sess.data || !sess.data.session) {
+        window.location.href = 'giris.html?return=/ogretmen-sinif.html?id=' + classId;
+        return;
+      }
+
+      // 3. Sınıf detayı + roster paralel
+      var classRes, rosterRes;
+      try {
+        [classRes, rosterRes] = await Promise.all([
+          sb.rpc('class_detail', { p_class_id: classId }),
+          sb.rpc('class_roster',  { p_class_id: classId })
+        ]);
+        if (classRes.error) throw classRes.error;
+        if (rosterRes.error) throw rosterRes.error;
+      } catch (err) {
+        var msg = String(err.message || err);
+        if (/not_class_owner|not_found/i.test(msg)) {
+          showError('Bu sınıfı görüntülemek için yetkin yok ya da sınıf bulunamadı.');
+        } else {
+          showError('Yüklenemedi: ' + msg);
+        }
+        return;
+      }
+
+      var classInfo = classRes.data || {};
+      var students = rosterRes.data || [];
+
+      // 4. Class info doldur
+      document.title = (classInfo.name || 'Sınıf') + ' | Gri English';
+      document.getElementById('oks-class-name').textContent = classInfo.name || 'Sınıf';
+      var descEl = document.getElementById('oks-class-desc');
+      if (classInfo.description) {
+        descEl.textContent = classInfo.description;
+      } else {
+        descEl.style.display = 'none';
+      }
+
+      document.getElementById('oks-member-count').textContent = classInfo.member_count || 0;
+      document.getElementById('oks-assignment-count').textContent = classInfo.assignment_count || 0;
+      document.getElementById('oks-created-date').textContent = fmtDateShort(classInfo.created_at);
+
+      var codeEl = document.getElementById('oks-join-code');
+      codeEl.textContent = classInfo.join_code || '—';
+      codeEl.addEventListener('click', function () {
+        if (navigator.clipboard && classInfo.join_code) {
+          navigator.clipboard.writeText(classInfo.join_code).then(function () {
+            var orig = codeEl.textContent;
+            codeEl.textContent = 'Kopyalandı';
+            setTimeout(function () { codeEl.textContent = orig; }, 1500);
+          });
+        }
+      });
+
+      // 5. Roster render
+      var rosterBody = document.getElementById('oks-roster-body');
+      if (students.length === 0) {
+        rosterBody.innerHTML = ''
+          + '<div class="oks-empty">'
+          + '<h3>Henüz öğrenci yok</h3>'
+          + '<p>Bu kodu öğrencilerinle paylaş. Panelim\'den "Sınıfa Katıl" diyerek girebilirler.</p>'
+          + '<div class="oks-empty-code">' + esc(classInfo.join_code || '') + '</div>'
+          + '</div>';
+      } else {
+        var rows = students.map(function (s) {
+          var total = parseInt(s.total_answers) || 0;
+          var correct = parseInt(s.correct_answers) || 0;
+          var accPct = parseFloat(s.accuracy_pct) || 0;
+          var accClass = total === 0 ? 'zero' : (accPct < 50 ? 'low' : '');
+          var accText = total === 0 ? '—' : accPct + '%';
+
+          return ''
+            + '<tr class="oks-roster-row" data-id="' + esc(s.student_id) + '" data-email="' + esc(s.student_email) + '">'
+              + '<td class="col-email">' + esc(s.student_email || '(e-posta yok)') + '</td>'
+              + '<td>' + total + '</td>'
+              + '<td class="col-accuracy ' + accClass + '">' + accText + '</td>'
+              + '<td class="col-meta">' + fmtRelative(s.last_active) + '</td>'
+              + '<td class="col-vocab">' + (parseInt(s.vocab_count) || 0) + '</td>'
+              + '<td class="col-joined col-meta">' + fmtDateShort(s.joined_at) + '</td>'
+              + '<td><button class="oks-remove-btn" data-action="remove" data-id="' + esc(s.student_id) + '" data-email="' + esc(s.student_email) + '" title="Sınıftan çıkar">×</button></td>'
+            + '</tr>';
+        }).join('');
+
+        rosterBody.innerHTML = ''
+          + '<table class="oks-roster-table">'
+            + '<thead><tr>'
+              + '<th>E-posta</th>'
+              + '<th>Cevap</th>'
+              + '<th>Doğruluk</th>'
+              + '<th>Son Aktivite</th>'
+              + '<th class="col-vocab">Kelime</th>'
+              + '<th class="col-joined">Katıldı</th>'
+              + '<th></th>'
+            + '</tr></thead>'
+            + '<tbody>' + rows + '</tbody>'
+          + '</table>';
+
+        // Row click → drawer
+        rosterBody.querySelectorAll('.oks-roster-row').forEach(function (row) {
+          row.addEventListener('click', function (e) {
+            // Remove button'a tıklama row click'i tetiklemesin
+            if (e.target.closest('[data-action="remove"]')) return;
+            openStudentDrawer(row.dataset.id, row.dataset.email);
+          });
+        });
+
+        // Remove button
+        rosterBody.querySelectorAll('[data-action="remove"]').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var email = btn.dataset.email || 'bu öğrenci';
+            if (!confirm(email + ' adresli öğrenciyi sınıftan çıkarmak istiyor musun?')) return;
+            btn.disabled = true;
+            try {
+              var r = await sb.rpc('remove_student_from_class', {
+                p_class_id: classId,
+                p_student_id: btn.dataset.id
+              });
+              if (r.error) throw r.error;
+              window.location.reload();
+            } catch (err) {
+              alert('Çıkarma başarısız: ' + (err.message || err));
+              btn.disabled = false;
+            }
+          });
+        });
+      }
+
+      // Show content
+      loadingEl.style.display = 'none';
+      contentEl.style.display = '';
+
+      // === Student drawer ===
+      var drawer = document.getElementById('student-drawer');
+      var drawerTitle = document.getElementById('osd-title');
+      var drawerBody = document.getElementById('osd-body');
+      var drawerClose = document.getElementById('osd-close');
+      var drawerBackdrop = document.getElementById('osd-backdrop');
+
+      function closeDrawer() {
+        drawer.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+      drawerClose.addEventListener('click', closeDrawer);
+      drawerBackdrop.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && drawer.classList.contains('show')) closeDrawer();
+      });
+
+      async function openStudentDrawer(studentId, email) {
+        drawerTitle.textContent = email || 'Öğrenci Detayı';
+        drawerBody.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-style: italic;">Yükleniyor...</p>';
+        drawer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        try {
+          var r = await sb.rpc('student_class_detail', {
+            p_class_id: classId,
+            p_student_id: studentId
+          });
+          if (r.error) throw r.error;
+          renderStudentDetail(r.data || {}, studentId);
+        } catch (err) {
+          drawerBody.innerHTML = '<p style="color: #b45046; font-style: italic; text-align: center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      function renderStudentDetail(d, studentId) {
+        var total = parseInt(d.total_answers) || 0;
+        var correct = parseInt(d.correct_count) || 0;
+        var wrong = parseInt(d.wrong_count) || 0;
+        var accPct = parseFloat(d.accuracy_pct) || 0;
+        var accClass = accPct < 50 ? 'accuracy-low' : '';
+        var accText = total === 0 ? '—' : accPct + '%';
+        var categories = d.categories || [];
+        var recent = d.recent_answers || [];
+
+        var metaLine = 'Sınıfa katılım: ' + fmtDate(d.joined_at)
+          + ' · Son aktivite: ' + (d.last_active ? fmtRelative(d.last_active) : 'henüz yok');
+
+        var summaryHtml = ''
+          + '<div class="osd-summary">'
+          + '<div class="osd-stat"><div class="osd-stat-val">' + total + '</div><div class="osd-stat-label">Cevap</div></div>'
+          + '<div class="osd-stat"><div class="osd-stat-val ' + accClass + '">' + accText + '</div><div class="osd-stat-label">Doğruluk</div></div>'
+          + '<div class="osd-stat"><div class="osd-stat-val">' + correct + '</div><div class="osd-stat-label">Doğru</div></div>'
+          + '<div class="osd-stat"><div class="osd-stat-val">' + wrong + '</div><div class="osd-stat-label">Yanlış</div></div>'
+          + '<div class="osd-stat"><div class="osd-stat-val">' + (parseInt(d.vocab_count) || 0) + '</div><div class="osd-stat-label">Kelime</div></div>'
+          + '<div class="osd-stat"><div class="osd-stat-val">' + (parseInt(d.writing_count) || 0) + '</div><div class="osd-stat-label">Writing</div></div>'
+          + '</div>';
+
+        // Categories
+        var catsHtml = '';
+        if (categories.length === 0) {
+          catsHtml = '<p style="color: var(--text-muted); font-style: italic;">Henüz veri yok.</p>';
+        } else {
+          catsHtml = '<ul class="osd-cat-list">' + categories.map(function (c) {
+            var caccClass = (parseFloat(c.accuracy) || 0) < 50 ? 'low' : '';
+            var examPill = c.exam_type ? '<span class="exam-pill">' + esc(c.exam_type) + '</span>' : '';
+            var nameText = humanizeCategory(c.category || '') + (c.subcategory ? ' · ' + humanizeCategory(c.subcategory) : '');
+            return ''
+              + '<li class="osd-cat-row">'
+              + '<div class="osd-cat-name">' + examPill + esc(nameText) + '</div>'
+              + '<div class="osd-cat-count">' + c.correct + '/' + c.total + '</div>'
+              + '<div class="osd-cat-acc ' + caccClass + '">' + c.accuracy + '%</div>'
+              + '</li>';
+          }).join('') + '</ul>';
+        }
+
+        // Recent answers
+        var recentHtml = '';
+        if (recent.length === 0) {
+          recentHtml = '<p style="color: var(--text-muted); font-style: italic;">Henüz cevap yok.</p>';
+        } else {
+          recentHtml = '<ul class="osd-recent-list">' + recent.map(function (a) {
+            var statusClass = a.status === 'correct' ? 'correct' : (a.status === 'wrong' ? 'wrong' : 'skipped');
+            var timeSpent = '';
+            if (a.time_spent_ms && a.time_spent_ms > 0) {
+              var sec = Math.round(a.time_spent_ms / 1000);
+              timeSpent = ' · ' + sec + 's';
+            }
+            var metaParts = [];
+            if (a.exam_type) metaParts.push(esc(a.exam_type));
+            if (a.category) metaParts.push(esc(humanizeCategory(a.category)));
+            if (a.difficulty) metaParts.push(esc(a.difficulty));
+            return ''
+              + '<li class="osd-recent-row">'
+              + '<span class="osd-recent-status ' + statusClass + '"></span>'
+              + '<div class="osd-recent-info">'
+                + '<span class="osd-recent-slug">' + esc(a.question_slug || '—') + '</span>'
+                + '<div class="osd-recent-meta">' + metaParts.join(' · ') + timeSpent + '</div>'
+              + '</div>'
+              + '<div class="osd-recent-time">' + fmtRelative(a.answered_at) + '</div>'
+              + '</li>';
+          }).join('') + '</ul>';
+        }
+
+        drawerBody.innerHTML = ''
+          + '<p class="osd-meta-line">' + metaLine + '</p>'
+          + summaryHtml
+          + '<div class="osd-section-title">Kategori Performansı</div>'
+          + catsHtml
+          + '<div class="osd-section-title">Son Cevaplar</div>'
+          + recentHtml
+          + '<div class="osd-actions">'
+            + '<button class="osd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
+          + '</div>';
+
+        // Remove from drawer
+        drawerBody.querySelector('.osd-remove-btn').addEventListener('click', async function () {
+          var email = d.student_email || 'bu öğrenci';
+          if (!confirm(email + ' adresli öğrenciyi sınıftan çıkarmak istiyor musun?')) return;
+          try {
+            var r = await sb.rpc('remove_student_from_class', {
+              p_class_id: classId,
+              p_student_id: studentId
+            });
+            if (r.error) throw r.error;
+            closeDrawer();
+            window.location.reload();
+          } catch (err) {
+            alert('Çıkarma başarısız: ' + (err.message || err));
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

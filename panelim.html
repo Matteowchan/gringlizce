@@ -3128,7 +3128,46 @@
       }
     })();
 
+    // SAT kamp soru slug'ı: sat-rw-kamp-d{D}-m{M}-q{Q}
+    var KAMP_DAY_PAGES = {
+      1: 'urun/day-1-information-and-ideas.html',
+      2: 'urun/day-2-inferences-quantitative.html'
+      // Day 3-8 henüz yok, kamp splash'a yönlenir
+    };
+    function parseKampSlug(slug) {
+      var m = /^sat-rw-kamp-d(\d+)-m(\d+)-q(\d+)$/.exec(slug || '');
+      if (!m) return null;
+      return { day: parseInt(m[1], 10), module: parseInt(m[2], 10), q: parseInt(m[3], 10) };
+    }
+    function renderKampCard(slug, date, type) {
+      var info = parseKampSlug(slug);
+      if (!info) return renderMissingCard(slug, date, type);
+      var href = KAMP_DAY_PAGES[info.day] || 'urun/sat-rw-8-gunluk-kamp.html';
+      var catLabel = 'Kamp · Day ' + info.day + ' · Module ' + info.module;
+      var preview = 'Soru #' + info.q;
+      var available = !!KAMP_DAY_PAGES[info.day];
+      var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Day Sayfası';
+      return [
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">SAT R&amp;W</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(catLabel) + '</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>',
+        '    </div>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '    <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '  </a>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+        '</div>'
+      ].join('');
+    }
+
     function renderMissingCard(slug, date, type) {
+      // Kamp slug'ı ise kamp kartı dön
+      if (parseKampSlug(slug)) return renderKampCard(slug, date, type);
       return [
         '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <div class="qb-list-card qb-missing">',

@@ -11,7 +11,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Öğretmen Paneli | Gri English</title>
-  <meta name="description" content="Öğretmen paneli — sınıflarını yönet, öğrencilerin ilerlemesini gör.">
+  <meta name="description" content="Öğretmen paneli — sınıflarını yönet, öğrencilerinin ilerlemesini gör.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -26,449 +26,546 @@
   <script src="assets/auth.js"></script>
   <script src="assets/site-config.js" defer></script>
   <style>
-    .ot-hero { padding: 2.5rem 0 1.5rem; }
-    .ot-hero .ot-eyebrow {
-      display: inline-block;
+    /* ============ Hero ============ */
+    .panel-hero { padding: 2.5rem 0 1.5rem; }
+    .panel-head { display: flex; align-items: flex-end; gap: 2rem; flex-wrap: wrap; justify-content: space-between; }
+    .panel-hero .t-eyebrow {
+      display: block;
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.2em;
+      font-size: 10px;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--gold, #C89A3C);
-      font-weight: 500;
-      margin-bottom: 0.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
     }
-    .ot-hero h1 {
+    .panel-hero .welcome {
       font-family: var(--font-display, Georgia), serif;
-      font-size: clamp(2rem, 4vw, 2.6rem);
-      margin: 0.1rem 0 0.4rem;
+      font-size: 2rem;
+      font-weight: 500;
+      margin: 0 0 0.4rem;
       color: var(--text, #1A2230);
     }
-    .ot-hero p.lead {
+    .panel-hero .sub {
+      color: var(--text-muted, #6B6862);
       font-family: var(--font-serif, 'Crimson Pro'), serif;
       font-style: italic;
-      color: var(--text-soft, #555);
       font-size: 1.05rem;
       margin: 0;
-      max-width: 60ch;
-    }
-
-    /* Onboarding (henüz öğretmen değilse) */
-    .ot-onboard {
-      background: var(--bg-card, #fff);
-      border: 1px solid var(--line, #D9D2C4);
-      padding: 2.5rem 2rem;
-      margin: 1.5rem 0;
-      text-align: center;
-    }
-    .ot-onboard h2 {
-      font-family: var(--font-display, Georgia), serif;
-      font-size: 1.6rem;
-      margin: 0 0 0.7rem;
-      color: var(--text);
-    }
-    .ot-onboard p {
-      font-family: var(--font-serif, 'Crimson Pro'), serif;
-      font-style: italic;
-      color: var(--text-soft);
-      max-width: 60ch;
-      margin: 0 auto 1.5rem;
-      line-height: 1.6;
-    }
-    .ot-onboard ul.ot-benefits {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.7rem;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .ot-onboard ul.ot-benefits li {
-      padding: 0.7rem 0.9rem;
-      background: var(--bg-soft, #F0EBDE);
-      border-radius: 3px;
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 0.88rem;
-      color: var(--text);
-      text-align: left;
-    }
-    .ot-onboard-btn {
-      display: inline-block;
-      padding: 0.85rem 1.8rem;
-      background: var(--teal, #2C5856);
-      color: #F4EFE3;
-      border: 1px solid var(--teal, #2C5856);
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 12px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .ot-onboard-btn:hover { background: #234644; }
-    .ot-onboard-btn:disabled { opacity: 0.5; cursor: default; }
-
-    /* Action bar */
-    .ot-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin: 1rem 0 1.2rem;
-      padding: 0.9rem 1.1rem;
-      background: var(--bg-card, #fff);
-      border: 1px solid var(--line, #D9D2C4);
-    }
-    .ot-actions .ot-summary {
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 0.9rem;
-      color: var(--text-soft);
-    }
-    .ot-actions .ot-summary strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-    .ot-btn-primary {
-      padding: 0.65rem 1.2rem;
-      background: var(--teal, #2C5856);
-      color: #F4EFE3;
-      border: 1px solid var(--teal, #2C5856);
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      font-weight: 500;
-      cursor: pointer;
-    }
-    .ot-btn-primary:hover { background: #234644; }
-    .ot-btn-primary:disabled { opacity: 0.5; cursor: default; }
-
-    /* Class grid */
-    .ot-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1rem;
-      margin-bottom: 3rem;
-    }
-    .ot-class-card {
-      background: var(--bg-card, #fff);
-      border: 1px solid var(--line, #D9D2C4);
-      padding: 1.3rem 1.4rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      position: relative;
-    }
-    .ot-class-card:hover {
-      border-color: var(--gold, #C89A3C);
-    }
-    .ot-class-card .occ-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 0.6rem;
-    }
-    .ot-class-card .occ-name {
-      font-family: var(--font-display, Georgia), serif;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text);
-      margin: 0;
-      flex: 1;
-      min-width: 0;
-    }
-    .ot-class-card .occ-menu-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      width: 28px;
-      height: 28px;
-      cursor: pointer;
-      color: var(--text-muted, #8a9099);
-      border-radius: 3px;
-      font-size: 1.2rem;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ot-class-card .occ-menu-btn:hover {
-      background: var(--bg-soft);
-      color: var(--text);
-    }
-    .ot-class-card .occ-desc {
-      font-family: var(--font-serif, 'Crimson Pro'), serif;
-      font-style: italic;
-      font-size: 0.88rem;
-      color: var(--text-soft);
-      margin: 0;
+      max-width: 56ch;
       line-height: 1.5;
     }
-    .ot-class-card .occ-stats {
-      display: flex;
-      gap: 1.2rem;
-      margin-top: 0.4rem;
-      padding-top: 0.7rem;
-      border-top: 1px solid var(--line, #D9D2C4);
+    .panel-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    /* ============ Buttons ============ */
+    .btn-primary {
+      background: var(--teal, #2C5856);
+      color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      padding: 0.7rem 1.4rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
     }
-    .ot-class-card .occ-stat {
-      flex: 1;
+    .btn-primary:hover { background: #234644; }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    .btn-action {
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.5rem 1rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted, #6B6862);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
     }
-    .ot-class-card .occ-stat .stat-val {
+    .btn-action:hover {
+      border-color: var(--text, #1A2230);
+      color: var(--text, #1A2230);
+    }
+
+    /* ============ Onboarding ============ */
+    .t-onboard {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #d4c9ae);
+      padding: 3rem 2.5rem;
+      margin: 2rem auto;
+      text-align: center;
+      max-width: 720px;
+    }
+    .t-onboard .t-onboard-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+    }
+    .t-onboard h2 {
       font-family: var(--font-display, Georgia), serif;
-      font-size: 1.4rem;
+      font-size: 1.8rem;
+      font-weight: 500;
+      margin: 0 0 0.8rem;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.01em;
+    }
+    .t-onboard p.lead {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted, #6B6862));
+      max-width: 52ch;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+      font-size: 1.05rem;
+    }
+    .t-onboard ul.t-benefits {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto 2.2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.5rem;
+      max-width: 600px;
+      text-align: left;
+    }
+    .t-onboard ul.t-benefits li {
+      padding: 0.55rem 0.2rem 0.55rem 1.3rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.87rem;
+      color: var(--text, #1A2230);
+      position: relative;
+      line-height: 1.4;
+    }
+    .t-onboard ul.t-benefits li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.85rem;
+      width: 6px;
+      height: 6px;
+      background: var(--gold, #C89A3C);
+      border-radius: 50%;
+    }
+
+    /* ============ Loading state ============ */
+    .loading-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-muted, #6B6862);
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    /* ============ Summary bar ============ */
+    .t-summary {
+      display: flex;
+      align-items: baseline;
+      gap: 1.8rem;
+      padding: 0.8rem 0;
+      margin: 0.6rem 0 1.8rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.85rem;
+      color: var(--text-muted, #6B6862);
+      border-bottom: 1px solid var(--line, #D9D2C4);
+      flex-wrap: wrap;
+    }
+    .t-summary-item strong {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--text, #1A2230);
+      margin-right: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+
+    /* ============ Created Banner ============ */
+    .t-created {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--teal, #2C5856);
+      padding: 1.3rem 1.5rem;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .t-created .t-created-text { flex: 1; min-width: 200px; }
+    .t-created .t-created-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .t-created h4 {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      margin: 0 0 0.3rem;
+      color: var(--text);
+    }
+    .t-created p {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      color: var(--text-soft, var(--text-muted));
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    .t-created-code {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 1.6rem;
       font-weight: 600;
       color: var(--teal, #2C5856);
-      line-height: 1;
-      display: block;
+      letter-spacing: 0.2em;
+      padding: 0.7rem 1.3rem;
+      background: var(--bg-soft, #e8e0cc);
+      border: 1px solid var(--teal);
+      user-select: all;
     }
-    .ot-class-card .occ-stat .stat-label {
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+    .t-created-close {
+      background: transparent;
+      border: 1px solid var(--line);
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
       color: var(--text-muted);
-      margin-top: 0.2rem;
-      display: block;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: all 0.15s;
     }
-    .ot-class-card .occ-join {
+    .t-created-close:hover { color: var(--text); border-color: var(--text); }
+
+    /* ============ Class Grid (editorial tiles) ============ */
+    .t-class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 3rem;
+    }
+    .t-class-tile {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #d4c9ae);
+      padding: 0;
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .t-class-tile:hover {
+      border-color: var(--teal, #2C5856);
+      box-shadow: 0 4px 14px rgba(26, 34, 48, 0.04);
+    }
+    .t-class-tile-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1.1rem 1.3rem 0.5rem;
+    }
+    .t-class-tile-mark {
+      width: 4px;
+      height: 32px;
+      background: var(--gold, #c89a3c);
+      border-radius: 2px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      transition: background 0.3s ease;
+    }
+    .t-class-tile:hover .t-class-tile-mark { background: var(--teal, #2C5856); }
+    .t-class-tile-titles { flex: 1; min-width: 0; }
+    .t-class-tile-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .t-class-tile-name {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text, #1A2230);
+      line-height: 1.3;
+    }
+    .t-tile-menu {
+      background: transparent;
+      border: 1px solid transparent;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      color: var(--text-muted, #6B6862);
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .t-tile-menu:hover {
+      color: var(--text);
+      background: var(--bg-soft, #e8e0cc);
+      border-color: var(--line);
+    }
+    .t-class-tile-desc {
+      font-family: var(--font-serif, 'Crimson Pro'), serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--text-soft, var(--text-muted, #6B6862));
+      margin: 0 1.3rem 0.6rem;
+      line-height: 1.5;
+      padding-left: calc(4px + 0.85rem);
+    }
+    .t-class-tile-stats {
+      display: flex;
+      gap: 0;
+      margin: 0.4rem 1.3rem 0.9rem;
+      padding-left: calc(4px + 0.85rem);
+    }
+    .t-stat {
+      flex: 1;
+      border-left: 1px solid var(--line, #D9D2C4);
+      padding-left: 1rem;
+    }
+    .t-stat:first-child {
+      border-left: none;
+      padding-left: 0;
+    }
+    .t-stat .t-stat-val {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--teal, #2C5856);
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+    .t-stat .t-stat-label {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted, #6B6862);
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+    .t-class-tile-foot {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      padding: 0.55rem 0.8rem;
-      background: var(--bg-soft, #F0EBDE);
-      border: 1px dashed var(--line, #D9D2C4);
-      border-radius: 3px;
-      margin-top: 0.4rem;
+      gap: 0.8rem;
+      padding: 0.85rem 1.3rem;
+      background: var(--bg-soft, #e8e0cc);
+      border-top: 1px solid var(--line, #D9D2C4);
+      margin-top: auto;
     }
-    .ot-class-card .occ-join-label {
+    .t-code-wrap { display: flex; flex-direction: column; gap: 0.15rem; }
+    .t-code-label {
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
+      font-size: 8px;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--text-muted);
+      color: var(--text-muted, #6B6862);
+      font-weight: 700;
     }
-    .ot-class-card .occ-join-code {
+    .t-code-val {
       font-family: 'Menlo', 'Monaco', monospace;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
-      color: var(--teal);
-      letter-spacing: 0.15em;
+      color: var(--teal, #2C5856);
+      letter-spacing: 0.18em;
     }
-    .ot-class-card .occ-join-copy {
-      background: var(--bg-card);
-      border: 1px solid var(--line);
-      padding: 0.3rem 0.65rem;
-      font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-      cursor: pointer;
-      border-radius: 3px;
+    .t-copy-btn {
+      padding: 0.4rem 0.85rem;
+      font-size: 9px;
     }
-    .ot-class-card .occ-join-copy:hover {
-      background: var(--teal);
-      color: #fff;
-      border-color: var(--teal);
-    }
-    .ot-class-card .occ-join-copy.copied {
+    .t-copy-btn.copied {
       background: var(--gold);
       color: #fff;
       border-color: var(--gold);
     }
 
-    /* Empty state */
-    .ot-empty {
-      background: var(--bg-card);
-      border: 1px dashed var(--line);
-      padding: 3rem 2rem;
+    /* ============ Empty State ============ */
+    .t-empty {
+      background: var(--bg-card, #fefcf7);
+      border: 1px dashed var(--line, #D9D2C4);
+      padding: 3.5rem 2.5rem;
       text-align: center;
-      margin: 1rem 0 3rem;
+      max-width: 640px;
+      margin: 1.5rem auto 3rem;
     }
-    .ot-empty h3 {
+    .t-empty-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+    }
+    .t-empty h3 {
       font-family: var(--font-display, Georgia), serif;
-      font-size: 1.3rem;
-      margin: 0 0 0.5rem;
-      color: var(--text);
+      font-size: 1.45rem;
+      font-weight: 500;
+      margin: 0 0 0.6rem;
+      color: var(--text, #1A2230);
+      letter-spacing: -0.01em;
     }
-    .ot-empty p {
+    .t-empty p {
       font-family: var(--font-serif, 'Crimson Pro'), serif;
       font-style: italic;
-      color: var(--text-soft);
+      color: var(--text-soft, var(--text-muted));
       max-width: 50ch;
-      margin: 0 auto;
+      margin: 0 auto 1.6rem;
+      line-height: 1.55;
+      font-size: 1rem;
     }
 
-    /* Modal */
-    .ot-modal {
+    /* ============ Modal ============ */
+    .t-modal {
       position: fixed;
       inset: 0;
-      background: rgba(15, 25, 40, 0.5);
+      background: rgba(15, 25, 40, 0.55);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
+      z-index: 9999;
+      padding: 1.5rem;
     }
-    .ot-modal.show { display: flex; }
-    .ot-modal-box {
-      background: var(--bg, #F4EFE3);
-      border: 1px solid var(--line);
-      max-width: 460px;
+    .t-modal.show { display: flex; }
+    .t-modal-box {
+      background: var(--bg-card, #fefcf7);
+      border: 1px solid var(--line, #d4c9ae);
+      max-width: 480px;
       width: 100%;
-      padding: 2rem 2rem 1.6rem;
+      padding: 2.2rem 2rem 1.7rem;
     }
-    .ot-modal-box h2 {
+    .t-modal-eyebrow {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold, #C89A3C);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .t-modal-box h2 {
       font-family: var(--font-display, Georgia), serif;
-      font-size: 1.5rem;
-      margin: 0 0 0.5rem;
+      font-size: 1.55rem;
+      font-weight: 500;
+      margin: 0 0 0.4rem;
       color: var(--text);
+      letter-spacing: -0.01em;
     }
-    .ot-modal-box p.modal-sub {
+    .t-modal-box .modal-sub {
       font-family: var(--font-serif, 'Crimson Pro'), serif;
       font-style: italic;
-      color: var(--text-soft);
-      margin: 0 0 1.5rem;
-      font-size: 0.92rem;
+      color: var(--text-soft, var(--text-muted));
+      margin: 0 0 1.6rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
     }
-    .ot-modal-box label {
+    .t-modal-box label {
       display: block;
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.18em;
+      font-size: 10px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--text-soft);
-      margin-bottom: 0.4rem;
-      font-weight: 500;
+      color: var(--text-muted, #6B6862);
+      font-weight: 700;
+      margin-bottom: 0.45rem;
     }
-    .ot-modal-box input,
-    .ot-modal-box textarea {
+    .t-modal-box input,
+    .t-modal-box textarea {
       width: 100%;
-      background: transparent;
-      border: 1px solid var(--line);
-      padding: 0.8rem 1rem;
+      background: var(--bg, #F4EFE3);
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.75rem 1rem;
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
       font-size: 0.95rem;
       color: var(--text);
       margin-bottom: 1.2rem;
       box-sizing: border-box;
+      transition: border-color 0.15s ease;
     }
-    .ot-modal-box input:focus,
-    .ot-modal-box textarea:focus {
+    .t-modal-box input:focus,
+    .t-modal-box textarea:focus {
       outline: none;
       border-color: var(--teal);
     }
-    .ot-modal-box textarea {
+    .t-modal-box textarea {
       resize: vertical;
-      min-height: 60px;
+      min-height: 70px;
     }
-    .ot-modal-actions {
+    .t-modal-actions {
       display: flex;
       gap: 0.7rem;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
     }
-    .ot-modal-cancel {
+    .t-modal-cancel {
       flex: 0 0 auto;
-      padding: 0.9rem 1.4rem;
+      padding: 0.8rem 1.3rem;
       background: transparent;
       border: 1px solid var(--line);
-      color: var(--text-soft);
+      color: var(--text-muted);
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.18em;
+      font-size: 10px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.15s;
     }
-    .ot-modal-submit {
+    .t-modal-cancel:hover { border-color: var(--text); color: var(--text); }
+    .t-modal-submit {
       flex: 1;
-      padding: 0.9rem;
+      padding: 0.8rem;
       background: var(--teal);
       color: #F4EFE3;
       border: 1px solid var(--teal);
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      transition: background 0.2s;
     }
-    .ot-modal-submit:hover { background: #234644; }
-    .ot-modal-submit:disabled { opacity: 0.5; cursor: default; }
-    .ot-modal .err {
-      color: #b45046;
+    .t-modal-submit:hover { background: #234644; }
+    .t-modal-submit:disabled { opacity: 0.5; cursor: default; }
+    .t-modal .err {
+      color: #b33a3a;
       font-family: var(--font-serif, 'Crimson Pro'), serif;
       font-style: italic;
       font-size: 0.88rem;
-      margin-top: 0.3rem;
+      margin-top: 0.7rem;
       min-height: 1.3rem;
     }
 
-    /* Created class success card */
-    .ot-created-banner {
-      background: linear-gradient(135deg, rgba(44,88,86,0.08), rgba(200,154,60,0.08));
-      border: 1px solid var(--teal);
-      padding: 1.2rem 1.4rem;
-      margin: 1.2rem 0;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .ot-created-banner .ocb-text {
-      flex: 1;
-      min-width: 200px;
-    }
-    .ot-created-banner .ocb-text h4 {
-      font-family: var(--font-display, Georgia), serif;
-      font-size: 1.1rem;
-      margin: 0 0 0.3rem;
-      color: var(--text);
-    }
-    .ot-created-banner .ocb-text p {
-      font-family: var(--font-serif, 'Crimson Pro'), serif;
-      font-style: italic;
-      color: var(--text-soft);
-      margin: 0;
-      font-size: 0.9rem;
-    }
-    .ot-created-banner .ocb-code {
-      font-family: 'Menlo', 'Monaco', monospace;
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--teal);
-      letter-spacing: 0.18em;
-      padding: 0.6rem 1rem;
-      background: var(--bg);
-      border: 1px solid var(--teal);
-      border-radius: 4px;
-    }
-    .ot-created-banner .ocb-close {
-      background: transparent;
-      border: 1px solid var(--line);
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-      color: var(--text-muted);
-      border-radius: 3px;
-      font-size: 1.1rem;
-    }
-    .ot-created-banner .ocb-close:hover {
-      color: var(--text);
-      border-color: var(--text);
-    }
-
-    @media (max-width: 600px) {
-      .ot-grid { grid-template-columns: 1fr; }
-      .ot-actions { flex-direction: column; align-items: stretch; }
-      .ot-btn-primary { width: 100%; }
-      .ot-onboard { padding: 1.8rem 1.2rem; }
+    @media (max-width: 640px) {
+      .panel-head { align-items: stretch; }
+      .panel-actions { width: 100%; }
+      .panel-actions .btn-primary { width: 100%; text-align: center; }
+      .t-class-grid { grid-template-columns: 1fr; }
+      .t-onboard { padding: 2rem 1.3rem; }
+      .t-created { flex-direction: column; align-items: stretch; text-align: center; }
+      .t-created-code { align-self: center; }
     }
   </style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
@@ -476,10 +573,8 @@
 </head>
 <body>
 
-  <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
 
   <header class="site-header">
     <div class="wrap nav">
@@ -499,88 +594,87 @@
 
   <main class="wrap" style="padding-bottom: 4rem;">
 
-    <!-- Hero -->
-    <section class="ot-hero">
-      <span class="ot-eyebrow">Öğretmen</span>
-      <h1>Öğretmen Paneli</h1>
-      <p class="lead">Sınıflarını yönet, öğrencilerinin ilerlemesini tek bakışta gör, ödev ata.</p>
-    </section>
+    <div id="ot-loading" class="loading-state">Yükleniyor...</div>
 
-    <!-- Loading state -->
-    <div id="ot-loading" style="text-align:center; padding: 3rem 0; color: var(--text-muted);">
-      <p style="font-family: var(--font-serif, 'Crimson Pro'), serif; font-style: italic;">Yükleniyor...</p>
-    </div>
-
-    <!-- Not logged in -->
-    <div id="ot-need-login" style="display:none;" class="ot-onboard">
+    <div id="ot-need-login" class="t-onboard" style="display:none;">
+      <div class="t-onboard-eyebrow">Erişim</div>
       <h2>Giriş yapmanız gerekiyor</h2>
-      <p>Öğretmen paneline erişebilmek için hesabınla giriş yap, ya da yoksa hesap aç.</p>
-      <a href="giris.html?return=/ogretmen.html" class="ot-onboard-btn">Giriş Yap</a>
+      <p class="lead">Öğretmen paneline erişebilmek için hesabınla giriş yap ya da yeni hesap aç.</p>
+      <a href="giris.html?return=/ogretmen.html" class="btn-primary">Giriş Yap</a>
     </div>
 
-    <!-- Onboarding: not a teacher yet -->
-    <div id="ot-onboard" style="display:none;" class="ot-onboard">
-      <h2>Öğretmen Olarak Kayıt Ol</h2>
-      <p>Sınıflarını oluştur, öğrencilerini ekle, ödev ata. Tamamen ücretsiz, hemen başlayabilirsin.</p>
-      <ul class="ot-benefits">
+    <div id="ot-onboard" class="t-onboard" style="display:none;">
+      <div class="t-onboard-eyebrow">Öğretmen Hesabı</div>
+      <h2>Öğretmen Olarak Devam Et</h2>
+      <p class="lead">Sınıflarını oluştur, öğrencilerini ekle, ödev ata. Tamamen ücretsiz, hemen başlayabilirsin.</p>
+      <ul class="t-benefits">
         <li>Sınıf oluştur, kod ile öğrenci davet et</li>
         <li>Öğrenci ilerlemesini detaylı izle</li>
-        <li>Soru bankası, writing, reading ödevleri ata</li>
-        <li>Birden fazla sınav türünü tek sınıfta yönet</li>
+        <li>Soru bankası, writing, reading ödevleri</li>
+        <li>Birden fazla sınavı tek sınıfta yönet</li>
       </ul>
-      <button id="ot-become-btn" class="ot-onboard-btn" type="button">Öğretmen Olarak Devam Et</button>
-      <p id="ot-become-err" class="err" style="margin-top:1rem; color:#b45046;"></p>
+      <button id="ot-become-btn" class="btn-primary" type="button">Öğretmen Olarak Devam Et</button>
+      <p id="ot-become-err" style="color:#b33a3a; margin-top: 1rem; font-style: italic; min-height: 1rem; font-family: var(--font-serif, 'Crimson Pro'), serif;"></p>
     </div>
 
-    <!-- Teacher dashboard -->
     <div id="ot-dashboard" style="display:none;">
 
-      <!-- New class created banner (after create) -->
-      <div id="ot-created" class="ot-created-banner" style="display:none;">
-        <div class="ocb-text">
-          <h4>Sınıfın oluşturuldu</h4>
-          <p>Bu kodu öğrencilerinle paylaş. Panelim'den "Sınıfa Katıl" diyerek girebilirler.</p>
+      <section class="panel-hero">
+        <div class="panel-head">
+          <div>
+            <span class="t-eyebrow">Öğretmen Paneli</span>
+            <h1 class="welcome">Sınıflarım</h1>
+            <p class="sub">Sınıflarını yönet, öğrencilerinin ilerlemesini gör, ödev ata.</p>
+          </div>
+          <div class="panel-actions">
+            <button id="ot-new-class-btn" class="btn-primary" type="button">+ Yeni Sınıf</button>
+          </div>
         </div>
-        <div class="ocb-code" id="ot-created-code">A7B2X9</div>
-        <button class="ocb-close" type="button" id="ot-created-close" aria-label="Kapat">×</button>
+      </section>
+
+      <div id="ot-created" class="t-created" style="display:none;">
+        <div class="t-created-text">
+          <div class="t-created-eyebrow">Sınıf Oluşturuldu</div>
+          <h4>Kodu öğrencilerinle paylaş</h4>
+          <p>Panelim'den "Sınıfa Katıl" diyerek bu kodla katılabilirler.</p>
+        </div>
+        <div class="t-created-code" id="ot-created-code">A7B2X9</div>
+        <button class="t-created-close" type="button" id="ot-created-close" aria-label="Kapat">×</button>
       </div>
 
-      <!-- Actions bar -->
-      <div class="ot-actions">
-        <div class="ot-summary">
-          <strong id="ot-class-count">0</strong> sınıf, toplam <strong id="ot-student-count">0</strong> öğrenci
-        </div>
-        <button id="ot-new-class-btn" class="ot-btn-primary" type="button">+ Yeni Sınıf</button>
+      <div class="t-summary">
+        <div class="t-summary-item"><strong id="ot-class-count">0</strong>sınıf</div>
+        <div class="t-summary-item"><strong id="ot-student-count">0</strong>toplam öğrenci</div>
       </div>
 
-      <!-- Class grid -->
-      <div id="ot-class-grid" class="ot-grid"></div>
+      <div id="ot-class-grid" class="t-class-grid"></div>
 
-      <!-- Empty state -->
-      <div id="ot-empty" class="ot-empty" style="display:none;">
+      <div id="ot-empty" class="t-empty" style="display:none;">
+        <div class="t-empty-eyebrow">Başla</div>
         <h3>Henüz sınıfın yok</h3>
         <p>İlk sınıfını oluştur, sistemin verdiği kodu öğrencilerinle paylaş. Onlar sınıfa katılınca ilerlemelerini burada izleyebilirsin.</p>
+        <button id="ot-new-class-btn-empty" class="btn-primary" type="button">+ İlk Sınıfını Oluştur</button>
       </div>
     </div>
 
   </main>
 
-  <!-- Create class modal -->
-  <div class="ot-modal" id="modal-create-class">
-    <div class="ot-modal-box">
-      <h2>Yeni Sınıf Oluştur</h2>
-      <p class="modal-sub">Sınıf adını ve kısa açıklamayı belirle. Sonra sistemin verdiği kodu öğrencilerine vereceksin.</p>
+  <div class="t-modal" id="modal-create-class">
+    <div class="t-modal-box">
+      <div class="t-modal-eyebrow">Yeni Sınıf</div>
+      <h2>Sınıf Oluştur</h2>
+      <p class="modal-sub">Sınıf adını ve kısa açıklamayı belirle. Sistem 6 karakterlik bir kod verecek, onu öğrencilerine ileteceksin.</p>
 
       <form id="ocl-form">
         <label for="ocl-name">Sınıf Adı</label>
         <input type="text" id="ocl-name" autocomplete="off" maxlength="100" required placeholder="Örn. 10A SAT R/W">
 
         <label for="ocl-desc">Açıklama (Opsiyonel)</label>
-        <textarea id="ocl-desc" rows="2" maxlength="300" placeholder="Örn. SAT R/W için kamp + soru çözümü"></textarea>
+        <textarea id="ocl-desc" rows="2" maxlength="300" placeholder="Örn. SAT R/W için kamp ve soru çözümü"></textarea>
 
-        <div class="ot-modal-actions">
-          <button type="button" class="ot-modal-cancel" id="ocl-cancel">Vazgeç</button>
-          <button type="submit" class="ot-modal-submit" id="ocl-submit">Oluştur</button>
+        <div class="t-modal-actions">
+          <button type="button" class="t-modal-cancel" id="ocl-cancel">Vazgeç</button>
+          <button type="submit" class="t-modal-submit" id="ocl-submit">Oluştur</button>
         </div>
 
         <div class="err" id="ocl-err"></div>
@@ -601,13 +695,6 @@
         auth: { persistSession: true, autoRefreshToken: true }
       });
 
-      var elLoading   = document.getElementById('ot-loading');
-      var elNeedLogin = document.getElementById('ot-need-login');
-      var elOnboard   = document.getElementById('ot-onboard');
-      var elDashboard = document.getElementById('ot-dashboard');
-      var elBecomeBtn = document.getElementById('ot-become-btn');
-      var elBecomeErr = document.getElementById('ot-become-err');
-
       function show(id) {
         ['ot-loading','ot-need-login','ot-onboard','ot-dashboard'].forEach(function (i) {
           var el = document.getElementById(i);
@@ -620,14 +707,6 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
 
-      function fmtDate(s) {
-        if (!s) return '';
-        var d = new Date(s);
-        var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-      }
-
-      // 1. Session + role check
       var sessRes = await sb.auth.getSession();
       if (!sessRes || !sessRes.data || !sessRes.data.session) {
         show('ot-need-login');
@@ -639,8 +718,10 @@
       var role = (profRes && profRes.data && profRes.data.role) || 'customer';
 
       if (role !== 'teacher' && role !== 'admin') {
-        // 2. Onboarding: become teacher
         show('ot-onboard');
+
+        var elBecomeBtn = document.getElementById('ot-become-btn');
+        var elBecomeErr = document.getElementById('ot-become-err');
 
         elBecomeBtn.addEventListener('click', async function () {
           elBecomeBtn.disabled = true;
@@ -648,7 +729,6 @@
           try {
             var rpc = await sb.rpc('teacher_become');
             if (rpc.error) throw rpc.error;
-            // Yenile, dashboard'a geç
             window.location.reload();
           } catch (err) {
             elBecomeErr.textContent = 'Bir sorun oluştu: ' + (err.message || err);
@@ -658,11 +738,9 @@
         return;
       }
 
-      // 3. Teacher dashboard
       show('ot-dashboard');
       await loadClasses();
 
-      // === Class list loading ===
       async function loadClasses() {
         var grid = document.getElementById('ot-class-grid');
         var empty = document.getElementById('ot-empty');
@@ -671,7 +749,6 @@
           if (res.error) throw res.error;
           var classes = res.data || [];
 
-          // Summary
           document.getElementById('ot-class-count').textContent = classes.length;
           var totalStudents = classes.reduce(function (sum, c) {
             return sum + (parseInt(c.member_count) || 0);
@@ -687,27 +764,33 @@
 
           grid.innerHTML = classes.map(function (c) {
             var descHtml = c.description
-              ? '<p class="occ-desc">' + esc(c.description) + '</p>'
+              ? '<p class="t-class-tile-desc">' + esc(c.description) + '</p>'
               : '';
-            return '<div class="ot-class-card" data-id="' + esc(c.class_id) + '">'
-              + '<div class="occ-head">'
-              + '<h3 class="occ-name">' + esc(c.name) + '</h3>'
-              + '<button class="occ-menu-btn" data-action="archive" data-id="' + esc(c.class_id) + '" title="Sınıfı arşivle">×</button>'
-              + '</div>'
+            return '<article class="t-class-tile" data-id="' + esc(c.class_id) + '">'
+              + '<header class="t-class-tile-head">'
+                + '<div class="t-class-tile-mark"></div>'
+                + '<div class="t-class-tile-titles">'
+                  + '<div class="t-class-tile-eyebrow">Sınıf</div>'
+                  + '<h3 class="t-class-tile-name">' + esc(c.name) + '</h3>'
+                + '</div>'
+                + '<button class="t-tile-menu" data-action="archive" data-id="' + esc(c.class_id) + '" title="Sınıfı arşivle">×</button>'
+              + '</header>'
               + descHtml
-              + '<div class="occ-stats">'
-              + '<div class="occ-stat"><span class="stat-val">' + c.member_count + '</span><span class="stat-label">Öğrenci</span></div>'
-              + '<div class="occ-stat"><span class="stat-val">' + c.assignment_count + '</span><span class="stat-label">Ödev</span></div>'
+              + '<div class="t-class-tile-stats">'
+                + '<div class="t-stat"><div class="t-stat-val">' + c.member_count + '</div><div class="t-stat-label">Öğrenci</div></div>'
+                + '<div class="t-stat"><div class="t-stat-val">' + c.assignment_count + '</div><div class="t-stat-label">Ödev</div></div>'
               + '</div>'
-              + '<div class="occ-join">'
-              + '<div><div class="occ-join-label">Sınıf Kodu</div><div class="occ-join-code">' + esc(c.join_code) + '</div></div>'
-              + '<button class="occ-join-copy" data-code="' + esc(c.join_code) + '" type="button">Kopyala</button>'
-              + '</div>'
-              + '</div>';
+              + '<footer class="t-class-tile-foot">'
+                + '<div class="t-code-wrap">'
+                  + '<div class="t-code-label">Sınıf Kodu</div>'
+                  + '<div class="t-code-val">' + esc(c.join_code) + '</div>'
+                + '</div>'
+                + '<button class="btn-action t-copy-btn" data-code="' + esc(c.join_code) + '" type="button">Kopyala</button>'
+              + '</footer>'
+            + '</article>';
           }).join('');
 
-          // Bind copy buttons
-          grid.querySelectorAll('.occ-join-copy').forEach(function (btn) {
+          grid.querySelectorAll('.t-copy-btn').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
               e.stopPropagation();
               var code = btn.dataset.code;
@@ -724,7 +807,6 @@
             });
           });
 
-          // Bind archive buttons
           grid.querySelectorAll('[data-action="archive"]').forEach(function (btn) {
             btn.addEventListener('click', async function (e) {
               e.stopPropagation();
@@ -742,27 +824,25 @@
             });
           });
 
-          // Card click → class detail
-          grid.querySelectorAll('.ot-class-card').forEach(function (card) {
-            card.style.cursor = 'pointer';
+          grid.querySelectorAll('.t-class-tile').forEach(function (card) {
             card.addEventListener('click', function (e) {
-              // Copy / archive button'ları tetiklemesin
-              if (e.target.closest('.occ-join-copy')) return;
+              if (e.target.closest('.t-copy-btn')) return;
               if (e.target.closest('[data-action="archive"]')) return;
               window.location.href = 'ogretmen-sinif.html?id=' + card.dataset.id;
             });
           });
         } catch (err) {
-          grid.innerHTML = '<p style="color:#b45046; font-style:italic;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+          grid.innerHTML = '<p style="color:#b33a3a; font-style:italic; padding:1rem 0;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
         }
       }
 
-      // === New class modal ===
+      // Modal handling
       var modal = document.getElementById('modal-create-class');
       var modalForm = document.getElementById('ocl-form');
       var modalCancel = document.getElementById('ocl-cancel');
       var modalErr = document.getElementById('ocl-err');
       var newBtn = document.getElementById('ot-new-class-btn');
+      var newBtnEmpty = document.getElementById('ot-new-class-btn-empty');
 
       function openModal() {
         modalErr.textContent = '';
@@ -773,11 +853,10 @@
           if (nameInput) nameInput.focus();
         }, 50);
       }
-      function closeModal() {
-        modal.classList.remove('show');
-      }
+      function closeModal() { modal.classList.remove('show'); }
 
       newBtn.addEventListener('click', openModal);
+      if (newBtnEmpty) newBtnEmpty.addEventListener('click', openModal);
       modalCancel.addEventListener('click', closeModal);
       modal.addEventListener('click', function (e) {
         if (e.target === modal) closeModal();
@@ -799,11 +878,9 @@
           if (r.error) throw r.error;
           var joinCode = (r.data && r.data.join_code) || '';
           closeModal();
-          // Show created banner
           var banner = document.getElementById('ot-created');
           document.getElementById('ot-created-code').textContent = joinCode;
           banner.style.display = '';
-          // Reload list
           await loadClasses();
         } catch (err) {
           modalErr.textContent = 'Sınıf oluşturulamadı: ' + (err.message || err);
@@ -816,7 +893,6 @@
         document.getElementById('ot-created').style.display = 'none';
       });
 
-      // ESC closes modal
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
       });

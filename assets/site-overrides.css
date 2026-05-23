@@ -1293,3 +1293,105 @@ button:focus,
 .tab-btn:hover {
   text-decoration: none !important;
 }
+
+/* ============================================================
+   HERO MOBILE PROGRESSIVE DISCLOSURE
+   Desktop: trigger gizli, content her zaman açık
+   Mobile (<880px): trigger görünür, content default kapalı
+   ============================================================ */
+
+/* Default (desktop): trigger gizli, content açık */
+.hero-collapsible .hero-collapse-trigger {
+  display: none;
+}
+.hero-collapsible .hero-collapse-content {
+  display: block;
+}
+.lead-extra {
+  display: inline;
+}
+
+/* Mobile: progressive disclosure aktif */
+@media (max-width: 880px) {
+
+  /* Lead paragraph kısalt */
+  .lead-extra {
+    display: none;
+  }
+
+  /* Collapsible trigger görünür */
+  .hero-collapsible {
+    margin: 1.2rem 0 0;
+  }
+  .hero-collapsible .hero-collapse-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    min-height: 48px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .hero-collapsible .hero-collapse-trigger:hover,
+  .hero-collapsible .hero-collapse-trigger:focus {
+    background: var(--bg-card, #fff);
+    border-color: var(--line-strong);
+    outline: none;
+  }
+  .hero-collapsible .hero-collapse-trigger .hct-label {
+    flex: 1;
+    text-align: left;
+  }
+  .hero-collapsible .hero-collapse-trigger .hct-chev {
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .hero-collapsible[data-expanded="true"] .hero-collapse-trigger .hct-chev {
+    transform: rotate(180deg);
+  }
+
+  /* Content default kapalı */
+  .hero-collapsible .hero-collapse-content {
+    display: none;
+    margin-top: 0.8rem;
+  }
+  .hero-collapsible[data-expanded="true"] .hero-collapse-content {
+    display: block;
+    animation: hero-collapse-in 0.25s ease-out;
+  }
+  @keyframes hero-collapse-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Secondary CTA (Ücretsiz Hesap Aç) — primary CTA ile çift olduğu için gizle */
+  .hero-q-secondary-cta {
+    display: none !important;
+  }
+
+  /* Hero CTA buttons mobilde tam genişlik tek sütun */
+  .hero-cta-ed {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.6rem;
+  }
+  .hero-cta-ed .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Dark mode mobil trigger renk uyumu */
+[data-theme="dark"] .hero-collapsible .hero-collapse-trigger {
+  background: var(--bg-soft);
+  border-color: var(--line);
+}

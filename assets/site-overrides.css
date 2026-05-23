@@ -1173,7 +1173,13 @@ select:focus {
 }
 
 /* ---------- 8. LINK SİSTEMİ ---------- */
-a:not(.btn):not(.nav-dropdown-trigger):not(.nav-submenu-trigger):not(.brand):not(.qb-list-card):not(.product-card):not(.qb-hub-card):not(.exam-card):not(.qb-topic-status):not(.qpc-btn):not(.qp-mentor-btn) {
+/* Sadece prose içindeki body text linklerinde underline + teal */
+/* UI anchor'ları (kart, badge, CTA) kendi stillerini korur */
+p > a:not(.btn),
+.lead a:not(.btn),
+li > a:not(.btn):not(.nav-dropdown-trigger):not(.nav-submenu-trigger):not(.nav-submenu-list a),
+article a:not(.btn),
+.prose a:not(.btn) {
   color: var(--teal);
   text-decoration: underline;
   text-decoration-color: rgba(44, 88, 86, 0.3);
@@ -1181,11 +1187,93 @@ a:not(.btn):not(.nav-dropdown-trigger):not(.nav-submenu-trigger):not(.brand):not
   text-decoration-thickness: 1.5px;
   transition: text-decoration-color 0.15s, color 0.15s;
 }
-a:not(.btn):hover {
+p > a:not(.btn):hover,
+.lead a:not(.btn):hover,
+article a:not(.btn):hover,
+.prose a:not(.btn):hover {
   text-decoration-color: var(--teal);
 }
 
-[data-theme="dark"] a:not(.btn):not(.nav-dropdown-trigger):not(.brand) {
+/* Nav listesi içi linkler underline'sız */
+.nav-links a,
+.nav-links li > a,
+.nav-dropdown-menu a,
+.nav-submenu-list a {
+  text-decoration: none !important;
+}
+
+[data-theme="dark"] p > a:not(.btn),
+[data-theme="dark"] .lead a:not(.btn),
+[data-theme="dark"] article a:not(.btn) {
   color: var(--teal-deep);
 }
 
+
+/* ---------- Specific UI anchor reset — no underline ---------- */
+/* Çalışma paketleri kartları, Ders notları kartları, vs */
+.qb-hub-card,
+.qb-hub-card a,
+.product-card,
+.product-card a,
+.exam-card,
+.exam-card a,
+.qb-list-card,
+.qb-list-card a,
+.calisma-card,
+.calisma-card a,
+.notes-card,
+.notes-card a,
+.note-card-link {
+  text-decoration: none !important;
+}
+
+/* Footer linkleri */
+.site-footer a,
+.footer a {
+  text-decoration: none !important;
+}
+
+/* Breadcrumb linkleri */
+.breadcrumb a {
+  text-decoration: none !important;
+}
+
+/* Eyebrow ve overline türündeki linkler */
+.eyebrow,
+.hero-overline,
+a.eyebrow,
+.qb-hub-badge {
+  text-decoration: none !important;
+}
+
+/* Hub card CTA arrow (İncele →) */
+.qb-hub-cta,
+.notes-card-cta,
+.calisma-card-cta,
+[class*="-cta"] {
+  text-decoration: none !important;
+}
+
+/* Hero-q-preview ve içeriği */
+.hero-q-preview,
+.hero-q-preview a,
+.hero-q-secondary-cta a {
+  text-decoration: none !important;
+}
+
+/* Card description paragraflarındaki tekil link de override gerekir */
+.qb-hub-card p,
+.product-card p,
+.notes-card p,
+.exam-card p,
+.qb-list-card p {
+  /* Bu paragraf bir <a> wrapper içindeyse, p > a kuralı tetiklenir
+     ama kartın kendisi link olduğunda underline istemiyoruz */
+}
+.qb-hub-card p > a,
+.product-card p > a,
+.notes-card p > a,
+.exam-card p > a {
+  text-decoration: none !important;
+  color: inherit !important;
+}

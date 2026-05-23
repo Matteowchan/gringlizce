@@ -220,7 +220,10 @@
       }
       btn.classList.toggle('active', isBookmarked);
     } catch (e) {
-      console.warn('[SATCamp] bookmark fail:', e);
+      console.error('[SATCamp] bookmark fail:', e, {user: GRI_USER_ID, slug: currentSlug});
+      // Görsel bir geribildirim — kullanıcı RLS hatası vs durumunda fark etsin
+      btn.title = 'Yer imi kaydedilemedi: ' + (e.message || 'bilinmeyen hata');
+      btn.classList.remove('active');
     } finally {
       btn.disabled = false;
     }
@@ -239,12 +242,12 @@
     if (!GRI_USER_ID || !currentSlug) return;
     try {
       var res = await sb.from('user_question_notes')
-        .select('note_text')
+        .select('note')
         .eq('user_id', GRI_USER_ID)
         .eq('question_slug', currentSlug)
         .maybeSingle();
-      if (res && res.data && res.data.note_text) {
-        currentNote = res.data.note_text;
+      if (res && res.data && res.data.note) {
+        currentNote = res.data.note;
         btn.classList.add('active');
       }
     } catch (e) { /* sessiz */ }
@@ -281,7 +284,7 @@
     btn.disabled = true; btn.textContent = 'Kaydediliyor...';
     try {
       var res = await sb.from('user_question_notes')
-        .upsert({ user_id: GRI_USER_ID, question_slug: currentSlug, note_text: text }, { onConflict: 'user_id,question_slug' });
+        .upsert({ user_id: GRI_USER_ID, question_slug: currentSlug, note: text }, { onConflict: 'user_id,question_slug' });
       if (res.error) throw res.error;
       currentNote = text;
       document.getElementById('scNoteBtn').classList.add('active');
@@ -364,13 +367,68 @@
     if (!vocab.length) {
       list.innerHTML = '<p class="sc-empty">Bu soru için sözlük girişi yok.</p>';
     } else {
-      list.innerHTML = vocab.map(function (v) {
-        return '<div class="sc-vocab-item"><div class="sc-vocab-en"><strong>' + escapeHtml(v.en) + '</strong>' +
-          (v.pos ? ' <em class="sc-vocab-pos">' + escapeHtml(v.pos) + '</em>' : '') + '</div>' +
-          '<div class="sc-vocab-tr">' + escapeHtml(v.tr || '') + '</div></div>';
+      list.innerHTML = vocab.map(function (v, idx) {
+        var canSave = !!GRI_USER_ID;
+        return '<div class="sc-vocab-item" data-word="' + escapeHtml(v.en) + '">' +
+          '<div class="sc-vocab-en"><strong>' + escapeHtml(v.en) + '</strong>' +
+            (v.pos ? ' <em class="sc-vocab-pos">' + escapeHtml(v.pos) + '</em>' : '') + '</div>' +
+          '<div class="sc-vocab-tr">' + escapeHtml(v.tr || '') + '</div>' +
+          (canSave ? '<button type="button" class="sc-vocab-save" data-vocab-save="' + escapeHtml(v.en) + '">Listeme Ekle</button>' : '') +
+        '</div>';
       }).join('');
     }
     openModal('scVocabModal');
+  }
+
+  // Sözlüğe ekleme: vocab-lookup edge function'ı çağırır (cache veya AI), sonra user_vocab'a yazar
+  async function saveVocabWord(word, btn) {
+    if (!GRI_USER_ID) { loginRedirect(); return; }
+    if (!word) return;
+    btn.disabled = true;
+    var origText = btn.textContent;
+    btn.textContent = 'Aranıyor...';
+    try {
+      var sess = await sb.auth.getSession();
+      var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      var r = await fetch(SUPABASE_URL + '/functions/v1/vocab-lookup', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ word: word })
+      });
+      var data = await r.json();
+      if (!r.ok || !data.ok || !data.vocabulary_id) {
+        var msg = (data && data.error === 'login_required') ? 'Giriş yapmalısın'
+                : (data && data.error === 'ai_unavailable') ? 'Sözlük şu an meşgul'
+                : 'Kelime bulunamadı';
+        btn.textContent = msg;
+        setTimeout(function () { btn.textContent = origText; btn.disabled = false; }, 2000);
+        return;
+      }
+
+      // user_vocab'a ekle (zaten varsa hata vermez, onConflict ignore)
+      var ins = await sb.from('user_vocab').insert({
+        user_id: GRI_USER_ID,
+        vocabulary_id: data.vocabulary_id
+      });
+      if (ins.error) {
+        // duplicate key → zaten kayıtlı
+        if (ins.error.code === '23505' || (ins.error.message || '').toLowerCase().indexOf('duplicate') !== -1) {
+          btn.textContent = 'Zaten Kayıtlı ✓';
+          btn.classList.add('saved');
+          return;
+        }
+        throw ins.error;
+      }
+      btn.textContent = 'Kayıtlı ✓';
+      btn.classList.add('saved');
+    } catch (e) {
+      console.warn('[SATCamp] vocab save fail:', e);
+      btn.textContent = 'Hata';
+      setTimeout(function () { btn.textContent = origText; btn.disabled = false; }, 2000);
+    }
   }
 
   function escapeHtml(s) {
@@ -433,14 +491,50 @@
         body: JSON.stringify(payload)
       });
       var data = await r.json();
+      // Edge function henüz inline_question desteklemiyorsa açık mesaj
+      if (data && data.error === 'missing_fields') {
+        fb.textContent = 'Griye Sor henüz aktif değil. Sistem yöneticisi edge function güncellemesini yapmalı.';
+        fb.className = 'sc-modal-feedback error';
+        return;
+      }
+      // Kota tükendi durumu
+      if (!r.ok && data && data.error === 'quota_exhausted') {
+        var packsHtml = '';
+        if (data.packs && data.packs.length) {
+          packsHtml = '<div class="sc-ask-packs">' + data.packs.map(function (p) {
+            return '<a href="' + p.url + '" target="_blank" rel="noopener" class="sc-ask-pack">' + escapeHtml(p.name) + ' — ₺' + p.price + '</a>';
+          }).join('') + '</div>';
+        }
+        resp.innerHTML = '<div class="sc-ask-bubble sc-ask-empty"><strong>Günlük kotanı kullandın.</strong> Daha fazla soru sormak için paket alabilir veya yarını bekleyebilirsin.' + packsHtml + '</div>';
+        return;
+      }
       if (!r.ok) {
         var msg = (data && data.error) || 'Hata oluştu (kod ' + r.status + ').';
         fb.textContent = msg;
         fb.className = 'sc-modal-feedback error';
-      } else {
-        var answer = (data && (data.answer || data.text || data.response)) || JSON.stringify(data);
-        resp.innerHTML = '<div class="sc-ask-bubble">' + escapeHtml(answer).replace(/\n/g, '<br>') + '</div>';
+        return;
       }
+      // Cevabı turns dizisinin SON elemanından çek
+      var answer = '';
+      if (data && Array.isArray(data.turns) && data.turns.length) {
+        var lastTurn = data.turns[data.turns.length - 1];
+        answer = lastTurn && lastTurn.ai_response ? String(lastTurn.ai_response) : '';
+      }
+      // Eski format fallback
+      if (!answer && data) {
+        answer = data.answer || data.text || data.response || '';
+      }
+      if (!answer) {
+        fb.textContent = 'Boş cevap döndü, tekrar dener misin?';
+        fb.className = 'sc-modal-feedback error';
+        return;
+      }
+      // Quota bilgisini minik bir notla göster
+      var quotaNote = '';
+      if (data.quota && typeof data.quota.total_remaining === 'number') {
+        quotaNote = '<div class="sc-ask-quota">Bugün ' + data.quota.total_remaining + ' soru hakkın kaldı.</div>';
+      }
+      resp.innerHTML = '<div class="sc-ask-bubble">' + escapeHtml(answer).replace(/\n/g, '<br>') + '</div>' + quotaNote;
     } catch (e) {
       fb.textContent = 'Bağlantı hatası: ' + (e.message || '');
       fb.className = 'sc-modal-feedback error';
@@ -528,6 +622,17 @@
     if (ne) ne.addEventListener('input', updateNoteCounter);
     if (rs) rs.addEventListener('click', submitReport);
     if (as) as.addEventListener('click', submitAsk);
+
+    // Sözlük: Listeme Ekle butonlarını event delegation ile yakala
+    var vList = document.getElementById('scVocabList');
+    if (vList) {
+      vList.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-vocab-save]');
+        if (!b) return;
+        e.preventDefault();
+        saveVocabWord(b.getAttribute('data-vocab-save'), b);
+      });
+    }
 
     loadUser().then(hookIntoCard);
   }

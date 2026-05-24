@@ -441,10 +441,10 @@
   }
 
   // -----------------------------------------------------------
-  // Griye Sor — soru.html ile aynı edge function
-  // gri-ask DB'den soru çekiyor. Kamp soruları DB'de yok, bu yüzden
-  // şimdilik passage + question + options'ı body'de yolluyoruz.
-  // Edge function'ın bunu kabul edip etmediğini Mert ile beraber test edeceğiz.
+  // Griye Sor — soru.html ile aynı edge function (gri-ask)
+  // Kamp soruları DB'de yok. Backend `inline_question` payload'unu
+  // okur ve onun verisinden prompt kurar. ai_question_usage cache'i
+  // slug'dan deterministik UUID ile çalışır (feature='gri-ask-camp').
   // -----------------------------------------------------------
   async function openAskModal() {
     if (!GRI_USER_ID) { loginRedirect(); return; }
@@ -534,8 +534,14 @@
       }
       // Quota bilgisini minik bir notla göster
       var quotaNote = '';
-      if (data.quota && typeof data.quota.total_remaining === 'number') {
-        quotaNote = '<div class="sc-ask-quota">Bugün ' + data.quota.total_remaining + ' soru hakkın kaldı.</div>';
+      var remainingQuota = null;
+      if (data && typeof data.remaining === 'number') {
+        remainingQuota = data.remaining;
+      } else if (data && data.quota && typeof data.quota.total_remaining === 'number') {
+        remainingQuota = data.quota.total_remaining;
+      }
+      if (remainingQuota !== null) {
+        quotaNote = '<div class="sc-ask-quota">' + remainingQuota + ' soru hakkın kaldı.</div>';
       }
       resp.innerHTML = '<div class="sc-ask-bubble">' + escapeHtml(answer).replace(/\n/g, '<br>') + '</div>' + quotaNote;
     } catch (e) {

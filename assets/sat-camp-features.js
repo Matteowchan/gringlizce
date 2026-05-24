@@ -23,8 +23,33 @@
 (function () {
   'use strict';
 
+  // ============================================================
+  // CLIENT-SIDE FEATURES bootstrap (supabase'siz çalışır)
+  // Altını çizme + şık eleme. Bu blok her durumda kurulur ki
+  // supabase CDN yüklenemese veya gecikirse bile bu iki özellik
+  // çalışmaya devam etsin. Function declarations IIFE içinde
+  // hoist edilir, aşağıda tanımlı setupHighlightSelection ve
+  // attachOptionElimination buradan çağrılabilir.
+  // ============================================================
+  function initClientSideFeatures() {
+    try { setupHighlightSelection(); } catch (e) { console.warn('[SATCamp] highlight init fail:', e); }
+    var card = document.getElementById('qcard');
+    if (card) {
+      var observer = new MutationObserver(function () {
+        try { attachOptionElimination(); } catch (e) { /* no-op */ }
+      });
+      observer.observe(card, { childList: true });
+      try { attachOptionElimination(); } catch (e) { /* no-op */ }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initClientSideFeatures);
+  } else {
+    initClientSideFeatures();
+  }
+
   if (!window.supabase || !window.supabase.createClient) {
-    console.warn('[SATCamp] supabase-js yok, modül atlanıyor.');
+    console.warn('[SATCamp] supabase-js yok, sunucu taraflı özellikler pasif (altını çizme ve şık eleme aktif).');
     return;
   }
 
@@ -599,7 +624,7 @@
   async function onQuestionReady() {
     currentSlug = computeSlug();
     currentVocab = readCurrentVocab();
-    attachOptionElimination();
+    // attachOptionElimination artık üst katmandaki client-side observer'dan çağrılıyor
     await loadBookmark();
     await loadNote();
   }
@@ -844,7 +869,7 @@
     }
 
     loadUser().then(hookIntoCard);
-    setupHighlightSelection();
+    // setupHighlightSelection artık üst katmandaki client-side bootstrap'tan çağrılıyor
   }
 
   if (document.readyState === 'loading') {

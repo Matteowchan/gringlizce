@@ -632,13 +632,27 @@
   </footer>
 
   <script>
-    // Zaten giriş yapılmışsa panele yönlendir
-    (function () {
+    // Zaten giriş yapılmışsa panele yönlendir (stale cache'e karşı native session check)
+    (async function () {
       var auth = window.GriAuth && window.GriAuth.verify();
-      if (auth) {
-        var ret = new URLSearchParams(window.location.search).get('return');
-        window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
+      if (!auth) return; // cache yok, formu göster
+
+      // Cache var ama gerçekten Supabase session da var mı? Yoksa stale demektir.
+      try {
+        var sb = window.GriAuth.supabase;
+        var sessRes = sb ? await sb.auth.getSession() : null;
+        if (!sessRes || !sessRes.data || !sessRes.data.session) {
+          // Cache stale: temizle, formu göster (return verme, loop'a girme)
+          if (window.GriAuth.logout) await window.GriAuth.logout();
+          return;
+        }
+      } catch (e) {
+        // Session kontrolünde hata: güvenli taraf, formu göster
+        return;
       }
+
+      var ret = new URLSearchParams(window.location.search).get('return');
+      window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
     })();
 
     // Yönlendirmeyle gelen hata mesajı varsa göster

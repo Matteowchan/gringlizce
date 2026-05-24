@@ -418,49 +418,50 @@
 
 /* ============================================================
    ALTINI ÇİZME (highlight)
-   Passage veya qstem içinde metin seçince beliren minik buton,
-   tıklayınca sarı mark ile sarar. Mark'a tıklayınca silinir.
-   Soru değişince innerHTML reset olduğu için otomatik temizlenir.
+   Passage veya qstem içinde metin seçince beliren mini toolbar:
+   üç renk (sarı, mavi, pembe) ve sil (×) butonu. Tıklayınca seçim
+   o renk ile sarılır. Mark'a tıklayınca silinir. Sil butonu seçim
+   içindeki tüm vurguları temizler. Persistence yok, soru değişince
+   innerHTML reset olduğu için otomatik temizlenir.
+   Palet soru bankası ile aynı: #fdef82, #b8dcf5, #f7c1d6.
    ============================================================ */
-mark.sc-hl {
-  background: #fff59d;
-  color: inherit;
-  padding: 0 1px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-mark.sc-hl:hover {
-  background: #ffeb3b;
-}
+mark.sc-hl-yellow { background: #fdef82; color: inherit; padding: 0 2px; border-radius: 2px; cursor: pointer; transition: filter 0.12s ease; }
+mark.sc-hl-blue   { background: #b8dcf5; color: inherit; padding: 0 2px; border-radius: 2px; cursor: pointer; transition: filter 0.12s ease; }
+mark.sc-hl-pink   { background: #f7c1d6; color: inherit; padding: 0 2px; border-radius: 2px; cursor: pointer; transition: filter 0.12s ease; }
+mark.sc-hl-yellow:hover,
+mark.sc-hl-blue:hover,
+mark.sc-hl-pink:hover { filter: brightness(0.92); }
 
-#sc-hl-btn {
+#sc-hl-toolbar {
   position: absolute;
-  z-index: 1000;
+  z-index: 1500;
   display: none;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  background: var(--teal, #2C5856);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-family: var(--font-ui, Inter), system-ui, sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-  white-space: nowrap;
+  gap: 0.3rem;
+  padding: 0.35rem 0.45rem;
+  background: var(--paper, #fff);
+  border: 1px solid var(--line, #e5e7e5);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
   user-select: none;
-  transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
 }
-#sc-hl-btn svg {
-  flex-shrink: 0;
+#sc-hl-toolbar.show { display: inline-flex; }
+.sc-hl-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  transition: transform 0.1s, border-color 0.15s;
 }
-#sc-hl-btn:hover {
-  background: var(--tdark, #1A3D3B);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-}
+.sc-hl-btn:hover { transform: scale(1.12); border-color: var(--ink, #1A2230); }
+.sc-hl-btn.sc-hl-yellow { background: #fdef82; }
+.sc-hl-btn.sc-hl-blue   { background: #b8dcf5; }
+.sc-hl-btn.sc-hl-pink   { background: #f7c1d6; }
+.sc-hl-btn.sc-hl-clear  { background: var(--bg-soft, #f0ece0); color: var(--ink-soft, #888); font-weight: 600; }

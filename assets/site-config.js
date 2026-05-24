@@ -337,12 +337,12 @@
   };
 
   // =============================================================
-  // NAV AUTH TOGGLE — login olmuş kullanıcı için Giriş → Panelim
+  // NAV AUTH TOGGLE — login olmuş kullanıcı için Giriş → Çalışma Masam
   // Tüm sayfalarda nav'daki giris.html linkini panelim.html'e çevirir
   // =============================================================
   // NAV AUTH MOUNT — #navUserMount içine login durumuna göre içerik bas
   // - Login değilse: "Giriş" CTA → giris.html
-  // - Login ise: dairesel avatar (email/isim ilk harfi) + dropdown (Panelim / Şifre / Çıkış)
+  // - Login ise: dairesel avatar (email/isim ilk harfi) + dropdown (Çalışma Masam / Şifre / Çıkış)
   // =============================================================
   function inSubdir() {
     // True if the page sits inside any one-level subdirectory (e.g. /urun/, /sat-ders-notlari/)
@@ -392,7 +392,7 @@
         '<div class="nav-user-name">' + escapeHtml(displayName) + '</div>' +
         (displayName !== email ? '<div class="nav-user-email">' + escapeHtml(email) + '</div>' : '') +
       '</div>' +
-      '<a href="' + pageHref('panelim.html') + '" role="menuitem">Panelim</a>' +
+      '<a href="' + pageHref('panelim.html') + '" role="menuitem">Çalışma Masam</a>' +
       '<a href="' + pageHref('sifre-sifirla.html') + '" role="menuitem">Şifre değiştir</a>' +
       '<button type="button" class="nav-user-logout" role="menuitem">Çıkış yap</button>';
 

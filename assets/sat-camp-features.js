@@ -35,6 +35,9 @@
   });
 
   var DAY = window.SAT_CAMP_DAY || 1;
+  // Track: 'rw' (Reading and Writing, default) veya 'math'. Day dosyası set eder.
+  // Slug ve gri-ask source bu değere göre branch'lenir, kayıtlar karışmaz.
+  var TRACK = (window.SAT_CAMP_TRACK === 'math') ? 'math' : 'rw';
   var GRI_USER_ID = null;
   var currentSlug = null;
   var currentVocab = [];
@@ -63,7 +66,7 @@
   function computeSlug() {
     var mod = (typeof window.currentModule === 'number') ? window.currentModule : 0;
     var q = (typeof window.currentQ === 'number') ? window.currentQ : 0;
-    return 'sat-rw-kamp-d' + DAY + '-m' + (mod + 1) + '-q' + (q + 1);
+    return 'sat-' + TRACK + '-kamp-d' + DAY + '-m' + (mod + 1) + '-q' + (q + 1);
   }
 
   function readCurrentVocab() {
@@ -478,7 +481,7 @@
           question: q.q || '',
           options: q.o || [],
           correct: q.a,
-          source: 'sat-rw-kamp-day-' + DAY
+          source: 'sat-' + TRACK + '-kamp-day-' + DAY
         }
       };
 

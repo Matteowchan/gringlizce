@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 4 Math — Exponential, Polynomial, Radical · Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#be123c;--tdark:#9f1239;--tdeep:#4c0519;
+  --tlight:#fda4af;--twash:#fff1f2;--tsoft:#ffe4e6;
+  --gold:#ca8a04;--gold-soft:#fef9c3;
+  --bg:#fafaf7;--paper:#ffffff;
+  --ink:#0f1f1e;--ink-soft:#37534f;--muted:#6b7975;
+  --line:#e5e7e5;--line-soft:#eef2f1;
+  --correct:#15803d;--correct-bg:#fff1f2;
+  --wrong:#b91c1c;--wrong-bg:#fef2f2;
+  --r:10px;--r-lg:14px;
+  --shadow-sm:0 1px 2px rgba(190,18,60,.04),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(190,18,60,.06),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(190,18,60,.08),0 4px 8px rgba(0,0,0,.04);
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-serif:'Lora',Georgia,serif;
+  --font-display:'Cormorant Garamond','Lora',serif;
+  --font-mono:'DM Mono','SF Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* SPLASH */
+#splash{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;background:radial-gradient(ellipse at top left,rgba(190,18,60,.08) 0%,transparent 60%),radial-gradient(ellipse at bottom right,rgba(202,138,4,.06) 0%,transparent 55%),linear-gradient(180deg,#fff1f2 0%,#fafaf7 100%)}
+.cover{max-width:680px;width:100%;text-align:center}
+.cover-brand{display:inline-flex;align-items:baseline;gap:.45rem;font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--tdeep);letter-spacing:-.01em;margin-bottom:3rem}
+.cover-brand .it{font-style:italic;font-weight:500;color:var(--teal)}
+.cover-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);padding:.5rem 1rem;background:rgba(190,18,60,.08);border-radius:99px;margin-bottom:1.4rem}
+.cover-title{font-family:var(--font-display);font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.05;font-weight:700;color:var(--tdeep);letter-spacing:-.015em;margin-bottom:.6rem}
+.cover-sub{font-family:var(--font-serif);font-size:clamp(1.05rem,2.2vw,1.2rem);font-style:italic;color:var(--ink-soft);margin-bottom:2rem;line-height:1.5}
+.cover-divider{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.6rem 0}
+.cover-divider::before,.cover-divider::after{content:'';flex:0 1 80px;height:1px;background:var(--line)}
+.cover-dia{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+.module-list{display:flex;flex-direction:column;gap:.8rem;margin:2rem 0;text-align:left}
+.module-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:all .15s}
+.module-card.clickable{cursor:pointer}
+.module-card.clickable:hover{border-color:var(--teal);background:var(--twash);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.module-card.disabled{opacity:.5;cursor:not-allowed}
+.module-card .mc-left{flex:1}
+.module-card .mc-name{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--tdeep);margin-bottom:.1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.module-card .mc-desc{font-family:var(--font-serif);font-size:.85rem;color:var(--ink-soft);font-style:italic}
+.module-card .mc-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-align:right}
+.module-card .mc-q{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--teal)}
+.mc-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.08em;font-weight:600;text-transform:uppercase;padding:.18rem .55rem;border-radius:99px;border:1px solid;display:inline-flex;align-items:center;gap:.3rem}
+.mc-status.done{color:var(--correct);border-color:#fda4af;background:var(--correct-bg)}
+.mc-status.progress{color:var(--gold);border-color:#fda4af;background:#fefce8}
+.mc-status.empty{color:var(--muted);border-color:var(--line);background:var(--line-soft)}
+
+/* Module tabs in results */
+.module-tabs{display:flex;gap:.5rem;margin-bottom:1.6rem;flex-wrap:wrap}
+.mt-btn{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.55rem 1rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;font-weight:600;color:var(--ink-soft);cursor:pointer;text-transform:uppercase;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.mt-btn:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.mt-btn.current{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mt-btn.done{border-color:#fda4af;color:var(--correct);background:var(--correct-bg)}
+.mt-btn.done.current{background:var(--correct);color:#fff;border-color:var(--correct)}
+.mt-btn:disabled{opacity:.4;cursor:not-allowed}
+.mt-pct{font-size:.66rem;opacity:.85}
+.cover-instr{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r);padding:1.1rem 1.4rem;margin-bottom:2rem;text-align:left;font-family:var(--font-serif);font-size:.93rem;line-height:1.65;color:var(--ink-soft)}
+.cover-instr strong{color:var(--tdeep);font-weight:600}
+.btn-start{display:inline-flex;align-items:center;gap:.6rem;background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:1rem 2.4rem;font-family:var(--font-ui);font-size:1rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(190,18,60,.25)}
+.btn-start:hover{background:var(--tdark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(190,18,60,.35)}
+.btn-start svg{width:18px;height:18px}
+
+/* TOPBAR */
+.topbar{background:var(--teal);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.08);display:none}
+.topbar.show{display:block}
+.tb-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;gap:1rem}
+.tb-meta{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;opacity:.85;text-transform:uppercase}
+.tb-qnum{font-family:var(--font-display);font-size:1.1rem;font-weight:600}
+.tb-actions{display:flex;gap:.5rem}
+.tb-btn{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:6px;padding:.35rem .8rem;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;font-weight:500;cursor:pointer;text-transform:uppercase;transition:background .15s}
+.tb-btn:hover{background:rgba(255,255,255,.28)}
+.tb-progress{height:3px;background:rgba(255,255,255,.18)}
+.tb-progress-fill{height:100%;background:#fff;transition:width .3s}
+
+/* QUIZ */
+#quiz{display:none}
+#quiz.show{display:block}
+.quiz-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.dot-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.4rem}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--tlight);border:1.5px solid var(--teal);opacity:.5;cursor:pointer;transition:all .2s}
+.dot.ans{background:var(--teal);opacity:1}
+.dot.cur{background:var(--teal);opacity:1;transform:scale(1.4);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--teal)}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.8rem 1.7rem;box-shadow:var(--shadow-sm)}
+.qtype{display:inline-flex;align-items:center;gap:.5rem;background:var(--twash);color:var(--tdeep);border:1px solid var(--tlight);border-radius:6px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;font-weight:500;padding:.3rem .7rem;text-transform:uppercase;margin-bottom:1.2rem}
+.passage{font-family:var(--font-serif);font-size:1.02rem;line-height:1.85;color:#1c1917;background:var(--twash);border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:1.15rem 1.3rem;margin-bottom:1.4rem}
+.passage u{text-decoration:none;font-weight:700;color:var(--tdeep);background:linear-gradient(transparent 60%,rgba(190,18,60,.18) 60%);padding:0 2px}
+.qstem{font-family:var(--font-ui);font-size:1rem;font-weight:600;color:var(--tdeep);margin-bottom:1.2rem;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.6rem}
+.opt{display:flex;align-items:flex-start;gap:.85rem;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;cursor:pointer;transition:all .15s;font-family:var(--font-serif);font-size:.96rem;line-height:1.55;color:var(--ink);text-align:left;width:100%}
+.opt:hover{border-color:var(--teal);background:var(--twash)}
+.opt.sel{border-color:var(--teal);background:var(--twash);box-shadow:0 0 0 3px rgba(190,18,60,.1)}
+.opt-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-top:1px;transition:all .15s;flex-shrink:0}
+.opt.sel .opt-letter{background:var(--teal);border-color:var(--teal);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.4rem}
+.btn-nav{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-family:var(--font-ui);font-size:.88rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.btn-nav:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-submit{background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:.65rem 1.5rem;font-family:var(--font-ui);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(190,18,60,.2)}
+.btn-submit:hover{background:var(--tdark)}
+
+/* INTERMISSION */
+#intermission{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem 1.5rem;background:linear-gradient(135deg,var(--twash) 0%,var(--bg) 100%)}
+#intermission.show{display:flex}
+.inter-card{max-width:560px;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:2.4rem 2.2rem;text-align:center;box-shadow:var(--shadow-lg)}
+.inter-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem}
+.inter-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--tdeep);margin-bottom:.4rem;line-height:1.15}
+.inter-sub{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:2rem;font-style:italic}
+.inter-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:2rem 0;padding:1.4rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.inter-stat .stat-num{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--teal);line-height:1}
+.inter-stat .stat-lbl{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:.3rem}
+.inter-next{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:1.6rem;line-height:1.55}
+.inter-next strong{color:var(--tdeep);font-weight:600}
+.inter-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+
+/* RESULTS */
+#results{display:none}
+#results.show{display:block}
+.res-header{background:linear-gradient(135deg,var(--teal) 0%,var(--tdark) 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center}
+.res-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;opacity:.75;text-transform:uppercase;margin-bottom:.6rem}
+.res-title{font-family:var(--font-display);font-size:2.2rem;font-weight:700;margin-bottom:.4rem;letter-spacing:-.01em}
+.res-sub{font-size:.92rem;opacity:.85}
+.res-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.score-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem 1.8rem;display:grid;grid-template-columns:auto 1fr;gap:1.6rem;align-items:center;margin-bottom:2.2rem;box-shadow:var(--shadow-md)}
+.score-big{text-align:center;padding-right:1.6rem;border-right:1px solid var(--line)}
+.score-num{font-family:var(--font-display);font-size:3.6rem;font-weight:700;color:var(--teal);line-height:1}
+.score-den{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.score-info .score-pct{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin-bottom:.3rem}
+.score-info .score-pct .lbl{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:400;letter-spacing:.08em;margin-left:.5rem;text-transform:uppercase}
+.score-msg{font-family:var(--font-serif);font-size:.92rem;color:var(--ink-soft);line-height:1.6;font-style:italic}
+.module-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.4rem}
+.mb-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;text-align:center}
+.mb-name{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.mb-score{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--tdeep)}
+.mb-pct{font-family:var(--font-mono);font-size:.72rem;color:var(--teal);margin-top:.15rem}
+.section-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600;padding-bottom:.5rem;margin-bottom:1.2rem;border-bottom:1px solid var(--line)}
+.module-divider{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin:2rem 0 1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--teal);display:flex;align-items:center;justify-content:space-between}
+.module-divider .md-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* Review */
+.review-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow-sm)}
+.review-head{display:flex;align-items:center;gap:.9rem;padding:.9rem 1.2rem;background:var(--wrong-bg);border-bottom:1px solid #fecaca;cursor:pointer;user-select:none}
+.review-head.correct{background:var(--correct-bg);border-bottom-color:#bbf7d0}
+.review-num{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--wrong);background:#fff;padding:.2rem .55rem;border-radius:5px;border:1px solid #fca5a5}
+.review-head.correct .review-num{color:var(--correct);border-color:#fda4af}
+.review-tag{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;flex:1}
+.review-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase;color:var(--wrong)}
+.review-head.correct .review-status{color:var(--correct)}
+.review-toggle{font-size:1rem;color:var(--muted);transition:transform .2s;margin-left:auto}
+.review-card.open .review-toggle{transform:rotate(180deg)}
+.review-body{padding:1.4rem 1.4rem 1.5rem;display:none}
+.review-card.open .review-body{display:block}
+.rev-passage{font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917;background:var(--bg);border-left:3px solid var(--line);padding:.85rem 1.1rem;margin-bottom:1rem;border-radius:0 6px 6px 0}
+.rev-passage u{text-decoration:none;font-weight:700;color:var(--tdeep)}
+.rev-stem{font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:.8rem}
+.rev-answers{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.4rem}
+.rev-ans{font-family:var(--font-serif);font-size:.88rem;padding:.45rem .8rem;border-radius:6px;display:flex;align-items:flex-start;gap:.6rem}
+.rev-ans.correct{background:var(--correct-bg);color:var(--correct);font-weight:600;border:1px solid #bbf7d0}
+.rev-ans.wrong-pick{background:var(--wrong-bg);color:var(--wrong);text-decoration:line-through;border:1px solid #fecaca}
+.rev-ans-letter{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;border-radius:50%;font-family:var(--font-mono);font-size:.7rem;font-weight:700;border:1.5px solid currentColor;background:#fff}
+
+/* Gri block */
+.gri-block{background:linear-gradient(180deg,#fff 0%,var(--twash) 100%);border:1px solid var(--tlight);border-radius:var(--r);overflow:hidden;margin-top:.8rem}
+.gri-head{display:flex;align-items:center;gap:.85rem;padding:.85rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight)}
+.gri-avatar{width:42px;height:42px;border-radius:50%;background:#fff;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.gri-avatar img{width:100%;height:100%;object-fit:cover}
+.gri-label{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--tdeep)}
+.gri-label small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-top:.05rem}
+.gri-body{padding:1.2rem 1.3rem;font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917}
+.expl-section{margin-bottom:1.2rem}
+.expl-section:last-child{margin-bottom:0}
+.expl-h{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--teal);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.expl-h::before{content:'';display:inline-block;width:14px;height:1.5px;background:var(--teal)}
+.expl-section p{margin-bottom:.5rem}
+.expl-section p:last-child{margin-bottom:0}
+.vocab-list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vocab-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:.65rem .95rem;border-bottom:1px solid var(--line-soft);align-items:baseline}
+.vocab-row:last-child{border-bottom:none}
+.vocab-en{font-family:var(--font-display);font-weight:600;font-size:.98rem;color:var(--tdeep);white-space:nowrap}
+.vocab-tr{font-family:var(--font-serif);font-size:.86rem;color:var(--ink-soft);font-style:italic}
+.vocab-tr .pos{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;color:var(--muted);background:var(--line-soft);padding:.08rem .35rem;border-radius:3px;margin-right:.4rem;text-transform:uppercase;font-style:normal}
+.rule-box{background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.9rem 1.1rem}
+.rule-box .rule-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#854d0e;font-weight:700;margin-bottom:.4rem}
+.rule-box p{font-family:var(--font-serif);font-size:.92rem;line-height:1.7;color:#422006;margin:0}
+mark.hl{background:linear-gradient(transparent 60%,#fef08a 60%);padding:0 2px;font-weight:500;color:inherit}
+mark.hl-key{background:linear-gradient(transparent 60%,rgba(190,18,60,.22) 60%);padding:0 2px;font-weight:500;color:inherit}
+
+/* Data tables (CoE Quantitative) */
+.data-block{margin:0 0 1.4rem;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.data-caption{font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--tdeep);padding:.7rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight);line-height:1.45}
+.data-caption .src{display:block;font-family:var(--font-serif);font-size:.78rem;font-weight:400;color:var(--ink-soft);font-style:italic;margin-top:.2rem}
+.data-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:.86rem}
+.data-table th{background:#fff;color:var(--tdeep);padding:.55rem .85rem;text-align:left;font-weight:600;border-bottom:1.5px solid var(--teal);font-size:.82rem}
+.data-table td{padding:.5rem .85rem;border-bottom:1px solid var(--line-soft);color:var(--ink)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.data-table .grp{background:var(--twash);font-weight:600;color:var(--tdeep)}
+.data-table tr:nth-child(even) td{background:#fafafa}
+.data-table tr:nth-child(even) td.grp{background:var(--tsoft)}
+.rev-data{margin:.7rem 0 1rem}
+
+/* Cross-Text Connections - dual passage */
+.dual-text{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0 1.2rem}
+.dual-text .text-block{padding:.9rem 1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.dual-text .text-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.45rem;text-transform:uppercase}
+.dual-text .text-body{font-family:var(--font-serif);font-size:.92rem;line-height:1.55;color:var(--ink)}
+@media (max-width:680px){.dual-text{grid-template-columns:1fr}}
+
+/* Rhetorical Synthesis - student notes */
+.notes-block{margin:.5rem 0 1rem;padding:1rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.notes-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.55rem;text-transform:uppercase}
+.notes-list{margin:0;padding-left:1.2rem;font-family:var(--font-serif);font-size:.92rem;line-height:1.6;color:var(--ink)}
+.notes-list li{margin-bottom:.3rem}
+.goal-line{margin:.5rem 0 .2rem;font-family:var(--font-serif);font-size:.95rem;line-height:1.55;color:var(--ink);font-style:italic}
+
+/* Footer */
+.site-foot{background:var(--tdeep);color:#fff;padding:2.4rem 1.5rem 2rem;text-align:center}
+.foot-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:.4rem}
+.foot-brand .it{font-style:italic;font-weight:500;color:var(--tlight)}
+.foot-text{font-size:.84rem;opacity:.75;font-family:var(--font-serif);margin-bottom:1rem}
+.foot-tagline{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tlight);opacity:.7}
+.results-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.btn-action{padding:.7rem 1.4rem;border-radius:var(--r);font-family:var(--font-ui);font-size:.85rem;font-weight:700;cursor:pointer;border:1.5px solid var(--teal);transition:all .15s}
+.btn-action.primary{background:var(--teal);color:#fff}
+.btn-action.primary:hover{background:var(--tdark)}
+.btn-action.outline{background:#fff;color:var(--teal)}
+.btn-action.outline:hover{background:var(--twash)}
+
+@media(max-width:640px){
+  .module-card{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .module-card .mc-meta{text-align:left}
+  .qcard{padding:1.3rem 1.1rem}
+  .passage{font-size:.95rem;padding:1rem 1.1rem}
+  .score-card{grid-template-columns:1fr;text-align:center}
+  .score-big{border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:1.2rem}
+  .module-breakdown{grid-template-columns:1fr}
+  .inter-stats{grid-template-columns:1fr;gap:.8rem}
+  .vocab-row{grid-template-columns:1fr;gap:.2rem}
+}
+@media print{
+  .topbar,.btn-start,.btn-nav,.btn-submit,.results-actions,.site-foot,.inter-actions{display:none!important}
+  body{background:#fff}
+  #splash,#intermission{display:none}
+  #results{display:block!important}
+  .review-card{break-inside:avoid;page-break-inside:avoid}
+  .review-card .review-body{display:block!important}
+}
+
+/* Math styles (KaTeX olmadan, Unicode + plain text) */
+.math-block{margin:.5rem 0 1rem;padding:.9rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);text-align:center;font-family:'Cormorant Garamond','Times New Roman',serif;font-size:1.2rem;font-style:italic}
+.math-block .var{font-style:italic}
+.usd{font-style:normal;white-space:nowrap}
+
+</style>
+<!-- Brand integration: Supabase + camp features (Math track) -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/sat-camp-features.css">
+<!-- KAMP PAYWALL deps -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/site-config.js"></script>
+<script src="../assets/auth.js"></script>
+<!-- /KAMP PAYWALL deps -->
+<!-- KAMP PAYWALL: tek seferlik kontrol -->
+<script>
+(function() {
+  var KAMP_SLUG = 'sat-rw-8-gunluk-kamp';
+  var SPLASH = '/urun/sat-rw-8-gunluk-kamp.html';
+
+  document.documentElement.style.visibility = 'hidden';
+  function allow() { document.documentElement.style.visibility = 'visible'; }
+  function deny() { window.location.replace(SPLASH); }
+
+  function check() {
+    if (!window.GriAuth) {
+      setTimeout(check, 80);
+      return;
+    }
+    var auth = window.GriAuth.verify();
+    if (!auth) {
+      window.GriAuth.refreshCache().then(function () {
+        var a2 = window.GriAuth.verify();
+        if (a2 && window.GriAuth.hasAccess(a2.record, KAMP_SLUG)) {
+          allow();
+        } else {
+          deny();
+        }
+      }).catch(deny);
+      return;
+    }
+    if (window.GriAuth.hasAccess(auth.record, KAMP_SLUG)) {
+      allow();
+    } else {
+      deny();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
+})();
+</script>
+<!-- /KAMP PAYWALL -->
+
+<script>window.SAT_CAMP_DAY = 4; window.SAT_CAMP_TRACK = 'math';</script>
+<script src="../assets/sat-camp-features.js" defer></script>
+</head>
+<body>
+<div class="sc-brand-bar">
+  <a href="../index.html" class="sc-brand-logo">Gri <span class="it">English</span></a>
+  <div class="sc-brand-meta">
+    <span class="sc-day-tag">DAY 4 · MATH</span>
+    <a href="../urun/sat-rw-8-gunluk-kamp.html">Kamp Anasayfa</a>
+    <a href="../calisma-paketleri.html">Tüm Paketler</a>
+    <a href="../panelim.html">Çalışma Masam</a>
+  </div>
+</div>
+
+
+<!-- SPLASH -->
+<section id="splash">
+  <div class="cover">
+    <div class="cover-brand">Gri <span class="it">English</span></div>
+    <div class="cover-eyebrow">Digital SAT Math · Day 4</div>
+    <h1 class="cover-title">Exponential, Polynomial, Radical</h1>
+    <p class="cover-sub">Advanced Math · Exp, Poly, Radical</p>
+
+    <div class="cover-divider"><span class="cover-dia"></span><span class="cover-dia"></span><span class="cover-dia"></span></div>
+
+    <div class="module-list" id="moduleList"></div>
+
+    <div class="cover-instr">
+      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa’ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
+    </div>
+
+    <button class="btn-start" onclick="startModule(0)">
+      Module 1 ile Başla
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-inner">
+    <span class="tb-meta" id="tbMeta">Module 1</span>
+    <span class="tb-qnum" id="tbQnum">1 / 27</span>
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="goHome()">Ana Sayfa</button>
+      <button class="tb-btn" onclick="quitToSplash()">Çıkış</button>
+    </div>
+  </div>
+  <div class="tb-progress"><div class="tb-progress-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="quiz-wrap">
+    <div class="dot-row" id="dotRow"></div>
+    <div id="qcard" class="qcard"></div>
+    <div class="nav-row">
+      <button class="btn-nav" id="prevBtn" onclick="prevQ()">‹ Önceki</button>
+      <button class="btn-nav" id="nextBtn" onclick="nextQ()">Sonraki ›</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitModule()" style="display:none">Modülü Bitir</button>
+    </div>
+  </div>
+</section>
+
+<!-- INTERMISSION -->
+<!-- RESULTS (per-module) -->
+<section id="results">
+  <div class="res-header">
+    <div class="res-eyebrow" id="resEyebrow">Module 1 Tamamlandı</div>
+    <h1 class="res-title" id="resTitle">Modül Analizi</h1>
+    <p class="res-sub" id="resSub">Her yanlışı incele, kuralları defterine geç</p>
+  </div>
+  <div class="res-wrap">
+    <div class="module-tabs" id="moduleTabs"></div>
+
+    <div class="score-card">
+      <div class="score-big">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-den" id="scoreDen">/ 27 doğru</div>
+      </div>
+      <div class="score-info">
+        <div class="score-pct"><span id="scorePct">0%</span><span class="lbl">Modül Doğruluğu</span></div>
+        <div class="score-msg" id="scoreMsg">Aşağıdaki analizleri dikkatlice oku. Her yanlışını yedi adım protokolüyle hata günlüğüne işle.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Soru-Soru Analiz</div>
+    <div id="reviewList"></div>
+
+    <div class="results-actions">
+      <button class="btn-action outline" onclick="goHome()">‹ Ana Sayfa</button>
+      <button class="btn-action outline" onclick="window.print()">PDF Olarak Yazdır</button>
+      <button class="btn-action primary" id="resPrimaryBtn" onclick="goToNextModule()">Sıradaki Modüle Geç ›</button>
+    </div>
+  </div>
+  <div class="site-foot">
+    <div class="foot-brand">Gri <span class="it">English</span></div>
+    <div class="foot-text">Sınav İngilizcesi için titizlikle hazırlanmış materyaller</div>
+    <div class="foot-tagline">Focus · Practice · Succeed</div>
+  </div>
+</section>
+
+<script>
+const GRI_MASCOT = 'data:image/png;base64,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';
+
+const MODULES = [
+{
+  name: 'Module 1',
+  subtitle: 'Advanced Math: Exp/Poly/Radical. Kolay-orta zorluk SAT formatlı sorular.',
+  questions: [
+    // Q1 — Exponential growth basic
+    {
+      k:'Advanced Math',
+      p:`A function is defined by f(x) = 3 · 2ˣ.`,
+      q:'What is the value of f(3)?',
+      o:['A) 6','B) 12','C) 18','D) 24'],
+      a:3,
+      explain:{
+        why_correct:'<em>f(3) = 3 · 2³ = 3 · 8 = 24</em>. Cevap: D.\n\n<strong>Önce üs sonra çarp</strong>: işlem sırası (PEMDAS).',
+        why_wrong:'<strong>A</strong> <em>3 · 2 = 6</em> (üssü atlamış). <strong>B</strong> <em>3 · 4</em> (üs yanlış). <strong>C</strong> rastgele.',
+        vocab:[
+          {en:'exponential function',pos:'n.',tr:'üstel fonksiyon'},
+          {en:'base',pos:'n.',tr:'taban'},
+          {en:'exponent',pos:'n.',tr:'üs'},
+          {en:'order of operations',pos:'n.',tr:'işlem sırası'},
+          {en:'evaluate at value',pos:'phr.',tr:'değerde hesapla'},
+        ],
+        rule:'<em>f(x) = a · bˣ</em> formunda: <strong>önce üs hesapla</strong> (<em>bˣ</em>), sonra <em>a</em> ile çarp. PEMDAS.'
+      }
+    },
+    // Q2 — Exponential decay
+    {
+      k:'Advanced Math',
+      p:`A function is defined by f(x) = 80 · (0.5)ˣ.`,
+      q:'What is the value of f(2)?',
+      o:['A) 80','B) 40','C) 20','D) 10'],
+      a:2,
+      explain:{
+        why_correct:'<em>f(2) = 80 · (0.5)² = 80 · 0.25 = 20</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> sabit a. <strong>B</strong> <em>80 · 0.5</em> (üs unutma). <strong>D</strong> hesap hatası.',
+        vocab:[
+          {en:'exponential decay',pos:'n.',tr:'üstel azalma'},
+          {en:'decay factor',pos:'n.',tr:'azalma katsayısı'},
+          {en:'base less than 1',pos:'phr.',tr:'taban 1’den küçük'},
+          {en:'half-life',pos:'n.',tr:'yarılanma süresi'},
+          {en:'shrinks',pos:'v.',tr:'küçülür'},
+        ],
+        rule:'<strong>Decay:</strong> taban <em>0 < b < 1</em>. Her birim için <em>b</em> ile çarp. <em>x</em> birim sonra: <em>a · bˣ</em>.'
+      }
+    },
+    // Q3 — Doubling growth
+    {
+      k:'Advanced Math',
+      p:`A bacterial population doubles every hour. The initial population is 100.`,
+      q:'What is the population after 4 hours?',
+      o:['A) 200','B) 400','C) 800','D) 1,600'],
+      a:3,
+      explain:{
+        why_correct:'<em>100 · 2⁴ = 100 · 16 = 1,600</em>. Cevap: D.\n\nDoğrulama: saat 1 → 200, 2 → 400, 3 → 800, 4 → 1,600.',
+        why_wrong:'<strong>A, B, C</strong> erken durdurma veya yanlış üs.',
+        vocab:[
+          {en:'doubles',pos:'v.',tr:'iki katına çıkar'},
+          {en:'initial population',pos:'n.',tr:'başlangıç popülasyonu'},
+          {en:'exponent of time',pos:'phr.',tr:'zamanın üssü'},
+          {en:'growth pattern',pos:'n.',tr:'büyüme örüntüsü'},
+          {en:'compound effect',pos:'n.',tr:'bileşik etki'},
+        ],
+        rule:'Sabit oranlı periyodik büyüme: <em>Final = Initial · (oran)^(periyot sayısı)</em>. İki katına çıkma → oran 2.'
+      }
+    },
+    // Q4 — Solve 2^x = 16
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">2ˣ = 16</div>`,
+      q:'What is the value of x?',
+      o:['A) 2','B) 3','C) 4','D) 8'],
+      a:2,
+      explain:{
+        why_correct:'<em>16 = 2⁴</em>. <em>2ˣ = 2⁴</em> → <em>x = 4</em>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> üs hesap hatası. <strong>D</strong> 16/2 hatası.',
+        vocab:[
+          {en:'same base',pos:'phr.',tr:'aynı taban'},
+          {en:'equate exponents',pos:'phr.',tr:'üsleri eşitle'},
+          {en:'power of 2',pos:'n.',tr:'2’nin kuvveti'},
+          {en:'recognize pattern',pos:'phr.',tr:'örüntü tanı'},
+          {en:'rewrite as power',pos:'phr.',tr:'kuvvet olarak yaz'},
+        ],
+        rule:'<em>bˣ = bʸ</em> ise <em>x = y</em>. Her iki tarafı aynı tabana çevir, sonra üsleri eşitle.'
+      }
+    },
+    // Q5 — Polynomial degree
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = 3x⁴ − 2x² + x + 7.`,
+      q:'What is the degree of the polynomial?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:3,
+      explain:{
+        why_correct:'Polinomun derecesi = <strong>en büyük üs</strong>. Burada <em>x⁴</em>. Derece: <em>4</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> <em>x</em>’in üssü. <strong>B</strong> <em>x²</em>. <strong>C</strong> rastgele.',
+        vocab:[
+          {en:'polynomial',pos:'n.',tr:'polinom'},
+          {en:'degree',pos:'n.',tr:'derece'},
+          {en:'highest exponent',pos:'phr.',tr:'en büyük üs'},
+          {en:'leading term',pos:'n.',tr:'baş terim'},
+          {en:'monomial',pos:'n.',tr:'tek terimli'},
+        ],
+        rule:'Polinomun derecesi: <strong>x’in en büyük üssü</strong>. Katsayılar değil, sadece üsler önemli.'
+      }
+    },
+    // Q6 — End behavior
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = 2x³ − x + 1.`,
+      q:'Which statement correctly describes the end behavior of p(x)?',
+      o:['A) Both ends point upward','B) Both ends point downward','C) Left end down, right end up','D) Left end up, right end down'],
+      a:2,
+      explain:{
+        why_correct:'<strong>Tek derece</strong> (3) + <strong>pozitif baş katsayı</strong> (2): sol uç aşağı, sağ uç yukarı. Cevap: C.',
+        why_wrong:'<strong>A</strong> çift derece + pozitif. <strong>B</strong> çift derece + negatif. <strong>D</strong> tek derece + negatif.',
+        vocab:[
+          {en:'end behavior',pos:'n.',tr:'uç davranış'},
+          {en:'asymptotic',pos:'adj.',tr:'asimptotik'},
+          {en:'leading coefficient',pos:'n.',tr:'baş katsayı'},
+          {en:'odd vs even degree',pos:'phr.',tr:'tek vs çift derece'},
+          {en:'as x approaches infinity',pos:'phr.',tr:'x sonsuza giderken'},
+        ],
+        rule:'<strong>End behavior:</strong> Tek derece + pozitif baş → sol↓, sağ↑. Tek + negatif → sol↑, sağ↓. Çift + pozitif → ikisi↑. Çift + negatif → ikisi↓.'
+      }
+    },
+    // Q7 — Roots from factored form
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = (x − 1)(x + 2)(x − 5).`,
+      q:'How many distinct real roots does p(x) have?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:2,
+      explain:{
+        why_correct:'Her faktör bir kök verir: <em>x = 1, −2, 5</em>. Üç distinct gerçek kök. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> kök sayısı eksik. <strong>D</strong> derece 3 olduğu için fazla.',
+        vocab:[
+          {en:'distinct real roots',pos:'phr.',tr:'farklı gerçek kökler'},
+          {en:'factored form',pos:'n.',tr:'çarpanlanmış form'},
+          {en:'count factors',pos:'phr.',tr:'çarpanları say'},
+          {en:'each factor gives one root',pos:'phr.',tr:'her çarpan bir kök verir'},
+          {en:'degree equals max roots',pos:'phr.',tr:'derece = max kök'},
+        ],
+        rule:'Çarpanlı form <em>(x − r₁)(x − r₂)...(x − rₙ)</em>: her faktör <em>x = rᵢ</em> kökünü verir. <strong>Farklı faktör sayısı</strong> = distinct kök sayısı.'
+      }
+    },
+    // Q8 — Remainder theorem
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = x³ − 2x + 5.`,
+      q:'What is the remainder when p(x) is divided by (x − 2)?',
+      o:['A) 5','B) 7','C) 9','D) 11'],
+      a:2,
+      explain:{
+        why_correct:'<mark class="hl-key">Remainder Theorem</mark>: <em>(x − a)</em>’ya bölünce kalan = <em>p(a)</em>. <em>p(2) = 8 − 4 + 5 = 9</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> sabit terim. <strong>B</strong> hesap hatası. <strong>D</strong> p(2) yanlış.',
+        vocab:[
+          {en:'remainder theorem',pos:'n.',tr:'kalan teoremi'},
+          {en:'polynomial division',pos:'n.',tr:'polinom bölme'},
+          {en:'evaluate at a',pos:'phr.',tr:'a’da hesapla'},
+          {en:'divisor (x − a)',pos:'n.',tr:'bölen (x − a)'},
+          {en:'shortcut method',pos:'n.',tr:'kısayol yöntem'},
+        ],
+        rule:'<strong>Remainder Theorem:</strong> <em>p(x)</em> bölü <em>(x − a)</em> kalanı = <em>p(a)</em>. Uzun bölme yapmaya gerek yok.'
+      }
+    },
+    // Q9 — Max x-intercepts of polynomial
+    {
+      k:'Advanced Math',
+      p:`A polynomial p(x) has degree 4.`,
+      q:'What is the maximum number of distinct x-intercepts that p(x) can have?',
+      o:['A) 2','B) 3','C) 4','D) 5'],
+      a:2,
+      explain:{
+        why_correct:'Derece <em>n</em>’li polinom en fazla <em>n</em> farklı reel kök/x-intercept’e sahip olabilir. Derece 4 → en fazla 4. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> derece sınırından az. <strong>D</strong> derece sınırını aşar.',
+        vocab:[
+          {en:'maximum intercepts',pos:'n.',tr:'maksimum kesişim'},
+          {en:'fundamental theorem',pos:'n.',tr:'temel teorem'},
+          {en:'degree determines max',pos:'phr.',tr:'derece max’i belirler'},
+          {en:'roots and intercepts',pos:'phr.',tr:'kökler ve kesişimler'},
+          {en:'algebra fundamentals',pos:'n.',tr:'cebir temelleri'},
+        ],
+        rule:'Derece <em>n</em>’li polinom: en fazla <em>n</em> distinct gerçek kök. Daha az olabilir (tekrarlı veya kompleks kökler).'
+      }
+    },
+    // Q10 — Solve by factoring x
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ − 4x = 0</div>`,
+      q:'How many distinct real solutions does the equation have?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:2,
+      explain:{
+        why_correct:'<em>x(x² − 4) = x(x − 2)(x + 2) = 0</em> → <em>x = 0, 2, −2</em>. Üç distinct kök. Cevap: C.',
+        why_wrong:'<strong>A</strong> sadece <em>x = 0</em>. <strong>B</strong> <em>x</em>’i unutmuş. <strong>D</strong> derece 3 aşkın.',
+        vocab:[
+          {en:'factor out',pos:'phr. v.',tr:'ortak çarpan al'},
+          {en:'common factor',pos:'n.',tr:'ortak çarpan'},
+          {en:'difference of squares',pos:'n.',tr:'iki kare farkı'},
+          {en:'cubic equation',pos:'n.',tr:'kübik denklem'},
+          {en:'zero product',pos:'phr.',tr:'sıfır çarpım'},
+        ],
+        rule:'Yüksek dereceli denklem: önce <strong>ortak x faktörü</strong> al. Sonra kalan içeride faktör veya tanıdık pattern (iki kare farkı vb.).'
+      }
+    },
+    // Q11 — Solve cubic
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ = 27</div>`,
+      q:'What is the real solution to the equation?',
+      o:['A) 1','B) 3','C) 9','D) 27'],
+      a:1,
+      explain:{
+        why_correct:'<em>x = ∛27 = 3</em>. Cevap: B.\n\n<strong>Not:</strong> Kübik kökte <em>±</em> yok (cube root tek değerlidir reel sayılarda).',
+        why_wrong:'<strong>A</strong> rastgele. <strong>C</strong> <em>3²</em>. <strong>D</strong> orijinal sayı.',
+        vocab:[
+          {en:'cube root',pos:'n.',tr:'küp kök'},
+          {en:'cubic equation',pos:'n.',tr:'kübik denklem'},
+          {en:'single real solution',pos:'phr.',tr:'tek reel çözüm'},
+          {en:'odd root unique',pos:'phr.',tr:'tek dereceli kök tek'},
+          {en:'verify by cubing',pos:'phr.',tr:'küp alarak doğrula'},
+        ],
+        rule:'<em>x³ = a</em>: tek bir reel çözüm <em>x = ∛a</em>. <strong>±</strong> yok (kübik kök tüm reel sayılar için tek değerli).'
+      }
+    },
+    // Q12 — Radical equation basic
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√x = 4</div>`,
+      q:'What is the value of x?',
+      o:['A) 2','B) 4','C) 8','D) 16'],
+      a:3,
+      explain:{
+        why_correct:'Karesini al: <em>x = 16</em>. Cevap: D.\n\nDoğrulama: <em>√16 = 4</em> ✓.',
+        why_wrong:'<strong>A</strong> √4. <strong>B</strong> verilen. <strong>C</strong> 2 × 4.',
+        vocab:[
+          {en:'radical equation',pos:'n.',tr:'köklü denklem'},
+          {en:'square both sides',pos:'phr.',tr:'iki tarafın karesini al'},
+          {en:'eliminate radical',pos:'phr.',tr:'kökü yok et'},
+          {en:'principal root',pos:'n.',tr:'baş kök (pozitif)'},
+          {en:'inverse operation',pos:'n.',tr:'ters işlem'},
+        ],
+        rule:'<em>√x = a</em>: kareyle <em>x = a²</em>. <strong>√x ≥ 0</strong> daima, bu yüzden <em>a ≥ 0</em> olmalı.'
+      }
+    },
+    // Q13 — Radical with linear inside
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√(x + 5) = 3</div>`,
+      q:'What is the value of x?',
+      o:['A) 2','B) 4','C) 9','D) 14'],
+      a:1,
+      explain:{
+        why_correct:'Kareyi al: <em>x + 5 = 9</em> → <em>x = 4</em>. Cevap: B.\n\nDoğrulama: <em>√(4 + 5) = √9 = 3</em> ✓.',
+        why_wrong:'<strong>A, D</strong> aritmetik hata. <strong>C</strong> kareyi yerleştirmemiş.',
+        vocab:[
+          {en:'isolate radical',pos:'phr.',tr:'kökü yalıt'},
+          {en:'square both sides',pos:'phr.',tr:'iki tarafın karesini al'},
+          {en:'solve linear inside',pos:'phr.',tr:'içerideki lineer’i çöz'},
+          {en:'check solution',pos:'phr.',tr:'çözümü kontrol et'},
+          {en:'simple radical',pos:'n.',tr:'basit köklü'},
+        ],
+        rule:'Köklü denklem: <strong>önce kökü yalıt</strong>, sonra her iki tarafı karele (veya küple). <strong>Çözümü orijinalde doğrula</strong>.'
+      }
+    },
+    // Q14 — Extraneous root check
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√x = x − 2</div>`,
+      q:'Which value of x is the only valid solution?',
+      o:['A) 1','B) 4','C) Both 1 and 4','D) Neither'],
+      a:1,
+      explain:{
+        why_correct:'Kareyi al: <em>x = (x − 2)² = x² − 4x + 4</em> → <em>x² − 5x + 4 = 0</em> → <em>(x − 1)(x − 4) = 0</em> → <em>x = 1</em> veya <em>4</em>.\n\n<mark class="hl-key">Yabancı kök kontrolü</mark>: <em>x = 1</em>: <em>√1 = 1</em>, <em>1 − 2 = −1</em>. <em>1 ≠ −1</em>, yabancı. <em>x = 4</em>: <em>√4 = 2</em>, <em>4 − 2 = 2</em> ✓. Cevap: B.',
+        why_wrong:'<strong>A</strong> yabancı kök. <strong>C</strong> her ikisi (yabancı dahil). <strong>D</strong> en az bir geçerli.',
+        vocab:[
+          {en:'extraneous solution',pos:'n.',tr:'yabancı çözüm'},
+          {en:'check in original',pos:'phr.',tr:'orijinalde kontrol et'},
+          {en:'square introduces',pos:'phr.',tr:'kare ekstra çözüm getirir'},
+          {en:'discard invalid',pos:'phr.',tr:'geçersizi at'},
+          {en:'principal sign',pos:'n.',tr:'baş işaret'},
+        ],
+        rule:'<strong>Squaring</strong> yabancı kök ekleyebilir. Köklü denklemlerde <strong>her zaman</strong> çözümü orijinalde doğrula.'
+      }
+    },
+    // Q15 — Rational exponent x^(1/2)
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x^(1⁄2) = 5</div>`,
+      q:'What is the value of x?',
+      o:['A) 5','B) 10','C) 15','D) 25'],
+      a:3,
+      explain:{
+        why_correct:'<em>x^(1/2) = √x = 5</em> → <em>x = 25</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> kare unutma. <strong>B, C</strong> hesap hataları.',
+        vocab:[
+          {en:'rational exponent',pos:'n.',tr:'rasyonel üs'},
+          {en:'fractional exponent',pos:'n.',tr:'kesirli üs'},
+          {en:'square root form',pos:'n.',tr:'karekök formu'},
+          {en:'equivalent notation',pos:'phr.',tr:'eşdeğer gösterim'},
+          {en:'raise to power',pos:'phr.',tr:'kuvvete yükselt'},
+        ],
+        rule:'<em>x^(1/n) = ⁿ√x</em>. Çözmek için her iki tarafı <em>n</em> kuvvetine yükselt. <em>x^(1/2) = √x</em> en yaygın.'
+      }
+    },
+    // Q16 — Evaluate fractional exponent
+    {
+      k:'Advanced Math',
+      p:`What is the value of 8^(2⁄3)?`,
+      q:'',
+      o:['A) 2','B) 4','C) 8','D) 16'],
+      a:1,
+      explain:{
+        why_correct:'<em>8^(2/3) = (∛8)² = 2² = 4</em>. Cevap: B.\n\nVeya <em>(8²)^(1/3) = 64^(1/3) = 4</em>.',
+        why_wrong:'<strong>A</strong> sadece <em>∛8</em>. <strong>C</strong> orijinal. <strong>D</strong> <em>8 × 2</em>.',
+        vocab:[
+          {en:'fractional exponent',pos:'n.',tr:'kesirli üs'},
+          {en:'numerator power',pos:'n.',tr:'pay kuvveti'},
+          {en:'denominator root',pos:'n.',tr:'payda kökü'},
+          {en:'order of operations',pos:'n.',tr:'işlem sırası'},
+          {en:'either order works',pos:'phr.',tr:'her iki sıra çalışır'},
+        ],
+        rule:'<em>a^(m/n) = (ⁿ√a)^m = ⁿ√(aᵐ)</em>. <strong>Pay = kuvvet</strong>, <strong>payda = kök</strong>. Genelde <strong>önce kök, sonra kuvvet</strong> kolay (küçük sayılar).'
+      }
+    },
+    // Q17 — Solve 2^(x+1) = 8
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">2^(x+1) = 8</div>`,
+      q:'What is the value of x?',
+      o:['A) −1','B) 1','C) 2','D) 3'],
+      a:2,
+      explain:{
+        why_correct:'<em>8 = 2³</em>. <em>2^(x+1) = 2³</em> → <em>x + 1 = 3</em> → <em>x = 2</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> üs eşitleme veya hesap hataları.',
+        vocab:[
+          {en:'same base technique',pos:'phr.',tr:'aynı taban tekniği'},
+          {en:'exponent equation',pos:'n.',tr:'üs denklemi'},
+          {en:'rewrite power',pos:'phr.',tr:'kuvvet olarak yaz'},
+          {en:'equate exponents',pos:'phr.',tr:'üsleri eşitle'},
+          {en:'linear in exponent',pos:'phr.',tr:'üsteki lineer'},
+        ],
+        rule:'<em>b^f(x) = b^g(x)</em>: <em>f(x) = g(x)</em>. Sağ tarafı sol tarafın tabanına yaz, sonra üsleri eşitle.'
+      }
+    },
+    // Q18 — Polynomial value substitution
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = x³ − 3x² + 2x − 1.`,
+      q:'What is the value of p(1)?',
+      o:['A) −1','B) 0','C) 1','D) 2'],
+      a:0,
+      explain:{
+        why_correct:'<em>p(1) = 1 − 3 + 2 − 1 = −1</em>. Cevap: A.',
+        why_wrong:'<strong>B, C, D</strong> aritmetik hataları.',
+        vocab:[
+          {en:'evaluate polynomial',pos:'phr.',tr:'polinomu değerlendir'},
+          {en:'substitute value',pos:'phr.',tr:'değeri yerleştir'},
+          {en:'careful arithmetic',pos:'phr.',tr:'dikkatli aritmetik'},
+          {en:'sign of each term',pos:'phr.',tr:'her terimin işareti'},
+          {en:'final sum',pos:'n.',tr:'son toplam'},
+        ],
+        rule:'Polinom değerlendir: her <em>x</em>’i değerle değiştir, işlem sırasına dikkat et. <strong>İşaretler kritik</strong>.'
+      }
+    },
+    // Q19 — Compound interest
+    {
+      k:'Advanced Math',
+      p:`<span class="usd">$1,000</span> is invested at an annual interest rate of 5%, compounded annually. The amount A after t years is given by A = 1000(1.05)ᵗ.`,
+      q:'What is the value of the investment after 2 years?',
+      o:['A) <span class="usd">$1,050</span>','B) <span class="usd">$1,100</span>','C) <span class="usd">$1,102.50</span>','D) <span class="usd">$1,110.25</span>'],
+      a:2,
+      explain:{
+        why_correct:'<em>A = 1000 · (1.05)² = 1000 · 1.1025 = 1,102.50</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> sadece <em>5%</em> kez (simple interest). <strong>B</strong> rastgele. <strong>D</strong> 3 yıl hesabı.',
+        vocab:[
+          {en:'compound interest',pos:'n.',tr:'bileşik faiz'},
+          {en:'compounded annually',pos:'phr.',tr:'yıllık bileşik'},
+          {en:'growth factor',pos:'n.',tr:'büyüme katsayısı'},
+          {en:'investment',pos:'n.',tr:'yatırım'},
+          {en:'annual rate',pos:'n.',tr:'yıllık oran'},
+        ],
+        rule:'Compound interest: <em>A = P(1 + r)ᵗ</em>. Her yıl <em>(1 + r)</em> ile çarp. Simple interest (<em>P + Prt</em>)’den farklı.'
+      }
+    },
+    // Q20 — Half-life
+    {
+      k:'Advanced Math',
+      p:`A radioactive substance has a half-life of 4 hours. The initial mass is 80 grams.`,
+      q:'What is the mass remaining after 8 hours, in grams?',
+      o:['A) 10','B) 20','C) 40','D) 60'],
+      a:1,
+      explain:{
+        why_correct:'8 saat = 2 yarılanma süresi. <em>80 · (1/2)² = 80/4 = 20</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 3 yarılanma. <strong>C</strong> 1 yarılanma. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'half-life',pos:'n.',tr:'yarılanma süresi'},
+          {en:'radioactive',pos:'adj.',tr:'radyoaktif'},
+          {en:'decay periods',pos:'n.',tr:'azalma periyotları'},
+          {en:'initial mass',pos:'n.',tr:'başlangıç kütlesi'},
+          {en:'time divided by half-life',pos:'phr.',tr:'zaman/yarılanma'},
+        ],
+        rule:'Half-life: <em>M = M₀ · (1/2)^(t/h)</em>, h yarılanma süresi. Her <em>h</em> birim zamanda yarıya iner.'
+      }
+    },
+    // Q21 — Growth vs decay identification
+    {
+      k:'Advanced Math',
+      p:`A function is defined by y = 100 · (0.97)ˣ.`,
+      q:'Which statement correctly describes the function?',
+      o:['A) Exponential growth at a rate of 3%','B) Exponential decay at a rate of 3%','C) Exponential growth at a rate of 97%','D) Exponential decay at a rate of 97%'],
+      a:1,
+      explain:{
+        why_correct:'<em>0.97 < 1</em>: decay. Rate = <em>1 − 0.97 = 0.03 = 3%</em>. Cevap: B.\n\n<strong>Mantık:</strong> Her birim için %97’si kalır, dolayısıyla %3’ü azalır.',
+        why_wrong:'<strong>A</strong> yön ters. <strong>C, D</strong> 97% kalan oran, azalma oranı değil.',
+        vocab:[
+          {en:'growth vs decay',pos:'phr.',tr:'büyüme vs azalma'},
+          {en:'rate of change',pos:'n.',tr:'değişim oranı'},
+          {en:'remaining fraction',pos:'n.',tr:'kalan kesir'},
+          {en:'decrease rate',pos:'n.',tr:'azalma oranı'},
+          {en:'percent vs decimal',pos:'phr.',tr:'yüzde vs ondalık'},
+        ],
+        rule:'<em>y = a · bˣ</em>: <em>b > 1</em> growth (oran <em>= b − 1</em>), <em>0 < b < 1</em> decay (oran <em>= 1 − b</em>). Yüzdeye çevir.'
+      }
+    },
+    // Q22 — Bacterial growth tripling
+    {
+      k:'Advanced Math',
+      p:`A bacterial population triples every 2 hours. The initial population is 50.`,
+      q:'What is the population after 6 hours?',
+      o:['A) 150','B) 450','C) 900','D) 1,350'],
+      a:3,
+      explain:{
+        why_correct:'6 saat = 3 triple periyot. <em>50 · 3³ = 50 · 27 = 1,350</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> sadece bir triple. <strong>B</strong> iki triple. <strong>C</strong> hesap hatası.',
+        vocab:[
+          {en:'triples',pos:'v.',tr:'üç katına çıkar'},
+          {en:'every 2 hours',pos:'phr.',tr:'her 2 saatte bir'},
+          {en:'periods elapsed',pos:'n.',tr:'geçen periyot sayısı'},
+          {en:'growth model',pos:'n.',tr:'büyüme modeli'},
+          {en:'compound effect',pos:'n.',tr:'bileşik etki'},
+        ],
+        rule:'Sabit oranlı periyodik büyüme: <em>Final = Initial · k^(t/p)</em>, k oran, p periyot uzunluğu, t toplam zaman.'
+      }
+    },
+    // Q23 — Growth model with explicit rate
+    {
+      k:'Advanced Math',
+      p:`A town’s population grows at 8% per year. If P₀ is the initial population, which equation correctly models the population P after x years?`,
+      q:'',
+      o:['A) P = P₀ · (0.92)ˣ','B) P = P₀ · (1.08)ˣ','C) P = P₀ · (8)ˣ','D) P = P₀ + 0.08x'],
+      a:1,
+      explain:{
+        why_correct:'%8 büyüme: her yıl <em>(1 + 0.08) = 1.08</em> ile çarp. <em>P = P₀ · (1.08)ˣ</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 8% decay (yön ters). <strong>C</strong> 8 katına çıkar (1.08 değil). <strong>D</strong> lineer (exponential değil).',
+        vocab:[
+          {en:'population growth',pos:'n.',tr:'nüfus büyümesi'},
+          {en:'percent per year',pos:'phr.',tr:'yıllık yüzde'},
+          {en:'multiplier per year',pos:'n.',tr:'yıllık çarpan'},
+          {en:'distinct from linear',pos:'phr.',tr:'lineerden farklı'},
+          {en:'compound vs simple',pos:'phr.',tr:'bileşik vs basit'},
+        ],
+        rule:'Exponential growth: <em>P = P₀(1 + r)ᵗ</em>, r ondalık olarak. Yıllık <em>%X</em> büyüme = çarpan <em>1.0X</em>. Lineer büyüme ile karıştırma.'
+      }
+    },
+    // Q24 — Polynomial coefficient at x = 0
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = ax³ + bx² + cx + d. The value of p(0) is 5.`,
+      q:'What is the value of d?',
+      o:['A) 0','B) 5','C) a','D) Cannot be determined'],
+      a:1,
+      explain:{
+        why_correct:'<em>p(0) = a(0) + b(0) + c(0) + d = d</em>. <em>d = 5</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> sabit terim 0 değil. <strong>C</strong> a bilinmiyor ama d sabit terim. <strong>D</strong> belirlenir.',
+        vocab:[
+          {en:'constant term',pos:'n.',tr:'sabit terim'},
+          {en:'evaluate at zero',pos:'phr.',tr:'sıfırda hesapla'},
+          {en:'isolate constant',pos:'phr.',tr:'sabiti yalıt'},
+          {en:'y-intercept of polynomial',pos:'phr.',tr:'polinomun y-kesişimi'},
+          {en:'all other terms vanish',pos:'phr.',tr:'diğer terimler kaybolur'},
+        ],
+        rule:'Herhangi bir polinom için <em>p(0) = </em>sabit terim. Diğer tüm terimler <em>x = 0</em>’da kaybolur.'
+      }
+    },
+    // Q25 — Radical with quadratic resolution
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√(2x + 3) = x</div>`,
+      q:'What is the only valid solution?',
+      o:['A) −1','B) 3','C) Both −1 and 3','D) Neither'],
+      a:1,
+      explain:{
+        why_correct:'Kareyi al: <em>2x + 3 = x²</em> → <em>x² − 2x − 3 = 0</em> → <em>(x − 3)(x + 1) = 0</em> → <em>x = 3</em> veya <em>−1</em>.\n\nKontrol: <em>x = 3</em>: <em>√9 = 3</em> ✓. <em>x = −1</em>: <em>√1 = 1</em>, <em>x = −1</em>. <em>1 ≠ −1</em>, yabancı. Cevap: B.',
+        why_wrong:'<strong>A</strong> yabancı kök. <strong>C</strong> her ikisi (yabancı dahil). <strong>D</strong> en az bir geçerli.',
+        vocab:[
+          {en:'extraneous solution',pos:'n.',tr:'yabancı çözüm'},
+          {en:'sign consistency',pos:'n.',tr:'işaret tutarlılığı'},
+          {en:'verify after squaring',pos:'phr.',tr:'kareden sonra doğrula'},
+          {en:'principal root non-negative',pos:'phr.',tr:'baş kök non-negatif'},
+          {en:'reject invalid',pos:'phr.',tr:'geçersizi reddet'},
+        ],
+        rule:'Köklü denklem + quadratic: kareyi al, quadratic’i çöz, sonra <strong>her çözümü orijinalde doğrula</strong>. <em>√x ≥ 0</em> her zaman.'
+      }
+    },
+    // Q26 — Cube root equation
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">∛x = 4</div>`,
+      q:'What is the value of x?',
+      o:['A) 12','B) 16','C) 64','D) 256'],
+      a:2,
+      explain:{
+        why_correct:'Küpünü al: <em>x = 4³ = 64</em>. Cevap: C.\n\nDoğrulama: <em>∛64 = 4</em> ✓.',
+        why_wrong:'<strong>A</strong> 4 × 3. <strong>B</strong> 4². <strong>D</strong> 4⁴.',
+        vocab:[
+          {en:'cube root',pos:'n.',tr:'küp kök'},
+          {en:'raise to third power',pos:'phr.',tr:'üçüncü kuvvete yükselt'},
+          {en:'inverse of cubing',pos:'phr.',tr:'küp almanın tersi'},
+          {en:'single real value',pos:'phr.',tr:'tek reel değer'},
+          {en:'no extraneous',pos:'phr.',tr:'yabancı yok'},
+        ],
+        rule:'<em>∛x = a</em>: küpünü al, <em>x = a³</em>. Kübik kökte <strong>± yok</strong> ve <strong>yabancı kök oluşmaz</strong>.'
+      }
+    },
+    // Q27 — Factor theorem
+    {
+      k:'Advanced Math',
+      p:`The polynomial p(x) = x³ − 4x² + ax + 6 has (x − 3) as a factor, where a is a constant.`,
+      q:'What is the value of a?',
+      o:['A) 1','B) 3','C) 6','D) 9'],
+      a:0,
+      explain:{
+        why_correct:'<mark class="hl-key">Factor Theorem</mark>: <em>(x − 3)</em> faktör ise <em>p(3) = 0</em>. <em>27 − 36 + 3a + 6 = 0</em> → <em>−3 + 3a = 0</em> → <em>a = 1</em>. Cevap: A.',
+        why_wrong:'<strong>B, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'factor theorem',pos:'n.',tr:'çarpan teoremi'},
+          {en:'(x − r) factor',pos:'phr.',tr:'(x − r) çarpan'},
+          {en:'p of r equals zero',pos:'phr.',tr:'p(r) = 0'},
+          {en:'find constant',pos:'phr.',tr:'sabiti bul'},
+          {en:'plug r into p',pos:'phr.',tr:'r’yi p’ye yerleştir'},
+        ],
+        rule:'<strong>Factor Theorem:</strong> <em>(x − r)</em> polinom <em>p(x)</em>’in çarpanı ⇔ <em>p(r) = 0</em>. Bilinmeyen katsayıyı bulmak için bu denklemi çöz.'
+      }
+    }
+  ]
+},
+{
+  name: 'Module 2',
+  subtitle: 'Advanced Math: Exp/Poly/Radical. Orta-zor zorluk.',
+  questions: [
+    // Q1 — Exponential equation with coefficient
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">3 · 2ˣ = 96</div>`,
+      q:'What is the value of x?',
+      o:['A) 4','B) 5','C) 6','D) 32'],
+      a:1,
+      explain:{
+        why_correct:'İki tarafı <em>3</em>’e böl: <em>2ˣ = 32 = 2⁵</em> → <em>x = 5</em>. Cevap: B.',
+        why_wrong:'<strong>A, C</strong> üs hesap hataları. <strong>D</strong> <em>96/3</em>’ü doğrudan x sanma.',
+        vocab:[
+          {en:'isolate exponential',pos:'phr.',tr:'üstel ifadeyi yalıt'},
+          {en:'divide by coefficient',pos:'phr.',tr:'katsayıya böl'},
+          {en:'recognize power',pos:'phr.',tr:'kuvveti tanı'},
+          {en:'same base method',pos:'phr.',tr:'aynı taban yöntemi'},
+          {en:'simplify to power',pos:'phr.',tr:'kuvvete sadeleştir'},
+        ],
+        rule:'<em>a · bˣ = c</em>: önce <strong>üstel ifadeyi yalıt</strong> (<em>a</em>’ya böl), sonra <em>c/a</em>’yı <em>b</em>’nin kuvveti olarak yaz, üsleri eşitle.'
+      }
+    },
+    // Q2 — Doubling time growth
+    {
+      k:'Advanced Math',
+      p:`A bacterial population doubles every 3 years. The initial population is 50.`,
+      q:'What is the population after 9 years?',
+      o:['A) 100','B) 200','C) 400','D) 800'],
+      a:2,
+      explain:{
+        why_correct:'9 yıl / 3 yıl = 3 doubling periyodu. <em>50 · 2³ = 50 · 8 = 400</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> bir doubling. <strong>B</strong> iki doubling. <strong>D</strong> dört doubling (yanlış periyot sayısı).',
+        vocab:[
+          {en:'doubling time',pos:'n.',tr:'ikiye katlanma süresi'},
+          {en:'periods elapsed',pos:'phr.',tr:'geçen periyotlar'},
+          {en:'time divided by period',pos:'phr.',tr:'zaman/periyot'},
+          {en:'compound growth',pos:'n.',tr:'bileşik büyüme'},
+          {en:'multiplicative model',pos:'n.',tr:'çarpımsal model'},
+        ],
+        rule:'Doubling time <em>p</em>, başlangıç <em>N₀</em>, zaman <em>t</em>: <em>N(t) = N₀ · 2^(t/p)</em>. Aynısı diğer oran (üçleme vb.) için de geçerli.'
+      }
+    },
+    // Q3 — Exponential inequality
+    {
+      k:'Advanced Math',
+      p:`Consider the inequality:
+<div class="math-block">2ˣ > 32</div>`,
+      q:'What is the smallest integer value of x that satisfies the inequality?',
+      o:['A) 4','B) 5','C) 6','D) 7'],
+      a:2,
+      explain:{
+        why_correct:'<em>32 = 2⁵</em>. <em>2ˣ > 2⁵</em> → <em>x > 5</em> (strict). En küçük tamsayı: <em>6</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> 2⁴ = 16 < 32. <strong>B</strong> 2⁵ = 32 (eşit, > değil). <strong>D</strong> en küçük değil.',
+        vocab:[
+          {en:'exponential inequality',pos:'n.',tr:'üstel eşitsizlik'},
+          {en:'strict inequality',pos:'n.',tr:'kesin eşitsizlik'},
+          {en:'smallest integer',pos:'n.',tr:'en küçük tamsayı'},
+          {en:'preserve direction',pos:'phr.',tr:'yönü koru'},
+          {en:'base greater than 1',pos:'phr.',tr:'taban 1’den büyük'},
+        ],
+        rule:'Üstel eşitsizlik (taban > 1): <em>bˣ > bʸ</em> ↔ <em>x > y</em>. Yön korunur. Taban <em>0 < b < 1</em> ise yön çevrilir.'
+      }
+    },
+    // Q4 — Polynomial division remainder
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = 2x³ + x² − 3x − 2.`,
+      q:'What is the remainder when p(x) is divided by (x − 1)?',
+      o:['A) −2','B) 0','C) 2','D) 4'],
+      a:0,
+      explain:{
+        why_correct:'Remainder Theorem: <em>p(1) = 2 + 1 − 3 − 2 = −2</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> p(1) = 0 sanma (faktör değil). <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'polynomial division',pos:'n.',tr:'polinom bölme'},
+          {en:'shortcut via theorem',pos:'phr.',tr:'teorem ile kısayol'},
+          {en:'plug in 1',pos:'phr.',tr:'1’i yerleştir'},
+          {en:'avoid long division',pos:'phr.',tr:'uzun bölmeden kaçın'},
+          {en:'careful with signs',pos:'phr.',tr:'işaretlere dikkat'},
+        ],
+        rule:'<em>(x − a)</em>’ya bölünce kalan = <em>p(a)</em>. Uzun bölme yapma; direkt değer hesapla.'
+      }
+    },
+    // Q5 — Polynomial through three points
+    {
+      k:'Advanced Math',
+      p:`A polynomial p(x) of degree 2 passes through the points (0, 3), (1, 0), and (−1, 8).`,
+      q:'What is the value of p(2)?',
+      o:['A) −3','B) −1','C) 0','D) 3'],
+      a:1,
+      explain:{
+        why_correct:'<em>p(x) = ax² + bx + c</em>. <em>p(0) = c = 3</em>. <em>p(1) = a + b + 3 = 0</em> → <em>a + b = −3</em>. <em>p(−1) = a − b + 3 = 8</em> → <em>a − b = 5</em>. Topla: <em>a = 1, b = −4</em>. <em>p(x) = x² − 4x + 3</em>. <em>p(2) = 4 − 8 + 3 = −1</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'three points',pos:'phr.',tr:'üç nokta'},
+          {en:'system of equations',pos:'n.',tr:'denklem sistemi'},
+          {en:'identify constants',pos:'phr.',tr:'sabitleri belirle'},
+          {en:'evaluate at given',pos:'phr.',tr:'verilende hesapla'},
+          {en:'unique quadratic',pos:'phr.',tr:'tek quadratic'},
+        ],
+        rule:'Üç nokta verili quadratic için: <em>ax² + bx + c</em> formunu kur, üç denklem sistemi çöz. <em>p(0)</em> direkt <em>c</em>’yi verir.'
+      }
+    },
+    // Q6 — Repeated root
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = (x − 2)²(x + 3).`,
+      q:'How many distinct real roots does p(x) have?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:1,
+      explain:{
+        why_correct:'Kökler: <em>x = 2</em> (multiplicity 2) ve <em>x = −3</em>. <strong>Distinct</strong> kökler: <em>2</em> ve <em>−3</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> sadece bir farklı kök değil. <strong>C</strong> tekrarlıyı ayrı sayma. <strong>D</strong> derece (toplam multiplicity).',
+        vocab:[
+          {en:'multiplicity',pos:'n.',tr:'çokluluk (kat)'},
+          {en:'repeated root',pos:'n.',tr:'tekrarlı kök'},
+          {en:'count distinct',pos:'phr.',tr:'farklı sayıyı say'},
+          {en:'degree vs distinct',pos:'phr.',tr:'derece vs distinct'},
+          {en:'touches axis',pos:'phr.',tr:'eksene değer'},
+        ],
+        rule:'<strong>Multiplicity:</strong> Tekrarlı faktör <em>(x − r)ⁿ</em>: <em>r</em> kökü <em>n</em> kez. <strong>Distinct kök sayısı</strong> = farklı <em>r</em>’lerin sayısı.'
+      }
+    },
+    // Q7 — Find coefficient given root
+    {
+      k:'Advanced Math',
+      p:`The polynomial p(x) = x³ + 2x² + ax − 6 has x = 1 as a root, where a is a constant.`,
+      q:'What is the value of a?',
+      o:['A) 1','B) 3','C) 5','D) 6'],
+      a:1,
+      explain:{
+        why_correct:'<em>x = 1</em> kök: <em>p(1) = 1 + 2 + a − 6 = 0</em> → <em>a − 3 = 0</em> → <em>a = 3</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> aritmetik hataları.',
+        vocab:[
+          {en:'given root',pos:'phr.',tr:'verilen kök'},
+          {en:'find coefficient',pos:'phr.',tr:'katsayıyı bul'},
+          {en:'apply root condition',pos:'phr.',tr:'kök koşulunu uygula'},
+          {en:'one-variable equation',pos:'phr.',tr:'tek değişkenli denklem'},
+          {en:'verify other roots',pos:'phr.',tr:'diğer kökleri doğrula'},
+        ],
+        rule:'Verili kök ile bilinmeyen katsayı: <em>p(kök) = 0</em> denklemi kur, bilinmeyen için çöz.'
+      }
+    },
+    // Q8 — Sum of cubic roots
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ − 5x² + 6x = 0</div>`,
+      q:'What is the sum of all real solutions?',
+      o:['A) 1','B) 5','C) 6','D) 10'],
+      a:1,
+      explain:{
+        why_correct:'<em>x</em> ortak çarpan: <em>x(x² − 5x + 6) = x(x − 2)(x − 3) = 0</em> → <em>x = 0, 2, 3</em>. Toplam: <em>5</em>. Cevap: B.\n\nVieta (kübik için): toplam = <em>−b/a = 5/1 = 5</em> ✓.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'cubic equation',pos:'n.',tr:'kübik denklem'},
+          {en:'factor out x',pos:'phr.',tr:'x ortak çarpan al'},
+          {en:'three real roots',pos:'phr.',tr:'üç gerçek kök'},
+          {en:'Vieta for cubic',pos:'phr.',tr:'kübik için Vieta'},
+          {en:'sum equals negative b over a',pos:'phr.',tr:'toplam = −b/a'},
+        ],
+        rule:'<strong>Kübik Vieta:</strong> <em>ax³ + bx² + cx + d = 0</em> için kökler toplamı = <em>−b/a</em>. Quadratic ile aynı yapı.'
+      }
+    },
+    // Q9 — Rational expression simplification
+    {
+      k:'Advanced Math',
+      p:`Consider the expression (x² − 9)⁄(x − 3) for x ≠ 3.`,
+      q:'Which expression is equivalent?',
+      o:['A) x + 3','B) x − 3','C) x² − 9','D) x + 9'],
+      a:0,
+      explain:{
+        why_correct:'<em>x² − 9 = (x − 3)(x + 3)</em>. Sadeleş: <em>(x − 3)(x + 3) / (x − 3) = x + 3</em> (x ≠ 3 koşulu altında). Cevap: A.',
+        why_wrong:'<strong>B</strong> aynı faktör. <strong>C</strong> sadeleşmemiş orijinal. <strong>D</strong> hesap hatası.',
+        vocab:[
+          {en:'rational expression',pos:'n.',tr:'rasyonel ifade'},
+          {en:'simplify',pos:'v.',tr:'sadeleştir'},
+          {en:'cancel common factor',pos:'phr.',tr:'ortak faktörü sadeleştir'},
+          {en:'restricted domain',pos:'n.',tr:'kısıtlı tanım'},
+          {en:'difference of squares',pos:'n.',tr:'iki kare farkı'},
+        ],
+        rule:'Rasyonel ifade sadeleştirme: pay ve paydayı faktörle, ortak faktörü sadeleş. <strong>Tanım kısıtını koru</strong> (orijinal payda sıfır olamaz).'
+      }
+    },
+    // Q10 — Solve by grouping
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ + 2x² − x − 2 = 0</div>`,
+      q:'How many distinct real solutions does the equation have?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:2,
+      explain:{
+        why_correct:'<mark class="hl-key">Gruplama</mark>: <em>x²(x + 2) − (x + 2) = (x + 2)(x² − 1) = (x + 2)(x − 1)(x + 1) = 0</em>. Kökler: <em>x = −2, 1, −1</em>. Üç distinct. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> faktörleme tamamlanmamış. <strong>D</strong> derece 3 üstü.',
+        vocab:[
+          {en:'factor by grouping',pos:'phr.',tr:'gruplayarak faktör'},
+          {en:'common factor in groups',pos:'phr.',tr:'gruplarda ortak faktör'},
+          {en:'difference of squares',pos:'n.',tr:'iki kare farkı'},
+          {en:'four-term polynomial',pos:'phr.',tr:'dört terimli polinom'},
+          {en:'split and factor',pos:'phr.',tr:'ayır ve faktör'},
+        ],
+        rule:'<strong>Grouping:</strong> 4 terimli polinomu 2-2 grupla. Her gruptan ortak faktör al, sonra büyük ortak faktörü çıkar.'
+      }
+    },
+    // Q11 — Sum of cubes
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ − 27 = 0</div>`,
+      q:'How many distinct real solutions does the equation have?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:0,
+      explain:{
+        why_correct:'Faktör: <em>(x − 3)(x² + 3x + 9) = 0</em>. Birinci: <em>x = 3</em>. İkinci: <em>D = 9 − 36 = −27 < 0</em> → reel kök yok. <strong>Tek reel çözüm</strong>. Cevap: A.',
+        why_wrong:'<strong>B, C, D</strong> kompleks kökleri reel sanma.',
+        vocab:[
+          {en:'difference of cubes',pos:'n.',tr:'iki küp farkı'},
+          {en:'irreducible quadratic',pos:'phr.',tr:'indirgenemez quadratic'},
+          {en:'complex conjugate roots',pos:'phr.',tr:'kompleks eşlenik kökler'},
+          {en:'single real solution',pos:'phr.',tr:'tek gerçek çözüm'},
+          {en:'check discriminant',pos:'phr.',tr:'diskriminantı kontrol et'},
+        ],
+        rule:'<em>a³ − b³ = (a − b)(a² + ab + b²)</em>. Quadratic kısmın diskriminantını kontrol — <strong>genelde negatif</strong> (kompleks kökler).'
+      }
+    },
+    // Q12 — Two radicals equation
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√(x + 5) − √x = 1</div>`,
+      q:'What is the value of x?',
+      o:['A) 1','B) 4','C) 9','D) 16'],
+      a:1,
+      explain:{
+        why_correct:'İzole: <em>√(x + 5) = √x + 1</em>. Kareyi al: <em>x + 5 = x + 2√x + 1</em> → <em>4 = 2√x</em> → <em>√x = 2</em> → <em>x = 4</em>. Cevap: B.\n\nDoğrulama: <em>√9 − √4 = 3 − 2 = 1</em> ✓.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'two radicals',pos:'phr.',tr:'iki kök'},
+          {en:'isolate first',pos:'phr.',tr:'önce yalıt'},
+          {en:'square both sides',pos:'phr.',tr:'iki tarafın karesini al'},
+          {en:'cross term',pos:'n.',tr:'çapraz terim'},
+          {en:'second square',pos:'phr.',tr:'ikinci kare alma'},
+        ],
+        rule:'İki köklü denklem: önce bir kökü yalıt, sonra kareyi al. Çapraz terim <em>2√x</em> kalabilir; <strong>tekrar yalıt ve karele</strong>.'
+      }
+    },
+    // Q13 — Radical inequality
+    {
+      k:'Advanced Math',
+      p:`Consider the inequality:
+<div class="math-block">√x > 3</div>`,
+      q:'What is the smallest integer value of x that satisfies the inequality?',
+      o:['A) 3','B) 9','C) 10','D) 12'],
+      a:2,
+      explain:{
+        why_correct:'Kareyi al (pozitif): <em>x > 9</em>. <em>x ≥ 0</em> zaten gerek. En küçük tamsayı <em>x > 9</em>: <em>10</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> 3 < 9. <strong>B</strong> √9 = 3, > değil. <strong>D</strong> en küçük değil.',
+        vocab:[
+          {en:'radical inequality',pos:'n.',tr:'köklü eşitsizlik'},
+          {en:'preserve direction',pos:'phr.',tr:'yönü koru'},
+          {en:'positive domain',pos:'n.',tr:'pozitif tanım'},
+          {en:'smallest integer',pos:'n.',tr:'en küçük tamsayı'},
+          {en:'strict comparison',pos:'phr.',tr:'kesin karşılaştırma'},
+        ],
+        rule:'<em>√x > k</em> (k pozitif): <em>x > k²</em>. <em>√x < k</em>: <em>0 ≤ x < k²</em>. Strict eşitsizlik <em>x ≠ k²</em>.'
+      }
+    },
+    // Q14 — Radical with addition
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√(x + 3) + 2 = 5</div>`,
+      q:'What is the value of x?',
+      o:['A) 2','B) 3','C) 4','D) 6'],
+      a:3,
+      explain:{
+        why_correct:'İzole: <em>√(x + 3) = 3</em>. Kareyi al: <em>x + 3 = 9</em> → <em>x = 6</em>. Cevap: D.',
+        why_wrong:'<strong>A, B, C</strong> izolasyon veya hesap hataları.',
+        vocab:[
+          {en:'isolate radical first',pos:'phr.',tr:'önce kökü yalıt'},
+          {en:'subtract constant',pos:'phr.',tr:'sabiti çıkar'},
+          {en:'then square',pos:'phr.',tr:'sonra karele'},
+          {en:'one-step solve',pos:'phr.',tr:'tek aşama çöz'},
+          {en:'verify in original',pos:'phr.',tr:'orijinalde doğrula'},
+        ],
+        rule:'Köklü denklem standard: <strong>(1) kökü yalıt → (2) karele → (3) çöz → (4) doğrula</strong>.'
+      }
+    },
+    // Q15 — Rational exponent equation
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x^(2⁄3) = 9</div>`,
+      q:'What is the value of x?',
+      o:['A) 3','B) 9','C) 27','D) 81'],
+      a:2,
+      explain:{
+        why_correct:'İki tarafı <em>(3/2)</em> kuvvetine yükselt: <em>x = 9^(3/2) = (√9)³ = 3³ = 27</em>. Cevap: C.\n\nDoğrulama: <em>27^(2/3) = (∛27)² = 3² = 9</em> ✓.',
+        why_wrong:'<strong>A</strong> ∛9 ya da rastgele. <strong>B</strong> verilen değer. <strong>D</strong> 9² hatası.',
+        vocab:[
+          {en:'rational exponent',pos:'n.',tr:'rasyonel üs'},
+          {en:'inverse power',pos:'n.',tr:'ters kuvvet'},
+          {en:'reciprocal exponent',pos:'n.',tr:'ters üs'},
+          {en:'undo by reciprocal',pos:'phr.',tr:'tersle geri al'},
+          {en:'cancel exponents',pos:'phr.',tr:'üsleri sadeleş'},
+        ],
+        rule:'<em>x^(m/n) = a</em>: iki tarafı <em>(n/m)</em>’ye yükselt. <em>x = a^(n/m)</em>. Üsler tersine işler.'
+      }
+    },
+    // Q16 — Different bases
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">4ˣ = 8</div>`,
+      q:'What is the value of x?',
+      o:['A) 1','B) 3⁄2','C) 2','D) 3'],
+      a:1,
+      explain:{
+        why_correct:'Aynı taban: <em>4 = 2², 8 = 2³</em>. <em>(2²)ˣ = 2³</em> → <em>2^(2x) = 2³</em> → <em>2x = 3</em> → <em>x = 3/2</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> rastgele. <strong>C</strong> üs eşitleme yanlış. <strong>D</strong> üs ifadesini doğrudan kopyalama.',
+        vocab:[
+          {en:'common base',pos:'n.',tr:'ortak taban'},
+          {en:'rewrite both sides',pos:'phr.',tr:'iki tarafı yeniden yaz'},
+          {en:'power of a power',pos:'phr.',tr:'kuvvetin kuvveti'},
+          {en:'multiply exponents',pos:'phr.',tr:'üsleri çarp'},
+          {en:'careful conversion',pos:'phr.',tr:'dikkatli dönüşüm'},
+        ],
+        rule:'Farklı tabanlar: <strong>ortak bir tabana çevir</strong>. <em>(bᵐ)ⁿ = b^(mn)</em>. Üsler eşitse: <em>(2²)ˣ = 2^(2x)</em>.'
+      }
+    },
+    // Q17 — Polynomial identity
+    {
+      k:'Advanced Math',
+      p:`The expression (x + a)(x + 4) is equivalent to x² + 7x + 12, where a is a constant.`,
+      q:'What is the value of a?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:2,
+      explain:{
+        why_correct:'<em>(x + a)(x + 4) = x² + (a + 4)x + 4a</em>. Eşitle: <em>a + 4 = 7</em> → <em>a = 3</em>. Doğrulama: <em>4a = 12</em> ✓. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'polynomial identity',pos:'n.',tr:'polinom özdeşliği'},
+          {en:'equivalent expressions',pos:'phr.',tr:'eşdeğer ifadeler'},
+          {en:'matching coefficients',pos:'phr.',tr:'katsayı eşleştirme'},
+          {en:'expand and compare',pos:'phr.',tr:'aç ve karşılaştır'},
+          {en:'verify both conditions',pos:'phr.',tr:'iki koşulu doğrula'},
+        ],
+        rule:'<strong>Polynomial identity:</strong> İki ifade eşit ⇔ <strong>her terim için katsayılar eşit</strong>. Aç ve karşılaştır.'
+      }
+    },
+    // Q18 — Rational root
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = 2x³ − 3x² − 11x + 6.`,
+      q:'Which of the following is a real root of p(x)?',
+      o:['A) 1','B) 2','C) 3','D) 6'],
+      a:2,
+      explain:{
+        why_correct:'Test: <em>p(3) = 54 − 27 − 33 + 6 = 0</em> ✓. <em>x = 3</em> kök. Cevap: C.\n\nRational Root Theorem: kökler ±(d’nin böleni)/(a’nın böleni) arasında. Burada 3 işe yarıyor.',
+        why_wrong:'<strong>A</strong> p(1) = 2 − 3 − 11 + 6 = −6 ≠ 0. <strong>B</strong> p(2) = 16 − 12 − 22 + 6 = −12. <strong>D</strong> p(6) çok büyük.',
+        vocab:[
+          {en:'rational root',pos:'n.',tr:'rasyonel kök'},
+          {en:'rational root theorem',pos:'n.',tr:'rasyonel kök teoremi'},
+          {en:'plug and test',pos:'phr.',tr:'yerleştir ve test et'},
+          {en:'integer candidate',pos:'n.',tr:'tamsayı aday'},
+          {en:'divisor of constant',pos:'phr.',tr:'sabit terimin böleni'},
+        ],
+        rule:'<strong>Rational Root Theorem:</strong> Olası rasyonel kökler <em>±(d’nin böleni) / (a’nın böleni)</em>. Adayları test et: <em>p(aday) = 0</em>?'
+      }
+    },
+    // Q19 — Sum of roots from Vieta
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">x³ − 6x² + 11x − 6 = 0</div>`,
+      q:'What is the sum of all real solutions?',
+      o:['A) 3','B) 6','C) 11','D) 12'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Kübik Vieta</mark>: kökler toplamı = <em>−b/a = 6/1 = 6</em>. Cevap: B.\n\nDoğrulama: faktör <em>(x − 1)(x − 2)(x − 3) = 0</em>, kökler 1, 2, 3, toplam 6 ✓.',
+        why_wrong:'<strong>A</strong> büyük kök. <strong>C</strong> c değeri. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'cubic Vieta',pos:'phr.',tr:'kübik Vieta'},
+          {en:'sum of all roots',pos:'phr.',tr:'tüm köklerin toplamı'},
+          {en:'avoid factoring',pos:'phr.',tr:'faktörlemeden kaçın'},
+          {en:'shortcut formula',pos:'n.',tr:'kısayol formül'},
+          {en:'higher-degree Vieta',pos:'phr.',tr:'yüksek dereceli Vieta'},
+        ],
+        rule:'<strong>Kübik için Vieta:</strong> <em>ax³ + bx² + cx + d = 0</em>. Kökler toplamı = <em>−b/a</em>, üçlü çarpım = <em>−d/a</em>.'
+      }
+    },
+    // Q20 — Composition with radical
+    {
+      k:'Advanced Math',
+      p:`The functions f and g are defined by f(x) = √x and g(x) = x + 5.`,
+      q:'What is the value of f(g(4))?',
+      o:['A) 2','B) 3','C) 4','D) 5'],
+      a:1,
+      explain:{
+        why_correct:'İçten dışa: <em>g(4) = 9</em>. <em>f(9) = √9 = 3</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> sıra veya hesap hataları.',
+        vocab:[
+          {en:'composition with radical',pos:'phr.',tr:'köklü kompozisyon'},
+          {en:'inside-out',pos:'phr.',tr:'içten dışa'},
+          {en:'square root output',pos:'n.',tr:'karekök çıktı'},
+          {en:'positive square root',pos:'n.',tr:'pozitif karekök'},
+          {en:'evaluate step by step',pos:'phr.',tr:'adım adım hesapla'},
+        ],
+        rule:'<em>f(g(x))</em>: önce g hesapla, sonucu f’ye yerleştir. Köklü fonksiyon: pozitif kök.'
+      }
+    },
+    // Q21 — Time to reach value
+    {
+      k:'Advanced Math',
+      p:`A bacterial population is modeled by P(t) = 100 · 2ᵗ, where t is the time in hours.`,
+      q:'After how many hours will the population reach 800?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:2,
+      explain:{
+        why_correct:'<em>100 · 2ᵗ = 800</em> → <em>2ᵗ = 8 = 2³</em> → <em>t = 3</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> üs hataları.',
+        vocab:[
+          {en:'time to reach',pos:'phr.',tr:'-e ulaşma zamanı'},
+          {en:'target value',pos:'n.',tr:'hedef değer'},
+          {en:'isolate exponent',pos:'phr.',tr:'üssü yalıt'},
+          {en:'rewrite right side',pos:'phr.',tr:'sağ tarafı yeniden yaz'},
+          {en:'matching exponents',pos:'phr.',tr:'üs eşleme'},
+        ],
+        rule:'"Hangi t değerinde değer hedefe ulaşır?" tipi sorular: denkelm kur, üstel ifadeyi yalıt, eşit tabanla üsleri eşitle.'
+      }
+    },
+    // Q22 — Half-life threshold
+    {
+      k:'Advanced Math',
+      p:`A radioactive substance has a half-life of 4 years. The initial mass is 80 grams.`,
+      q:'After how many years will the mass be 5 grams?',
+      o:['A) 4','B) 8','C) 12','D) 16'],
+      a:3,
+      explain:{
+        why_correct:'<em>80/5 = 16 = 2⁴</em>. 4 yarılanma gerekli. <em>4 × 4 = 16</em> yıl. Cevap: D.\n\nDoğrulama: <em>80 → 40 → 20 → 10 → 5</em> (4 adım).',
+        why_wrong:'<strong>A, B, C</strong> yarılanma sayısı yanlış.',
+        vocab:[
+          {en:'half-life threshold',pos:'phr.',tr:'yarılanma eşiği'},
+          {en:'count halvings',pos:'phr.',tr:'yarılanma say'},
+          {en:'ratio of initial',pos:'phr.',tr:'başlangıç oranı'},
+          {en:'multiple half-lives',pos:'phr.',tr:'çoklu yarılanma'},
+          {en:'total time elapsed',pos:'phr.',tr:'toplam geçen zaman'},
+        ],
+        rule:'Half-life threshold problem: oran <em>(initial/final)</em> = 2’nin kaçıncı kuvveti? O sayı kadar yarılanma süresi.'
+      }
+    },
+    // Q23 — Radical with coefficient
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">2√(x − 1) + 3 = 11</div>`,
+      q:'What is the value of x?',
+      o:['A) 5','B) 9','C) 13','D) 17'],
+      a:3,
+      explain:{
+        why_correct:'İzole: <em>2√(x − 1) = 8</em> → <em>√(x − 1) = 4</em>. Kareyi al: <em>x − 1 = 16</em> → <em>x = 17</em>. Cevap: D.\n\nDoğrulama: <em>2√16 + 3 = 8 + 3 = 11</em> ✓.',
+        why_wrong:'<strong>A, B, C</strong> izolasyon veya hesap hataları.',
+        vocab:[
+          {en:'isolate radical',pos:'phr.',tr:'kökü yalıt'},
+          {en:'subtract then divide',pos:'phr.',tr:'önce çıkar sonra böl'},
+          {en:'multi-step radical',pos:'phr.',tr:'çok aşamalı köklü'},
+          {en:'undo operations',pos:'phr.',tr:'işlemleri geri al'},
+          {en:'reverse order',pos:'phr.',tr:'ters sıra'},
+        ],
+        rule:'Çok aşamalı köklü: önce sabit terimi çıkar, sonra katsayıya böl, sonra kareyi al. PEMDAS’ı <strong>tersinden uygula</strong>.'
+      }
+    },
+    // Q24 — Polynomial inverse problem
+    {
+      k:'Advanced Math',
+      p:`A polynomial p(x) of degree 3 has roots 1, −2, and 5, and passes through the point (0, 10).`,
+      q:'What is the value of p(2)?',
+      o:['A) −12','B) −6','C) 6','D) 12'],
+      a:0,
+      explain:{
+        why_correct:'<em>p(x) = a(x − 1)(x + 2)(x − 5)</em>. (0, 10): <em>a(−1)(2)(−5) = 10a = 10</em> → <em>a = 1</em>. <em>p(2) = 1 · (1)(4)(−3) = −12</em>. Cevap: A.',
+        why_wrong:'<strong>B, C, D</strong> a değeri veya işaret hataları.',
+        vocab:[
+          {en:'roots and point',pos:'phr.',tr:'kökler ve nokta'},
+          {en:'find leading coefficient',pos:'phr.',tr:'baş katsayıyı bul'},
+          {en:'fully determined polynomial',pos:'phr.',tr:'tamamen belirlenmiş polinom'},
+          {en:'evaluate at given x',pos:'phr.',tr:'verilen x’te hesapla'},
+          {en:'sign in each factor',pos:'phr.',tr:'her faktördeki işaret'},
+        ],
+        rule:'Kökler + bir nokta verili polinom: <em>p(x) = a(x − r₁)...(x − rₙ)</em>. Noktayla <em>a</em>’yı bul. Sonra istenen <em>x</em>’te hesapla.'
+      }
+    },
+    // Q25 — Exponent simplification
+    {
+      k:'Advanced Math',
+      p:`Consider the expression (2x³)² · (x²)³, where x ≠ 0.`,
+      q:'Which is equivalent?',
+      o:['A) 4x⁶','B) 4x⁹','C) 4x¹²','D) 8x¹²'],
+      a:2,
+      explain:{
+        why_correct:'<em>(2x³)² = 4x⁶</em>. <em>(x²)³ = x⁶</em>. Çarp: <em>4x⁶ · x⁶ = 4x¹²</em>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> üs toplama yanlış. <strong>D</strong> 4 yerine 8 (2³ hatası).',
+        vocab:[
+          {en:'exponent rules',pos:'n.',tr:'üs kuralları'},
+          {en:'power of a power',pos:'phr.',tr:'kuvvetin kuvveti'},
+          {en:'multiply same base',pos:'phr.',tr:'aynı tabanı çarp'},
+          {en:'add exponents',pos:'phr.',tr:'üsleri topla'},
+          {en:'distribute exponent',pos:'phr.',tr:'üssü dağıt'},
+        ],
+        rule:'<em>(aᵐ)ⁿ = a^(mn)</em>, <em>aᵐ · aⁿ = a^(m+n)</em>. <em>(ab)ⁿ = aⁿbⁿ</em>. Sırayla uygula, sabitleri ayrıca çarp.'
+      }
+    },
+    // Q26 — Decay threshold
+    {
+      k:'Advanced Math',
+      p:`A substance with a half-life of 5 hours has an initial mass of 200 grams.`,
+      q:'After how many hours will the mass first reach 25 grams?',
+      o:['A) 5','B) 10','C) 15','D) 20'],
+      a:2,
+      explain:{
+        why_correct:'<em>200/25 = 8 = 2³</em>. 3 yarılanma. <em>3 × 5 = 15</em> saat. Cevap: C.\n\nDoğrulama: <em>200 → 100 → 50 → 25</em> (3 adım).',
+        why_wrong:'<strong>A</strong> 1 yarılanma. <strong>B</strong> 2 yarılanma. <strong>D</strong> 4 yarılanma.',
+        vocab:[
+          {en:'decay reach',pos:'phr.',tr:'azalma ulaşma'},
+          {en:'count halvings',pos:'phr.',tr:'yarılanma say'},
+          {en:'first reach value',pos:'phr.',tr:'ilk değere ulaşma'},
+          {en:'ratio method',pos:'n.',tr:'oran yöntemi'},
+          {en:'multiply by period',pos:'phr.',tr:'periyot ile çarp'},
+        ],
+        rule:'Decay threshold: <em>(initial/final) = 2ⁿ</em>’den <em>n</em> bul, sonra <em>n × half-life</em>.'
+      }
+    },
+    // Q27 — Volume polynomial application
+    {
+      k:'Advanced Math',
+      p:`A rectangular box has dimensions x, x + 1, and x + 2 centimeters, where x is a positive integer. The volume of the box is 24 cubic centimeters.`,
+      q:'What is the value of x?',
+      o:['A) 1','B) 2','C) 3','D) 4'],
+      a:1,
+      explain:{
+        why_correct:'<em>x(x + 1)(x + 2) = 24</em>. Test <em>x = 2</em>: <em>2 · 3 · 4 = 24</em> ✓. Cevap: B.',
+        why_wrong:'<strong>A</strong> <em>1·2·3 = 6</em>. <strong>C</strong> <em>3·4·5 = 60</em>. <strong>D</strong> <em>4·5·6 = 120</em>.',
+        vocab:[
+          {en:'rectangular box',pos:'n.',tr:'dikdörtgenler prizması'},
+          {en:'consecutive integers',pos:'phr.',tr:'ardışık tamsayılar'},
+          {en:'volume formula',pos:'n.',tr:'hacim formülü'},
+          {en:'test values',pos:'phr.',tr:'değerleri test et'},
+          {en:'positive integer constraint',pos:'phr.',tr:'pozitif tamsayı kısıtı'},
+        ],
+        rule:'Yüksek dereceli denklem + tamsayı kısıtı: aday tamsayıları test et. <strong>Ardışık tamsayı çarpımları</strong> hızlı tanınır (özellikle küçük değerler).'
+      }
+    }
+  ]
+},
+{
+  name: 'Bonus',
+  subtitle: 'Advanced Math: Exp/Poly/Radical. 12 yaygın tuzak ve zor word problems.',
+  questions: [
+    // B1 — Domain of √(−x)
+    {
+      k:'Advanced Math',
+      p:`Consider the expression √(−x).`,
+      q:'For which values of x does this expression represent a real number?',
+      o:['A) x ≥ 0','B) x ≤ 0','C) x > 0','D) All real x'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Tuzak: argument koşulu</mark>. Karekök reel olması için <em>argument ≥ 0</em>: <em>−x ≥ 0</em> → <em>x ≤ 0</em>. Cevap: B.\n\nÖrnek: <em>x = −4</em>: <em>√(−(−4)) = √4 = 2</em> reel. <em>x = 4</em>: <em>√(−4)</em> reel değil.',
+        why_wrong:'<strong>A</strong> "x pozitif" reflex, ama argument <em>−x</em>. <strong>C</strong> 0 dahil olmalı (<em>√0 = 0</em> reel). <strong>D</strong> negatif sayının karekökü reel değil.',
+        vocab:[
+          {en:'argument of radical',pos:'n.',tr:'kökün argümanı'},
+          {en:'real number',pos:'n.',tr:'reel sayı'},
+          {en:'non-negative constraint',pos:'phr.',tr:'non-negatif kısıt'},
+          {en:'domain restriction',pos:'n.',tr:'tanım kısıtı'},
+          {en:'careful sign analysis',pos:'phr.',tr:'dikkatli işaret analizi'},
+        ],
+        rule:'<strong>Karekök tanım tuzağı:</strong> <em>√(expression) reel</em> ⇔ <em>expression ≥ 0</em>. <strong>x</strong> değil <strong>argument</strong> non-negatif olmalı.'
+      }
+    },
+    // B2 — Exponent multiply vs add
+    {
+      k:'Advanced Math',
+      p:`Consider the expression 2³ · 2⁴.`,
+      q:'Which expression is equivalent?',
+      o:['A) 2⁷','B) 2¹²','C) 4⁷','D) 8⁷'],
+      a:0,
+      explain:{
+        why_correct:'<mark class="hl-key">Aynı taban çarpım</mark>: <em>aᵐ · aⁿ = a^(m+n)</em>. <em>2³ · 2⁴ = 2⁷</em>. Cevap: A.\n\nDoğrulama: <em>8 · 16 = 128 = 2⁷</em> ✓.',
+        why_wrong:'<strong>B</strong> üs çarpma hatası (<em>3 · 4</em>). <strong>C, D</strong> tabanı da çarpma hatası.',
+        vocab:[
+          {en:'add exponents',pos:'phr.',tr:'üsleri topla'},
+          {en:'multiply exponents',pos:'phr.',tr:'üsleri çarp'},
+          {en:'same base',pos:'phr.',tr:'aynı taban'},
+          {en:'power of a power',pos:'phr.',tr:'kuvvetin kuvveti'},
+          {en:'exponent rule trap',pos:'phr.',tr:'üs kuralı tuzağı'},
+        ],
+        rule:'<strong>Üs kuralları tuzağı:</strong> <em>aᵐ · aⁿ = a^(m+n)</em> (TOPLA). <em>(aᵐ)ⁿ = a^(mn)</em> (ÇARP). <em>aᵐ · bᵐ = (ab)ᵐ</em> (tabanlar çarpılır). Karıştırma!'
+      }
+    },
+    // B3 — Half-life formula trap
+    {
+      k:'Advanced Math',
+      p:`A radioactive substance with a half-life of 5 years has an initial mass of 80 grams.`,
+      q:'What is the mass remaining after 15 years?',
+      o:['A) 5','B) 10','C) 16','D) 25'],
+      a:1,
+      explain:{
+        why_correct:'<em>15 yıl = 3 yarılanma periyodu</em>. <em>80 · (1/2)³ = 80/8 = 10</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> formül yanlış uygulama. <strong>C</strong> lineer (80 − 15·k) hatası. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'half-life formula',pos:'n.',tr:'yarılanma formülü'},
+          {en:'exponent in formula',pos:'phr.',tr:'formüldeki üs'},
+          {en:'time over period',pos:'phr.',tr:'zaman bölü periyot'},
+          {en:'exponential not linear',pos:'phr.',tr:'üstel, lineer değil'},
+          {en:'periodic decay',pos:'n.',tr:'periyodik azalma'},
+        ],
+        rule:'<strong>Half-life tuzağı:</strong> <em>M(t) = M₀ · (1/2)^(t/h)</em>, <strong>üs = t/h</strong> (zaman bölü yarılanma). Üstel davranır, lineer değil.'
+      }
+    },
+    // B4 — Growth rate identification
+    {
+      k:'Advanced Math',
+      p:`A function is defined by y = 50 · (1.03)ˣ.`,
+      q:'Which statement correctly describes the function?',
+      o:['A) Exponential growth at a rate of 3%','B) Exponential growth at a rate of 103%','C) Exponential decay at a rate of 3%','D) Exponential decay at a rate of 97%'],
+      a:0,
+      explain:{
+        why_correct:'<em>1.03 > 1</em>: growth. Rate = <em>1.03 − 1 = 0.03 = 3%</em>. Cevap: A.\n\n<strong>Mantık:</strong> Her birim için %100’ü korunur + %3 büyür → çarpan 1.03.',
+        why_wrong:'<strong>B</strong> tüm 1.03 büyüme oranı sanma. <strong>C, D</strong> growth’u decay sanma (1.03 > 1).',
+        vocab:[
+          {en:'growth rate',pos:'n.',tr:'büyüme oranı'},
+          {en:'multiplier vs rate',pos:'phr.',tr:'çarpan vs oran'},
+          {en:'percent increase',pos:'n.',tr:'yüzdesel artış'},
+          {en:'subtract 1',pos:'phr.',tr:'1’i çıkar'},
+          {en:'convert to percent',pos:'phr.',tr:'yüzdeye çevir'},
+        ],
+        rule:'<strong>Rate tuzağı:</strong> <em>y = a · bˣ</em>’de oran = <em>(b − 1)</em> growth için, <em>(1 − b)</em> decay için. Çarpan <em>b</em>’yi direkt oran sanma.'
+      }
+    },
+    // B5 — √x = negative (no solution)
+    {
+      k:'Advanced Math',
+      p:`Consider the equation:
+<div class="math-block">√x = −3</div>`,
+      q:'What is the value of x?',
+      o:['A) 9','B) −9','C) 3','D) No solution'],
+      a:3,
+      explain:{
+        why_correct:'<mark class="hl-key">Karekök daima ≥ 0</mark>. <em>√x</em> hiçbir zaman negatif olamaz, dolayısıyla <em>√x = −3</em> denklemi <strong>çözümsüz</strong>. Cevap: D.\n\n<strong>Tuzak:</strong> Kareyi alma <em>x = 9</em> verir ama bu <strong>yabancı kök</strong> — orijinalde <em>√9 = 3 ≠ −3</em>.',
+        why_wrong:'<strong>A</strong> kareyi alarak elde edilen yabancı kök. <strong>B</strong> negatif sayı karekök tanım dışı. <strong>C</strong> rastgele.',
+        vocab:[
+          {en:'principal root',pos:'n.',tr:'baş kök'},
+          {en:'non-negative output',pos:'phr.',tr:'non-negatif çıktı'},
+          {en:'extraneous solution',pos:'n.',tr:'yabancı çözüm'},
+          {en:'no real solution',pos:'phr.',tr:'reel çözüm yok'},
+          {en:'principal vs general root',pos:'phr.',tr:'baş kök vs genel kök'},
+        ],
+        rule:'<strong>√x = negative tuzağı:</strong> Karekök daima <strong>≥ 0</strong> (principal root). <em>√x = negatif sayı</em> denkleminin <strong>çözümü yok</strong>. Kareyi almak yabancı kök üretir.'
+      }
+    },
+    // B6 — Cube root of negative
+    {
+      k:'Advanced Math',
+      p:`Consider the expression ∛(−27).`,
+      q:'What is its value?',
+      o:['A) Undefined','B) −3','C) 3','D) −27'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Küp kök tuzağı</mark>: <em>∛</em> negatif sayılarda tanımlıdır. <em>(−3)³ = −27</em>, dolayısıyla <em>∛(−27) = −3</em>. Cevap: B.\n\n<strong>Karekök vs küp kök:</strong> Karekök negatifte tanım dışı (reel değil); küp kök negatifte tanımlı.',
+        why_wrong:'<strong>A</strong> karekök gibi tanım dışı sanma. <strong>C</strong> işaret yanlış. <strong>D</strong> orijinal sayı.',
+        vocab:[
+          {en:'cube root',pos:'n.',tr:'küp kök'},
+          {en:'defined for negatives',pos:'phr.',tr:'negatifler için tanımlı'},
+          {en:'odd index root',pos:'phr.',tr:'tek dereceli kök'},
+          {en:'even vs odd index',pos:'phr.',tr:'çift vs tek derece'},
+          {en:'sign preserves',pos:'phr.',tr:'işaret korunur'},
+        ],
+        rule:'<strong>Kök derecesi tuzağı:</strong> <strong>Çift</strong> dereceli kök (√, ⁴√) sadece <em>non-negatif</em> tanımlı. <strong>Tek</strong> dereceli kök (∛, ⁵√) tüm reel sayılarda tanımlı.'
+      }
+    },
+    // B7 — Degree of polynomial product
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = (x² + 1)(x³ − 2x).`,
+      q:'What is the degree of p(x)?',
+      o:['A) 3','B) 5','C) 6','D) 8'],
+      a:1,
+      explain:{
+        why_correct:'Polinom çarpımında derece <strong>toplanır</strong>. <em>derece(2) + derece(3) = 5</em>. Cevap: B.\n\nDoğrulama: açılım <em>x⁵ − 2x³ + x³ − 2x = x⁵ − x³ − 2x</em>, derece 5 ✓.',
+        why_wrong:'<strong>A</strong> sadece ikinci faktör. <strong>C</strong> dereceleri çarpma hatası. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'product of polynomials',pos:'phr.',tr:'polinomların çarpımı'},
+          {en:'add degrees',pos:'phr.',tr:'dereceleri topla'},
+          {en:'leading term',pos:'n.',tr:'baş terim'},
+          {en:'expansion verification',pos:'phr.',tr:'açılım doğrulama'},
+          {en:'highest power',pos:'n.',tr:'en yüksek kuvvet'},
+        ],
+        rule:'<strong>Çarpım derecesi tuzağı:</strong> <em>derece(p · q) = derece(p) + derece(q)</em>. <strong>Topla</strong>, çarpma. Doğrulama: baş terimleri çarp.'
+      }
+    },
+    // B8 — Remainder theorem sign
+    {
+      k:'Advanced Math',
+      p:`Consider the polynomial p(x) = x² − 3x + 5.`,
+      q:'What is the remainder when p(x) is divided by (x + 2)?',
+      o:['A) 3','B) 5','C) 11','D) 15'],
+      a:3,
+      explain:{
+        why_correct:'<mark class="hl-key">İşaret tuzağı</mark>: <em>(x + 2) = (x − (−2))</em>. Remainder Theorem ile <em>p(−2)</em>: <em>4 + 6 + 5 = 15</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> <em>p(2) = 4 − 6 + 5 = 3</em> (işaret yanlış). <strong>B</strong> sabit terim. <strong>C</strong> hesap hatası.',
+        vocab:[
+          {en:'remainder theorem sign',pos:'phr.',tr:'kalan teoremi işareti'},
+          {en:'flip sign',pos:'phr.',tr:'işareti çevir'},
+          {en:'(x + a) means a = −a',pos:'phr.',tr:'(x + a) ise (x − (−a))'},
+          {en:'evaluate at opposite',pos:'phr.',tr:'zıt değerde hesapla'},
+          {en:'careful with parentheses',pos:'phr.',tr:'parantezlere dikkat'},
+        ],
+        rule:'<strong>RT işaret tuzağı:</strong> <em>p(x)/(x − a)</em>’nin kalanı = <em>p(a)</em>. <em>p(x)/(x + 2)</em>: <em>x + 2 = x − (−2)</em>, dolayısıyla <em>p(−2)</em> hesapla.'
+      }
+    },
+    // B9 — Domain of √(x − 4)
+    {
+      k:'Advanced Math',
+      p:`Consider the function f(x) = √(x − 4).`,
+      q:'For which values of x is f(x) defined as a real number?',
+      o:['A) x > 4','B) x ≥ 4','C) x ≤ 4','D) All real x'],
+      a:1,
+      explain:{
+        why_correct:'Kök argument ≥ 0: <em>x − 4 ≥ 0</em> → <em>x ≥ 4</em>. <em>= 4</em> dahil çünkü <em>√0 = 0</em> reel. Cevap: B.',
+        why_wrong:'<strong>A</strong> strict (= dahil değil) — ama <em>√0</em> tanımlı. <strong>C</strong> yön ters. <strong>D</strong> negatif argument reel olmaz.',
+        vocab:[
+          {en:'domain',pos:'n.',tr:'tanım kümesi'},
+          {en:'real-valued',pos:'adj.',tr:'reel değerli'},
+          {en:'include boundary',pos:'phr.',tr:'sınırı dahil et'},
+          {en:'argument constraint',pos:'phr.',tr:'argument kısıtı'},
+          {en:'inclusive inequality',pos:'phr.',tr:'içleyici eşitsizlik'},
+        ],
+        rule:'<strong>Karekök domain:</strong> <em>√(expression)</em> reel için <em>expression ≥ 0</em>. <strong>Sınır dahil</strong> (<em>√0 = 0</em>).'
+      }
+    },
+    // B10 — End behavior even + negative
+    {
+      k:'Advanced Math',
+      p:`A polynomial has even degree and a negative leading coefficient.`,
+      q:'Which statement correctly describes the end behavior?',
+      o:['A) Both ends point upward','B) Both ends point downward','C) Left end up, right end down','D) Left end down, right end up'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Tuzak: çift + negatif</mark>. Çift derece (genelde yukarı) + <strong>negatif baş katsayı</strong> = yansıma → her iki uç <strong>aşağı</strong>. Cevap: B.\n\nÖrnek: <em>y = −x²</em>: aşağı açılan parabol, iki uç aşağı.',
+        why_wrong:'<strong>A</strong> çift + pozitif. <strong>C</strong> tek + negatif. <strong>D</strong> tek + pozitif.',
+        vocab:[
+          {en:'even degree',pos:'phr.',tr:'çift derece'},
+          {en:'negative leading',pos:'phr.',tr:'negatif baş katsayı'},
+          {en:'reflection',pos:'n.',tr:'yansıma'},
+          {en:'symmetric ends',pos:'phr.',tr:'simetrik uçlar'},
+          {en:'sign reversal',pos:'n.',tr:'işaret tersleme'},
+        ],
+        rule:'<strong>End behavior tuzağı:</strong> Çift derece = iki uç aynı yön (pozitif → ↑↑, negatif → ↓↓). Tek derece = iki uç zıt yön. <strong>Baş katsayı işareti</strong> tüm yönü tersine çevirir.'
+      }
+    },
+    // B11 — Multiplicity at root behavior
+    {
+      k:'Advanced Math',
+      p:`A polynomial is defined by p(x) = (x − 2)²(x + 3).`,
+      q:'At which x-intercept does the graph cross the x-axis (rather than just touch it)?',
+      o:['A) x = 2 only','B) x = −3 only','C) Both x = 2 and x = −3','D) Neither'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Multiplicity davranışı</mark>: <em>x = 2</em> multiplicity 2 (çift) → grafik <strong>değer ve döner</strong> (touches). <em>x = −3</em> multiplicity 1 (tek) → grafik <strong>geçer</strong> (crosses). Cevap: B.',
+        why_wrong:'<strong>A</strong> çift multiplicity geçmez, sadece değer. <strong>C</strong> sadece tek multiplicity geçer. <strong>D</strong> en az bir tane geçer.',
+        vocab:[
+          {en:'multiplicity behavior',pos:'phr.',tr:'multiplicity davranışı'},
+          {en:'cross vs touch',pos:'phr.',tr:'geçer vs değer'},
+          {en:'odd multiplicity crosses',pos:'phr.',tr:'tek multiplicity geçer'},
+          {en:'even multiplicity touches',pos:'phr.',tr:'çift multiplicity değer'},
+          {en:'graph behavior at root',pos:'phr.',tr:'kökte grafik davranışı'},
+        ],
+        rule:'<strong>Multiplicity tuzağı:</strong> Kökte multiplicity <strong>tek</strong> → grafik x-eksenini <strong>geçer</strong>. <strong>Çift</strong> → x-eksenine <strong>değer ve döner</strong> (parabola davranışı).'
+      }
+    },
+    // B12 — Rational exponent meaning
+    {
+      k:'Advanced Math',
+      p:`Which expression is equivalent to x^(1⁄2)?`,
+      q:'',
+      o:['A) √x','B) 1⁄(2x)','C) x⁄2','D) x²'],
+      a:0,
+      explain:{
+        why_correct:'<mark class="hl-key">Rasyonel üs tuzağı</mark>: <em>x^(1/n) = ⁿ√x</em>. <em>x^(1/2) = √x</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> 1/2’yi bölme sanma (üs değil). <strong>C</strong> x’i 2’ye bölme. <strong>D</strong> üssü tersine alma.',
+        vocab:[
+          {en:'rational exponent',pos:'n.',tr:'rasyonel üs'},
+          {en:'fractional exponent',pos:'n.',tr:'kesirli üs'},
+          {en:'root form',pos:'n.',tr:'kök formu'},
+          {en:'misread as division',pos:'phr.',tr:'bölme olarak yanlış okuma'},
+          {en:'principal square root',pos:'n.',tr:'baş karekök'},
+        ],
+        rule:'<strong>Rasyonel üs tuzağı:</strong> <em>x^(m/n) = ⁿ√(xᵐ) = (ⁿ√x)ᵐ</em>. <strong>Üs</strong>, bölme değil. <em>x^(1/2) = √x</em>, NOT <em>1/(2x)</em>.'
+      }
+    }
+  ]
+}
+];
+
+// ============= STATE =============
+let currentModule = 0;
+let currentQ = 0;
+let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
+let moduleCompleted = MODULES.map(() => false);
+
+// ============= HELPERS =============
+function getModuleStatus(idx){
+  const mod = MODULES[idx];
+  if(mod.questions.length === 0) return 'empty';
+  if(moduleCompleted[idx]) return 'complete';
+  const answered = answers[idx].filter(a => a !== null).length;
+  if(answered === 0) return 'untouched';
+  return 'in-progress';
+}
+function getModuleScore(idx){
+  let c = 0;
+  answers[idx].forEach((a,i)=>{ if(a === MODULES[idx].questions[i].a) c++ });
+  return c;
+}
+
+// ============= SPLASH RENDERER =============
+function renderSplash(){
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği henüz eklenmemiş modülleri splash’ta gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let badge = '';
+    if(status === 'complete'){
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      badge = `<span class="mc-status done">✓ ${sc}/${m.questions.length} · ${pct}%</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      badge = `<span class="mc-status progress">▶ ${ans}/${m.questions.length} devam</span>`;
+    }
+    return `<div class="module-card clickable" onclick="startModule(${i})">
+      <div class="mc-left">
+        <div class="mc-name">${m.name} ${badge}</div>
+        <div class="mc-desc">${m.subtitle}</div>
+      </div>
+      <div class="mc-meta"><div class="mc-q">${m.questions.length}</div><div>soru</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ============= NAVIGATION =============
+function startModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  // If already completed, show results
+  if(moduleCompleted[idx]){
+    showModuleResults();
+    return;
+  }
+  // Find first unanswered to resume, or start at 0
+  const firstUnanswered = answers[idx].findIndex(a => a === null);
+  currentQ = firstUnanswered === -1 ? 0 : firstUnanswered;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function goHome(){
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('splash').style.display='flex';
+  renderSplash();
+  window.scrollTo({top:0});
+}
+
+function quitToSplash(){
+  if(!confirm('Çıkmak istediğine emin misin? Tüm ilerlemen sıfırlanacak.')) return;
+  currentModule = 0; currentQ = 0;
+  answers = MODULES.map(m => new Array(m.questions.length).fill(null));
+  moduleCompleted = MODULES.map(() => false);
+  goHome();
+}
+
+function restartQuiz(){
+  if(!confirm('Bu modülü baştan çözmek istediğine emin misin?')) return;
+  answers[currentModule] = new Array(MODULES[currentModule].questions.length).fill(null);
+  moduleCompleted[currentModule] = false;
+  currentQ = 0;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const mod = MODULES[currentModule];
+  const q = mod.questions[currentQ];
+  const card = document.getElementById('qcard');
+  card.innerHTML = `
+    <div class="qtype">${q.k}</div>
+    <div class="passage">${q.p}</div>
+    ${q.data ? q.data : ''}
+    <div class="qstem">${q.q}</div>
+    <div class="opts">
+      ${q.o.map((opt,i)=>{
+        const letter = opt.substring(0,1);
+        const text = opt.substring(3);
+        const selected = answers[currentModule][currentQ]===i?'sel':'';
+        return `<button class="opt ${selected}" onclick="pickAnswer(${i})">
+          <span class="opt-letter">${letter}</span><span>${text}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('tbMeta').textContent = `${mod.name} · Day 4 Math EPR`;
+  document.getElementById('tbQnum').textContent = `${currentQ+1} / ${mod.questions.length}`;
+  document.getElementById('progFill').style.width = `${((currentQ+1)/mod.questions.length)*100}%`;
+  const dr = document.getElementById('dotRow');
+  dr.innerHTML = mod.questions.map((_,i)=>{
+    const cls = i===currentQ?'cur':(answers[currentModule][i]!==null?'ans':'');
+    return `<span class="dot ${cls}" onclick="goTo(${i})" title="Soru ${i+1}"></span>`;
+  }).join('');
+  document.getElementById('prevBtn').disabled = currentQ===0;
+  const isLast = currentQ===mod.questions.length-1;
+  document.getElementById('nextBtn').style.display = isLast?'none':'';
+  document.getElementById('submitBtn').style.display = isLast?'':'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  window.MODULES = MODULES;
+  window.currentModule = currentModule;
+  window.currentQ = currentQ;
+}
+function pickAnswer(i){ answers[currentModule][currentQ]=i; renderQuestion() }
+function goTo(i){ currentQ=i; renderQuestion() }
+function nextQ(){ if(currentQ<MODULES[currentModule].questions.length-1){ currentQ++; renderQuestion() } }
+function prevQ(){ if(currentQ>0){ currentQ--; renderQuestion() } }
+
+function submitModule(){
+  showModuleResults();
+}
+
+function showModuleResults(){
+  const mod = MODULES[currentModule];
+  let correct = 0;
+  answers[currentModule].forEach((a,i)=>{ if(a===mod.questions[i].a) correct++ });
+  const pct = mod.questions.length ? Math.round((correct/mod.questions.length)*100) : 0;
+
+  // Mark as completed if all answered
+  const allAnswered = answers[currentModule].every(a => a !== null);
+  if(allAnswered) moduleCompleted[currentModule] = true;
+
+  // Header
+  document.getElementById('resEyebrow').textContent = `${mod.name} · Detaylı Analiz`;
+  const titles = ['Module 1 Analizi', 'Module 2 Analizi', 'Bonus Analizi'];
+  document.getElementById('resTitle').textContent = titles[currentModule] || 'Modül Analizi';
+  document.getElementById('resSub').textContent = 'Aşağıdaki yanlışları tek tek aç, kuralları defterine geç';
+
+  // Module tabs
+  renderModuleTabs();
+
+  // Score card
+  document.getElementById('scoreNum').textContent = correct;
+  document.getElementById('scoreDen').textContent = `/ ${mod.questions.length} doğru`;
+  document.getElementById('scorePct').textContent = pct+'%';
+  const msg = document.getElementById('scoreMsg');
+  if(pct>=80) msg.textContent='Bu modülde çok iyi bir performans gösterdin. Yine de yanlışlarını detaylı incele, küçük hatalar sınavda büyür.';
+  else if(pct>=60) msg.textContent='Ortalama bir sonuç. Aşağıdaki analizleri dikkatlice oku, hata günlüğüne yedi adım protokolüyle işle.';
+  else msg.textContent='Bu modülde daha çok pratik gerekiyor. Her yanlışı tek tek aç, kuralı kendi kelimelerinle defterine geçir.';
+
+  // Determine next button
+  const isLast = currentModule === MODULES.length - 1;
+  const nextHasQ = !isLast && MODULES[currentModule+1].questions.length > 0;
+  const primaryBtn = document.getElementById('resPrimaryBtn');
+  if(nextHasQ){
+    const nextNames = ['Module 2', 'Bonus'];
+    primaryBtn.textContent = `${nextNames[currentModule] || 'Sıradaki'} Modülüne Geç ›`;
+    primaryBtn.onclick = goToNextModule;
+    primaryBtn.style.display = '';
+  } else {
+    primaryBtn.textContent = 'Bu Modülü Baştan Çöz';
+    primaryBtn.onclick = restartQuiz;
+    primaryBtn.style.display = '';
+  }
+
+  renderModuleReview();
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderModuleTabs(){
+  const tabs = document.getElementById('moduleTabs');
+  tabs.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği yoksa hiç gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let cls = '';
+    let label = '';
+    if(i === currentModule) cls += ' current';
+    if(status === 'complete'){
+      cls += ' done';
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      label = `<span class="mt-pct">${sc}/${m.questions.length}</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      label = `<span class="mt-pct">${ans}/${m.questions.length}</span>`;
+    }
+    return `<button class="mt-btn${cls}" onclick="switchToModule(${i})">${m.name} ${label}</button>`;
+  }).join('');
+}
+
+function switchToModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  if(moduleCompleted[idx] || answers[idx].some(a => a !== null)){
+    showModuleResults();
+  } else {
+    startModule(idx);
+  }
+}
+
+function goToNextModule(){
+  if(currentModule + 1 < MODULES.length && MODULES[currentModule+1].questions.length > 0){
+    startModule(currentModule + 1);
+  }
+}
+
+function renderModuleReview(){
+  const list = document.getElementById('reviewList');
+  const mod = MODULES[currentModule];
+  let html = '';
+  mod.questions.forEach((q,idx)=>{
+    const userAns = answers[currentModule][idx];
+    const correctAns = q.a;
+    const isCorrect = userAns===correctAns;
+    const statusText = isCorrect?'DOĞRU':(userAns===null?'BOŞ':'YANLIŞ');
+    const answersHtml = q.o.map((opt,i)=>{
+      const letter = opt.substring(0,1);
+      const text = opt.substring(3);
+      let cls = '';
+      if(i===correctAns) cls = 'correct';
+      else if(i===userAns) cls = 'wrong-pick';
+      else return '';
+      return `<div class="rev-ans ${cls}"><span class="rev-ans-letter">${letter}</span><span>${text}</span></div>`;
+    }).filter(Boolean).join('');
+    const e = q.explain;
+    const vocabHtml = e.vocab.map(v=>`<div class="vocab-row"><span class="vocab-en">${v.en}</span><span class="vocab-tr"><span class="pos">${v.pos}</span>${v.tr}</span></div>`).join('');
+    html += `<div class="review-card ${isCorrect?'':'open'}">
+      <div class="review-head ${isCorrect?'correct':''}" onclick="this.parentElement.classList.toggle('open')">
+        <span class="review-num">${idx+1}</span>
+        <span class="review-tag">${q.k}</span>
+        <span class="review-status">${statusText}</span>
+        <span class="review-toggle">▾</span>
+      </div>
+      <div class="review-body">
+        <div class="rev-passage">${q.p}</div>
+        ${q.data ? `<div class="rev-data">${q.data}</div>` : ''}
+        <div class="rev-stem">${q.q}</div>
+        <div class="rev-answers">${answersHtml}</div>
+        <div class="gri-block">
+          <div class="gri-head">
+            <div class="gri-avatar"><img src="${GRI_MASCOT}" alt="Gri"></div>
+            <div class="gri-label">Gri diyor ki<small>Detaylı Analiz</small></div>
+          </div>
+          <div class="gri-body">
+            <div class="expl-section"><div class="expl-h">Doğru Cevap Mantığı</div><p>${e.why_correct}</p></div>
+            <div class="expl-section"><div class="expl-h">Yanlış Şıklar Neden Yanlış</div><p>${e.why_wrong}</p></div>
+            <div class="expl-section"><div class="expl-h">Kelime Hazinesi</div><div class="vocab-list">${vocabHtml}</div></div>
+            <div class="expl-section"><div class="rule-box"><div class="rule-label">Kuralı Hatırla</div><p>${e.rule}</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+// ============= INIT =============
+renderSplash();
+</script>
+</body>
+</html>

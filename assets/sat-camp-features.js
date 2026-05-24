@@ -668,42 +668,35 @@
 
   // -----------------------------------------------------------
   // Altını çizme — passage veya qstem içinde metin seçimi olduğunda
-  // floating toolbar gösterir: üç renk (sarı, mavi, pembe) + sil (×).
-  // Renk butonu seçimi <mark class="sc-hl-{color}"> ile sarar.
-  // Sil butonu seçim içindeki tüm vurguları kaldırır.
-  // Mevcut bir mark'a tıklayınca da o vurgu silinir. Persistence yok,
-  // soru değişince DOM resetlendiği için temizlenir.
-  // Palet soru bankası ile aynı: #fdef82, #b8dcf5, #f7c1d6.
+  // tek bir "Altını Çiz" butonu beliriyor. Butona tıklayınca seçim
+  // sarı <mark class="sc-hl"> ile sarılır. Mevcut bir mark'a tıklayınca
+  // o vurgu kalkar. Persistence yok, soru değişince DOM resetlendiği
+  // için temizlenir.
   // -----------------------------------------------------------
-  var hlToolbar = null;
+  var hlBtn = null;
 
-  function ensureHighlightToolbar() {
-    if (hlToolbar) return hlToolbar;
-    hlToolbar = document.createElement('div');
-    hlToolbar.id = 'sc-hl-toolbar';
-    hlToolbar.innerHTML =
-      '<button type="button" class="sc-hl-btn sc-hl-yellow" data-color="yellow" title="Sarı" aria-label="Sarı vurgu"></button>' +
-      '<button type="button" class="sc-hl-btn sc-hl-blue" data-color="blue" title="Mavi" aria-label="Mavi vurgu"></button>' +
-      '<button type="button" class="sc-hl-btn sc-hl-pink" data-color="pink" title="Pembe" aria-label="Pembe vurgu"></button>' +
-      '<button type="button" class="sc-hl-btn sc-hl-clear" data-action="clear" title="Sil" aria-label="Vurguyu sil">×</button>';
+  function ensureHighlightButton() {
+    if (hlBtn) return hlBtn;
+    hlBtn = document.createElement('button');
+    hlBtn.id = 'sc-hl-btn';
+    hlBtn.type = 'button';
+    hlBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M9 11l-4 4 1.5 1.5L11 12"/><path d="M14 8l-3 3 4 4 3-3z"/><path d="M5 19l3-3"/>' +
+      '</svg><span>Altını Çiz</span>';
+    hlBtn.setAttribute('aria-label', 'Seçili metni altını çiz');
     // mousedown propagasyonu seçimi kaybetmesin
-    hlToolbar.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    hlToolbar.addEventListener('click', function (e) {
-      var btn = e.target && e.target.closest && e.target.closest('.sc-hl-btn');
-      if (!btn) return;
-      if (btn.dataset.action === 'clear') {
-        clearHighlightInSelection();
-      } else if (btn.dataset.color) {
-        applyHighlight(btn.dataset.color);
-      }
-      hideHighlightToolbar();
+    hlBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    hlBtn.addEventListener('click', function () {
+      applyHighlight();
+      hideHighlightButton();
     });
-    document.body.appendChild(hlToolbar);
-    return hlToolbar;
+    document.body.appendChild(hlBtn);
+    return hlBtn;
   }
 
-  function hideHighlightToolbar() {
-    if (hlToolbar) hlToolbar.classList.remove('show');
+  function hideHighlightButton() {
+    if (hlBtn) hlBtn.classList.remove('show');
   }
 
   function getHighlightableRoot(node) {
@@ -713,18 +706,19 @@
     return el.closest('.passage, .qstem');
   }
 
-  function positionHighlightToolbar(range) {
-    if (!hlToolbar) return;
+  function positionHighlightButton(range) {
+    if (!hlBtn) return;
     var rect = range.getBoundingClientRect();
-    if (!rect.width && !rect.height) { hideHighlightToolbar(); return; }
-    var tbH = hlToolbar.offsetHeight || 36;
-    var tbW = hlToolbar.offsetWidth || 160;
-    var top = rect.top + window.scrollY - tbH - 8;
+    if (!rect.width && !rect.height) { hideHighlightButton(); return; }
+    var bH = hlBtn.offsetHeight || 32;
+    var bW = hlBtn.offsetWidth || 110;
+    var top = rect.top + window.scrollY - bH - 8;
+    // Ekran üst kenarına yakınsa altına geç
     if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
-    var left = rect.left + window.scrollX + (rect.width / 2) - (tbW / 2);
-    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - tbW - 8));
-    hlToolbar.style.top = top + 'px';
-    hlToolbar.style.left = left + 'px';
+    var left = rect.left + window.scrollX + (rect.width / 2) - (bW / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - bW - 8));
+    hlBtn.style.top = top + 'px';
+    hlBtn.style.left = left + 'px';
   }
 
   function handleSelectionShow() {
@@ -733,44 +727,44 @@
     setTimeout(function () {
       var sel = window.getSelection();
       if (!sel || !sel.rangeCount || sel.toString().trim().length === 0) {
-        hideHighlightToolbar();
+        hideHighlightButton();
         return;
       }
       var range = sel.getRangeAt(0);
       if (range.collapsed) {
-        hideHighlightToolbar();
+        hideHighlightButton();
         return;
       }
       var startRoot = getHighlightableRoot(range.startContainer);
       var endRoot = getHighlightableRoot(range.endContainer);
       if (!startRoot || startRoot !== endRoot) {
-        hideHighlightToolbar();
+        hideHighlightButton();
         return;
       }
-      ensureHighlightToolbar();
-      hlToolbar.classList.add('show');
-      positionHighlightToolbar(range);
+      ensureHighlightButton();
+      hlBtn.classList.add('show');
+      positionHighlightButton(range);
     }, 10);
   }
 
   function handleSelectionHide() {
-    // selectionchange seçim boşaldığında toolbar'ı kapat
+    // selectionchange seçim boşaldığında butonu kapat
     var sel = window.getSelection();
     if (!sel || !sel.rangeCount || sel.toString().trim().length === 0) {
-      hideHighlightToolbar();
+      hideHighlightButton();
     }
   }
 
   function setupHighlightSelection() {
     // Desktop: mouseup ile aç (selection bittiğinde)
     document.addEventListener('mouseup', function (e) {
-      // Toolbar üstünde mouseup ise yok say
-      if (hlToolbar && hlToolbar.contains(e.target)) return;
+      // Buton üstünde mouseup ise yok say
+      if (hlBtn && hlBtn.contains(e.target)) return;
       handleSelectionShow();
     });
     // Mobile: touchend ile aç
     document.addEventListener('touchend', function (e) {
-      if (hlToolbar && hlToolbar.contains(e.target)) return;
+      if (hlBtn && hlBtn.contains(e.target)) return;
       handleSelectionShow();
     }, { passive: true });
     // Seçim sıfırlanırsa kapat
@@ -779,37 +773,19 @@
     document.addEventListener('click', handleHighlightClick);
   }
 
-  function applyHighlight(color) {
+  function applyHighlight() {
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return;
     var range = sel.getRangeAt(0);
     try {
       var mark = document.createElement('mark');
-      mark.className = 'sc-hl-' + color;
-      mark.dataset.color = color;
+      mark.className = 'sc-hl';
       range.surroundContents(mark);
       sel.removeAllRanges();
     } catch (e) {
       // Cross-element boundary (örn. seçim <em>'in içinden başlayıp dışında bitiyor)
       console.warn('[SATCamp] highlight cross-boundary, ignored');
     }
-  }
-
-  function clearHighlightInSelection() {
-    var sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-    var range = sel.getRangeAt(0);
-    var root = getHighlightableRoot(range.startContainer);
-    if (!root) return;
-    // Seçim içine giren tüm sc-hl-* mark'larını kaldır
-    var marks = Array.prototype.slice.call(root.querySelectorAll('mark.sc-hl-yellow, mark.sc-hl-blue, mark.sc-hl-pink'));
-    marks.forEach(function (mark) {
-      if (sel.containsNode(mark, true)) {
-        unwrapMark(mark);
-      }
-    });
-    sel.removeAllRanges();
-    if (root.normalize) root.normalize();
   }
 
   function unwrapMark(mark) {
@@ -822,7 +798,7 @@
   function handleHighlightClick(e) {
     var t = e.target;
     if (!t || !t.closest) return;
-    var mark = t.closest('mark.sc-hl-yellow, mark.sc-hl-blue, mark.sc-hl-pink');
+    var mark = t.closest('mark.sc-hl');
     if (!mark) return;
     unwrapMark(mark);
     if (mark.parentNode && mark.parentNode.normalize) mark.parentNode.normalize();

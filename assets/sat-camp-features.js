@@ -643,27 +643,42 @@
 
   // -----------------------------------------------------------
   // Altını çizme — passage veya qstem içinde metin seçimi olduğunda
-  // floating button gösterir, tıklayınca seçimi <mark class="sc-hl"> ile
-  // sarar. Mevcut highlight'a tıklayınca silinir. Persistence yok,
+  // floating toolbar gösterir: üç renk (sarı, mavi, pembe) + sil (×).
+  // Renk butonu seçimi <mark class="sc-hl-{color}"> ile sarar.
+  // Sil butonu seçim içindeki tüm vurguları kaldırır.
+  // Mevcut bir mark'a tıklayınca da o vurgu silinir. Persistence yok,
   // soru değişince DOM resetlendiği için temizlenir.
+  // Palet soru bankası ile aynı: #fdef82, #b8dcf5, #f7c1d6.
   // -----------------------------------------------------------
-  var hlBtn = null;
+  var hlToolbar = null;
 
-  function ensureHighlightButton() {
-    if (hlBtn) return hlBtn;
-    hlBtn = document.createElement('button');
-    hlBtn.id = 'sc-hl-btn';
-    hlBtn.type = 'button';
-    hlBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M9 11l-4 4 1.5 1.5L11 12"/><path d="M14 8l-3 3 4 4 3-3z"/><path d="M5 19l3-3"/>' +
-      '</svg><span>Altını Çiz</span>';
-    hlBtn.setAttribute('aria-label', 'Seçili metni altını çiz');
+  function ensureHighlightToolbar() {
+    if (hlToolbar) return hlToolbar;
+    hlToolbar = document.createElement('div');
+    hlToolbar.id = 'sc-hl-toolbar';
+    hlToolbar.innerHTML =
+      '<button type="button" class="sc-hl-btn sc-hl-yellow" data-color="yellow" title="Sarı" aria-label="Sarı vurgu"></button>' +
+      '<button type="button" class="sc-hl-btn sc-hl-blue" data-color="blue" title="Mavi" aria-label="Mavi vurgu"></button>' +
+      '<button type="button" class="sc-hl-btn sc-hl-pink" data-color="pink" title="Pembe" aria-label="Pembe vurgu"></button>' +
+      '<button type="button" class="sc-hl-btn sc-hl-clear" data-action="clear" title="Sil" aria-label="Vurguyu sil">×</button>';
     // mousedown propagasyonu seçimi kaybetmesin
-    hlBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    hlBtn.addEventListener('click', applyHighlight);
-    document.body.appendChild(hlBtn);
-    return hlBtn;
+    hlToolbar.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    hlToolbar.addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest && e.target.closest('.sc-hl-btn');
+      if (!btn) return;
+      if (btn.dataset.action === 'clear') {
+        clearHighlightInSelection();
+      } else if (btn.dataset.color) {
+        applyHighlight(btn.dataset.color);
+      }
+      hideHighlightToolbar();
+    });
+    document.body.appendChild(hlToolbar);
+    return hlToolbar;
+  }
+
+  function hideHighlightToolbar() {
+    if (hlToolbar) hlToolbar.classList.remove('show');
   }
 
   function getHighlightableRoot(node) {
@@ -673,69 +688,119 @@
     return el.closest('.passage, .qstem');
   }
 
-  function positionHighlightButton(range) {
-    if (!hlBtn) return;
+  function positionHighlightToolbar(range) {
+    if (!hlToolbar) return;
     var rect = range.getBoundingClientRect();
-    if (!rect.width && !rect.height) { hlBtn.style.display = 'none'; return; }
-    var btnH = hlBtn.offsetHeight || 30;
-    var btnW = hlBtn.offsetWidth || 100;
-    var top = rect.top + window.scrollY - btnH - 8;
-    // Ekran üst kenarına yakınsa altına geç
+    if (!rect.width && !rect.height) { hideHighlightToolbar(); return; }
+    var tbH = hlToolbar.offsetHeight || 36;
+    var tbW = hlToolbar.offsetWidth || 160;
+    var top = rect.top + window.scrollY - tbH - 8;
     if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
-    var left = rect.left + window.scrollX + (rect.width / 2) - (btnW / 2);
-    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - btnW - 8));
-    hlBtn.style.top = top + 'px';
-    hlBtn.style.left = left + 'px';
+    var left = rect.left + window.scrollX + (rect.width / 2) - (tbW / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - tbW - 8));
+    hlToolbar.style.top = top + 'px';
+    hlToolbar.style.left = left + 'px';
   }
 
-  function handleSelectionForHighlight() {
+  function handleSelectionShow() {
+    // mouseup/touchend sonrası kısa gecikme ile seçimi oku (browser'ın
+    // selection'ı stabilize etmesi için)
+    setTimeout(function () {
+      var sel = window.getSelection();
+      if (!sel || !sel.rangeCount || sel.toString().trim().length === 0) {
+        hideHighlightToolbar();
+        return;
+      }
+      var range = sel.getRangeAt(0);
+      if (range.collapsed) {
+        hideHighlightToolbar();
+        return;
+      }
+      var startRoot = getHighlightableRoot(range.startContainer);
+      var endRoot = getHighlightableRoot(range.endContainer);
+      if (!startRoot || startRoot !== endRoot) {
+        hideHighlightToolbar();
+        return;
+      }
+      ensureHighlightToolbar();
+      hlToolbar.classList.add('show');
+      positionHighlightToolbar(range);
+    }, 10);
+  }
+
+  function handleSelectionHide() {
+    // selectionchange seçim boşaldığında toolbar'ı kapat
     var sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.rangeCount) {
-      if (hlBtn) hlBtn.style.display = 'none';
-      return;
+    if (!sel || !sel.rangeCount || sel.toString().trim().length === 0) {
+      hideHighlightToolbar();
     }
-    var range = sel.getRangeAt(0);
-    var startRoot = getHighlightableRoot(range.startContainer);
-    var endRoot = getHighlightableRoot(range.endContainer);
-    if (!startRoot || startRoot !== endRoot) {
-      if (hlBtn) hlBtn.style.display = 'none';
-      return;
-    }
-    ensureHighlightButton();
-    hlBtn.style.display = 'inline-flex';
-    positionHighlightButton(range);
   }
 
-  function applyHighlight() {
+  function setupHighlightSelection() {
+    // Desktop: mouseup ile aç (selection bittiğinde)
+    document.addEventListener('mouseup', function (e) {
+      // Toolbar üstünde mouseup ise yok say
+      if (hlToolbar && hlToolbar.contains(e.target)) return;
+      handleSelectionShow();
+    });
+    // Mobile: touchend ile aç
+    document.addEventListener('touchend', function (e) {
+      if (hlToolbar && hlToolbar.contains(e.target)) return;
+      handleSelectionShow();
+    }, { passive: true });
+    // Seçim sıfırlanırsa kapat
+    document.addEventListener('selectionchange', handleSelectionHide);
+    // Mevcut mark'a tıklamayla silme
+    document.addEventListener('click', handleHighlightClick);
+  }
+
+  function applyHighlight(color) {
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return;
     var range = sel.getRangeAt(0);
     try {
       var mark = document.createElement('mark');
-      mark.className = 'sc-hl';
+      mark.className = 'sc-hl-' + color;
+      mark.dataset.color = color;
       range.surroundContents(mark);
       sel.removeAllRanges();
-      if (hlBtn) hlBtn.style.display = 'none';
     } catch (e) {
       // Cross-element boundary (örn. seçim <em>'in içinden başlayıp dışında bitiyor)
       console.warn('[SATCamp] highlight cross-boundary, ignored');
     }
   }
 
+  function clearHighlightInSelection() {
+    var sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    var range = sel.getRangeAt(0);
+    var root = getHighlightableRoot(range.startContainer);
+    if (!root) return;
+    // Seçim içine giren tüm sc-hl-* mark'larını kaldır
+    var marks = Array.prototype.slice.call(root.querySelectorAll('mark.sc-hl-yellow, mark.sc-hl-blue, mark.sc-hl-pink'));
+    marks.forEach(function (mark) {
+      if (sel.containsNode(mark, true)) {
+        unwrapMark(mark);
+      }
+    });
+    sel.removeAllRanges();
+    if (root.normalize) root.normalize();
+  }
+
+  function unwrapMark(mark) {
+    var parent = mark.parentNode;
+    if (!parent) return;
+    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+  }
+
   function handleHighlightClick(e) {
     var t = e.target;
     if (!t || !t.closest) return;
-    var mark = t.closest('mark.sc-hl');
+    var mark = t.closest('mark.sc-hl-yellow, mark.sc-hl-blue, mark.sc-hl-pink');
     if (!mark) return;
-    var parent = mark.parentNode;
-    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
-    parent.removeChild(mark);
-    parent.normalize();
-  }
-
-  function setupHighlightSelection() {
-    document.addEventListener('selectionchange', handleSelectionForHighlight);
-    document.addEventListener('click', handleHighlightClick);
+    unwrapMark(mark);
+    if (mark.parentNode && mark.parentNode.normalize) mark.parentNode.normalize();
   }
 
   // -----------------------------------------------------------

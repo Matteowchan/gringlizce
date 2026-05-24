@@ -599,8 +599,143 @@
   async function onQuestionReady() {
     currentSlug = computeSlug();
     currentVocab = readCurrentVocab();
+    attachOptionElimination();
     await loadBookmark();
     await loadNote();
+  }
+
+  // -----------------------------------------------------------
+  // Şık eleme — sağ tık (desktop) veya basılı tutma (mobil)
+  // .opt'a .eliminated class'ı toggle eder. .sel ise (cevap seçilmişse)
+  // çalışmaz. Soru değişince renderQuestion innerHTML'i tazelediği için
+  // eleme durumu otomatik sıfırlanır.
+  // -----------------------------------------------------------
+  function attachOptionElimination() {
+    var card = document.getElementById('qcard');
+    if (!card) return;
+    var opts = card.querySelectorAll('.opt');
+    opts.forEach(function (opt) {
+      if (opt.dataset.elimBound) return;
+      opt.dataset.elimBound = '1';
+
+      opt.addEventListener('contextmenu', function (e) {
+        if (opt.classList.contains('sel')) return;
+        e.preventDefault();
+        opt.classList.toggle('eliminated');
+      });
+
+      var pressTimer = null;
+      opt.addEventListener('touchstart', function () {
+        if (opt.classList.contains('sel')) return;
+        pressTimer = setTimeout(function () {
+          opt.classList.toggle('eliminated');
+          pressTimer = null;
+        }, 500);
+      }, { passive: true });
+      var clearPress = function () {
+        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+      };
+      opt.addEventListener('touchend', clearPress);
+      opt.addEventListener('touchmove', clearPress);
+      opt.addEventListener('touchcancel', clearPress);
+    });
+  }
+
+  // -----------------------------------------------------------
+  // Altını çizme — passage veya qstem içinde metin seçimi olduğunda
+  // floating button gösterir, tıklayınca seçimi <mark class="sc-hl"> ile
+  // sarar. Mevcut highlight'a tıklayınca silinir. Persistence yok,
+  // soru değişince DOM resetlendiği için temizlenir.
+  // -----------------------------------------------------------
+  var hlBtn = null;
+
+  function ensureHighlightButton() {
+    if (hlBtn) return hlBtn;
+    hlBtn = document.createElement('button');
+    hlBtn.id = 'sc-hl-btn';
+    hlBtn.type = 'button';
+    hlBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M9 11l-4 4 1.5 1.5L11 12"/><path d="M14 8l-3 3 4 4 3-3z"/><path d="M5 19l3-3"/>' +
+      '</svg><span>Altını Çiz</span>';
+    hlBtn.setAttribute('aria-label', 'Seçili metni altını çiz');
+    // mousedown propagasyonu seçimi kaybetmesin
+    hlBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    hlBtn.addEventListener('click', applyHighlight);
+    document.body.appendChild(hlBtn);
+    return hlBtn;
+  }
+
+  function getHighlightableRoot(node) {
+    if (!node) return null;
+    var el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el) return null;
+    return el.closest('.passage, .qstem');
+  }
+
+  function positionHighlightButton(range) {
+    if (!hlBtn) return;
+    var rect = range.getBoundingClientRect();
+    if (!rect.width && !rect.height) { hlBtn.style.display = 'none'; return; }
+    var btnH = hlBtn.offsetHeight || 30;
+    var btnW = hlBtn.offsetWidth || 100;
+    var top = rect.top + window.scrollY - btnH - 8;
+    // Ekran üst kenarına yakınsa altına geç
+    if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
+    var left = rect.left + window.scrollX + (rect.width / 2) - (btnW / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - btnW - 8));
+    hlBtn.style.top = top + 'px';
+    hlBtn.style.left = left + 'px';
+  }
+
+  function handleSelectionForHighlight() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) {
+      if (hlBtn) hlBtn.style.display = 'none';
+      return;
+    }
+    var range = sel.getRangeAt(0);
+    var startRoot = getHighlightableRoot(range.startContainer);
+    var endRoot = getHighlightableRoot(range.endContainer);
+    if (!startRoot || startRoot !== endRoot) {
+      if (hlBtn) hlBtn.style.display = 'none';
+      return;
+    }
+    ensureHighlightButton();
+    hlBtn.style.display = 'inline-flex';
+    positionHighlightButton(range);
+  }
+
+  function applyHighlight() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    var range = sel.getRangeAt(0);
+    try {
+      var mark = document.createElement('mark');
+      mark.className = 'sc-hl';
+      range.surroundContents(mark);
+      sel.removeAllRanges();
+      if (hlBtn) hlBtn.style.display = 'none';
+    } catch (e) {
+      // Cross-element boundary (örn. seçim <em>'in içinden başlayıp dışında bitiyor)
+      console.warn('[SATCamp] highlight cross-boundary, ignored');
+    }
+  }
+
+  function handleHighlightClick(e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var mark = t.closest('mark.sc-hl');
+    if (!mark) return;
+    var parent = mark.parentNode;
+    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    parent.normalize();
+  }
+
+  function setupHighlightSelection() {
+    document.addEventListener('selectionchange', handleSelectionForHighlight);
+    document.addEventListener('click', handleHighlightClick);
   }
 
   // -----------------------------------------------------------
@@ -644,6 +779,7 @@
     }
 
     loadUser().then(hookIntoCard);
+    setupHighlightSelection();
   }
 
   if (document.readyState === 'loading') {

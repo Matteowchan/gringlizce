@@ -3983,6 +3983,8 @@
     function renderMissingCard(slug, date, type) {
       // Kamp slug'ı ise kamp kartı dön
       if (parseKampSlug(slug)) return renderKampCard(slug, date, type);
+      // Mock slug'ı ise mock kartı dön
+      if (parseMockSlug(slug)) return renderMockCard(slug, date, type);
       return [
         '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <div class="qb-list-card qb-missing">',
@@ -3996,6 +3998,57 @@
         '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
         '    <span class="qb-cta" style="color: var(--text-muted);">—</span>',
         '  </div>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+        '</div>'
+      ].join('');
+    }
+
+    // ============================================================
+    // SAT MOCK (tam deneme) slug resolver
+    // Format: sat-mock-{N}-{section}-{mod}-q{Q}
+    // section: rw | math   mod: m1 | m2e | m2h   Q: 1-based
+    // ============================================================
+    var MOCK_PAGES = {
+      1: 'urun/sat-mock-1.html',
+      // ileride 2, 3 vb eklendikçe burası genişler
+    };
+    function parseMockSlug(slug) {
+      var m = /^sat-mock-(\d+)-(rw|math)-(m1|m2e|m2h)-q(\d+)$/.exec(slug || '');
+      if (!m) return null;
+      return {
+        mockNumber: parseInt(m[1], 10),
+        section: m[2],
+        modSlug: m[3],
+        q: parseInt(m[4], 10)
+      };
+    }
+    function renderMockCard(slug, date, type) {
+      var info = parseMockSlug(slug);
+      if (!info) return null;
+      var page = MOCK_PAGES[info.mockNumber];
+      var href = page ? (page + '?review=1&section=' + info.section + '&mod=' + info.modSlug + '&q=' + info.q) : 'urun/sat-rw-8-gunluk-kamp.html';
+      var sectionLabel = info.section === 'math' ? 'Math' : 'R&amp;W';
+      var modLabel = info.modSlug === 'm1' ? 'Module 1' :
+                     info.modSlug === 'm2h' ? 'Module 2 (Zor)' :
+                     'Module 2 (Kolay)';
+      var badge = 'SAT Mock ' + info.mockNumber;
+      var catLabel = 'Tam Deneme · ' + sectionLabel + ' · ' + modLabel;
+      var preview = 'Soru #' + info.q;
+      var available = !!page;
+      var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Deneme Sayfası';
+      return [
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">' + badge + '</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(catLabel) + '</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>',
+        '    </div>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '    <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '  </a>',
         '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
         '</div>'
       ].join('');

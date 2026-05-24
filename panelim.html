@@ -3954,11 +3954,13 @@
       var info = parseKampSlug(slug);
       if (!info) return renderMissingCard(slug, date, type);
       var pages = info.track === 'math' ? KAMP_DAY_PAGES_MATH : KAMP_DAY_PAGES_RW;
-      var href = pages[info.day] || 'urun/sat-rw-8-gunluk-kamp.html';
+      var dayPage = pages[info.day];
+      // Day sayfası varsa URL param ile direkt soruya götür, yoksa kamp splash'ına
+      var href = dayPage ? (dayPage + '?m=' + info.module + '&q=' + info.q) : 'urun/sat-rw-8-gunluk-kamp.html';
       var badge = info.track === 'math' ? 'SAT Math' : 'SAT R&amp;W';
       var catLabel = 'Kamp · Day ' + info.day + ' · Module ' + info.module;
       var preview = 'Soru #' + info.q;
-      var available = !!pages[info.day];
+      var available = !!dayPage;
       var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Day Sayfası';
       return [
         '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',

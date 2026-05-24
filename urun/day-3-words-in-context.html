@@ -1965,6 +1965,24 @@ function renderModuleReview(){
 }
 // ============= INIT =============
 renderSplash();
+
+// URL param desteği: ?m=M&q=Q ile direkt soruya git (Çalışma Masam linkleri için)
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var m = parseInt(params.get('m'), 10);
+    var q = parseInt(params.get('q'), 10);
+    if (isNaN(m) || isNaN(q) || m < 1 || q < 1) return;
+    var modIdx = m - 1;
+    if (!MODULES[modIdx] || !MODULES[modIdx].questions || q > MODULES[modIdx].questions.length) return;
+    currentModule = modIdx;
+    currentQ = q - 1;
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').classList.add('show');
+    document.getElementById('quiz').classList.add('show');
+    renderQuestion();
+  } catch (e) { /* fall back to splash */ }
+})();
 </script>
 </body>
 </html>

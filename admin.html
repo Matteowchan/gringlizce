@@ -2847,7 +2847,7 @@
               });
             });
             presenceUsers = users;
-            $('stat-online').textContent = users.length.toLocaleString('tr-TR');
+            $('stat-online').textContent = countUniqueOnline().toLocaleString('tr-TR');
             // Modal açıksa yenile
             var modal = $('online-modal');
             if (modal && modal.classList.contains('show')) {
@@ -2861,37 +2861,121 @@
       }
     }
 
+    // Aynı user_id'li birden fazla tab varsa tek kişi olarak say.
+    // Anonim entry'ler (user_id yok) tek tek sayılır, dedupe edilemez.
+    function countUniqueOnline() {
+      var raw = presenceUsers || [];
+      var seen = {};
+      var count = 0;
+      raw.forEach(function (u) {
+        if (u.anon || !u.user_id) {
+          count++;
+        } else if (!seen[u.user_id]) {
+          seen[u.user_id] = true;
+          count++;
+        }
+      });
+      return count;
+    }
+
     function renderOnlineUsersList() {
       var listEl = $('online-list');
       var subEl = $('online-modal-sub');
       if (!listEl) return;
-      var users = (presenceUsers || []).slice();
-      // Anonim olmayanlar üstte
+      var raw = (presenceUsers || []).slice();
+
+      // Logged-in user'ları user_id ile grupla, anonimleri ayrı tut
+      var grouped = {};
+      var anonRows = [];
+      raw.forEach(function (u) {
+        if (u.anon || !u.user_id) {
+          anonRows.push({
+            user_id: null,
+            email: u.email,
+            display_name: u.display_name,
+            page: u.page || '/',
+            pages: [u.page || '/'],
+            joined_at: u.joined_at,
+            oldest_joined: u.joined_at,
+            tab_count: 1,
+            anon: true
+          });
+          return;
+        }
+        if (!grouped[u.user_id]) {
+          grouped[u.user_id] = {
+            user_id: u.user_id,
+            email: u.email,
+            display_name: u.display_name,
+            pages: [],
+            joined_at: u.joined_at,
+            oldest_joined: u.joined_at,
+            tab_count: 0,
+            anon: false
+          };
+        }
+        var g = grouped[u.user_id];
+        g.pages.push(u.page || '/');
+        g.tab_count++;
+        if ((u.joined_at || 0) > (g.joined_at || 0)) g.joined_at = u.joined_at;
+        if ((u.joined_at || 0) < (g.oldest_joined || 0) || !g.oldest_joined) g.oldest_joined = u.joined_at;
+      });
+
+      var users = [];
+      Object.keys(grouped).forEach(function (uid) {
+        var g = grouped[uid];
+        // En son aktif olunan sayfayı başa al
+        var uniquePages = [];
+        g.pages.forEach(function (p) { if (uniquePages.indexOf(p) === -1) uniquePages.push(p); });
+        g.page = uniquePages[0];
+        g.pages = uniquePages;
+        users.push(g);
+      });
+      anonRows.forEach(function (a) { users.push(a); });
+
+      // Anonim olmayanlar üstte, en yeni katılan önce
       users.sort(function (a, b) {
         if (a.anon !== b.anon) return a.anon ? 1 : -1;
         return (b.joined_at || 0) - (a.joined_at || 0);
       });
+
       var loggedIn = users.filter(function (u) { return !u.anon; }).length;
       var anonCount = users.length - loggedIn;
-      subEl.textContent = users.length + ' kişi online (' + loggedIn + ' üye, ' + anonCount + ' anonim ziyaretçi)';
+      var totalTabs = raw.length;
+      var extraTabs = totalTabs - users.length;
+      var subTxt = users.length + ' kişi online (' + loggedIn + ' üye, ' + anonCount + ' anonim ziyaretçi)';
+      if (extraTabs > 0) subTxt += ' · +' + extraTabs + ' ek tab';
+      subEl.textContent = subTxt;
 
       if (users.length === 0) {
         listEl.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-style: italic; text-align: center;">Şu an kimse online değil.</div>';
         return;
       }
       listEl.innerHTML = users.map(function (u) {
-        var dur = u.joined_at ? Math.max(1, Math.round((Date.now() - u.joined_at) / 60000)) : null;
+        // Multi-tab için en eski tab'ın süresi gösterilir (site'de geçirdiği süre)
+        // Tek tab için bu sayfada geçirdiği süre
+        var refTime = (u.tab_count > 1) ? u.oldest_joined : u.joined_at;
+        var dur = refTime ? Math.max(1, Math.round((Date.now() - refTime) / 60000)) : null;
         var durStr = dur ? (dur >= 60 ? Math.round(dur / 60) + ' saat' : dur + ' dk') : '';
         var name = u.email || 'Anonim ziyaretçi';
         var sub = u.display_name && u.display_name !== u.email ? u.display_name : '';
-        if (durStr) sub = sub ? sub + ' · ' + durStr + ' önce katıldı' : durStr + ' önce katıldı';
+        if (durStr) {
+          var timeLabel = (u.tab_count > 1) ? ('site\'de ' + durStr) : (durStr + ' bu sayfada');
+          sub = sub ? sub + ' · ' + timeLabel : timeLabel;
+        }
+        if (u.tab_count > 1) {
+          sub = sub ? sub + ' · ' + u.tab_count + ' tab' : u.tab_count + ' tab';
+        }
+        var pageDisplay = (u.tab_count > 1 && u.pages.length > 1)
+          ? u.pages.join(', ')
+          : (u.page || '/');
         return '<div class="online-row ' + (u.anon ? 'anon' : '') + '">' +
           '<span class="online-dot"></span>' +
           '<div class="online-info">' +
             '<div class="online-email">' + escHtmlAdmin(name) + '</div>' +
             (sub ? '<div class="online-meta">' + escHtmlAdmin(sub) + '</div>' : '') +
           '</div>' +
-          '<div class="online-page">' + escHtmlAdmin(u.page || '/') + '</div>' +
+          '<div class="online-page">' + escHtmlAdmin(pageDisplay) + '</div>' +
         '</div>';
       }).join('');
     }

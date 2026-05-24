@@ -3919,8 +3919,8 @@
       }
     })();
 
-    // SAT kamp soru slug'ı: sat-rw-kamp-d{D}-m{M}-q{Q}
-    var KAMP_DAY_PAGES = {
+    // SAT kamp soru slug'ı: sat-{track}-kamp-d{D}-m{M}-q{Q}, track: rw veya math
+    var KAMP_DAY_PAGES_RW = {
       1: 'urun/day-1-information-and-ideas.html',
       2: 'urun/day-2-inferences-quantitative.html',
       3: 'urun/day-3-words-in-context.html',
@@ -3930,25 +3930,42 @@
       7: 'urun/day-7-mock-review.html',
       8: 'urun/day-8-final-review.html'
     };
+    var KAMP_DAY_PAGES_MATH = {
+      1: 'urun/day-1-math-linear.html',
+      2: 'urun/day-2-math-systems.html',
+      3: 'urun/day-3-math-quadratic.html',
+      4: 'urun/day-4-math-epr.html',
+      5: 'urun/day-5-math-psda.html',
+      6: 'urun/day-6-math-stats.html',
+      7: 'urun/day-7-math-geo.html',
+      8: 'urun/day-8-math-mock.html'
+    };
     function parseKampSlug(slug) {
-      var m = /^sat-rw-kamp-d(\d+)-m(\d+)-q(\d+)$/.exec(slug || '');
+      var m = /^sat-(rw|math)-kamp-d(\d+)-m(\d+)-q(\d+)$/.exec(slug || '');
       if (!m) return null;
-      return { day: parseInt(m[1], 10), module: parseInt(m[2], 10), q: parseInt(m[3], 10) };
+      return {
+        track: m[1],
+        day: parseInt(m[2], 10),
+        module: parseInt(m[3], 10),
+        q: parseInt(m[4], 10)
+      };
     }
     function renderKampCard(slug, date, type) {
       var info = parseKampSlug(slug);
       if (!info) return renderMissingCard(slug, date, type);
-      var href = KAMP_DAY_PAGES[info.day] || 'urun/sat-rw-8-gunluk-kamp.html';
+      var pages = info.track === 'math' ? KAMP_DAY_PAGES_MATH : KAMP_DAY_PAGES_RW;
+      var href = pages[info.day] || 'urun/sat-rw-8-gunluk-kamp.html';
+      var badge = info.track === 'math' ? 'SAT Math' : 'SAT R&amp;W';
       var catLabel = 'Kamp · Day ' + info.day + ' · Module ' + info.module;
       var preview = 'Soru #' + info.q;
-      var available = !!KAMP_DAY_PAGES[info.day];
+      var available = !!pages[info.day];
       var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Day Sayfası';
       return [
         '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
         '    <div class="qb-main">',
         '      <div class="qb-head-line">',
-        '        <span class="qb-badge">SAT R&amp;W</span>',
+        '        <span class="qb-badge">' + badge + '</span>',
         '        <span class="qb-cat">' + escHtmlPanel(catLabel) + '</span>',
         '      </div>',
         '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>',

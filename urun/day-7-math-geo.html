@@ -348,6 +348,10 @@ mark.hl-key{background:linear-gradient(transparent 60%,rgba(79,70,229,.22) 60%);
       Module 1 ile Başla
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
+    <button id="resetBtn" class="btn-reset-progress" onclick="resetAllProgress()" style="display:none;margin-top:14px;background:transparent;border:1px solid rgba(150,150,150,.4);color:#888;padding:8px 18px;font-size:13px;border-radius:6px;cursor:pointer;font-family:inherit;">
+      Tüm İlerlemeyi Sıfırla
+    </button>
+
   </div>
 </section>
 
@@ -1765,6 +1769,67 @@ let currentQ = 0;
 let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
 let moduleCompleted = MODULES.map(() => false);
 
+// ============= PERSISTENCE =============
+const STORAGE_KEY = 'gri-camp-day-7-math-geo';
+function saveProgress(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: answers,
+      completed: moduleCompleted,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadProgress(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.answers) || d.answers.length !== MODULES.length) return;
+    for(var i=0; i<MODULES.length; i++){
+      if(!Array.isArray(d.answers[i]) || d.answers[i].length !== MODULES[i].questions.length) return;
+    }
+    answers = d.answers;
+    moduleCompleted = (Array.isArray(d.completed) && d.completed.length === MODULES.length)
+      ? d.completed : MODULES.map(function(){return false;});
+  } catch(e) {}
+}
+function hasAnyAnswer(){
+  for(var i=0; i<answers.length; i++){
+    for(var j=0; j<answers[i].length; j++){
+      if(answers[i][j] !== null) return true;
+    }
+  }
+  return false;
+}
+function resetAllProgress(){
+  if(!confirm('Tüm modüllerdeki cevapların ve ilerlemen silinecek. Emin misin?')) return;
+  answers = MODULES.map(function(m){ return new Array(m.questions.length).fill(null); });
+  moduleCompleted = MODULES.map(function(){ return false; });
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  currentModule = 0; currentQ = 0;
+  var qEl = document.getElementById('quiz');
+  var tEl = document.getElementById('topbar');
+  var rEl = document.getElementById('results');
+  var sEl = document.getElementById('splash');
+  if(qEl) qEl.classList.remove('show');
+  if(tEl) tEl.classList.remove('show');
+  if(rEl) rEl.classList.remove('show');
+  if(sEl) sEl.style.display = 'flex';
+  renderSplash();
+}
+
+// ============= UNLOAD WARNING =============
+window.addEventListener('beforeunload', function(e){
+  // Quiz ekranı açıkken sayfayı yenilemeye veya kapatmaya karşı uyarı.
+  var quizEl = document.getElementById('quiz');
+  if(quizEl && quizEl.classList.contains('show')){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
 // ============= HELPERS =============
 function getModuleStatus(idx){
   const mod = MODULES[idx];
@@ -1804,6 +1869,8 @@ function renderSplash(){
       <div class="mc-meta"><div class="mc-q">${m.questions.length}</div><div>soru</div></div>
     </div>`;
   }).join('');
+  var rb = document.getElementById('resetBtn');
+  if(rb){ rb.style.display = hasAnyAnswer() ? 'inline-block' : 'none'; }
 }
 
 // ============= NAVIGATION =============
@@ -1835,10 +1902,7 @@ function goHome(){
 }
 
 function quitToSplash(){
-  if(!confirm('Çıkmak istediğine emin misin? Tüm ilerlemen sıfırlanacak.')) return;
-  currentModule = 0; currentQ = 0;
-  answers = MODULES.map(m => new Array(m.questions.length).fill(null));
-  moduleCompleted = MODULES.map(() => false);
+  if(!confirm('Ana sayfaya dönmek istediğine emin misin? Cevapların kaydedildi.')) return;
   goHome();
 }
 
@@ -1847,6 +1911,7 @@ function restartQuiz(){
   answers[currentModule] = new Array(MODULES[currentModule].questions.length).fill(null);
   moduleCompleted[currentModule] = false;
   currentQ = 0;
+  saveProgress();
   document.getElementById('results').classList.remove('show');
   document.getElementById('topbar').classList.add('show');
   document.getElementById('quiz').classList.add('show');
@@ -1890,7 +1955,7 @@ function renderQuestion(){
   window.currentModule = currentModule;
   window.currentQ = currentQ;
 }
-function pickAnswer(i){ answers[currentModule][currentQ]=i; renderQuestion() }
+function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
 function goTo(i){ currentQ=i; renderQuestion() }
 function nextQ(){ if(currentQ<MODULES[currentModule].questions.length-1){ currentQ++; renderQuestion() } }
 function prevQ(){ if(currentQ>0){ currentQ--; renderQuestion() } }
@@ -1908,6 +1973,7 @@ function showModuleResults(){
   // Mark as completed if all answered
   const allAnswered = answers[currentModule].every(a => a !== null);
   if(allAnswered) moduleCompleted[currentModule] = true;
+  saveProgress();
 
   // Header
   document.getElementById('resEyebrow').textContent = `${mod.name} · Detaylı Analiz`;
@@ -2037,6 +2103,7 @@ function renderModuleReview(){
   list.innerHTML = html;
 }
 // ============= INIT =============
+loadProgress();
 renderSplash();
 
 // URL param desteği: ?m=M&q=Q ile direkt soruya git (Çalışma Masam linkleri için)

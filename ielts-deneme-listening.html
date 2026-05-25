@@ -579,7 +579,7 @@
 
     function renderForm(g) {
       const sc = g.shared_content || {};
-      let h = `<table class="form-completion">`;
+      let h = `<div class="table-wrap"><table class="form-completion">`;
       if (sc.form_title) h += `<caption>${escapeHtml(sc.form_title)}</caption>`;
       for (const row of (sc.rows || [])) {
         h += `<tr><td>${escapeHtml(row.label)}</td><td>`;
@@ -587,7 +587,7 @@
         else h += escapeHtml(row.value || '');
         h += `</td></tr>`;
       }
-      return h + `</table>`;
+      return h + `</table></div>`;
     }
 
     function renderSentence(g) {
@@ -650,13 +650,13 @@
       const rows = sc.rows || [];
       const pie = `<svg viewBox="0 0 100 100" style="max-width:220px;"><circle cx="50" cy="50" r="50" fill="#4a90d9"/><path d="M 50 50 L 50 0 A 50 50 0 0 1 97.55 65.45 Z" fill="#7bbd6f"/><path d="M 50 50 L 97.55 65.45 A 50 50 0 0 1 79.39 95.11 Z" fill="#e07b7b"/></svg>`;
       const colors = ['#4a90d9', '#e07b7b', '#7bbd6f'];
-      let h = `<div class="chart-block">${pie}<table>`;
+      let h = `<div class="chart-block">${pie}<div class="table-wrap"><table>`;
       rows.forEach((row, i) => {
         const sw = `<span class="swatch" style="background:${colors[i % 3]};"></span>`;
         const inj = `<span class="q-num-prefix">${row.question_number}</span><input type="text" class="q-input" data-q="${row.question_number}" autocomplete="off">`;
         h += `<tr><td>${sw}${row.label.replace('___', inj)}</td></tr>`;
       });
-      return h + `</table></div>`;
+      return h + `</table></div></div>`;
     }
 
     function handleAnswerChange(e) {

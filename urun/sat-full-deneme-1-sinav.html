@@ -6469,6 +6469,16 @@ function clearSavedState() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
 }
 
+// Sınav sırasında sayfayı yenileme/kapatma uyarısı.
+// state.mode === 'exam' iken aktif (review modunda devre dışı).
+window.addEventListener('beforeunload', function(e){
+  if(state && state.mode === 'exam'){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
 function resumeExam() {
   const data = loadSavedState();
   if (!data) {
@@ -6722,6 +6732,8 @@ document.addEventListener('keydown', (e) => {
     </div>
   </div>
 </div>
+
+<script src="../assets/back-button.js" defer></script>
 
 </body>
 </html>

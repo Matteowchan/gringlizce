@@ -2533,7 +2533,66 @@
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
-  </style>
+  
+    /* Vocab pagination */
+    .vocab-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0.75rem auto 1rem;
+      max-width: 980px;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 6px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .vocab-pagination .vp-btn {
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.45rem 0.9rem;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      border-radius: 4px;
+      color: var(--text, #1a2230);
+      font-family: inherit;
+    }
+    .vocab-pagination .vp-btn:hover:not(:disabled) {
+      background: var(--bg-soft, #f5f1e8);
+      border-color: var(--teal, #1f6e62);
+    }
+    .vocab-pagination .vp-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .vocab-pagination .vp-info {
+      font-size: 0.9rem;
+      color: var(--text, #1a2230);
+    }
+    .vocab-pagination .vp-info strong {
+      font-weight: 600;
+    }
+    .vocab-pagination .vp-sub {
+      color: var(--text-muted, #8a9099);
+      font-size: 0.82rem;
+      margin-left: 0.3rem;
+    }
+    @media (max-width: 540px) {
+      .vocab-pagination {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+      .vocab-pagination .vp-info {
+        order: -1;
+        width: 100%;
+        text-align: center;
+        font-size: 0.85rem;
+      }
+    }
+</style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <meta property="og:type" content="website">
@@ -4305,6 +4364,7 @@
           elEmpty.style.display = 'flex';
           elCount.textContent = '0 kelime';
           elGrid.innerHTML = '';
+          if (elBar) { elBar.style.display = 'none'; elBar.innerHTML = ''; }
           return;
         }
 
@@ -4316,7 +4376,11 @@
           return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        elGrid.innerHTML = rows.map(function (r) {
+        // ===== PAGINATION =====
+        var PAGE_SIZE = 12;
+        var currentPage = 0;
+
+        function renderCard(r) {
           var vocab = r.vocabulary || {};
           var def = vocab.definition_json || {};
           var word = vocab.word_display || '—';
@@ -4379,64 +4443,106 @@
             '  <div class="vocab-card-tip">' + tipBody + '</div>',
             '</div>'
           ].join('');
-        }).join('');
+        }
 
-        // Sil butonları
-        elGrid.querySelectorAll('.vocab-card-delete').forEach(function (btn) {
-          btn.addEventListener('click', async function (e) {
-            e.stopPropagation();
-            var id = btn.dataset.id;
-            if (!id) return;
-            if (!confirm('Bu kelimeyi listenden çıkarmak istiyor musun?')) return;
-            try {
-              await sbCli.from('user_vocab').delete().eq('id', id).eq('user_id', userId);
-              var card = btn.closest('.vocab-card');
-              if (card) card.remove();
-              // Sayım güncelle
-              var remaining = elGrid.querySelectorAll('.vocab-card').length;
-              if (remaining === 0) {
-                elCount.textContent = '0 kelime';
-                elGrid.innerHTML = '';
-                if (elEmpty) elEmpty.style.display = 'flex';
-              } else {
-                elCount.textContent = remaining + ' kelime kayıtlı';
-              }
-            } catch (e) { console.error('[vocab delete]', e); }
+        function attachListeners() {
+          // Sil butonları
+          elGrid.querySelectorAll('.vocab-card-delete').forEach(function (btn) {
+            btn.addEventListener('click', async function (e) {
+              e.stopPropagation();
+              var id = btn.dataset.id;
+              if (!id) return;
+              if (!confirm('Bu kelimeyi listenden çıkarmak istiyor musun?')) return;
+              try {
+                await sbCli.from('user_vocab').delete().eq('id', id).eq('user_id', userId);
+                // rows array'inden de düşür
+                var idx = rows.findIndex(function (r) { return r.id == id; });
+                if (idx >= 0) rows.splice(idx, 1);
+                // Sayım güncelle
+                if (rows.length === 0) {
+                  elCount.textContent = '0 kelime';
+                  elGrid.innerHTML = '';
+                  if (elBar) { elBar.style.display = 'none'; elBar.innerHTML = ''; }
+                  if (elEmpty) elEmpty.style.display = 'flex';
+                  return;
+                }
+                elCount.textContent = rows.length + ' kelime kayıtlı';
+                // Eğer son sayfa boşaldıysa bir geri git
+                var totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                if (currentPage >= totalPages) currentPage = totalPages - 1;
+                renderPage();
+              } catch (e) { console.error('[vocab delete]', e); }
+            });
           });
-        });
 
-        // Review butonu — vocab_review_increment RPC çağrısı
-        elGrid.querySelectorAll('.vocab-card-review').forEach(function (btn) {
-          btn.addEventListener('click', async function (e) {
-            e.stopPropagation();
-            var vid = btn.dataset.vid;
-            if (!vid) return;
-            // Anti-spam: 2 saniye disable
-            if (btn.disabled) return;
-            btn.disabled = true;
-            try {
-              var rpcRes = await sbCli.rpc('vocab_review_increment', { p_vocabulary_id: vid });
-              if (rpcRes.error) throw rpcRes.error;
-              var newCount = (rpcRes.data && rpcRes.data.review_count) || 0;
-              // Sayacı güncelle (UI'da göster)
-              var countEl = btn.querySelector('.vcr-count');
-              if (countEl) {
-                countEl.textContent = newCount;
-                countEl.classList.remove('vcr-count-zero');
+          // Review butonu — vocab_review_increment RPC çağrısı
+          elGrid.querySelectorAll('.vocab-card-review').forEach(function (btn) {
+            btn.addEventListener('click', async function (e) {
+              e.stopPropagation();
+              var vid = btn.dataset.vid;
+              if (!vid) return;
+              if (btn.disabled) return;
+              btn.disabled = true;
+              try {
+                var rpcRes = await sbCli.rpc('vocab_review_increment', { p_vocabulary_id: vid });
+                if (rpcRes.error) throw rpcRes.error;
+                var newCount = (rpcRes.data && rpcRes.data.review_count) || 0;
+                var countEl = btn.querySelector('.vcr-count');
+                if (countEl) {
+                  countEl.textContent = newCount;
+                  countEl.classList.remove('vcr-count-zero');
+                }
+                btn.classList.add('vcr-just-clicked');
+                setTimeout(function () { btn.classList.remove('vcr-just-clicked'); }, 800);
+              } catch (err) {
+                console.warn('[vocab review]', err);
+              } finally {
+                setTimeout(function () { btn.disabled = false; }, 1500);
               }
-              btn.classList.add('vcr-just-clicked');
-              setTimeout(function () { btn.classList.remove('vcr-just-clicked'); }, 800);
-            } catch (err) {
-              console.warn('[vocab review]', err);
-            } finally {
-              setTimeout(function () { btn.disabled = false; }, 1500);
-            }
+            });
           });
-        });
+        }
+
+        function renderPagination() {
+          if (!elBar) return;
+          var totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+          if (totalPages <= 1) {
+            elBar.style.display = 'none';
+            elBar.innerHTML = '';
+            return;
+          }
+          elBar.style.display = 'flex';
+          elBar.className = 'vocab-pagination';
+          var start = currentPage * PAGE_SIZE + 1;
+          var end = Math.min((currentPage + 1) * PAGE_SIZE, rows.length);
+          elBar.innerHTML =
+            '<button type="button" class="vp-btn" id="vp-prev"' + (currentPage === 0 ? ' disabled' : '') + '>‹ Önceki</button>' +
+            '<span class="vp-info">Sayfa <strong>' + (currentPage + 1) + '</strong> / ' + totalPages +
+              ' <span class="vp-sub">(' + start + '–' + end + ' / ' + rows.length + ')</span></span>' +
+            '<button type="button" class="vp-btn" id="vp-next"' + (currentPage === totalPages - 1 ? ' disabled' : '') + '>Sonraki ›</button>';
+
+          var prev = document.getElementById('vp-prev');
+          var next = document.getElementById('vp-next');
+          if (prev) prev.onclick = function () { if (currentPage > 0) { currentPage--; renderPage(); } };
+          if (next) next.onclick = function () {
+            var tp = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+            if (currentPage < tp - 1) { currentPage++; renderPage(); }
+          };
+        }
+
+        function renderPage() {
+          var start = currentPage * PAGE_SIZE;
+          var end = start + PAGE_SIZE;
+          var pageRows = rows.slice(start, end);
+          elGrid.innerHTML = pageRows.map(renderCard).join('');
+          attachListeners();
+          renderPagination();
+        }
+
+        renderPage();
       } catch (e) {
         console.warn('[vocab list] load failed:', e);
-      }
-    })();
+      })();
 
     // ============ TARGET BAND UI (target_band rozeti için) ============
     (async function initTargetBand() {

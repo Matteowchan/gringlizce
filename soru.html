@@ -1964,11 +1964,35 @@
       }
       return arr;
     }
+
+    // localStorage'tan sessionStorage'a önyükleme (Supabase beklemeden UI'a yansısın)
+    (function preloadFromLocal() {
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('gri.answer.') === 0) {
+            if (!sessionStorage.getItem(k)) {
+              var v = localStorage.getItem(k);
+              if (v) sessionStorage.setItem(k, v);
+            }
+          }
+        }
+      } catch (e) { /* storage erişimi engellendi */ }
+    })();
+
     function getAnswerStatus(slug) {
-      return sessionStorage.getItem('gri.answer.' + slug); // 'correct' | 'incorrect' | null
+      // Önce sessionStorage, yoksa localStorage'tan al (kalıcı cache)
+      var v = sessionStorage.getItem('gri.answer.' + slug);
+      if (v) return v;
+      try {
+        v = localStorage.getItem('gri.answer.' + slug);
+        if (v) sessionStorage.setItem('gri.answer.' + slug, v);
+      } catch (e) {}
+      return v; // 'correct' | 'incorrect' | null
     }
     function setAnswerStatus(slug, status) {
       sessionStorage.setItem('gri.answer.' + slug, status);
+      try { localStorage.setItem('gri.answer.' + slug, status); } catch (e) {}
       // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
       if (GRI_USER_ID) {
         supabase.from('user_answers').upsert({
@@ -1987,7 +2011,10 @@
       }
     }
     function clearAnswersForSet(slugs) {
-      slugs.forEach(s => sessionStorage.removeItem('gri.answer.' + s));
+      slugs.forEach(function (s) {
+        sessionStorage.removeItem('gri.answer.' + s);
+        try { localStorage.removeItem('gri.answer.' + s); } catch (e) {}
+      });
     }
 
     // Login kullanıcının tüm cevaplarını DB'den yükle, sessionStorage'a serp
@@ -2001,6 +2028,7 @@
           res.data.forEach(function (row) {
             if (!sessionStorage.getItem('gri.answer.' + row.question_slug)) {
               sessionStorage.setItem('gri.answer.' + row.question_slug, row.status);
+              try { localStorage.setItem('gri.answer.' + row.question_slug, row.status); } catch (e) {}
             }
           });
         }

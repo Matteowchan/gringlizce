@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 6 Math — Statistics & Probability · Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#475569;--tdark:#334155;--tdeep:#0f172a;
+  --tlight:#94a3b8;--twash:#f8fafc;--tsoft:#e2e8f0;
+  --gold:#ca8a04;--gold-soft:#fef9c3;
+  --bg:#fafaf7;--paper:#ffffff;
+  --ink:#0f1f1e;--ink-soft:#37534f;--muted:#6b7975;
+  --line:#e5e7e5;--line-soft:#eef2f1;
+  --correct:#15803d;--correct-bg:#f8fafc;
+  --wrong:#b91c1c;--wrong-bg:#fef2f2;
+  --r:10px;--r-lg:14px;
+  --shadow-sm:0 1px 2px rgba(71,85,105,.04),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(71,85,105,.06),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(71,85,105,.08),0 4px 8px rgba(0,0,0,.04);
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-serif:'Lora',Georgia,serif;
+  --font-display:'Cormorant Garamond','Lora',serif;
+  --font-mono:'DM Mono','SF Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* SPLASH */
+#splash{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;background:radial-gradient(ellipse at top left,rgba(71,85,105,.08) 0%,transparent 60%),radial-gradient(ellipse at bottom right,rgba(202,138,4,.06) 0%,transparent 55%),linear-gradient(180deg,#f8fafc 0%,#fafaf7 100%)}
+.cover{max-width:680px;width:100%;text-align:center}
+.cover-brand{display:inline-flex;align-items:baseline;gap:.45rem;font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--tdeep);letter-spacing:-.01em;margin-bottom:3rem}
+.cover-brand .it{font-style:italic;font-weight:500;color:var(--teal)}
+.cover-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);padding:.5rem 1rem;background:rgba(71,85,105,.08);border-radius:99px;margin-bottom:1.4rem}
+.cover-title{font-family:var(--font-display);font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.05;font-weight:700;color:var(--tdeep);letter-spacing:-.015em;margin-bottom:.6rem}
+.cover-sub{font-family:var(--font-serif);font-size:clamp(1.05rem,2.2vw,1.2rem);font-style:italic;color:var(--ink-soft);margin-bottom:2rem;line-height:1.5}
+.cover-divider{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.6rem 0}
+.cover-divider::before,.cover-divider::after{content:'';flex:0 1 80px;height:1px;background:var(--line)}
+.cover-dia{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+.module-list{display:flex;flex-direction:column;gap:.8rem;margin:2rem 0;text-align:left}
+.module-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:all .15s}
+.module-card.clickable{cursor:pointer}
+.module-card.clickable:hover{border-color:var(--teal);background:var(--twash);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.module-card.disabled{opacity:.5;cursor:not-allowed}
+.module-card .mc-left{flex:1}
+.module-card .mc-name{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--tdeep);margin-bottom:.1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.module-card .mc-desc{font-family:var(--font-serif);font-size:.85rem;color:var(--ink-soft);font-style:italic}
+.module-card .mc-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-align:right}
+.module-card .mc-q{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--teal)}
+.mc-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.08em;font-weight:600;text-transform:uppercase;padding:.18rem .55rem;border-radius:99px;border:1px solid;display:inline-flex;align-items:center;gap:.3rem}
+.mc-status.done{color:var(--correct);border-color:#94a3b8;background:var(--correct-bg)}
+.mc-status.progress{color:var(--gold);border-color:#94a3b8;background:#fefce8}
+.mc-status.empty{color:var(--muted);border-color:var(--line);background:var(--line-soft)}
+
+/* Module tabs in results */
+.module-tabs{display:flex;gap:.5rem;margin-bottom:1.6rem;flex-wrap:wrap}
+.mt-btn{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.55rem 1rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;font-weight:600;color:var(--ink-soft);cursor:pointer;text-transform:uppercase;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.mt-btn:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.mt-btn.current{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mt-btn.done{border-color:#94a3b8;color:var(--correct);background:var(--correct-bg)}
+.mt-btn.done.current{background:var(--correct);color:#fff;border-color:var(--correct)}
+.mt-btn:disabled{opacity:.4;cursor:not-allowed}
+.mt-pct{font-size:.66rem;opacity:.85}
+.cover-instr{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r);padding:1.1rem 1.4rem;margin-bottom:2rem;text-align:left;font-family:var(--font-serif);font-size:.93rem;line-height:1.65;color:var(--ink-soft)}
+.cover-instr strong{color:var(--tdeep);font-weight:600}
+.btn-start{display:inline-flex;align-items:center;gap:.6rem;background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:1rem 2.4rem;font-family:var(--font-ui);font-size:1rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(71,85,105,.25)}
+.btn-start:hover{background:var(--tdark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(71,85,105,.35)}
+.btn-start svg{width:18px;height:18px}
+
+/* TOPBAR */
+.topbar{background:var(--teal);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.08);display:none}
+.topbar.show{display:block}
+.tb-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;gap:1rem}
+.tb-meta{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;opacity:.85;text-transform:uppercase}
+.tb-qnum{font-family:var(--font-display);font-size:1.1rem;font-weight:600}
+.tb-actions{display:flex;gap:.5rem}
+.tb-btn{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:6px;padding:.35rem .8rem;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;font-weight:500;cursor:pointer;text-transform:uppercase;transition:background .15s}
+.tb-btn:hover{background:rgba(255,255,255,.28)}
+.tb-progress{height:3px;background:rgba(255,255,255,.18)}
+.tb-progress-fill{height:100%;background:#fff;transition:width .3s}
+
+/* QUIZ */
+#quiz{display:none}
+#quiz.show{display:block}
+.quiz-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.dot-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.4rem}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--tlight);border:1.5px solid var(--teal);opacity:.5;cursor:pointer;transition:all .2s}
+.dot.ans{background:var(--teal);opacity:1}
+.dot.cur{background:var(--teal);opacity:1;transform:scale(1.4);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--teal)}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.8rem 1.7rem;box-shadow:var(--shadow-sm)}
+.qtype{display:inline-flex;align-items:center;gap:.5rem;background:var(--twash);color:var(--tdeep);border:1px solid var(--tlight);border-radius:6px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;font-weight:500;padding:.3rem .7rem;text-transform:uppercase;margin-bottom:1.2rem}
+.passage{font-family:var(--font-serif);font-size:1.02rem;line-height:1.85;color:#1c1917;background:var(--twash);border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:1.15rem 1.3rem;margin-bottom:1.4rem}
+.passage u{text-decoration:none;font-weight:700;color:var(--tdeep);background:linear-gradient(transparent 60%,rgba(71,85,105,.18) 60%);padding:0 2px}
+.qstem{font-family:var(--font-ui);font-size:1rem;font-weight:600;color:var(--tdeep);margin-bottom:1.2rem;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.6rem}
+.opt{display:flex;align-items:flex-start;gap:.85rem;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;cursor:pointer;transition:all .15s;font-family:var(--font-serif);font-size:.96rem;line-height:1.55;color:var(--ink);text-align:left;width:100%}
+.opt:hover{border-color:var(--teal);background:var(--twash)}
+.opt.sel{border-color:var(--teal);background:var(--twash);box-shadow:0 0 0 3px rgba(71,85,105,.1)}
+.opt-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-top:1px;transition:all .15s;flex-shrink:0}
+.opt.sel .opt-letter{background:var(--teal);border-color:var(--teal);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.4rem}
+.btn-nav{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-family:var(--font-ui);font-size:.88rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.btn-nav:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-submit{background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:.65rem 1.5rem;font-family:var(--font-ui);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(71,85,105,.2)}
+.btn-submit:hover{background:var(--tdark)}
+
+/* INTERMISSION */
+#intermission{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem 1.5rem;background:linear-gradient(135deg,var(--twash) 0%,var(--bg) 100%)}
+#intermission.show{display:flex}
+.inter-card{max-width:560px;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:2.4rem 2.2rem;text-align:center;box-shadow:var(--shadow-lg)}
+.inter-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem}
+.inter-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--tdeep);margin-bottom:.4rem;line-height:1.15}
+.inter-sub{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:2rem;font-style:italic}
+.inter-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:2rem 0;padding:1.4rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.inter-stat .stat-num{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--teal);line-height:1}
+.inter-stat .stat-lbl{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:.3rem}
+.inter-next{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:1.6rem;line-height:1.55}
+.inter-next strong{color:var(--tdeep);font-weight:600}
+.inter-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+
+/* RESULTS */
+#results{display:none}
+#results.show{display:block}
+.res-header{background:linear-gradient(135deg,var(--teal) 0%,var(--tdark) 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center}
+.res-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;opacity:.75;text-transform:uppercase;margin-bottom:.6rem}
+.res-title{font-family:var(--font-display);font-size:2.2rem;font-weight:700;margin-bottom:.4rem;letter-spacing:-.01em}
+.res-sub{font-size:.92rem;opacity:.85}
+.res-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.score-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem 1.8rem;display:grid;grid-template-columns:auto 1fr;gap:1.6rem;align-items:center;margin-bottom:2.2rem;box-shadow:var(--shadow-md)}
+.score-big{text-align:center;padding-right:1.6rem;border-right:1px solid var(--line)}
+.score-num{font-family:var(--font-display);font-size:3.6rem;font-weight:700;color:var(--teal);line-height:1}
+.score-den{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.score-info .score-pct{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin-bottom:.3rem}
+.score-info .score-pct .lbl{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:400;letter-spacing:.08em;margin-left:.5rem;text-transform:uppercase}
+.score-msg{font-family:var(--font-serif);font-size:.92rem;color:var(--ink-soft);line-height:1.6;font-style:italic}
+.module-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.4rem}
+.mb-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;text-align:center}
+.mb-name{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.mb-score{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--tdeep)}
+.mb-pct{font-family:var(--font-mono);font-size:.72rem;color:var(--teal);margin-top:.15rem}
+.section-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600;padding-bottom:.5rem;margin-bottom:1.2rem;border-bottom:1px solid var(--line)}
+.module-divider{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin:2rem 0 1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--teal);display:flex;align-items:center;justify-content:space-between}
+.module-divider .md-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* Review */
+.review-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow-sm)}
+.review-head{display:flex;align-items:center;gap:.9rem;padding:.9rem 1.2rem;background:var(--wrong-bg);border-bottom:1px solid #fecaca;cursor:pointer;user-select:none}
+.review-head.correct{background:var(--correct-bg);border-bottom-color:#bbf7d0}
+.review-num{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--wrong);background:#fff;padding:.2rem .55rem;border-radius:5px;border:1px solid #fca5a5}
+.review-head.correct .review-num{color:var(--correct);border-color:#94a3b8}
+.review-tag{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;flex:1}
+.review-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase;color:var(--wrong)}
+.review-head.correct .review-status{color:var(--correct)}
+.review-toggle{font-size:1rem;color:var(--muted);transition:transform .2s;margin-left:auto}
+.review-card.open .review-toggle{transform:rotate(180deg)}
+.review-body{padding:1.4rem 1.4rem 1.5rem;display:none}
+.review-card.open .review-body{display:block}
+.rev-passage{font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917;background:var(--bg);border-left:3px solid var(--line);padding:.85rem 1.1rem;margin-bottom:1rem;border-radius:0 6px 6px 0}
+.rev-passage u{text-decoration:none;font-weight:700;color:var(--tdeep)}
+.rev-stem{font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:.8rem}
+.rev-answers{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.4rem}
+.rev-ans{font-family:var(--font-serif);font-size:.88rem;padding:.45rem .8rem;border-radius:6px;display:flex;align-items:flex-start;gap:.6rem}
+.rev-ans.correct{background:var(--correct-bg);color:var(--correct);font-weight:600;border:1px solid #bbf7d0}
+.rev-ans.wrong-pick{background:var(--wrong-bg);color:var(--wrong);text-decoration:line-through;border:1px solid #fecaca}
+.rev-ans-letter{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;border-radius:50%;font-family:var(--font-mono);font-size:.7rem;font-weight:700;border:1.5px solid currentColor;background:#fff}
+
+/* Gri block */
+.gri-block{background:linear-gradient(180deg,#fff 0%,var(--twash) 100%);border:1px solid var(--tlight);border-radius:var(--r);overflow:hidden;margin-top:.8rem}
+.gri-head{display:flex;align-items:center;gap:.85rem;padding:.85rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight)}
+.gri-avatar{width:42px;height:42px;border-radius:50%;background:#fff;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.gri-avatar img{width:100%;height:100%;object-fit:cover}
+.gri-label{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--tdeep)}
+.gri-label small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-top:.05rem}
+.gri-body{padding:1.2rem 1.3rem;font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917}
+.expl-section{margin-bottom:1.2rem}
+.expl-section:last-child{margin-bottom:0}
+.expl-h{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--teal);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.expl-h::before{content:'';display:inline-block;width:14px;height:1.5px;background:var(--teal)}
+.expl-section p{margin-bottom:.5rem}
+.expl-section p:last-child{margin-bottom:0}
+.vocab-list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vocab-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:.65rem .95rem;border-bottom:1px solid var(--line-soft);align-items:baseline}
+.vocab-row:last-child{border-bottom:none}
+.vocab-en{font-family:var(--font-display);font-weight:600;font-size:.98rem;color:var(--tdeep);white-space:nowrap}
+.vocab-tr{font-family:var(--font-serif);font-size:.86rem;color:var(--ink-soft);font-style:italic}
+.vocab-tr .pos{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;color:var(--muted);background:var(--line-soft);padding:.08rem .35rem;border-radius:3px;margin-right:.4rem;text-transform:uppercase;font-style:normal}
+.rule-box{background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.9rem 1.1rem}
+.rule-box .rule-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#854d0e;font-weight:700;margin-bottom:.4rem}
+.rule-box p{font-family:var(--font-serif);font-size:.92rem;line-height:1.7;color:#422006;margin:0}
+mark.hl{background:linear-gradient(transparent 60%,#fef08a 60%);padding:0 2px;font-weight:500;color:inherit}
+mark.hl-key{background:linear-gradient(transparent 60%,rgba(71,85,105,.22) 60%);padding:0 2px;font-weight:500;color:inherit}
+
+/* Data tables (CoE Quantitative) */
+.data-block{margin:0 0 1.4rem;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.data-caption{font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--tdeep);padding:.7rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight);line-height:1.45}
+.data-caption .src{display:block;font-family:var(--font-serif);font-size:.78rem;font-weight:400;color:var(--ink-soft);font-style:italic;margin-top:.2rem}
+.data-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:.86rem}
+.data-table th{background:#fff;color:var(--tdeep);padding:.55rem .85rem;text-align:left;font-weight:600;border-bottom:1.5px solid var(--teal);font-size:.82rem}
+.data-table td{padding:.5rem .85rem;border-bottom:1px solid var(--line-soft);color:var(--ink)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.data-table .grp{background:var(--twash);font-weight:600;color:var(--tdeep)}
+.data-table tr:nth-child(even) td{background:#fafafa}
+.data-table tr:nth-child(even) td.grp{background:var(--tsoft)}
+.rev-data{margin:.7rem 0 1rem}
+
+/* Cross-Text Connections - dual passage */
+.dual-text{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0 1.2rem}
+.dual-text .text-block{padding:.9rem 1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.dual-text .text-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.45rem;text-transform:uppercase}
+.dual-text .text-body{font-family:var(--font-serif);font-size:.92rem;line-height:1.55;color:var(--ink)}
+@media (max-width:680px){.dual-text{grid-template-columns:1fr}}
+
+/* Rhetorical Synthesis - student notes */
+.notes-block{margin:.5rem 0 1rem;padding:1rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.notes-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.55rem;text-transform:uppercase}
+.notes-list{margin:0;padding-left:1.2rem;font-family:var(--font-serif);font-size:.92rem;line-height:1.6;color:var(--ink)}
+.notes-list li{margin-bottom:.3rem}
+.goal-line{margin:.5rem 0 .2rem;font-family:var(--font-serif);font-size:.95rem;line-height:1.55;color:var(--ink);font-style:italic}
+
+/* Footer */
+.site-foot{background:var(--tdeep);color:#fff;padding:2.4rem 1.5rem 2rem;text-align:center}
+.foot-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:.4rem}
+.foot-brand .it{font-style:italic;font-weight:500;color:var(--tlight)}
+.foot-text{font-size:.84rem;opacity:.75;font-family:var(--font-serif);margin-bottom:1rem}
+.foot-tagline{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tlight);opacity:.7}
+.results-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.btn-action{padding:.7rem 1.4rem;border-radius:var(--r);font-family:var(--font-ui);font-size:.85rem;font-weight:700;cursor:pointer;border:1.5px solid var(--teal);transition:all .15s}
+.btn-action.primary{background:var(--teal);color:#fff}
+.btn-action.primary:hover{background:var(--tdark)}
+.btn-action.outline{background:#fff;color:var(--teal)}
+.btn-action.outline:hover{background:var(--twash)}
+
+@media(max-width:640px){
+  .module-card{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .module-card .mc-meta{text-align:left}
+  .qcard{padding:1.3rem 1.1rem}
+  .passage{font-size:.95rem;padding:1rem 1.1rem}
+  .score-card{grid-template-columns:1fr;text-align:center}
+  .score-big{border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:1.2rem}
+  .module-breakdown{grid-template-columns:1fr}
+  .inter-stats{grid-template-columns:1fr;gap:.8rem}
+  .vocab-row{grid-template-columns:1fr;gap:.2rem}
+}
+@media print{
+  .topbar,.btn-start,.btn-nav,.btn-submit,.results-actions,.site-foot,.inter-actions{display:none!important}
+  body{background:#fff}
+  #splash,#intermission{display:none}
+  #results{display:block!important}
+  .review-card{break-inside:avoid;page-break-inside:avoid}
+  .review-card .review-body{display:block!important}
+}
+
+/* Math styles (KaTeX olmadan, Unicode + plain text) */
+.math-block{margin:.5rem 0 1rem;padding:.9rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);text-align:center;font-family:'Cormorant Garamond','Times New Roman',serif;font-size:1.2rem;font-style:italic}
+.math-block .var{font-style:italic}
+.usd{font-style:normal;white-space:nowrap}
+
+</style>
+<!-- Brand integration: Supabase + camp features (Math track) -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/sat-camp-features.css">
+<!-- KAMP PAYWALL deps -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/site-config.js"></script>
+<script src="../assets/auth.js"></script>
+<!-- /KAMP PAYWALL deps -->
+<!-- KAMP PAYWALL: tek seferlik kontrol -->
+<script>
+(function() {
+  var KAMP_SLUG = 'sat-rw-8-gunluk-kamp';
+  var SPLASH = '/urun/sat-rw-8-gunluk-kamp.html';
+
+  document.documentElement.style.visibility = 'hidden';
+  function allow() { document.documentElement.style.visibility = 'visible'; }
+  function deny() { window.location.replace(SPLASH); }
+
+  function check() {
+    if (!window.GriAuth) {
+      setTimeout(check, 80);
+      return;
+    }
+    var auth = window.GriAuth.verify();
+    if (!auth) {
+      window.GriAuth.refreshCache().then(function () {
+        var a2 = window.GriAuth.verify();
+        if (a2 && window.GriAuth.hasAccess(a2.record, KAMP_SLUG)) {
+          allow();
+        } else {
+          deny();
+        }
+      }).catch(deny);
+      return;
+    }
+    if (window.GriAuth.hasAccess(auth.record, KAMP_SLUG)) {
+      allow();
+    } else {
+      deny();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
+})();
+</script>
+<!-- /KAMP PAYWALL -->
+
+<script>window.SAT_CAMP_DAY = 6; window.SAT_CAMP_TRACK = 'math';</script>
+<script src="../assets/sat-camp-features.js" defer></script>
+</head>
+<body>
+<div class="sc-brand-bar">
+  <a href="../index.html" class="sc-brand-logo">Gri <span class="it">English</span></a>
+  <div class="sc-brand-meta">
+    <span class="sc-day-tag">DAY 6 · MATH</span>
+    <a href="../urun/sat-rw-8-gunluk-kamp.html">Kamp Anasayfa</a>
+    <a href="../calisma-paketleri.html">Tüm Paketler</a>
+    <a href="../panelim.html">Çalışma Masam</a>
+  </div>
+</div>
+
+
+<!-- SPLASH -->
+<section id="splash">
+  <div class="cover">
+    <div class="cover-brand">Gri <span class="it">English</span></div>
+    <div class="cover-eyebrow">Digital SAT Math · Day 6</div>
+    <h1 class="cover-title">Statistics & Probability</h1>
+    <p class="cover-sub">PSDA · İstatistik ve Olasılık</p>
+
+    <div class="cover-divider"><span class="cover-dia"></span><span class="cover-dia"></span><span class="cover-dia"></span></div>
+
+    <div class="module-list" id="moduleList"></div>
+
+    <div class="cover-instr">
+      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa’ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
+    </div>
+
+    <button class="btn-start" onclick="startModule(0)">
+      Module 1 ile Başla
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button id="resetBtn" class="btn-reset-progress" onclick="resetAllProgress()" style="display:none;margin-top:14px;background:transparent;border:1px solid rgba(150,150,150,.4);color:#888;padding:8px 18px;font-size:13px;border-radius:6px;cursor:pointer;font-family:inherit;">
+      Tüm İlerlemeyi Sıfırla
+    </button>
+
+  </div>
+</section>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-inner">
+    <span class="tb-meta" id="tbMeta">Module 1</span>
+    <span class="tb-qnum" id="tbQnum">1 / 27</span>
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="goHome()">Ana Sayfa</button>
+      <button class="tb-btn" onclick="quitToSplash()">Çıkış</button>
+    </div>
+  </div>
+  <div class="tb-progress"><div class="tb-progress-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="quiz-wrap">
+    <div class="dot-row" id="dotRow"></div>
+    <div id="qcard" class="qcard"></div>
+    <div class="nav-row">
+      <button class="btn-nav" id="prevBtn" onclick="prevQ()">‹ Önceki</button>
+      <button class="btn-nav" id="nextBtn" onclick="nextQ()">Sonraki ›</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitModule()" style="display:none">Modülü Bitir</button>
+    </div>
+  </div>
+</section>
+
+<!-- INTERMISSION -->
+<!-- RESULTS (per-module) -->
+<section id="results">
+  <div class="res-header">
+    <div class="res-eyebrow" id="resEyebrow">Module 1 Tamamlandı</div>
+    <h1 class="res-title" id="resTitle">Modül Analizi</h1>
+    <p class="res-sub" id="resSub">Her yanlışı incele, kuralları defterine geç</p>
+  </div>
+  <div class="res-wrap">
+    <div class="module-tabs" id="moduleTabs"></div>
+
+    <div class="score-card">
+      <div class="score-big">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-den" id="scoreDen">/ 27 doğru</div>
+      </div>
+      <div class="score-info">
+        <div class="score-pct"><span id="scorePct">0%</span><span class="lbl">Modül Doğruluğu</span></div>
+        <div class="score-msg" id="scoreMsg">Aşağıdaki analizleri dikkatlice oku. Her yanlışını yedi adım protokolüyle hata günlüğüne işle.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Soru-Soru Analiz</div>
+    <div id="reviewList"></div>
+
+    <div class="results-actions">
+      <button class="btn-action outline" onclick="goHome()">‹ Ana Sayfa</button>
+      <button class="btn-action outline" onclick="window.print()">PDF Olarak Yazdır</button>
+      <button class="btn-action primary" id="resPrimaryBtn" onclick="goToNextModule()">Sıradaki Modüle Geç ›</button>
+    </div>
+  </div>
+  <div class="site-foot">
+    <div class="foot-brand">Gri <span class="it">English</span></div>
+    <div class="foot-text">Sınav İngilizcesi için titizlikle hazırlanmış materyaller</div>
+    <div class="foot-tagline">Focus · Practice · Succeed</div>
+  </div>
+</section>
+
+<script>
+const GRI_MASCOT = 'data:image/png;base64,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';
+
+const MODULES = [
+{
+  name: 'Module 1',
+  subtitle: 'PSDA: Statistics & Probability. Kolay-orta zorluk SAT formatlı sorular.',
+  questions: [
+    // Q1 — Mean basic
+    {
+      k:'PSDA',
+      p:`Consider the data set: 4, 6, 8, 10, 12.`,
+      q:'What is the mean of the data set?',
+      o:['A) 6','B) 8','C) 10','D) 40'],
+      a:1,
+      explain:{
+        why_correct:'Mean = <em>(4 + 6 + 8 + 10 + 12) / 5 = 40/5 = 8</em>. Cevap: B.',
+        why_wrong:'<strong>A, C</strong> rastgele. <strong>D</strong> sadece toplam (bölme atlanmış).',
+        vocab:[
+          {en:'mean',pos:'n.',tr:'aritmetik ortalama'},
+          {en:'sum of values',pos:'phr.',tr:'değerlerin toplamı'},
+          {en:'count of values',pos:'phr.',tr:'değer sayısı'},
+          {en:'arithmetic average',pos:'n.',tr:'aritmetik ortalama'},
+          {en:'central tendency',pos:'n.',tr:'merkezi eğilim'},
+        ],
+        rule:'<strong>Mean</strong> = <em>(toplam) / (sayı)</em>. Tüm değerleri topla, eleman sayısına böl.'
+      }
+    },
+    // Q2 — Median odd count
+    {
+      k:'PSDA',
+      p:`Consider the data set: 3, 7, 5, 9, 1.`,
+      q:'What is the median?',
+      o:['A) 3','B) 5','C) 7','D) 9'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Önce sırala</mark>: <em>1, 3, 5, 7, 9</em>. Median = orta değer = <em>5</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> sıralama yapılmadan veya yanlış pozisyon.',
+        vocab:[
+          {en:'median',pos:'n.',tr:'medyan (ortanca)'},
+          {en:'sort first',pos:'phr.',tr:'önce sırala'},
+          {en:'middle value',pos:'n.',tr:'orta değer'},
+          {en:'odd count',pos:'phr.',tr:'tek sayı'},
+          {en:'ordered data',pos:'n.',tr:'sıralı veri'},
+        ],
+        rule:'<strong>Median:</strong> önce sırala, sonra orta değeri al. Tek sayıda ise tam orta. Çift sayıda ise iki ortancanın ortalaması.'
+      }
+    },
+    // Q3 — Mode
+    {
+      k:'PSDA',
+      p:`Consider the data set: 2, 5, 7, 5, 8, 5, 10.`,
+      q:'What is the mode?',
+      o:['A) 5','B) 6','C) 7','D) 10'],
+      a:0,
+      explain:{
+        why_correct:'Mode = en sık tekrarlanan değer. <em>5</em> üç kez tekrarlanıyor. Cevap: A.',
+        why_wrong:'<strong>B</strong> mean yakını. <strong>C, D</strong> tekrarsız değerler.',
+        vocab:[
+          {en:'mode',pos:'n.',tr:'mod (en sık değer)'},
+          {en:'most frequent',pos:'phr.',tr:'en sık'},
+          {en:'tally values',pos:'phr.',tr:'değerleri say'},
+          {en:'unique value',pos:'n.',tr:'tekil değer'},
+          {en:'no mode possible',pos:'phr.',tr:'mod olmayabilir'},
+        ],
+        rule:'<strong>Mode:</strong> en çok tekrarlanan değer. Bir veri setinde birden fazla mod olabilir (bimodal) veya hiç olmayabilir.'
+      }
+    },
+    // Q4 — Range
+    {
+      k:'PSDA',
+      p:`Consider the data set: 12, 4, 8, 19, 7.`,
+      q:'What is the range?',
+      o:['A) 7','B) 12','C) 15','D) 19'],
+      a:2,
+      explain:{
+        why_correct:'Range = <em>max − min = 19 − 4 = 15</em>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> tek değer. <strong>D</strong> max.',
+        vocab:[
+          {en:'range',pos:'n.',tr:'açıklık (range)'},
+          {en:'maximum',pos:'n.',tr:'maksimum'},
+          {en:'minimum',pos:'n.',tr:'minimum'},
+          {en:'spread',pos:'n.',tr:'yayılım'},
+          {en:'simple measure of variation',pos:'phr.',tr:'basit yayılım ölçüsü'},
+        ],
+        rule:'<strong>Range:</strong> <em>max − min</em>. En basit yayılım ölçüsü, outlier’lara çok duyarlı.'
+      }
+    },
+    // Q5 — Mean change when adding value
+    {
+      k:'PSDA',
+      p:`The data set {5, 8, 11} has a mean of 8. The value 14 is added to the set.`,
+      q:'What is the mean of the new data set?',
+      o:['A) 8','B) 9','C) 9.5','D) 10'],
+      a:2,
+      explain:{
+        why_correct:'Önceki toplam: <em>3 × 8 = 24</em>. Yeni toplam: <em>24 + 14 = 38</em>. Yeni count: 4. Yeni mean: <em>38/4 = 9.5</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> mean değişmez varsayımı. <strong>B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'add value',pos:'phr.',tr:'değer ekle'},
+          {en:'new mean',pos:'n.',tr:'yeni ortalama'},
+          {en:'recalculate',pos:'v.',tr:'yeniden hesapla'},
+          {en:'sum changes',pos:'phr.',tr:'toplam değişir'},
+          {en:'count changes',pos:'phr.',tr:'sayı değişir'},
+        ],
+        rule:'Mean yeni değer ekleyince: <em>(eski toplam + yeni değer) / (eski sayı + 1)</em>. Eski ortalamadan büyük değer mean’i artırır.'
+      }
+    },
+    // Q6 — Mean change when removing
+    {
+      k:'PSDA',
+      p:`The data set {3, 6, 9, 12, 15} has a mean of 9. The value 15 is removed from the set.`,
+      q:'What is the mean of the new data set?',
+      o:['A) 7.5','B) 8','C) 9','D) 10'],
+      a:0,
+      explain:{
+        why_correct:'Önceki toplam: <em>5 × 9 = 45</em>. Yeni toplam: <em>45 − 15 = 30</em>. Yeni count: 4. <em>30/4 = 7.5</em>. Cevap: A.',
+        why_wrong:'<strong>B, D</strong> hesap hataları. <strong>C</strong> mean değişmez varsayımı.',
+        vocab:[
+          {en:'remove value',pos:'phr.',tr:'değer çıkar'},
+          {en:'subtract from sum',pos:'phr.',tr:'toplamdan çıkar'},
+          {en:'count decreases',pos:'phr.',tr:'sayı azalır'},
+          {en:'effect of outlier',pos:'phr.',tr:'aykırı değer etkisi'},
+          {en:'large value removal',pos:'phr.',tr:'büyük değer çıkarma'},
+        ],
+        rule:'Mean değer çıkarma: <em>(eski toplam − çıkarılan) / (eski sayı − 1)</em>. Eski ortalamadan büyük değeri çıkarma mean’i düşürür.'
+      }
+    },
+    // Q7 — Weighted average
+    {
+      k:'PSDA',
+      p:`A student scored 85 on a midterm exam (weight: 40%) and 95 on a final exam (weight: 60%).`,
+      q:'What is the student’s weighted final grade?',
+      o:['A) 87','B) 89','C) 90','D) 91'],
+      a:3,
+      explain:{
+        why_correct:'<em>0.40 × 85 + 0.60 × 95 = 34 + 57 = 91</em>. Cevap: D.',
+        why_wrong:'<strong>A, B</strong> aritmetik ortalama (90) civarı. <strong>C</strong> aritmetik ortalama.',
+        vocab:[
+          {en:'weighted grade',pos:'n.',tr:'ağırlıklı not'},
+          {en:'midterm',pos:'n.',tr:'ara sınav'},
+          {en:'final exam',pos:'n.',tr:'final sınavı'},
+          {en:'weight as decimal',pos:'phr.',tr:'ağırlığı ondalık olarak'},
+          {en:'higher weight dominates',pos:'phr.',tr:'yüksek ağırlık baskın'},
+        ],
+        rule:'Weighted average: <em>Σ (value × weight)</em>. Ağırlık fazla olan değer sonuca daha çok etki eder.'
+      }
+    },
+    // Q8 — Two-way table marginal
+    {
+      k:'PSDA',
+      p:`A café surveys 100 customers. The two-way table shows beverage preference by gender:<br><br><em>Male: 30 Coffee, 20 Tea, 50 Total.</em><br><em>Female: 40 Coffee, 10 Tea, 50 Total.</em><br><em>Column totals: 70 Coffee, 30 Tea, 100 Grand Total.</em>`,
+      q:'How many people in total prefer Coffee?',
+      o:['A) 30','B) 40','C) 70','D) 100'],
+      a:2,
+      explain:{
+        why_correct:'Coffee sütununun toplamı: <em>30 + 40 = 70</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> male coffee. <strong>B</strong> female coffee. <strong>D</strong> grand total.',
+        vocab:[
+          {en:'two-way table',pos:'n.',tr:'iki yönlü tablo'},
+          {en:'marginal frequency',pos:'n.',tr:'kenar frekansı'},
+          {en:'row total',pos:'n.',tr:'satır toplamı'},
+          {en:'column total',pos:'n.',tr:'sütun toplamı'},
+          {en:'grand total',pos:'n.',tr:'genel toplam'},
+        ],
+        rule:'Two-way table’da <strong>marginal frequency</strong> = satır veya sütun toplamı. Genel toplam ile karıştırma.'
+      }
+    },
+    // Q9 — Two-way table joint
+    {
+      k:'PSDA',
+      p:`Using the same table from the previous question (Male/Female × Coffee/Tea).`,
+      q:'How many females prefer Coffee?',
+      o:['A) 10','B) 30','C) 40','D) 50'],
+      a:2,
+      explain:{
+        why_correct:'Female × Coffee hücresi: <em>40</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> female tea. <strong>B</strong> male coffee. <strong>D</strong> female total.',
+        vocab:[
+          {en:'joint frequency',pos:'n.',tr:'ortak frekans'},
+          {en:'cell value',pos:'n.',tr:'hücre değeri'},
+          {en:'specific intersection',pos:'phr.',tr:'belirli kesişim'},
+          {en:'row and column',pos:'phr.',tr:'satır ve sütun'},
+          {en:'read directly',pos:'phr.',tr:'doğrudan oku'},
+        ],
+        rule:'<strong>Joint frequency</strong> = iki kategorinin kesişimindeki hücre. Marginal toplamlardan ayırt et.'
+      }
+    },
+    // Q10 — Conditional probability
+    {
+      k:'PSDA',
+      p:`Using the same Male/Female × Coffee/Tea table (70 total Coffee drinkers; 40 of them female).`,
+      q:'What is the probability that a randomly selected coffee drinker is female?',
+      o:['A) 2⁄5','B) 4⁄7','C) 2⁄7','D) 1⁄4'],
+      a:1,
+      explain:{
+        why_correct:'Coffee içen toplam: <em>70</em>. Female coffee içen: <em>40</em>. <em>P(female | coffee) = 40/70 = 4/7</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 40/100 = 2/5 (yanlış payda, grand total). <strong>C</strong> male coffee/70. <strong>D</strong> female tea/female total.',
+        vocab:[
+          {en:'conditional probability',pos:'phr.',tr:'koşullu olasılık'},
+          {en:'given that',pos:'phr.',tr:'verildiğinde'},
+          {en:'restricted sample',pos:'phr.',tr:'kısıtlı örnek'},
+          {en:'reduced denominator',pos:'phr.',tr:'küçültülmüş payda'},
+          {en:'subset focus',pos:'phr.',tr:'altküme odağı'},
+        ],
+        rule:'<strong>P(A|B)</strong> = P(A ∩ B) / P(B). Tabloda: <em>(joint cell) / (marginal of given category)</em>.'
+      }
+    },
+    // Q11 — Probability from frequency
+    {
+      k:'PSDA',
+      p:`A survey of 50 students shows 30 passed a recent test.`,
+      q:'What is the probability that a randomly chosen student passed?',
+      o:['A) 1⁄3','B) 2⁄5','C) 3⁄5','D) 4⁄5'],
+      a:2,
+      explain:{
+        why_correct:'<em>P(passed) = 30/50 = 3/5</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'empirical probability',pos:'n.',tr:'deneysel olasılık'},
+          {en:'relative frequency',pos:'n.',tr:'göreli frekans'},
+          {en:'simplify fraction',pos:'phr.',tr:'kesri sadeleştir'},
+          {en:'data-based',pos:'adj.',tr:'veri tabanlı'},
+          {en:'observed proportion',pos:'phr.',tr:'gözlemlenmiş oran'},
+        ],
+        rule:'<strong>Empirical probability</strong> = uygun gözlem / toplam gözlem. Veriden hesaplanan olasılık.'
+      }
+    },
+    // Q12 — Correlation type
+    {
+      k:'PSDA',
+      p:`A scatter plot shows that as the value of x increases, the value of y also increases.`,
+      q:'Which type of correlation is shown?',
+      o:['A) Positive','B) Negative','C) No correlation','D) Strong negative'],
+      a:0,
+      explain:{
+        why_correct:'<strong>Pozitif korelasyon</strong>: iki değişken aynı yönde değişir (ikisi de artar veya ikisi de azalır). Cevap: A.',
+        why_wrong:'<strong>B, D</strong> negatif: biri artar, diğeri azalır. <strong>C</strong> ilişki yok.',
+        vocab:[
+          {en:'positive correlation',pos:'phr.',tr:'pozitif korelasyon'},
+          {en:'negative correlation',pos:'phr.',tr:'negatif korelasyon'},
+          {en:'scatter plot',pos:'n.',tr:'serpme grafik'},
+          {en:'trend',pos:'n.',tr:'eğilim'},
+          {en:'direction of association',pos:'phr.',tr:'ilişki yönü'},
+        ],
+        rule:'<strong>Korelasyon türleri:</strong> Pozitif (aynı yön), negatif (zıt yön), no correlation (ilişki yok). Slope işareti yön belirler.'
+      }
+    },
+    // Q13 — Bar chart percent
+    {
+      k:'PSDA',
+      p:`A survey of 100 people about favorite ice cream flavors shows: Chocolate 35, Vanilla 25, Strawberry 20, Other 20.`,
+      q:'What percent of people prefer Chocolate?',
+      o:['A) 20%','B) 25%','C) 35%','D) 45%'],
+      a:2,
+      explain:{
+        why_correct:'<em>35/100 = 35%</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> Strawberry/Other. <strong>B</strong> Vanilla. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'bar chart',pos:'n.',tr:'çubuk grafik'},
+          {en:'category',pos:'n.',tr:'kategori'},
+          {en:'preference',pos:'n.',tr:'tercih'},
+          {en:'percent of total',pos:'phr.',tr:'toplamın yüzdesi'},
+          {en:'simple ratio',pos:'phr.',tr:'basit oran'},
+        ],
+        rule:'Bar chart ya da kategori verisinde percent: <em>kategori sayı / toplam × 100%</em>.'
+      }
+    },
+    // Q14 — Line graph change
+    {
+      k:'PSDA',
+      p:`A line graph shows store sales (in units) over five months: January 100, February 120, March 110, April 130, May 140.`,
+      q:'By how many units did sales increase from January to May?',
+      o:['A) 20','B) 30','C) 40','D) 50'],
+      a:2,
+      explain:{
+        why_correct:'<em>140 − 100 = 40</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yanlış aylar.',
+        vocab:[
+          {en:'line graph',pos:'n.',tr:'çizgi grafik'},
+          {en:'over time',pos:'phr.',tr:'zaman içinde'},
+          {en:'change in value',pos:'phr.',tr:'değer değişimi'},
+          {en:'endpoint comparison',pos:'phr.',tr:'uç nokta karşılaştırma'},
+          {en:'sales trend',pos:'n.',tr:'satış eğilimi'},
+        ],
+        rule:'Line graph net değişim: <em>son değer − ilk değer</em>. Aradaki değerleri toplama gerek yok.'
+      }
+    },
+    // Q15 — Histogram total
+    {
+      k:'PSDA',
+      p:`A histogram shows test scores in intervals: 50–60 with 5 students, 60–70 with 8 students, 70–80 with 15 students, 80–90 with 12 students, 90–100 with 5 students.`,
+      q:'What is the total number of students?',
+      o:['A) 35','B) 40','C) 45','D) 50'],
+      a:2,
+      explain:{
+        why_correct:'Toplam: <em>5 + 8 + 15 + 12 + 5 = 45</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'histogram',pos:'n.',tr:'histogram'},
+          {en:'frequency interval',pos:'n.',tr:'frekans aralığı'},
+          {en:'sum frequencies',pos:'phr.',tr:'frekansları topla'},
+          {en:'class width',pos:'n.',tr:'sınıf genişliği'},
+          {en:'total observations',pos:'n.',tr:'toplam gözlem'},
+        ],
+        rule:'Histogram toplam gözlem: tüm aralık frekanslarını <strong>topla</strong>. Her bar bir aralıktaki sayıdır.'
+      }
+    },
+    // Q16 — Median from frequency table
+    {
+      k:'PSDA',
+      p:`A frequency table shows test scores: 70 appears 3 times, 80 appears 5 times, 90 appears 4 times, 100 appears 3 times. (Total: 15 students.)`,
+      q:'What is the median score?',
+      o:['A) 70','B) 80','C) 85','D) 90'],
+      a:1,
+      explain:{
+        why_correct:'Toplam: <em>15</em>. Median pozisyonu: <em>(15+1)/2 = 8</em>. inci eleman.\nCumulative frekans: 70 (1–3), 80 (4–8), 90 (9–12), 100 (13–15). <em>8’inci eleman = 80</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> en küçük. <strong>C</strong> 80 ile 90 arası ortalama (yanlış). <strong>D</strong> ortadan büyük.',
+        vocab:[
+          {en:'cumulative frequency',pos:'n.',tr:'kümülatif frekans'},
+          {en:'position of median',pos:'phr.',tr:'medyan pozisyonu'},
+          {en:'count up',pos:'phr.',tr:'sayarak yukarı çık'},
+          {en:'ordered data',pos:'n.',tr:'sıralı veri'},
+          {en:'frequency table',pos:'n.',tr:'frekans tablosu'},
+        ],
+        rule:'Frekans tablosundan median: pozisyonu hesapla (<em>(n+1)/2</em>), kümülatif frekansla pozisyonun düştüğü değeri bul.'
+      }
+    },
+    // Q17 — Mean from frequency table
+    {
+      k:'PSDA',
+      p:`A frequency table shows: 70 appears 2 times, 80 appears 3 times, 90 appears 5 times. (Total: 10 students.)`,
+      q:'What is the mean score?',
+      o:['A) 80','B) 83','C) 85','D) 90'],
+      a:1,
+      explain:{
+        why_correct:'Toplam puan: <em>70(2) + 80(3) + 90(5) = 140 + 240 + 450 = 830</em>. Toplam frekans: <em>10</em>. Mean: <em>830/10 = 83</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> aritmetik ortalama (80, frekansları görmezden gelme). <strong>C</strong> hesap hatası. <strong>D</strong> en yüksek frekanslı puan.',
+        vocab:[
+          {en:'weighted mean from table',pos:'phr.',tr:'tablodan ağırlıklı ortalama'},
+          {en:'multiply by frequency',pos:'phr.',tr:'frekansla çarp'},
+          {en:'sum products',pos:'phr.',tr:'çarpımları topla'},
+          {en:'divide by total count',pos:'phr.',tr:'toplam sayıya böl'},
+          {en:'weighted by frequency',pos:'phr.',tr:'frekansa göre ağırlıklı'},
+        ],
+        rule:'Frekans tablosundan mean: <em>Σ(value × frequency) / Σ(frequency)</em>. Aritmetik ortalama <strong>değil</strong> — frekanslar ağırlık.'
+      }
+    },
+    // Q18 — Standard deviation comparison
+    {
+      k:'PSDA',
+      p:`Consider two data sets:<br>Set A: 5, 5, 5, 5, 5<br>Set B: 1, 3, 5, 7, 9`,
+      q:'Which set has a larger standard deviation?',
+      o:['A) Set A','B) Set B','C) They are equal','D) Cannot be determined'],
+      a:1,
+      explain:{
+        why_correct:'Set A’nın tüm değerleri aynı: yayılım yok, <em>SD = 0</em>. Set B değerler dağılmış, <em>SD > 0</em>. Set B daha büyük. Cevap: B.',
+        why_wrong:'<strong>A</strong> yayılım yok demek SD = 0. <strong>C</strong> farklı yayılımlar. <strong>D</strong> belirlenir.',
+        vocab:[
+          {en:'standard deviation',pos:'n.',tr:'standart sapma'},
+          {en:'spread',pos:'n.',tr:'yayılım'},
+          {en:'identical values',pos:'phr.',tr:'özdeş değerler'},
+          {en:'zero variation',pos:'phr.',tr:'sıfır varyasyon'},
+          {en:'measure of dispersion',pos:'phr.',tr:'dağılım ölçüsü'},
+        ],
+        rule:'<strong>SD</strong> = veri yayılım ölçüsü. Tüm değerler eşit ise SD = 0. Daha fazla yayılım → daha büyük SD.'
+      }
+    },
+    // Q19 — Box plot IQR
+    {
+      k:'PSDA',
+      p:`A box plot shows Q1 = 60, median = 75, and Q3 = 85.`,
+      q:'What is the interquartile range (IQR)?',
+      o:['A) 15','B) 20','C) 25','D) 30'],
+      a:2,
+      explain:{
+        why_correct:'<em>IQR = Q3 − Q1 = 85 − 60 = 25</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> median − Q1. <strong>B</strong> hesap hatası. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'interquartile range',pos:'n.',tr:'çeyrekler arası açıklık'},
+          {en:'IQR',pos:'n.',tr:'IQR'},
+          {en:'first quartile',pos:'n.',tr:'birinci çeyrek (Q1)'},
+          {en:'third quartile',pos:'n.',tr:'üçüncü çeyrek (Q3)'},
+          {en:'box width',pos:'n.',tr:'kutu genişliği'},
+        ],
+        rule:'<strong>IQR = Q3 − Q1</strong>. Orta %50’nin yayılımı. Outlier’lara range’den daha dirençli.'
+      }
+    },
+    // Q20 — Quartile
+    {
+      k:'PSDA',
+      p:`Consider the sorted data set: 4, 6, 8, 10, 12, 14, 16.`,
+      q:'What is Q3 (the third quartile)?',
+      o:['A) 8','B) 12','C) 14','D) 16'],
+      a:2,
+      explain:{
+        why_correct:'Toplam 7 değer, median 10 (4. eleman). Üst yarı: <em>12, 14, 16</em>. Q3 = bu yarının medyanı = <em>14</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> Q1. <strong>B</strong> üst yarı min. <strong>D</strong> max.',
+        vocab:[
+          {en:'five-number summary',pos:'n.',tr:'beş sayı özeti'},
+          {en:'quartile',pos:'n.',tr:'çeyrek'},
+          {en:'upper half',pos:'phr.',tr:'üst yarı'},
+          {en:'lower half',pos:'phr.',tr:'alt yarı'},
+          {en:'median of half',pos:'phr.',tr:'yarının medyanı'},
+        ],
+        rule:'<strong>Quartiles:</strong> Q1 = alt yarının medyanı, Q2 = median, Q3 = üst yarının medyanı.'
+      }
+    },
+    // Q21 — Complement probability
+    {
+      k:'PSDA',
+      p:`The probability that it will rain tomorrow is 0.3.`,
+      q:'What is the probability that it will not rain tomorrow?',
+      o:['A) 0.3','B) 0.5','C) 0.7','D) 1.3'],
+      a:2,
+      explain:{
+        why_correct:'<em>P(not rain) = 1 − P(rain) = 1 − 0.3 = 0.7</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> aynı olasılık. <strong>B</strong> rastgele. <strong>D</strong> toplam 1 sınırını aşar.',
+        vocab:[
+          {en:'complement',pos:'n.',tr:'tümleyen'},
+          {en:'not event',pos:'phr.',tr:'olay olmama'},
+          {en:'one minus P',pos:'phr.',tr:'1 eksi P'},
+          {en:'sum to one',pos:'phr.',tr:'toplam 1'},
+          {en:'all probabilities sum',pos:'phr.',tr:'tüm olasılıklar toplamı'},
+        ],
+        rule:'<strong>Complement rule:</strong> <em>P(not A) = 1 − P(A)</em>. Bir olayın olma ve olmama olasılıkları toplamı 1.'
+      }
+    },
+    // Q22 — Mutually exclusive
+    {
+      k:'PSDA',
+      p:`Events A and B are mutually exclusive, with P(A) = 0.4 and P(B) = 0.3.`,
+      q:'What is P(A or B)?',
+      o:['A) 0.12','B) 0.4','C) 0.7','D) 1.0'],
+      a:2,
+      explain:{
+        why_correct:'Mutually exclusive: <em>P(A or B) = P(A) + P(B) = 0.4 + 0.3 = 0.7</em>. Cevap: C.\n\n<strong>Not:</strong> Mutually exclusive olaylar birlikte olamaz, kesişim 0.',
+        why_wrong:'<strong>A</strong> P(A) × P(B) (independent için). <strong>B</strong> sadece A. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'mutually exclusive',pos:'phr.',tr:'ayrık olaylar'},
+          {en:'no overlap',pos:'phr.',tr:'kesişim yok'},
+          {en:'A or B',pos:'phr.',tr:'A veya B'},
+          {en:'union',pos:'n.',tr:'birleşim'},
+          {en:'cannot happen together',pos:'phr.',tr:'birlikte olamaz'},
+        ],
+        rule:'<strong>Mutually exclusive:</strong> <em>P(A or B) = P(A) + P(B)</em>. Genel: <em>P(A ∪ B) = P(A) + P(B) − P(A ∩ B)</em>; ayrıkta P(A ∩ B) = 0.'
+      }
+    },
+    // Q23 — Sample size effect
+    {
+      k:'PSDA',
+      p:`A researcher is choosing between two surveys: one with 200 respondents and another with 800 respondents (assuming both are random).`,
+      q:'Which survey would generally provide a more reliable estimate of the population?',
+      o:['A) Both equally reliable','B) The 200-person survey','C) The 800-person survey','D) Cannot be determined'],
+      a:2,
+      explain:{
+        why_correct:'Daha büyük random örnek (800) genellikle daha güvenilir tahmin verir, çünkü <strong>margin of error küçülür</strong> ve <strong>sampling variability azalır</strong>. Cevap: C.',
+        why_wrong:'<strong>A</strong> sample size etkisini görmezden gelir. <strong>B</strong> küçük örnek daha az güvenilir. <strong>D</strong> belirlenir.',
+        vocab:[
+          {en:'sample size',pos:'n.',tr:'örnek büyüklüğü'},
+          {en:'reliable estimate',pos:'phr.',tr:'güvenilir tahmin'},
+          {en:'margin of error',pos:'n.',tr:'hata payı'},
+          {en:'sampling variability',pos:'n.',tr:'örnekleme değişkenliği'},
+          {en:'larger is better',pos:'phr.',tr:'büyük daha iyi'},
+        ],
+        rule:'<strong>Sample size effect:</strong> Büyük random örnekler daha küçük margin of error verir. Random olmayan büyük örnek bias’lı olabilir.'
+      }
+    },
+    // Q24 — Margin of error
+    {
+      k:'PSDA',
+      p:`A poll shows that a candidate has 55% support with a margin of error of 3 percentage points.`,
+      q:'What range likely contains the true support level?',
+      o:['A) Exactly 55%','B) 52% to 58%','C) 50% to 60%','D) 45% to 55%'],
+      a:1,
+      explain:{
+        why_correct:'Margin of error 3%: gerçek değer <em>55 ± 3 = 52% ile 58%</em> arasında. Cevap: B.',
+        why_wrong:'<strong>A</strong> tek değer. <strong>C, D</strong> yanlış aralık.',
+        vocab:[
+          {en:'margin of error',pos:'n.',tr:'hata payı'},
+          {en:'confidence interval',pos:'n.',tr:'güven aralığı'},
+          {en:'plus or minus',pos:'phr.',tr:'artı eksi'},
+          {en:'true population value',pos:'phr.',tr:'gerçek populasyon değeri'},
+          {en:'survey estimate',pos:'n.',tr:'anket tahmini'},
+        ],
+        rule:'<strong>Margin of error:</strong> gerçek değer örnek tahmin <em>± ME</em> aralığında. Aralık = (tahmin − ME) ile (tahmin + ME).'
+      }
+    },
+    // Q25 — Mean vs median with outlier
+    {
+      k:'PSDA',
+      p:`Consider the data set: 2, 3, 4, 5, 100.`,
+      q:'Which measure of central tendency is more representative of the typical value?',
+      o:['A) Mean','B) Median','C) Mode','D) Both Mean and Median equally'],
+      a:1,
+      explain:{
+        why_correct:'<em>Mean = 114/5 = 22.8</em>. <em>Median = 4</em>. 100 outlier mean’i şişiriyor; median temsili. Cevap: B.',
+        why_wrong:'<strong>A</strong> outlier ile bozulur. <strong>C</strong> tekrar yok (mode yok). <strong>D</strong> aynı değiller.',
+        vocab:[
+          {en:'outlier',pos:'n.',tr:'aykırı değer'},
+          {en:'central tendency',pos:'n.',tr:'merkezi eğilim'},
+          {en:'skewed data',pos:'phr.',tr:'çarpık veri'},
+          {en:'robust statistic',pos:'phr.',tr:'sağlam istatistik'},
+          {en:'representative value',pos:'phr.',tr:'temsili değer'},
+        ],
+        rule:'<strong>Outlier varsa median tercih edilir.</strong> Mean outlier’lardan çok etkilenir; median değişmez.'
+      }
+    },
+    // Q26 — Sampling bias
+    {
+      k:'PSDA',
+      p:`A school surveys students about lunch preferences by interviewing only students who eat in the cafeteria.`,
+      q:'Which best describes this sampling method?',
+      o:['A) Random sampling','B) Biased sampling','C) Stratified sampling','D) Fully representative'],
+      a:1,
+      explain:{
+        why_correct:'<strong>Selection bias</strong>: kafeteryada yemek yemeyen öğrenciler örnekte yok. Bu öğrencilerin tercihleri farklı olabilir. Cevap: B.',
+        why_wrong:'<strong>A</strong> tüm öğrencilerden seçim değil. <strong>C</strong> alt grupları ayırmıyor. <strong>D</strong> kafeteryada yemeyenler dışlanmış.',
+        vocab:[
+          {en:'sampling bias',pos:'n.',tr:'örnekleme yanlılığı'},
+          {en:'biased sample',pos:'n.',tr:'yanlı örnek'},
+          {en:'selection bias',pos:'n.',tr:'seçim yanlılığı'},
+          {en:'representative',pos:'adj.',tr:'temsili'},
+          {en:'population subset',pos:'phr.',tr:'popülasyon altkümesi'},
+        ],
+        rule:'<strong>Sampling bias:</strong> Belirli bir grubun seçim şansı diğerlerinden farklı ise örnek yanlı. Sonuçlar genellenemez.'
+      }
+    },
+    // Q27 — Linear model from scatter
+    {
+      k:'PSDA',
+      p:`A scatter plot shows data points clustered around a straight line with a positive slope.`,
+      q:'For the best linear model y = mx + b, what is true about m?',
+      o:['A) m > 0','B) m < 0','C) m = 0','D) m is undefined'],
+      a:0,
+      explain:{
+        why_correct:'Pozitif slope demek <em>m > 0</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> negatif slope (zıt yön). <strong>C</strong> yatay doğru. <strong>D</strong> dikey doğru.',
+        vocab:[
+          {en:'best linear model',pos:'phr.',tr:'en iyi lineer model'},
+          {en:'positive slope',pos:'phr.',tr:'pozitif eğim'},
+          {en:'line of best fit',pos:'phr.',tr:'en iyi uyum doğrusu'},
+          {en:'trend line',pos:'n.',tr:'trend çizgisi'},
+          {en:'regression line',pos:'n.',tr:'regresyon doğrusu'},
+        ],
+        rule:'Line of best fit slope: x ile y aynı yönde değişir → pozitif slope (<em>m > 0</em>). Zıt yön → negatif (<em>m < 0</em>).'
+      }
+    }
+  ]
+},
+{
+  name: 'Module 2',
+  subtitle: 'PSDA: Statistics & Probability. Orta-zor zorluk.',
+  questions: [
+    // Q1 — Find missing value given mean
+    {
+      k:'PSDA',
+      p:`The mean of the data set {x, 6, 8, 10, 14} is 9.`,
+      q:'What is the value of x?',
+      o:['A) 5','B) 11','C) 9','D) 7'],
+      a:3,
+      explain:{
+        why_correct:'Mean × count = sum. <em>9 × 5 = 45</em>. <em>x + 6 + 8 + 10 + 14 = 45</em> → <em>x + 38 = 45</em> → <em>x = 7</em>. Cevap: D.',
+        why_wrong:'<strong>A, B, C</strong> hesap hataları.',
+        vocab:[
+          {en:'find missing value',pos:'phr.',tr:'eksik değeri bul'},
+          {en:'work backward from mean',pos:'phr.',tr:'ortalamadan geriye çalış'},
+          {en:'sum equals mean times count',pos:'phr.',tr:'toplam = mean × sayı'},
+          {en:'subtract known values',pos:'phr.',tr:'bilinenleri çıkar'},
+          {en:'linear equation',pos:'n.',tr:'lineer denklem'},
+        ],
+        rule:'<strong>Find missing value from mean:</strong> <em>sum = mean × count</em>. Bilinen değerleri çıkar, eksik değeri bul.'
+      }
+    },
+    // Q2 — Combined mean (unequal groups)
+    {
+      k:'PSDA',
+      p:`Class A has 25 students with an average score of 75. Class B has 15 students with an average score of 85.`,
+      q:'What is the combined average for both classes?',
+      o:['A) 78','B) 78.75','C) 80','D) 82'],
+      a:1,
+      explain:{
+        why_correct:'Toplam puan: <em>25(75) + 15(85) = 1,875 + 1,275 = 3,150</em>. Toplam öğrenci: <em>40</em>. Combined avg: <em>3,150/40 = 78.75</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> hesap hatası. <strong>C</strong> aritmetik ortalama (75+85)/2 = 80 (yanlış, farklı grup büyüklükleri). <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'combined mean',pos:'phr.',tr:'birleşik ortalama'},
+          {en:'unequal group sizes',pos:'phr.',tr:'farklı grup büyüklükleri'},
+          {en:'weighted by count',pos:'phr.',tr:'sayıya göre ağırlıklı'},
+          {en:'sum then divide',pos:'phr.',tr:'topla sonra böl'},
+          {en:'avg of avgs trap',pos:'phr.',tr:'ortalamaların ortalaması tuzağı'},
+        ],
+        rule:'<strong>Combined avg:</strong> <em>(Σ group total) / (Σ group count)</em>. Grup büyüklükleri eşitse aritmetik ortalama; değilse <strong>weighted</strong>.'
+      }
+    },
+    // Q3 — Median with even count
+    {
+      k:'PSDA',
+      p:`Consider the sorted data set: 4, 8, 10, 12, 14, 18.`,
+      q:'What is the median?',
+      o:['A) 10','B) 13','C) 12','D) 11'],
+      a:3,
+      explain:{
+        why_correct:'Çift sayıda eleman (6). İki orta değer: <em>10</em> ve <em>12</em>. Median = <em>(10 + 12)/2 = 11</em>. Cevap: D.',
+        why_wrong:'<strong>A, C</strong> tek orta değer (yanlış, ikisinin ortalaması alınmalı). <strong>B</strong> hesap hatası.',
+        vocab:[
+          {en:'median even count',pos:'phr.',tr:'çift sayıda medyan'},
+          {en:'two middle values',pos:'phr.',tr:'iki orta değer'},
+          {en:'average them',pos:'phr.',tr:'ortalamasını al'},
+          {en:'between values',pos:'phr.',tr:'değerler arasında'},
+          {en:'sorted data',pos:'phr.',tr:'sıralı veri'},
+        ],
+        rule:'<strong>Median çift sayıda:</strong> iki orta değerin <strong>ortalaması</strong>. Tek sayıda: tam orta değer.'
+      }
+    },
+    // Q4 — Three-component weighted average
+    {
+      k:'PSDA',
+      p:`A student’s grade is based on three components: Homework (20%), Tests (50%), and Final (30%). The student scored 90 on Homework, 80 on Tests, and 70 on the Final.`,
+      q:'What is the student’s weighted final grade?',
+      o:['A) 75','B) 77','C) 79','D) 80'],
+      a:2,
+      explain:{
+        why_correct:'<em>0.20(90) + 0.50(80) + 0.30(70) = 18 + 40 + 21 = 79</em>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> hesap hataları. <strong>D</strong> aritmetik ortalama (80).',
+        vocab:[
+          {en:'three-component grade',pos:'phr.',tr:'üç bileşenli not'},
+          {en:'apply each weight',pos:'phr.',tr:'her ağırlığı uygula'},
+          {en:'sum products',pos:'phr.',tr:'çarpımları topla'},
+          {en:'weights total 100',pos:'phr.',tr:'ağırlıklar toplamı 100'},
+          {en:'biggest weight effect',pos:'phr.',tr:'en büyük ağırlık etkisi'},
+        ],
+        rule:'Multi-component weighted: <em>Σ(score × weight)</em>, ağırlıklar toplamı 1 (veya 100%). En büyük ağırlık sonuca en çok etki eder.'
+      }
+    },
+    // Q5 — Mean unchanged when value equals mean
+    {
+      k:'PSDA',
+      p:`A data set of 5 values has a mean of 12. A new value of 12 is added to the data set.`,
+      q:'What is the new mean?',
+      o:['A) 6','B) 12','C) 14','D) 24'],
+      a:1,
+      explain:{
+        why_correct:'Eski toplam: <em>5 × 12 = 60</em>. Yeni toplam: <em>60 + 12 = 72</em>. Yeni sayı: 6. <em>72/6 = 12</em>. Mean değişmedi. Cevap: B.\n\n<strong>Kural:</strong> Yeni değer mean’e eşitse, mean değişmez.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'add mean-equal value',pos:'phr.',tr:'mean’e eşit değer ekleme'},
+          {en:'mean preserved',pos:'phr.',tr:'mean korunur'},
+          {en:'insight rule',pos:'phr.',tr:'içgörü kuralı'},
+          {en:'no shift',pos:'phr.',tr:'kayma yok'},
+          {en:'balance preserved',pos:'phr.',tr:'denge korunur'},
+        ],
+        rule:'<strong>Önemli kural:</strong> Yeni değer eski mean’e eşitse, mean <strong>değişmez</strong>. Mean’den büyük değer mean’i artırır, küçük değer azaltır.'
+      }
+    },
+    // Q6 — Two-way table relative frequency overall
+    {
+      k:'PSDA',
+      p:`In a café’s survey of 100 customers (Male/Female × Coffee/Tea): 30 Male Coffee, 20 Male Tea, 40 Female Coffee, 10 Female Tea.`,
+      q:'What percent of all customers are males who prefer coffee?',
+      o:['A) 30%','B) 50%','C) 60%','D) 70%'],
+      a:0,
+      explain:{
+        why_correct:'Male coffee: 30. Toplam: 100. <em>30/100 = 30%</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> male total. <strong>C</strong> male coffee/male total. <strong>D</strong> coffee total.',
+        vocab:[
+          {en:'relative frequency overall',pos:'phr.',tr:'genel göreli frekans'},
+          {en:'cell over grand total',pos:'phr.',tr:'hücre/genel toplam'},
+          {en:'joint percent',pos:'phr.',tr:'ortak yüzde'},
+          {en:'all customers denominator',pos:'phr.',tr:'tüm müşteriler payda'},
+          {en:'specific subgroup',pos:'phr.',tr:'belirli alt grup'},
+        ],
+        rule:'Two-way table genel oran: <em>hücre / grand total</em>. Conditional ile karıştırma (conditional bir alt grup içinde).'
+      }
+    },
+    // Q7 — Conditional from row
+    {
+      k:'PSDA',
+      p:`Using the same table (30 Male Coffee, 20 Male Tea, 40 Female Coffee, 10 Female Tea):`,
+      q:'What percent of males prefer coffee?',
+      o:['A) 30%','B) 40%','C) 50%','D) 60%'],
+      a:3,
+      explain:{
+        why_correct:'Male toplam: <em>30 + 20 = 50</em>. Male coffee: 30. <em>30/50 = 60%</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> male coffee/100 (yanlış payda). <strong>B</strong> female coffee/100. <strong>C</strong> rastgele.',
+        vocab:[
+          {en:'percent of males',pos:'phr.',tr:'erkeklerin yüzdesi'},
+          {en:'restrict to males',pos:'phr.',tr:'erkeklere kısıtla'},
+          {en:'row total denominator',pos:'phr.',tr:'satır toplamı payda'},
+          {en:'P(coffee | male)',pos:'phr.',tr:'P(coffee | male)'},
+          {en:'given male',pos:'phr.',tr:'erkek verildiğinde'},
+        ],
+        rule:'<strong>P(A | row)</strong> = (A within row) / (row total). "Within males" anahtar — payda <strong>males</strong>, all değil.'
+      }
+    },
+    // Q8 — Conditional from column
+    {
+      k:'PSDA',
+      p:`Using the same table (Coffee total: 70; Male coffee: 30; Female coffee: 40):`,
+      q:'What proportion of coffee drinkers are male?',
+      o:['A) 3⁄10','B) 3⁄7','C) 4⁄7','D) 1⁄2'],
+      a:1,
+      explain:{
+        why_correct:'Coffee toplam: <em>70</em>. Male coffee: <em>30</em>. <em>30/70 = 3/7</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> male coffee/100. <strong>C</strong> female coffee/70 (= 4/7). <strong>D</strong> yaklaşık ama doğru değil.',
+        vocab:[
+          {en:'proportion of coffee drinkers',pos:'phr.',tr:'kahve içenlerin oranı'},
+          {en:'restrict to coffee',pos:'phr.',tr:'kahveye kısıtla'},
+          {en:'column total denominator',pos:'phr.',tr:'sütun toplamı payda'},
+          {en:'P(male | coffee)',pos:'phr.',tr:'P(male | coffee)'},
+          {en:'given coffee',pos:'phr.',tr:'kahve verildiğinde'},
+        ],
+        rule:'<strong>P(A | column)</strong> = (A within column) / (column total). Aynı tablo, farklı koşullar = farklı yanıtlar.'
+      }
+    },
+    // Q9 — P(A or B) not mutually exclusive
+    {
+      k:'PSDA',
+      p:`Two events A and B satisfy P(A) = 0.5, P(B) = 0.4, and P(A and B) = 0.2.`,
+      q:'What is P(A or B)?',
+      o:['A) 0.7','B) 0.9','C) 0.2','D) 0.6'],
+      a:0,
+      explain:{
+        why_correct:'<strong>Inclusion-Exclusion:</strong> <em>P(A or B) = P(A) + P(B) − P(A and B) = 0.5 + 0.4 − 0.2 = 0.7</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> P(A) + P(B) (kesişimi çıkarmadan). <strong>C</strong> sadece kesişim. <strong>D</strong> hesap hatası.',
+        vocab:[
+          {en:'inclusion-exclusion',pos:'phr.',tr:'içerme-dışlama'},
+          {en:'subtract intersection',pos:'phr.',tr:'kesişimi çıkar'},
+          {en:'not mutually exclusive',pos:'phr.',tr:'ayrık olmayan'},
+          {en:'overlap counts once',pos:'phr.',tr:'örtüşme bir kez sayılır'},
+          {en:'union formula',pos:'n.',tr:'birleşim formülü'},
+        ],
+        rule:'<strong>P(A ∪ B) = P(A) + P(B) − P(A ∩ B)</strong>. Sadece mutually exclusive durumunda P(A∩B) = 0.'
+      }
+    },
+    // Q10 — Sequential without replacement
+    {
+      k:'PSDA',
+      p:`A bag contains 4 red and 6 blue marbles. Two are drawn without replacement.`,
+      q:'What is the probability of drawing a red marble first and then a blue marble?',
+      o:['A) 4⁄15','B) 4⁄25','C) 6⁄25','D) 24⁄100'],
+      a:0,
+      explain:{
+        why_correct:'<em>P(red first) = 4/10</em>. Red sonra: 3 red, 6 blue, 9 toplam kalır. <em>P(blue | red first) = 6/9</em>. <em>P(red then blue) = (4/10)(6/9) = 24/90 = 4/15</em>. Cevap: A.',
+        why_wrong:'<strong>B, C</strong> hesap hataları. <strong>D</strong> with replacement (4/10 × 6/10).',
+        vocab:[
+          {en:'sequential events',pos:'phr.',tr:'ardışık olaylar'},
+          {en:'order matters',pos:'phr.',tr:'sıra önemli'},
+          {en:'red then blue',pos:'phr.',tr:'kırmızı sonra mavi'},
+          {en:'updated bag',pos:'phr.',tr:'güncellenmiş torba'},
+          {en:'multiplication rule',pos:'n.',tr:'çarpım kuralı'},
+        ],
+        rule:'<strong>Sequential without replacement:</strong> P(A then B) = P(A) × P(B|A). İkinci çekimde torba değişmiş.'
+      }
+    },
+    // Q11 — Predict from regression
+    {
+      k:'PSDA',
+      p:`The line of best fit for a data set is given by y = 2x + 5.`,
+      q:'What is the predicted value of y when x = 10?',
+      o:['A) 15','B) 20','C) 25','D) 30'],
+      a:2,
+      explain:{
+        why_correct:'<em>y = 2(10) + 5 = 20 + 5 = 25</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'line of best fit',pos:'phr.',tr:'en iyi uyum doğrusu'},
+          {en:'predicted value',pos:'phr.',tr:'tahmin edilen değer'},
+          {en:'regression line',pos:'n.',tr:'regresyon doğrusu'},
+          {en:'plug in x',pos:'phr.',tr:'x’i yerleştir'},
+          {en:'linear model',pos:'n.',tr:'lineer model'},
+        ],
+        rule:'Regression line’dan tahmin: x değerini denkleme yerleştir, y’yi hesapla. Veri noktası olmasa bile tahmin yapılabilir (interpolation/extrapolation).'
+      }
+    },
+    // Q12 — Margin of error population range
+    {
+      k:'PSDA',
+      p:`A poll shows that 55% of 1,000,000 voters support a measure, with a margin of error of 3 percentage points.`,
+      q:'What is the most likely range for the number of supporters?',
+      o:['A) 500,000 to 600,000','B) 520,000 to 580,000','C) Exactly 550,000','D) Cannot be determined'],
+      a:1,
+      explain:{
+        why_correct:'ME ±3%: gerçek oran <em>52% ile 58%</em>. Sayı: <em>0.52(1,000,000) = 520,000</em> ile <em>0.58(1,000,000) = 580,000</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> ME çok geniş yorumlanmış. <strong>C</strong> ME 0 sanma. <strong>D</strong> verili bilgilerle belirlenir.',
+        vocab:[
+          {en:'margin of error range',pos:'phr.',tr:'hata payı aralığı'},
+          {en:'percent to count',pos:'phr.',tr:'yüzdeyi sayıya çevir'},
+          {en:'apply ME',pos:'phr.',tr:'ME uygula'},
+          {en:'lower and upper bounds',pos:'phr.',tr:'alt ve üst sınır'},
+          {en:'voter count range',pos:'phr.',tr:'seçmen sayısı aralığı'},
+        ],
+        rule:'ME aralığı sayıya çevirme: <em>(orijinal ± ME)% × toplam</em>. Hem alt hem üst sınırı hesapla.'
+      }
+    },
+    // Q13 — Effect of adding constant
+    {
+      k:'PSDA',
+      p:`A data set has a mean of 50 and a standard deviation of 10. The value 5 is added to every value in the data set.`,
+      q:'What are the new mean and standard deviation?',
+      o:['A) Mean 55, SD 10','B) Mean 50, SD 10','C) Mean 55, SD 15','D) Mean 50, SD 15'],
+      a:0,
+      explain:{
+        why_correct:'Sabit ekleme: <strong>mean kayar</strong> (<em>+5</em>) ama <strong>SD değişmez</strong> (göreli yayılım aynı). Cevap: A.',
+        why_wrong:'<strong>B</strong> mean değişmez sanma. <strong>C, D</strong> SD’yi de etkiler sanma.',
+        vocab:[
+          {en:'shift data',pos:'phr.',tr:'veriyi kaydır'},
+          {en:'add constant to all',pos:'phr.',tr:'hepsine sabit ekle'},
+          {en:'mean shifts',pos:'phr.',tr:'mean kayar'},
+          {en:'spread preserved',pos:'phr.',tr:'yayılım korunur'},
+          {en:'translation invariant',pos:'phr.',tr:'kaydırma değişmez'},
+        ],
+        rule:'<strong>Sabit ekleme:</strong> mean <em>+c</em>, ancak SD değişmez. Tüm değerler aynı yönde kayar; göreli mesafeler korunur.'
+      }
+    },
+    // Q14 — Effect of multiplying by constant
+    {
+      k:'PSDA',
+      p:`A data set has a mean of 20 and a standard deviation of 5. Each value in the data set is multiplied by 3.`,
+      q:'What are the new mean and standard deviation?',
+      o:['A) Mean 60, SD 5','B) Mean 60, SD 15','C) Mean 20, SD 15','D) Mean 23, SD 8'],
+      a:1,
+      explain:{
+        why_correct:'Sabit ile çarpma: hem <strong>mean</strong> hem <strong>SD</strong> aynı katsayıyla çarpılır. Mean: <em>20 × 3 = 60</em>. SD: <em>5 × 3 = 15</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> sadece mean değişir sanma. <strong>C</strong> mean değişmez sanma. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'scale data',pos:'phr.',tr:'veriyi ölçekle'},
+          {en:'multiply all by constant',pos:'phr.',tr:'hepsini sabitle çarp'},
+          {en:'both scale',pos:'phr.',tr:'ikisi de ölçeklenir'},
+          {en:'proportional change',pos:'phr.',tr:'orantılı değişim'},
+          {en:'linear transformation',pos:'phr.',tr:'lineer dönüşüm'},
+        ],
+        rule:'<strong>Sabit ile çarpma:</strong> mean <em>×c</em>, SD <em>×c</em> (mutlak değer). Tüm yayılım ölçeklenir, göreli yayılım aynı kalır.'
+      }
+    },
+    // Q15 — Skewness right-skewed
+    {
+      k:'PSDA',
+      p:`A histogram shows a distribution with a long tail extending to the right (toward high values) and most data on the left.`,
+      q:'What is the relationship between the mean and the median?',
+      o:['A) Mean = Median','B) Cannot be determined','C) Mean < Median','D) Mean > Median'],
+      a:3,
+      explain:{
+        why_correct:'<strong>Right-skewed</strong>: yüksek uç değerler mean’i sağa çeker. Median ise outlier’a dirençli, ortada kalır. <em>Mean > Median</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> simetrik dağılım. <strong>C</strong> sol skewness. <strong>B</strong> belirlenir.',
+        vocab:[
+          {en:'skewness',pos:'n.',tr:'çarpıklık'},
+          {en:'right-skewed',pos:'adj.',tr:'sağa çarpık'},
+          {en:'positive skew',pos:'phr.',tr:'pozitif çarpıklık'},
+          {en:'tail direction',pos:'phr.',tr:'kuyruk yönü'},
+          {en:'mean pulled',pos:'phr.',tr:'mean çekilir'},
+        ],
+        rule:'<strong>Skewness:</strong> right-skewed (positive) → mean > median. Left-skewed → mean < median. Symmetric → mean = median. Mean kuyruk yönüne kayar.'
+      }
+    },
+    // Q16 — Range vs IQR with outliers
+    {
+      k:'PSDA',
+      p:`A data set contains several extreme outliers.`,
+      q:'Which measure of spread is more robust to outliers?',
+      o:['A) Range','B) IQR','C) Both are equally robust','D) Both are equally affected'],
+      a:1,
+      explain:{
+        why_correct:'IQR sadece orta %50’yi kullanır, dolayısıyla uç değerlere <strong>dirençli</strong>. Range max − min, outlier’lardan doğrudan etkilenir. Cevap: B.',
+        why_wrong:'<strong>A</strong> range outlier’la şişer. <strong>C, D</strong> robustness ölçüleri farklı.',
+        vocab:[
+          {en:'robust to outliers',pos:'phr.',tr:'outlier’a dirençli'},
+          {en:'resistant statistic',pos:'phr.',tr:'dirençli istatistik'},
+          {en:'middle 50%',pos:'phr.',tr:'orta %50'},
+          {en:'extreme values',pos:'phr.',tr:'uç değerler'},
+          {en:'sensitive measure',pos:'phr.',tr:'duyarlı ölçü'},
+        ],
+        rule:'<strong>Robust ölçüler:</strong> IQR > Range, Median > Mean (outlier’lara karşı). Veri çarpıksa veya outlier’lar varsa robust seç.'
+      }
+    },
+    // Q17 — Systematic sampling
+    {
+      k:'PSDA',
+      p:`A researcher selects every 10th student from an alphabetical list of 1,000 students.`,
+      q:'Which sampling method is being used?',
+      o:['A) Simple random','B) Systematic','C) Convenience','D) Stratified'],
+      a:1,
+      explain:{
+        why_correct:'<strong>Systematic sampling</strong>: sabit aralıkla seçim (her 10’uncu). Cevap: B.',
+        why_wrong:'<strong>A</strong> tamamen rastgele seçim değil. <strong>C</strong> kolaylık değil. <strong>D</strong> alt gruplara ayırma yok.',
+        vocab:[
+          {en:'systematic sampling',pos:'phr.',tr:'sistematik örnekleme'},
+          {en:'fixed interval',pos:'phr.',tr:'sabit aralık'},
+          {en:'every nth',pos:'phr.',tr:'her n’inci'},
+          {en:'ordered list',pos:'phr.',tr:'sıralı liste'},
+          {en:'efficient method',pos:'phr.',tr:'verimli yöntem'},
+        ],
+        rule:'<strong>Sampling türleri:</strong> Simple random (rastgele), Systematic (sabit aralık), Stratified (alt gruplardan), Convenience (kolay erişim, yanlı), Cluster (gruplar).'
+      }
+    },
+    // Q18 — Convenience sampling
+    {
+      k:'PSDA',
+      p:`A student surveys her closest friends about their exam preparation habits.`,
+      q:'Which sampling method is this, and what is its main weakness?',
+      o:['A) Random, no weakness','B) Stratified, well-balanced','C) Convenience, biased and not representative','D) Systematic, perfectly fair'],
+      a:2,
+      explain:{
+        why_correct:'<strong>Convenience sampling</strong>: kolayca ulaşılabilenleri seçme. <strong>Bias</strong>: arkadaşlar genelde benzer alışkanlıklara sahip, genellenemez. Cevap: C.',
+        why_wrong:'<strong>A</strong> rastgele değil. <strong>B</strong> alt gruplara ayrılmış değil. <strong>D</strong> bias var.',
+        vocab:[
+          {en:'convenience sampling',pos:'phr.',tr:'kolaylık örneklemesi'},
+          {en:'biased',pos:'adj.',tr:'yanlı'},
+          {en:'not representative',pos:'phr.',tr:'temsili değil'},
+          {en:'selection bias',pos:'phr.',tr:'seçim yanlılığı'},
+          {en:'limited generalization',pos:'phr.',tr:'sınırlı genelleme'},
+        ],
+        rule:'<strong>Convenience sampling tuzağı:</strong> Kolay erişim = bias. Sonuçlar daha geniş popülasyona genellenemez. Anlamlı çalışmalar random sampling gerektirir.'
+      }
+    },
+    // Q19 — Conditional comparison
+    {
+      k:'PSDA',
+      p:`A study reports: 75% of regular exercisers are healthy, while 40% of non-exercisers are healthy.`,
+      q:'What is the difference between these two conditional proportions?',
+      o:['A) 0 percentage points','B) 15 percentage points','C) 35 percentage points','D) 50 percentage points'],
+      a:2,
+      explain:{
+        why_correct:'<em>75% − 40% = 35</em> percentage points. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'conditional comparison',pos:'phr.',tr:'koşullu karşılaştırma'},
+          {en:'difference in proportions',pos:'phr.',tr:'oran farkı'},
+          {en:'percentage points',pos:'phr.',tr:'yüzde puan'},
+          {en:'association evidence',pos:'phr.',tr:'ilişki kanıtı'},
+          {en:'absolute difference',pos:'phr.',tr:'mutlak fark'},
+        ],
+        rule:'İki koşullu oran farkı: <em>P(A|B₁) − P(A|B₂)</em>. Fark sıfırdan farklıysa <strong>ilişki</strong> var (ama sebep-sonuç değil).'
+      }
+    },
+    // Q20 — Mean from grouped data
+    {
+      k:'PSDA',
+      p:`A frequency distribution shows: ages 0–10 (midpoint 5) has 4 people, ages 10–20 (midpoint 15) has 6 people, and ages 20–30 (midpoint 25) has 10 people.`,
+      q:'What is the estimated mean age, in years?',
+      o:['A) 15','B) 18','C) 20','D) 25'],
+      a:1,
+      explain:{
+        why_correct:'Midpoint method: <em>(5·4 + 15·6 + 25·10)/20 = (20 + 90 + 250)/20 = 360/20 = 18</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları veya midpoint atlanmış.',
+        vocab:[
+          {en:'grouped data',pos:'phr.',tr:'gruplandırılmış veri'},
+          {en:'midpoint of interval',pos:'phr.',tr:'aralığın orta noktası'},
+          {en:'estimated mean',pos:'phr.',tr:'tahmini ortalama'},
+          {en:'frequency distribution',pos:'phr.',tr:'frekans dağılımı'},
+          {en:'class interval',pos:'n.',tr:'sınıf aralığı'},
+        ],
+        rule:'<strong>Grouped data mean:</strong> her aralığın <strong>midpoint</strong>’ini kullan, frekansla çarp, topla, toplam frekansa böl.'
+      }
+    },
+    // Q21 — Slope interpretation
+    {
+      k:'PSDA',
+      p:`A linear regression analysis yields the equation y = −0.5x + 20, where x is hours studied per week and y is reported stress level.`,
+      q:'What does the slope of −0.5 indicate?',
+      o:['A) Stress increases by 0.5 for each additional hour studied','B) Stress decreases by 0.5 for each additional hour studied','C) Stress is unrelated to studying','D) Stress equals 20 regardless of studying'],
+      a:1,
+      explain:{
+        why_correct:'Negatif slope: <em>x</em> birim arttıkça <em>y</em> <em>0.5</em> birim azalır. Cevap: B.',
+        why_wrong:'<strong>A</strong> yön ters (slope negatif). <strong>C</strong> slope ≠ 0, ilişki var. <strong>D</strong> y-intercept yanlış yorum.',
+        vocab:[
+          {en:'slope interpretation',pos:'phr.',tr:'eğim yorumu'},
+          {en:'per unit change',pos:'phr.',tr:'birim değişim başına'},
+          {en:'negative association',pos:'phr.',tr:'negatif ilişki'},
+          {en:'inverse relationship',pos:'phr.',tr:'ters ilişki'},
+          {en:'predicted decrease',pos:'phr.',tr:'tahmin edilen azalış'},
+        ],
+        rule:'<strong>Slope yorumu:</strong> x’in <strong>birim</strong> artışında y’nin <strong>slope kadar</strong> değişimi. Negatif → azalış, pozitif → artış.'
+      }
+    },
+    // Q22 — Correlation vs causation
+    {
+      k:'PSDA',
+      p:`A study finds a strong positive correlation between ice cream sales and crime rates.`,
+      q:'Which conclusion is most appropriate?',
+      o:['A) Ice cream consumption causes crime','B) Crime causes increased ice cream sales','C) Both may be related to a third variable (e.g., warm weather)','D) The data must be incorrect'],
+      a:2,
+      explain:{
+        why_correct:'<strong>Correlation ≠ causation</strong>. Üçüncü değişken (sıcak hava) hem ice cream tüketimini hem outdoor crime’ı artırabilir. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> nedensellik iddiası, sadece korelasyondan çıkarılamaz. <strong>D</strong> veri yanlış demek için kanıt yok.',
+        vocab:[
+          {en:'correlation',pos:'n.',tr:'korelasyon'},
+          {en:'causation',pos:'n.',tr:'nedensellik'},
+          {en:'confounding variable',pos:'phr.',tr:'kafa karıştırıcı değişken'},
+          {en:'third variable',pos:'phr.',tr:'üçüncü değişken'},
+          {en:'spurious relationship',pos:'phr.',tr:'sahte ilişki'},
+        ],
+        rule:'<strong>Korelasyon ≠ nedensellik.</strong> İki değişken birlikte değişebilir, ama biri diğerine sebep değil olabilir. Üçüncü değişken (lurking variable) sebep olabilir.'
+      }
+    },
+    // Q23 — Independence check
+    {
+      k:'PSDA',
+      p:`Two events A and B have P(A) = 0.3, P(B) = 0.4, and P(A and B) = 0.18.`,
+      q:'Are A and B independent events?',
+      o:['A) Yes, because P(A) + P(B) ≠ 1','B) Yes, because P(A and B) > 0','C) No, because P(A and B) ≠ P(A) × P(B)','D) Not enough information'],
+      a:2,
+      explain:{
+        why_correct:'Independence testi: <em>P(A and B) = P(A) × P(B)</em> mi? <em>P(A) × P(B) = 0.3 × 0.4 = 0.12 ≠ 0.18</em>. Bağımsız <strong>değil</strong>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> independence testi değil. <strong>D</strong> bilgi yeterli.',
+        vocab:[
+          {en:'independence test',pos:'phr.',tr:'bağımsızlık testi'},
+          {en:'product condition',pos:'phr.',tr:'çarpım koşulu'},
+          {en:'dependent events',pos:'phr.',tr:'bağımlı olaylar'},
+          {en:'verify independence',pos:'phr.',tr:'bağımsızlığı doğrula'},
+          {en:'positive correlation',pos:'phr.',tr:'pozitif korelasyon'},
+        ],
+        rule:'<strong>Independence test:</strong> <em>P(A ∩ B) = P(A) × P(B)</em>. Eşit değilse <strong>dependent</strong>. Büyükse pozitif, küçükse negatif ilişki.'
+      }
+    },
+    // Q24 — Multiplication rule
+    {
+      k:'PSDA',
+      p:`Two events A and B have P(A) = 0.6 and P(B | A) = 0.5.`,
+      q:'What is P(A and B)?',
+      o:['A) 0.30','B) 0.10','C) 0.50','D) 0.80'],
+      a:0,
+      explain:{
+        why_correct:'<strong>Multiplication rule:</strong> <em>P(A ∩ B) = P(A) × P(B|A) = 0.6 × 0.5 = 0.30</em>. Cevap: A.',
+        why_wrong:'<strong>B, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'multiplication rule',pos:'phr.',tr:'çarpım kuralı'},
+          {en:'joint probability',pos:'phr.',tr:'ortak olasılık'},
+          {en:'general formula',pos:'phr.',tr:'genel formül'},
+          {en:'works for dependent',pos:'phr.',tr:'bağımlılar için çalışır'},
+          {en:'conditional given A',pos:'phr.',tr:'A verildiğinde koşullu'},
+        ],
+        rule:'<strong>P(A ∩ B) = P(A) · P(B|A)</strong>. Bu formül independent veya dependent fark etmez. Independent ise P(B|A) = P(B).'
+      }
+    },
+    // Q25 — Percentile interpretation
+    {
+      k:'PSDA',
+      p:`A student scored at the 80th percentile on a national test.`,
+      q:'Which statement best describes this?',
+      o:['A) The student answered 80% of questions correctly','B) 80% of test-takers scored at or below this student’s score','C) 80% of test-takers scored at or above this student’s score','D) The student got 80 questions right'],
+      a:1,
+      explain:{
+        why_correct:'<strong>80th percentile</strong>: <em>%80</em>’i bu öğrencinin puanına eşit veya daha düşük. Cevap: B.',
+        why_wrong:'<strong>A, D</strong> percentile yüzde puanla karıştırma. <strong>C</strong> ters yorumlama.',
+        vocab:[
+          {en:'percentile',pos:'n.',tr:'yüzdelik'},
+          {en:'at or below',pos:'phr.',tr:'eşit ya da altında'},
+          {en:'relative ranking',pos:'phr.',tr:'göreli sıralama'},
+          {en:'not raw score',pos:'phr.',tr:'ham puan değil'},
+          {en:'comparison-based',pos:'adj.',tr:'karşılaştırma tabanlı'},
+        ],
+        rule:'<strong>Percentile:</strong> bu puanın <strong>altında</strong> (veya eşit) olan veri yüzdesi. Yüzde puanla aynı şey değil. 80th percentile ≠ %80 doğru.'
+      }
+    },
+    // Q26 — Sample vs population mean
+    {
+      k:'PSDA',
+      p:`A random sample of 50 people from a large population gives a sample mean of 75.`,
+      q:'What can be inferred about the true population mean?',
+      o:['A) It is exactly 75','B) It must be greater than 75','C) It must be less than 75','D) It is likely close to 75 but not necessarily exact'],
+      a:3,
+      explain:{
+        why_correct:'Sample mean popülasyon mean’inin tahminidir, <strong>kesin değil</strong>. Sampling variability’den dolayı küçük farklar beklenir. Cevap: D.',
+        why_wrong:'<strong>A</strong> kesin eşitlik garanti edilemez. <strong>B, C</strong> yön belirsiz.',
+        vocab:[
+          {en:'sample mean',pos:'phr.',tr:'örnek ortalaması'},
+          {en:'population mean',pos:'phr.',tr:'popülasyon ortalaması'},
+          {en:'point estimate',pos:'phr.',tr:'nokta tahmin'},
+          {en:'sampling variability',pos:'phr.',tr:'örnekleme değişkenliği'},
+          {en:'approximate not exact',pos:'phr.',tr:'yaklaşık, kesin değil'},
+        ],
+        rule:'<strong>Sample → population:</strong> sample istatistikleri popülasyon parametrelerinin <strong>tahminidir</strong>. Random örnekle yakın olur ama kesin değil.'
+      }
+    },
+    // Q27 — Probability from listed outcomes
+    {
+      k:'PSDA',
+      p:`A box contains 5 balls numbered 1, 2, 3, 4, and 5. Two balls are drawn at random without replacement.`,
+      q:'What is the probability that the sum of the two numbers is greater than 7?',
+      o:['A) 1⁄10','B) 1⁄5','C) 3⁄10','D) 1⁄2'],
+      a:1,
+      explain:{
+        why_correct:'Tüm pair’lar (10 tane): (1,2)=3, (1,3)=4, (1,4)=5, (1,5)=6, (2,3)=5, (2,4)=6, (2,5)=7, (3,4)=7, (3,5)=8, (4,5)=9.\nSum > 7: (3,5)=8, (4,5)=9. <strong>2 pair</strong>. P = <em>2/10 = 1/5</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> tek pair sayma. <strong>C</strong> sum ≥ 7 (3 pair). <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'unordered pairs',pos:'phr.',tr:'sırasız çiftler'},
+          {en:'sum condition',pos:'phr.',tr:'toplam koşulu'},
+          {en:'list all outcomes',pos:'phr.',tr:'tüm sonuçları listele'},
+          {en:'count favorable',pos:'phr.',tr:'uygunları say'},
+          {en:'combinatorial probability',pos:'phr.',tr:'kombinasyonel olasılık'},
+        ],
+        rule:'<strong>Combinatorial probability:</strong> Küçük durumlarda tüm pair’leri listele, koşulu sağlayanları say, toplama böl. <em>P = uygun / toplam</em>.'
+      }
+    }
+  ]
+},
+{
+  name: 'Bonus',
+  subtitle: 'PSDA: Statistics & Probability. 12 yaygın tuzak ve zor word problems.',
+  questions: [
+    // B1 — Mean averaging trap
+    {
+      k:'PSDA',
+      p:`A data set of 5 values has a mean of 70. A new value of 80 is added to the set.`,
+      q:'What is the new mean?',
+      o:['A) 71.67','B) 75','C) 80','D) 70'],
+      a:0,
+      explain:{
+        why_correct:'<mark class="hl-key">Eşit ağırlık tuzağı</mark>. Eski toplam: <em>5 × 70 = 350</em>. Yeni toplam: <em>350 + 80 = 430</em>. Yeni sayı: 6. <em>430/6 ≈ 71.67</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> <em>(70 + 80)/2 = 75</em> (yanlış — eski 5 değer, yeni 1 değer, eşit ağırlık değil). <strong>C</strong> sadece yeni değer. <strong>D</strong> değişmedi sanma.',
+        vocab:[
+          {en:'unequal weights',pos:'phr.',tr:'eşit olmayan ağırlıklar'},
+          {en:'mean and value not equal weight',pos:'phr.',tr:'mean ve değer eşit ağırlık değil'},
+          {en:'averaging means trap',pos:'phr.',tr:'mean’leri ortalamak tuzak'},
+          {en:'sum and count update',pos:'phr.',tr:'toplam ve sayıyı güncelle'},
+          {en:'small effect on large set',pos:'phr.',tr:'büyük setteki küçük etki'},
+        ],
+        rule:'<strong>Mean update tuzağı:</strong> Eski mean ve yeni değer <strong>eşit ağırlıkta değil</strong>. Doğru formül: <em>(eski toplam + yeni değer) / (eski sayı + 1)</em>.'
+      }
+    },
+    // B2 — Correlation vs causation
+    {
+      k:'PSDA',
+      p:`A study finds a positive correlation between students who use tutors and their exam scores.`,
+      q:'Which conclusion is most appropriate?',
+      o:['A) Tutoring directly causes better exam scores','B) Higher scores cause students to seek tutors','C) There is a correlation, but other factors (motivation, time invested) may also explain the relationship','D) The correlation is meaningless'],
+      a:2,
+      explain:{
+        why_correct:'<strong>Correlation ≠ causation</strong>. Üçüncü değişkenler (motivasyon, ailenin desteği, zaman) hem tutoring kullanımını hem skorları etkileyebilir. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> nedensellik iddiası, korelasyondan çıkarılamaz. <strong>D</strong> ilişki var, anlamsız değil.',
+        vocab:[
+          {en:'correlation vs causation',pos:'phr.',tr:'korelasyon vs nedensellik'},
+          {en:'lurking variable',pos:'phr.',tr:'gizli değişken'},
+          {en:'observational study',pos:'phr.',tr:'gözlemsel çalışma'},
+          {en:'confounder',pos:'n.',tr:'kafa karıştırıcı'},
+          {en:'experimental design',pos:'phr.',tr:'deneysel tasarım'},
+        ],
+        rule:'<strong>Correlation ≠ causation tuzağı:</strong> Pozitif ilişki nedensellik garantilemez. Sadece <strong>randomized experiments</strong> nedensellik gösterebilir.'
+      }
+    },
+    // B3 — Percentile vs percent
+    {
+      k:'PSDA',
+      p:`Maria scored at the 70th percentile on a standardized test.`,
+      q:'Which interpretation is correct?',
+      o:['A) Maria answered 70% of the questions correctly','B) 70% of test-takers scored at or below Maria’s score','C) Maria is in the top 70% of test-takers','D) Maria answered 70 questions correctly'],
+      a:1,
+      explain:{
+        why_correct:'<strong>Percentile</strong> = göreli sıralama. 70th percentile: <em>%70</em>’i Maria’nın puanına eşit veya altında. Cevap: B.',
+        why_wrong:'<strong>A, D</strong> ham puanla karıştırma. <strong>C</strong> ters yorum (top %30, alt %70 değil).',
+        vocab:[
+          {en:'percentile vs percent score',pos:'phr.',tr:'yüzdelik vs yüzde puan'},
+          {en:'relative ranking',pos:'phr.',tr:'göreli sıralama'},
+          {en:'at or below',pos:'phr.',tr:'eşit ya da altında'},
+          {en:'standardized test',pos:'phr.',tr:'standart test'},
+          {en:'comparison-based',pos:'adj.',tr:'karşılaştırma tabanlı'},
+        ],
+        rule:'<strong>Percentile tuzağı:</strong> 70th percentile = bu puanın altında veya eşit olan veri yüzdesi. Yüzde puan veya doğru soru sayısı <strong>değil</strong>.'
+      }
+    },
+    // B4 — P(A|B) vs P(B|A)
+    {
+      k:'PSDA',
+      p:`In a study, 80% of students who got an A on the final studied 10+ hours. Some conclude that 80% of students who studied 10+ hours got an A.`,
+      q:'Is this conclusion correct?',
+      o:['A) Yes, the two percentages must be equal','B) No, P(study | A) and P(A | study) are different conditional probabilities','C) Yes, because both involve studying','D) Cannot be determined from the information'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Conditional yön tuzağı</mark>. <em>P(study | A)</em> ve <em>P(A | study)</em> farklı conditional’lar. Aynı veriden farklı sonuçlar. Cevap: B.\n\nÖrnek: 10+ saat çalışan ama A almayan birçok öğrenci olabilir.',
+        why_wrong:'<strong>A, C</strong> conditional probability’nin <strong>yöne bağlı</strong> olduğunu görmezden gelir. <strong>D</strong> aslında ayrı oldukları belirlenebilir.',
+        vocab:[
+          {en:'conditional direction',pos:'phr.',tr:'koşullu yönü'},
+          {en:'P(A given B)',pos:'phr.',tr:'P(A | B) — A koşullu B'},
+          {en:'Bayes’ confusion',pos:'phr.',tr:'Bayes karışıklığı'},
+          {en:'flipped conditional',pos:'phr.',tr:'ters çevrilmiş koşullu'},
+          {en:'not symmetric',pos:'phr.',tr:'simetrik değil'},
+        ],
+        rule:'<strong>Conditional yön tuzağı:</strong> <em>P(A|B) ≠ P(B|A)</em> genellikle. "X olanların %80’i Y" demek "Y olanların %80’i X" demek değil.'
+      }
+    },
+    // B5 — Independent vs mutually exclusive
+    {
+      k:'PSDA',
+      p:`Events A and B are mutually exclusive, with P(A) = 0.5 and P(B) = 0.5.`,
+      q:'Are A and B independent?',
+      o:['A) Yes, because both have probability 0.5','B) Yes, they don’t overlap','C) No, because mutually exclusive (with positive probabilities) implies dependent','D) Cannot be determined'],
+      a:2,
+      explain:{
+        why_correct:'<mark class="hl-key">Bağımsız vs ayrık karıştırma</mark>. Bağımsız: <em>P(A∩B) = P(A) × P(B) = 0.25</em>. Ayrık: <em>P(A∩B) = 0</em>. <em>0 ≠ 0.25</em>, dolayısıyla <strong>bağımsız değil</strong>. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> "ayrık olma" bağımsızlık demek sanma (yaygın karışıklık). <strong>D</strong> bilgi yeterli.',
+        vocab:[
+          {en:'independent vs mutually exclusive',pos:'phr.',tr:'bağımsız vs ayrık'},
+          {en:'positive probability',pos:'phr.',tr:'pozitif olasılık'},
+          {en:'overlap means dependence',pos:'phr.',tr:'örtüşme bağımlılık'},
+          {en:'confused concepts',pos:'phr.',tr:'karıştırılan kavramlar'},
+          {en:'definition contrast',pos:'phr.',tr:'tanım farkı'},
+        ],
+        rule:'<strong>Bağımsız ≠ ayrık.</strong> Independent: P(A∩B) = P(A)P(B). Mutually exclusive: P(A∩B) = 0. Her ikisi de pozitif olasılıkta <strong>aynı anda olmaz</strong>.'
+      }
+    },
+    // B6 — "At least one" complement
+    {
+      k:'PSDA',
+      p:`A fair coin is flipped 4 times.`,
+      q:'What is the probability of getting at least one head?',
+      o:['A) 1⁄2','B) 1⁄4','C) 4⁄16','D) 15⁄16'],
+      a:3,
+      explain:{
+        why_correct:'<mark class="hl-key">Complement kullan</mark>. <em>P(no heads) = (1/2)⁴ = 1/16</em>. <em>P(at least one head) = 1 − 1/16 = 15/16</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> tek atış. <strong>B, C</strong> "1/4 of flips heads" gibi yanlış yorum.',
+        vocab:[
+          {en:'at least one strategy',pos:'phr.',tr:'en az bir stratejisi'},
+          {en:'complement rule',pos:'phr.',tr:'tümleyen kuralı'},
+          {en:'one minus probability',pos:'phr.',tr:'1 − olasılık'},
+          {en:'no heads = all tails',pos:'phr.',tr:'hiç head = hepsi tail'},
+          {en:'multiple trials',pos:'phr.',tr:'çoklu deneme'},
+        ],
+        rule:'<strong>"At least one" tuzağı:</strong> Doğrudan toplama overcounting yapar. Daima <em>1 − P(none)</em> kullan.'
+      }
+    },
+    // B7 — With replacement
+    {
+      k:'PSDA',
+      p:`Two cards are drawn from a standard 52-card deck WITH REPLACEMENT.`,
+      q:'What is the probability that both cards are hearts?',
+      o:['A) 1⁄16','B) 1⁄17','C) 1⁄4','D) 1⁄52'],
+      a:0,
+      explain:{
+        why_correct:'13 hearts in 52 cards. With replacement, ikinci çekimde deste aynı. <em>(13/52) × (13/52) = (1/4)² = 1/16</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> without replacement (13/52 × 12/51 ≈ 1/17). <strong>C</strong> tek çekim. <strong>D</strong> hesap hatası.',
+        vocab:[
+          {en:'with replacement',pos:'phr.',tr:'iadeli'},
+          {en:'deck of cards',pos:'phr.',tr:'kart destesi'},
+          {en:'hearts suit',pos:'phr.',tr:'kupa'},
+          {en:'reset between draws',pos:'phr.',tr:'çekimler arası reset'},
+          {en:'independent draws',pos:'phr.',tr:'bağımsız çekimler'},
+        ],
+        rule:'<strong>With replacement:</strong> her çekim bağımsız, olasılıklar aynı kalır. Carpım kuralı: <em>P × P</em> (aynı durumda).'
+      }
+    },
+    // B8 — Margin of error interpretation
+    {
+      k:'PSDA',
+      p:`A poll shows a candidate has 51% support, with a margin of error of 3 percentage points.`,
+      q:'Can we confidently conclude that the candidate has majority support?',
+      o:['A) Yes, since 51% > 50%','B) Yes, because the margin of error is small','C) No, because the range 48% to 54% includes values below 50%','D) Cannot be determined'],
+      a:2,
+      explain:{
+        why_correct:'<strong>ME hesaba kat</strong>. Gerçek değer <em>51 ± 3 = 48% ile 54%</em> arasında. Bu aralık <strong>50%’nin altına</strong> uzanıyor → çoğunluk garantili değil. Cevap: C.',
+        why_wrong:'<strong>A, B</strong> ME’i görmezden gelir. <strong>D</strong> ME ile aralık belirlenir.',
+        vocab:[
+          {en:'majority conclusion',pos:'phr.',tr:'çoğunluk sonucu'},
+          {en:'confidence interval',pos:'phr.',tr:'güven aralığı'},
+          {en:'crosses threshold',pos:'phr.',tr:'eşiği geçer'},
+          {en:'margin of error overinterpretation',pos:'phr.',tr:'ME aşırı yorum'},
+          {en:'statistical uncertainty',pos:'phr.',tr:'istatistiksel belirsizlik'},
+        ],
+        rule:'<strong>ME yorum tuzağı:</strong> Estimate ± ME aralığını kontrol et. Eğer aralık eşiği geçiyorsa (50%, 0 vb.) <strong>kesin sonuç çıkarılamaz</strong>.'
+      }
+    },
+    // B9 — Mean vs median in skewed
+    {
+      k:'PSDA',
+      p:`A neighborhood’s income data has a mean of <span class="usd">$80,000</span> and a median of <span class="usd">$50,000</span>.`,
+      q:'Which best describes the distribution?',
+      o:['A) Symmetric distribution','B) Right-skewed: a few high-income outliers pull the mean up','C) Left-skewed: low-income values dominate','D) All residents have the same income'],
+      a:1,
+      explain:{
+        why_correct:'<em>Mean > Median</em> → <strong>right-skewed</strong>. Yüksek gelirli birkaç outlier mean’i yukarı çekiyor; median etkilenmiyor. Cevap: B.',
+        why_wrong:'<strong>A</strong> simetrik için mean ≈ median. <strong>C</strong> left-skewed: mean < median. <strong>D</strong> SD = 0 olur.',
+        vocab:[
+          {en:'income distribution',pos:'phr.',tr:'gelir dağılımı'},
+          {en:'right-skewed real example',pos:'phr.',tr:'sağa çarpık gerçek örnek'},
+          {en:'mean above median',pos:'phr.',tr:'mean medyan üstünde'},
+          {en:'outlier influence',pos:'phr.',tr:'aykırı değer etkisi'},
+          {en:'wealth disparity',pos:'phr.',tr:'gelir eşitsizliği'},
+        ],
+        rule:'<strong>Mean vs median:</strong> Mean > Median ise right-skewed. Mean < Median ise left-skewed. Outlier mean’i kendi yönüne çeker.'
+      }
+    },
+    // B10 — Misleading graph (truncated axis)
+    {
+      k:'PSDA',
+      p:`A bar graph shows quarterly sales: Q1 = 100, Q2 = 101, Q3 = 102, Q4 = 103. However, the y-axis starts at 99 (not 0), making the bars appear dramatically different in height.`,
+      q:'What is misleading about this graph?',
+      o:['A) The data is incorrect','B) The bars should be lines instead','C) The truncated y-axis exaggerates small differences','D) More quarters are needed for analysis'],
+      a:2,
+      explain:{
+        why_correct:'<strong>Truncated y-axis</strong>: sıfırdan başlamayan eksen küçük farkları büyük gösterir. Görsel manipülasyon, veri yanlış değil. Cevap: C.',
+        why_wrong:'<strong>A</strong> veri doğru. <strong>B</strong> bar vs line tasarım tercihi. <strong>D</strong> mevcut veri yeterli.',
+        vocab:[
+          {en:'misleading graph',pos:'phr.',tr:'yanıltıcı grafik'},
+          {en:'truncated y-axis',pos:'phr.',tr:'kesilmiş y-ekseni'},
+          {en:'visual exaggeration',pos:'phr.',tr:'görsel abartı'},
+          {en:'scale manipulation',pos:'phr.',tr:'ölçek manipülasyonu'},
+          {en:'distorted perception',pos:'phr.',tr:'çarpıtılmış algı'},
+        ],
+        rule:'<strong>Yanıltıcı grafik tuzağı:</strong> Y-ekseni sıfırdan başlamıyorsa, görsel farklar abartılır. Veriye doğrudan bakman gerekir, sadece grafik şekline değil.'
+      }
+    },
+    // B11 — Median position even count
+    {
+      k:'PSDA',
+      p:`A data set has 100 sorted values.`,
+      q:'How is the median determined?',
+      o:['A) The 50th value','B) The average of the 50th and 51st values','C) The 51st value','D) The value at the 50th percentile (whichever is given)'],
+      a:1,
+      explain:{
+        why_correct:'<strong>Çift sayıda</strong> veri için median = <strong>iki orta değerin ortalaması</strong>. 100 değer için: 50. ve 51. değerler. Cevap: B.',
+        why_wrong:'<strong>A</strong> tek orta değer (yanlış). <strong>C</strong> tek orta değer (yanlış). <strong>D</strong> kavram karıştırma.',
+        vocab:[
+          {en:'median position',pos:'phr.',tr:'medyan pozisyonu'},
+          {en:'even count median',pos:'phr.',tr:'çift sayıda medyan'},
+          {en:'average two middles',pos:'phr.',tr:'iki ortancayı ortalama'},
+          {en:'(n/2) and (n/2 + 1)',pos:'phr.',tr:'(n/2) ve (n/2 + 1)'},
+          {en:'careful indexing',pos:'phr.',tr:'dikkatli indeksleme'},
+        ],
+        rule:'<strong>Median pozisyon:</strong> n tek → (n+1)/2. inci değer. n çift → (n/2). ve (n/2 + 1). değerlerin ortalaması.'
+      }
+    },
+    // B12 — Small sample size
+    {
+      k:'PSDA',
+      p:`A survey of only 5 people shows 80% prefer Brand A. The researcher concludes that 80% of all consumers prefer Brand A.`,
+      q:'Is this conclusion appropriate?',
+      o:['A) Yes, 80% is a strong majority','B) No, the sample size is too small for reliable inference','C) Yes, as long as the survey was honest','D) Need to repeat the survey identically'],
+      a:1,
+      explain:{
+        why_correct:'<strong>5 kişi çok küçük örnek</strong>. Sampling variability büyük; %80 (4/5) genel popülasyon için temsili değil. Cevap: B.\n\nKurala örnek: SAT genelde n ≥ 30 büyük örnek sayar.',
+        why_wrong:'<strong>A</strong> büyüklük yetersiz. <strong>C</strong> dürüstlük tek başına yetmez. <strong>D</strong> tekrarlama büyüklüğü çözmez.',
+        vocab:[
+          {en:'small sample',pos:'phr.',tr:'küçük örnek'},
+          {en:'sampling variability',pos:'phr.',tr:'örnekleme değişkenliği'},
+          {en:'unreliable inference',pos:'phr.',tr:'güvenilmez çıkarım'},
+          {en:'minimum sample size',pos:'phr.',tr:'minimum örnek sayısı'},
+          {en:'statistical power',pos:'phr.',tr:'istatistiksel güç'},
+        ],
+        rule:'<strong>Sample size tuzağı:</strong> Küçük örnek (< 30) için yüksek belirsizlik. Sonuçlar büyük popülasyona genellenemez. Büyük margin of error.'
+      }
+    }
+  ]
+}
+];
+
+// ============= STATE =============
+let currentModule = 0;
+let currentQ = 0;
+let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
+let moduleCompleted = MODULES.map(() => false);
+
+// ============= PERSISTENCE =============
+const STORAGE_KEY = 'gri-camp-day-6-math-stats';
+function saveProgress(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: answers,
+      completed: moduleCompleted,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadProgress(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.answers) || d.answers.length !== MODULES.length) return;
+    for(var i=0; i<MODULES.length; i++){
+      if(!Array.isArray(d.answers[i]) || d.answers[i].length !== MODULES[i].questions.length) return;
+    }
+    answers = d.answers;
+    moduleCompleted = (Array.isArray(d.completed) && d.completed.length === MODULES.length)
+      ? d.completed : MODULES.map(function(){return false;});
+  } catch(e) {}
+}
+function hasAnyAnswer(){
+  for(var i=0; i<answers.length; i++){
+    for(var j=0; j<answers[i].length; j++){
+      if(answers[i][j] !== null) return true;
+    }
+  }
+  return false;
+}
+function resetAllProgress(){
+  if(!confirm('Tüm modüllerdeki cevapların ve ilerlemen silinecek. Emin misin?')) return;
+  answers = MODULES.map(function(m){ return new Array(m.questions.length).fill(null); });
+  moduleCompleted = MODULES.map(function(){ return false; });
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  currentModule = 0; currentQ = 0;
+  var qEl = document.getElementById('quiz');
+  var tEl = document.getElementById('topbar');
+  var rEl = document.getElementById('results');
+  var sEl = document.getElementById('splash');
+  if(qEl) qEl.classList.remove('show');
+  if(tEl) tEl.classList.remove('show');
+  if(rEl) rEl.classList.remove('show');
+  if(sEl) sEl.style.display = 'flex';
+  renderSplash();
+}
+
+// ============= UNLOAD WARNING =============
+window.addEventListener('beforeunload', function(e){
+  // Quiz ekranı açıkken sayfayı yenilemeye veya kapatmaya karşı uyarı.
+  var quizEl = document.getElementById('quiz');
+  if(quizEl && quizEl.classList.contains('show')){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// ============= HELPERS =============
+function getModuleStatus(idx){
+  const mod = MODULES[idx];
+  if(mod.questions.length === 0) return 'empty';
+  if(moduleCompleted[idx]) return 'complete';
+  const answered = answers[idx].filter(a => a !== null).length;
+  if(answered === 0) return 'untouched';
+  return 'in-progress';
+}
+function getModuleScore(idx){
+  let c = 0;
+  answers[idx].forEach((a,i)=>{ if(a === MODULES[idx].questions[i].a) c++ });
+  return c;
+}
+
+// ============= SPLASH RENDERER =============
+function renderSplash(){
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği henüz eklenmemiş modülleri splash’ta gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let badge = '';
+    if(status === 'complete'){
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      badge = `<span class="mc-status done">✓ ${sc}/${m.questions.length} · ${pct}%</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      badge = `<span class="mc-status progress">▶ ${ans}/${m.questions.length} devam</span>`;
+    }
+    return `<div class="module-card clickable" onclick="startModule(${i})">
+      <div class="mc-left">
+        <div class="mc-name">${m.name} ${badge}</div>
+        <div class="mc-desc">${m.subtitle}</div>
+      </div>
+      <div class="mc-meta"><div class="mc-q">${m.questions.length}</div><div>soru</div></div>
+    </div>`;
+  }).join('');
+  var rb = document.getElementById('resetBtn');
+  if(rb){ rb.style.display = hasAnyAnswer() ? 'inline-block' : 'none'; }
+}
+
+// ============= NAVIGATION =============
+function startModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  // If already completed, show results
+  if(moduleCompleted[idx]){
+    showModuleResults();
+    return;
+  }
+  // Find first unanswered to resume, or start at 0
+  const firstUnanswered = answers[idx].findIndex(a => a === null);
+  currentQ = firstUnanswered === -1 ? 0 : firstUnanswered;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function goHome(){
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('splash').style.display='flex';
+  renderSplash();
+  window.scrollTo({top:0});
+}
+
+function quitToSplash(){
+  if(!confirm('Ana sayfaya dönmek istediğine emin misin? Cevapların kaydedildi.')) return;
+  goHome();
+}
+
+function restartQuiz(){
+  if(!confirm('Bu modülü baştan çözmek istediğine emin misin?')) return;
+  answers[currentModule] = new Array(MODULES[currentModule].questions.length).fill(null);
+  moduleCompleted[currentModule] = false;
+  currentQ = 0;
+  saveProgress();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const mod = MODULES[currentModule];
+  const q = mod.questions[currentQ];
+  const card = document.getElementById('qcard');
+  card.innerHTML = `
+    <div class="qtype" lang="en">${q.k}</div>
+    <div class="passage">${q.p}</div>
+    ${q.data ? q.data : ''}
+    <div class="qstem">${q.q}</div>
+    <div class="opts">
+      ${q.o.map((opt,i)=>{
+        const letter = opt.substring(0,1);
+        const text = opt.substring(3);
+        const selected = answers[currentModule][currentQ]===i?'sel':'';
+        return `<button class="opt ${selected}" onclick="pickAnswer(${i})">
+          <span class="opt-letter">${letter}</span><span>${text}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('tbMeta').textContent = `${mod.name} · Day 6 Math Stats`;
+  document.getElementById('tbQnum').textContent = `${currentQ+1} / ${mod.questions.length}`;
+  document.getElementById('progFill').style.width = `${((currentQ+1)/mod.questions.length)*100}%`;
+  const dr = document.getElementById('dotRow');
+  dr.innerHTML = mod.questions.map((_,i)=>{
+    const cls = i===currentQ?'cur':(answers[currentModule][i]!==null?'ans':'');
+    return `<span class="dot ${cls}" onclick="goTo(${i})" title="Soru ${i+1}"></span>`;
+  }).join('');
+  document.getElementById('prevBtn').disabled = currentQ===0;
+  const isLast = currentQ===mod.questions.length-1;
+  document.getElementById('nextBtn').style.display = isLast?'none':'';
+  document.getElementById('submitBtn').style.display = isLast?'':'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  window.MODULES = MODULES;
+  window.currentModule = currentModule;
+  window.currentQ = currentQ;
+}
+function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
+function goTo(i){ currentQ=i; renderQuestion() }
+function nextQ(){ if(currentQ<MODULES[currentModule].questions.length-1){ currentQ++; renderQuestion() } }
+function prevQ(){ if(currentQ>0){ currentQ--; renderQuestion() } }
+
+function submitModule(){
+  showModuleResults();
+}
+
+function showModuleResults(){
+  const mod = MODULES[currentModule];
+  let correct = 0;
+  answers[currentModule].forEach((a,i)=>{ if(a===mod.questions[i].a) correct++ });
+  const pct = mod.questions.length ? Math.round((correct/mod.questions.length)*100) : 0;
+
+  // Mark as completed if all answered
+  const allAnswered = answers[currentModule].every(a => a !== null);
+  if(allAnswered) moduleCompleted[currentModule] = true;
+  saveProgress();
+
+  // Header
+  document.getElementById('resEyebrow').textContent = `${mod.name} · Detaylı Analiz`;
+  const titles = ['Module 1 Analizi', 'Module 2 Analizi', 'Bonus Analizi'];
+  document.getElementById('resTitle').textContent = titles[currentModule] || 'Modül Analizi';
+  document.getElementById('resSub').textContent = 'Aşağıdaki yanlışları tek tek aç, kuralları defterine geç';
+
+  // Module tabs
+  renderModuleTabs();
+
+  // Score card
+  document.getElementById('scoreNum').textContent = correct;
+  document.getElementById('scoreDen').textContent = `/ ${mod.questions.length} doğru`;
+  document.getElementById('scorePct').textContent = pct+'%';
+  const msg = document.getElementById('scoreMsg');
+  if(pct>=80) msg.textContent='Bu modülde çok iyi bir performans gösterdin. Yine de yanlışlarını detaylı incele, küçük hatalar sınavda büyür.';
+  else if(pct>=60) msg.textContent='Ortalama bir sonuç. Aşağıdaki analizleri dikkatlice oku, hata günlüğüne yedi adım protokolüyle işle.';
+  else msg.textContent='Bu modülde daha çok pratik gerekiyor. Her yanlışı tek tek aç, kuralı kendi kelimelerinle defterine geçir.';
+
+  // Determine next button
+  const isLast = currentModule === MODULES.length - 1;
+  const nextHasQ = !isLast && MODULES[currentModule+1].questions.length > 0;
+  const primaryBtn = document.getElementById('resPrimaryBtn');
+  if(nextHasQ){
+    const nextNames = ['Module 2', 'Bonus'];
+    primaryBtn.textContent = `${nextNames[currentModule] || 'Sıradaki'} Modülüne Geç ›`;
+    primaryBtn.onclick = goToNextModule;
+    primaryBtn.style.display = '';
+  } else {
+    primaryBtn.textContent = 'Bu Modülü Baştan Çöz';
+    primaryBtn.onclick = restartQuiz;
+    primaryBtn.style.display = '';
+  }
+
+  renderModuleReview();
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderModuleTabs(){
+  const tabs = document.getElementById('moduleTabs');
+  tabs.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği yoksa hiç gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let cls = '';
+    let label = '';
+    if(i === currentModule) cls += ' current';
+    if(status === 'complete'){
+      cls += ' done';
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      label = `<span class="mt-pct">${sc}/${m.questions.length}</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      label = `<span class="mt-pct">${ans}/${m.questions.length}</span>`;
+    }
+    return `<button class="mt-btn${cls}" onclick="switchToModule(${i})">${m.name} ${label}</button>`;
+  }).join('');
+}
+
+function switchToModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  if(moduleCompleted[idx] || answers[idx].some(a => a !== null)){
+    showModuleResults();
+  } else {
+    startModule(idx);
+  }
+}
+
+function goToNextModule(){
+  if(currentModule + 1 < MODULES.length && MODULES[currentModule+1].questions.length > 0){
+    startModule(currentModule + 1);
+  }
+}
+
+function renderModuleReview(){
+  const list = document.getElementById('reviewList');
+  const mod = MODULES[currentModule];
+  let html = '';
+  mod.questions.forEach((q,idx)=>{
+    const userAns = answers[currentModule][idx];
+    const correctAns = q.a;
+    const isCorrect = userAns===correctAns;
+    const statusText = isCorrect?'DOĞRU':(userAns===null?'BOŞ':'YANLIŞ');
+    const answersHtml = q.o.map((opt,i)=>{
+      const letter = opt.substring(0,1);
+      const text = opt.substring(3);
+      let cls = '';
+      if(i===correctAns) cls = 'correct';
+      else if(i===userAns) cls = 'wrong-pick';
+      else return '';
+      return `<div class="rev-ans ${cls}"><span class="rev-ans-letter">${letter}</span><span>${text}</span></div>`;
+    }).filter(Boolean).join('');
+    const e = q.explain;
+    const vocabHtml = e.vocab.map(v=>`<div class="vocab-row"><span class="vocab-en">${v.en}</span><span class="vocab-tr"><span class="pos">${v.pos}</span>${v.tr}</span></div>`).join('');
+    html += `<div class="review-card ${isCorrect?'':'open'}">
+      <div class="review-head ${isCorrect?'correct':''}" onclick="this.parentElement.classList.toggle('open')">
+        <span class="review-num">${idx+1}</span>
+        <span class="review-tag">${q.k}</span>
+        <span class="review-status">${statusText}</span>
+        <span class="review-toggle">▾</span>
+      </div>
+      <div class="review-body">
+        <div class="rev-passage">${q.p}</div>
+        ${q.data ? `<div class="rev-data">${q.data}</div>` : ''}
+        <div class="rev-stem">${q.q}</div>
+        <div class="rev-answers">${answersHtml}</div>
+        <div class="gri-block">
+          <div class="gri-head">
+            <div class="gri-avatar"><img src="${GRI_MASCOT}" alt="Gri"></div>
+            <div class="gri-label">Gri diyor ki<small>Detaylı Analiz</small></div>
+          </div>
+          <div class="gri-body">
+            <div class="expl-section"><div class="expl-h">Doğru Cevap Mantığı</div><p>${e.why_correct}</p></div>
+            <div class="expl-section"><div class="expl-h">Yanlış Şıklar Neden Yanlış</div><p>${e.why_wrong}</p></div>
+            <div class="expl-section"><div class="expl-h">Kelime Hazinesi</div><div class="vocab-list">${vocabHtml}</div></div>
+            <div class="expl-section"><div class="rule-box"><div class="rule-label">Kuralı Hatırla</div><p>${e.rule}</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+// ============= INIT =============
+loadProgress();
+renderSplash();
+
+// URL param desteği: ?m=M&q=Q ile direkt soruya git (Çalışma Masam linkleri için)
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var m = parseInt(params.get('m'), 10);
+    var q = parseInt(params.get('q'), 10);
+    if (isNaN(m) || isNaN(q) || m < 1 || q < 1) return;
+    var modIdx = m - 1;
+    if (!MODULES[modIdx] || !MODULES[modIdx].questions || q > MODULES[modIdx].questions.length) return;
+    currentModule = modIdx;
+    currentQ = q - 1;
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').classList.add('show');
+    document.getElementById('quiz').classList.add('show');
+    renderQuestion();
+  } catch (e) { /* fall back to splash */ }
+})();
+</script>
+</body>
+</html>

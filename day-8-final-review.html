@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 7 — Mock Review · Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#166534;--tdark:#14532d;--tdeep:#052e16;
+  --tlight:#86efac;--twash:#f0fdf4;--tsoft:#dcfce7;
+  --gold:#ca8a04;--gold-soft:#fef9c3;
+  --bg:#fafaf7;--paper:#ffffff;
+  --ink:#0f1f1e;--ink-soft:#37534f;--muted:#6b7975;
+  --line:#e5e7e5;--line-soft:#eef2f1;
+  --correct:#15803d;--correct-bg:#f0fdf4;
+  --wrong:#b91c1c;--wrong-bg:#fef2f2;
+  --r:10px;--r-lg:14px;
+  --shadow-sm:0 1px 2px rgba(22,101,52,.04),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(22,101,52,.06),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(22,101,52,.08),0 4px 8px rgba(0,0,0,.04);
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-serif:'Lora',Georgia,serif;
+  --font-display:'Cormorant Garamond','Lora',serif;
+  --font-mono:'DM Mono','SF Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* SPLASH */
+#splash{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;background:radial-gradient(ellipse at top left,rgba(22,101,52,.08) 0%,transparent 60%),radial-gradient(ellipse at bottom right,rgba(202,138,4,.06) 0%,transparent 55%),linear-gradient(180deg,#f0fdf4 0%,#fafaf7 100%)}
+.cover{max-width:680px;width:100%;text-align:center}
+.cover-brand{display:inline-flex;align-items:baseline;gap:.45rem;font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--tdeep);letter-spacing:-.01em;margin-bottom:3rem}
+.cover-brand .it{font-style:italic;font-weight:500;color:var(--teal)}
+.cover-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);padding:.5rem 1rem;background:rgba(22,101,52,.08);border-radius:99px;margin-bottom:1.4rem}
+.cover-title{font-family:var(--font-display);font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.05;font-weight:700;color:var(--tdeep);letter-spacing:-.015em;margin-bottom:.6rem}
+.cover-sub{font-family:var(--font-serif);font-size:clamp(1.05rem,2.2vw,1.2rem);font-style:italic;color:var(--ink-soft);margin-bottom:2rem;line-height:1.5}
+.cover-divider{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.6rem 0}
+.cover-divider::before,.cover-divider::after{content:'';flex:0 1 80px;height:1px;background:var(--line)}
+.cover-dia{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+.module-list{display:flex;flex-direction:column;gap:.8rem;margin:2rem 0;text-align:left}
+.module-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:all .15s}
+.module-card.clickable{cursor:pointer}
+.module-card.clickable:hover{border-color:var(--teal);background:var(--twash);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.module-card.disabled{opacity:.5;cursor:not-allowed}
+.module-card .mc-left{flex:1}
+.module-card .mc-name{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--tdeep);margin-bottom:.1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.module-card .mc-desc{font-family:var(--font-serif);font-size:.85rem;color:var(--ink-soft);font-style:italic}
+.module-card .mc-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-align:right}
+.module-card .mc-q{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--teal)}
+.mc-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.08em;font-weight:600;text-transform:uppercase;padding:.18rem .55rem;border-radius:99px;border:1px solid;display:inline-flex;align-items:center;gap:.3rem}
+.mc-status.done{color:var(--correct);border-color:#86efac;background:var(--correct-bg)}
+.mc-status.progress{color:var(--gold);border-color:#86efac;background:#fefce8}
+.mc-status.empty{color:var(--muted);border-color:var(--line);background:var(--line-soft)}
+
+/* Module tabs in results */
+.module-tabs{display:flex;gap:.5rem;margin-bottom:1.6rem;flex-wrap:wrap}
+.mt-btn{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.55rem 1rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;font-weight:600;color:var(--ink-soft);cursor:pointer;text-transform:uppercase;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.mt-btn:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.mt-btn.current{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mt-btn.done{border-color:#86efac;color:var(--correct);background:var(--correct-bg)}
+.mt-btn.done.current{background:var(--correct);color:#fff;border-color:var(--correct)}
+.mt-btn:disabled{opacity:.4;cursor:not-allowed}
+.mt-pct{font-size:.66rem;opacity:.85}
+.cover-instr{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r);padding:1.1rem 1.4rem;margin-bottom:2rem;text-align:left;font-family:var(--font-serif);font-size:.93rem;line-height:1.65;color:var(--ink-soft)}
+.cover-instr strong{color:var(--tdeep);font-weight:600}
+.btn-start{display:inline-flex;align-items:center;gap:.6rem;background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:1rem 2.4rem;font-family:var(--font-ui);font-size:1rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(22,101,52,.25)}
+.btn-start:hover{background:var(--tdark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(22,101,52,.35)}
+.btn-start svg{width:18px;height:18px}
+
+/* TOPBAR */
+.topbar{background:var(--teal);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.08);display:none}
+.topbar.show{display:block}
+.tb-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;gap:1rem}
+.tb-meta{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;opacity:.85;text-transform:uppercase}
+.tb-qnum{font-family:var(--font-display);font-size:1.1rem;font-weight:600}
+.tb-actions{display:flex;gap:.5rem}
+.tb-btn{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:6px;padding:.35rem .8rem;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;font-weight:500;cursor:pointer;text-transform:uppercase;transition:background .15s}
+.tb-btn:hover{background:rgba(255,255,255,.28)}
+.tb-progress{height:3px;background:rgba(255,255,255,.18)}
+.tb-progress-fill{height:100%;background:#fff;transition:width .3s}
+
+/* QUIZ */
+#quiz{display:none}
+#quiz.show{display:block}
+.quiz-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.dot-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.4rem}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--tlight);border:1.5px solid var(--teal);opacity:.5;cursor:pointer;transition:all .2s}
+.dot.ans{background:var(--teal);opacity:1}
+.dot.cur{background:var(--teal);opacity:1;transform:scale(1.4);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--teal)}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.8rem 1.7rem;box-shadow:var(--shadow-sm)}
+.qtype{display:inline-flex;align-items:center;gap:.5rem;background:var(--twash);color:var(--tdeep);border:1px solid var(--tlight);border-radius:6px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;font-weight:500;padding:.3rem .7rem;text-transform:uppercase;margin-bottom:1.2rem}
+.passage{font-family:var(--font-serif);font-size:1.02rem;line-height:1.85;color:#1c1917;background:var(--twash);border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:1.15rem 1.3rem;margin-bottom:1.4rem}
+.passage u{text-decoration:none;font-weight:700;color:var(--tdeep);background:linear-gradient(transparent 60%,rgba(22,101,52,.18) 60%);padding:0 2px}
+.qstem{font-family:var(--font-ui);font-size:1rem;font-weight:600;color:var(--tdeep);margin-bottom:1.2rem;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.6rem}
+.opt{display:flex;align-items:flex-start;gap:.85rem;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;cursor:pointer;transition:all .15s;font-family:var(--font-serif);font-size:.96rem;line-height:1.55;color:var(--ink);text-align:left;width:100%}
+.opt:hover{border-color:var(--teal);background:var(--twash)}
+.opt.sel{border-color:var(--teal);background:var(--twash);box-shadow:0 0 0 3px rgba(22,101,52,.1)}
+.opt-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-top:1px;transition:all .15s;flex-shrink:0}
+.opt.sel .opt-letter{background:var(--teal);border-color:var(--teal);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.4rem}
+.btn-nav{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-family:var(--font-ui);font-size:.88rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.btn-nav:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-submit{background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:.65rem 1.5rem;font-family:var(--font-ui);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(22,101,52,.2)}
+.btn-submit:hover{background:var(--tdark)}
+
+/* INTERMISSION */
+#intermission{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem 1.5rem;background:linear-gradient(135deg,var(--twash) 0%,var(--bg) 100%)}
+#intermission.show{display:flex}
+.inter-card{max-width:560px;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:2.4rem 2.2rem;text-align:center;box-shadow:var(--shadow-lg)}
+.inter-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem}
+.inter-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--tdeep);margin-bottom:.4rem;line-height:1.15}
+.inter-sub{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:2rem;font-style:italic}
+.inter-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:2rem 0;padding:1.4rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.inter-stat .stat-num{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--teal);line-height:1}
+.inter-stat .stat-lbl{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:.3rem}
+.inter-next{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:1.6rem;line-height:1.55}
+.inter-next strong{color:var(--tdeep);font-weight:600}
+.inter-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+
+/* RESULTS */
+#results{display:none}
+#results.show{display:block}
+.res-header{background:linear-gradient(135deg,var(--teal) 0%,var(--tdark) 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center}
+.res-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;opacity:.75;text-transform:uppercase;margin-bottom:.6rem}
+.res-title{font-family:var(--font-display);font-size:2.2rem;font-weight:700;margin-bottom:.4rem;letter-spacing:-.01em}
+.res-sub{font-size:.92rem;opacity:.85}
+.res-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.score-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem 1.8rem;display:grid;grid-template-columns:auto 1fr;gap:1.6rem;align-items:center;margin-bottom:2.2rem;box-shadow:var(--shadow-md)}
+.score-big{text-align:center;padding-right:1.6rem;border-right:1px solid var(--line)}
+.score-num{font-family:var(--font-display);font-size:3.6rem;font-weight:700;color:var(--teal);line-height:1}
+.score-den{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.score-info .score-pct{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin-bottom:.3rem}
+.score-info .score-pct .lbl{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:400;letter-spacing:.08em;margin-left:.5rem;text-transform:uppercase}
+.score-msg{font-family:var(--font-serif);font-size:.92rem;color:var(--ink-soft);line-height:1.6;font-style:italic}
+.module-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.4rem}
+.mb-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;text-align:center}
+.mb-name{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.mb-score{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--tdeep)}
+.mb-pct{font-family:var(--font-mono);font-size:.72rem;color:var(--teal);margin-top:.15rem}
+.section-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600;padding-bottom:.5rem;margin-bottom:1.2rem;border-bottom:1px solid var(--line)}
+.module-divider{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin:2rem 0 1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--teal);display:flex;align-items:center;justify-content:space-between}
+.module-divider .md-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* Review */
+.review-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow-sm)}
+.review-head{display:flex;align-items:center;gap:.9rem;padding:.9rem 1.2rem;background:var(--wrong-bg);border-bottom:1px solid #fecaca;cursor:pointer;user-select:none}
+.review-head.correct{background:var(--correct-bg);border-bottom-color:#bbf7d0}
+.review-num{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--wrong);background:#fff;padding:.2rem .55rem;border-radius:5px;border:1px solid #fca5a5}
+.review-head.correct .review-num{color:var(--correct);border-color:#86efac}
+.review-tag{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;flex:1}
+.review-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase;color:var(--wrong)}
+.review-head.correct .review-status{color:var(--correct)}
+.review-toggle{font-size:1rem;color:var(--muted);transition:transform .2s;margin-left:auto}
+.review-card.open .review-toggle{transform:rotate(180deg)}
+.review-body{padding:1.4rem 1.4rem 1.5rem;display:none}
+.review-card.open .review-body{display:block}
+.rev-passage{font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917;background:var(--bg);border-left:3px solid var(--line);padding:.85rem 1.1rem;margin-bottom:1rem;border-radius:0 6px 6px 0}
+.rev-passage u{text-decoration:none;font-weight:700;color:var(--tdeep)}
+.rev-stem{font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:.8rem}
+.rev-answers{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.4rem}
+.rev-ans{font-family:var(--font-serif);font-size:.88rem;padding:.45rem .8rem;border-radius:6px;display:flex;align-items:flex-start;gap:.6rem}
+.rev-ans.correct{background:var(--correct-bg);color:var(--correct);font-weight:600;border:1px solid #bbf7d0}
+.rev-ans.wrong-pick{background:var(--wrong-bg);color:var(--wrong);text-decoration:line-through;border:1px solid #fecaca}
+.rev-ans-letter{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;border-radius:50%;font-family:var(--font-mono);font-size:.7rem;font-weight:700;border:1.5px solid currentColor;background:#fff}
+
+/* Gri block */
+.gri-block{background:linear-gradient(180deg,#fff 0%,var(--twash) 100%);border:1px solid var(--tlight);border-radius:var(--r);overflow:hidden;margin-top:.8rem}
+.gri-head{display:flex;align-items:center;gap:.85rem;padding:.85rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight)}
+.gri-avatar{width:42px;height:42px;border-radius:50%;background:#fff;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.gri-avatar img{width:100%;height:100%;object-fit:cover}
+.gri-label{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--tdeep)}
+.gri-label small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-top:.05rem}
+.gri-body{padding:1.2rem 1.3rem;font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917}
+.expl-section{margin-bottom:1.2rem}
+.expl-section:last-child{margin-bottom:0}
+.expl-h{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--teal);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.expl-h::before{content:'';display:inline-block;width:14px;height:1.5px;background:var(--teal)}
+.expl-section p{margin-bottom:.5rem}
+.expl-section p:last-child{margin-bottom:0}
+.vocab-list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vocab-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:.65rem .95rem;border-bottom:1px solid var(--line-soft);align-items:baseline}
+.vocab-row:last-child{border-bottom:none}
+.vocab-en{font-family:var(--font-display);font-weight:600;font-size:.98rem;color:var(--tdeep);white-space:nowrap}
+.vocab-tr{font-family:var(--font-serif);font-size:.86rem;color:var(--ink-soft);font-style:italic}
+.vocab-tr .pos{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;color:var(--muted);background:var(--line-soft);padding:.08rem .35rem;border-radius:3px;margin-right:.4rem;text-transform:uppercase;font-style:normal}
+.rule-box{background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.9rem 1.1rem}
+.rule-box .rule-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#854d0e;font-weight:700;margin-bottom:.4rem}
+.rule-box p{font-family:var(--font-serif);font-size:.92rem;line-height:1.7;color:#422006;margin:0}
+mark.hl{background:linear-gradient(transparent 60%,#fef08a 60%);padding:0 2px;font-weight:500;color:inherit}
+mark.hl-key{background:linear-gradient(transparent 60%,rgba(22,101,52,.22) 60%);padding:0 2px;font-weight:500;color:inherit}
+
+/* Data tables (CoE Quantitative) */
+.data-block{margin:0 0 1.4rem;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.data-caption{font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--tdeep);padding:.7rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight);line-height:1.45}
+.data-caption .src{display:block;font-family:var(--font-serif);font-size:.78rem;font-weight:400;color:var(--ink-soft);font-style:italic;margin-top:.2rem}
+.data-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:.86rem}
+.data-table th{background:#fff;color:var(--tdeep);padding:.55rem .85rem;text-align:left;font-weight:600;border-bottom:1.5px solid var(--teal);font-size:.82rem}
+.data-table td{padding:.5rem .85rem;border-bottom:1px solid var(--line-soft);color:var(--ink)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.data-table .grp{background:var(--twash);font-weight:600;color:var(--tdeep)}
+.data-table tr:nth-child(even) td{background:#fafafa}
+.data-table tr:nth-child(even) td.grp{background:var(--tsoft)}
+.rev-data{margin:.7rem 0 1rem}
+
+/* Cross-Text Connections - dual passage */
+.dual-text{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0 1.2rem}
+.dual-text .text-block{padding:.9rem 1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.dual-text .text-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.45rem;text-transform:uppercase}
+.dual-text .text-body{font-family:var(--font-serif);font-size:.92rem;line-height:1.55;color:var(--ink)}
+@media (max-width:680px){.dual-text{grid-template-columns:1fr}}
+
+/* Rhetorical Synthesis - student notes */
+.notes-block{margin:.5rem 0 1rem;padding:1rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.notes-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.55rem;text-transform:uppercase}
+.notes-list{margin:0;padding-left:1.2rem;font-family:var(--font-serif);font-size:.92rem;line-height:1.6;color:var(--ink)}
+.notes-list li{margin-bottom:.3rem}
+.goal-line{margin:.5rem 0 .2rem;font-family:var(--font-serif);font-size:.95rem;line-height:1.55;color:var(--ink);font-style:italic}
+
+/* Footer */
+.site-foot{background:var(--tdeep);color:#fff;padding:2.4rem 1.5rem 2rem;text-align:center}
+.foot-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:.4rem}
+.foot-brand .it{font-style:italic;font-weight:500;color:var(--tlight)}
+.foot-text{font-size:.84rem;opacity:.75;font-family:var(--font-serif);margin-bottom:1rem}
+.foot-tagline{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tlight);opacity:.7}
+.results-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.btn-action{padding:.7rem 1.4rem;border-radius:var(--r);font-family:var(--font-ui);font-size:.85rem;font-weight:700;cursor:pointer;border:1.5px solid var(--teal);transition:all .15s}
+.btn-action.primary{background:var(--teal);color:#fff}
+.btn-action.primary:hover{background:var(--tdark)}
+.btn-action.outline{background:#fff;color:var(--teal)}
+.btn-action.outline:hover{background:var(--twash)}
+
+@media(max-width:640px){
+  .module-card{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .module-card .mc-meta{text-align:left}
+  .qcard{padding:1.3rem 1.1rem}
+  .passage{font-size:.95rem;padding:1rem 1.1rem}
+  .score-card{grid-template-columns:1fr;text-align:center}
+  .score-big{border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:1.2rem}
+  .module-breakdown{grid-template-columns:1fr}
+  .inter-stats{grid-template-columns:1fr;gap:.8rem}
+  .vocab-row{grid-template-columns:1fr;gap:.2rem}
+}
+@media print{
+  .topbar,.btn-start,.btn-nav,.btn-submit,.results-actions,.site-foot,.inter-actions{display:none!important}
+  body{background:#fff}
+  #splash,#intermission{display:none}
+  #results{display:block!important}
+  .review-card{break-inside:avoid;page-break-inside:avoid}
+  .review-card .review-body{display:block!important}
+}
+</style>
+
+<!-- Brand integration: Supabase + camp features -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/sat-camp-features.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.SAT_CAMP_DAY = 7;</script>
+<script src="../assets/sat-camp-features.js" defer></script>
+</head>
+<body>
+<div class="sc-brand-bar">
+  <a href="../index.html" class="sc-brand-logo">Gri <span class="it">English</span></a>
+  <div class="sc-brand-meta">
+    <span class="sc-day-tag">DAY 7</span>
+    <a href="../urun/sat-rw-8-gunluk-kamp.html">Kamp Anasayfa</a>
+    <a href="../calisma-paketleri.html">Tüm Paketler</a>
+    <a href="../panelim.html">Çalışma Masam</a>
+  </div>
+</div>
+
+<!-- SPLASH -->
+<section id="splash">
+  <div class="cover">
+    <div class="cover-brand">Gri <span class="it">English</span></div>
+    <div class="cover-eyebrow">Digital SAT · Day 7</div>
+    <h1 class="cover-title">Mock Review</h1>
+    <p class="cover-sub">Karışık Pratik · Tüm Kategoriler</p>
+
+    <div class="cover-divider"><span class="cover-dia"></span><span class="cover-dia"></span><span class="cover-dia"></span></div>
+
+    <div class="module-list" id="moduleList"></div>
+
+    <div class="cover-instr">
+      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa\'ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
+    </div>
+
+    <button class="btn-start" onclick="startModule(0)">
+      Module 1 ile Başla
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button id="resetBtn" class="btn-reset-progress" onclick="resetAllProgress()" style="display:none;margin-top:14px;background:transparent;border:1px solid rgba(150,150,150,.4);color:#888;padding:8px 18px;font-size:13px;border-radius:6px;cursor:pointer;font-family:inherit;">
+      Tüm İlerlemeyi Sıfırla
+    </button>
+
+  </div>
+</section>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-inner">
+    <span class="tb-meta" id="tbMeta">Module 1</span>
+    <span class="tb-qnum" id="tbQnum">1 / 27</span>
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="goHome()">Ana Sayfa</button>
+      <button class="tb-btn" onclick="quitToSplash()">Çıkış</button>
+    </div>
+  </div>
+  <div class="tb-progress"><div class="tb-progress-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="quiz-wrap">
+    <div class="dot-row" id="dotRow"></div>
+    <div id="qcard" class="qcard"></div>
+    <div class="nav-row">
+      <button class="btn-nav" id="prevBtn" onclick="prevQ()">‹ Önceki</button>
+      <button class="btn-nav" id="nextBtn" onclick="nextQ()">Sonraki ›</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitModule()" style="display:none">Modülü Bitir</button>
+    </div>
+  </div>
+</section>
+
+<!-- INTERMISSION -->
+<!-- RESULTS (per-module) -->
+<section id="results">
+  <div class="res-header">
+    <div class="res-eyebrow" id="resEyebrow">Module 1 Tamamlandı</div>
+    <h1 class="res-title" id="resTitle">Modül Analizi</h1>
+    <p class="res-sub" id="resSub">Her yanlışı incele, kuralları defterine geç</p>
+  </div>
+  <div class="res-wrap">
+    <div class="module-tabs" id="moduleTabs"></div>
+
+    <div class="score-card">
+      <div class="score-big">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-den" id="scoreDen">/ 27 doğru</div>
+      </div>
+      <div class="score-info">
+        <div class="score-pct"><span id="scorePct">0%</span><span class="lbl">Modül Doğruluğu</span></div>
+        <div class="score-msg" id="scoreMsg">Aşağıdaki analizleri dikkatlice oku. Her yanlışını yedi adım protokolüyle hata günlüğüne işle.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Soru-Soru Analiz</div>
+    <div id="reviewList"></div>
+
+    <div class="results-actions">
+      <button class="btn-action outline" onclick="goHome()">‹ Ana Sayfa</button>
+      <button class="btn-action outline" onclick="window.print()">PDF Olarak Yazdır</button>
+      <button class="btn-action primary" id="resPrimaryBtn" onclick="goToNextModule()">Sıradaki Modüle Geç ›</button>
+    </div>
+  </div>
+  <div class="site-foot">
+    <div class="foot-brand">Gri <span class="it">English</span></div>
+    <div class="foot-text">Sınav İngilizcesi için titizlikle hazırlanmış materyaller</div>
+    <div class="foot-tagline">Focus · Practice · Succeed</div>
+  </div>
+</section>
+
+<script>
+const GRI_MASCOT = 'data:image/png;base64,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';
+
+const MODULES = [
+{
+  name: 'Module 1',
+  subtitle: 'Karışık mock pratik. Tüm kategorilerden kolay-orta sorular.',
+  questions: [
+    // Q1 — Central Ideas (Day 1 retention)
+    {
+      k:'Central Ideas and Details',
+      p:`Among the most striking findings of recent paleontological work is that many groups of organisms long thought to have appeared suddenly in the fossil record actually evolved over much longer periods than the record initially suggested. Newer collection methods, including careful examination of fine-grained sediments that earlier expeditions had overlooked, have produced specimens that fill in transitional stages between previously isolated forms — substantially extending the documented evolutionary timelines for several major lineages.`,
+      q:'Which choice best states the main idea of the text?',
+      o:['A) Paleontology is a relatively new field of study.','B) Recent collection methods have revealed transitional forms that extend the documented timelines of evolutionary change for several lineages previously thought to have appeared suddenly.','C) Fine-grained sediments are difficult to study.','D) All major lineages of organisms appeared suddenly in the fossil record.'],
+      a:1,
+      explain:{
+        why_correct:'Ana fikir: <mark class="hl-key">yeni yöntemler + transitional forms + uzatılmış timeline</mark>. B üç elemanı birleştirerek metnin merkezi iddiasını verir.',
+        why_wrong:'<strong>A</strong> alan tanımı, ana fikir değil. <strong>C</strong> yan detay. <strong>D</strong> metnin tam tersi.',
+        vocab:[
+          {en:'paleontological',pos:'adj.',tr:'paleontolojik'},
+          {en:'specimen',pos:'n.',tr:'örnek, numune'},
+          {en:'transitional',pos:'adj.',tr:'geçişsel'},
+          {en:'lineage',pos:'n.',tr:'soy hattı'},
+          {en:'sediment',pos:'n.',tr:'tortu, sediment'},
+        ],
+        rule:'Central Idea\'da metnin ana iddiası genellikle iki-üç elemanın sentezidir: yöntem + bulgu + sonuç gibi. Tek alıntı yetersiz.'
+      }
+    },
+    // Q2 — Inferences (Day 2 retention)
+    {
+      k:'Inferences',
+      p:`Researchers studying urban green spaces have found that residents living within four hundred meters of a park reported higher self-rated mental health than residents farther away, after controlling for income and neighborhood characteristics. However, the effect was much larger when the park contained mature tree cover than when the green space consisted primarily of open grass.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) All urban green spaces have identical effects on mental health.','B) Mature tree cover, not green space alone, appears to be a particularly important factor in the mental-health benefits associated with proximity to urban parks.','C) Open grass has no effect on mental health.','D) Urban residents prefer parks to grass.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">park yakınlığı fayda + mature tree cover daha büyük etki</mark>. Mantıklı çıkarım: tree cover anahtar faktör. B nüanslı doğru.',
+        why_wrong:'<strong>A</strong> "identical" mutlak. <strong>C</strong> "no effect" aşırı. <strong>D</strong> tercih değil etki ölçülüyor.',
+        vocab:[
+          {en:'self-rated',pos:'adj.',tr:'kendi değerlendirmesine dayalı'},
+          {en:'mature',pos:'adj.',tr:'olgun'},
+          {en:'proximity',pos:'n.',tr:'yakınlık'},
+          {en:'cover',pos:'n.',tr:'örtü, kapsam'},
+          {en:'characteristic',pos:'n.',tr:'özellik'},
+        ],
+        rule:'Inference\'da iki ayrı veri (yakınlık etkisi + tree cover etkisinin daha büyük olması) <strong>"daha spesifik faktör anahtar"</strong> çıkarımına götürür.'
+      }
+    },
+    // Q3 — Words in Context (Day 3 retention)
+    {
+      k:'Words in Context',
+      p:`The economist\'s argument was so <u>______</u> that even her usual critics, while not fully persuaded, conceded that her central claim deserved more serious consideration than it had received in earlier reviews of the literature.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) confusing','B) compelling','C) tedious','D) speculative'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"critics conceded that her claim deserved more serious consideration"</mark> — eleştirmenler bile dikkate değer buldu. "Compelling" güçlü, dikkat çeken — tam bu etki.',
+        why_wrong:'<strong>A</strong> "confusing" — taviz vereceklerinde çelişir. <strong>C</strong> "tedious" sıkıcı. <strong>D</strong> "speculative" spekülatif — daha az ciddi alınır.',
+        vocab:[
+          {en:'compelling',pos:'adj.',tr:'ikna edici, etkileyici'},
+          {en:'concede',pos:'v.',tr:'kabul etmek (taviz vererek)'},
+          {en:'persuade',pos:'v.',tr:'ikna etmek'},
+          {en:'central claim',pos:'n.',tr:'merkezi iddia'},
+          {en:'literature',pos:'n.',tr:'literatür (akademik)'},
+        ],
+        rule:'WiC\'te "critics conceded X deserves consideration" göstergesi argümanın <strong>güçlü/dikkat çeken</strong> niteliğini ister: compelling, forceful, persuasive.'
+      }
+    },
+    // Q4 — Text Structure and Purpose (Day 4 retention)
+    {
+      k:'Text Structure and Purpose',
+      p:`Traditional accounts of human evolution have emphasized the role of brain size as the central driver of cognitive differences between modern humans and our closest extinct relatives. <u>Recent work in comparative neuroscience has begun to suggest that this size-focused narrative, while partially supported by the fossil record, may underweight differences in the internal organization of comparably sized brains — particularly the density and connectivity of certain prefrontal regions that appear to differ substantially across human and Neanderthal specimens.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the size-focused narrative with additional fossil evidence.','B) It complicates the size-focused narrative by introducing internal organizational differences as a comparably important factor.','C) It denies that brain size affects cognition.','D) It defines the term "prefrontal."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"while partially supported, may underweight differences in internal organization"</mark> diyerek boyut odaklı anlatıyı iç organizasyon farklılıklarıyla karmaşıklaştırıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies size affects" aşırı. <strong>D</strong> tanım yok.',
+        vocab:[
+          {en:'comparative',pos:'adj.',tr:'karşılaştırmalı'},
+          {en:'extinct',pos:'adj.',tr:'soyu tükenmiş'},
+          {en:'underweight',pos:'v.',tr:'önemini azaltmak'},
+          {en:'prefrontal',pos:'adj.',tr:'prefrontal (beyin)'},
+          {en:'connectivity',pos:'n.',tr:'bağlantı'},
+        ],
+        rule:'TSP\'de "while partially supported, may underweight X" yapısı yerleşik anlatıyı kısmi kabul + ek faktör ile karmaşıklaştırma işlevidir.'
+      }
+    },
+    // Q5 — Transitions (Day 5 retention)
+    {
+      k:'Transitions',
+      p:`The committee had originally planned to present its findings to the full council before the summer recess. <u>______</u> several members requested additional time to review supporting documents that arrived later than expected, and the presentation was rescheduled for the autumn session.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) As a result,','B) However,','C) For example,','D) Similarly,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">orijinal plan — yaz tatili öncesi sunum</mark>. İkinci cümle: <mark class="hl-key">üyeler ek zaman istedi + sunum sonbahara ertelendi</mark>. Plan vs gerçekleşen sapma. "However" doğru.',
+        why_wrong:'<strong>A</strong> "as a result" sonuç, ama erteleme planın sonucu değil sapması. <strong>C</strong> "for example" örnek. <strong>D</strong> "similarly" benzerlik.',
+        vocab:[
+          {en:'council',pos:'n.',tr:'konsey, meclis'},
+          {en:'recess',pos:'n.',tr:'tatil, ara'},
+          {en:'supporting documents',pos:'n.',tr:'destekleyici belgeler'},
+          {en:'reschedule',pos:'v.',tr:'yeniden planlamak'},
+          {en:'session',pos:'n.',tr:'oturum'},
+        ],
+        rule:'Transitions\'ta "orijinal plan X. ___ farklı gelişme oldu" yapısı kontrast ister: However, Yet, Nevertheless.'
+      }
+    },
+    // Q6 — Rhetorical Synthesis (Day 6 retention)
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching the development of the bicycle, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>The earliest bicycles, called "running machines" or "draisines," appeared in the early 1800s.</li>
+    <li>They had no pedals; riders pushed themselves along by walking.</li>
+    <li>Pedal-driven bicycles emerged in the 1860s.</li>
+    <li>The "safety bicycle" of the 1880s introduced equal-sized wheels and a chain drive.</li>
+    <li>The safety bicycle made cycling accessible to a much wider population, including women.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to emphasize the social significance of the safety bicycle.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Early bicycles, called draisines, had no pedals.','B) Pedal-driven bicycles emerged in the 1860s.','C) The "safety bicycle" of the 1880s, with equal-sized wheels and a chain drive, made cycling accessible to a much wider population, including women.','D) Bicycles developed gradually over the nineteenth century.'],
+      a:2,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">safety bicycle\'in toplumsal önemi</mark>. C: (1) safety bicycle tanımı, (2) yapısal özellikleri, (3) toplumsal etki (much wider population, including women). Toplumsal vurgu net.',
+        why_wrong:'<strong>A</strong> early bicycle, safety değil. <strong>B</strong> pedal-driven, safety değil. <strong>D</strong> genel tarih.',
+        vocab:[
+          {en:'pedal',pos:'n.',tr:'pedal'},
+          {en:'chain drive',pos:'n.',tr:'zincir tahriği'},
+          {en:'accessible',pos:'adj.',tr:'erişilebilir'},
+          {en:'safety bicycle',pos:'n.',tr:'güvenlik bisikleti (modern bisiklet)'},
+          {en:'wider',pos:'adj.',tr:'daha geniş'},
+        ],
+        rule:'RS\'te "emphasize social significance" goal\'u için cevap konunun toplumsal etki/erişilebilirlik boyutunu öne çıkarır. Sadece teknik detaylar yarımdır.'
+      }
+    },
+    // Q7 — Boundaries (SEC)
+    {
+      k:'Boundaries',
+      p:`The publishing company had committed to releasing the author\'s next novel within twelve months <u>______</u> production delays at its printing facility ultimately pushed the release date by an additional six months.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , however','B) however','C) ; however,','D) , however,'],
+      a:2,
+      explain:{
+        why_correct:'İki bağımsız cümle: "The publishing company had committed..." + "production delays...pushed the release date". <mark class="hl-key">Noktalı virgül + however + virgül</mark> doğru kalıp.',
+        why_wrong:'<strong>A</strong> comma + however comma splice. <strong>B</strong> noktalama yok. <strong>D</strong> "comma + however + comma" comma splice.',
+        vocab:[
+          {en:'publishing',pos:'n.',tr:'yayıncılık'},
+          {en:'commit',pos:'v.',tr:'taahhüt etmek'},
+          {en:'production delay',pos:'n.',tr:'üretim gecikmesi'},
+          {en:'ultimately',pos:'adv.',tr:'sonunda'},
+        ],
+        rule:'Conjunctive adverb (however, therefore, moreover) iki bağımsız cümle arasında: <strong>noktalı virgül + adverb + virgül</strong>. Virgülle bağlama comma splice yaratır.'
+      }
+    },
+    // Q8 — CoE Textual (Day 1 retention)
+    {
+      k:'Command of Evidence',
+      p:`Researchers studying mountain glacier retreat in the Himalayas have observed that the rate of glacier mass loss has accelerated substantially since the early 2000s, with current loss rates roughly double those observed during the 1990s. They have argued that this acceleration cannot be explained by atmospheric warming alone and that additional factors — particularly deposits of black carbon from regional air pollution that darken glacier surfaces and increase absorption of solar radiation — must be contributing.`,
+      q:'Which choice best supports the researchers\' argument that atmospheric warming alone cannot explain the acceleration?',
+      o:['A) Glaciers worldwide have been retreating for over a century.','B) Studies measuring atmospheric temperatures above the Himalayas show only modest warming over the same period.','C) Black carbon emissions in the region have increased substantially since 2000.','D) Glacier monitoring stations have improved their measurement precision in recent decades.'],
+      a:1,
+      explain:{
+        why_correct:'Argüman: <mark class="hl-key">atmospheric warming tek başına yeterli değil</mark>. B: <mark class="hl-key">atmospheric warming "only modest"</mark> — yani warming ölçeği gözlenen hızlanmayı açıklamak için yetersiz. Bu, argümanı doğrudan destekler.',
+        why_wrong:'<strong>A</strong> tarihsel arka plan, mekanizma argümanına etkisiz. <strong>C</strong> black carbon kanıtı — additional factor argümanını destekler ama "warming alone yetersiz" iddiasını değil. <strong>D</strong> metodoloji.',
+        vocab:[
+          {en:'glacier',pos:'n.',tr:'buzul'},
+          {en:'retreat',pos:'n./v.',tr:'gerileme; gerilemek'},
+          {en:'accelerate',pos:'v.',tr:'hızlanmak'},
+          {en:'deposit',pos:'n.',tr:'birikinti'},
+          {en:'absorption',pos:'n.',tr:'soğurma, emme'},
+        ],
+        rule:'CoE\'da argüman "X alone cannot explain Y" diyorsa, en güçlü destek <strong>X\'in tek başına yetersizliğini gösteren ölçüm</strong>tür. Alternatif faktör kanıtı dolaylıdır.'
+      }
+    },
+    // Q9 — Words in Context
+    {
+      k:'Words in Context',
+      p:`Although the museum\'s acquisitions team had a reputation for hesitation, when the rare codex came up for auction the curator acted with uncharacteristic <u>______</u>, securing the purchase within hours and outmaneuvering several larger institutions that had been studying the same opportunity for weeks.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) reluctance','B) decisiveness','C) confusion','D) modesty'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"acted...secured purchase within hours...outmaneuvering"</mark> — hızlı, kararlı eylem. "Uncharacteristic" (alışılmadık) işareti: ekibin normalde "hesitation"u yok ediliyor. "Decisiveness" karar gücü — tam karşıt.',
+        why_wrong:'<strong>A</strong> "reluctance" tereddüt — hesitation\'la aynı şey. <strong>C</strong> "confusion" karışıklık — hızlı eylemle çelişir. <strong>D</strong> "modesty" alçakgönüllülük.',
+        vocab:[
+          {en:'decisiveness',pos:'n.',tr:'kararlılık, karar gücü'},
+          {en:'codex',pos:'n.',tr:'eski el yazması kitap'},
+          {en:'uncharacteristic',pos:'adj.',tr:'alışılmadık, atipik'},
+          {en:'outmaneuver',pos:'v.',tr:'manevrayla geçmek'},
+          {en:'curator',pos:'n.',tr:'küratör'},
+        ],
+        rule:'WiC\'te "uncharacteristic X" yapısı, önceki cümlede tanımlanan normal davranışın <strong>zıttı</strong> bir özellik ister. Burada "hesitation"un zıttı: decisiveness.'
+      }
+    },
+    // Q10 — Form-Structure-Sense (subject-verb agreement)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The geological history of the islands, including the volcanic eruptions and sea-level changes that shaped their current topography, <u>______</u> the subject of a new research initiative funded by the National Science Foundation.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) are','B) is','C) have been','D) were'],
+      a:1,
+      explain:{
+        why_correct:'Özne: <mark class="hl-key">"The geological history"</mark> (tekil). Araya giren "including the volcanic eruptions and sea-level changes" özne sayısını değiştirmez. Doğru fiil: <strong>"is"</strong>.',
+        why_wrong:'<strong>A</strong> "are" çoğul — özne tekil. <strong>C</strong> "have been" çoğul. <strong>D</strong> "were" çoğul + geçmiş.',
+        vocab:[
+          {en:'topography',pos:'n.',tr:'topoğrafya, yer şekli'},
+          {en:'eruption',pos:'n.',tr:'patlama (volkan)'},
+          {en:'initiative',pos:'n.',tr:'girişim'},
+          {en:'foundation',pos:'n.',tr:'vakıf, temel'},
+        ],
+        rule:'Subject-verb agreement\'ta araya giren "including X" yapısı özne sayısını değiştirmez. Asıl özne ("history") tekilse, fiil tekil ("is").'
+      }
+    },
+    // Q11 — Transitions
+    {
+      k:'Transitions',
+      p:`Most economic forecasts for the next decade predict modest growth across major industrial economies. <u>______</u> the same forecasts have substantial uncertainty bands, and several reputable models have produced scenarios in which growth turns out to be much faster or much slower than the central estimate suggests.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Indeed,','B) However,','C) For example,','D) Therefore,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">tahminler modest growth</mark>. İkinci cümle: <mark class="hl-key">aynı tahminlerin uncertainty bands var + farklı senaryolar mümkün</mark>. Kesin tahmin → belirsizlik vurgusu kontrast. "However" doğru.',
+        why_wrong:'<strong>A</strong> "indeed" pekiştirme. <strong>C</strong> "for example" örnek. <strong>D</strong> "therefore" sonuç.',
+        vocab:[
+          {en:'forecast',pos:'n.',tr:'tahmin'},
+          {en:'modest',pos:'adj.',tr:'mütevazı'},
+          {en:'uncertainty band',pos:'n.',tr:'belirsizlik bandı'},
+          {en:'reputable',pos:'adj.',tr:'saygın'},
+          {en:'estimate',pos:'n.',tr:'tahmin'},
+        ],
+        rule:'Transitions\'ta "merkezi tahmin X. ___ aynı tahminlerin belirsizliği var" yapısı kontrast: However.'
+      }
+    },
+    // Q12 — Inferences
+    {
+      k:'Inferences',
+      p:`Studies of consumer attention have found that shoppers who browse online product catalogs spend much more time on pages featuring large numbers of options. However, the same shoppers complete fewer actual purchases when option counts exceed roughly thirty alternatives, with completion rates falling sharply beyond that threshold.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) Larger catalogs always increase total sales.','B) Increasing option counts beyond a certain point may impede rather than facilitate consumer decision-making, even though such options attract more browsing attention.','C) Shoppers prefer catalogs with fewer than ten options.','D) Online catalogs have no effect on shopping behavior.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">çok seçenek = daha çok browse + 30 sonrası daha az alım</mark>. Mantıklı çıkarım: <mark class="hl-key">belirli noktanın ötesinde seçenek karar vermeyi engelleyebilir</mark>. B nüanslı doğru.',
+        why_wrong:'<strong>A</strong> "always" mutlak. <strong>C</strong> "fewer than ten" spesifik sayı verilmiyor. <strong>D</strong> "no effect" aşırı.',
+        vocab:[
+          {en:'browse',pos:'v.',tr:'gözden geçirmek'},
+          {en:'catalog',pos:'n.',tr:'katalog'},
+          {en:'threshold',pos:'n.',tr:'eşik'},
+          {en:'completion rate',pos:'n.',tr:'tamamlama oranı'},
+          {en:'impede',pos:'v.',tr:'engellemek'},
+        ],
+        rule:'Inference\'da "X aynı zamanda hem A hem A\'ya zıt B yaratır" yapısı <strong>belirli noktanın ötesinde ters etki</strong> çıkarımına götürür.'
+      }
+    },
+    // Q13 — Rhetorical Synthesis
+    {
+      k:'Rhetorical Synthesis',
+      p:`While studying the artist Hilma af Klint, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>Hilma af Klint was a Swedish painter (1862-1944).</li>
+    <li>She painted large abstract works beginning around 1906.</li>
+    <li>Her abstract paintings predate the work of Kandinsky, Mondrian, and Malevich, who are often credited with inventing abstract painting.</li>
+    <li>She kept much of her abstract work hidden during her lifetime, stipulating that it not be shown publicly until twenty years after her death.</li>
+    <li>Recognition of her contribution to early abstraction has grown substantially in the twenty-first century.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to emphasize how af Klint\'s historical position in abstract art has been reassessed.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Hilma af Klint was a Swedish painter who lived from 1862 to 1944.','B) Although Kandinsky, Mondrian, and Malevich are often credited with inventing abstract painting, af Klint produced large abstract works beginning around 1906 — predating their work — though she kept much of it hidden during her lifetime, with recognition of her contribution growing substantially only in the twenty-first century.','C) Af Klint kept her abstract work hidden during her lifetime.','D) Abstract painting was developed by Kandinsky, Mondrian, and Malevich.'],
+      a:1,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">af Klint\'in soyutta tarihsel pozisyonunun yeniden değerlendirilmesi</mark>. B: (1) yaygın atıf (Kandinsky vd.), (2) af Klint\'in öncülüğü (1906, predating), (3) gizlenme, (4) son dönem tanınma. Reassessment hikayesi tam.',
+        why_wrong:'<strong>A</strong> sadece biyografi. <strong>C</strong> sadece gizlenme. <strong>D</strong> hatalı atıf.',
+        vocab:[
+          {en:'abstract',pos:'adj.',tr:'soyut'},
+          {en:'predate',pos:'v.',tr:'daha önce var olmak'},
+          {en:'credit',pos:'v.',tr:'atfetmek (başarı için)'},
+          {en:'stipulate',pos:'v.',tr:'şart koşmak'},
+          {en:'recognition',pos:'n.',tr:'tanınma'},
+        ],
+        rule:'RS\'te "reassessment of historical position" goal\'u için cevap (1) önceki anlatı, (2) yeni veri, (3) sonuç olarak değerlendirme değişikliğini birleştirir.'
+      }
+    },
+    // Q14 — Cross-Text Connections
+    {
+      k:'Cross-Text Connections',
+      p:`<div class="dual-text"><div class="text-block"><div class="text-label">Text 1</div><div class="text-body">Educational researcher Naveen Patel argues that effective classroom instruction depends primarily on the use of well-designed curriculum materials, since teachers who follow a strong curriculum produce consistent learning gains regardless of their individual teaching experience.</div></div><div class="text-block"><div class="text-label">Text 2</div><div class="text-body">Educational psychologist Renata Vargas observes that recent studies have found teacher quality effects substantially larger than curriculum effects in many subject areas, with experienced and well-prepared teachers producing better outcomes even when working with weaker materials — suggesting that curriculum quality and teacher quality interact rather than substitute for one another.</div></div></div>`,
+      q:'Which choice best describes how Vargas (Text 2) responds to Patel (Text 1)?',
+      o:['A) By rejecting the importance of curriculum entirely.','B) By questioning Patel\'s implicit assumption that curriculum quality is the primary driver of learning gains and arguing that teacher quality interacts with curriculum rather than being substituted by it.','C) By denying that teachers affect student learning.','D) By arguing that classroom instruction is unimportant.'],
+      a:1,
+      explain:{
+        why_correct:'Text 2: <mark class="hl-key">"teacher quality effects substantially larger than curriculum effects...interact rather than substitute"</mark>. Vargas Patel\'in "primarily curriculum" varsayımını sorguluyor + etkileşim alternatifi sunuyor. B doğru.',
+        why_wrong:'<strong>A</strong> "rejecting entirely" yok. <strong>C</strong> "deny teachers affect" tam tersi. <strong>D</strong> "instruction unimportant" yok.',
+        vocab:[
+          {en:'curriculum',pos:'n.',tr:'müfredat'},
+          {en:'consistent',pos:'adj.',tr:'tutarlı'},
+          {en:'substantially',pos:'adv.',tr:'önemli ölçüde'},
+          {en:'interact',pos:'v.',tr:'etkileşmek'},
+          {en:'substitute',pos:'v.',tr:'yerine geçmek'},
+        ],
+        rule:'CTC\'de "questioning implicit assumption + alternative framework (interact rather than substitute)" yapısı yumuşak sorgulama + alternatif önermedir.'
+      }
+    },
+    // Q15 — Words in Context
+    {
+      k:'Words in Context',
+      p:`The committee\'s response to the proposal was so <u>______</u> that the proposal\'s author left the meeting uncertain whether to revise the document substantially or to abandon it altogether, a situation that experienced colleagues identified as the predictable result of feedback offered without clear priorities.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) enthusiastic','B) ambiguous','C) hostile','D) repetitive'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"left uncertain whether to revise or abandon"</mark> + <mark class="hl-key">"feedback without clear priorities"</mark> — geribildirim belirsiz. "Ambiguous" iki anlamlı, belirsiz — tam bu durum.',
+        why_wrong:'<strong>A</strong> "enthusiastic" coşkulu — belirsizlikle çelişir. <strong>C</strong> "hostile" düşmanca — abandon edilebilir ama revise düşünmezdi. <strong>D</strong> "repetitive" tekrarlayıcı.',
+        vocab:[
+          {en:'ambiguous',pos:'adj.',tr:'belirsiz, iki anlamlı'},
+          {en:'revise',pos:'v.',tr:'gözden geçirmek'},
+          {en:'abandon',pos:'v.',tr:'terk etmek'},
+          {en:'altogether',pos:'adv.',tr:'tamamen'},
+          {en:'priority',pos:'n.',tr:'öncelik'},
+        ],
+        rule:'WiC\'te "left uncertain whether to X or Y" göstergesi geribildirimin <strong>belirsizliğini</strong> ister: ambiguous, equivocal, indeterminate.'
+      }
+    },
+    // Q16 — Transitions
+    {
+      k:'Transitions',
+      p:`The university\'s endowment had grown by an average of seven percent annually over the past three decades, outperforming most comparable institutions during that period. <u>______</u> recent years have seen substantially weaker returns, with two consecutive years of negative performance forcing the institution to reconsider its budget plans for upcoming initiatives.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Similarly,','B) However,','C) For instance,','D) Therefore,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">30 yıl olumlu performans (%7)</mark>. İkinci cümle: <mark class="hl-key">son yıllar negatif + bütçe yeniden gözden geçirme</mark>. Olumlu uzun vadeli vs olumsuz yakın dönem kontrast. "However" doğru.',
+        why_wrong:'<strong>A</strong> "similarly" benzerlik. <strong>C</strong> "for instance" örnek. <strong>D</strong> "therefore" sonuç.',
+        vocab:[
+          {en:'endowment',pos:'n.',tr:'vakıf fonu'},
+          {en:'comparable',pos:'adj.',tr:'kıyaslanabilir'},
+          {en:'consecutive',pos:'adj.',tr:'ardışık'},
+          {en:'reconsider',pos:'v.',tr:'yeniden düşünmek'},
+          {en:'initiative',pos:'n.',tr:'girişim'},
+        ],
+        rule:'Transitions\'ta "uzun vadeli olumlu trend. ___ yakın dönem zayıflama" yapısı kontrast: However.'
+      }
+    },
+    // Q17 — Text Structure and Purpose
+    {
+      k:'Text Structure and Purpose',
+      p:`The case for hosting the international athletics championship in Mexico City often emphasizes the city\'s extensive existing sports infrastructure, its experience hosting previous large-scale events, and the substantial economic activity such events typically generate for the host city. <u>Critics of the proposal have argued, however, that the city\'s elevation — over 2,200 meters above sea level — creates competition conditions that would substantially advantage athletes accustomed to high altitude and disadvantage athletes from lower-elevation regions, raising fairness concerns that the proposal\'s supporters have not adequately addressed.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It supports the case for hosting the championship in Mexico City with additional evidence.','B) It introduces a substantive objection to the proposal — competition fairness concerns arising from the city\'s elevation — that the supporters\' case has not fully answered.','C) It denies that Mexico City has hosted previous large-scale events.','D) It defines the term "athletics championship."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle "<mark class="hl-key">Critics have argued, however...elevation...creates competition conditions that would substantially advantage/disadvantage...fairness concerns that supporters have not adequately addressed</mark>" diyerek savunucu argümana ciddi bir itiraz sunuyor. B doğru.',
+        why_wrong:'<strong>A</strong> "supports" tam tersi. <strong>C</strong> "denies previous events" yok. <strong>D</strong> terim tanımı yok.',
+        vocab:[
+          {en:'elevation',pos:'n.',tr:'yükseklik (rakım)'},
+          {en:'athlete',pos:'n.',tr:'sporcu'},
+          {en:'accustomed to',pos:'phr.',tr:'-e alışkın'},
+          {en:'altitude',pos:'n.',tr:'irtifa, rakım'},
+          {en:'fairness',pos:'n.',tr:'adillik'},
+        ],
+        rule:'TSP\'de "Critics have argued, however...X concerns supporters have not addressed" yapısı savunucu argümana <strong>esaslı itiraz sunma</strong> işlevidir.'
+      }
+    },
+    // Q18 — Form-Structure-Sense (modifier placement)
+    {
+      k:'Form, Structure, and Sense',
+      p:`<u>______</u> the geologist analyzed the rock samples and determined that they were significantly older than the surrounding formations.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) Examined under a high-powered microscope,','B) After examining the samples under a high-powered microscope,','C) Examining under a high-powered microscope,','D) Having been examined under a high-powered microscope,'],
+      a:1,
+      explain:{
+        why_correct:'Cümlenin öznesi <mark class="hl-key">"the geologist"</mark>. Modifier "examining" eyleminin öznesi de geologist olmalı — yani geologist examines. B: <mark class="hl-key">"After examining...the geologist analyzed"</mark> — geologist examines + analyzes. Doğru ilişki.',
+        why_wrong:'<strong>A</strong> "Examined under microscope" pasif — geologist incelendi anlamı, mantıksız. <strong>C</strong> "Examining under microscope" özne yok, dangling. <strong>D</strong> "Having been examined" pasif — geologist incelendi.',
+        vocab:[
+          {en:'geologist',pos:'n.',tr:'jeolog'},
+          {en:'specimen',pos:'n.',tr:'örnek, numune'},
+          {en:'microscope',pos:'n.',tr:'mikroskop'},
+          {en:'formation',pos:'n.',tr:'oluşum (jeoloji)'},
+          {en:'high-powered',pos:'adj.',tr:'yüksek güçlü'},
+        ],
+        rule:'Modifier placement\'ta cümle başındaki participle/clause\'un öznesi, ana cümlenin öznesiyle eşleşmeli. "Examined" pasif ise özne incelenen şey olmalı; aktif "examining" ise inceleyen kişi olmalı.'
+      }
+    },
+    // Q19 — Rhetorical Synthesis
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching the Black Death, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>The Black Death was a pandemic that swept through Europe between 1347 and 1351.</li>
+    <li>It is estimated to have killed between 30 and 50 percent of the European population.</li>
+    <li>The disease is now thought to have been caused primarily by the bacterium Yersinia pestis.</li>
+    <li>Modern survivors of plague provide one source of evidence about the disease\'s mechanism.</li>
+    <li>The pandemic produced lasting changes in European labor markets, religious practice, and political organization.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to introduce the scale of the Black Death to an audience unfamiliar with European history.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) The Black Death was caused by the bacterium Yersinia pestis.','B) The Black Death, a pandemic that swept through Europe between 1347 and 1351, killed between 30 and 50 percent of the European population, producing lasting changes in labor markets, religious practice, and political organization.','C) Modern survivors of plague provide evidence about the disease.','D) The pandemic took place in the fourteenth century.'],
+      a:1,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">ölçeği tanıt</mark>. B: (1) ne olduğu (pandemic, 1347-1351), (2) ölüm ölçeği (%30-50), (3) kalıcı dönüşümler (labor, religion, politics). Üç boyut.',
+        why_wrong:'<strong>A</strong> sadece patojen. <strong>C</strong> meta-bilgi. <strong>D</strong> sadece zaman.',
+        vocab:[
+          {en:'pandemic',pos:'n.',tr:'pandemi'},
+          {en:'plague',pos:'n.',tr:'veba'},
+          {en:'bacterium',pos:'n.',tr:'bakteri'},
+          {en:'mechanism',pos:'n.',tr:'mekanizma'},
+          {en:'lasting',pos:'adj.',tr:'kalıcı'},
+        ],
+        rule:'RS\'te "introduce the scale" goal\'u için cevap olay + ölçü + kalıcı sonuçlarını birleştirir.'
+      }
+    },
+    // Q20 — Boundaries
+    {
+      k:'Boundaries',
+      p:`The architect proposed three distinct concepts for the new library <u>______</u> the committee found significant merit in all of them but ultimately chose the most contextual approach.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , and','B) and','C) ;','D) , however'],
+      a:0,
+      explain:{
+        why_correct:'İki bağımsız cümle: "The architect proposed three concepts" + "the committee found merit in all of them but ultimately chose...". <mark class="hl-key">Virgül + and</mark> klasik koordinasyon. A doğru.',
+        why_wrong:'<strong>B</strong> noktalama yok. <strong>C</strong> noktalı virgül teknik olarak çalışır ama "and" bağlacı kaybolur, akış zayıf. <strong>D</strong> "comma + however" comma splice + yön kontrast değil.',
+        vocab:[
+          {en:'distinct',pos:'adj.',tr:'belirgin biçimde farklı'},
+          {en:'concept',pos:'n.',tr:'konsept'},
+          {en:'merit',pos:'n.',tr:'liyakat, değer'},
+          {en:'contextual',pos:'adj.',tr:'bağlamsal'},
+          {en:'ultimately',pos:'adv.',tr:'sonunda'},
+        ],
+        rule:'İki bağımsız cümleyi bağlamak için <strong>virgül + coordinator (and, but, or, so, yet, for, nor)</strong> standart.'
+      }
+    },
+    // Q21 — Inferences
+    {
+      k:'Inferences',
+      p:`Studies of language acquisition in deaf children of hearing parents have found that children who receive consistent sign language input from infancy reach typical language milestones — first signs, multi-sign combinations, complex grammatical structures — at ages comparable to hearing children acquiring spoken language. Children whose sign-language exposure begins after age three, however, show measurable delays in reaching the same milestones and often do not catch up to peers exposed from infancy.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) Language acquisition is impossible without sound.','B) Early exposure to language input — whether signed or spoken — appears to be important for typical language development, with later exposure producing measurable and often lasting differences.','C) Deaf children always have delays in language development.','D) Sign language is identical to spoken language in all respects.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">erken sign = typical milestones</mark> + <mark class="hl-key">3+ sign = delays, sıklıkla catch-up yok</mark>. Mantıklı çıkarım: <mark class="hl-key">erken maruz kalma anahtar, modalite (signed/spoken) ikincil</mark>. B doğru.',
+        why_wrong:'<strong>A</strong> "impossible" mutlak, metin tam tersini gösteriyor. <strong>C</strong> "always" mutlak. <strong>D</strong> "identical in all respects" aşırı.',
+        vocab:[
+          {en:'acquisition',pos:'n.',tr:'edinim'},
+          {en:'deaf',pos:'adj.',tr:'işitme engelli'},
+          {en:'milestone',pos:'n.',tr:'kilometre taşı'},
+          {en:'exposure',pos:'n.',tr:'maruz kalma'},
+          {en:'peer',pos:'n.',tr:'akran'},
+        ],
+        rule:'Inference\'da iki paralel veri (signed early = typical; spoken early = typical) + bir koşulun erken/geç farkı = <strong>erken maruz kalmanın anahtar olduğu, modalitenin ikincil olduğu</strong> çıkarımı.'
+      }
+    },
+    // Q22 — Rhetorical Synthesis
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching tide-pool ecosystems, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>Tide pools form along rocky coastlines when seawater is trapped during low tide.</li>
+    <li>Organisms in tide pools must survive dramatic changes in temperature, salinity, and water level twice daily.</li>
+    <li>Many tide-pool species have specialized adaptations: barnacles seal their shells, anemones retract into protective cavities, mussels close their valves.</li>
+    <li>Diversity in tide pools is often higher than in adjacent subtidal zones with more stable conditions.</li>
+    <li>Researchers attribute this paradox to the constant disturbance preventing any single species from dominating.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to explain the paradox of high tide-pool diversity despite harsh conditions.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Tide pools form along rocky coastlines.','B) Despite the dramatic changes in temperature, salinity, and water level that tide-pool organisms must survive twice daily, tide pools often host higher diversity than adjacent subtidal zones — because the constant disturbance prevents any single species from dominating, with specialized adaptations allowing many species to coexist.','C) Barnacles seal their shells during low tide.','D) Tide pools experience temperature changes.'],
+      a:1,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">sert koşullara rağmen yüksek çeşitlilik paradoksu</mark>. B: (1) sert koşullar (sıcaklık, tuzluluk, su seviyesi), (2) paradoksal sonuç (yüksek çeşitlilik), (3) açıklama (constant disturbance + specialized adaptations). Paradoks tam.',
+        why_wrong:'<strong>A</strong> sadece oluşum. <strong>C</strong> sadece bir adaptasyon. <strong>D</strong> sadece koşul.',
+        vocab:[
+          {en:'tide pool',pos:'n.',tr:'gelgit havuzu'},
+          {en:'salinity',pos:'n.',tr:'tuzluluk'},
+          {en:'barnacle',pos:'n.',tr:'midye benzeri kabuklu'},
+          {en:'subtidal',pos:'adj.',tr:'gelgit altı'},
+          {en:'disturbance',pos:'n.',tr:'rahatsızlık, bozulma'},
+        ],
+        rule:'RS\'te "explain paradox" goal\'u için cevap (1) sert koşulları, (2) zıt yöndeki sonucu, (3) çözüm mekanizmasını birleştirir.'
+      }
+    },
+    // Q23 — Central Ideas and Details
+    {
+      k:'Central Ideas and Details',
+      p:`Marine biologist Anjali Sharma\'s recent paper challenges a long-standing assumption about coral reef recovery: namely, that reefs damaged by mass bleaching events recover most fully when subsequent water conditions remain stable. Sharma\'s analysis of recovery rates at 47 reef sites over fifteen years shows that reefs in regions with periodic moderate disturbances — including limited storms and brief temperature fluctuations — often outpace recovery in reefs left in unusually stable conditions. She attributes this counterintuitive pattern to the role of disturbance in maintaining the species diversity that supports long-term resilience.`,
+      q:'Which choice best states the main idea of the text?',
+      o:['A) Coral reefs always recover quickly after mass bleaching events.','B) Sharma\'s research challenges the assumption that stable conditions optimize coral recovery, showing that periodic moderate disturbance can actually accelerate recovery by maintaining species diversity.','C) Coral reefs are damaged by mass bleaching events.','D) Marine biology is a complex field of study.'],
+      a:1,
+      explain:{
+        why_correct:'Ana fikir: <mark class="hl-key">Sharma\'nın çalışması varsayımı sorguluyor + moderate disturbance daha iyi recovery + species diversity mekanizma</mark>. B üç boyutu birleştirir.',
+        why_wrong:'<strong>A</strong> "always quickly" mutlak. <strong>C</strong> arka plan. <strong>D</strong> meta ifade.',
+        vocab:[
+          {en:'long-standing',pos:'adj.',tr:'köklü, uzun süredir var olan'},
+          {en:'bleaching',pos:'n.',tr:'beyazlama'},
+          {en:'fluctuation',pos:'n.',tr:'dalgalanma'},
+          {en:'outpace',pos:'v.',tr:'önüne geçmek'},
+          {en:'resilience',pos:'n.',tr:'dayanıklılık'},
+        ],
+        rule:'Central Idea\'da bir araştırmacının iddiası varsayımı sorgulayıp alternatif mekanizma sunuyorsa, ana fikir bu üçlü ilişkidir.'
+      }
+    },
+    // Q24 — Form-Structure-Sense (parallel structure)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The new training program focuses on three core competencies: communicating effectively with diverse audiences, navigating complex regulatory environments, and <u>______</u> across departments to advance shared goals.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) collaboration','B) to collaborate','C) collaborates','D) collaborating'],
+      a:3,
+      explain:{
+        why_correct:'Liste: <mark class="hl-key">communicating, navigating, ___</mark>. Paralel yapı için üçüncü öge de <strong>"-ing"</strong> formu olmalı. "Collaborating" tek tutarlı seçim.',
+        why_wrong:'<strong>A</strong> "collaboration" isim, paralel değil. <strong>B</strong> "to collaborate" infinitive, paralel değil. <strong>C</strong> "collaborates" tekil fiil, paralel değil.',
+        vocab:[
+          {en:'competency',pos:'n.',tr:'yetkinlik'},
+          {en:'navigate',pos:'v.',tr:'yönetmek (karmaşık şeyler)'},
+          {en:'regulatory',pos:'adj.',tr:'düzenleyici'},
+          {en:'advance',pos:'v.',tr:'ilerletmek'},
+          {en:'shared',pos:'adj.',tr:'paylaşılan'},
+        ],
+        rule:'Parallel structure\'da listedeki öğeler aynı dilbilgisel formda olmalı: tüm "-ing" ya da tüm infinitive ya da tüm isim. Karışım yanlış.'
+      }
+    },
+    // Q25 — Transitions
+    {
+      k:'Transitions',
+      p:`The medical school had decreased the number of cadaver dissections in its anatomy curriculum, replacing several sessions with virtual three-dimensional models that students could manipulate on their own schedules. <u>______</u> faculty members observed that students using the new format developed comparable spatial knowledge of anatomical structures while spending fewer total hours on the anatomy unit.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Nevertheless,','B) Consequently,','C) For example,','D) On the contrary,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">değişiklik (cadaver → virtual)</mark>. İkinci cümle: <mark class="hl-key">faculty observed sonuç (comparable knowledge, fewer hours)</mark>. Değişimin sonucu. "Consequently" sebep-sonuç.',
+        why_wrong:'<strong>A</strong> "nevertheless" kontrast. <strong>C</strong> "for example" örnek. <strong>D</strong> "on the contrary" zıtlık.',
+        vocab:[
+          {en:'cadaver',pos:'n.',tr:'kadavra'},
+          {en:'dissection',pos:'n.',tr:'diseksiyon'},
+          {en:'anatomy',pos:'n.',tr:'anatomi'},
+          {en:'curriculum',pos:'n.',tr:'müfredat'},
+          {en:'manipulate',pos:'v.',tr:'manipüle etmek, ele almak'},
+        ],
+        rule:'Transitions\'ta "değişiklik X yapıldı. ___ gözlenen sonuç Y" yapısı cause/effect: Consequently, As a result, Therefore.'
+      }
+    },
+    // Q26 — CoE Quantitative
+    {
+      k:'Command of Evidence',
+      p:`Researchers comparing reading outcomes in three school districts implementing different early-literacy programs reported that the district using Program A produced average end-of-year reading scores 12 percentile points above the district using Program B, and 8 percentile points above the district using Program C. The researchers concluded that Program A is meaningfully more effective than the alternatives for early literacy outcomes in comparable settings.
+<div class="data-block">
+  <div class="data-caption">End-of-year reading scores by program (percentile)<span class="src">Data from three-district comparison, current year</span></div>
+  <table class="data-table">
+    <thead><tr><th>Program</th><th class="num">Average percentile</th><th class="num">Standard deviation</th></tr></thead>
+    <tbody>
+      <tr><td>Program A</td><td class="num">62</td><td class="num">8</td></tr>
+      <tr><td>Program B</td><td class="num">50</td><td class="num">9</td></tr>
+      <tr><td>Program C</td><td class="num">54</td><td class="num">8</td></tr>
+    </tbody>
+  </table>
+</div>`,
+      q:'Which choice from the table most directly supports the researchers\' conclusion?',
+      o:['A) The standard deviations for each program are similar (8 to 9 percentile points).','B) Program A produces an average percentile (62) that exceeds Program B (50) by 12 points and Program C (54) by 8 points.','C) Program B has the highest standard deviation.','D) All three programs produce scores in the typical range.'],
+      a:1,
+      explain:{
+        why_correct:'Conclusion: <mark class="hl-key">Program A meaningfully more effective</mark>. B: A (62) > B (50) ve A (62) > C (54) — fark sayısal olarak doğrulanır. Conclusion\'ı doğrudan destekler.',
+        why_wrong:'<strong>A</strong> SD\'ler farkın güvenilirliğine işaret eder ama conclusion\'ı direkt desteklemez. <strong>C</strong> conclusion\'ı desteklemez. <strong>D</strong> conclusion\'la ilgisiz.',
+        vocab:[
+          {en:'percentile',pos:'n.',tr:'yüzdelik dilim'},
+          {en:'literacy',pos:'n.',tr:'okuryazarlık'},
+          {en:'standard deviation',pos:'n.',tr:'standart sapma'},
+          {en:'meaningfully',pos:'adv.',tr:'anlamlı şekilde'},
+          {en:'comparable',pos:'adj.',tr:'kıyaslanabilir'},
+        ],
+        rule:'CoE Quantitative\'de doğru cevap genellikle conclusion\'ın sayısal karşılaştırmasını <strong>doğrudan</strong> tablodan alır. Yan istatistikler (SD, range) dolaylıdır.'
+      }
+    },
+    // Q27 — Text Structure and Purpose
+    {
+      k:'Text Structure and Purpose',
+      p:`The standard account of how human languages first developed identifies vocal anatomy — particularly the modern human larynx — as the key biological precondition that allowed our species to produce the wide range of sounds modern speech requires. <u>Recent comparative work has begun to question this anatomy-focused account, observing that several closely related species, including some now extinct Neanderthal populations, appear to have possessed vocal anatomy substantially similar to that of modern humans without producing comparable speech — a finding that suggests cognitive rather than purely anatomical factors may have played the more decisive role.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the anatomy-focused account with additional evidence.','B) It complicates the anatomy-focused account by introducing comparative evidence that suggests cognitive factors, not anatomy alone, were decisive.','C) It denies that vocal anatomy matters for speech.','D) It defines the human larynx.'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"closely related species had similar anatomy without comparable speech...cognitive rather than purely anatomical factors may have played the more decisive role"</mark> diyerek anatomi odaklı anlatıyı bilişsel faktörlerle karmaşıklaştırıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies anatomy matters" aşırı; cümle "purely anatomical" diyor. <strong>D</strong> larynx tanımı yok.',
+        vocab:[
+          {en:'vocal',pos:'adj.',tr:'sesli, ses ile ilgili'},
+          {en:'larynx',pos:'n.',tr:'gırtlak'},
+          {en:'precondition',pos:'n.',tr:'ön koşul'},
+          {en:'Neanderthal',pos:'n.',tr:'Neandertal'},
+          {en:'decisive',pos:'adj.',tr:'belirleyici'},
+        ],
+        rule:'TSP\'de "anatomy-focused account, may have played the more decisive role" yapısı yerleşik faktörü kabul + alternatif daha önemli faktör önerme işlevidir.'
+      }
+    }
+  ]
+},
+{
+  name: 'Module 2',
+  subtitle: 'Karışık mock pratik. Tüm kategorilerden orta-zor sorular.',
+  questions: [
+    // Q1 — Medium-hard TSP
+    {
+      k:'Text Structure and Purpose',
+      p:`The conventional account of the spread of the printing press across Europe in the fifteenth century has emphasized the role of declining costs as the central driver of adoption, with the technology becoming progressively cheaper as workshops gained experience producing presses and ink. <u>Recent economic-historical work has begun to complicate this cost-focused account by tracing the equally important role of geographically dispersed networks of skilled printers who carried specialized knowledge — type-cutting, ink preparation, press repair — from one workshop to another, often migrating across substantial distances to establish new operations.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the cost-focused account with additional examples.','B) It complicates the cost-focused account by introducing the migration of skilled printers as a comparably important factor in the technology\'s spread.','C) It denies that the printing press spread across Europe.','D) It defines what counts as a "workshop."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"complicate this cost-focused account by tracing the equally important role of geographically dispersed networks of skilled printers"</mark> diyerek maliyet odaklı anlatıyı uzman göç ağı ile karmaşıklaştırıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies spread" aşırı. <strong>D</strong> tanım yok.',
+        vocab:[
+          {en:'progressively',pos:'adv.',tr:'kademeli olarak'},
+          {en:'dispersed',pos:'adj.',tr:'dağılmış'},
+          {en:'type-cutting',pos:'n.',tr:'tipo kesim, harf hazırlama'},
+          {en:'migrate',pos:'v.',tr:'göç etmek'},
+          {en:'operation',pos:'n.',tr:'işletme, faaliyet'},
+        ],
+        rule:'TSP\'de "complicate cost-focused account by tracing equally important role of X" yapısı yerleşik faktörü <strong>kabul + ek paralel faktör eklemek</strong> işlevidir.'
+      }
+    },
+    // Q2 — Medium-hard Inferences
+    {
+      k:'Inferences',
+      p:`Long-term studies of marine kelp forests off the California coast have shown that areas where sea otters were reintroduced after near-extirpation in the early twentieth century have substantially higher kelp density than otherwise comparable areas lacking otter populations. The differential reflects otter predation on sea urchins, which graze on kelp; in areas without otters, urchin populations grow large enough to clear kelp from extensive stretches of seafloor.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) Sea otters cause kelp to grow.','B) Sea otters appear to play an important indirect role in maintaining kelp forest density by suppressing urchin populations that would otherwise overgraze the kelp.','C) Sea urchins are harmful to all marine ecosystems.','D) Kelp forests cannot exist without sea otters.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">otter\'lı bölge yüksek kelp + otter\'sız bölge urchin overgrazes</mark>. Mantıklı çıkarım: <mark class="hl-key">otter dolaylı olarak kelp yoğunluğunu koruyor (urchin\'i bastırarak)</mark>. B doğru.',
+        why_wrong:'<strong>A</strong> doğrudan büyütme değil dolaylı. <strong>C</strong> "all marine ecosystems" aşırı. <strong>D</strong> "cannot exist without" mutlak.',
+        vocab:[
+          {en:'kelp',pos:'n.',tr:'kahverengi alg, deniz yosunu'},
+          {en:'otter',pos:'n.',tr:'su samuru'},
+          {en:'near-extirpation',pos:'n.',tr:'neredeyse tükenme'},
+          {en:'urchin',pos:'n.',tr:'deniz kestanesi'},
+          {en:'overgraze',pos:'v.',tr:'aşırı otlamak'},
+        ],
+        rule:'Inference\'da dolaylı zincir (X → Y → Z) çıkarımları sıklıkla "indirect role through suppressing intermediary" şeklinde nüanslı doğru cevap üretir.'
+      }
+    },
+    // Q3 — Medium-hard Words in Context
+    {
+      k:'Words in Context',
+      p:`Critics of the new policy have characterized it as <u>______</u>, citing its tendency to apply identical procedures to situations that, in their view, require careful attention to local circumstances and the particular communities affected.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) responsive','B) inflexible','C) ambiguous','D) nuanced'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"apply identical procedures to situations that require careful attention to local circumstances"</mark> — eleştiri yerelliğe dikkat etmediği için. "Inflexible" esnek olmayan, katı — tam bu nitelik.',
+        why_wrong:'<strong>A</strong> "responsive" duyarlı, eleştiriyle çelişir. <strong>C</strong> "ambiguous" belirsiz. <strong>D</strong> "nuanced" nüanslı — eleştirinin zıttı.',
+        vocab:[
+          {en:'inflexible',pos:'adj.',tr:'esnek olmayan, katı'},
+          {en:'identical',pos:'adj.',tr:'aynı'},
+          {en:'circumstance',pos:'n.',tr:'koşul, durum'},
+          {en:'tendency',pos:'n.',tr:'eğilim'},
+          {en:'characterize',pos:'v.',tr:'nitelemek'},
+        ],
+        rule:'WiC\'te "apply identical procedures despite varying circumstances" göstergesi <strong>esneksizlik</strong> sıfatı ister: inflexible, rigid, uniform.'
+      }
+    },
+    // Q4 — Medium-hard Transitions
+    {
+      k:'Transitions',
+      p:`Critics of the new tax legislation have argued that its central provisions will disproportionately benefit households in the highest income brackets while providing relatively modest relief to middle-income earners. <u>______</u> recent analysis from the legislative budget office has produced findings broadly consistent with these criticisms, projecting that approximately sixty percent of total tax savings will flow to households in the top decile of the income distribution.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) However,','B) Indeed,','C) Conversely,','D) For example,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">eleştirmenler iddia</mark>. İkinci cümle: <mark class="hl-key">budget office bulgu eleştiriyle uyumlu</mark>. Pekiştirme. "Indeed" doğru.',
+        why_wrong:'<strong>A</strong> "however" kontrast, ama uyumlu bulgu. <strong>C</strong> "conversely" zıtlık. <strong>D</strong> "for example" — budget office bir örnek değil ayrı bir kanıt.',
+        vocab:[
+          {en:'legislation',pos:'n.',tr:'yasama, yasa'},
+          {en:'provision',pos:'n.',tr:'hüküm, madde'},
+          {en:'disproportionately',pos:'adv.',tr:'orantısız şekilde'},
+          {en:'decile',pos:'n.',tr:'desil, %10\'luk dilim'},
+          {en:'distribution',pos:'n.',tr:'dağılım'},
+        ],
+        rule:'Transitions\'ta "eleştiri X. ___ başka bir kanıt X\'e uyumlu" yapısı pekiştirme: Indeed, In fact.'
+      }
+    },
+    // Q5 — Medium-hard RS
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching two early forms of telephony, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>Alexander Graham Bell\'s patent for the telephone was granted in 1876.</li>
+    <li>Bell\'s system used continuous variation of an electrical signal to transmit voice.</li>
+    <li>Antonio Meucci had developed a similar device — the "telettrofono" — by 1860, several years before Bell.</li>
+    <li>Meucci was unable to afford the fees required to maintain a permanent patent application.</li>
+    <li>Bell\'s patent has historically received credit for the invention, though Meucci\'s priority has been increasingly recognized in recent decades.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to emphasize how historical attribution of the telephone\'s invention has been reassessed in recent decades.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Alexander Graham Bell\'s patent was granted in 1876.','B) Although Bell\'s 1876 patent has historically received credit for inventing the telephone, Antonio Meucci had developed a similar device by 1860 but was unable to afford the fees to maintain a permanent patent application — a priority that has been increasingly recognized in recent decades.','C) Meucci could not afford patent fees.','D) Bell\'s system used continuous variation of an electrical signal.'],
+      a:1,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">telefonun icat atfının yeniden değerlendirilmesi</mark>. B: (1) tarihsel atıf (Bell 1876), (2) Meucci öncülüğü + engel (1860, patent fees), (3) son dönem tanınma. Reassessment hikayesi tam.',
+        why_wrong:'<strong>A</strong> sadece Bell patenti. <strong>C</strong> sadece engel. <strong>D</strong> sadece teknik bileşen.',
+        vocab:[
+          {en:'patent',pos:'n.',tr:'patent'},
+          {en:'priority',pos:'n.',tr:'öncelik (icat\'ta zaman önceliği)'},
+          {en:'continuous',pos:'adj.',tr:'sürekli'},
+          {en:'fees',pos:'n.',tr:'ücretler'},
+          {en:'recognize',pos:'v.',tr:'tanımak'},
+        ],
+        rule:'RS\'te "reassessed historical attribution" goal\'u için cevap (1) eski atıf, (2) yeni iddia + nedenleri, (3) son dönem tanınmayı birleştirir.'
+      }
+    },
+    // Q6 — Medium-hard Central Ideas
+    {
+      k:'Central Ideas and Details',
+      p:`Studies of online consumer behavior have begun to map a previously underappreciated pattern: that purchases made impulsively often correlate with later dissatisfaction more strongly than purchases made after extensive comparison shopping. The pattern holds across product categories — clothing, electronics, household goods — and across income levels. Researchers have hypothesized that the brief gratification of impulse purchases gives way to evaluation against the broader range of alternatives that comparison shoppers consider, an evaluation that impulse buyers conduct only retrospectively after the purchase is complete.`,
+      q:'Which choice best states the main idea of the text?',
+      o:['A) Online shopping is always inferior to in-person shopping.','B) Impulse purchases tend to produce greater later dissatisfaction than comparison-shopped purchases across product categories and income levels, with researchers attributing the pattern to retrospective evaluation against alternatives that impulse buyers initially skip.','C) Researchers have studied consumer behavior in many product categories.','D) Comparison shopping is too time-consuming for most consumers.'],
+      a:1,
+      explain:{
+        why_correct:'Ana fikir: <mark class="hl-key">impulse purchase → daha çok dissatisfaction + kategoriler boyunca + retrospective evaluation mekanizması</mark>. B üç boyutu birleştirir.',
+        why_wrong:'<strong>A</strong> "always inferior" aşırı, metnin söylediği değil. <strong>C</strong> meta ifade. <strong>D</strong> spekülasyon.',
+        vocab:[
+          {en:'impulsive',pos:'adj.',tr:'içtepkisel, ani'},
+          {en:'dissatisfaction',pos:'n.',tr:'memnuniyetsizlik'},
+          {en:'gratification',pos:'n.',tr:'tatmin'},
+          {en:'retrospectively',pos:'adv.',tr:'geriye dönük olarak'},
+          {en:'underappreciated',pos:'adj.',tr:'yeterince takdir edilmemiş'},
+        ],
+        rule:'Central Idea\'da iki olgu (örüntü + mekanizma) birlikte sunuluyorsa, ana fikir her ikisini birleştirir. Tek yön yarımdır.'
+      }
+    },
+    // Q7 — Medium-hard CTC
+    {
+      k:'Cross-Text Connections',
+      p:`<div class="dual-text"><div class="text-block"><div class="text-label">Text 1</div><div class="text-body">Health economist Felicia Adeyemi argues that the most cost-effective public health interventions in low-income countries are vaccination programs and oral rehydration therapy — both of which produce substantial improvements in child survival at relatively modest per-patient costs.</div></div><div class="text-block"><div class="text-label">Text 2</div><div class="text-body">Public health researcher Mohammed Tahir agrees that vaccination and rehydration are highly cost-effective at the per-patient level but adds that their full population-level benefit depends on sustained delivery systems — trained workers, reliable supply chains, monitoring — whose costs over time can substantially exceed the per-patient intervention costs themselves.</div></div></div>`,
+      q:'Which choice best describes how Tahir (Text 2) responds to Adeyemi (Text 1)?',
+      o:['A) By rejecting the cost-effectiveness of vaccinations entirely.','B) By accepting Adeyemi\'s per-patient cost-effectiveness claim while arguing that sustained delivery systems impose substantial additional costs that should be considered when evaluating population-level effectiveness.','C) By denying that vaccinations improve child survival.','D) By claiming that all public health interventions are equally cost-effective.'],
+      a:1,
+      explain:{
+        why_correct:'Text 2: <mark class="hl-key">"agrees vaccination and rehydration are highly cost-effective at per-patient level + adds delivery systems...costs exceed intervention costs"</mark>. Tahir kabul + ek maliyet boyutu. B doğru.',
+        why_wrong:'<strong>A</strong> "rejecting entirely" yok. <strong>C</strong> "denying child survival" yok. <strong>D</strong> "all equally" aşırı.',
+        vocab:[
+          {en:'cost-effective',pos:'adj.',tr:'maliyet etkin'},
+          {en:'oral rehydration',pos:'n.',tr:'ağızdan sıvı tedavisi'},
+          {en:'sustained',pos:'adj.',tr:'sürdürülen'},
+          {en:'delivery system',pos:'n.',tr:'dağıtım/teslim sistemi'},
+          {en:'supply chain',pos:'n.',tr:'tedarik zinciri'},
+        ],
+        rule:'CTC\'de "accepts per-patient claim + adds system-level costs" yapısı kabul + boyut genişletmedir.'
+      }
+    },
+    // Q8 — Medium-hard Boundaries
+    {
+      k:'Boundaries',
+      p:`The research team had originally planned to publish their results in a single comprehensive paper <u>______</u> they later decided to release the findings in three shorter articles, each focusing on a distinct aspect of the data.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , but','B) however','C) ; however','D) , however'],
+      a:0,
+      explain:{
+        why_correct:'İki bağımsız cümle: "team had planned to publish in a single paper" + "they decided to release findings in three articles". <mark class="hl-key">Virgül + but</mark> klasik kontrast bağlantı.',
+        why_wrong:'<strong>B</strong> noktalama yok. <strong>C</strong> "; however" sonrası virgül eksik (",however,"). <strong>D</strong> "comma + however" comma splice.',
+        vocab:[
+          {en:'comprehensive',pos:'adj.',tr:'kapsamlı'},
+          {en:'release',pos:'v.',tr:'yayımlamak'},
+          {en:'distinct',pos:'adj.',tr:'belirgin biçimde farklı'},
+          {en:'aspect',pos:'n.',tr:'yön, açı'},
+          {en:'finding',pos:'n.',tr:'bulgu'},
+        ],
+        rule:'İki bağımsız cümleyi kontrast bağlamak için <strong>virgül + but/yet</strong> standart. Conjunctive adverb için noktalı virgül kalıbı kullanılır.'
+      }
+    },
+    // Q9 — Medium-hard WiC
+    {
+      k:'Words in Context',
+      p:`The director\'s instructions to the cast were so <u>______</u> that several actors privately consulted one another after rehearsal to confirm that they had understood the same things, only to discover that their interpretations differed in important respects.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) precise','B) cryptic','C) repetitive','D) succinct'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"actors privately consulted...interpretations differed in important respects"</mark> — talimatlar farklı yorumlandı. "Cryptic" şifreli, anlaşılması güç — yorum farkına yol açar.',
+        why_wrong:'<strong>A</strong> "precise" kesin — farklı yorum çıkmazdı. <strong>C</strong> "repetitive" tekrarlayıcı. <strong>D</strong> "succinct" özlü.',
+        vocab:[
+          {en:'cryptic',pos:'adj.',tr:'şifreli, anlaşılmaz'},
+          {en:'consult',pos:'v.',tr:'danışmak'},
+          {en:'rehearsal',pos:'n.',tr:'prova'},
+          {en:'interpretation',pos:'n.',tr:'yorum'},
+          {en:'respect',pos:'n.',tr:'açı, bakımdan'},
+        ],
+        rule:'WiC\'te "interpretations differed in important respects" göstergesi talimatların <strong>belirsizlik/anlaşılmazlığını</strong> ister: cryptic, ambiguous, opaque.'
+      }
+    },
+    // Q10 — Medium-hard FSS (possessive apostrophe)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The institute had completed <u>______</u> annual review of research projects three weeks before the deadline, submitting the final report to the board on schedule.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) it\'s','B) its','C) its\'','D) their'],
+      a:1,
+      explain:{
+        why_correct:'Pronoun, "The institute"un possessive halini gerektiriyor. <mark class="hl-key">"Its"</mark> tekil possessive: apostrof yok. "The institute" tekil bir kurum → "its annual review" = "the institute\'s annual review".',
+        why_wrong:'<strong>A</strong> "it\'s" = "it is" contraction; mantıksız ("the institute had completed it is annual review"). <strong>C</strong> "its\'" yanlış form; İngilizcede böyle bir kelime yok. <strong>D</strong> "their" çoğul; "The institute" formal İngilizcede tekil pronoun ("it/its") alır.',
+        vocab:[
+          {en:'institute',pos:'n.',tr:'enstitü, kurum'},
+          {en:'annual',pos:'adj.',tr:'yıllık'},
+          {en:'review',pos:'n.',tr:'inceleme, değerlendirme'},
+          {en:'deadline',pos:'n.',tr:'son tarih'},
+          {en:'on schedule',pos:'phr.',tr:'zamanında, programlandığı şekilde'},
+        ],
+        rule:'<strong>"Its"</strong> tekil possessive (apostrof yok). <strong>"It\'s"</strong> = "it is" ya da "it has" contraction\'ı (her zaman apostrof). Tek kurum/şirket gibi tekil collective nouns Amerikan formal İngilizcede tekil pronoun ("it/its") alır, "their" değil.'
+      }
+    },
+    // Q11 — Medium-hard Transitions
+    {
+      k:'Transitions',
+      p:`The startup\'s initial product launch had attracted significant venture capital interest and a relatively favorable round of early-stage funding from established investors. <u>______</u> the company\'s second product, released eighteen months later to less promising initial reviews, encountered a substantially cooler reception from the same investor community when its leadership returned to seek additional capital.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Likewise,','B) However,','C) For example,','D) Subsequently,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">ilk launch — olumlu yatırımcı tepkisi</mark>. İkinci cümle: <mark class="hl-key">ikinci ürün — soğuk yatırımcı tepkisi</mark>. Yön farkı. "However" kontrast.',
+        why_wrong:'<strong>A</strong> "likewise" benzerlik. <strong>C</strong> "for example" örnek. <strong>D</strong> "subsequently" sadece zaman.',
+        vocab:[
+          {en:'venture capital',pos:'n.',tr:'risk sermayesi'},
+          {en:'favorable',pos:'adj.',tr:'olumlu'},
+          {en:'reception',pos:'n.',tr:'karşılama'},
+          {en:'leadership',pos:'n.',tr:'liderlik, yönetim'},
+          {en:'promising',pos:'adj.',tr:'umut verici'},
+        ],
+        rule:'Transitions\'ta "olumlu durum X. ___ olumsuz durum Y" yapısı kontrast: However, Yet.'
+      }
+    },
+    // Q12 — Medium-hard Inferences
+    {
+      k:'Inferences',
+      p:`Studies of teacher attrition have found that early-career teachers in schools providing structured mentoring, dedicated planning time, and feedback from experienced colleagues are substantially less likely to leave the profession within their first five years than early-career teachers in schools lacking these supports — even when the two groups are matched for compensation, classroom assignments, and demographic characteristics of the students they teach.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) Teacher attrition is caused entirely by inadequate compensation.','B) Compensation alone does not determine early-career teacher retention; the structure of professional support appears to play a substantial independent role in whether teachers remain in the profession.','C) All teachers leave the profession within five years.','D) Mentoring programs are required for all schools.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">structured support → retention + compensation/assignment/demographic eşleştirilse bile fark</mark>. Mantıklı çıkarım: <mark class="hl-key">compensation tek başına değil, yapısal destek bağımsız faktör</mark>. B doğru.',
+        why_wrong:'<strong>A</strong> "entirely by inadequate compensation" mutlak, metin tam aksini gösteriyor. <strong>C</strong> "all teachers" mutlak. <strong>D</strong> normatif.',
+        vocab:[
+          {en:'attrition',pos:'n.',tr:'ayrılma, gediş'},
+          {en:'mentoring',pos:'n.',tr:'mentorluk'},
+          {en:'retention',pos:'n.',tr:'tutma, elde tutma'},
+          {en:'matched for',pos:'phr.',tr:'-e göre eşleştirilmiş'},
+          {en:'demographic',pos:'adj.',tr:'demografik'},
+        ],
+        rule:'Inference\'da "X eşleştirilmiş ama Y hâlâ fark yaratıyor" yapısı <strong>Y\'nin bağımsız etkisini</strong> gösterir.'
+      }
+    },
+    // Q13 — Medium-hard RS
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching octopus problem-solving, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>A 2023 study examined how octopuses learn to open child-resistant pill bottles.</li>
+    <li>Octopuses were presented with bottles containing food rewards.</li>
+    <li>Most subjects opened the bottles within three attempts after their first successful opening.</li>
+    <li>Successful subjects appeared to learn primarily through trial and error rather than by watching other octopuses.</li>
+    <li>Researchers concluded that the result suggests sophisticated independent problem-solving without social learning.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to specify what the study\'s findings indicate about the type of problem-solving octopuses use.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Octopuses were given food rewards in the experiment.','B) The 2023 study examined child-resistant pill bottles.','C) The study\'s findings suggest that octopuses solve novel problems through sophisticated independent trial-and-error learning, rather than through observation of other octopuses — a form of problem-solving that operates without social learning.','D) Octopuses learn quickly.'],
+      a:2,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">octopus problem-solving türünü belirt</mark>. C: (1) yöntem (trial-and-error), (2) zıt yöntem (not observation), (3) sonuç (independent, without social learning). Spesifik tür.',
+        why_wrong:'<strong>A</strong> sadece ödül. <strong>B</strong> sadece materyal. <strong>D</strong> mutlak ve belirsiz.',
+        vocab:[
+          {en:'child-resistant',pos:'adj.',tr:'çocuk korumalı'},
+          {en:'trial and error',pos:'n.',tr:'deneme yanılma'},
+          {en:'sophisticated',pos:'adj.',tr:'gelişkin, karmaşık'},
+          {en:'social learning',pos:'n.',tr:'sosyal öğrenme'},
+          {en:'subject',pos:'n.',tr:'denek, özne'},
+        ],
+        rule:'RS\'te "specify what findings indicate" goal\'u için cevap (1) mekanizmayı, (2) alternatif mekanizmayı dışlayan veriyi, (3) sonucu birleştirir.'
+      }
+    },
+    // Q14 — Medium-hard TSP
+    {
+      k:'Text Structure and Purpose',
+      p:`Standard accounts of the Scientific Revolution often portray its key figures — Copernicus, Galileo, Newton — as having worked largely in opposition to entrenched religious authority. <u>Recent historical work has begun to qualify this opposition narrative, observing that these scientists were themselves deeply embedded in religious traditions that shaped both their research questions and the conceptual frameworks they brought to bear, with the conflicts so emphasized in popular accounts emerging primarily in specific episodes rather than characterizing the era as a whole.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the opposition narrative with additional examples.','B) It qualifies the opposition narrative by arguing that scientific figures were embedded in religious traditions and that the famous conflicts represent specific episodes rather than the era\'s defining feature.','C) It denies that the Scientific Revolution occurred.','D) It defines the term "religious authority."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"qualify this opposition narrative, observing scientists embedded in religious traditions...conflicts emerging in specific episodes rather than characterizing era"</mark> diyerek karşıtlık anlatısını ikili bir ayrım ile yumuşatıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies revolution" aşırı. <strong>D</strong> tanım yok.',
+        vocab:[
+          {en:'entrenched',pos:'adj.',tr:'köklü, yerleşmiş'},
+          {en:'embed',pos:'v.',tr:'gömmek, yerleştirmek'},
+          {en:'qualify',pos:'v.',tr:'koşullamak, sınırlamak'},
+          {en:'framework',pos:'n.',tr:'çerçeve'},
+          {en:'episode',pos:'n.',tr:'olay, dönem'},
+        ],
+        rule:'TSP\'de "qualify the X narrative by observing Y" yapısı yerleşik anlatıyı yumuşatma + koşullama işlevidir.'
+      }
+    },
+    // Q15 — Medium-hard CoE Textual
+    {
+      k:'Command of Evidence',
+      p:`Researchers studying the success of small businesses have argued that access to short-term lines of credit is the single most important financial factor distinguishing businesses that survive their first three years from those that close during the same period. They emphasize that even profitable small businesses can fail if they experience temporary cash-flow gaps that they cannot bridge through borrowing.`,
+      q:'Which choice best supports the researchers\' argument?',
+      o:['A) Many small businesses are profitable in their first year.','B) Surveys of closed small businesses find that over half experienced episodes when they were unable to obtain short-term credit to bridge temporary cash-flow gaps during their final year of operation.','C) Small businesses operate in many different sectors.','D) Short-term credit has fluctuated over the past decade.'],
+      a:1,
+      explain:{
+        why_correct:'Argüman: <mark class="hl-key">short-term credit erişimi survive-or-close ayırıcı</mark>. B: <mark class="hl-key">"over half of closed businesses unable to obtain short-term credit during final year"</mark> — kapanma ile credit eksikliği arasındaki ilişkiyi doğrudan gösterir.',
+        why_wrong:'<strong>A</strong> kârlılık argümanı destekliyor ama credit-survival değil. <strong>C</strong> alakasız. <strong>D</strong> genel piyasa, kapanma-credit bağı değil.',
+        vocab:[
+          {en:'line of credit',pos:'n.',tr:'kredi limiti'},
+          {en:'cash-flow',pos:'n.',tr:'nakit akışı'},
+          {en:'bridge',pos:'v.',tr:'köprülemek, kapatmak'},
+          {en:'survive',pos:'v.',tr:'hayatta kalmak'},
+          {en:'episode',pos:'n.',tr:'olay'},
+        ],
+        rule:'CoE\'da argüman "X factor ayırıcı" diyorsa, doğru destek <strong>kapanan businesses\'in X eksikliği yaşadığı oranını</strong> verir. Genel başarı/kârlılık dolaylıdır.'
+      }
+    },
+    // Q16 — Medium-hard Transitions
+    {
+      k:'Transitions',
+      p:`Most analyses of urban transportation policy assume that reductions in car use will accompany improved bicycle infrastructure, allowing planners to project benefits in terms of reduced emissions and traffic congestion. <u>______</u> the relationship between bicycle infrastructure and car-use reduction has proven more variable than such projections suggest, with some cities showing the predicted substitution effect while others have seen bicycle use grow alongside continued car use without measurable substitution.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Therefore,','B) However,','C) Similarly,','D) For example,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">planlayıcı varsayım — bisiklet ↑ → araba ↓</mark>. İkinci cümle: <mark class="hl-key">gerçek ilişki daha değişken, bazı şehirlerde substitution yok</mark>. Varsayım vs gerçek kontrast. "However" doğru.',
+        why_wrong:'<strong>A</strong> "therefore" sonuç. <strong>C</strong> "similarly" benzerlik. <strong>D</strong> "for example" örnek.',
+        vocab:[
+          {en:'congestion',pos:'n.',tr:'tıkanıklık'},
+          {en:'substitution',pos:'n.',tr:'ikame'},
+          {en:'variable',pos:'adj.',tr:'değişken'},
+          {en:'measurable',pos:'adj.',tr:'ölçülebilir'},
+          {en:'alongside',pos:'prep.',tr:'-le birlikte'},
+        ],
+        rule:'Transitions\'ta "varsayım X. ___ gerçek X\'i karmaşıklaştırıyor" yapısı kontrast: However.'
+      }
+    },
+    // Q17 — Medium-hard WiC
+    {
+      k:'Words in Context',
+      p:`The reviewer\'s assessment of the novel was uncharacteristically <u>______</u>: rather than the qualified praise the author typically received in such venues, the review offered enthusiastic recommendation with virtually no significant reservations of any kind.`,
+      q:'Which choice completes the text with the most logical and precise word?',
+      o:['A) restrained','B) effusive','C) ambivalent','D) cautious'],
+      a:1,
+      explain:{
+        why_correct:'Bağlam: <mark class="hl-key">"enthusiastic recommendation with virtually no significant reservations"</mark> + <mark class="hl-key">"uncharacteristically"</mark> (alışılmadık derecede). "Effusive" coşkulu, taşkın — tam bu nitelik.',
+        why_wrong:'<strong>A</strong> "restrained" ölçülü, kontrol — "enthusiastic + no reservations" ile çelişir. <strong>C</strong> "ambivalent" kararsız. <strong>D</strong> "cautious" temkinli.',
+        vocab:[
+          {en:'effusive',pos:'adj.',tr:'coşkulu, taşkın'},
+          {en:'qualified praise',pos:'n.',tr:'koşullu övgü'},
+          {en:'venue',pos:'n.',tr:'mecra, mekan'},
+          {en:'reservation',pos:'n.',tr:'çekince'},
+          {en:'virtually',pos:'adv.',tr:'neredeyse, fiilen'},
+        ],
+        rule:'WiC\'te "enthusiastic + no reservations + uncharacteristically" göstergeleri <strong>taşkın olumlu</strong> sıfat ister: effusive, gushing, exuberant.'
+      }
+    },
+    // Q18 — Medium-hard FSS (verb tense)
+    {
+      k:'Form, Structure, and Sense',
+      p:`By the time the research team submitted its final report last spring, the field season they were documenting <u>______</u> nearly two years earlier.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) ends','B) had ended','C) ended','D) was ending'],
+      a:1,
+      explain:{
+        why_correct:'Zaman ilişkisi: <mark class="hl-key">"submitted last spring"</mark> simple past + <mark class="hl-key">"nearly two years earlier"</mark> daha önceki bir an. İki geçmiş zaman arasında erken olanı <strong>past perfect ("had ended")</strong> ile belirtilir.',
+        why_wrong:'<strong>A</strong> "ends" present, geçmişle uyumsuz. <strong>C</strong> "ended" simple past, zaman sıralaması belirsiz. <strong>D</strong> "was ending" past continuous, eylemin bitmiş olmasını belirtmez.',
+        vocab:[
+          {en:'submit',pos:'v.',tr:'sunmak, teslim etmek'},
+          {en:'field season',pos:'n.',tr:'saha sezonu'},
+          {en:'document',pos:'v.',tr:'belgelemek'},
+          {en:'earlier',pos:'adv.',tr:'daha önce'},
+        ],
+        rule:'Past perfect ("had + V3") iki geçmiş zaman arasındaki <strong>daha erken</strong> olanı belirtmek için kullanılır. "By the time + simple past, S + had + V3" klasik kalıp.'
+      }
+    },
+    // Q19 — Medium-hard RS
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching tardigrades, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>Tardigrades, often called "water bears," are microscopic animals less than 1 mm long.</li>
+    <li>They can survive extreme environments including near-freezing temperatures, boiling water, and the vacuum of space.</li>
+    <li>They achieve this by entering a state called "cryptobiosis," in which metabolic activity nearly ceases.</li>
+    <li>In cryptobiosis, the animal\'s body water is replaced by protective sugars and proteins.</li>
+    <li>Some tardigrades have survived after a decade or more in this dormant state.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to explain the biological mechanism by which tardigrades survive extreme environments.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Tardigrades are less than 1 mm long.','B) Tardigrades can survive boiling water.','C) Tardigrades survive extreme environments by entering "cryptobiosis," a dormant state in which metabolic activity nearly ceases and the animal\'s body water is replaced by protective sugars and proteins — a mechanism that has allowed some tardigrades to revive after a decade or more in this state.','D) Some tardigrades have survived for a decade in dormant states.'],
+      a:2,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">biyolojik mekanizmayı açıkla</mark>. C: (1) durum (cryptobiosis), (2) içsel değişim (metabolic cease + water replaced), (3) etki (decade survival). Mekanizma tam.',
+        why_wrong:'<strong>A</strong> sadece boyut. <strong>B</strong> sadece bir ekstrem. <strong>D</strong> sadece sonuç.',
+        vocab:[
+          {en:'tardigrade',pos:'n.',tr:'su ayısı'},
+          {en:'microscopic',pos:'adj.',tr:'mikroskobik'},
+          {en:'cryptobiosis',pos:'n.',tr:'gizli yaşam durumu'},
+          {en:'metabolic',pos:'adj.',tr:'metabolik'},
+          {en:'dormant',pos:'adj.',tr:'uyuyan, atıl'},
+        ],
+        rule:'RS\'te "explain biological mechanism" goal\'u için cevap (1) durumu, (2) içsel süreçleri, (3) etkisini sentezler.'
+      }
+    },
+    // Q20 — Medium-hard Inferences
+    {
+      k:'Inferences',
+      p:`Analyses of trade between high-wage and low-wage countries have produced a consistent pattern: the gap in wages for comparable jobs between trading partners narrows in some industries but widens in others over the same period, with the widening occurring most often in industries where work cannot easily be relocated across borders. Industries whose production can shift between countries show the predicted convergence over time.`,
+      q:'Which choice most logically completes the text?',
+      o:['A) International trade is unimportant to wage levels.','B) The mobility of production across borders appears to mediate whether wage gaps narrow or widen between trading partners — with greater mobility producing the convergence economic theory predicts, while limited mobility allows wage divergence to persist or grow.','C) All industries show wage convergence over time.','D) Wages in low-wage countries are always lower.'],
+      a:1,
+      explain:{
+        why_correct:'Metin: <mark class="hl-key">narrowing in mobile industries + widening in immobile industries</mark>. Mantıklı çıkarım: <mark class="hl-key">mobility wage gap dinamiğini aracılık ediyor</mark>. B nüanslı doğru.',
+        why_wrong:'<strong>A</strong> "unimportant" tam tersi. <strong>C</strong> "all industries" mutlak, metin tam aksini söylüyor. <strong>D</strong> trivial.',
+        vocab:[
+          {en:'wage',pos:'n.',tr:'ücret, maaş'},
+          {en:'comparable',pos:'adj.',tr:'kıyaslanabilir'},
+          {en:'narrow',pos:'v.',tr:'daralmak'},
+          {en:'mobility',pos:'n.',tr:'hareketlilik'},
+          {en:'mediate',pos:'v.',tr:'aracılık etmek'},
+        ],
+        rule:'Inference\'da iki zıt sonuç bir koşula bağlıysa, çıkarım <strong>"koşul X sonucu aracılık ediyor"</strong> şeklindedir.'
+      }
+    },
+    // Q21 — Medium-hard CTC
+    {
+      k:'Cross-Text Connections',
+      p:`<div class="dual-text"><div class="text-block"><div class="text-label">Text 1</div><div class="text-body">Architectural historian Sara Kingsley contends that the rapid spread of modernist architecture across mid-twentieth-century cities reflected, above all, the deliberate choice of municipal authorities seeking to project images of progress and rationality through their public buildings.</div></div><div class="text-block"><div class="text-label">Text 2</div><div class="text-body">Urban historian Pavel Markov acknowledges that municipal preferences played a role but argues that modernist construction techniques — particularly steel-frame construction and precast concrete — also offered substantial cost advantages over traditional alternatives, making modernism appealing on practical economic grounds independent of any symbolic intentions.</div></div></div>`,
+      q:'Which choice best describes how Markov (Text 2) responds to Kingsley (Text 1)?',
+      o:['A) By rejecting the role of municipal preferences entirely.','B) By acknowledging Kingsley\'s role for municipal preferences while introducing economic cost advantages as a substantial parallel driver that operated independently of symbolic considerations.','C) By denying that modernist architecture spread across mid-century cities.','D) By arguing that municipal authorities played no role in architecture.'],
+      a:1,
+      explain:{
+        why_correct:'Text 2: <mark class="hl-key">"acknowledges municipal preferences played a role + adds steel-frame + precast cost advantages...independent of symbolic intentions"</mark>. Markov kabul + paralel ekonomik faktör. B doğru.',
+        why_wrong:'<strong>A</strong> "rejecting entirely" yok. <strong>C</strong> "denying spread" yok. <strong>D</strong> "no role" yok.',
+        vocab:[
+          {en:'modernist',pos:'adj.',tr:'modernist'},
+          {en:'municipal',pos:'adj.',tr:'belediye'},
+          {en:'rationality',pos:'n.',tr:'rasyonellik'},
+          {en:'steel-frame',pos:'n.',tr:'çelik iskelet'},
+          {en:'precast',pos:'adj.',tr:'önceden döküm'},
+        ],
+        rule:'CTC\'de "acknowledges X + adds parallel factor independent of X" yapısı kabul + paralel bağımsız faktördür.'
+      }
+    },
+    // Q22 — Medium-hard TSP
+    {
+      k:'Text Structure and Purpose',
+      p:`Traditional discussions of the Italian Renaissance have emphasized Florence as the center from which artistic and intellectual innovations gradually radiated outward to other Italian cities and eventually to the rest of Europe. <u>Recent comparative work has begun to question this Florence-centered narrative, documenting parallel and partly independent developments in Venice, Naples, and several smaller centers — developments that drew on local intellectual traditions and that often produced innovations later credited primarily to Florentine practitioners.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the Florence-centered narrative with additional examples.','B) It complicates the Florence-centered narrative by documenting parallel independent developments in other Italian cities that produced innovations later attributed primarily to Florence.','C) It denies that the Italian Renaissance occurred.','D) It defines the term "Renaissance."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"question Florence-centered narrative...parallel and partly independent developments in Venice, Naples..."</mark> diyerek Floransa-merkezli anlatıyı paralel gelişmelerle karmaşıklaştırıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies Renaissance" aşırı. <strong>D</strong> tanım yok.',
+        vocab:[
+          {en:'radiate',pos:'v.',tr:'yayılmak'},
+          {en:'parallel',pos:'adj.',tr:'paralel'},
+          {en:'practitioner',pos:'n.',tr:'uygulayıcı'},
+          {en:'attribute',pos:'v.',tr:'atfetmek'},
+          {en:'comparative',pos:'adj.',tr:'karşılaştırmalı'},
+        ],
+        rule:'TSP\'de "question X-centered narrative...parallel developments elsewhere" yapısı yerleşik merkez-çevre anlatısını karmaşıklaştırma işlevidir.'
+      }
+    },
+    // Q23 — Medium-hard Central Ideas
+    {
+      k:'Central Ideas and Details',
+      p:`Cognitive psychologist Sofia Mendoza\'s recent work on collaborative problem-solving challenges a long-standing claim in educational research: that group work invariably produces better outcomes than individual work for tasks of moderate complexity. Mendoza\'s analysis of laboratory studies finds that group advantages depend critically on whether group members differ enough in initial perspectives to generate productive disagreement — homogeneous groups, despite their efficient communication, produce outcomes only marginally better than individuals working alone, while heterogeneous groups produce the substantial gains the literature has often attributed to "group work" without distinguishing.`,
+      q:'Which choice best states the main idea of the text?',
+      o:['A) Group work is always more effective than individual work.','B) Mendoza\'s research shows that the benefits of group work for moderate-complexity tasks depend on the diversity of initial perspectives among group members, with homogeneous groups producing only marginal gains over individuals and heterogeneous groups producing substantial gains.','C) Communication within groups is important for effective work.','D) Educational research has examined group work for many decades.'],
+      a:1,
+      explain:{
+        why_correct:'Ana fikir: <mark class="hl-key">Mendoza\'nın çalışması yerleşik iddiayı koşulluyor + diversity anahtar + homogeneous marginal, heterogeneous substantial</mark>. B üç katmanı birleştirir.',
+        why_wrong:'<strong>A</strong> "always" mutlak, metin tam tersini sorguluyor. <strong>C</strong> yan detay. <strong>D</strong> meta ifade.',
+        vocab:[
+          {en:'collaborative',pos:'adj.',tr:'işbirlikçi'},
+          {en:'invariably',pos:'adv.',tr:'her zaman, değişmez şekilde'},
+          {en:'heterogeneous',pos:'adj.',tr:'heterojen, çeşitli'},
+          {en:'homogeneous',pos:'adj.',tr:'homojen, türdeş'},
+          {en:'productive disagreement',pos:'n.',tr:'üretken anlaşmazlık'},
+        ],
+        rule:'Central Idea\'da bir araştırmacının iddiası varsayımı sorgulayıp koşullamayla nüans katıyorsa, ana fikir koşullamayı + ayrı sonuçları belirtmelidir.'
+      }
+    },
+    // Q24 — Medium-hard RS
+    {
+      k:'Rhetorical Synthesis',
+      p:`While researching cuneiform tablets, a student has taken the following notes:
+<div class="notes-block">
+  <div class="notes-label">Student Notes</div>
+  <ul class="notes-list">
+    <li>Cuneiform writing was invented in Mesopotamia around 3200 BCE.</li>
+    <li>It was used for over three thousand years before being supplanted by alphabetic systems.</li>
+    <li>The earliest surviving cuneiform tablets primarily record administrative and economic information — lists of goods, debts, tax receipts.</li>
+    <li>Later cuneiform tablets include literature, scientific texts, legal codes, and personal correspondence.</li>
+    <li>The shift in subject matter reflects the gradual expansion of writing\'s social functions over centuries.</li>
+  </ul>
+</div>
+<div class="goal-line">The student wants to emphasize how the uses of cuneiform writing evolved over its long history.</div>`,
+      q:'Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+      o:['A) Cuneiform writing was invented in Mesopotamia around 3200 BCE.','B) Over its three-thousand-year history, cuneiform writing evolved from primarily recording administrative and economic information — lists of goods, debts, tax receipts — to encompassing literature, scientific texts, legal codes, and personal correspondence, reflecting the gradual expansion of writing\'s social functions.','C) Alphabetic systems eventually supplanted cuneiform.','D) Cuneiform tablets include scientific texts.'],
+      a:1,
+      explain:{
+        why_correct:'Goal: <mark class="hl-key">kullanımın evrim</mark>. B: (1) zaman kapsamı (3000 yıl), (2) başlangıç kullanımı (admin/eco), (3) sonraki kullanımlar (literature, science, law), (4) genelleme (expansion of social functions). Evrim hikayesi tam.',
+        why_wrong:'<strong>A</strong> sadece başlangıç. <strong>C</strong> sadece son. <strong>D</strong> sadece bir tür.',
+        vocab:[
+          {en:'cuneiform',pos:'n.',tr:'çivi yazısı'},
+          {en:'Mesopotamia',pos:'n.',tr:'Mezopotamya'},
+          {en:'supplant',pos:'v.',tr:'yerini almak'},
+          {en:'tablet',pos:'n.',tr:'tablet (kil)'},
+          {en:'correspondence',pos:'n.',tr:'yazışma'},
+        ],
+        rule:'RS\'te "how uses evolved over history" goal\'u için cevap (1) erken kullanım, (2) sonraki kullanım, (3) genel eğilimi birleştirir.'
+      }
+    },
+    // Q25 — Medium-hard Transitions
+    {
+      k:'Transitions',
+      p:`The artist had relied for decades on a small number of trusted dealers who handled most of his major sales and managed his exhibitions across several cities. <u>______</u> when those dealers retired within a few years of one another, the artist found himself without established representation at precisely the moment when he was attempting to launch a substantial new body of work.`,
+      q:'Which choice completes the text with the most logical transition?',
+      o:['A) Nevertheless,','B) As a result,','C) For instance,','D) Likewise,'],
+      a:1,
+      explain:{
+        why_correct:'İlk cümle: <mark class="hl-key">küçük dealer ağına bağımlılık</mark>. İkinci cümle: <mark class="hl-key">dealer\'lar emekli olunca → representation yok</mark>. Bağımlılığın sonucu. "As a result" sebep-sonuç.',
+        why_wrong:'<strong>A</strong> "nevertheless" kontrast. <strong>C</strong> "for instance" örnek. <strong>D</strong> "likewise" benzerlik.',
+        vocab:[
+          {en:'dealer',pos:'n.',tr:'galerici, satıcı'},
+          {en:'exhibition',pos:'n.',tr:'sergi'},
+          {en:'representation',pos:'n.',tr:'temsil (sanat dünyasında galerici desteği)'},
+          {en:'launch',pos:'v.',tr:'başlatmak, sunmak'},
+          {en:'precisely',pos:'adv.',tr:'tam olarak'},
+        ],
+        rule:'Transitions\'ta "küçük gruba bağımlılık. ___ grup eridi → sorun" yapısı cause/effect: As a result, Consequently.'
+      }
+    },
+    // Q26 — Medium-hard CoE Quantitative
+    {
+      k:'Command of Evidence',
+      p:`A researcher compared graduation rates at three universities that adopted different first-year advising programs in 2018. After five years of data collection, she concluded that intensive small-group advising (used by University X) produced substantially better graduation rates than larger advising groups (University Y) or self-directed advising (University Z), with the effect largest for first-generation college students.
+<div class="data-block">
+  <div class="data-caption">Five-year graduation rates by advising model (percent)<span class="src">Data from three-university comparison, 2018-2023 cohort</span></div>
+  <table class="data-table">
+    <thead><tr><th>University</th><th class="num">All students</th><th class="num">First-gen students</th></tr></thead>
+    <tbody>
+      <tr><td>X (intensive small-group)</td><td class="num">78</td><td class="num">66</td></tr>
+      <tr><td>Y (larger advising groups)</td><td class="num">71</td><td class="num">52</td></tr>
+      <tr><td>Z (self-directed)</td><td class="num">68</td><td class="num">47</td></tr>
+    </tbody>
+  </table>
+</div>`,
+      q:'Which choice from the table most directly supports the researcher\'s conclusion about first-generation students?',
+      o:['A) University X has the highest all-student graduation rate at 78 percent.','B) Among first-generation students, University X\'s graduation rate (66 percent) is 14 percentage points higher than University Y\'s (52 percent) and 19 points higher than University Z\'s (47 percent).','C) University Z has the lowest all-student graduation rate.','D) All three universities have all-student graduation rates above 65 percent.'],
+      a:1,
+      explain:{
+        why_correct:'Conclusion: <mark class="hl-key">first-gen students için etki en büyük</mark>. B: <mark class="hl-key">first-gen kolonu</mark> kullanır — X (66), Y (52), Z (47). Farklar: 14 ve 19 puan, all-student farklarından (7 ve 10 puan) daha büyük. Conclusion\'ı doğrudan destekler.',
+        why_wrong:'<strong>A</strong> all-student verisi, first-gen değil. <strong>C</strong> first-gen değil. <strong>D</strong> first-gen değil.',
+        vocab:[
+          {en:'advising',pos:'n.',tr:'danışmanlık'},
+          {en:'intensive',pos:'adj.',tr:'yoğun'},
+          {en:'self-directed',pos:'adj.',tr:'kendi kendine yönlendiren'},
+          {en:'first-generation',pos:'adj.',tr:'aile birinci kuşak'},
+          {en:'cohort',pos:'n.',tr:'kohort, grup'},
+        ],
+        rule:'CoE Quantitative\'de conclusion bir alt grup hakkındaysa, destek o alt grubun verisinden gelmelidir. Genel veri dolaylıdır.'
+      }
+    },
+    // Q27 — Medium-hard TSP
+    {
+      k:'Text Structure and Purpose',
+      p:`The popular narrative about the rise of digital streaming has often portrayed traditional broadcast television as a declining medium gradually being replaced by on-demand services. <u>Industry data from the past several years complicate this replacement narrative, however, showing that while younger audiences have indeed shifted substantial portions of their viewing to streaming platforms, broadcast television continues to attract large audiences for major sporting events, breaking news, and certain long-running prestige programs — suggesting that streaming and broadcast may be settling into a complementary coexistence rather than the simple replacement the popular narrative anticipated.</u>`,
+      q:'Which choice best describes the function of the underlined sentence in the text?',
+      o:['A) It confirms the replacement narrative with additional examples.','B) It complicates the replacement narrative by showing that broadcast television continues to attract large audiences in certain segments, suggesting complementary coexistence rather than simple replacement.','C) It denies that streaming services exist.','D) It defines what counts as "prestige programming."'],
+      a:1,
+      explain:{
+        why_correct:'Altı çizili cümle <mark class="hl-key">"complicate this replacement narrative...broadcast continues to attract large audiences for sporting events, breaking news, prestige programs...complementary coexistence rather than simple replacement"</mark> diyerek yerleşik yer değiştirme anlatısını birlikte var olma ile karmaşıklaştırıyor. B doğru.',
+        why_wrong:'<strong>A</strong> "confirms" tam tersi. <strong>C</strong> "denies streaming exist" aşırı. <strong>D</strong> tanım yok.',
+        vocab:[
+          {en:'broadcast',pos:'adj.',tr:'yayın'},
+          {en:'on-demand',pos:'adj.',tr:'talep üzerine'},
+          {en:'shift',pos:'v.',tr:'kaymak'},
+          {en:'complementary',pos:'adj.',tr:'tamamlayıcı'},
+          {en:'coexistence',pos:'n.',tr:'birlikte var olma'},
+        ],
+        rule:'TSP\'de "complicate replacement narrative...complementary coexistence" yapısı sıfır toplamlı yer değiştirme anlatısını birlikte var olmayla karmaşıklaştırma işlevidir.'
+      }
+    }
+  ]
+},
+{
+  name: 'Bonus',
+  subtitle: 'Zor. SEC parlatma — Boundaries ve Form-Structure-Sense.',
+  questions: [
+    // B1 — Hard Boundaries (semicolon vs comma splice)
+    {
+      k:'Boundaries',
+      p:`The institute\'s annual review identified three areas where measurement protocols had drifted from documented standards <u>______</u> the most serious of these involved the calibration procedures used for the climate-monitoring instruments installed in 2019.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) ,','B) ;','C) , however','D) but'],
+      a:1,
+      explain:{
+        why_correct:'İki yakın ilişkili bağımsız cümle: "review identified three areas" + "the most serious of these involved...". <mark class="hl-key">Noktalı virgül</mark> ilişkili bağımsız cümleleri bağlamak için uygundur. Burada ikinci cümle birincinin üç alanından birini detaylandırıyor.',
+        why_wrong:'<strong>A</strong> sadece virgül comma splice. <strong>C</strong> "comma + however" comma splice + yön zıt değil. <strong>D</strong> "but" kontrast gerektirir, burada detaylandırma var.',
+        vocab:[
+          {en:'protocol',pos:'n.',tr:'protokol'},
+          {en:'drift',pos:'v.',tr:'sapmak, kaymak'},
+          {en:'calibration',pos:'n.',tr:'kalibrasyon, ayarlama'},
+          {en:'monitor',pos:'v.',tr:'izlemek'},
+          {en:'installed',pos:'adj.',tr:'kurulu, yerleştirilmiş'},
+        ],
+        rule:'Noktalı virgül (semicolon) <strong>yakın ilişkili iki bağımsız cümleyi</strong> bağlamak için kullanılır, özellikle ikincisi birincinin detayını ya da gelişimini sağlıyorsa. "But" kontrast, ilişkili genişletme değil.'
+      }
+    },
+    // B2 — Hard FSS (S-V agreement with intervening prepositional phrase)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The collection of folk songs gathered by the ethnomusicologist during her three years of fieldwork in the highland villages <u>______</u> being prepared for digital release by the regional cultural archive next spring.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) are','B) were','C) is','D) have been'],
+      a:2,
+      explain:{
+        why_correct:'Özne: <mark class="hl-key">"The collection"</mark> (tekil). Araya giren "of folk songs gathered...in the highland villages" prepositional phrase\'leri özne sayısını değiştirmez. Doğru fiil: <strong>"is"</strong> (tekil, simple present).',
+        why_wrong:'<strong>A</strong> "are" çoğul. <strong>B</strong> "were" çoğul + geçmiş. <strong>D</strong> "have been" çoğul + perfect.',
+        vocab:[
+          {en:'ethnomusicologist',pos:'n.',tr:'etnomüzikolog'},
+          {en:'fieldwork',pos:'n.',tr:'saha çalışması'},
+          {en:'highland',pos:'adj.',tr:'yayla, yüksek bölge'},
+          {en:'archive',pos:'n.',tr:'arşiv'},
+          {en:'prepare',pos:'v.',tr:'hazırlamak'},
+        ],
+        rule:'Subject-verb agreement\'ta araya giren prepositional phrase\'ler özne sayısını değiştirmez. Asıl özne ("collection") tekilse, fiil tekil ("is") olmalı.'
+      }
+    },
+    // B3 — Hard Boundaries (colon for explanation)
+    {
+      k:'Boundaries',
+      p:`The committee\'s final report identified one issue as more urgent than all others <u>______</u> the failure of the central archive\'s backup system, which had gone undetected for nearly fourteen months despite the system\'s scheduled monthly testing protocols.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) ,','B) ;','C) :','D) and'],
+      a:2,
+      explain:{
+        why_correct:'İlk cümle (bağımsız): "report identified one issue as more urgent than all others". Sonrasında <mark class="hl-key">bu "one issue"un ne olduğunun açıklaması</mark> geliyor — "the failure of the central archive\'s backup system...". İki noktanın klasik kullanımı: önceki cümle bir genel ifade yapar, iki nokta ile spesifik açıklama gelir.',
+        why_wrong:'<strong>A</strong> sadece virgül yetersiz (bir liste başlatmak için noktalama gerek). <strong>B</strong> noktalı virgül iki bağımsız cümle birleştirir, açıklama değil. <strong>D</strong> "and" eklenti yaratır, açıklama değil.',
+        vocab:[
+          {en:'urgent',pos:'adj.',tr:'acil'},
+          {en:'archive',pos:'n.',tr:'arşiv'},
+          {en:'backup',pos:'n.',tr:'yedek'},
+          {en:'undetected',pos:'adj.',tr:'fark edilmemiş'},
+          {en:'protocol',pos:'n.',tr:'protokol'},
+        ],
+        rule:'İki nokta (colon) <strong>önceki bağımsız cümlenin spesifik bir öğesini açıklama, liste sunma ya da somutlaştırma</strong> için kullanılır. Cümle bir genel ifade verir → iki nokta → spesifikleştirme.'
+      }
+    },
+    // B4 — Hard FSS (pronoun case in compound subject)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The committee\'s choice surprised most observers, as <u>______</u> had been considered far less likely than the candidate she ultimately defeated to receive the chair appointment.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) her','B) she','C) hers','D) herself'],
+      a:1,
+      explain:{
+        why_correct:'Pronoun bir cümlenin öznesi olarak kullanılıyor: "<mark class="hl-key">___ had been considered</mark>". Özne pozisyonu için subject pronoun: <strong>"she"</strong>.',
+        why_wrong:'<strong>A</strong> "her" object case. <strong>C</strong> "hers" possessive. <strong>D</strong> "herself" reflexive, antecedent yok.',
+        vocab:[
+          {en:'observer',pos:'n.',tr:'gözlemci'},
+          {en:'consider',pos:'v.',tr:'kabul etmek, değerlendirmek'},
+          {en:'candidate',pos:'n.',tr:'aday'},
+          {en:'defeat',pos:'v.',tr:'yenmek'},
+          {en:'appointment',pos:'n.',tr:'atama'},
+        ],
+        rule:'Pronoun case\'de özne pozisyonu için <strong>subject pronoun</strong> (I, he, she, we, they). Object pozisyonu için object pronoun (me, him, her, us, them). Possessive için hers, his vs.'
+      }
+    },
+    // B5 — Hard Boundaries (conjunctive adverb)
+    {
+      k:'Boundaries',
+      p:`The treaty had been ratified by both parties before the new administration took office <u>______</u> several of its key implementation provisions remained subject to ongoing diplomatic negotiation as recently as last week.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , however','B) ; however,','C) however','D) , however,'],
+      a:1,
+      explain:{
+        why_correct:'İki bağımsız cümle: "treaty had been ratified" + "several provisions remained subject to negotiation". <mark class="hl-key">Noktalı virgül + however + virgül</mark> conjunctive adverb için doğru kalıp.',
+        why_wrong:'<strong>A</strong> "comma + however" comma splice. <strong>C</strong> noktalama eksik. <strong>D</strong> "comma + however + comma" comma splice.',
+        vocab:[
+          {en:'treaty',pos:'n.',tr:'antlaşma'},
+          {en:'ratify',pos:'v.',tr:'onaylamak (yasama)'},
+          {en:'administration',pos:'n.',tr:'yönetim'},
+          {en:'implementation',pos:'n.',tr:'uygulama'},
+          {en:'diplomatic',pos:'adj.',tr:'diplomatik'},
+        ],
+        rule:'Conjunctive adverb (however, therefore, moreover, consequently) iki bağımsız cümle arasında: <strong>noktalı virgül + adverb + virgül</strong>. Sadece virgülle bağlama her zaman comma splice.'
+      }
+    },
+    // B6 — Hard FSS (parallel structure with complex phrases)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The orientation program emphasized that successful graduate students must develop strong research skills, master the analytical methods used in their disciplines, and <u>______</u> productive working relationships with both senior faculty and fellow students throughout their programs.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) cultivating','B) cultivation of','C) cultivate','D) to cultivate'],
+      a:2,
+      explain:{
+        why_correct:'Paralel liste: <mark class="hl-key">"must develop strong skills, master the analytical methods, and ___ productive relationships"</mark>. İlk iki öge "develop" ve "master" — bare infinitive (modal "must"\'tan sonra). Üçüncü öge de bare infinitive olmalı: <strong>"cultivate"</strong>.',
+        why_wrong:'<strong>A</strong> "cultivating" gerund, paralel değil. <strong>B</strong> "cultivation of" isim, paralel değil. <strong>D</strong> "to cultivate" infinitive marker "to" ile, paralel değil.',
+        vocab:[
+          {en:'orientation',pos:'n.',tr:'oryantasyon, tanıtım'},
+          {en:'analytical',pos:'adj.',tr:'analitik'},
+          {en:'discipline',pos:'n.',tr:'disiplin, alan'},
+          {en:'cultivate',pos:'v.',tr:'geliştirmek, beslemek (ilişki)'},
+          {en:'faculty',pos:'n.',tr:'öğretim üyeleri'},
+        ],
+        rule:'Parallel structure\'ta liste öğeleri aynı dilbilgisel formda olmalı. "Must develop, master, and cultivate" — modal\'dan sonra üç bare infinitive. Karışım yanlış.'
+      }
+    },
+    // B7 — Hard Boundaries (period vs semicolon for unrelated clauses)
+    {
+      k:'Boundaries',
+      p:`The new committee structure replaced a previous arrangement that had been in place since the institute\'s founding nearly forty years earlier <u>______</u> the agenda for the inaugural meeting included a substantial range of proposals that the new structure was specifically designed to handle more efficiently.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , and','B) ,','C) ;','D) and'],
+      a:0,
+      explain:{
+        why_correct:'İki bağımsız cümle: "structure replaced a previous arrangement" + "agenda included proposals the new structure was designed to handle". <mark class="hl-key">Virgül + and</mark> klasik koordinasyon ile bağlama — iki cümle eş ağırlıkta, birbirine ekleniyor.',
+        why_wrong:'<strong>B</strong> sadece virgül comma splice. <strong>C</strong> noktalı virgül "and" bağlacını gereksiz kılar ama burada "and" ile akış daha doğal. Aslında "; " de teknik olarak çalışır, ama "virgül + and" daha yaygın ve burada akış daha iyi. <strong>D</strong> noktalama yok.',
+        vocab:[
+          {en:'arrangement',pos:'n.',tr:'düzenleme'},
+          {en:'founding',pos:'n.',tr:'kuruluş'},
+          {en:'agenda',pos:'n.',tr:'gündem'},
+          {en:'inaugural',pos:'adj.',tr:'açılış, ilk'},
+          {en:'substantial',pos:'adj.',tr:'önemli, kayda değer'},
+        ],
+        rule:'İki bağımsız cümleyi <strong>virgül + and</strong> ile bağlama, "and" bağlayıcısı olduğunda en doğal seçim. Noktalı virgül "and"siz yapı için daha uygundur.'
+      }
+    },
+    // B8 — Hard FSS (dangling modifier)
+    {
+      k:'Form, Structure, and Sense',
+      p:`<u>______</u> recent satellite imagery revealed that the lake had shrunk by nearly thirty percent over the past two decades, with the most rapid losses occurring during the past five years of unusually low precipitation.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) Examined by hydrologists studying regional drought patterns,','B) Examining the lake\'s seasonal variability,','C) After hydrologists examined the lake\'s seasonal variability,','D) Having been examined for seasonal variability,'],
+      a:2,
+      explain:{
+        why_correct:'Cümlenin öznesi <mark class="hl-key">"recent satellite imagery"</mark>. Modifier "examining" inceleme yapan birey olmalı — uydu görüntüsü incelemez. <strong>"After hydrologists examined..."</strong> ayrı bir özne (hydrologists) ile bağımsız bağımlı cümle. Dangling değil.',
+        why_wrong:'<strong>A</strong> "Examined by hydrologists" pasif → satellite imagery incelendi anlamı, ama imagery hydrologist tarafından incelenmiyor, lake inceleniyor. <strong>B</strong> "Examining the lake" → imagery examine ediyor, mantıksız. <strong>D</strong> "Having been examined" pasif → imagery incelendi, mantıksız.',
+        vocab:[
+          {en:'imagery',pos:'n.',tr:'görüntüler'},
+          {en:'shrink',pos:'v.',tr:'küçülmek'},
+          {en:'hydrologist',pos:'n.',tr:'hidrolog'},
+          {en:'seasonal',pos:'adj.',tr:'mevsimsel'},
+          {en:'variability',pos:'n.',tr:'değişkenlik'},
+        ],
+        rule:'Dangling modifier\'dan kaçınmak için: ya modifier\'ın öznesi ana cümlenin öznesiyle eşleşmeli, ya da modifier\'ı kendi öznesi olan bir bağımlı cümleye dönüştür ("After X did Y, ...").'
+      }
+    },
+    // B9 — Hard Boundaries (independent + dependent)
+    {
+      k:'Boundaries',
+      p:`The galaxy\'s rotational profile, which astronomers had measured during the previous decade using optical telescopes <u>______</u> was refined this year by new radio observations that revealed several previously unmapped features in the galaxy\'s outer regions.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , and','B) ,','C) ;','D) and'],
+      a:1,
+      explain:{
+        why_correct:'Cümle yapısı: "The galaxy\'s rotational profile [, which clause ,] was refined". <mark class="hl-key">Non-restrictive relative clause</mark> ("which...telescopes") iki virgül arasına alınmalı. Açılış virgülü zaten var, kapanış virgülü gerek: tek virgül.',
+        why_wrong:'<strong>A</strong> ", and" başka bir cümle bağlar, ama burada bağımsız ikinci cümle yok. <strong>C</strong> noktalı virgül iki bağımsız cümle gerek, burada relative clause var. <strong>D</strong> noktalama yok.',
+        vocab:[
+          {en:'rotational',pos:'adj.',tr:'dönme ile ilgili'},
+          {en:'profile',pos:'n.',tr:'profil'},
+          {en:'optical',pos:'adj.',tr:'optik'},
+          {en:'refine',pos:'v.',tr:'rafine etmek, geliştirmek'},
+          {en:'unmapped',pos:'adj.',tr:'haritalanmamış'},
+        ],
+        rule:'Non-restrictive relative clause ("which...") <strong>iki virgül arasına</strong> alınır. Açılış virgülü varsa, kapanış da virgül olmalı. Diğer noktalama (; , and) cümle yapısını bozar.'
+      }
+    },
+    // B10 — Hard FSS (logical comparison)
+    {
+      k:'Form, Structure, and Sense',
+      p:`The graduate program\'s placement rate of nearly ninety percent for its students entering academic positions is substantially higher than <u>______</u> comparable programs in the region.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) other','B) those of','C) the','D) that of'],
+      a:3,
+      explain:{
+        why_correct:'Karşılaştırma: "<mark class="hl-key">The graduate program\'s placement rate</mark>" (tek bir rate) vs <mark class="hl-key">"___ comparable programs"</mark>. Karşılaştırma mantıksal olmalı: rate vs rate, programs vs programs değil. "That" tek programs\'ın rate\'i için. <strong>"that of comparable programs"</strong> = "the rate of comparable programs".',
+        why_wrong:'<strong>A</strong> "other comparable programs" — bu programları karşılaştırır, rate ile değil. <strong>B</strong> "those of" çoğul — birden çok rate var anlamı, ama her program tek rate\'e sahip; üstelik karşılaştırılan single program\'s rate. <strong>C</strong> "the comparable programs" — yine programs karşılaştırılır.',
+        vocab:[
+          {en:'placement',pos:'n.',tr:'yerleştirme'},
+          {en:'academic',pos:'adj.',tr:'akademik'},
+          {en:'comparable',pos:'adj.',tr:'kıyaslanabilir'},
+          {en:'substantially',pos:'adv.',tr:'önemli ölçüde'},
+          {en:'region',pos:'n.',tr:'bölge'},
+        ],
+        rule:'Logical comparison\'da karşılaştırılan iki şey aynı türden olmalı: rate vs rate, score vs score. "That of X" tek X\'in özelliği için, "those of X" çoğul X\'lerin özelliği için. Burada single program rate vs comparable programs\' (kollektif) rate karşılaştırılıyor; "that" tek olmasından dolayı (each comparable program\'s rate, but collectively addressed via "that of").'
+      }
+    },
+    // B11 — Hard Boundaries (run-on across long sentence)
+    {
+      k:'Boundaries',
+      p:`The institute\'s funding had risen substantially over the past five years thanks to a series of multi-year grants from foundations and government agencies that supported its broader expansion <u>______</u> the addition of two new research centers and a substantial increase in graduate fellowships was made possible by this stable funding base.`,
+      q:'Which choice best completes the sentence?',
+      o:['A) , and','B) ,','C) ;','D) and'],
+      a:0,
+      explain:{
+        why_correct:'İki bağımsız cümle: "funding had risen substantially..." + "the addition of two new research centers...was made possible by this stable funding base". <mark class="hl-key">Virgül + and</mark> klasik koordinasyon ile bağlama. İki cümle birbirini destekliyor (sebep → sonuç ekstrasyonu).',
+        why_wrong:'<strong>B</strong> sadece virgül comma splice. <strong>C</strong> noktalı virgül teknik çalışır ama "and" akışı daha doğal. <strong>D</strong> noktalama yok, run-on.',
+        vocab:[
+          {en:'multi-year',pos:'adj.',tr:'çok yıllı'},
+          {en:'grant',pos:'n.',tr:'hibe'},
+          {en:'expansion',pos:'n.',tr:'genişleme'},
+          {en:'fellowship',pos:'n.',tr:'burs (akademik)'},
+          {en:'stable',pos:'adj.',tr:'istikrarlı'},
+        ],
+        rule:'Uzun cümlelerde iki bağımsız cümleyi bağlamak için <strong>virgül + and (ya da diğer coordinator)</strong> standart. Noktalama olmadığında run-on hatası oluşur.'
+      }
+    },
+    // B12 — Hard FSS (verb tense sequence)
+    {
+      k:'Form, Structure, and Sense',
+      p:`By the time the documentary was completed in 2022, the lake whose ecological recovery it documented <u>______</u> through more than a decade of restoration work funded by multiple federal and state agencies.`,
+      q:'Which choice completes the text so that it conforms to the conventions of Standard English?',
+      o:['A) goes','B) has gone','C) had gone','D) was going'],
+      a:2,
+      explain:{
+        why_correct:'Zaman ilişkisi: <mark class="hl-key">"was completed in 2022"</mark> simple past + <mark class="hl-key">"through more than a decade"</mark> 2022\'den önceki on yıllık süreç. İki geçmiş zaman arasında erken/uzanan eylem için <strong>past perfect ("had gone")</strong>.',
+        why_wrong:'<strong>A</strong> "goes" present, geçmişle uyumsuz. <strong>B</strong> "has gone" present perfect, 2022\'de hâlâ devam ediyor anlamı, ama documentary o noktada bitmiş ve süreç ona kadar tamamlanmış. <strong>D</strong> "was going" past continuous, tamamlanmışlık eksik.',
+        vocab:[
+          {en:'documentary',pos:'n.',tr:'belgesel'},
+          {en:'recovery',pos:'n.',tr:'iyileşme'},
+          {en:'restoration',pos:'n.',tr:'restorasyon'},
+          {en:'agency',pos:'n.',tr:'kurum, ajans'},
+          {en:'federal',pos:'adj.',tr:'federal'},
+        ],
+        rule:'Past perfect ("had + V3") iki geçmiş zaman arasındaki <strong>erken/uzanan eylem</strong> için kullanılır. "By the time + simple past, S + had + V3" klasik kalıp. Bu yapı eylemin reference point\'ten önce başladığını ve tamamlandığını/ulaştığını gösterir.'
+      }
+    }
+  ]
+}
+];
+
+// ============= STATE =============
+let currentModule = 0;
+let currentQ = 0;
+let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
+let moduleCompleted = MODULES.map(() => false);
+
+// ============= PERSISTENCE =============
+const STORAGE_KEY = 'gri-camp-day-7-mock-review';
+function saveProgress(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: answers,
+      completed: moduleCompleted,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadProgress(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.answers) || d.answers.length !== MODULES.length) return;
+    for(var i=0; i<MODULES.length; i++){
+      if(!Array.isArray(d.answers[i]) || d.answers[i].length !== MODULES[i].questions.length) return;
+    }
+    answers = d.answers;
+    moduleCompleted = (Array.isArray(d.completed) && d.completed.length === MODULES.length)
+      ? d.completed : MODULES.map(function(){return false;});
+  } catch(e) {}
+}
+function hasAnyAnswer(){
+  for(var i=0; i<answers.length; i++){
+    for(var j=0; j<answers[i].length; j++){
+      if(answers[i][j] !== null) return true;
+    }
+  }
+  return false;
+}
+function resetAllProgress(){
+  if(!confirm('Tüm modüllerdeki cevapların ve ilerlemen silinecek. Emin misin?')) return;
+  answers = MODULES.map(function(m){ return new Array(m.questions.length).fill(null); });
+  moduleCompleted = MODULES.map(function(){ return false; });
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  currentModule = 0; currentQ = 0;
+  var qEl = document.getElementById('quiz');
+  var tEl = document.getElementById('topbar');
+  var rEl = document.getElementById('results');
+  var sEl = document.getElementById('splash');
+  if(qEl) qEl.classList.remove('show');
+  if(tEl) tEl.classList.remove('show');
+  if(rEl) rEl.classList.remove('show');
+  if(sEl) sEl.style.display = 'flex';
+  renderSplash();
+}
+
+// ============= UNLOAD WARNING =============
+window.addEventListener('beforeunload', function(e){
+  // Quiz ekranı açıkken sayfayı yenilemeye veya kapatmaya karşı uyarı.
+  var quizEl = document.getElementById('quiz');
+  if(quizEl && quizEl.classList.contains('show')){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// ============= HELPERS =============
+function getModuleStatus(idx){
+  const mod = MODULES[idx];
+  if(mod.questions.length === 0) return 'empty';
+  if(moduleCompleted[idx]) return 'complete';
+  const answered = answers[idx].filter(a => a !== null).length;
+  if(answered === 0) return 'untouched';
+  return 'in-progress';
+}
+function getModuleScore(idx){
+  let c = 0;
+  answers[idx].forEach((a,i)=>{ if(a === MODULES[idx].questions[i].a) c++ });
+  return c;
+}
+
+// ============= SPLASH RENDERER =============
+function renderSplash(){
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği henüz eklenmemiş modülleri splash'ta gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let badge = '';
+    if(status === 'complete'){
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      badge = `<span class="mc-status done">✓ ${sc}/${m.questions.length} · ${pct}%</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      badge = `<span class="mc-status progress">▶ ${ans}/${m.questions.length} devam</span>`;
+    }
+    return `<div class="module-card clickable" onclick="startModule(${i})">
+      <div class="mc-left">
+        <div class="mc-name">${m.name} ${badge}</div>
+        <div class="mc-desc">${m.subtitle}</div>
+      </div>
+      <div class="mc-meta"><div class="mc-q">${m.questions.length}</div><div>soru</div></div>
+    </div>`;
+  }).join('');
+  var rb = document.getElementById('resetBtn');
+  if(rb){ rb.style.display = hasAnyAnswer() ? 'inline-block' : 'none'; }
+}
+
+// ============= NAVIGATION =============
+function startModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  // If already completed, show results
+  if(moduleCompleted[idx]){
+    showModuleResults();
+    return;
+  }
+  // Find first unanswered to resume, or start at 0
+  const firstUnanswered = answers[idx].findIndex(a => a === null);
+  currentQ = firstUnanswered === -1 ? 0 : firstUnanswered;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function goHome(){
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('splash').style.display='flex';
+  renderSplash();
+  window.scrollTo({top:0});
+}
+
+function quitToSplash(){
+  if(!confirm('Ana sayfaya dönmek istediğine emin misin? Cevapların kaydedildi.')) return;
+  goHome();
+}
+
+function restartQuiz(){
+  if(!confirm('Bu modülü baştan çözmek istediğine emin misin?')) return;
+  answers[currentModule] = new Array(MODULES[currentModule].questions.length).fill(null);
+  moduleCompleted[currentModule] = false;
+  currentQ = 0;
+  saveProgress();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const mod = MODULES[currentModule];
+  const q = mod.questions[currentQ];
+  const card = document.getElementById('qcard');
+  card.innerHTML = `
+    <div class="qtype" lang="en">${q.k}</div>
+    <div class="passage">${q.p}</div>
+    ${q.data ? q.data : ''}
+    <div class="qstem">${q.q}</div>
+    <div class="opts">
+      ${q.o.map((opt,i)=>{
+        const letter = opt.substring(0,1);
+        const text = opt.substring(3);
+        const selected = answers[currentModule][currentQ]===i?'sel':'';
+        return `<button class="opt ${selected}" onclick="pickAnswer(${i})">
+          <span class="opt-letter">${letter}</span><span>${text}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('tbMeta').textContent = `${mod.name} · Day 7 Mock Review`;
+  document.getElementById('tbQnum').textContent = `${currentQ+1} / ${mod.questions.length}`;
+  document.getElementById('progFill').style.width = `${((currentQ+1)/mod.questions.length)*100}%`;
+  const dr = document.getElementById('dotRow');
+  dr.innerHTML = mod.questions.map((_,i)=>{
+    const cls = i===currentQ?'cur':(answers[currentModule][i]!==null?'ans':'');
+    return `<span class="dot ${cls}" onclick="goTo(${i})" title="Soru ${i+1}"></span>`;
+  }).join('');
+  document.getElementById('prevBtn').disabled = currentQ===0;
+  const isLast = currentQ===mod.questions.length-1;
+  document.getElementById('nextBtn').style.display = isLast?'none':'';
+  document.getElementById('submitBtn').style.display = isLast?'':'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
+function goTo(i){ currentQ=i; renderQuestion() }
+function nextQ(){ if(currentQ<MODULES[currentModule].questions.length-1){ currentQ++; renderQuestion() } }
+function prevQ(){ if(currentQ>0){ currentQ--; renderQuestion() } }
+
+function submitModule(){
+  showModuleResults();
+}
+
+function showModuleResults(){
+  const mod = MODULES[currentModule];
+  let correct = 0;
+  answers[currentModule].forEach((a,i)=>{ if(a===mod.questions[i].a) correct++ });
+  const pct = mod.questions.length ? Math.round((correct/mod.questions.length)*100) : 0;
+
+  // Mark as completed if all answered
+  const allAnswered = answers[currentModule].every(a => a !== null);
+  if(allAnswered) moduleCompleted[currentModule] = true;
+  saveProgress();
+
+  // Header
+  document.getElementById('resEyebrow').textContent = `${mod.name} · Detaylı Analiz`;
+  const titles = ['Module 1 Analizi', 'Module 2 Analizi', 'Bonus Analizi'];
+  document.getElementById('resTitle').textContent = titles[currentModule] || 'Modül Analizi';
+  document.getElementById('resSub').textContent = 'Aşağıdaki yanlışları tek tek aç, kuralları defterine geç';
+
+  // Module tabs
+  renderModuleTabs();
+
+  // Score card
+  document.getElementById('scoreNum').textContent = correct;
+  document.getElementById('scoreDen').textContent = `/ ${mod.questions.length} doğru`;
+  document.getElementById('scorePct').textContent = pct+'%';
+  const msg = document.getElementById('scoreMsg');
+  if(pct>=80) msg.textContent='Bu modülde çok iyi bir performans gösterdin. Yine de yanlışlarını detaylı incele, küçük hatalar sınavda büyür.';
+  else if(pct>=60) msg.textContent='Ortalama bir sonuç. Aşağıdaki analizleri dikkatlice oku, hata günlüğüne yedi adım protokolüyle işle.';
+  else msg.textContent='Bu modülde daha çok pratik gerekiyor. Her yanlışı tek tek aç, kuralı kendi kelimelerinle defterine geçir.';
+
+  // Determine next button
+  const isLast = currentModule === MODULES.length - 1;
+  const nextHasQ = !isLast && MODULES[currentModule+1].questions.length > 0;
+  const primaryBtn = document.getElementById('resPrimaryBtn');
+  if(nextHasQ){
+    const nextNames = ['Module 2', 'Bonus'];
+    primaryBtn.textContent = `${nextNames[currentModule] || 'Sıradaki'} Modülüne Geç ›`;
+    primaryBtn.onclick = goToNextModule;
+    primaryBtn.style.display = '';
+  } else {
+    primaryBtn.textContent = 'Bu Modülü Baştan Çöz';
+    primaryBtn.onclick = restartQuiz;
+    primaryBtn.style.display = '';
+  }
+
+  renderModuleReview();
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderModuleTabs(){
+  const tabs = document.getElementById('moduleTabs');
+  tabs.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği yoksa hiç gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let cls = '';
+    let label = '';
+    if(i === currentModule) cls += ' current';
+    if(status === 'complete'){
+      cls += ' done';
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      label = `<span class="mt-pct">${sc}/${m.questions.length}</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      label = `<span class="mt-pct">${ans}/${m.questions.length}</span>`;
+    }
+    return `<button class="mt-btn${cls}" onclick="switchToModule(${i})">${m.name} ${label}</button>`;
+  }).join('');
+}
+
+function switchToModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  if(moduleCompleted[idx] || answers[idx].some(a => a !== null)){
+    showModuleResults();
+  } else {
+    startModule(idx);
+  }
+}
+
+function goToNextModule(){
+  if(currentModule + 1 < MODULES.length && MODULES[currentModule+1].questions.length > 0){
+    startModule(currentModule + 1);
+  }
+}
+
+function renderModuleReview(){
+  const list = document.getElementById('reviewList');
+  const mod = MODULES[currentModule];
+  let html = '';
+  mod.questions.forEach((q,idx)=>{
+    const userAns = answers[currentModule][idx];
+    const correctAns = q.a;
+    const isCorrect = userAns===correctAns;
+    const statusText = isCorrect?'DOĞRU':(userAns===null?'BOŞ':'YANLIŞ');
+    const answersHtml = q.o.map((opt,i)=>{
+      const letter = opt.substring(0,1);
+      const text = opt.substring(3);
+      let cls = '';
+      if(i===correctAns) cls = 'correct';
+      else if(i===userAns) cls = 'wrong-pick';
+      else return '';
+      return `<div class="rev-ans ${cls}"><span class="rev-ans-letter">${letter}</span><span>${text}</span></div>`;
+    }).filter(Boolean).join('');
+    const e = q.explain;
+    const vocabHtml = e.vocab.map(v=>`<div class="vocab-row"><span class="vocab-en">${v.en}</span><span class="vocab-tr"><span class="pos">${v.pos}</span>${v.tr}</span></div>`).join('');
+    html += `<div class="review-card ${isCorrect?'':'open'}">
+      <div class="review-head ${isCorrect?'correct':''}" onclick="this.parentElement.classList.toggle('open')">
+        <span class="review-num">${idx+1}</span>
+        <span class="review-tag">${q.k}</span>
+        <span class="review-status">${statusText}</span>
+        <span class="review-toggle">▾</span>
+      </div>
+      <div class="review-body">
+        <div class="rev-passage">${q.p}</div>
+        ${q.data ? `<div class="rev-data">${q.data}</div>` : ''}
+        <div class="rev-stem">${q.q}</div>
+        <div class="rev-answers">${answersHtml}</div>
+        <div class="gri-block">
+          <div class="gri-head">
+            <div class="gri-avatar"><img src="${GRI_MASCOT}" alt="Gri"></div>
+            <div class="gri-label">Gri diyor ki<small>Detaylı Analiz</small></div>
+          </div>
+          <div class="gri-body">
+            <div class="expl-section"><div class="expl-h">Doğru Cevap Mantığı</div><p>${e.why_correct}</p></div>
+            <div class="expl-section"><div class="expl-h">Yanlış Şıklar Neden Yanlış</div><p>${e.why_wrong}</p></div>
+            <div class="expl-section"><div class="expl-h">Kelime Hazinesi</div><div class="vocab-list">${vocabHtml}</div></div>
+            <div class="expl-section"><div class="rule-box"><div class="rule-label">Kuralı Hatırla</div><p>${e.rule}</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+// ============= INIT =============
+loadProgress();
+renderSplash();
+
+// URL param desteği: ?m=M&q=Q ile direkt soruya git (Çalışma Masam linkleri için)
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var m = parseInt(params.get('m'), 10);
+    var q = parseInt(params.get('q'), 10);
+    if (isNaN(m) || isNaN(q) || m < 1 || q < 1) return;
+    var modIdx = m - 1;
+    if (!MODULES[modIdx] || !MODULES[modIdx].questions || q > MODULES[modIdx].questions.length) return;
+    currentModule = modIdx;
+    currentQ = q - 1;
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').classList.add('show');
+    document.getElementById('quiz').classList.add('show');
+    renderQuestion();
+  } catch (e) { /* fall back to splash */ }
+})();
+</script>
+</body>
+</html>

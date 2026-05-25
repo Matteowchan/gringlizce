@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 5 Math — Ratios, Percentages, Units, Rates · Gri English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#b45309;--tdark:#92400e;--tdeep:#451a03;
+  --tlight:#fcd34d;--twash:#fffbeb;--tsoft:#fef3c7;
+  --gold:#ca8a04;--gold-soft:#fef9c3;
+  --bg:#fafaf7;--paper:#ffffff;
+  --ink:#0f1f1e;--ink-soft:#37534f;--muted:#6b7975;
+  --line:#e5e7e5;--line-soft:#eef2f1;
+  --correct:#15803d;--correct-bg:#fffbeb;
+  --wrong:#b91c1c;--wrong-bg:#fef2f2;
+  --r:10px;--r-lg:14px;
+  --shadow-sm:0 1px 2px rgba(180,83,9,.04),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(180,83,9,.06),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(180,83,9,.08),0 4px 8px rgba(0,0,0,.04);
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-serif:'Lora',Georgia,serif;
+  --font-display:'Cormorant Garamond','Lora',serif;
+  --font-mono:'DM Mono','SF Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* SPLASH */
+#splash{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;background:radial-gradient(ellipse at top left,rgba(180,83,9,.08) 0%,transparent 60%),radial-gradient(ellipse at bottom right,rgba(202,138,4,.06) 0%,transparent 55%),linear-gradient(180deg,#fffbeb 0%,#fafaf7 100%)}
+.cover{max-width:680px;width:100%;text-align:center}
+.cover-brand{display:inline-flex;align-items:baseline;gap:.45rem;font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--tdeep);letter-spacing:-.01em;margin-bottom:3rem}
+.cover-brand .it{font-style:italic;font-weight:500;color:var(--teal)}
+.cover-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);padding:.5rem 1rem;background:rgba(180,83,9,.08);border-radius:99px;margin-bottom:1.4rem}
+.cover-title{font-family:var(--font-display);font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.05;font-weight:700;color:var(--tdeep);letter-spacing:-.015em;margin-bottom:.6rem}
+.cover-sub{font-family:var(--font-serif);font-size:clamp(1.05rem,2.2vw,1.2rem);font-style:italic;color:var(--ink-soft);margin-bottom:2rem;line-height:1.5}
+.cover-divider{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.6rem 0}
+.cover-divider::before,.cover-divider::after{content:'';flex:0 1 80px;height:1px;background:var(--line)}
+.cover-dia{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+.module-list{display:flex;flex-direction:column;gap:.8rem;margin:2rem 0;text-align:left}
+.module-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:all .15s}
+.module-card.clickable{cursor:pointer}
+.module-card.clickable:hover{border-color:var(--teal);background:var(--twash);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.module-card.disabled{opacity:.5;cursor:not-allowed}
+.module-card .mc-left{flex:1}
+.module-card .mc-name{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--tdeep);margin-bottom:.1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.module-card .mc-desc{font-family:var(--font-serif);font-size:.85rem;color:var(--ink-soft);font-style:italic}
+.module-card .mc-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-align:right}
+.module-card .mc-q{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--teal)}
+.mc-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.08em;font-weight:600;text-transform:uppercase;padding:.18rem .55rem;border-radius:99px;border:1px solid;display:inline-flex;align-items:center;gap:.3rem}
+.mc-status.done{color:var(--correct);border-color:#fcd34d;background:var(--correct-bg)}
+.mc-status.progress{color:var(--gold);border-color:#fcd34d;background:#fefce8}
+.mc-status.empty{color:var(--muted);border-color:var(--line);background:var(--line-soft)}
+
+/* Module tabs in results */
+.module-tabs{display:flex;gap:.5rem;margin-bottom:1.6rem;flex-wrap:wrap}
+.mt-btn{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.55rem 1rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;font-weight:600;color:var(--ink-soft);cursor:pointer;text-transform:uppercase;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.mt-btn:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.mt-btn.current{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mt-btn.done{border-color:#fcd34d;color:var(--correct);background:var(--correct-bg)}
+.mt-btn.done.current{background:var(--correct);color:#fff;border-color:var(--correct)}
+.mt-btn:disabled{opacity:.4;cursor:not-allowed}
+.mt-pct{font-size:.66rem;opacity:.85}
+.cover-instr{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r);padding:1.1rem 1.4rem;margin-bottom:2rem;text-align:left;font-family:var(--font-serif);font-size:.93rem;line-height:1.65;color:var(--ink-soft)}
+.cover-instr strong{color:var(--tdeep);font-weight:600}
+.btn-start{display:inline-flex;align-items:center;gap:.6rem;background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:1rem 2.4rem;font-family:var(--font-ui);font-size:1rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(180,83,9,.25)}
+.btn-start:hover{background:var(--tdark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(180,83,9,.35)}
+.btn-start svg{width:18px;height:18px}
+
+/* TOPBAR */
+.topbar{background:var(--teal);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.08);display:none}
+.topbar.show{display:block}
+.tb-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;gap:1rem}
+.tb-meta{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;opacity:.85;text-transform:uppercase}
+.tb-qnum{font-family:var(--font-display);font-size:1.1rem;font-weight:600}
+.tb-actions{display:flex;gap:.5rem}
+.tb-btn{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:6px;padding:.35rem .8rem;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;font-weight:500;cursor:pointer;text-transform:uppercase;transition:background .15s}
+.tb-btn:hover{background:rgba(255,255,255,.28)}
+.tb-progress{height:3px;background:rgba(255,255,255,.18)}
+.tb-progress-fill{height:100%;background:#fff;transition:width .3s}
+
+/* QUIZ */
+#quiz{display:none}
+#quiz.show{display:block}
+.quiz-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.dot-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.4rem}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--tlight);border:1.5px solid var(--teal);opacity:.5;cursor:pointer;transition:all .2s}
+.dot.ans{background:var(--teal);opacity:1}
+.dot.cur{background:var(--teal);opacity:1;transform:scale(1.4);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--teal)}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.8rem 1.7rem;box-shadow:var(--shadow-sm)}
+.qtype{display:inline-flex;align-items:center;gap:.5rem;background:var(--twash);color:var(--tdeep);border:1px solid var(--tlight);border-radius:6px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;font-weight:500;padding:.3rem .7rem;text-transform:uppercase;margin-bottom:1.2rem}
+.passage{font-family:var(--font-serif);font-size:1.02rem;line-height:1.85;color:#1c1917;background:var(--twash);border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:1.15rem 1.3rem;margin-bottom:1.4rem}
+.passage u{text-decoration:none;font-weight:700;color:var(--tdeep);background:linear-gradient(transparent 60%,rgba(180,83,9,.18) 60%);padding:0 2px}
+.qstem{font-family:var(--font-ui);font-size:1rem;font-weight:600;color:var(--tdeep);margin-bottom:1.2rem;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.6rem}
+.opt{display:flex;align-items:flex-start;gap:.85rem;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;cursor:pointer;transition:all .15s;font-family:var(--font-serif);font-size:.96rem;line-height:1.55;color:var(--ink);text-align:left;width:100%}
+.opt:hover{border-color:var(--teal);background:var(--twash)}
+.opt.sel{border-color:var(--teal);background:var(--twash);box-shadow:0 0 0 3px rgba(180,83,9,.1)}
+.opt-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-top:1px;transition:all .15s;flex-shrink:0}
+.opt.sel .opt-letter{background:var(--teal);border-color:var(--teal);color:#fff}
+.nav-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.4rem}
+.btn-nav{background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:.6rem 1.2rem;font-family:var(--font-ui);font-size:.88rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.btn-nav:hover:not(:disabled){border-color:var(--teal);color:var(--tdeep)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-submit{background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:.65rem 1.5rem;font-family:var(--font-ui);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(180,83,9,.2)}
+.btn-submit:hover{background:var(--tdark)}
+
+/* INTERMISSION */
+#intermission{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem 1.5rem;background:linear-gradient(135deg,var(--twash) 0%,var(--bg) 100%)}
+#intermission.show{display:flex}
+.inter-card{max-width:560px;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:2.4rem 2.2rem;text-align:center;box-shadow:var(--shadow-lg)}
+.inter-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem}
+.inter-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--tdeep);margin-bottom:.4rem;line-height:1.15}
+.inter-sub{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:2rem;font-style:italic}
+.inter-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:2rem 0;padding:1.4rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.inter-stat .stat-num{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--teal);line-height:1}
+.inter-stat .stat-lbl{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:.3rem}
+.inter-next{font-family:var(--font-serif);font-size:.95rem;color:var(--ink-soft);margin-bottom:1.6rem;line-height:1.55}
+.inter-next strong{color:var(--tdeep);font-weight:600}
+.inter-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+
+/* RESULTS */
+#results{display:none}
+#results.show{display:block}
+.res-header{background:linear-gradient(135deg,var(--teal) 0%,var(--tdark) 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center}
+.res-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.2em;opacity:.75;text-transform:uppercase;margin-bottom:.6rem}
+.res-title{font-family:var(--font-display);font-size:2.2rem;font-weight:700;margin-bottom:.4rem;letter-spacing:-.01em}
+.res-sub{font-size:.92rem;opacity:.85}
+.res-wrap{max-width:760px;margin:0 auto;padding:2.2rem 1.2rem 4rem}
+.score-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem 1.8rem;display:grid;grid-template-columns:auto 1fr;gap:1.6rem;align-items:center;margin-bottom:2.2rem;box-shadow:var(--shadow-md)}
+.score-big{text-align:center;padding-right:1.6rem;border-right:1px solid var(--line)}
+.score-num{font-family:var(--font-display);font-size:3.6rem;font-weight:700;color:var(--teal);line-height:1}
+.score-den{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.score-info .score-pct{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin-bottom:.3rem}
+.score-info .score-pct .lbl{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:400;letter-spacing:.08em;margin-left:.5rem;text-transform:uppercase}
+.score-msg{font-family:var(--font-serif);font-size:.92rem;color:var(--ink-soft);line-height:1.6;font-style:italic}
+.module-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.4rem}
+.mb-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;text-align:center}
+.mb-name{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.mb-score{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--tdeep)}
+.mb-pct{font-family:var(--font-mono);font-size:.72rem;color:var(--teal);margin-top:.15rem}
+.section-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600;padding-bottom:.5rem;margin-bottom:1.2rem;border-bottom:1px solid var(--line)}
+.module-divider{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--tdeep);margin:2rem 0 1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--teal);display:flex;align-items:center;justify-content:space-between}
+.module-divider .md-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* Review */
+.review-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow-sm)}
+.review-head{display:flex;align-items:center;gap:.9rem;padding:.9rem 1.2rem;background:var(--wrong-bg);border-bottom:1px solid #fecaca;cursor:pointer;user-select:none}
+.review-head.correct{background:var(--correct-bg);border-bottom-color:#bbf7d0}
+.review-num{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--wrong);background:#fff;padding:.2rem .55rem;border-radius:5px;border:1px solid #fca5a5}
+.review-head.correct .review-num{color:var(--correct);border-color:#fcd34d}
+.review-tag{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;flex:1}
+.review-status{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase;color:var(--wrong)}
+.review-head.correct .review-status{color:var(--correct)}
+.review-toggle{font-size:1rem;color:var(--muted);transition:transform .2s;margin-left:auto}
+.review-card.open .review-toggle{transform:rotate(180deg)}
+.review-body{padding:1.4rem 1.4rem 1.5rem;display:none}
+.review-card.open .review-body{display:block}
+.rev-passage{font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917;background:var(--bg);border-left:3px solid var(--line);padding:.85rem 1.1rem;margin-bottom:1rem;border-radius:0 6px 6px 0}
+.rev-passage u{text-decoration:none;font-weight:700;color:var(--tdeep)}
+.rev-stem{font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:.8rem}
+.rev-answers{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.4rem}
+.rev-ans{font-family:var(--font-serif);font-size:.88rem;padding:.45rem .8rem;border-radius:6px;display:flex;align-items:flex-start;gap:.6rem}
+.rev-ans.correct{background:var(--correct-bg);color:var(--correct);font-weight:600;border:1px solid #bbf7d0}
+.rev-ans.wrong-pick{background:var(--wrong-bg);color:var(--wrong);text-decoration:line-through;border:1px solid #fecaca}
+.rev-ans-letter{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;border-radius:50%;font-family:var(--font-mono);font-size:.7rem;font-weight:700;border:1.5px solid currentColor;background:#fff}
+
+/* Gri block */
+.gri-block{background:linear-gradient(180deg,#fff 0%,var(--twash) 100%);border:1px solid var(--tlight);border-radius:var(--r);overflow:hidden;margin-top:.8rem}
+.gri-head{display:flex;align-items:center;gap:.85rem;padding:.85rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight)}
+.gri-avatar{width:42px;height:42px;border-radius:50%;background:#fff;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.gri-avatar img{width:100%;height:100%;object-fit:cover}
+.gri-label{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--tdeep)}
+.gri-label small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-top:.05rem}
+.gri-body{padding:1.2rem 1.3rem;font-family:var(--font-serif);font-size:.93rem;line-height:1.75;color:#1c1917}
+.expl-section{margin-bottom:1.2rem}
+.expl-section:last-child{margin-bottom:0}
+.expl-h{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--teal);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.expl-h::before{content:'';display:inline-block;width:14px;height:1.5px;background:var(--teal)}
+.expl-section p{margin-bottom:.5rem}
+.expl-section p:last-child{margin-bottom:0}
+.vocab-list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vocab-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:.65rem .95rem;border-bottom:1px solid var(--line-soft);align-items:baseline}
+.vocab-row:last-child{border-bottom:none}
+.vocab-en{font-family:var(--font-display);font-weight:600;font-size:.98rem;color:var(--tdeep);white-space:nowrap}
+.vocab-tr{font-family:var(--font-serif);font-size:.86rem;color:var(--ink-soft);font-style:italic}
+.vocab-tr .pos{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;color:var(--muted);background:var(--line-soft);padding:.08rem .35rem;border-radius:3px;margin-right:.4rem;text-transform:uppercase;font-style:normal}
+.rule-box{background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.9rem 1.1rem}
+.rule-box .rule-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#854d0e;font-weight:700;margin-bottom:.4rem}
+.rule-box p{font-family:var(--font-serif);font-size:.92rem;line-height:1.7;color:#422006;margin:0}
+mark.hl{background:linear-gradient(transparent 60%,#fef08a 60%);padding:0 2px;font-weight:500;color:inherit}
+mark.hl-key{background:linear-gradient(transparent 60%,rgba(180,83,9,.22) 60%);padding:0 2px;font-weight:500;color:inherit}
+
+/* Data tables (CoE Quantitative) */
+.data-block{margin:0 0 1.4rem;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.data-caption{font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--tdeep);padding:.7rem 1.1rem;background:var(--twash);border-bottom:1px solid var(--tlight);line-height:1.45}
+.data-caption .src{display:block;font-family:var(--font-serif);font-size:.78rem;font-weight:400;color:var(--ink-soft);font-style:italic;margin-top:.2rem}
+.data-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:.86rem}
+.data-table th{background:#fff;color:var(--tdeep);padding:.55rem .85rem;text-align:left;font-weight:600;border-bottom:1.5px solid var(--teal);font-size:.82rem}
+.data-table td{padding:.5rem .85rem;border-bottom:1px solid var(--line-soft);color:var(--ink)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.data-table .grp{background:var(--twash);font-weight:600;color:var(--tdeep)}
+.data-table tr:nth-child(even) td{background:#fafafa}
+.data-table tr:nth-child(even) td.grp{background:var(--tsoft)}
+.rev-data{margin:.7rem 0 1rem}
+
+/* Cross-Text Connections - dual passage */
+.dual-text{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0 1.2rem}
+.dual-text .text-block{padding:.9rem 1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.dual-text .text-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.45rem;text-transform:uppercase}
+.dual-text .text-body{font-family:var(--font-serif);font-size:.92rem;line-height:1.55;color:var(--ink)}
+@media (max-width:680px){.dual-text{grid-template-columns:1fr}}
+
+/* Rhetorical Synthesis - student notes */
+.notes-block{margin:.5rem 0 1rem;padding:1rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.notes-label{font-family:var(--font-ui);font-size:.72rem;color:var(--tdeep);letter-spacing:.08em;font-weight:600;margin-bottom:.55rem;text-transform:uppercase}
+.notes-list{margin:0;padding-left:1.2rem;font-family:var(--font-serif);font-size:.92rem;line-height:1.6;color:var(--ink)}
+.notes-list li{margin-bottom:.3rem}
+.goal-line{margin:.5rem 0 .2rem;font-family:var(--font-serif);font-size:.95rem;line-height:1.55;color:var(--ink);font-style:italic}
+
+/* Footer */
+.site-foot{background:var(--tdeep);color:#fff;padding:2.4rem 1.5rem 2rem;text-align:center}
+.foot-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:.4rem}
+.foot-brand .it{font-style:italic;font-weight:500;color:var(--tlight)}
+.foot-text{font-size:.84rem;opacity:.75;font-family:var(--font-serif);margin-bottom:1rem}
+.foot-tagline{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tlight);opacity:.7}
+.results-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.btn-action{padding:.7rem 1.4rem;border-radius:var(--r);font-family:var(--font-ui);font-size:.85rem;font-weight:700;cursor:pointer;border:1.5px solid var(--teal);transition:all .15s}
+.btn-action.primary{background:var(--teal);color:#fff}
+.btn-action.primary:hover{background:var(--tdark)}
+.btn-action.outline{background:#fff;color:var(--teal)}
+.btn-action.outline:hover{background:var(--twash)}
+
+@media(max-width:640px){
+  .module-card{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .module-card .mc-meta{text-align:left}
+  .qcard{padding:1.3rem 1.1rem}
+  .passage{font-size:.95rem;padding:1rem 1.1rem}
+  .score-card{grid-template-columns:1fr;text-align:center}
+  .score-big{border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:1.2rem}
+  .module-breakdown{grid-template-columns:1fr}
+  .inter-stats{grid-template-columns:1fr;gap:.8rem}
+  .vocab-row{grid-template-columns:1fr;gap:.2rem}
+}
+@media print{
+  .topbar,.btn-start,.btn-nav,.btn-submit,.results-actions,.site-foot,.inter-actions{display:none!important}
+  body{background:#fff}
+  #splash,#intermission{display:none}
+  #results{display:block!important}
+  .review-card{break-inside:avoid;page-break-inside:avoid}
+  .review-card .review-body{display:block!important}
+}
+
+/* Math styles (KaTeX olmadan, Unicode + plain text) */
+.math-block{margin:.5rem 0 1rem;padding:.9rem 1.1rem;background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);text-align:center;font-family:'Cormorant Garamond','Times New Roman',serif;font-size:1.2rem;font-style:italic}
+.math-block .var{font-style:italic}
+.usd{font-style:normal;white-space:nowrap}
+
+</style>
+<!-- Brand integration: Supabase + camp features (Math track) -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/sat-camp-features.css">
+<!-- KAMP PAYWALL deps -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/site-config.js"></script>
+<script src="../assets/auth.js"></script>
+<!-- /KAMP PAYWALL deps -->
+<!-- KAMP PAYWALL: tek seferlik kontrol -->
+<script>
+(function() {
+  var KAMP_SLUG = 'sat-rw-8-gunluk-kamp';
+  var SPLASH = '/urun/sat-rw-8-gunluk-kamp.html';
+
+  document.documentElement.style.visibility = 'hidden';
+  function allow() { document.documentElement.style.visibility = 'visible'; }
+  function deny() { window.location.replace(SPLASH); }
+
+  function check() {
+    if (!window.GriAuth) {
+      setTimeout(check, 80);
+      return;
+    }
+    var auth = window.GriAuth.verify();
+    if (!auth) {
+      window.GriAuth.refreshCache().then(function () {
+        var a2 = window.GriAuth.verify();
+        if (a2 && window.GriAuth.hasAccess(a2.record, KAMP_SLUG)) {
+          allow();
+        } else {
+          deny();
+        }
+      }).catch(deny);
+      return;
+    }
+    if (window.GriAuth.hasAccess(auth.record, KAMP_SLUG)) {
+      allow();
+    } else {
+      deny();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
+})();
+</script>
+<!-- /KAMP PAYWALL -->
+
+<script>window.SAT_CAMP_DAY = 5; window.SAT_CAMP_TRACK = 'math';</script>
+<script src="../assets/sat-camp-features.js" defer></script>
+</head>
+<body>
+<div class="sc-brand-bar">
+  <a href="../index.html" class="sc-brand-logo">Gri <span class="it">English</span></a>
+  <div class="sc-brand-meta">
+    <span class="sc-day-tag">DAY 5 · MATH</span>
+    <a href="../urun/sat-rw-8-gunluk-kamp.html">Kamp Anasayfa</a>
+    <a href="../calisma-paketleri.html">Tüm Paketler</a>
+    <a href="../panelim.html">Çalışma Masam</a>
+  </div>
+</div>
+
+
+<!-- SPLASH -->
+<section id="splash">
+  <div class="cover">
+    <div class="cover-brand">Gri <span class="it">English</span></div>
+    <div class="cover-eyebrow">Digital SAT Math · Day 5</div>
+    <h1 class="cover-title">Ratios, Percentages, Units, Rates</h1>
+    <p class="cover-sub">PSDA · Oran, Yüzde, Birim, Hız</p>
+
+    <div class="cover-divider"><span class="cover-dia"></span><span class="cover-dia"></span><span class="cover-dia"></span></div>
+
+    <div class="module-list" id="moduleList"></div>
+
+    <div class="cover-instr">
+      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa’ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
+    </div>
+
+    <button class="btn-start" onclick="startModule(0)">
+      Module 1 ile Başla
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button id="resetBtn" class="btn-reset-progress" onclick="resetAllProgress()" style="display:none;margin-top:14px;background:transparent;border:1px solid rgba(150,150,150,.4);color:#888;padding:8px 18px;font-size:13px;border-radius:6px;cursor:pointer;font-family:inherit;">
+      Tüm İlerlemeyi Sıfırla
+    </button>
+
+  </div>
+</section>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-inner">
+    <span class="tb-meta" id="tbMeta">Module 1</span>
+    <span class="tb-qnum" id="tbQnum">1 / 27</span>
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="goHome()">Ana Sayfa</button>
+      <button class="tb-btn" onclick="quitToSplash()">Çıkış</button>
+    </div>
+  </div>
+  <div class="tb-progress"><div class="tb-progress-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="quiz-wrap">
+    <div class="dot-row" id="dotRow"></div>
+    <div id="qcard" class="qcard"></div>
+    <div class="nav-row">
+      <button class="btn-nav" id="prevBtn" onclick="prevQ()">‹ Önceki</button>
+      <button class="btn-nav" id="nextBtn" onclick="nextQ()">Sonraki ›</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitModule()" style="display:none">Modülü Bitir</button>
+    </div>
+  </div>
+</section>
+
+<!-- INTERMISSION -->
+<!-- RESULTS (per-module) -->
+<section id="results">
+  <div class="res-header">
+    <div class="res-eyebrow" id="resEyebrow">Module 1 Tamamlandı</div>
+    <h1 class="res-title" id="resTitle">Modül Analizi</h1>
+    <p class="res-sub" id="resSub">Her yanlışı incele, kuralları defterine geç</p>
+  </div>
+  <div class="res-wrap">
+    <div class="module-tabs" id="moduleTabs"></div>
+
+    <div class="score-card">
+      <div class="score-big">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-den" id="scoreDen">/ 27 doğru</div>
+      </div>
+      <div class="score-info">
+        <div class="score-pct"><span id="scorePct">0%</span><span class="lbl">Modül Doğruluğu</span></div>
+        <div class="score-msg" id="scoreMsg">Aşağıdaki analizleri dikkatlice oku. Her yanlışını yedi adım protokolüyle hata günlüğüne işle.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Soru-Soru Analiz</div>
+    <div id="reviewList"></div>
+
+    <div class="results-actions">
+      <button class="btn-action outline" onclick="goHome()">‹ Ana Sayfa</button>
+      <button class="btn-action outline" onclick="window.print()">PDF Olarak Yazdır</button>
+      <button class="btn-action primary" id="resPrimaryBtn" onclick="goToNextModule()">Sıradaki Modüle Geç ›</button>
+    </div>
+  </div>
+  <div class="site-foot">
+    <div class="foot-brand">Gri <span class="it">English</span></div>
+    <div class="foot-text">Sınav İngilizcesi için titizlikle hazırlanmış materyaller</div>
+    <div class="foot-tagline">Focus · Practice · Succeed</div>
+  </div>
+</section>
+
+<script>
+const GRI_MASCOT = 'data:image/png;base64,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';
+
+const MODULES = [
+{
+  name: 'Module 1',
+  subtitle: 'PSDA: Ratios, Percentages, Units, Rates. Kolay-orta zorluk SAT formatlı sorular.',
+  questions: [
+    // Q1 — Basic ratio with total
+    {
+      k:'PSDA',
+      p:`The ratio of boys to girls in a class is 3:5. There are 40 students in total.`,
+      q:'How many boys are in the class?',
+      o:['A) 12','B) 15','C) 18','D) 25'],
+      a:1,
+      explain:{
+        why_correct:'Toplam parça: <em>3 + 5 = 8</em>. Boys oranı: <em>3/8</em>. Boys sayısı: <em>(3/8) × 40 = 15</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> hesap hatası. <strong>C</strong> rastgele. <strong>D</strong> girls (5/8 × 40 = 25).',
+        vocab:[
+          {en:'ratio',pos:'n.',tr:'oran'},
+          {en:'parts',pos:'n.',tr:'parçalar'},
+          {en:'total parts',pos:'phr.',tr:'toplam parça'},
+          {en:'proportion of total',pos:'phr.',tr:'toplamın oranı'},
+          {en:'distribute by ratio',pos:'phr.',tr:'orana göre dağıt'},
+        ],
+        rule:'Ratio <em>a:b</em>, toplam <em>T</em>: her parça sayısı = <em>(parça oranı / toplam parça) × T</em>. Boys = <em>(a/(a+b)) × T</em>.'
+      }
+    },
+    // Q2 — Proportion solve
+    {
+      k:'PSDA',
+      p:`Consider the proportion:
+<div class="math-block">4⁄x = 12⁄15</div>`,
+      q:'What is the value of x?',
+      o:['A) 3','B) 5','C) 8','D) 12'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Çapraz çarpım</mark>: <em>4 × 15 = 12 × x</em> → <em>60 = 12x</em> → <em>x = 5</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'proportion',pos:'n.',tr:'orantı'},
+          {en:'cross multiply',pos:'phr.',tr:'çapraz çarp'},
+          {en:'solve for x',pos:'phr.',tr:'x için çöz'},
+          {en:'equivalent fractions',pos:'phr.',tr:'eşdeğer kesirler'},
+          {en:'fraction equation',pos:'n.',tr:'kesir denklemi'},
+        ],
+        rule:'Proportion <em>a/b = c/d</em>: çapraz çarpım <em>ad = bc</em>. Bilinmeyen için çöz.'
+      }
+    },
+    // Q3 — Basic percent of
+    {
+      k:'PSDA',
+      p:`What is 20% of 150?`,
+      q:'',
+      o:['A) 15','B) 30','C) 75','D) 130'],
+      a:1,
+      explain:{
+        why_correct:'<em>20% = 0.20</em>. <em>0.20 × 150 = 30</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 10%. <strong>C</strong> 50%. <strong>D</strong> 130 = 150 − 20.',
+        vocab:[
+          {en:'percent of',pos:'phr.',tr:'-in yüzdesi'},
+          {en:'decimal form',pos:'n.',tr:'ondalık form'},
+          {en:'multiply',pos:'v.',tr:'çarp'},
+          {en:'convert percent',pos:'phr.',tr:'yüzdeyi çevir'},
+          {en:'base value',pos:'n.',tr:'temel değer'},
+        ],
+        rule:'X% of Y = <em>(X/100) × Y</em>. Yüzdeyi ondalığa çevirip çarp.'
+      }
+    },
+    // Q4 — Percent increase
+    {
+      k:'PSDA',
+      p:`A price increased from <span class="usd">$40</span> to <span class="usd">$50</span>.`,
+      q:'What is the percent increase?',
+      o:['A) 10%','B) 20%','C) 25%','D) 50%'],
+      a:2,
+      explain:{
+        why_correct:'Artış: <em>50 − 40 = 10</em>. Oran: <em>10/40 = 0.25 = 25%</em>. Cevap: C.\n\n<strong>Formül:</strong> <em>(yeni − eski) / eski × 100%</em>.',
+        why_wrong:'<strong>A</strong> artış miktarı (dolar). <strong>B</strong> yeni değere göre (10/50). <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'percent increase',pos:'n.',tr:'yüzdesel artış'},
+          {en:'original value',pos:'n.',tr:'orijinal değer'},
+          {en:'change',pos:'n.',tr:'değişim'},
+          {en:'divide by original',pos:'phr.',tr:'orijinale böl'},
+          {en:'rate of change',pos:'n.',tr:'değişim oranı'},
+        ],
+        rule:'<strong>Percent change:</strong> <em>(new − old) / old × 100%</em>. Payda <strong>orijinal değer</strong>, yeni değer değil.'
+      }
+    },
+    // Q5 — Unit conversion length
+    {
+      k:'PSDA',
+      p:`How many meters are in 3 kilometers?`,
+      q:'',
+      o:['A) 300','B) 3,000','C) 30,000','D) 300,000'],
+      a:1,
+      explain:{
+        why_correct:'<em>1 km = 1,000 m</em>. <em>3 km = 3,000 m</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> kilo ’yüz’ sanma. <strong>C, D</strong> aşırı yüksek.',
+        vocab:[
+          {en:'unit conversion',pos:'n.',tr:'birim dönüşümü'},
+          {en:'kilometer',pos:'n.',tr:'kilometre'},
+          {en:'meter',pos:'n.',tr:'metre'},
+          {en:'metric system',pos:'n.',tr:'metrik sistem'},
+          {en:'prefix kilo',pos:'phr.',tr:'kilo öneki (1000)'},
+        ],
+        rule:'<strong>Metrik öneki:</strong> kilo = 1,000, mega = 1,000,000, milli = 1/1,000, micro = 1/1,000,000.'
+      }
+    },
+    // Q6 — Unit conversion time
+    {
+      k:'PSDA',
+      p:`How many minutes are in 2.5 hours?`,
+      q:'',
+      o:['A) 25','B) 60','C) 120','D) 150'],
+      a:3,
+      explain:{
+        why_correct:'<em>1 hour = 60 min</em>. <em>2.5 × 60 = 150</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> rastgele. <strong>B</strong> 1 saat. <strong>C</strong> 2 saat.',
+        vocab:[
+          {en:'hour',pos:'n.',tr:'saat'},
+          {en:'minute',pos:'n.',tr:'dakika'},
+          {en:'time conversion',pos:'n.',tr:'zaman dönüşümü'},
+          {en:'fractional time',pos:'n.',tr:'kesirli zaman'},
+          {en:'multiply by 60',pos:'phr.',tr:'60 ile çarp'},
+        ],
+        rule:'Zaman birimleri: <em>1 saat = 60 dk</em>, <em>1 dk = 60 sn</em>, <em>1 gün = 24 saat</em>. Kesirli saati ondalığa çevirip çarp.'
+      }
+    },
+    // Q7 — Unit price (per pound)
+    {
+      k:'PSDA',
+      p:`5 pounds of apples cost <span class="usd">$12</span>.`,
+      q:'What is the cost per pound, in dollars?',
+      o:['A) <span class="usd">$0.60</span>','B) <span class="usd">$2.00</span>','C) <span class="usd">$2.40</span>','D) <span class="usd">$7.00</span>'],
+      a:2,
+      explain:{
+        why_correct:'<em>12/5 = 2.40</em> dolar/pound. Cevap: C.',
+        why_wrong:'<strong>A</strong> 1/(12/5)/4 gibi rastgele. <strong>B</strong> 12/6. <strong>D</strong> 12 − 5.',
+        vocab:[
+          {en:'unit price',pos:'n.',tr:'birim fiyat'},
+          {en:'per pound',pos:'phr.',tr:'pound başına'},
+          {en:'cost per unit',pos:'phr.',tr:'birim başına maliyet'},
+          {en:'divide total by quantity',pos:'phr.',tr:'toplam/miktar'},
+          {en:'rate',pos:'n.',tr:'oran, hız'},
+        ],
+        rule:'<strong>Unit rate:</strong> <em>total / quantity</em>. Birim "per" anahtar kelimesini içerir ($/lb, mi/h, etc.).'
+      }
+    },
+    // Q8 — Miles per gallon
+    {
+      k:'PSDA',
+      p:`A car uses 4 gallons of gas to travel 100 miles.`,
+      q:'What is the car’s fuel efficiency, in miles per gallon?',
+      o:['A) 15','B) 20','C) 25','D) 40'],
+      a:2,
+      explain:{
+        why_correct:'<em>mpg = miles / gallons = 100/4 = 25</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'fuel efficiency',pos:'n.',tr:'yakıt verimliliği'},
+          {en:'miles per gallon',pos:'n.',tr:'galon başına mil (mpg)'},
+          {en:'gallon',pos:'n.',tr:'galon (yaklaşık 3.785 L)'},
+          {en:'rate of consumption',pos:'phr.',tr:'tüketim hızı'},
+          {en:'travel distance',pos:'n.',tr:'gidilen mesafe'},
+        ],
+        rule:'MPG (miles/gallon) = <em>distance / gas used</em>. Birim oranlarda <strong>pay/payda</strong> sırasına dikkat.'
+      }
+    },
+    // Q9 — Density
+    {
+      k:'PSDA',
+      p:`A substance has a density of 8 grams per cubic centimeter. A sample has volume 15 cubic centimeters.`,
+      q:'What is the mass of the sample, in grams?',
+      o:['A) 60','B) 90','C) 120','D) 150'],
+      a:2,
+      explain:{
+        why_correct:'<em>mass = density × volume = 8 × 15 = 120</em> g. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'density',pos:'n.',tr:'yoğunluk'},
+          {en:'volume',pos:'n.',tr:'hacim'},
+          {en:'mass',pos:'n.',tr:'kütle'},
+          {en:'cubic centimeter',pos:'n.',tr:'santimetreküp (cm³)'},
+          {en:'sample',pos:'n.',tr:'örnek'},
+        ],
+        rule:'<strong>Density formula:</strong> <em>D = m/V</em>, dolayısıyla <em>m = D × V</em>. Birim takip et: <em>g/cm³ × cm³ = g</em>.'
+      }
+    },
+    // Q10 — Scale factor
+    {
+      k:'PSDA',
+      p:`A scale model uses a scale of 1:50. The real object has a height of 100 cm.`,
+      q:'What is the height of the model, in cm?',
+      o:['A) 2','B) 50','C) 500','D) 5,000'],
+      a:0,
+      explain:{
+        why_correct:'Scale 1:50 → model 1 birim = real 50 birim. Model boyu: <em>100/50 = 2</em> cm. Cevap: A.',
+        why_wrong:'<strong>B</strong> scale değeri. <strong>C</strong> ölçek ters. <strong>D</strong> çarpma yönü ters.',
+        vocab:[
+          {en:'scale model',pos:'n.',tr:'ölçekli model'},
+          {en:'scale factor',pos:'n.',tr:'ölçek faktörü'},
+          {en:'real vs model',pos:'phr.',tr:'gerçek vs model'},
+          {en:'shrink',pos:'v.',tr:'küçült'},
+          {en:'enlarge',pos:'v.',tr:'büyült'},
+        ],
+        rule:'<strong>Scale 1:n:</strong> model 1 birim = real n birim. Model boyut = <em>real / n</em>. (Tersi: gerçek boyut = model × n.)'
+      }
+    },
+    // Q11 — Probability simple
+    {
+      k:'PSDA',
+      p:`A bag contains 4 red marbles and 6 blue marbles. One marble is randomly selected.`,
+      q:'What is the probability that the marble is red?',
+      o:['A) 2⁄5','B) 3⁄5','C) 4⁄6','D) 2⁄3'],
+      a:0,
+      explain:{
+        why_correct:'<em>P(red) = uygun/toplam = 4/(4+6) = 4/10 = 2/5</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> mavi olasılığı. <strong>C, D</strong> red/blue oranı (olasılık değil).',
+        vocab:[
+          {en:'probability',pos:'n.',tr:'olasılık'},
+          {en:'favorable outcomes',pos:'phr.',tr:'uygun sonuçlar'},
+          {en:'total outcomes',pos:'phr.',tr:'toplam sonuçlar'},
+          {en:'random selection',pos:'n.',tr:'rastgele seçim'},
+          {en:'marble',pos:'n.',tr:'misket'},
+        ],
+        rule:'<em>P(event) = favorable / total</em>. Olasılık daima 0 ile 1 arasında.'
+      }
+    },
+    // Q12 — Ratio with one quantity known
+    {
+      k:'PSDA',
+      p:`The ratio of boys to girls in a school is 2:3. There are 30 girls.`,
+      q:'How many boys are there?',
+      o:['A) 12','B) 15','C) 20','D) 45'],
+      a:2,
+      explain:{
+        why_correct:'Boys/Girls = 2/3. <em>Boys/30 = 2/3</em> → <em>Boys = (2/3) × 30 = 20</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya orantı yönü ters.',
+        vocab:[
+          {en:'parts of ratio',pos:'phr.',tr:'oran parçaları'},
+          {en:'find unknown part',pos:'phr.',tr:'bilinmeyen parçayı bul'},
+          {en:'set up proportion',pos:'phr.',tr:'orantı kur'},
+          {en:'cross multiply',pos:'phr.',tr:'çapraz çarp'},
+          {en:'directly proportional',pos:'phr.',tr:'doğru orantılı'},
+        ],
+        rule:'Verili oran <em>a:b</em>, bir miktar bilinen: orantı kur <em>(istenen / bilinen = a / b)</em>. Çapraz çarpım ile çöz.'
+      }
+    },
+    // Q13 — Percent decrease
+    {
+      k:'PSDA',
+      p:`A price decreased from <span class="usd">$80</span> to <span class="usd">$60</span>.`,
+      q:'What is the percent decrease?',
+      o:['A) 20%','B) 25%','C) 33%','D) 75%'],
+      a:1,
+      explain:{
+        why_correct:'Azalış: <em>80 − 60 = 20</em>. Oran: <em>20/80 = 0.25 = 25%</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> azalış miktarı. <strong>C</strong> yeni değere göre (20/60). <strong>D</strong> 60/80.',
+        vocab:[
+          {en:'percent decrease',pos:'n.',tr:'yüzdesel azalış'},
+          {en:'original value',pos:'n.',tr:'orijinal değer'},
+          {en:'reduction',pos:'n.',tr:'azaltma'},
+          {en:'divide by original',pos:'phr.',tr:'orijinale böl'},
+          {en:'consistent denominator',pos:'phr.',tr:'tutarlı payda'},
+        ],
+        rule:'<strong>Percent change:</strong> her zaman <em>orijinal değere</em> böl. Increase ve decrease aynı formül.'
+      }
+    },
+    // Q14 — Percent to decimal
+    {
+      k:'PSDA',
+      p:`What is 35% expressed as a decimal?`,
+      q:'',
+      o:['A) 0.035','B) 0.35','C) 3.5','D) 35'],
+      a:1,
+      explain:{
+        why_correct:'<em>35% = 35/100 = 0.35</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 3.5%. <strong>C</strong> ondalık noktası yanlış. <strong>D</strong> tamsayı.',
+        vocab:[
+          {en:'decimal form',pos:'n.',tr:'ondalık form'},
+          {en:'divide by 100',pos:'phr.',tr:'100’e böl'},
+          {en:'shift decimal',pos:'phr.',tr:'ondalığı kaydır'},
+          {en:'convert percent',pos:'phr.',tr:'yüzdeyi çevir'},
+          {en:'place value',pos:'n.',tr:'basamak değeri'},
+        ],
+        rule:'Percent → decimal: <strong>100’e böl</strong> (ondalığı iki basamak sola kaydır). 35% = 0.35.'
+      }
+    },
+    // Q15 — Find original price (reverse percent)
+    {
+      k:'PSDA',
+      p:`After a 20% discount, the sale price of an item is <span class="usd">$40</span>.`,
+      q:'What was the original price, in dollars?',
+      o:['A) <span class="usd">$32</span>','B) <span class="usd">$48</span>','C) <span class="usd">$50</span>','D) <span class="usd">$60</span>'],
+      a:2,
+      explain:{
+        why_correct:'%20 indirim sonrası %80 kalır. <em>0.80 × P = 40</em> → <em>P = 50</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> 40 + 20% (yanlış yön). <strong>B</strong> 40 × 1.20 (asimetri). <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'reverse percent',pos:'n.',tr:'ters yüzde'},
+          {en:'original price',pos:'n.',tr:'orijinal fiyat'},
+          {en:'sale price',pos:'n.',tr:'indirimli fiyat'},
+          {en:'after discount',pos:'phr.',tr:'indirim sonrası'},
+          {en:'asymmetric percent',pos:'phr.',tr:'asimetrik yüzde'},
+        ],
+        rule:'Ters yüzde: <em>(1 − r) × original = sale</em>. Orijinal için <strong>böl, çarpma</strong>: <em>original = sale / (1 − r)</em>.'
+      }
+    },
+    // Q16 — Direct proportion
+    {
+      k:'PSDA',
+      p:`y is directly proportional to x. When x = 4, y = 12.`,
+      q:'What is y when x = 7?',
+      o:['A) 14','B) 17','C) 21','D) 24'],
+      a:2,
+      explain:{
+        why_correct:'<em>y = kx</em>. <em>12 = 4k</em> → <em>k = 3</em>. <em>y = 3(7) = 21</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'directly proportional',pos:'phr.',tr:'doğru orantılı'},
+          {en:'constant of proportionality',pos:'phr.',tr:'orantı sabiti'},
+          {en:'k',pos:'n.',tr:'sabit (k)'},
+          {en:'linear relationship',pos:'phr.',tr:'lineer ilişki'},
+          {en:'find k first',pos:'phr.',tr:'önce k’yı bul'},
+        ],
+        rule:'<strong>Direct proportion:</strong> <em>y = kx</em>. Verili çift ile k bul, sonra yeni x için y hesapla.'
+      }
+    },
+    // Q17 — Inverse proportion
+    {
+      k:'PSDA',
+      p:`y is inversely proportional to x. When x = 4, y = 6.`,
+      q:'What is y when x = 3?',
+      o:['A) 4','B) 6','C) 8','D) 10'],
+      a:2,
+      explain:{
+        why_correct:'<em>y = k/x</em>. <em>6 = k/4</em> → <em>k = 24</em>. <em>y = 24/3 = 8</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> direct vs inverse karıştırma veya hesap hatası.',
+        vocab:[
+          {en:'inversely proportional',pos:'phr.',tr:'ters orantılı'},
+          {en:'product is constant',pos:'phr.',tr:'çarpım sabit'},
+          {en:'reciprocal relationship',pos:'phr.',tr:'ters ilişki'},
+          {en:'x times y',pos:'phr.',tr:'x çarpı y'},
+          {en:'hyperbolic',pos:'adj.',tr:'hiperbolik'},
+        ],
+        rule:'<strong>Inverse proportion:</strong> <em>y = k/x</em>, veya <em>xy = k</em>. x büyürken y küçülür. <em>x₁ · y₁ = x₂ · y₂</em>.'
+      }
+    },
+    // Q18 — Speed distance time
+    {
+      k:'PSDA',
+      p:`A car travels at a constant speed of 60 km/h. The car travels a distance of 180 km.`,
+      q:'How many hours does the trip take?',
+      o:['A) 2','B) 3','C) 4','D) 5'],
+      a:1,
+      explain:{
+        why_correct:'<em>time = distance / speed = 180/60 = 3</em> saat. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'constant speed',pos:'n.',tr:'sabit hız'},
+          {en:'distance',pos:'n.',tr:'mesafe'},
+          {en:'time',pos:'n.',tr:'zaman'},
+          {en:'rate formula',pos:'n.',tr:'hız formülü'},
+          {en:'rearrange formula',pos:'phr.',tr:'formülü yeniden düzenle'},
+        ],
+        rule:'<strong>Speed-Distance-Time:</strong> <em>d = vt</em>. <em>t = d/v</em>, <em>v = d/t</em>. Birimler tutarlı olmalı.'
+      }
+    },
+    // Q19 — MPG calculation
+    {
+      k:'PSDA',
+      p:`A car traveled 240 miles on 8 gallons of gas.`,
+      q:'What is the car’s fuel efficiency, in miles per gallon?',
+      o:['A) 15','B) 24','C) 30','D) 60'],
+      a:2,
+      explain:{
+        why_correct:'<em>240/8 = 30</em> mpg. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'fuel efficiency',pos:'n.',tr:'yakıt verimliliği'},
+          {en:'miles traveled',pos:'phr.',tr:'gidilen mil'},
+          {en:'gas consumed',pos:'phr.',tr:'tüketilen yakıt'},
+          {en:'rate calculation',pos:'n.',tr:'oran hesabı'},
+          {en:'simple division',pos:'phr.',tr:'basit bölme'},
+        ],
+        rule:'MPG: <em>miles / gallons</em>. "Per" → bölme. Dimensions: <em>miles ÷ gallons = miles/gallon</em>.'
+      }
+    },
+    // Q20 — Currency conversion
+    {
+      k:'PSDA',
+      p:`1 US dollar is equivalent to 30 Turkish lira at a certain exchange rate.`,
+      q:'How many lira are equivalent to <span class="usd">$50</span>?',
+      o:['A) 500','B) 1,000','C) 1,500','D) 3,000'],
+      a:2,
+      explain:{
+        why_correct:'<em>50 × 30 = 1,500</em> lira. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yön ters.',
+        vocab:[
+          {en:'currency conversion',pos:'n.',tr:'döviz çevirimi'},
+          {en:'exchange rate',pos:'n.',tr:'döviz kuru'},
+          {en:'equivalent',pos:'adj.',tr:'eşdeğer'},
+          {en:'multiply by rate',pos:'phr.',tr:'kurla çarp'},
+          {en:'lira',pos:'n.',tr:'lira (Türk para birimi)'},
+        ],
+        rule:'Döviz: <em>amount × rate</em>. Yön kritik: <em>1 USD = 30 TL</em>’den USD’yi TL’ye çevirmek için <strong>çarp</strong>; tersine <strong>böl</strong>.'
+      }
+    },
+    // Q21 — Discount then tax
+    {
+      k:'PSDA',
+      p:`An item costs <span class="usd">$100</span>. A 20% discount is applied first, then an 8% sales tax is added to the discounted price.`,
+      q:'What is the final price, in dollars?',
+      o:['A) <span class="usd">$88.00</span>','B) <span class="usd">$86.40</span>','C) <span class="usd">$80.00</span>','D) <span class="usd">$108.00</span>'],
+      a:1,
+      explain:{
+        why_correct:'İndirim sonrası: <em>100 × 0.80 = 80</em>. Vergi sonrası: <em>80 × 1.08 = 86.40</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> %12 net (yanlış yöntem). <strong>C</strong> sadece indirim. <strong>D</strong> sadece vergi.',
+        vocab:[
+          {en:'discount',pos:'n.',tr:'indirim'},
+          {en:'sales tax',pos:'n.',tr:'satış vergisi'},
+          {en:'sequential operations',pos:'phr.',tr:'ardışık işlemler'},
+          {en:'final price',pos:'n.',tr:'son fiyat'},
+          {en:'compound percent',pos:'n.',tr:'bileşik yüzde'},
+        ],
+        rule:'<strong>Ardışık yüzde:</strong> Her aşama <strong>önceki sonuca</strong> uygulanır. <em>%discount + %tax</em> birbirini iptal etmez. Sırayla çarp.'
+      }
+    },
+    // Q22 — Population growth
+    {
+      k:'PSDA',
+      p:`A town’s population grew by 15%. The original population was 200.`,
+      q:'What is the new population?',
+      o:['A) 215','B) 230','C) 245','D) 260'],
+      a:1,
+      explain:{
+        why_correct:'<em>200 × 1.15 = 230</em>. Cevap: B.\n\nAlternatif: artış <em>0.15 × 200 = 30</em>, yeni <em>200 + 30 = 230</em>.',
+        why_wrong:'<strong>A</strong> artış miktarı. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'population growth',pos:'n.',tr:'nüfus artışı'},
+          {en:'new value',pos:'n.',tr:'yeni değer'},
+          {en:'growth multiplier',pos:'n.',tr:'büyüme çarpanı'},
+          {en:'percentage increase',pos:'n.',tr:'yüzdesel artış'},
+          {en:'(1 + r) factor',pos:'phr.',tr:'(1 + r) çarpanı'},
+        ],
+        rule:'Percent artış sonrası yeni değer: <em>original × (1 + r)</em>. Decrease: <em>original × (1 − r)</em>.'
+      }
+    },
+    // Q23 — Markup
+    {
+      k:'PSDA',
+      p:`A store buys an item at wholesale for <span class="usd">$40</span> and marks it up by 25% to determine the selling price.`,
+      q:'What is the selling price, in dollars?',
+      o:['A) <span class="usd">$42</span>','B) <span class="usd">$45</span>','C) <span class="usd">$50</span>','D) <span class="usd">$65</span>'],
+      a:2,
+      explain:{
+        why_correct:'<em>40 × 1.25 = 50</em>. Cevap: C.\n\nAlternatif: markup <em>0.25 × 40 = 10</em>, total <em>40 + 10 = 50</em>.',
+        why_wrong:'<strong>A, B</strong> hesap hataları. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'markup',pos:'n.',tr:'kâr marjı'},
+          {en:'wholesale price',pos:'n.',tr:'toptan fiyat'},
+          {en:'selling price',pos:'n.',tr:'satış fiyatı'},
+          {en:'retail',pos:'n.',tr:'perakende'},
+          {en:'profit margin',pos:'n.',tr:'kâr marjı'},
+        ],
+        rule:'Markup percent: <em>selling = wholesale × (1 + markup rate)</em>. Aynı formül growth ile.'
+      }
+    },
+    // Q24 — Population decline
+    {
+      k:'PSDA',
+      p:`A town’s population decreased by 8% from an initial population of 50,000.`,
+      q:'What is the new population?',
+      o:['A) 42,000','B) 46,000','C) 48,000','D) 54,000'],
+      a:1,
+      explain:{
+        why_correct:'<em>50,000 × 0.92 = 46,000</em>. Cevap: B.\n\nAlternatif: azalma <em>0.08 × 50,000 = 4,000</em>, yeni <em>50,000 − 4,000 = 46,000</em>.',
+        why_wrong:'<strong>A, C</strong> hesap hataları. <strong>D</strong> artış formülü (yanlış yön).',
+        vocab:[
+          {en:'population decline',pos:'n.',tr:'nüfus azalması'},
+          {en:'decrease multiplier',pos:'n.',tr:'azalış çarpanı'},
+          {en:'(1 − r) factor',pos:'phr.',tr:'(1 − r) çarpanı'},
+          {en:'final value',pos:'n.',tr:'son değer'},
+          {en:'subtract or multiply',pos:'phr.',tr:'çıkar veya çarp'},
+        ],
+        rule:'Percent decrease yeni değer: <em>original × (1 − r)</em>. Azalmada <strong>çarpan < 1</strong>.'
+      }
+    },
+    // Q25 — Map scale
+    {
+      k:'PSDA',
+      p:`On a map, 1 centimeter represents 5 kilometers of real distance.`,
+      q:'If two cities are 12 cm apart on the map, what is the real distance between them, in kilometers?',
+      o:['A) 12','B) 24','C) 60','D) 600'],
+      a:2,
+      explain:{
+        why_correct:'<em>12 × 5 = 60</em> km. Cevap: C.',
+        why_wrong:'<strong>A</strong> ölçek atlanmış. <strong>B</strong> hesap hatası. <strong>D</strong> 100 ile çarpma yanlış.',
+        vocab:[
+          {en:'map scale',pos:'n.',tr:'harita ölçeği'},
+          {en:'represent',pos:'v.',tr:'temsil etmek'},
+          {en:'real distance',pos:'n.',tr:'gerçek mesafe'},
+          {en:'apart',pos:'adv.',tr:'uzakta'},
+          {en:'conversion factor',pos:'n.',tr:'dönüşüm faktörü'},
+        ],
+        rule:'<strong>Map scale:</strong> <em>1 cm : k km</em> demek <em>harita üzerinde 1 cm = gerçekte k km</em>. <em>Map × k = real</em>.'
+      }
+    },
+    // Q26 — Weighted average (mixture)
+    {
+      k:'PSDA',
+      p:`4 pounds of almonds at <span class="usd">$6</span> per pound are mixed with 6 pounds of cashews at <span class="usd">$10</span> per pound.`,
+      q:'What is the average cost per pound of the mixture, in dollars?',
+      o:['A) <span class="usd">$7.00</span>','B) <span class="usd">$7.50</span>','C) <span class="usd">$8.00</span>','D) <span class="usd">$8.40</span>'],
+      a:3,
+      explain:{
+        why_correct:'Toplam maliyet: <em>4 · 6 + 6 · 10 = 24 + 60 = 84</em>. Toplam pound: <em>10</em>. Ortalama: <em>84/10 = 8.40</em>. Cevap: D.',
+        why_wrong:'<strong>A, B</strong> aritmetik ortalama (8). <strong>C</strong> hesap hatası.',
+        vocab:[
+          {en:'weighted average',pos:'n.',tr:'ağırlıklı ortalama'},
+          {en:'mixture',pos:'n.',tr:'karışım'},
+          {en:'almonds',pos:'n.',tr:'badem'},
+          {en:'cashews',pos:'n.',tr:'kaju'},
+          {en:'total cost over total quantity',pos:'phr.',tr:'toplam maliyet/toplam miktar'},
+        ],
+        rule:'<strong>Weighted average:</strong> <em>(Σ value × weight) / Σ weight</em>. Aritmetik ortalama değil — miktarlar ağırlık.'
+      }
+    },
+    // Q27 — Average speed
+    {
+      k:'PSDA',
+      p:`A train traveled 150 km in 2.5 hours.`,
+      q:'What is the average speed, in km/h?',
+      o:['A) 50','B) 55','C) 60','D) 65'],
+      a:2,
+      explain:{
+        why_correct:'<em>average speed = total distance / total time = 150/2.5 = 60</em> km/h. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'average speed',pos:'n.',tr:'ortalama hız'},
+          {en:'total distance',pos:'n.',tr:'toplam mesafe'},
+          {en:'total time',pos:'n.',tr:'toplam zaman'},
+          {en:'unit km per hour',pos:'phr.',tr:'birim km/saat'},
+          {en:'dimensional check',pos:'n.',tr:'birim kontrolü'},
+        ],
+        rule:'<strong>Average speed:</strong> <em>total distance / total time</em>. Eğer hız sabit değilse, ayrı segmentleri toplayıp böl.'
+      }
+    }
+  ]
+},
+{
+  name: 'Module 2',
+  subtitle: 'PSDA: Ratios, Percentages, Units, Rates. Orta-zor zorluk.',
+  questions: [
+    // Q1 — Compound percent (asymmetry)
+    {
+      k:'PSDA',
+      p:`A price increased by 10%, and then the new price decreased by 10%.`,
+      q:'What is the net percent change from the original price?',
+      o:['A) 0%','B) −1%','C) +1%','D) −10%'],
+      a:1,
+      explain:{
+        why_correct:'Ardışık çarpan: <em>1.10 × 0.90 = 0.99</em>. Net: <em>0.99 − 1 = −0.01 = −1%</em>. Cevap: B.\n\n<strong>Asimetri:</strong> Aynı oranda artış ve azalış birbirini götürmez.',
+        why_wrong:'<strong>A</strong> simetri varsayımı (yanlış). <strong>C</strong> yön ters. <strong>D</strong> sadece son azalış.',
+        vocab:[
+          {en:'compound percent',pos:'n.',tr:'bileşik yüzde'},
+          {en:'asymmetry',pos:'n.',tr:'asimetri'},
+          {en:'sequential changes',pos:'phr.',tr:'ardışık değişimler'},
+          {en:'net change',pos:'n.',tr:'net değişim'},
+          {en:'multiplier method',pos:'n.',tr:'çarpan yöntemi'},
+        ],
+        rule:'<strong>Ardışık yüzde asimetri:</strong> <em>%X artış</em> + <em>%X azalış</em> ≠ %0. Her aşama önceki sonuca uygulanır.'
+      }
+    },
+    // Q2 — Reverse multi-step percent
+    {
+      k:'PSDA',
+      p:`After a 20% discount and an additional 10% discount on the reduced price, the final price of an item is <span class="usd">$36</span>.`,
+      q:'What was the original price, in dollars?',
+      o:['A) <span class="usd">$45</span>','B) <span class="usd">$48</span>','C) <span class="usd">$50</span>','D) <span class="usd">$60</span>'],
+      a:2,
+      explain:{
+        why_correct:'<em>0.80 × 0.90 × P = 0.72P = 36</em> → <em>P = 36/0.72 = 50</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yanlış toplam indirim (30%).',
+        vocab:[
+          {en:'reverse percent',pos:'n.',tr:'ters yüzde'},
+          {en:'multi-step discount',pos:'phr.',tr:'çok aşamalı indirim'},
+          {en:'combined factor',pos:'n.',tr:'birleşik çarpan'},
+          {en:'original price',pos:'n.',tr:'orijinal fiyat'},
+          {en:'divide by factor',pos:'phr.',tr:'çarpana böl'},
+        ],
+        rule:'Multi-step reverse: tüm çarpanları çarp (<em>0.80 × 0.90 = 0.72</em>), sonra final’i bu çarpana <strong>böl</strong>.'
+      }
+    },
+    // Q3 — Mixture concentration
+    {
+      k:'PSDA',
+      p:`3 liters of a 30% alcohol solution are mixed with 7 liters of a 50% alcohol solution.`,
+      q:'What is the alcohol concentration of the mixture?',
+      o:['A) 40%','B) 42%','C) 44%','D) 46%'],
+      a:2,
+      explain:{
+        why_correct:'Saf alkol toplamı: <em>3(0.30) + 7(0.50) = 0.9 + 3.5 = 4.4</em> L. Toplam hacim: <em>10</em> L. Konsantrasyon: <em>4.4/10 = 0.44 = 44%</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> aritmetik ortalama <em>(30+50)/2</em>. <strong>B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'concentration',pos:'n.',tr:'derişim'},
+          {en:'alcohol solution',pos:'n.',tr:'alkol çözeltisi'},
+          {en:'pure substance',pos:'phr.',tr:'saf madde'},
+          {en:'weighted by volume',pos:'phr.',tr:'hacme göre ağırlıklı'},
+          {en:'mixture problem',pos:'n.',tr:'karışım problemi'},
+        ],
+        rule:'Mixture: <em>(toplam saf madde) / (toplam hacim) = konsantrasyon</em>. Saf madde = her bileşenin <em>konsantrasyon × hacim</em>.'
+      }
+    },
+    // Q4 — Density from cube
+    {
+      k:'PSDA',
+      p:`A cube has an edge length of 4 cm. The cube has a mass of 384 grams.`,
+      q:'What is the density of the cube, in grams per cubic centimeter?',
+      o:['A) 4','B) 6','C) 8','D) 12'],
+      a:1,
+      explain:{
+        why_correct:'Volume = <em>4³ = 64</em> cm³. Density = <em>mass / volume = 384/64 = 6</em> g/cm³. Cevap: B.',
+        why_wrong:'<strong>A</strong> edge length. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'cube',pos:'n.',tr:'küp'},
+          {en:'edge length',pos:'n.',tr:'kenar uzunluğu'},
+          {en:'cube volume',pos:'n.',tr:'küp hacmi'},
+          {en:'compute density',pos:'phr.',tr:'yoğunluğu hesapla'},
+          {en:'mass per volume',pos:'phr.',tr:'hacim başına kütle'},
+        ],
+        rule:'Cube volume = <em>edge³</em>. Density = <em>m/V</em>. Birim takip et: <em>g/cm³</em>.'
+      }
+    },
+    // Q5 — Independent probability
+    {
+      k:'PSDA',
+      p:`Two standard six-sided dice are rolled.`,
+      q:'What is the probability that both dice show 6?',
+      o:['A) 1⁄12','B) 1⁄18','C) 1⁄36','D) 2⁄36'],
+      a:2,
+      explain:{
+        why_correct:'Bağımsız olaylar: <em>P(both) = P(A) × P(B) = (1/6) × (1/6) = 1/36</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> toplam. <strong>B</strong> hesap hatası. <strong>D</strong> sadeleşmemiş ama 2/36 = 1/18 (farklı sonuç).',
+        vocab:[
+          {en:'independent events',pos:'phr.',tr:'bağımsız olaylar'},
+          {en:'multiply probabilities',pos:'phr.',tr:'olasılıkları çarp'},
+          {en:'both occur',pos:'phr.',tr:'ikisi de gerçekleşir'},
+          {en:'six-sided dice',pos:'phr.',tr:'altı yüzlü zar'},
+          {en:'joint probability',pos:'n.',tr:'ortak olasılık'},
+        ],
+        rule:'Bağımsız olaylar AND: <em>P(A ∩ B) = P(A) × P(B)</em>. Sequential bağımsız atışlar (zarlar, paralar) için.'
+      }
+    },
+    // Q6 — Direct proportion variable change
+    {
+      k:'PSDA',
+      p:`y is directly proportional to x.`,
+      q:'If x is doubled, what happens to y?',
+      o:['A) y is halved','B) y is doubled','C) y is quadrupled','D) y stays the same'],
+      a:1,
+      explain:{
+        why_correct:'<em>y = kx</em>. <em>x → 2x</em> ise <em>y → k(2x) = 2(kx) = 2y</em>. <em>y</em> de iki katına çıkar. Cevap: B.',
+        why_wrong:'<strong>A</strong> inverse davranışı. <strong>C</strong> x² ilişkisi. <strong>D</strong> ilişki yok varsayımı.',
+        vocab:[
+          {en:'directly proportional',pos:'phr.',tr:'doğru orantılı'},
+          {en:'scaling behavior',pos:'phr.',tr:'ölçekleme davranışı'},
+          {en:'multiplied by k',pos:'phr.',tr:'k ile çarpılır'},
+          {en:'preserve ratio',pos:'phr.',tr:'oranı koru'},
+          {en:'linear scaling',pos:'phr.',tr:'lineer ölçekleme'},
+        ],
+        rule:'Direct proportion: x kaç katına çıkarsa, y de aynı katına. <em>x → cx ⇒ y → cy</em>.'
+      }
+    },
+    // Q7 — Inverse proportion variable change
+    {
+      k:'PSDA',
+      p:`y is inversely proportional to x.`,
+      q:'If x is doubled, what happens to y?',
+      o:['A) y is doubled','B) y is halved','C) y is quadrupled','D) y stays the same'],
+      a:1,
+      explain:{
+        why_correct:'<em>y = k/x</em>. <em>x → 2x</em> ise <em>y → k/(2x) = (k/x)/2 = y/2</em>. <em>y</em> yarıya iner. Cevap: B.',
+        why_wrong:'<strong>A</strong> direct davranışı. <strong>C</strong> ters x². <strong>D</strong> ilişki yok varsayımı.',
+        vocab:[
+          {en:'inversely proportional',pos:'phr.',tr:'ters orantılı'},
+          {en:'reciprocal scaling',pos:'phr.',tr:'ters ölçekleme'},
+          {en:'product constant',pos:'phr.',tr:'çarpım sabit'},
+          {en:'inverse behavior',pos:'phr.',tr:'ters davranış'},
+          {en:'opposite trend',pos:'phr.',tr:'zıt eğilim'},
+        ],
+        rule:'Inverse proportion: x kaç katına çıkarsa, y o oranda <strong>küçülür</strong>. <em>x → cx ⇒ y → y/c</em>.'
+      }
+    },
+    // Q8 — Combined work rate
+    {
+      k:'PSDA',
+      p:`Worker A can finish a job in 4 hours. Worker B can finish the same job in 6 hours.`,
+      q:'Working together at their constant rates, how long, in hours, does the job take?',
+      o:['A) 2','B) 2.4','C) 5','D) 10'],
+      a:1,
+      explain:{
+        why_correct:'Birleşik hız: <em>1/4 + 1/6 = 3/12 + 2/12 = 5/12 job/h</em>. Süre: <em>1 / (5/12) = 12/5 = 2.4</em> saat. Cevap: B.',
+        why_wrong:'<strong>A</strong> 1/6 × 2. <strong>C</strong> aritmetik ortalama. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'work rate',pos:'n.',tr:'iş hızı'},
+          {en:'combined rate',pos:'n.',tr:'birleşik hız'},
+          {en:'job per hour',pos:'phr.',tr:'saat başına iş'},
+          {en:'reciprocal of time',pos:'phr.',tr:'zamanın tersi'},
+          {en:'fraction of job',pos:'phr.',tr:'işin kesri'},
+        ],
+        rule:'Combined work rate: <em>1/T_A + 1/T_B = 1/T_combined</em>. Hızları topla, tersini al.'
+      }
+    },
+    // Q9 — mph to ft/s conversion
+    {
+      k:'PSDA',
+      p:`A car travels at a constant speed of 60 miles per hour.`,
+      q:'What is the speed, in feet per second? (1 mile = 5,280 feet)',
+      o:['A) 60','B) 88','C) 100','D) 360'],
+      a:1,
+      explain:{
+        why_correct:'<em>60 mi/h × 5280 ft/mi × (1 h / 3600 s) = (60 × 5280)/3600 = 316,800/3,600 = 88</em> ft/s. Cevap: B.',
+        why_wrong:'<strong>A</strong> birim dönüşümü atlanmış. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'feet per second',pos:'phr.',tr:'saniye başına feet'},
+          {en:'dimensional analysis',pos:'n.',tr:'boyut analizi'},
+          {en:'conversion factor',pos:'n.',tr:'dönüşüm faktörü'},
+          {en:'unit cancellation',pos:'phr.',tr:'birim sadeleşmesi'},
+          {en:'imperial units',pos:'phr.',tr:'imperial birimler'},
+        ],
+        rule:'Birim dönüşümü: orijinal birim × (yeni birim / orijinal birim). Birimleri sadeleşecek şekilde yaz.'
+      }
+    },
+    // Q10 — Combined tax and tip
+    {
+      k:'PSDA',
+      p:`A restaurant bill is <span class="usd">$80</span> before tax and tip. A 10% tax is applied to the bill, then a 15% tip is added to the post-tax amount.`,
+      q:'What is the total amount paid, in dollars?',
+      o:['A) <span class="usd">$100.00</span>','B) <span class="usd">$100.80</span>','C) <span class="usd">$101.20</span>','D) <span class="usd">$102.00</span>'],
+      a:2,
+      explain:{
+        why_correct:'Vergi sonrası: <em>80 × 1.10 = 88</em>. Bahşiş sonrası: <em>88 × 1.15 = 101.20</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yanlış sıralı çarpım.',
+        vocab:[
+          {en:'bill',pos:'n.',tr:'hesap'},
+          {en:'sales tax',pos:'n.',tr:'satış vergisi'},
+          {en:'tip',pos:'n.',tr:'bahşiş'},
+          {en:'sequential addition',pos:'phr.',tr:'ardışık ekleme'},
+          {en:'total amount',pos:'n.',tr:'toplam tutar'},
+        ],
+        rule:'Sequential percent additions: önce vergi (<em>×1.10</em>), sonra bahşiş post-tax’a (<em>×1.15</em>). Sıra önemli.'
+      }
+    },
+    // Q11 — Compound markdown
+    {
+      k:'PSDA',
+      p:`A jacket originally costs <span class="usd">$100</span>. First, a 20% discount is applied. Then, an additional 10% discount is applied to the reduced price.`,
+      q:'What is the final price, in dollars?',
+      o:['A) <span class="usd">$70</span>','B) <span class="usd">$72</span>','C) <span class="usd">$75</span>','D) <span class="usd">$80</span>'],
+      a:1,
+      explain:{
+        why_correct:'<em>100 × 0.80 × 0.90 = 80 × 0.90 = 72</em>. Cevap: B.\n\n<strong>Asimetri:</strong> %30 net indirim değil (sadece çarpım %72).',
+        why_wrong:'<strong>A</strong> net %30 indirim varsayımı. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'compound discount',pos:'n.',tr:'bileşik indirim'},
+          {en:'additional discount',pos:'phr.',tr:'ek indirim'},
+          {en:'reduced price',pos:'n.',tr:'indirimli fiyat'},
+          {en:'final price',pos:'n.',tr:'son fiyat'},
+          {en:'sequential multiply',pos:'phr.',tr:'ardışık çarpma'},
+        ],
+        rule:'İki indirim üst üste: <em>(1 − r₁) × (1 − r₂) × original</em>. <strong>Toplam değil, çarpım</strong>.'
+      }
+    },
+    // Q12 — Area unit conversion
+    {
+      k:'PSDA',
+      p:`A rectangular room measures 3 meters by 4 meters.`,
+      q:'What is the area of the floor, in square centimeters?',
+      o:['A) 1,200','B) 12,000','C) 120,000','D) 1,200,000'],
+      a:2,
+      explain:{
+        why_correct:'Alan: <em>3 × 4 = 12</em> m². Birim dönüşümü: <em>1 m² = 100² cm² = 10,000 cm²</em>. <em>12 × 10,000 = 120,000</em> cm². Cevap: C.',
+        why_wrong:'<strong>A</strong> sadece 100 ile çarpma. <strong>B</strong> 1000 ile çarpma. <strong>D</strong> 100000 ile çarpma.',
+        vocab:[
+          {en:'square meters',pos:'n.',tr:'metrekare'},
+          {en:'square centimeters',pos:'n.',tr:'santimetrekare'},
+          {en:'area conversion',pos:'n.',tr:'alan dönüşümü'},
+          {en:'squared factor',pos:'n.',tr:'kareli faktör'},
+          {en:'two-dimensional',pos:'adj.',tr:'iki boyutlu'},
+        ],
+        rule:'Alan dönüşümü: lineer faktör <strong>kareye yükselt</strong>. <em>1 m = 100 cm</em> → <em>1 m² = 100² cm² = 10,000 cm²</em>.'
+      }
+    },
+    // Q13 — Weighted average with categories
+    {
+      k:'PSDA',
+      p:`A student’s grade is based on three tests: Test 1 worth 20%, Test 2 worth 30%, and Test 3 worth 50%. The student scored 80 on Test 1, 70 on Test 2, and 90 on Test 3.`,
+      q:'What is the student’s weighted final grade?',
+      o:['A) 80','B) 82','C) 85','D) 90'],
+      a:1,
+      explain:{
+        why_correct:'<em>0.20(80) + 0.30(70) + 0.50(90) = 16 + 21 + 45 = 82</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> aritmetik ortalama (80). <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'weighted grade',pos:'n.',tr:'ağırlıklı not'},
+          {en:'weight percentage',pos:'phr.',tr:'ağırlık yüzdesi'},
+          {en:'apply weights',pos:'phr.',tr:'ağırlıkları uygula'},
+          {en:'sum products',pos:'phr.',tr:'çarpımları topla'},
+          {en:'final grade',pos:'n.',tr:'son not'},
+        ],
+        rule:'Weighted average: <em>Σ (value × weight)</em>, ağırlıklar toplamı 1 (veya 100%) olmalı. Aritmetik ortalama değil.'
+      }
+    },
+    // Q14 — Probability without replacement
+    {
+      k:'PSDA',
+      p:`A bag contains 5 red marbles and 3 blue marbles. Two marbles are drawn without replacement.`,
+      q:'What is the probability that both drawn marbles are red?',
+      o:['A) 5⁄14','B) 5⁄16','C) 5⁄8','D) 25⁄64'],
+      a:0,
+      explain:{
+        why_correct:'<em>P(birinci kırmızı) = 5/8</em>. İkinci çekim için kalan: 4 kırmızı, 7 toplam. <em>P(ikinci|birinci) = 4/7</em>. <em>P(both) = (5/8) × (4/7) = 20/56 = 5/14</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> hesap hatası. <strong>C</strong> sadece tek kırmızı çekme (ikinci çekim atlanmış). <strong>D</strong> with replacement varsayımı (5/8)² = 25/64.',
+        vocab:[
+          {en:'without replacement',pos:'phr.',tr:'iadesiz çekim'},
+          {en:'with replacement',pos:'phr.',tr:'iadeli çekim'},
+          {en:'conditional probability',pos:'phr.',tr:'koşullu olasılık'},
+          {en:'remaining marbles',pos:'phr.',tr:'kalan misketler'},
+          {en:'dependent events',pos:'phr.',tr:'bağımlı olaylar'},
+        ],
+        rule:'<strong>Without replacement:</strong> ikinci çekimde hem pay hem payda 1 azalır. <em>P(A then B) = P(A) × P(B|A)</em>.'
+      }
+    },
+    // Q15 — Two-step ratio
+    {
+      k:'PSDA',
+      p:`The ratio of A to B is 2:3, and the ratio of B to C is 4:5.`,
+      q:'What is the ratio of A to C?',
+      o:['A) 2:5','B) 8:15','C) 6:15','D) 5:6'],
+      a:1,
+      explain:{
+        why_correct:'B’yi eşitle: <em>A:B = 8:12</em> (×4), <em>B:C = 12:15</em> (×3). <em>A:C = 8:15</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> orantı zincirleme hatası.',
+        vocab:[
+          {en:'chained ratios',pos:'phr.',tr:'zincirli oranlar'},
+          {en:'common term',pos:'n.',tr:'ortak terim'},
+          {en:'LCM of middle terms',pos:'phr.',tr:'orta terimlerin EKOK’u'},
+          {en:'transitive ratio',pos:'phr.',tr:'geçişli oran'},
+          {en:'scale ratios',pos:'phr.',tr:'oranları ölçekle'},
+        ],
+        rule:'<strong>Chained ratios:</strong> ortak terimi eşitle (LCM ile çarp). Sonra uçtan uca oranı oku.'
+      }
+    },
+    // Q16 — Reverse from compound
+    {
+      k:'PSDA',
+      p:`A town’s population grew by 20% over a year, reaching 6,000.`,
+      q:'What was the population a year ago?',
+      o:['A) 4,500','B) 4,800','C) 5,000','D) 5,500'],
+      a:2,
+      explain:{
+        why_correct:'<em>1.20 × P = 6,000</em> → <em>P = 6,000/1.20 = 5,000</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları (örn. <em>6,000 − %20</em> yanlış).',
+        vocab:[
+          {en:'one year ago',pos:'phr.',tr:'bir yıl önce'},
+          {en:'reverse growth',pos:'phr.',tr:'ters büyüme'},
+          {en:'divide by factor',pos:'phr.',tr:'çarpana böl'},
+          {en:'find initial',pos:'phr.',tr:'başlangıcı bul'},
+          {en:'percent grew',pos:'phr.',tr:'yüzde arttı'},
+        ],
+        rule:'Yeni değer = orijinal × (1 + r). Orijinal için: <strong>yeni / (1 + r)</strong>. <em>Yeni − r%</em> hesabı yanlış.'
+      }
+    },
+    // Q17 — Sample proportion
+    {
+      k:'PSDA',
+      p:`In a poll of 200 voters, 120 said they support Candidate A. The total population is 5,000 voters.`,
+      q:'Based on this sample, how many total voters are estimated to support Candidate A?',
+      o:['A) 1,200','B) 2,000','C) 3,000','D) 4,000'],
+      a:2,
+      explain:{
+        why_correct:'Örnek oranı: <em>120/200 = 0.60</em>. Toplam: <em>0.60 × 5,000 = 3,000</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yanlış orantı.',
+        vocab:[
+          {en:'poll',pos:'n.',tr:'anket'},
+          {en:'voters',pos:'n.',tr:'seçmenler'},
+          {en:'sample proportion',pos:'n.',tr:'örnek oranı'},
+          {en:'estimate from sample',pos:'phr.',tr:'örnekten tahmin'},
+          {en:'extrapolate',pos:'v.',tr:'ekstrapol etmek'},
+        ],
+        rule:'Sample → population: <em>(örnek oranı) × toplam</em>. Örnek temsili olmalı.'
+      }
+    },
+    // Q18 — Two-segment avg speed
+    {
+      k:'PSDA',
+      p:`A car travels 60 km at 60 km/h, then continues another 60 km at 30 km/h.`,
+      q:'What is the average speed for the entire trip, in km/h?',
+      o:['A) 30','B) 40','C) 45','D) 50'],
+      a:1,
+      explain:{
+        why_correct:'Süre 1: <em>60/60 = 1</em> saat. Süre 2: <em>60/30 = 2</em> saat. Toplam: <em>1 + 2 = 3</em> saat. Toplam mesafe: <em>120</em> km. Ortalama: <em>120/3 = 40</em> km/h. Cevap: B.',
+        why_wrong:'<strong>C, D</strong> aritmetik ortalama (45). <strong>A</strong> daha yavaş.',
+        vocab:[
+          {en:'average speed',pos:'n.',tr:'ortalama hız'},
+          {en:'two segments',pos:'phr.',tr:'iki bölüm'},
+          {en:'total distance over total time',pos:'phr.',tr:'toplam mesafe/toplam zaman'},
+          {en:'harmonic mean',pos:'n.',tr:'harmonik ortalama'},
+          {en:'NOT arithmetic mean',pos:'phr.',tr:'aritmetik ortalama DEĞİL'},
+        ],
+        rule:'Average speed = <em>total distance / total time</em>. <strong>Aritmetik ortalama değil</strong> — eşit mesafede yavaş yön daha çok zaman alır.'
+      }
+    },
+    // Q19 — Currency reverse
+    {
+      k:'PSDA',
+      p:`The exchange rate is 1 US dollar = 0.92 euros.`,
+      q:'How many US dollars are equivalent to 460 euros?',
+      o:['A) <span class="usd">$423</span>','B) <span class="usd">$500</span>','C) <span class="usd">$522</span>','D) <span class="usd">$600</span>'],
+      a:1,
+      explain:{
+        why_correct:'EUR → USD: <em>460 / 0.92 = 500</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> 460 × 0.92 (yanlış yön). <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'exchange rate',pos:'n.',tr:'döviz kuru'},
+          {en:'reverse conversion',pos:'phr.',tr:'ters dönüşüm'},
+          {en:'divide to reverse',pos:'phr.',tr:'tersine çevirmek için böl'},
+          {en:'dimensional analysis',pos:'n.',tr:'boyut analizi'},
+          {en:'forex',pos:'n.',tr:'döviz'},
+        ],
+        rule:'Currency reverse: yönün tersi için <strong>çarpma yerine böl</strong>. USD → EUR: <em>×0.92</em>. EUR → USD: <em>÷0.92</em>.'
+      }
+    },
+    // Q20 — Net compound
+    {
+      k:'PSDA',
+      p:`A worker’s salary increased by 10% one year, then decreased by 5% the next year.`,
+      q:'What is the net percent change in salary?',
+      o:['A) +4%','B) +4.5%','C) +5%','D) +5.5%'],
+      a:1,
+      explain:{
+        why_correct:'<em>1.10 × 0.95 = 1.045</em> → net <em>+4.5%</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> hesap hataları veya 10−5 = 5 hatası.',
+        vocab:[
+          {en:'net change',pos:'n.',tr:'net değişim'},
+          {en:'increase then decrease',pos:'phr.',tr:'artış sonra azalış'},
+          {en:'sequential rates',pos:'phr.',tr:'ardışık oranlar'},
+          {en:'multiplier method',pos:'n.',tr:'çarpan yöntemi'},
+          {en:'compound result',pos:'n.',tr:'bileşik sonuç'},
+        ],
+        rule:'Net compound percent: <em>(1 + r₁)(1 + r₂) − 1</em>. r negatifse decrease. Toplam değil.'
+      }
+    },
+    // Q21 — Area ratio of similar figures
+    {
+      k:'PSDA',
+      p:`Two squares have side lengths in the ratio 2:3.`,
+      q:'What is the ratio of their areas?',
+      o:['A) 2:3','B) 4:9','C) 4:6','D) 6:9'],
+      a:1,
+      explain:{
+        why_correct:'Alan oran: <em>(2/3)² = 4/9</em>. Cevap: B.\n\nDoğrulama: kenar 2 → alan 4; kenar 3 → alan 9. <em>4:9</em> ✓.',
+        why_wrong:'<strong>A</strong> kenar oranı (alan değil). <strong>C, D</strong> sadeleşmemiş orantı (hatalı).',
+        vocab:[
+          {en:'similar figures',pos:'phr.',tr:'benzer şekiller'},
+          {en:'ratio of areas',pos:'phr.',tr:'alanların oranı'},
+          {en:'squared ratio',pos:'phr.',tr:'kareli oran'},
+          {en:'side length ratio',pos:'phr.',tr:'kenar uzunluğu oranı'},
+          {en:'dimensional scaling',pos:'phr.',tr:'boyutsal ölçekleme'},
+        ],
+        rule:'Benzer iki boyutlu şekiller: alan oranı = <em>(kenar oranı)²</em>. Üç boyutlu için: hacim oranı = <em>(kenar oranı)³</em>.'
+      }
+    },
+    // Q22 — Density mixed units
+    {
+      k:'PSDA',
+      p:`A substance has a mass of 2 kilograms and a volume of 500 cubic centimeters.`,
+      q:'What is the density, in grams per cubic centimeter?',
+      o:['A) 2','B) 4','C) 8','D) 10'],
+      a:1,
+      explain:{
+        why_correct:'<em>2 kg = 2,000 g</em>. <em>Density = 2,000/500 = 4</em> g/cm³. Cevap: B.',
+        why_wrong:'<strong>A</strong> kg/cm³ birim. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'mixed units',pos:'phr.',tr:'karışık birimler'},
+          {en:'kilogram to gram',pos:'phr.',tr:'kilogram → gram'},
+          {en:'unit consistency',pos:'phr.',tr:'birim tutarlılığı'},
+          {en:'convert before divide',pos:'phr.',tr:'bölmeden önce çevir'},
+          {en:'metric prefix',pos:'n.',tr:'metrik öneki'},
+        ],
+        rule:'Density hesabı: <strong>birimleri eşitle</strong>. <em>g/cm³</em> isteniyorsa kg’yi g’ye çevir.'
+      }
+    },
+    // Q23 — Inverse work rate (find one)
+    {
+      k:'PSDA',
+      p:`Workers A and B together can finish a job in 6 hours. Worker A alone can finish the job in 10 hours.`,
+      q:'How long does it take Worker B alone to finish the job?',
+      o:['A) 8','B) 12','C) 15','D) 20'],
+      a:2,
+      explain:{
+        why_correct:'<em>1/A + 1/B = 1/T</em>. <em>1/10 + 1/B = 1/6</em> → <em>1/B = 1/6 − 1/10 = 5/30 − 3/30 = 2/30 = 1/15</em> → <em>B = 15</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları veya yanlış formül.',
+        vocab:[
+          {en:'find unknown worker',pos:'phr.',tr:'bilinmeyen işçiyi bul'},
+          {en:'individual rate',pos:'n.',tr:'bireysel hız'},
+          {en:'subtract rates',pos:'phr.',tr:'hızları çıkar'},
+          {en:'common denominator',pos:'n.',tr:'ortak payda'},
+          {en:'reciprocal final',pos:'phr.',tr:'son tersini al'},
+        ],
+        rule:'Bir işçinin süresini bilinen birleşik süreden bulmak için: <em>1/B = 1/T − 1/A</em>. Sonucun tersini al.'
+      }
+    },
+    // Q24 — Capture-recapture estimation
+    {
+      k:'PSDA',
+      p:`A biologist tags 100 fish in a pond and releases them. Later, she catches 50 fish and finds that 5 of them are tagged.`,
+      q:'Based on this data, what is the estimated total fish population in the pond?',
+      o:['A) 500','B) 1,000','C) 1,500','D) 2,000'],
+      a:1,
+      explain:{
+        why_correct:'Orantı: <em>tagged in sample / sample = tagged total / population</em>. <em>5/50 = 100/N</em> → <em>N = 100 × 50/5 = 1,000</em>. Cevap: B.',
+        why_wrong:'<strong>A, C, D</strong> orantı hatası.',
+        vocab:[
+          {en:'capture-recapture',pos:'phr.',tr:'yakala-tekrar yakala'},
+          {en:'tag',pos:'v.',tr:'etiketle'},
+          {en:'sample tagged',pos:'phr.',tr:'örnekteki etiketli'},
+          {en:'estimate population',pos:'phr.',tr:'popülasyonu tahmin et'},
+          {en:'biological survey',pos:'phr.',tr:'biyolojik araştırma'},
+        ],
+        rule:'<strong>Capture-recapture:</strong> <em>etiketli örnek / örnek = etiketli toplam / popülasyon</em>. Yaban hayatı tahmininde kullanılır.'
+      }
+    },
+    // Q25 — Markup then sale
+    {
+      k:'PSDA',
+      p:`A store buys an item at wholesale for <span class="usd">$80</span>. The store applies a 25% markup to set the selling price. The item is then put on sale with a 10% discount.`,
+      q:'What is the sale price, in dollars?',
+      o:['A) <span class="usd">$86</span>','B) <span class="usd">$88</span>','C) <span class="usd">$90</span>','D) <span class="usd">$92</span>'],
+      a:2,
+      explain:{
+        why_correct:'Markup: <em>80 × 1.25 = 100</em>. Sale: <em>100 × 0.90 = 90</em>. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'wholesale',pos:'n.',tr:'toptan'},
+          {en:'markup then discount',pos:'phr.',tr:'kâr marjı sonra indirim'},
+          {en:'sale price',pos:'n.',tr:'indirimli fiyat'},
+          {en:'retail journey',pos:'n.',tr:'perakende yolculuğu'},
+          {en:'sequential pricing',pos:'phr.',tr:'ardışık fiyatlama'},
+        ],
+        rule:'Markup + indirim: önce <em>×(1 + markup)</em>, sonra <em>×(1 − discount)</em>. Sıra önemli.'
+      }
+    },
+    // Q26 — Population net after two years
+    {
+      k:'PSDA',
+      p:`A town with 10,000 residents experiences a 5% increase in population in year 1 and a 4% decrease in year 2.`,
+      q:'What is the population at the end of year 2?',
+      o:['A) 10,000','B) 10,080','C) 10,100','D) 10,500'],
+      a:1,
+      explain:{
+        why_correct:'<em>10,000 × 1.05 × 0.96 = 10,500 × 0.96 = 10,080</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> %5 ve %4 birbirini götürür sanma. <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'over two years',pos:'phr.',tr:'iki yıl içinde'},
+          {en:'consecutive changes',pos:'phr.',tr:'ardışık değişimler'},
+          {en:'sequential percent',pos:'phr.',tr:'ardışık yüzde'},
+          {en:'compound effect',pos:'n.',tr:'bileşik etki'},
+          {en:'percent does not add',pos:'phr.',tr:'yüzdeler toplanmaz'},
+        ],
+        rule:'Ardışık % değişimler: ÇARPILIR, eklenmez. <em>P × (1 + r₁) × (1 + r₂)...</em>. Cebirsel toplam yanıltıcı.'
+      }
+    },
+    // Q27 — Pipe fill and drain
+    {
+      k:'PSDA',
+      p:`A pipe can fill an empty pool in 4 hours. A drain at the bottom can empty the full pool in 6 hours. Both are open at the same time, starting with an empty pool.`,
+      q:'How long does it take to fill the pool, in hours?',
+      o:['A) 8','B) 10','C) 12','D) 15'],
+      a:2,
+      explain:{
+        why_correct:'Net hız: <em>1/4 − 1/6 = 3/12 − 2/12 = 1/12 pool/h</em>. Süre: <em>1 / (1/12) = 12</em> saat. Cevap: C.',
+        why_wrong:'<strong>A, B, D</strong> hesap hataları.',
+        vocab:[
+          {en:'pipe and drain',pos:'phr.',tr:'boru ve gider'},
+          {en:'net rate',pos:'n.',tr:'net hız'},
+          {en:'opposing rates',pos:'phr.',tr:'karşıt hızlar'},
+          {en:'subtract rates',pos:'phr.',tr:'hızları çıkar'},
+          {en:'fill while draining',pos:'phr.',tr:'akıtırken doldurma'},
+        ],
+        rule:'Karşıt yönlü iş: <strong>hızları çıkar</strong> (boş doldurma − boşaltma). <em>Net = fill rate − drain rate</em>.'
+      }
+    }
+  ]
+},
+{
+  name: 'Bonus',
+  subtitle: 'PSDA: Ratios, Percentages, Units, Rates. 12 yaygın tuzak ve zor word problems.',
+  questions: [
+    // B1 — Arithmetic vs harmonic mean (avg speed)
+    {
+      k:'PSDA',
+      p:`A car travels 60 km at 30 km/h, then continues another 60 km at 60 km/h.`,
+      q:'What is the average speed for the entire trip, in km/h?',
+      o:['A) 40','B) 45','C) 50','D) 90'],
+      a:0,
+      explain:{
+        why_correct:'<mark class="hl-key">Tuzak: aritmetik ortalama</mark>. Süre 1: <em>60/30 = 2</em> saat. Süre 2: <em>60/60 = 1</em> saat. Toplam: <em>3</em> saat, <em>120</em> km. Ortalama: <em>120/3 = 40</em> km/h. Cevap: A.',
+        why_wrong:'<strong>B</strong> aritmetik ortalama <em>(30+60)/2 = 45</em> (yanlış, eşit zaman varsayar). <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'harmonic mean',pos:'n.',tr:'harmonik ortalama'},
+          {en:'arithmetic mean',pos:'n.',tr:'aritmetik ortalama'},
+          {en:'equal distance',pos:'phr.',tr:'eşit mesafe'},
+          {en:'slower segment dominates',pos:'phr.',tr:'yavaş bölüm baskın'},
+          {en:'time-weighted',pos:'adj.',tr:'zaman-ağırlıklı'},
+        ],
+        rule:'<strong>Avg speed tuzağı:</strong> Eşit mesafede yavaş bölüm <strong>daha çok zaman</strong> alır, sonuç ortalamadan düşer. Aritmetik ortalama <strong>eşit zaman</strong> varsayar.'
+      }
+    },
+    // B2 — Percent asymmetry severe
+    {
+      k:'PSDA',
+      p:`A price increases by 50%, then decreases by 50%.`,
+      q:'What is the net percent change from the original price?',
+      o:['A) 0%','B) −25%','C) +25%','D) −50%'],
+      a:1,
+      explain:{
+        why_correct:'<em>1.50 × 0.50 = 0.75</em>. Net: <em>−25%</em>. Cevap: B.\n\n<strong>Tuzak:</strong> Aynı oran artış + azalış asla %0 vermez. Burada %50 yüksek olduğu için fark belirgin.',
+        why_wrong:'<strong>A</strong> simetri varsayımı (yanlış). <strong>C</strong> yön ters. <strong>D</strong> sadece son azalış.',
+        vocab:[
+          {en:'percent asymmetry',pos:'n.',tr:'yüzde asimetri'},
+          {en:'large percent effect',pos:'phr.',tr:'büyük yüzde etkisi'},
+          {en:'cancel symmetry myth',pos:'phr.',tr:'simetri mitini boz'},
+          {en:'compound result',pos:'n.',tr:'bileşik sonuç'},
+          {en:'net loss',pos:'n.',tr:'net kayıp'},
+        ],
+        rule:'<strong>Aynı % artış + azalış net kayıp.</strong> <em>(1+r)(1−r) = 1 − r²</em>. Büyük <em>r</em> için fark belirgin: %10 → −1%, %50 → −25%.'
+      }
+    },
+    // B3 — Without replacement probability
+    {
+      k:'PSDA',
+      p:`A bag contains 3 red marbles and 7 blue marbles. Two marbles are drawn at random without replacement.`,
+      q:'What is the probability that both drawn marbles are red?',
+      o:['A) 9⁄100','B) 1⁄15','C) 3⁄10','D) 3⁄100'],
+      a:1,
+      explain:{
+        why_correct:'<em>P(birinci red) = 3/10</em>. İkinci için kalan: 2 red, 9 total. <em>P(ikinci|birinci) = 2/9</em>. <em>P(both) = (3/10)(2/9) = 6/90 = 1/15</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> WITH replacement: <em>(3/10)² = 9/100</em> (yanlış). <strong>C</strong> tek çekim. <strong>D</strong> hesap hatası.',
+        vocab:[
+          {en:'without replacement',pos:'phr.',tr:'iadesiz'},
+          {en:'with replacement',pos:'phr.',tr:'iadeli'},
+          {en:'dependent events',pos:'phr.',tr:'bağımlı olaylar'},
+          {en:'updated probability',pos:'n.',tr:'güncellenmiş olasılık'},
+          {en:'shrinking sample',pos:'phr.',tr:'küçülen örnek'},
+        ],
+        rule:'<strong>Without replacement:</strong> ikinci çekimde hem favorable hem total <strong>1 azalır</strong>. WITH replacement: koşullar değişmez (independent).'
+      }
+    },
+    // B4 — Area unit conversion (squared)
+    {
+      k:'PSDA',
+      p:`How many square centimeters are in 1 square meter?`,
+      q:'',
+      o:['A) 100','B) 1,000','C) 10,000','D) 100,000'],
+      a:2,
+      explain:{
+        why_correct:'<em>1 m = 100 cm</em>. <em>1 m² = (100 cm)² = 10,000 cm²</em>. Cevap: C.',
+        why_wrong:'<strong>A</strong> sadece lineer faktör. <strong>B</strong> rastgele. <strong>D</strong> kübik faktör (hacim için).',
+        vocab:[
+          {en:'squared conversion',pos:'phr.',tr:'kareli dönüşüm'},
+          {en:'linear vs area',pos:'phr.',tr:'lineer vs alan'},
+          {en:'two-dimensional',pos:'adj.',tr:'iki boyutlu'},
+          {en:'dimensional scaling',pos:'phr.',tr:'boyutsal ölçekleme'},
+          {en:'common mistake',pos:'phr.',tr:'yaygın hata'},
+        ],
+        rule:'<strong>Area conversion tuzağı:</strong> lineer dönüşüm faktörünü <strong>kareye yükselt</strong>. <em>1 m = 100 cm</em> → <em>1 m² = 10,000 cm²</em>, NOT 100 cm².'
+      }
+    },
+    // B5 — Volume unit conversion (cubed)
+    {
+      k:'PSDA',
+      p:`How many cubic centimeters are in 1 cubic meter?`,
+      q:'',
+      o:['A) 1,000','B) 10,000','C) 100,000','D) 1,000,000'],
+      a:3,
+      explain:{
+        why_correct:'<em>1 m = 100 cm</em>. <em>1 m³ = (100)³ = 1,000,000 cm³</em>. Cevap: D.',
+        why_wrong:'<strong>A</strong> lineer. <strong>B</strong> kareli (alan). <strong>C</strong> rastgele.',
+        vocab:[
+          {en:'cubed conversion',pos:'phr.',tr:'kübik dönüşüm'},
+          {en:'three-dimensional',pos:'adj.',tr:'üç boyutlu'},
+          {en:'volume scaling',pos:'phr.',tr:'hacim ölçekleme'},
+          {en:'cube the factor',pos:'phr.',tr:'faktörü küple'},
+          {en:'million cm cubed',pos:'phr.',tr:'milyon cm küp'},
+        ],
+        rule:'<strong>Volume conversion tuzağı:</strong> lineer faktörü <strong>küpe yükselt</strong>. <em>1 m³ = 100³ = 1,000,000 cm³</em>.'
+      }
+    },
+    // B6 — Inverse with squared variable
+    {
+      k:'PSDA',
+      p:`y is inversely proportional to x².`,
+      q:'If x is tripled, what happens to y?',
+      o:['A) y is tripled','B) y becomes 1⁄3 of its original value','C) y becomes 1⁄9 of its original value','D) y stays the same'],
+      a:2,
+      explain:{
+        why_correct:'<em>y = k/x²</em>. <em>x → 3x</em>: <em>y → k/(3x)² = k/(9x²) = y/9</em>. <em>y</em> 1/9’a iner. Cevap: C.',
+        why_wrong:'<strong>A</strong> direct davranışı. <strong>B</strong> sadece x ile inverse (kare yok). <strong>D</strong> sabit varsayımı.',
+        vocab:[
+          {en:'inverse square',pos:'n.',tr:'ters kare'},
+          {en:'inverse proportional to square',pos:'phr.',tr:'kareye ters orantılı'},
+          {en:'reciprocal squared',pos:'phr.',tr:'tersinin karesi'},
+          {en:'physics relation',pos:'phr.',tr:'fizik ilişkisi'},
+          {en:'scaling factor cubed',pos:'phr.',tr:'kübe yükselt'},
+        ],
+        rule:'<strong>Inverse square tuzağı:</strong> <em>y = k/x²</em>: <em>x → cx</em> ise <em>y → y/c²</em>. Triple x → 1/9 y.'
+      }
+    },
+    // B7 — Weighted vs simple average
+    {
+      k:'PSDA',
+      p:`In a school, 25 students from Class A have an average test score of 80. 15 students from Class B have an average of 90.`,
+      q:'What is the combined average for all 40 students?',
+      o:['A) 83.75','B) 85','C) 87.5','D) 90'],
+      a:0,
+      explain:{
+        why_correct:'Toplam puan: <em>25(80) + 15(90) = 2,000 + 1,350 = 3,350</em>. Combined avg: <em>3,350/40 = 83.75</em>. Cevap: A.',
+        why_wrong:'<strong>B</strong> <em>(80 + 90)/2 = 85</em> (aritmetik trap, eşit sayı varsayar). <strong>C, D</strong> hesap hataları.',
+        vocab:[
+          {en:'combined average',pos:'phr.',tr:'birleşik ortalama'},
+          {en:'unequal group sizes',pos:'phr.',tr:'farklı grup büyüklükleri'},
+          {en:'weighted by count',pos:'phr.',tr:'sayıya göre ağırlıklı'},
+          {en:'avg of averages trap',pos:'phr.',tr:'ortalamaların ortalaması tuzağı'},
+          {en:'sum then divide',pos:'phr.',tr:'topla sonra böl'},
+        ],
+        rule:'<strong>Avg of averages tuzağı:</strong> Eşit olmayan grup büyüklükleriyle <em>(avg₁ + avg₂)/2</em> YANLIŞ. <strong>Toplam puanı/toplam sayı</strong> kullan.'
+      }
+    },
+    // B8 — Percent change wrong denominator
+    {
+      k:'PSDA',
+      p:`A price went from <span class="usd">$80</span> to <span class="usd">$100</span>.`,
+      q:'What is the percent increase?',
+      o:['A) 20%','B) 25%','C) 80%','D) 125%'],
+      a:1,
+      explain:{
+        why_correct:'Artış: <em>100 − 80 = 20</em>. Oran: <em>20/80 = 0.25 = 25%</em>. Cevap: B.\n\n<strong>Tuzak:</strong> Yeni değer (100) değil, <strong>orijinal değer (80)</strong> payda.',
+        why_wrong:'<strong>A</strong> <em>20/100 = 20%</em> (yeni değer payda — yanlış). <strong>C</strong> orijinal/yeni. <strong>D</strong> yeni/orijinal.',
+        vocab:[
+          {en:'wrong denominator',pos:'phr.',tr:'yanlış payda'},
+          {en:'original is base',pos:'phr.',tr:'orijinal temel değer'},
+          {en:'consistent reference',pos:'phr.',tr:'tutarlı referans'},
+          {en:'old value formula',pos:'phr.',tr:'eski değer formülü'},
+          {en:'percent change definition',pos:'phr.',tr:'yüzde değişim tanımı'},
+        ],
+        rule:'<strong>Percent change formula:</strong> <em>(new − old)/old × 100%</em>. <strong>Payda eski değer</strong>, yeni değer değil. Her zaman.'
+      }
+    },
+    // B9 — Reverse percent direction
+    {
+      k:'PSDA',
+      p:`After a 25% increase, the price of an item is <span class="usd">$50</span>.`,
+      q:'What was the original price?',
+      o:['A) <span class="usd">$37.50</span>','B) <span class="usd">$40</span>','C) <span class="usd">$62.50</span>','D) <span class="usd">$75</span>'],
+      a:1,
+      explain:{
+        why_correct:'<em>1.25 × P = 50</em> → <em>P = 50/1.25 = 40</em>. Cevap: B.',
+        why_wrong:'<strong>A</strong> <em>50 × 0.75 = 37.50</em> (yanlış — çıkarma değil bölme). <strong>C</strong> <em>50 × 1.25</em>. <strong>D</strong> rastgele.',
+        vocab:[
+          {en:'reverse percent direction',pos:'phr.',tr:'ters yüzde yön'},
+          {en:'divide not subtract',pos:'phr.',tr:'çıkar değil böl'},
+          {en:'undo growth',pos:'phr.',tr:'büyümeyi geri al'},
+          {en:'final to original',pos:'phr.',tr:'son → orijinal'},
+          {en:'common subtraction error',pos:'phr.',tr:'yaygın çıkarma hatası'},
+        ],
+        rule:'<strong>Reverse percent tuzağı:</strong> Final = original × (1+r). Original için <strong>final / (1+r)</strong>, NOT final × (1−r). Asimetrik!'
+      }
+    },
+    // B10 — km/h to m/s conversion
+    {
+      k:'PSDA',
+      p:`A car travels at 90 kilometers per hour.`,
+      q:'What is the speed in meters per second? (1 km = 1,000 m; 1 h = 3,600 s)',
+      o:['A) 0.025','B) 25','C) 250','D) 324,000'],
+      a:1,
+      explain:{
+        why_correct:'<em>90 km/h × (1,000 m/km) × (1 h/3,600 s) = 90,000/3,600 = 25</em> m/s. Cevap: B.',
+        why_wrong:'<strong>A</strong> 1000’i bölmüş 3600’le. <strong>C, D</strong> dönüşüm yönü hatası.',
+        vocab:[
+          {en:'km to m to s',pos:'phr.',tr:'km → m → s'},
+          {en:'dimensional analysis',pos:'n.',tr:'boyut analizi'},
+          {en:'shortcut divide 3.6',pos:'phr.',tr:'3.6’ya bölme kısayolu'},
+          {en:'preserve units',pos:'phr.',tr:'birimleri koru'},
+          {en:'set up factors',pos:'phr.',tr:'faktörleri kur'},
+        ],
+        rule:'<strong>km/h → m/s kısayolu:</strong> <em>÷ 3.6</em>. Veya: 1000/3600 = 5/18 ile çarp.'
+      }
+    },
+    // B11 — At least one (independent events)
+    {
+      k:'PSDA',
+      p:`A fair coin is flipped twice.`,
+      q:'What is the probability of getting at least one head?',
+      o:['A) 1⁄2','B) 3⁄4','C) 1','D) 1⁄4'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">"At least one" tuzağı</mark>: kolay yol = <em>1 − P(none)</em>. <em>P(no heads) = (1/2)² = 1/4</em>. <em>P(at least one) = 1 − 1/4 = 3/4</em>. Cevap: B.\n\nDoğrulama: HH, HT, TH, TT — 3/4 has at least one H.',
+        why_wrong:'<strong>A</strong> tek atış olasılığı. <strong>C</strong> <em>P(H) + P(H) = 1</em> (overcounting — kesişimi çıkarmadı). <strong>D</strong> <em>P(no heads)</em>.',
+        vocab:[
+          {en:'at least one',pos:'phr.',tr:'en az bir'},
+          {en:'complement rule',pos:'n.',tr:'tümleyen kuralı'},
+          {en:'overcounting',pos:'n.',tr:'aşırı sayma'},
+          {en:'one minus none',pos:'phr.',tr:'1 − hiç'},
+          {en:'union not addition',pos:'phr.',tr:'birleşim ekleme değil'},
+        ],
+        rule:'<strong>"At least one" tuzağı:</strong> <em>P(at least 1) = 1 − P(none)</em>. Ekleme overcount riski (kesişim iki kez sayılır).'
+      }
+    },
+    // B12 — Ratio interpretation (parts vs whole)
+    {
+      k:'PSDA',
+      p:`The ratio of cats to dogs at a shelter is 3:5. There are 32 animals total.`,
+      q:'How many cats are at the shelter?',
+      o:['A) 9','B) 12','C) 19','D) 20'],
+      a:1,
+      explain:{
+        why_correct:'<mark class="hl-key">Toplam parça</mark>: <em>3 + 5 = 8</em>. Her parça: <em>32/8 = 4</em>. Cats: <em>3 × 4 = 12</em>. Cevap: B.\n\n<strong>Tuzak:</strong> <em>3:5</em>’te 5’i toplam sanma yanlış.',
+        why_wrong:'<strong>A</strong> rastgele. <strong>C</strong> <em>32 × 3/5 = 19.2</em> (yanlış — 5’i toplam sanma, 8 olmalı). <strong>D</strong> dogs.',
+        vocab:[
+          {en:'parts of ratio',pos:'phr.',tr:'oranın parçaları'},
+          {en:'sum of parts',pos:'phr.',tr:'parçaların toplamı'},
+          {en:'parts not whole',pos:'phr.',tr:'parça toplam değil'},
+          {en:'denominator total',pos:'phr.',tr:'payda toplam'},
+          {en:'fraction of total',pos:'phr.',tr:'toplamın kesri'},
+        ],
+        rule:'<strong>Ratio tuzağı:</strong> <em>a:b</em>’de <strong>a + b toplam parça</strong>. Kategorinin payı = <em>(o kategorinin parçası) / (a + b)</em>. <em>a/b</em> yanlış payda.'
+      }
+    }
+  ]
+}
+];
+
+// ============= STATE =============
+let currentModule = 0;
+let currentQ = 0;
+let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
+let moduleCompleted = MODULES.map(() => false);
+
+// ============= PERSISTENCE =============
+const STORAGE_KEY = 'gri-camp-day-5-math-psda';
+function saveProgress(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: answers,
+      completed: moduleCompleted,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadProgress(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.answers) || d.answers.length !== MODULES.length) return;
+    for(var i=0; i<MODULES.length; i++){
+      if(!Array.isArray(d.answers[i]) || d.answers[i].length !== MODULES[i].questions.length) return;
+    }
+    answers = d.answers;
+    moduleCompleted = (Array.isArray(d.completed) && d.completed.length === MODULES.length)
+      ? d.completed : MODULES.map(function(){return false;});
+  } catch(e) {}
+}
+function hasAnyAnswer(){
+  for(var i=0; i<answers.length; i++){
+    for(var j=0; j<answers[i].length; j++){
+      if(answers[i][j] !== null) return true;
+    }
+  }
+  return false;
+}
+function resetAllProgress(){
+  if(!confirm('Tüm modüllerdeki cevapların ve ilerlemen silinecek. Emin misin?')) return;
+  answers = MODULES.map(function(m){ return new Array(m.questions.length).fill(null); });
+  moduleCompleted = MODULES.map(function(){ return false; });
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  currentModule = 0; currentQ = 0;
+  var qEl = document.getElementById('quiz');
+  var tEl = document.getElementById('topbar');
+  var rEl = document.getElementById('results');
+  var sEl = document.getElementById('splash');
+  if(qEl) qEl.classList.remove('show');
+  if(tEl) tEl.classList.remove('show');
+  if(rEl) rEl.classList.remove('show');
+  if(sEl) sEl.style.display = 'flex';
+  renderSplash();
+}
+
+// ============= UNLOAD WARNING =============
+window.addEventListener('beforeunload', function(e){
+  // Quiz ekranı açıkken sayfayı yenilemeye veya kapatmaya karşı uyarı.
+  var quizEl = document.getElementById('quiz');
+  if(quizEl && quizEl.classList.contains('show')){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// ============= HELPERS =============
+function getModuleStatus(idx){
+  const mod = MODULES[idx];
+  if(mod.questions.length === 0) return 'empty';
+  if(moduleCompleted[idx]) return 'complete';
+  const answered = answers[idx].filter(a => a !== null).length;
+  if(answered === 0) return 'untouched';
+  return 'in-progress';
+}
+function getModuleScore(idx){
+  let c = 0;
+  answers[idx].forEach((a,i)=>{ if(a === MODULES[idx].questions[i].a) c++ });
+  return c;
+}
+
+// ============= SPLASH RENDERER =============
+function renderSplash(){
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği henüz eklenmemiş modülleri splash’ta gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let badge = '';
+    if(status === 'complete'){
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      badge = `<span class="mc-status done">✓ ${sc}/${m.questions.length} · ${pct}%</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      badge = `<span class="mc-status progress">▶ ${ans}/${m.questions.length} devam</span>`;
+    }
+    return `<div class="module-card clickable" onclick="startModule(${i})">
+      <div class="mc-left">
+        <div class="mc-name">${m.name} ${badge}</div>
+        <div class="mc-desc">${m.subtitle}</div>
+      </div>
+      <div class="mc-meta"><div class="mc-q">${m.questions.length}</div><div>soru</div></div>
+    </div>`;
+  }).join('');
+  var rb = document.getElementById('resetBtn');
+  if(rb){ rb.style.display = hasAnyAnswer() ? 'inline-block' : 'none'; }
+}
+
+// ============= NAVIGATION =============
+function startModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  // If already completed, show results
+  if(moduleCompleted[idx]){
+    showModuleResults();
+    return;
+  }
+  // Find first unanswered to resume, or start at 0
+  const firstUnanswered = answers[idx].findIndex(a => a === null);
+  currentQ = firstUnanswered === -1 ? 0 : firstUnanswered;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function goHome(){
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('splash').style.display='flex';
+  renderSplash();
+  window.scrollTo({top:0});
+}
+
+function quitToSplash(){
+  if(!confirm('Ana sayfaya dönmek istediğine emin misin? Cevapların kaydedildi.')) return;
+  goHome();
+}
+
+function restartQuiz(){
+  if(!confirm('Bu modülü baştan çözmek istediğine emin misin?')) return;
+  answers[currentModule] = new Array(MODULES[currentModule].questions.length).fill(null);
+  moduleCompleted[currentModule] = false;
+  currentQ = 0;
+  saveProgress();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const mod = MODULES[currentModule];
+  const q = mod.questions[currentQ];
+  const card = document.getElementById('qcard');
+  card.innerHTML = `
+    <div class="qtype" lang="en">${q.k}</div>
+    <div class="passage">${q.p}</div>
+    ${q.data ? q.data : ''}
+    <div class="qstem">${q.q}</div>
+    <div class="opts">
+      ${q.o.map((opt,i)=>{
+        const letter = opt.substring(0,1);
+        const text = opt.substring(3);
+        const selected = answers[currentModule][currentQ]===i?'sel':'';
+        return `<button class="opt ${selected}" onclick="pickAnswer(${i})">
+          <span class="opt-letter">${letter}</span><span>${text}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('tbMeta').textContent = `${mod.name} · Day 5 Math PSDA`;
+  document.getElementById('tbQnum').textContent = `${currentQ+1} / ${mod.questions.length}`;
+  document.getElementById('progFill').style.width = `${((currentQ+1)/mod.questions.length)*100}%`;
+  const dr = document.getElementById('dotRow');
+  dr.innerHTML = mod.questions.map((_,i)=>{
+    const cls = i===currentQ?'cur':(answers[currentModule][i]!==null?'ans':'');
+    return `<span class="dot ${cls}" onclick="goTo(${i})" title="Soru ${i+1}"></span>`;
+  }).join('');
+  document.getElementById('prevBtn').disabled = currentQ===0;
+  const isLast = currentQ===mod.questions.length-1;
+  document.getElementById('nextBtn').style.display = isLast?'none':'';
+  document.getElementById('submitBtn').style.display = isLast?'':'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  window.MODULES = MODULES;
+  window.currentModule = currentModule;
+  window.currentQ = currentQ;
+}
+function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
+function goTo(i){ currentQ=i; renderQuestion() }
+function nextQ(){ if(currentQ<MODULES[currentModule].questions.length-1){ currentQ++; renderQuestion() } }
+function prevQ(){ if(currentQ>0){ currentQ--; renderQuestion() } }
+
+function submitModule(){
+  showModuleResults();
+}
+
+function showModuleResults(){
+  const mod = MODULES[currentModule];
+  let correct = 0;
+  answers[currentModule].forEach((a,i)=>{ if(a===mod.questions[i].a) correct++ });
+  const pct = mod.questions.length ? Math.round((correct/mod.questions.length)*100) : 0;
+
+  // Mark as completed if all answered
+  const allAnswered = answers[currentModule].every(a => a !== null);
+  if(allAnswered) moduleCompleted[currentModule] = true;
+  saveProgress();
+
+  // Header
+  document.getElementById('resEyebrow').textContent = `${mod.name} · Detaylı Analiz`;
+  const titles = ['Module 1 Analizi', 'Module 2 Analizi', 'Bonus Analizi'];
+  document.getElementById('resTitle').textContent = titles[currentModule] || 'Modül Analizi';
+  document.getElementById('resSub').textContent = 'Aşağıdaki yanlışları tek tek aç, kuralları defterine geç';
+
+  // Module tabs
+  renderModuleTabs();
+
+  // Score card
+  document.getElementById('scoreNum').textContent = correct;
+  document.getElementById('scoreDen').textContent = `/ ${mod.questions.length} doğru`;
+  document.getElementById('scorePct').textContent = pct+'%';
+  const msg = document.getElementById('scoreMsg');
+  if(pct>=80) msg.textContent='Bu modülde çok iyi bir performans gösterdin. Yine de yanlışlarını detaylı incele, küçük hatalar sınavda büyür.';
+  else if(pct>=60) msg.textContent='Ortalama bir sonuç. Aşağıdaki analizleri dikkatlice oku, hata günlüğüne yedi adım protokolüyle işle.';
+  else msg.textContent='Bu modülde daha çok pratik gerekiyor. Her yanlışı tek tek aç, kuralı kendi kelimelerinle defterine geçir.';
+
+  // Determine next button
+  const isLast = currentModule === MODULES.length - 1;
+  const nextHasQ = !isLast && MODULES[currentModule+1].questions.length > 0;
+  const primaryBtn = document.getElementById('resPrimaryBtn');
+  if(nextHasQ){
+    const nextNames = ['Module 2', 'Bonus'];
+    primaryBtn.textContent = `${nextNames[currentModule] || 'Sıradaki'} Modülüne Geç ›`;
+    primaryBtn.onclick = goToNextModule;
+    primaryBtn.style.display = '';
+  } else {
+    primaryBtn.textContent = 'Bu Modülü Baştan Çöz';
+    primaryBtn.onclick = restartQuiz;
+    primaryBtn.style.display = '';
+  }
+
+  renderModuleReview();
+  document.getElementById('quiz').classList.remove('show');
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderModuleTabs(){
+  const tabs = document.getElementById('moduleTabs');
+  tabs.innerHTML = MODULES.map((m,i)=>{
+    // İçeriği yoksa hiç gösterme
+    if(m.questions.length === 0) return '';
+    const status = getModuleStatus(i);
+    let cls = '';
+    let label = '';
+    if(i === currentModule) cls += ' current';
+    if(status === 'complete'){
+      cls += ' done';
+      const sc = getModuleScore(i);
+      const pct = Math.round(sc/m.questions.length*100);
+      label = `<span class="mt-pct">${sc}/${m.questions.length}</span>`;
+    } else if(status === 'in-progress'){
+      const ans = answers[i].filter(a=>a!==null).length;
+      label = `<span class="mt-pct">${ans}/${m.questions.length}</span>`;
+    }
+    return `<button class="mt-btn${cls}" onclick="switchToModule(${i})">${m.name} ${label}</button>`;
+  }).join('');
+}
+
+function switchToModule(idx){
+  if(MODULES[idx].questions.length === 0) return;
+  currentModule = idx;
+  if(moduleCompleted[idx] || answers[idx].some(a => a !== null)){
+    showModuleResults();
+  } else {
+    startModule(idx);
+  }
+}
+
+function goToNextModule(){
+  if(currentModule + 1 < MODULES.length && MODULES[currentModule+1].questions.length > 0){
+    startModule(currentModule + 1);
+  }
+}
+
+function renderModuleReview(){
+  const list = document.getElementById('reviewList');
+  const mod = MODULES[currentModule];
+  let html = '';
+  mod.questions.forEach((q,idx)=>{
+    const userAns = answers[currentModule][idx];
+    const correctAns = q.a;
+    const isCorrect = userAns===correctAns;
+    const statusText = isCorrect?'DOĞRU':(userAns===null?'BOŞ':'YANLIŞ');
+    const answersHtml = q.o.map((opt,i)=>{
+      const letter = opt.substring(0,1);
+      const text = opt.substring(3);
+      let cls = '';
+      if(i===correctAns) cls = 'correct';
+      else if(i===userAns) cls = 'wrong-pick';
+      else return '';
+      return `<div class="rev-ans ${cls}"><span class="rev-ans-letter">${letter}</span><span>${text}</span></div>`;
+    }).filter(Boolean).join('');
+    const e = q.explain;
+    const vocabHtml = e.vocab.map(v=>`<div class="vocab-row"><span class="vocab-en">${v.en}</span><span class="vocab-tr"><span class="pos">${v.pos}</span>${v.tr}</span></div>`).join('');
+    html += `<div class="review-card ${isCorrect?'':'open'}">
+      <div class="review-head ${isCorrect?'correct':''}" onclick="this.parentElement.classList.toggle('open')">
+        <span class="review-num">${idx+1}</span>
+        <span class="review-tag">${q.k}</span>
+        <span class="review-status">${statusText}</span>
+        <span class="review-toggle">▾</span>
+      </div>
+      <div class="review-body">
+        <div class="rev-passage">${q.p}</div>
+        ${q.data ? `<div class="rev-data">${q.data}</div>` : ''}
+        <div class="rev-stem">${q.q}</div>
+        <div class="rev-answers">${answersHtml}</div>
+        <div class="gri-block">
+          <div class="gri-head">
+            <div class="gri-avatar"><img src="${GRI_MASCOT}" alt="Gri"></div>
+            <div class="gri-label">Gri diyor ki<small>Detaylı Analiz</small></div>
+          </div>
+          <div class="gri-body">
+            <div class="expl-section"><div class="expl-h">Doğru Cevap Mantığı</div><p>${e.why_correct}</p></div>
+            <div class="expl-section"><div class="expl-h">Yanlış Şıklar Neden Yanlış</div><p>${e.why_wrong}</p></div>
+            <div class="expl-section"><div class="expl-h">Kelime Hazinesi</div><div class="vocab-list">${vocabHtml}</div></div>
+            <div class="expl-section"><div class="rule-box"><div class="rule-label">Kuralı Hatırla</div><p>${e.rule}</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+// ============= INIT =============
+loadProgress();
+renderSplash();
+
+// URL param desteği: ?m=M&q=Q ile direkt soruya git (Çalışma Masam linkleri için)
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var m = parseInt(params.get('m'), 10);
+    var q = parseInt(params.get('q'), 10);
+    if (isNaN(m) || isNaN(q) || m < 1 || q < 1) return;
+    var modIdx = m - 1;
+    if (!MODULES[modIdx] || !MODULES[modIdx].questions || q > MODULES[modIdx].questions.length) return;
+    currentModule = modIdx;
+    currentQ = q - 1;
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').classList.add('show');
+    document.getElementById('quiz').classList.add('show');
+    renderQuestion();
+  } catch (e) { /* fall back to splash */ }
+})();
+</script>
+</body>
+</html>

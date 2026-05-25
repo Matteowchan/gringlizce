@@ -443,6 +443,13 @@
     var data = buildCrumbs(filename);
     if (!data.crumbs || data.crumbs.length <= 1) return;
 
+    // Sayfada zaten native bir .breadcrumb varsa duplicate olmasın diye gizle.
+    // (Bazı sayfalarda inline breadcrumb HTML mevcut, biz tek tip bar
+    // gösterelim, eski olanı sayfaya bastığı momentten itibaren gizleyelim.)
+    var nativeStyle = document.createElement('style');
+    nativeStyle.textContent = '.breadcrumb{display:none !important;}';
+    document.head.appendChild(nativeStyle);
+
     var styleEl = document.createElement('style');
     styleEl.textContent = STYLE;
     document.head.appendChild(styleEl);

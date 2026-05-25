@@ -937,7 +937,260 @@
       .t-modal-row { grid-template-columns: 1fr; gap: 0; }
       .t-type-picker { grid-template-columns: 1fr; }
     }
-  </style>
+  
+
+    /* === Student Drawer Tabs === */
+    .sd-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1.5px solid var(--line, #D9D2C4);
+      margin: 1.25rem 0 1rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sd-tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.6rem 1rem;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      color: var(--text-muted, #8a9099);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1.5px;
+    }
+    .sd-tab-btn:hover {
+      color: var(--text, #1a2230);
+    }
+    .sd-tab-btn.active {
+      color: var(--teal, #1f6e62);
+      border-bottom-color: var(--teal, #1f6e62);
+      font-weight: 600;
+    }
+    .sd-tab-btn .sd-tab-count {
+      display: inline-block;
+      margin-left: 0.35rem;
+      padding: 0.05rem 0.45rem;
+      background: var(--bg-soft, #f5f1e8);
+      color: var(--text-muted, #8a9099);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .sd-tab-btn.active .sd-tab-count {
+      background: var(--teal, #1f6e62);
+      color: var(--bg-card, #fff);
+    }
+
+    .sd-tab-panel { display: none; }
+    .sd-tab-panel.active { display: block; }
+
+    .sd-tab-empty {
+      color: var(--text-muted, #8a9099);
+      font-style: italic;
+      padding: 1rem 0;
+      text-align: center;
+    }
+    .sd-tab-loading {
+      color: var(--text-muted, #8a9099);
+      font-style: italic;
+      padding: 0.5rem 0;
+      text-align: center;
+    }
+
+    /* Passage accordion */
+    .sd-passage-group {
+      margin-bottom: 0.6rem;
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 4px;
+      background: var(--bg-card, #fff);
+    }
+    .sd-passage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s;
+    }
+    .sd-passage-header:hover {
+      background: var(--bg-soft, #f5f1e8);
+    }
+    .sd-passage-title {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.88rem;
+      color: var(--text, #1a2230);
+      flex: 1;
+      min-width: 0;
+    }
+    .sd-passage-meta {
+      font-size: 0.76rem;
+      color: var(--text-muted, #8a9099);
+      margin-top: 0.15rem;
+    }
+    .sd-passage-count {
+      background: var(--bg-soft, #f5f1e8);
+      color: var(--text, #1a2230);
+      font-size: 0.78rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 10px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .sd-passage-caret {
+      color: var(--text-muted, #8a9099);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .sd-passage-group.open .sd-passage-caret {
+      transform: rotate(90deg);
+    }
+    .sd-passage-questions {
+      display: none;
+      border-top: 1px solid var(--line, #D9D2C4);
+      padding: 0.3rem 0;
+    }
+    .sd-passage-group.open .sd-passage-questions {
+      display: block;
+    }
+    .sd-q-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid var(--line-soft, #ece7d8);
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.12s;
+    }
+    .sd-q-row:last-child { border-bottom: none; }
+    .sd-q-row:hover { background: var(--bg-soft, #f5f1e8); }
+    .sd-q-mark {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 0.55rem;
+      flex-shrink: 0;
+    }
+    .sd-q-mark.wrong { background: #c44a3c; }
+    .sd-q-mark.bookmark { background: #c89a3c; }
+    .sd-q-body { flex: 1; min-width: 0; }
+    .sd-q-text {
+      font-family: var(--font-serif, Georgia), serif;
+      font-size: 0.88rem;
+      color: var(--text, #1a2230);
+      line-height: 1.45;
+      margin: 0 0 0.25rem;
+      word-break: break-word;
+    }
+    .sd-q-meta {
+      font-size: 0.74rem;
+      color: var(--text-muted, #8a9099);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .sd-q-meta .sd-q-letter {
+      display: inline-block;
+      padding: 0 0.35rem;
+      background: rgba(196, 74, 60, 0.12);
+      color: #c44a3c;
+      border-radius: 2px;
+      margin-left: 0.3rem;
+      font-weight: 600;
+    }
+    .sd-q-note {
+      font-size: 0.78rem;
+      color: var(--text-muted, #8a9099);
+      font-style: italic;
+      margin-top: 0.2rem;
+      padding-left: 0.6rem;
+      border-left: 2px solid var(--line, #D9D2C4);
+    }
+
+    /* Vocab list (drawer içi) */
+    .sd-vocab-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .sd-vocab-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0.85rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--line, #D9D2C4);
+      border-radius: 4px;
+    }
+    .sd-vocab-word {
+      font-family: var(--font-serif, Georgia), serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text, #1a2230);
+    }
+    .sd-vocab-meaning {
+      font-size: 0.85rem;
+      color: var(--text, #1a2230);
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .sd-vocab-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted, #8a9099);
+      white-space: nowrap;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    @media (max-width: 540px) {
+      .sd-vocab-row {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+      }
+    }
+
+    /* Vocab pagination (drawer içi) */
+    .sd-vocab-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-soft, #f5f1e8);
+      border-radius: 4px;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    }
+    .sd-vocab-pagination button {
+      background: transparent;
+      border: 1px solid var(--line, #D9D2C4);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 3px;
+      color: var(--text, #1a2230);
+      font-family: inherit;
+    }
+    .sd-vocab-pagination button:hover:not(:disabled) {
+      background: var(--bg-card, #fff);
+      border-color: var(--teal, #1f6e62);
+    }
+    .sd-vocab-pagination button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .sd-vocab-pagination .sd-vp-info {
+      font-size: 0.85rem;
+      color: var(--text, #1a2230);
+    }
+    .sd-vocab-pagination .sd-vp-sub {
+      color: var(--text-muted, #8a9099);
+      font-size: 0.78rem;
+      margin-left: 0.25rem;
+    }
+
+</style>
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <meta name="description" content="Sınıf — Gri English">
@@ -1483,16 +1736,55 @@
           }).join('') + '</ul>';
         }
 
+        var wrongCount = wrong;
+        var vocabCountInit = parseInt(d.vocab_count) || 0;
+
+        var tabsHtml = ''
+          + '<div class="sd-tabs" role="tablist">'
+            + '<button class="sd-tab-btn active" data-tab="overview" type="button">Özet</button>'
+            + '<button class="sd-tab-btn" data-tab="bookmarks" type="button">Yer İmleri</button>'
+            + '<button class="sd-tab-btn" data-tab="wrong" type="button">Yanlışlar<span class="sd-tab-count" id="sd-tab-count-wrong">' + (wrongCount || 0) + '</span></button>'
+            + '<button class="sd-tab-btn" data-tab="vocab" type="button">Kelimeler<span class="sd-tab-count" id="sd-tab-count-vocab">' + vocabCountInit + '</span></button>'
+          + '</div>';
+
+        var overviewPanel = ''
+          + '<div class="sd-tab-panel active" data-panel="overview">'
+            + '<div class="sd-section-title">Kategori Performansı</div>'
+            + catsHtml
+            + '<div class="sd-section-title">Son Cevaplar</div>'
+            + recentHtml
+          + '</div>';
+
+        var bookmarksPanel = '<div class="sd-tab-panel" data-panel="bookmarks" id="sd-panel-bookmarks"><p class="sd-tab-loading">Yer imleri yüklenecek...</p></div>';
+        var wrongPanel = '<div class="sd-tab-panel" data-panel="wrong" id="sd-panel-wrong"><p class="sd-tab-loading">Yanlış cevaplar yüklenecek...</p></div>';
+        var vocabPanel = '<div class="sd-tab-panel" data-panel="vocab" id="sd-panel-vocab"><p class="sd-tab-loading">Kelimeler yüklenecek...</p></div>';
+
         sdBody.innerHTML = ''
           + '<p class="sd-meta">' + meta + '</p>'
           + summary
-          + '<div class="sd-section-title">Kategori Performansı</div>'
-          + catsHtml
-          + '<div class="sd-section-title">Son Cevaplar</div>'
-          + recentHtml
+          + tabsHtml
+          + overviewPanel
+          + bookmarksPanel
+          + wrongPanel
+          + vocabPanel
           + '<div class="sd-actions">'
             + '<button class="sd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
           + '</div>';
+
+        // Sekme switching
+        var loaded = { bookmarks: false, wrong: false, vocab: false };
+        sdBody.querySelectorAll('.sd-tab-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var key = btn.dataset.tab;
+            sdBody.querySelectorAll('.sd-tab-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+            sdBody.querySelectorAll('.sd-tab-panel').forEach(function (p) {
+              p.classList.toggle('active', p.dataset.panel === key);
+            });
+            if (key === 'bookmarks' && !loaded.bookmarks) { loaded.bookmarks = true; loadStudentBookmarks(studentId); }
+            else if (key === 'wrong' && !loaded.wrong) { loaded.wrong = true; loadStudentWrong(studentId); }
+            else if (key === 'vocab' && !loaded.vocab) { loaded.vocab = true; loadStudentVocab(studentId, 0); }
+          });
+        });
 
         sdBody.querySelector('.sd-remove-btn').addEventListener('click', async function () {
           var email = d.student_email || 'bu öğrenci';
@@ -1509,6 +1801,193 @@
           }
         });
       }
+
+      // ============================================================
+      // Yeni RPC entegrasyonları: yer imleri, yanlış cevaplar, kelime listesi
+      // ============================================================
+
+      function humanizeShort(s) {
+        if (!s) return '';
+        return String(s).replace(/[-_]/g, ' ').replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+      }
+
+      function escAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function renderPassageGroup(grp, kind) {
+        // kind: 'bookmark' veya 'wrong'
+        var passageId = grp.passage_id;
+        var examType = grp.exam_type ? humanizeShort(grp.exam_type) : '';
+        var subjectLine = [
+          examType,
+          grp.section ? humanizeShort(grp.section) : '',
+          grp.category ? humanizeShort(grp.category) : '',
+          grp.subcategory ? humanizeShort(grp.subcategory) : ''
+        ].filter(Boolean).join(' · ');
+        if (!subjectLine) subjectLine = 'Diğer';
+
+        var titleText = passageId ? 'Pasaj' : 'Pasajsız Sorular';
+        var count = parseInt(grp.question_count) || (grp.questions ? grp.questions.length : 0);
+
+        var qRows = (grp.questions || []).map(function (q) {
+          var slug = q.slug || '';
+          var qText = q.question_text ? esc(q.question_text) : esc(slug);
+          var letterHtml = '';
+          if (kind === 'wrong' && q.selected_letter) {
+            letterHtml = '<span class="sd-q-letter">Seçilen: ' + esc(q.selected_letter) + '</span>'
+              + (q.correct_answer ? '<span class="sd-q-letter" style="background:rgba(31,110,98,0.12);color:#1f6e62;">Doğru: ' + esc(q.correct_answer) + '</span>' : '');
+          }
+          var dateStr = '';
+          if (kind === 'wrong' && q.answered_at) dateStr = fmtRelative(q.answered_at);
+          else if (kind === 'bookmark' && q.bookmarked_at) dateStr = fmtRelative(q.bookmarked_at);
+
+          var noteHtml = q.note ? '<div class="sd-q-note">' + esc(q.note) + '</div>' : '';
+          var markClass = kind === 'wrong' ? 'wrong' : 'bookmark';
+
+          return '<a class="sd-q-row" href="soru.html?q=' + encodeURIComponent(slug) + '" target="_blank" rel="noopener">'
+            + '<span class="sd-q-mark ' + markClass + '"></span>'
+            + '<div class="sd-q-body">'
+              + '<p class="sd-q-text">' + qText + '</p>'
+              + '<div class="sd-q-meta">' + esc(dateStr) + ' ' + letterHtml + '</div>'
+              + noteHtml
+            + '</div>'
+          + '</a>';
+        }).join('');
+
+        return '<div class="sd-passage-group">'
+          + '<div class="sd-passage-header">'
+            + '<div style="flex:1; min-width:0;">'
+              + '<div class="sd-passage-title">' + esc(titleText) + '</div>'
+              + '<div class="sd-passage-meta">' + esc(subjectLine) + '</div>'
+            + '</div>'
+            + '<span class="sd-passage-count">' + count + '</span>'
+            + '<span class="sd-passage-caret">›</span>'
+          + '</div>'
+          + '<div class="sd-passage-questions">' + qRows + '</div>'
+        + '</div>';
+      }
+
+      function attachPassageAccordion(panel) {
+        panel.querySelectorAll('.sd-passage-header').forEach(function (h) {
+          h.addEventListener('click', function () {
+            h.closest('.sd-passage-group').classList.toggle('open');
+          });
+        });
+      }
+
+      async function loadStudentBookmarks(studentId) {
+        var panel = document.getElementById('sd-panel-bookmarks');
+        if (!panel) return;
+        panel.innerHTML = '<p class="sd-tab-loading">Yükleniyor...</p>';
+        try {
+          var r = await sb.rpc('student_bookmarks_by_passage', {
+            p_class_id: classId, p_student_id: studentId
+          });
+          if (r.error) throw r.error;
+          var groups = r.data || [];
+          if (!Array.isArray(groups) || groups.length === 0) {
+            panel.innerHTML = '<p class="sd-tab-empty">Bu öğrencinin yer imi yok.</p>';
+            return;
+          }
+          panel.innerHTML = groups.map(function (g) { return renderPassageGroup(g, 'bookmark'); }).join('');
+          attachPassageAccordion(panel);
+        } catch (e) {
+          console.error('[student bookmarks]', e);
+          panel.innerHTML = '<p class="sd-tab-empty">Yer imleri yüklenemedi: ' + esc(e.message || String(e)) + '</p>';
+        }
+      }
+
+      async function loadStudentWrong(studentId) {
+        var panel = document.getElementById('sd-panel-wrong');
+        if (!panel) return;
+        panel.innerHTML = '<p class="sd-tab-loading">Yükleniyor...</p>';
+        try {
+          var r = await sb.rpc('student_wrong_by_passage', {
+            p_class_id: classId, p_student_id: studentId
+          });
+          if (r.error) throw r.error;
+          var groups = r.data || [];
+          if (!Array.isArray(groups) || groups.length === 0) {
+            panel.innerHTML = '<p class="sd-tab-empty">Bu öğrencinin yanlış cevabı yok.</p>';
+            return;
+          }
+          // Toplam yanlış sayısını tekrar hesapla (tab count güncel olsun)
+          var total = groups.reduce(function (acc, g) { return acc + (parseInt(g.question_count) || 0); }, 0);
+          var countEl = document.getElementById('sd-tab-count-wrong');
+          if (countEl) countEl.textContent = total;
+          panel.innerHTML = groups.map(function (g) { return renderPassageGroup(g, 'wrong'); }).join('');
+          attachPassageAccordion(panel);
+        } catch (e) {
+          console.error('[student wrong]', e);
+          panel.innerHTML = '<p class="sd-tab-empty">Yanlış cevaplar yüklenemedi: ' + esc(e.message || String(e)) + '</p>';
+        }
+      }
+
+      async function loadStudentVocab(studentId, page) {
+        var panel = document.getElementById('sd-panel-vocab');
+        if (!panel) return;
+        var PAGE = 12;
+        var offset = (parseInt(page) || 0) * PAGE;
+        panel.innerHTML = '<p class="sd-tab-loading">Yükleniyor...</p>';
+        try {
+          var r = await sb.rpc('student_vocab', {
+            p_class_id: classId, p_student_id: studentId,
+            p_limit: PAGE, p_offset: offset
+          });
+          if (r.error) throw r.error;
+          var data = r.data || { total: 0, rows: [] };
+          var total = parseInt(data.total) || 0;
+          var rows = data.rows || [];
+          var countEl = document.getElementById('sd-tab-count-vocab');
+          if (countEl) countEl.textContent = total;
+
+          if (total === 0) {
+            panel.innerHTML = '<p class="sd-tab-empty">Bu öğrencinin kelime listesi boş.</p>';
+            return;
+          }
+
+          var rowsHtml = '<div class="sd-vocab-list">' + rows.map(function (r) {
+            var word = r.word_display || '—';
+            var def = r.definition_json || {};
+            var firstMeaning = '';
+            if (Array.isArray(def.meanings) && def.meanings.length) firstMeaning = def.meanings[0];
+            else if (def.turkish) firstMeaning = def.turkish;
+            var meta = (r.review_count > 0 ? r.review_count + ' tekrar · ' : '') + fmtRelative(r.saved_at);
+            return '<div class="sd-vocab-row">'
+              + '<div class="sd-vocab-word">' + esc(word) + '</div>'
+              + '<div class="sd-vocab-meaning">' + esc(firstMeaning) + '</div>'
+              + '<div class="sd-vocab-meta">' + esc(meta) + '</div>'
+            + '</div>';
+          }).join('') + '</div>';
+
+          var totalPages = Math.max(1, Math.ceil(total / PAGE));
+          var currentPage = parseInt(page) || 0;
+          var start = currentPage * PAGE + 1;
+          var end = Math.min((currentPage + 1) * PAGE, total);
+
+          var paginationHtml = '';
+          if (totalPages > 1) {
+            paginationHtml = '<div class="sd-vocab-pagination">'
+              + '<button type="button" id="sd-vp-prev"' + (currentPage === 0 ? ' disabled' : '') + '>‹ Önceki</button>'
+              + '<span class="sd-vp-info">Sayfa <strong>' + (currentPage + 1) + '</strong> / ' + totalPages
+                + ' <span class="sd-vp-sub">(' + start + '–' + end + ' / ' + total + ')</span></span>'
+              + '<button type="button" id="sd-vp-next"' + (currentPage === totalPages - 1 ? ' disabled' : '') + '>Sonraki ›</button>'
+            + '</div>';
+          }
+
+          panel.innerHTML = rowsHtml + paginationHtml;
+
+          var prev = document.getElementById('sd-vp-prev');
+          var next = document.getElementById('sd-vp-next');
+          if (prev) prev.addEventListener('click', function () { if (currentPage > 0) loadStudentVocab(studentId, currentPage - 1); });
+          if (next) next.addEventListener('click', function () { if (currentPage < totalPages - 1) loadStudentVocab(studentId, currentPage + 1); });
+        } catch (e) {
+          console.error('[student vocab]', e);
+          panel.innerHTML = '<p class="sd-tab-empty">Kelime listesi yüklenemedi: ' + esc(e.message || String(e)) + '</p>';
+        }
+      }
+
 
       // ===== Tabs =====
       var tabBtns = document.querySelectorAll('.ks-tab');

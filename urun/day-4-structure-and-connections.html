@@ -297,7 +297,7 @@ mark.hl-key{background:linear-gradient(transparent 60%,rgba(15,118,110,.22) 60%)
     <div class="module-list" id="moduleList"></div>
 
     <div class="cover-instr">
-      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa'ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
+      <strong>Yönerge.</strong> Aşağıdaki modülü seçerek başla. Her modülü bitirdiğinde detaylı analiz açılır. İstediğin zaman Ana Sayfa\'ya dönüp diğer modülleri inceleyebilirsin. Her yanlışı yedi adım protokolüyle defterine geç. Yeni modüller eklendikçe burada görünür olacak.
     </div>
 
     <button class="btn-start" onclick="startModule(0)">
@@ -364,6 +364,7 @@ mark.hl-key{background:linear-gradient(transparent 60%,rgba(15,118,110,.22) 60%)
 
     <div class="results-actions">
       <button class="btn-action outline" onclick="goHome()">‹ Ana Sayfa</button>
+      <button class="btn-action outline" onclick="reviewModuleQuestions()">Soruları Tekrar Gez</button>
       <button class="btn-action outline" onclick="window.print()">PDF Olarak Yazdır</button>
       <button class="btn-action primary" id="resPrimaryBtn" onclick="goToNextModule()">Sıradaki Modüle Geç ›</button>
     </div>
@@ -3453,6 +3454,16 @@ function restartQuiz(){
   renderQuestion();
 }
 
+function reviewModuleQuestions(){
+  // Modül tamamlanmış olsa bile soruların içine girip sözlük/AI ile gez
+  // Cevaplar korunur, kullanıcı isterse cevabı değiştirebilir
+  currentQ = 0;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('quiz').classList.add('show');
+  renderQuestion();
+}
+
 function renderQuestion(){
   const mod = MODULES[currentModule];
   const q = mod.questions[currentQ];
@@ -3486,6 +3497,9 @@ function renderQuestion(){
   document.getElementById('nextBtn').style.display = isLast?'none':'';
   document.getElementById('submitBtn').style.display = isLast?'':'none';
   window.scrollTo({top:0,behavior:'smooth'});
+  window.MODULES = MODULES;
+  window.currentModule = currentModule;
+  window.currentQ = currentQ;
 }
 function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
 function goTo(i){ currentQ=i; renderQuestion() }

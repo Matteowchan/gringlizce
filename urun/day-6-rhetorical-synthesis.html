@@ -325,6 +325,7 @@ mark.hl-key{background:linear-gradient(transparent 60%,rgba(180,83,9,.22) 60%);p
     <span class="tb-qnum" id="tbQnum">1 / 27</span>
     <div class="tb-actions">
       <button class="tb-btn" onclick="goHome()">Ana Sayfa</button>
+      <button class="tb-btn" id="tbResultsBtn" onclick="showModuleResults()" style="display:none;">Sonuçları Gör</button>
       <button class="tb-btn" onclick="quitToSplash()">Çıkış</button>
     </div>
   </div>
@@ -3420,12 +3421,8 @@ function renderSplash(){
 function startModule(idx){
   if(MODULES[idx].questions.length === 0) return;
   currentModule = idx;
-  // If already completed, show results
-  if(moduleCompleted[idx]){
-    showModuleResults();
-    return;
-  }
-  // Find first unanswered to resume, or start at 0
+  // Tamamlanmış olsa bile direkt sorulara git (review mode)
+  // İlk cevaplanmamış soru varsa oraya, yoksa baştan başla
   const firstUnanswered = answers[idx].findIndex(a => a === null);
   currentQ = firstUnanswered === -1 ? 0 : firstUnanswered;
   document.getElementById('splash').style.display='none';
@@ -3507,6 +3504,9 @@ function renderQuestion(){
   window.MODULES = MODULES;
   window.currentModule = currentModule;
   window.currentQ = currentQ;
+  // Tamamlanmış modülde "Sonuçları Gör" butonu görünsün
+  var tbResults = document.getElementById('tbResultsBtn');
+  if(tbResults) tbResults.style.display = moduleCompleted[currentModule] ? '' : 'none';
 }
 function pickAnswer(i){ answers[currentModule][currentQ]=i; saveProgress(); renderQuestion() }
 function goTo(i){ currentQ=i; renderQuestion() }

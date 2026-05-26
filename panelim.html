@@ -5286,6 +5286,25 @@
                     + '<span class="my-assign-completed-pill">Tamamlandı</span>'
                     + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
                 }
+              } else if (a.type === 'vocab') {
+                meta.push((cfg.word_count || 0) + ' kelime');
+                meta.push('Flashcard');
+                if (cfg.attempt_count > 0) {
+                  meta.push(cfg.attempt_count + ' deneme');
+                }
+
+                var bestPct = (a.progress_target > 0 && a.progress_current !== null)
+                  ? Math.round(100 * a.progress_current / a.progress_target)
+                  : 0;
+                var hasAttempt = cfg.attempt_count > 0;
+
+                bodyHtml = ''
+                  + '<div class="my-assign-progress">'
+                  + '<div class="my-assign-progress-bar"><div class="my-assign-progress-fill ' + (isCompleted ? 'completed' : '') + '" style="width:' + Math.min(bestPct, 100) + '%"></div></div>'
+                  + '<div class="my-assign-progress-text">' + (hasAttempt ? 'En iyi: ' + a.progress_current + ' / ' + a.progress_target + ' (%' + bestPct + ')' : 'Henüz çözmedin') + '</div>'
+                  + '</div>';
+
+                actionsHtml = '<a href="vocab-quiz.html?id=' + escMA(a.assignment_id) + '" class="my-assign-btn">' + (hasAttempt ? 'Tekrar Çöz →' : 'Çözmeye Başla →') + '</a>';
               }
 
               return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'

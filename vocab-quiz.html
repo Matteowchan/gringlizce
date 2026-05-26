@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Kelime Ödevi | Gri English</title>
+  <meta name="theme-color" content="#2C5856">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/main.css">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="assets/site-config.js" defer></script>
+  <script src="assets/theme.js" defer></script>
+
+  <style>
+    :root {
+      --bg: #F4EFE3;
+      --bg-card: #FFFFFF;
+      --text: #1A2230;
+      --text-soft: #4A4A48;
+      --text-muted: #6B6862;
+      --teal: #2C5856;
+      --teal-dark: #1D4341;
+      --gold: #B89968;
+      --line: #D9D2C4;
+      --success: #2C7A4E;
+      --error: #B33A3A;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-ui: 'Inter', system-ui, sans-serif;
+      --font-body: Georgia, 'Times New Roman', serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vq-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(244, 239, 227, 0.9);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .vq-brand {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .vq-brand em { color: var(--teal); font-style: italic; }
+
+    .vq-exit {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text-soft);
+      padding: 0.45rem 0.9rem;
+      border-radius: 4px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .vq-exit:hover { background: var(--bg-card); color: var(--text); }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ========== SPLASH ========== */
+    .vq-splash {
+      text-align: center;
+      padding: 2rem 1rem;
+      width: 100%;
+    }
+    .vq-eyebrow {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+    }
+    .vq-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin: 0 0 0.6rem;
+      line-height: 1.15;
+      color: var(--text);
+    }
+    .vq-meta {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+    .vq-meta span { margin: 0 0.4rem; }
+    .vq-desc {
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-soft);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+
+    .vq-stats {
+      display: flex;
+      gap: 2.5rem;
+      justify-content: center;
+      margin: 0 auto 2.5rem;
+      padding: 1.5rem 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      max-width: 480px;
+    }
+    .vq-stat-box {
+      text-align: center;
+    }
+    .vq-stat-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+    .vq-stat-value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--teal);
+      line-height: 1;
+    }
+
+    .vq-btn-primary, .vq-btn-secondary {
+      display: inline-block;
+      padding: 1rem 2.4rem;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .vq-btn-primary {
+      background: var(--teal);
+      color: #fff;
+    }
+    .vq-btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .vq-btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .vq-btn-secondary:hover { background: var(--bg-card); }
+
+    /* ========== QUIZ ========== */
+    .vq-quiz { width: 100%; max-width: 560px; }
+
+    .vq-progress {
+      margin-bottom: 1.5rem;
+    }
+    .vq-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .vq-progress-fill {
+      height: 100%;
+      background: var(--teal);
+      transition: width 0.3s ease;
+    }
+    .vq-progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      letter-spacing: 0.08em;
+    }
+    .vq-progress-text strong { color: var(--text); }
+
+    .vq-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 3.5rem 2rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: transform 0.25s ease;
+    }
+    .vq-card.flipped {
+      background: #FAF5EB;
+    }
+
+    .vq-card-front, .vq-card-back {
+      width: 100%;
+    }
+    .vq-card-front .vq-word {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .vq-card-front .vq-instruction {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 1.5rem;
+      letter-spacing: 0.1em;
+    }
+    .vq-card-back .vq-en {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .vq-card-back .vq-tr {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--teal);
+      line-height: 1.2;
+    }
+    .vq-card-back .vq-pos {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.2rem 0.7rem;
+      background: rgba(184, 153, 104, 0.15);
+      color: var(--gold);
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border-radius: 3px;
+    }
+
+    .vq-actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+    }
+    .vq-action-btn {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--line);
+      background: var(--bg-card);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .vq-action-btn:hover { background: #FAF5EB; }
+
+    .vq-flip-btn {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+      max-width: 280px;
+      margin: 0 auto;
+      display: block;
+    }
+    .vq-flip-btn:hover { background: var(--teal-dark); }
+
+    .vq-knew {
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .vq-knew:hover { background: rgba(44, 122, 78, 0.08); }
+
+    .vq-didnt {
+      border-color: var(--error);
+      color: var(--error);
+    }
+    .vq-didnt:hover { background: rgba(179, 58, 58, 0.08); }
+
+    /* ========== RESULT ========== */
+    .vq-result {
+      text-align: center;
+      padding: 2rem 1rem;
+      width: 100%;
+    }
+    .vq-result-score {
+      font-family: var(--font-display);
+      font-size: 5rem;
+      font-weight: 600;
+      color: var(--teal);
+      line-height: 1;
+      margin: 1rem 0 0.3rem;
+    }
+    .vq-result-score-out {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .vq-result-pct {
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      letter-spacing: 0.1em;
+    }
+    .vq-new-best {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      padding: 0.5rem 1.2rem;
+      background: var(--gold);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-radius: 3px;
+    }
+    .vq-result-stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .vq-result-stats span strong { color: var(--text); }
+
+    .vq-result-actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ========== MESSAGES ========== */
+    .vq-msg {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-family: var(--font-body);
+      color: var(--text-muted);
+    }
+    .vq-msg.error { color: var(--error); }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .vq-title { font-size: 1.7rem; }
+      .vq-card { padding: 2.5rem 1rem; min-height: 220px; }
+      .vq-card-front .vq-word { font-size: 2.2rem; }
+      .vq-card-back .vq-tr { font-size: 1.8rem; }
+      .vq-card-back .vq-en { font-size: 1.2rem; }
+      .vq-stats { padding: 1rem 1.4rem; gap: 1.8rem; }
+      .vq-stat-value { font-size: 1.7rem; }
+      .vq-result-score { font-size: 3.6rem; }
+      .vq-actions { flex-direction: column; }
+      .vq-action-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="vq-header">
+  <a href="masam.html" class="vq-brand">Gri <em>English</em></a>
+  <a href="masam.html" class="vq-exit" id="vq-exit">← Masama Dön</a>
+</header>
+
+<main>
+  <div id="vq-root">
+    <p class="vq-msg">Yükleniyor...</p>
+  </div>
+</main>
+
+<script>
+(async function () {
+  var SUPABASE_URL = window.SUPABASE_URL || 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SUPABASE_KEY = window.SUPABASE_KEY || 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  if (!window.supabase || !window.supabase.createClient) {
+    document.getElementById('vq-root').innerHTML = '<p class="vq-msg error">Supabase yüklenemedi.</p>';
+    return;
+  }
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Auth check
+  var sess = await sb.auth.getSession();
+  if (!sess.data.session) {
+    window.location.href = 'giris.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;
+  }
+
+  // Parse assignment id
+  var params = new URLSearchParams(window.location.search);
+  var assignmentId = params.get('id');
+  if (!assignmentId) {
+    document.getElementById('vq-root').innerHTML = '<p class="vq-msg error">Ödev ID eksik. <a href="masam.html">Masama Dön</a></p>';
+    return;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ========== State ==========
+  var quizState = {
+    assignmentId: assignmentId,
+    assignment: null,
+    words: [],
+    currentIdx: 0,
+    score: 0,
+    isFlipped: false,
+    startTime: null
+  };
+
+  // ========== Load quiz ==========
+  var root = document.getElementById('vq-root');
+  try {
+    var r = await sb.rpc('vocab_quiz_start', { p_assignment_id: assignmentId });
+    if (r.error) throw r.error;
+    var data = r.data || {};
+    quizState.assignment = data.assignment || {};
+    quizState.words = data.words || [];
+
+    if (quizState.words.length === 0) {
+      root.innerHTML = '<p class="vq-msg">Bu ödevde henüz kelime yok. <a href="masam.html">Masama Dön</a></p>';
+      return;
+    }
+
+    renderSplash();
+  } catch (err) {
+    root.innerHTML = '<p class="vq-msg error">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+    return;
+  }
+
+  // ========== Splash ==========
+  function renderSplash() {
+    var a = quizState.assignment;
+    var deadlineStr = '';
+    if (a.deadline) {
+      var d = new Date(a.deadline);
+      deadlineStr = '<span>Son tarih: ' + d.toLocaleDateString('tr-TR') + '</span>';
+    }
+    var expiredBadge = a.is_expired
+      ? '<div style="background:rgba(179,58,58,0.1); color:var(--error); padding:0.5rem 1rem; border-radius:4px; display:inline-block; font-size:0.8rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; margin-bottom:1rem;">Süresi geçti</div>'
+      : '';
+
+    root.innerHTML = ''
+      + '<div class="vq-splash">'
+      + expiredBadge
+      + '<div class="vq-eyebrow">Kelime Ödevi</div>'
+      + '<h1 class="vq-title">' + esc(a.title || 'Kelime') + '</h1>'
+      + '<div class="vq-meta">'
+        + '<span>' + quizState.words.length + ' kelime</span>'
+        + (deadlineStr ? '·' + deadlineStr : '')
+      + '</div>'
+      + (a.description ? '<p class="vq-desc">' + esc(a.description) + '</p>' : '')
+      + '<div class="vq-stats">'
+        + '<div class="vq-stat-box">'
+          + '<div class="vq-stat-label">Toplam Kelime</div>'
+          + '<div class="vq-stat-value">' + quizState.words.length + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<button class="vq-btn-primary" id="vq-start-btn">Başla</button>'
+      + '<p style="margin-top:1.4rem; font-size:0.82rem; color:var(--text-muted); font-family:var(--font-ui);">Her kelime için kafanda çevirisini düşün, sonra kartı çevirip kontrol et. Bildim/Bilmedim seç. Sınırsız tekrar çözebilirsin.</p>'
+      + '</div>';
+
+    document.getElementById('vq-start-btn').addEventListener('click', startQuiz);
+  }
+
+  // ========== Quiz ==========
+  function startQuiz() {
+    quizState.currentIdx = 0;
+    quizState.score = 0;
+    quizState.isFlipped = false;
+    quizState.startTime = Date.now();
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var idx = quizState.currentIdx;
+    var total = quizState.words.length;
+    var word = quizState.words[idx];
+    var pct = Math.round(100 * idx / total);
+
+    quizState.isFlipped = false;
+
+    root.innerHTML = ''
+      + '<div class="vq-quiz">'
+      + '<div class="vq-progress">'
+        + '<div class="vq-progress-bar"><div class="vq-progress-fill" style="width:' + pct + '%"></div></div>'
+        + '<div class="vq-progress-text">'
+          + '<span><strong>' + (idx + 1) + '</strong> / ' + total + '</span>'
+          + '<span>' + quizState.score + ' bildim</span>'
+        + '</div>'
+      + '</div>'
+
+      + '<div class="vq-card" id="vq-card">'
+        + '<div class="vq-card-front" id="vq-front">'
+          + '<div class="vq-word">' + esc(word.en) + '</div>'
+          + '<div class="vq-instruction">Çevirisini düşün, sonra çevir</div>'
+        + '</div>'
+      + '</div>'
+
+      + '<button class="vq-action-btn vq-flip-btn" id="vq-flip-btn">Çevir</button>'
+      + '</div>';
+
+    document.getElementById('vq-flip-btn').addEventListener('click', flipCard);
+  }
+
+  function flipCard() {
+    var word = quizState.words[quizState.currentIdx];
+    var card = document.getElementById('vq-card');
+    card.classList.add('flipped');
+    quizState.isFlipped = true;
+
+    // Render back
+    card.innerHTML = ''
+      + '<div class="vq-card-back">'
+        + '<div class="vq-en">' + esc(word.en) + '</div>'
+        + '<div class="vq-tr">' + esc(word.tr) + '</div>'
+        + (word.pos ? '<div class="vq-pos">' + esc(word.pos) + '</div>' : '')
+      + '</div>';
+
+    // Replace flip button with knew/didn't buttons
+    var flipBtn = document.getElementById('vq-flip-btn');
+    var actions = document.createElement('div');
+    actions.className = 'vq-actions';
+    actions.innerHTML = ''
+      + '<button class="vq-action-btn vq-didnt" id="vq-didnt-btn">Bilmedim</button>'
+      + '<button class="vq-action-btn vq-knew" id="vq-knew-btn">Bildim</button>';
+    flipBtn.parentNode.replaceChild(actions, flipBtn);
+
+    document.getElementById('vq-knew-btn').addEventListener('click', function () { markAnswer(true); });
+    document.getElementById('vq-didnt-btn').addEventListener('click', function () { markAnswer(false); });
+  }
+
+  function markAnswer(knew) {
+    if (knew) quizState.score += 1;
+    quizState.currentIdx += 1;
+
+    if (quizState.currentIdx >= quizState.words.length) {
+      submitQuiz();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  // ========== Submit & Result ==========
+  async function submitQuiz() {
+    root.innerHTML = '<p class="vq-msg">Sonuç kaydediliyor...</p>';
+    var duration = Date.now() - quizState.startTime;
+
+    try {
+      var r = await sb.rpc('vocab_quiz_submit', {
+        p_assignment_id: quizState.assignmentId,
+        p_score: quizState.score,
+        p_total: quizState.words.length,
+        p_duration_ms: duration
+      });
+      if (r.error) throw r.error;
+      var result = r.data || {};
+      renderResult(result, duration);
+    } catch (err) {
+      root.innerHTML = '<p class="vq-msg error">Sonuç kaydedilemedi: ' + esc(err.message || err) + '</p>';
+    }
+  }
+
+  function renderResult(result, duration) {
+    var pct = result.pct || 0;
+    var isNewBest = result.is_new_best;
+    var bestScore = result.best_score;
+    var durSec = Math.round(duration / 1000);
+    var durStr = durSec < 60 ? durSec + ' sn' : Math.floor(durSec / 60) + ' dk ' + (durSec % 60) + ' sn';
+
+    var congrats = pct >= 90 ? 'Mükemmel!' : (pct >= 70 ? 'Aferin!' : (pct >= 50 ? 'İyi gidiyor' : 'Tekrar dene'));
+
+    root.innerHTML = ''
+      + '<div class="vq-result">'
+      + '<div class="vq-eyebrow">' + congrats + '</div>'
+      + '<h2 class="vq-title" style="margin-bottom:0.4rem;">' + esc(quizState.assignment.title || 'Kelime') + '</h2>'
+      + (isNewBest ? '<div class="vq-new-best">Yeni Rekor</div>' : '')
+      + '<div class="vq-result-score">'
+        + result.score
+        + '<span class="vq-result-score-out"> / ' + result.total + '</span>'
+      + '</div>'
+      + '<div class="vq-result-pct">%' + pct + '</div>'
+      + '<div class="vq-result-stats">'
+        + '<span>Süre: <strong>' + durStr + '</strong></span>'
+        + (bestScore !== null && bestScore !== result.score ? '<span>·</span><span>En yüksek: <strong>' + bestScore + ' / ' + result.total + '</strong></span>' : '')
+      + '</div>'
+      + '<div class="vq-result-actions">'
+        + '<button class="vq-btn-primary" id="vq-retry-btn">Tekrar Çöz</button>'
+        + '<a href="masam.html" class="vq-btn-secondary">Masama Dön</a>'
+      + '</div>'
+      + '</div>';
+
+    document.getElementById('vq-retry-btn').addEventListener('click', function () {
+      // Shuffle ile baştan başla
+      quizState.words = quizState.words.slice().sort(function () { return Math.random() - 0.5; });
+      startQuiz();
+    });
+  }
+
+  // Exit confirmation if quiz in progress
+  window.addEventListener('beforeunload', function (e) {
+    if (quizState.startTime && quizState.currentIdx > 0 && quizState.currentIdx < quizState.words.length) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>

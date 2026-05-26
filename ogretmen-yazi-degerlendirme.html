@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Yazı Değerlendirme | Gri English</title>
+  <meta name="theme-color" content="#2C5856">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/main.css">
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="assets/site-config.js" defer></script>
+  <script src="assets/theme.js" defer></script>
+
+  <style>
+    :root {
+      --bg: #F4EFE3; --bg-soft: #EFE8D9; --bg-card: #FFFFFF; --bg-card-soft: #FBF7EE;
+      --text: #1A2230; --text-soft: #4A4A48; --text-muted: #6B6862;
+      --teal: #2C5856; --teal-dark: #1D4341; --gold: #B89968; --line: #D9D2C4; --line-soft: #E8E1D2;
+      --success: #2C7A4E; --error: #B33A3A;
+      --cat-grammar: #B33A3A; --cat-grammar-bg: #FBEAEA;
+      --cat-vocabulary: #8C5BB3; --cat-vocabulary-bg: #F1E9F8;
+      --cat-cohesion: #B89968; --cat-cohesion-bg: #FAF3E5;
+      --cat-task_response: #2C5856; --cat-task_response-bg: #E6EEEE;
+      --cat-positive: #2C7A4E; --cat-positive-bg: #E8F3EC;
+      --cat-other: #6B6862; --cat-other-bg: #EFE8D9;
+      --shadow-sm: 0 1px 2px rgba(26,34,48,0.04), 0 1px 3px rgba(26,34,48,0.03);
+      --shadow-md: 0 1px 2px rgba(26,34,48,0.04), 0 4px 12px rgba(26,34,48,0.06);
+      --shadow-lg: 0 1px 2px rgba(26,34,48,0.04), 0 8px 24px rgba(26,34,48,0.08);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-ui: 'Inter', system-ui, sans-serif;
+      --font-body: Georgia, 'Times New Roman', serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    .wd-header {
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--line-soft);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(244,239,227,0.92); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 30;
+    }
+    .wd-brand { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; color: var(--text); text-decoration: none; }
+    .wd-brand em { color: var(--teal); font-style: italic; }
+    .wd-back {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none; padding: 0.5rem 0.9rem;
+      border: 1px solid var(--line); border-radius: 5px; background: var(--bg-card); font-weight: 600;
+    }
+    .wd-back:hover { background: var(--bg-card-soft); color: var(--text); }
+
+    .wd-main {
+      display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem;
+      max-width: 1280px; margin: 0 auto; padding: 1.5rem;
+    }
+
+    /* ============ LEFT: writing ============ */
+    .wd-left { min-width: 0; }
+
+    .wd-info {
+      background: var(--bg-card); border: 1px solid var(--line-soft); border-radius: 10px;
+      padding: 1.2rem 1.4rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .wd-info-eyebrow { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 600; }
+    .wd-info-title { font-family: var(--font-display); font-size: 1.55rem; font-weight: 600; color: var(--text); margin: 0 0 0.4rem; line-height: 1.2; }
+    .wd-info-meta { font-family: var(--font-ui); font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .wd-info-meta strong { color: var(--text); font-weight: 600; }
+    .wd-info-meta-sep { color: var(--line); }
+
+    .wd-prompt-box {
+      background: var(--bg-card-soft); border: 1px solid var(--line-soft); border-radius: 8px;
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+      font-family: var(--font-body); font-size: 0.95rem; line-height: 1.55; color: var(--text-soft);
+      white-space: pre-wrap;
+    }
+    .wd-prompt-box .wd-prompt-eyebrow {
+      font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem;
+    }
+
+    .wd-writing-box {
+      background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 1.8rem 2rem; box-shadow: var(--shadow-md); position: relative;
+    }
+    .wd-writing-text {
+      font-family: var(--font-body); font-size: 1.06rem; line-height: 1.75; color: var(--text);
+      white-space: pre-wrap; word-wrap: break-word;
+      user-select: text; cursor: text;
+    }
+    .wd-writing-text mark {
+      padding: 1px 2px; border-radius: 2px; cursor: pointer;
+      transition: filter 0.15s; background-color: var(--cat-bg, #FAF3E5);
+      border-bottom: 2px solid var(--cat-color, var(--gold));
+      color: inherit;
+    }
+    .wd-writing-text mark:hover { filter: brightness(0.93); }
+    .wd-writing-text mark.active { box-shadow: 0 0 0 2px var(--cat-color, var(--gold)); }
+
+    /* Selection popup */
+    .wd-sel-popup {
+      position: absolute; background: var(--text); color: #fff;
+      padding: 0.4rem 0.6rem; border-radius: 6px; font-family: var(--font-ui); font-size: 12px;
+      box-shadow: var(--shadow-lg); z-index: 100;
+      display: none; gap: 0.5rem; align-items: center;
+    }
+    .wd-sel-popup.show { display: flex; }
+    .wd-sel-popup button {
+      background: var(--gold); color: #fff; border: none; padding: 0.35rem 0.7rem;
+      border-radius: 4px; font-family: inherit; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    }
+    .wd-sel-popup button:hover { background: #9C7F45; }
+
+    /* Comment editor (full overlay) */
+    .wd-overlay {
+      position: fixed; inset: 0; background: rgba(20,24,32,0.5); backdrop-filter: blur(3px);
+      z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .wd-overlay.show { display: flex; }
+    .wd-comment-box {
+      background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px;
+      max-width: 480px; width: 100%; padding: 1.6rem 1.4rem;
+      box-shadow: var(--shadow-lg);
+    }
+    .wd-comment-eyebrow { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 0.5rem; }
+    .wd-comment-title { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; color: var(--text); margin: 0 0 0.7rem; }
+    .wd-selected {
+      background: var(--bg-card-soft); border-left: 3px solid var(--gold);
+      padding: 0.5rem 0.8rem; margin-bottom: 1rem;
+      font-family: var(--font-body); font-size: 0.92rem; color: var(--text-soft); font-style: italic;
+      border-radius: 0 4px 4px 0;
+    }
+    .wd-cat-row {
+      display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .wd-cat-btn {
+      padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--bg-card); cursor: pointer; font-family: var(--font-ui);
+      font-size: 11px; letter-spacing: 0.06em; font-weight: 600;
+      transition: all 0.15s;
+    }
+    .wd-cat-btn:hover { border-color: var(--gold); }
+    .wd-cat-btn.active {
+      background: var(--cat-bg, var(--bg-soft)); border-color: var(--cat-color, var(--gold));
+      color: var(--cat-color, var(--text));
+    }
+    .wd-comment-input {
+      width: 100%; min-height: 100px; padding: 0.7rem 0.9rem;
+      background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+      font-family: var(--font-body); font-size: 0.95rem; line-height: 1.5; resize: vertical;
+    }
+    .wd-comment-input:focus { outline: none; border-color: var(--teal); }
+    .wd-comment-actions {
+      display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;
+    }
+    .wd-btn { padding: 0.6rem 1.2rem; border-radius: 5px; cursor: pointer; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; border: 1px solid transparent; }
+    .wd-btn-primary { background: var(--teal); color: #fff; }
+    .wd-btn-primary:hover { background: var(--teal-dark); }
+    .wd-btn-ghost { background: transparent; color: var(--text); border-color: var(--line); }
+    .wd-btn-ghost:hover { background: var(--bg-card-soft); }
+    .wd-btn-danger { background: transparent; color: var(--error); border-color: var(--error); }
+    .wd-btn-danger:hover { background: var(--error); color: #fff; }
+
+    /* ============ RIGHT: rubric ============ */
+    .wd-right { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 100px); overflow-y: auto; }
+    .wd-rubric-box {
+      background: var(--bg-card); border: 1px solid var(--line-soft); border-radius: 10px;
+      padding: 1.4rem; box-shadow: var(--shadow-md);
+    }
+    .wd-rubric-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin: 0 0 0.4rem; }
+    .wd-rubric-sub { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; letter-spacing: 0.04em; }
+
+    .wd-rubric-type-select {
+      width: 100%; padding: 0.55rem 0.7rem;
+      background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px;
+      font-family: var(--font-ui); font-size: 0.85rem; margin-bottom: 1.2rem;
+    }
+
+    .wd-criterion { margin-bottom: 1rem; }
+    .wd-criterion-row {
+      display: grid; grid-template-columns: 1fr 90px; gap: 0.6rem; align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .wd-criterion-label {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-soft); font-weight: 600;
+    }
+    .wd-criterion-input {
+      padding: 0.4rem 0.6rem; background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 4px;
+      font-family: var(--font-display); font-size: 1rem; text-align: center; font-weight: 600;
+    }
+    .wd-criterion-input:focus { outline: none; border-color: var(--teal); }
+
+    .wd-overall {
+      background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-soft) 100%);
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 1rem 1.2rem; margin: 1rem 0; text-align: center;
+    }
+    .wd-overall-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 700; }
+    .wd-overall-value {
+      font-family: var(--font-display); font-size: 2.6rem; font-weight: 600; color: var(--teal);
+      line-height: 1; letter-spacing: -0.02em;
+    }
+    .wd-overall-unit { font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    .wd-summary-label {
+      font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-soft); font-weight: 600; margin-bottom: 0.4rem;
+    }
+    .wd-summary {
+      width: 100%; min-height: 140px; padding: 0.7rem 0.9rem;
+      background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+      font-family: var(--font-body); font-size: 0.92rem; line-height: 1.5; resize: vertical;
+    }
+    .wd-summary:focus { outline: none; border-color: var(--teal); }
+
+    .wd-save {
+      width: 100%; margin-top: 1rem; padding: 0.85rem; background: var(--teal); color: #fff;
+      border: none; border-radius: 6px; font-family: var(--font-ui); font-size: 11px;
+      letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .wd-save:hover { background: var(--teal-dark); }
+    .wd-save:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wd-save-msg { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem; min-height: 1.2rem; }
+    .wd-save-msg.ok { color: var(--success); font-weight: 600; }
+    .wd-save-msg.err { color: var(--error); }
+
+    /* Comments list (sidebar bottom) */
+    .wd-comments-list {
+      margin-top: 1rem; background: var(--bg-card); border: 1px solid var(--line-soft);
+      border-radius: 10px; padding: 1.2rem; box-shadow: var(--shadow-sm);
+    }
+    .wd-comments-title { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; font-weight: 700; }
+    .wd-comment-item {
+      padding: 0.6rem 0.7rem; margin-bottom: 0.5rem; border-radius: 5px;
+      background: var(--bg); border-left: 3px solid var(--cat-color, var(--gold));
+      cursor: pointer;
+    }
+    .wd-comment-item:hover { background: var(--bg-card-soft); }
+    .wd-comment-item-cat {
+      display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+      background: var(--cat-bg, var(--bg-soft)); color: var(--cat-color, var(--text-soft));
+      font-family: var(--font-ui); font-size: 9px; letter-spacing: 0.12em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.3rem;
+    }
+    .wd-comment-item-text { font-family: var(--font-body); font-size: 0.88rem; line-height: 1.4; color: var(--text); }
+    .wd-comment-item-sel {
+      font-family: var(--font-body); font-size: 0.78rem; font-style: italic;
+      color: var(--text-muted); margin-top: 0.3rem;
+    }
+
+    .wd-msg { text-align: center; padding: 3rem 1rem; font-family: var(--font-body); color: var(--text-muted); }
+    .wd-msg.error { color: var(--error); }
+
+    @media (max-width: 960px) {
+      .wd-main { grid-template-columns: 1fr; }
+      .wd-right { position: static; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="wd-header">
+  <a href="ogretmen.html" class="wd-brand">Gri <em>English</em></a>
+  <a href="#" class="wd-back" id="wd-back">← Sınıfa Dön</a>
+</header>
+
+<main class="wd-main" id="wd-main">
+  <div style="grid-column: 1 / -1;"><p class="wd-msg">Yükleniyor...</p></div>
+</main>
+
+<!-- Comment editor overlay -->
+<div class="wd-overlay" id="wd-overlay">
+  <div class="wd-comment-box">
+    <div class="wd-comment-eyebrow">Yorum</div>
+    <h3 class="wd-comment-title" id="wd-comment-title">Yeni Yorum</h3>
+    <div class="wd-selected" id="wd-selected"></div>
+    <div class="wd-cat-row" id="wd-cat-row">
+      <button type="button" class="wd-cat-btn" data-cat="grammar">Grammar</button>
+      <button type="button" class="wd-cat-btn" data-cat="vocabulary">Vocabulary</button>
+      <button type="button" class="wd-cat-btn" data-cat="cohesion">Cohesion</button>
+      <button type="button" class="wd-cat-btn" data-cat="task_response">Task</button>
+      <button type="button" class="wd-cat-btn" data-cat="positive">Pozitif</button>
+      <button type="button" class="wd-cat-btn" data-cat="other">Diğer</button>
+    </div>
+    <textarea class="wd-comment-input" id="wd-comment-input" placeholder="Bu kısma yorumun..." maxlength="2000"></textarea>
+    <div class="wd-comment-actions">
+      <button type="button" class="wd-btn wd-btn-danger" id="wd-comment-delete" style="display:none;">Sil</button>
+      <button type="button" class="wd-btn wd-btn-ghost" id="wd-comment-cancel">Vazgeç</button>
+      <button type="button" class="wd-btn wd-btn-primary" id="wd-comment-save">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function () {
+  var SUPABASE_URL = window.SUPABASE_URL || 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SUPABASE_KEY = window.SUPABASE_KEY || 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  if (!window.supabase || !window.supabase.createClient) {
+    document.getElementById('wd-main').innerHTML = '<p class="wd-msg error">Supabase yüklenemedi.</p>';
+    return;
+  }
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var sess = await sb.auth.getSession();
+  if (!sess.data.session) {
+    window.location.href = 'giris.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var writingId = params.get('id');
+  if (!writingId) {
+    document.getElementById('wd-main').innerHTML = '<p class="wd-msg error">Yazı ID eksik.</p>';
+    return;
+  }
+
+  function esc(s) { if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  // ============ Rubric definitions ============
+  var RUBRICS = {
+    generic: {
+      label: 'Genel',
+      criteria: [],
+      computeOverall: function () { return null; }
+    },
+    ielts_task1: {
+      label: 'IELTS Task 1',
+      criteria: [
+        { key: 'task_achievement', label: 'Task Achievement', min: 0, max: 9, step: 0.5 },
+        { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+      ],
+      computeOverall: function (scores) {
+        var keys = ['task_achievement','coherence_cohesion','lexical_resource','grammar'];
+        var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
+        if (vals.length === 0) return null;
+        var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        return Math.round(avg * 2) / 2;
+      },
+      unit: 'Band'
+    },
+    ielts_task2: {
+      label: 'IELTS Task 2',
+      criteria: [
+        { key: 'task_response', label: 'Task Response', min: 0, max: 9, step: 0.5 },
+        { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+      ],
+      computeOverall: function (scores) {
+        var keys = ['task_response','coherence_cohesion','lexical_resource','grammar'];
+        var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
+        if (vals.length === 0) return null;
+        var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        return Math.round(avg * 2) / 2;
+      },
+      unit: 'Band'
+    },
+    ib_english_b: {
+      label: 'IB English B',
+      criteria: [
+        { key: 'language', label: 'Language', min: 0, max: 12, step: 1 },
+        { key: 'message', label: 'Message', min: 0, max: 12, step: 1 },
+        { key: 'conceptual', label: 'Conceptual Understanding', min: 0, max: 6, step: 1 }
+      ],
+      computeOverall: function (scores) {
+        var keys = ['language','message','conceptual'];
+        var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
+        if (vals.length < 3) return null;
+        return vals.reduce(function (a, b) { return a + b; }, 0);
+      },
+      unit: '/ 30'
+    },
+    toefl_writing: {
+      label: 'TOEFL Writing',
+      criteria: [
+        { key: 'overall', label: 'Holistic Score', min: 0, max: 5, step: 1 }
+      ],
+      computeOverall: function (scores) {
+        var v = parseFloat(scores.overall);
+        return isNaN(v) ? null : v;
+      },
+      unit: '/ 5'
+    }
+  };
+
+  // ============ State ============
+  var state = {
+    writingId: writingId,
+    writing: null,
+    evaluation: null,
+    comments: [],
+    canEdit: false,
+    rubricType: 'generic',
+    scores: {},
+    summary: '',
+    currentSelection: null, // { start, end, text }
+    editingCommentId: null,
+    editingCategory: 'other'
+  };
+
+  // ============ Load ============
+  var mainEl = document.getElementById('wd-main');
+  try {
+    var r = await sb.rpc('get_writing_detail', { p_writing_id: parseInt(writingId) });
+    if (r.error) throw r.error;
+    var data = r.data || {};
+    state.writing = data.writing || {};
+    state.evaluation = data.evaluation;
+    state.comments = data.comments || [];
+    state.canEdit = !!data.can_edit;
+
+    if (!state.canEdit) {
+      mainEl.innerHTML = '<div style="grid-column:1/-1;"><p class="wd-msg error">Bu yazıyı değerlendirme yetkin yok.</p></div>';
+      return;
+    }
+
+    // Init rubric
+    if (state.evaluation) {
+      state.rubricType = state.evaluation.rubric_type || 'generic';
+      state.scores = state.evaluation.scores || {};
+      state.summary = state.evaluation.summary_feedback || '';
+    } else {
+      // Auto-pick rubric based on exam/text_type
+      state.rubricType = autoPickRubric(state.writing.exam, state.writing.text_type);
+    }
+
+    renderPage();
+  } catch (err) {
+    mainEl.innerHTML = '<div style="grid-column:1/-1;"><p class="wd-msg error">Yüklenemedi: ' + esc(err.message || err) + '</p></div>';
+    return;
+  }
+
+  function autoPickRubric(exam, textType) {
+    if (exam === 'ielts') {
+      if (textType && /task[\s_-]?1/i.test(textType)) return 'ielts_task1';
+      return 'ielts_task2';
+    }
+    if (exam === 'ib') return 'ib_english_b';
+    if (exam === 'toefl') return 'toefl_writing';
+    return 'generic';
+  }
+
+  // ============ Render ============
+  function renderPage() {
+    var w = state.writing;
+    var backUrl = w.class_id ? 'ogretmen-sinif.html?id=' + encodeURIComponent(w.class_id) : 'ogretmen.html';
+    document.getElementById('wd-back').href = backUrl;
+
+    mainEl.innerHTML = ''
+      + '<div class="wd-left">'
+        + '<div class="wd-info">'
+          + '<div class="wd-info-eyebrow">' + esc((w.exam || '').toUpperCase()) + (w.text_type ? ' · <span lang="en">' + esc(w.text_type) + '</span>' : '') + '</div>'
+          + '<h1 class="wd-info-title">' + esc(w.assignment_title || w.prompt_title || 'Yazı Değerlendirme') + '</h1>'
+          + '<div class="wd-info-meta">'
+            + '<span><strong>' + esc(w.student_email || '(öğrenci yok)') + '</strong></span>'
+            + '<span class="wd-info-meta-sep">·</span>'
+            + '<span><strong>' + (w.word_count || 0) + '</strong> kelime</span>'
+            + '<span class="wd-info-meta-sep">·</span>'
+            + '<span>' + esc(fmtDate(w.created_at)) + '</span>'
+          + '</div>'
+        + '</div>'
+        + (w.prompt_snapshot
+          ? '<div class="wd-prompt-box"><div class="wd-prompt-eyebrow">Prompt</div>' + esc(w.prompt_snapshot) + '</div>'
+          : '')
+        + '<div class="wd-writing-box" style="position:relative;">'
+          + '<div class="wd-writing-text" id="wd-text"></div>'
+          + '<div class="wd-sel-popup" id="wd-sel-popup"><button type="button" id="wd-sel-add">Yorum ekle</button></div>'
+        + '</div>'
+      + '</div>'
+
+      + '<aside class="wd-right">'
+        + '<div class="wd-rubric-box">'
+          + '<h2 class="wd-rubric-title">Değerlendirme</h2>'
+          + '<div class="wd-rubric-sub">Rubric ve genel geri bildirim</div>'
+          + '<select class="wd-rubric-type-select" id="wd-rubric-type">'
+            + Object.keys(RUBRICS).map(function (k) {
+              return '<option value="' + k + '"' + (k === state.rubricType ? ' selected' : '') + '>' + RUBRICS[k].label + '</option>';
+            }).join('')
+          + '</select>'
+          + '<div id="wd-criteria"></div>'
+          + '<div class="wd-overall">'
+            + '<div class="wd-overall-label">Genel</div>'
+            + '<div class="wd-overall-value" id="wd-overall-value">—</div>'
+            + '<div class="wd-overall-unit" id="wd-overall-unit"></div>'
+          + '</div>'
+          + '<label class="wd-summary-label">Genel geri bildirim</label>'
+          + '<textarea class="wd-summary" id="wd-summary" maxlength="5000" placeholder="Genel notların...">' + esc(state.summary) + '</textarea>'
+          + '<button class="wd-save" id="wd-save">Değerlendirmeyi Kaydet</button>'
+          + '<div class="wd-save-msg" id="wd-save-msg"></div>'
+        + '</div>'
+        + '<div class="wd-comments-list" id="wd-comments-list"></div>'
+      + '</aside>';
+
+    renderText();
+    renderCriteria();
+    renderOverall();
+    renderCommentsList();
+    bindHandlers();
+  }
+
+  function fmtDate(s) {
+    if (!s) return '';
+    var d = new Date(s);
+    return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function CAT_INFO(cat) {
+    var info = {
+      grammar: { label: 'Grammar', color: 'var(--cat-grammar)', bg: 'var(--cat-grammar-bg)' },
+      vocabulary: { label: 'Vocabulary', color: 'var(--cat-vocabulary)', bg: 'var(--cat-vocabulary-bg)' },
+      cohesion: { label: 'Cohesion', color: 'var(--cat-cohesion)', bg: 'var(--cat-cohesion-bg)' },
+      task_response: { label: 'Task', color: 'var(--cat-task_response)', bg: 'var(--cat-task_response-bg)' },
+      positive: { label: 'Pozitif', color: 'var(--cat-positive)', bg: 'var(--cat-positive-bg)' },
+      other: { label: 'Diğer', color: 'var(--cat-other)', bg: 'var(--cat-other-bg)' }
+    };
+    return info[cat] || info.other;
+  }
+
+  function renderText() {
+    var text = state.writing.text || '';
+    var textEl = document.getElementById('wd-text');
+    var comments = state.comments.slice().sort(function (a, b) { return a.start_offset - b.start_offset; });
+
+    // Build chunks with marks
+    var chunks = [];
+    var pos = 0;
+    comments.forEach(function (c) {
+      if (c.start_offset > pos) {
+        chunks.push({ text: text.slice(pos, c.start_offset), comment: null });
+      }
+      // Eğer yeni yorum mevcut chunk'la üst üste binerse, basit fallback: önce gelen kazanır
+      var s = Math.max(c.start_offset, pos);
+      var e = c.end_offset;
+      if (e > s) {
+        chunks.push({ text: text.slice(s, e), comment: c });
+      }
+      pos = Math.max(pos, e);
+    });
+    if (pos < text.length) chunks.push({ text: text.slice(pos), comment: null });
+
+    textEl.innerHTML = chunks.map(function (ch) {
+      if (ch.comment) {
+        var info = CAT_INFO(ch.comment.category);
+        return '<mark data-comment-id="' + esc(ch.comment.id) + '" style="--cat-color:' + info.color + ';--cat-bg:' + info.bg + ';">' + esc(ch.text) + '</mark>';
+      }
+      return esc(ch.text);
+    }).join('');
+
+    // Click on mark → edit
+    textEl.querySelectorAll('mark[data-comment-id]').forEach(function (m) {
+      m.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openEditComment(m.dataset.commentId);
+      });
+    });
+  }
+
+  function renderCriteria() {
+    var box = document.getElementById('wd-criteria');
+    var rubric = RUBRICS[state.rubricType];
+    if (!rubric.criteria.length) {
+      box.innerHTML = '<p style="font-family:var(--font-ui); font-size:0.8rem; color:var(--text-muted); margin: 0.5rem 0 1rem;">Bu rubric tipinde alt kriter yok. Genel geri bildirim ile değerlendir.</p>';
+      return;
+    }
+    box.innerHTML = rubric.criteria.map(function (cr) {
+      var val = state.scores[cr.key] || '';
+      return '<div class="wd-criterion">'
+        + '<div class="wd-criterion-row">'
+          + '<label class="wd-criterion-label">' + esc(cr.label) + '</label>'
+          + '<input type="number" class="wd-criterion-input" data-key="' + esc(cr.key) + '" min="' + cr.min + '" max="' + cr.max + '" step="' + cr.step + '" value="' + esc(val) + '">'
+        + '</div>'
+      + '</div>';
+    }).join('');
+
+    box.querySelectorAll('.wd-criterion-input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        state.scores[inp.dataset.key] = inp.value === '' ? null : parseFloat(inp.value);
+        renderOverall();
+      });
+    });
+  }
+
+  function renderOverall() {
+    var rubric = RUBRICS[state.rubricType];
+    var v = rubric.computeOverall(state.scores);
+    document.getElementById('wd-overall-value').textContent = v == null ? '—' : v;
+    document.getElementById('wd-overall-unit').textContent = (v != null && rubric.unit) ? rubric.unit : '';
+  }
+
+  function renderCommentsList() {
+    var box = document.getElementById('wd-comments-list');
+    if (state.comments.length === 0) {
+      box.innerHTML = '<div class="wd-comments-title">Yorumlar</div><p style="font-family:var(--font-ui); font-size:0.82rem; color:var(--text-muted); margin:0;">Yazı üzerinde metin seçip yorum ekleyebilirsin.</p>';
+      return;
+    }
+    box.innerHTML = '<div class="wd-comments-title">Yorumlar (' + state.comments.length + ')</div>'
+      + state.comments.map(function (c) {
+        var info = CAT_INFO(c.category);
+        return '<div class="wd-comment-item" data-id="' + esc(c.id) + '" style="--cat-color:' + info.color + ';--cat-bg:' + info.bg + ';">'
+          + '<span class="wd-comment-item-cat">' + info.label + '</span>'
+          + '<div class="wd-comment-item-text">' + esc(c.body) + '</div>'
+          + (c.selected_text ? '<div class="wd-comment-item-sel">"' + esc(c.selected_text.slice(0, 80)) + (c.selected_text.length > 80 ? '…' : '') + '"</div>' : '')
+        + '</div>';
+      }).join('');
+
+    box.querySelectorAll('.wd-comment-item').forEach(function (item) {
+      item.addEventListener('click', function () { openEditComment(item.dataset.id); });
+    });
+  }
+
+  // ============ Selection handling ============
+  function bindHandlers() {
+    var textEl = document.getElementById('wd-text');
+    var popup = document.getElementById('wd-sel-popup');
+    var addBtn = document.getElementById('wd-sel-add');
+
+    document.addEventListener('selectionchange', function () {
+      var sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) {
+        popup.classList.remove('show');
+        state.currentSelection = null;
+        return;
+      }
+      var range = sel.getRangeAt(0);
+      // Selection within textEl?
+      if (!textEl.contains(range.commonAncestorContainer)) {
+        popup.classList.remove('show');
+        return;
+      }
+
+      var offsets = getSelectionOffsets(textEl, range);
+      if (!offsets || offsets.start === offsets.end) {
+        popup.classList.remove('show');
+        return;
+      }
+
+      state.currentSelection = {
+        start: offsets.start,
+        end: offsets.end,
+        text: (state.writing.text || '').slice(offsets.start, offsets.end)
+      };
+
+      // Position popup
+      var rect = range.getBoundingClientRect();
+      var parentRect = textEl.parentElement.getBoundingClientRect();
+      var top = rect.bottom - parentRect.top + 8;
+      var left = rect.left + (rect.width / 2) - parentRect.left;
+      popup.style.top = top + 'px';
+      popup.style.left = left + 'px';
+      popup.style.transform = 'translateX(-50%)';
+      popup.classList.add('show');
+    });
+
+    addBtn.addEventListener('click', function () {
+      if (!state.currentSelection) return;
+      popup.classList.remove('show');
+      openNewComment(state.currentSelection);
+    });
+
+    // Rubric type change
+    document.getElementById('wd-rubric-type').addEventListener('change', function (e) {
+      state.rubricType = e.target.value;
+      state.scores = {}; // reset scores
+      renderCriteria();
+      renderOverall();
+    });
+
+    // Summary
+    document.getElementById('wd-summary').addEventListener('input', function (e) {
+      state.summary = e.target.value;
+    });
+
+    // Save
+    document.getElementById('wd-save').addEventListener('click', saveEvaluation);
+
+    // Comment overlay
+    document.getElementById('wd-comment-cancel').addEventListener('click', closeCommentEditor);
+    document.getElementById('wd-comment-save').addEventListener('click', saveComment);
+    document.getElementById('wd-comment-delete').addEventListener('click', deleteCurrentComment);
+    document.getElementById('wd-overlay').addEventListener('click', function (e) {
+      if (e.target.id === 'wd-overlay') closeCommentEditor();
+    });
+
+    // Cat buttons
+    document.querySelectorAll('.wd-cat-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.editingCategory = btn.dataset.cat;
+        updateCatButtons();
+      });
+    });
+  }
+
+  // Text offset (plaintext) from selection range
+  function getSelectionOffsets(root, range) {
+    var preRange = document.createRange();
+    preRange.selectNodeContents(root);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    var start = preRange.toString().length;
+    preRange.setEnd(range.endContainer, range.endOffset);
+    var end = preRange.toString().length;
+    return { start: start, end: end };
+  }
+
+  function updateCatButtons() {
+    document.querySelectorAll('.wd-cat-btn').forEach(function (btn) {
+      var active = btn.dataset.cat === state.editingCategory;
+      btn.classList.toggle('active', active);
+      var info = CAT_INFO(btn.dataset.cat);
+      btn.style.setProperty('--cat-color', info.color);
+      btn.style.setProperty('--cat-bg', info.bg);
+    });
+  }
+
+  // ============ Comment editor ============
+  function openNewComment(sel) {
+    state.editingCommentId = null;
+    state.editingCategory = 'other';
+    document.getElementById('wd-comment-title').textContent = 'Yeni Yorum';
+    document.getElementById('wd-selected').textContent = '"' + (sel.text.length > 200 ? sel.text.slice(0, 200) + '…' : sel.text) + '"';
+    document.getElementById('wd-comment-input').value = '';
+    document.getElementById('wd-comment-delete').style.display = 'none';
+    updateCatButtons();
+    document.getElementById('wd-overlay').classList.add('show');
+    setTimeout(function () { document.getElementById('wd-comment-input').focus(); }, 50);
+  }
+
+  function openEditComment(commentId) {
+    var c = state.comments.find(function (x) { return x.id === commentId; });
+    if (!c) return;
+    state.editingCommentId = commentId;
+    state.editingCategory = c.category;
+    state.currentSelection = { start: c.start_offset, end: c.end_offset, text: c.selected_text };
+    document.getElementById('wd-comment-title').textContent = 'Yorumu Düzenle';
+    document.getElementById('wd-selected').textContent = '"' + (c.selected_text.length > 200 ? c.selected_text.slice(0, 200) + '…' : c.selected_text) + '"';
+    document.getElementById('wd-comment-input').value = c.body;
+    document.getElementById('wd-comment-delete').style.display = '';
+    updateCatButtons();
+    document.getElementById('wd-overlay').classList.add('show');
+    setTimeout(function () { document.getElementById('wd-comment-input').focus(); }, 50);
+  }
+
+  function closeCommentEditor() {
+    document.getElementById('wd-overlay').classList.remove('show');
+    state.editingCommentId = null;
+    state.currentSelection = null;
+  }
+
+  async function saveComment() {
+    var body = document.getElementById('wd-comment-input').value.trim();
+    if (!body) { alert('Yorum boş olamaz.'); return; }
+    var saveBtn = document.getElementById('wd-comment-save');
+    saveBtn.disabled = true;
+
+    try {
+      if (state.editingCommentId) {
+        var r = await sb.rpc('update_writing_comment', {
+          p_comment_id: state.editingCommentId,
+          p_category: state.editingCategory,
+          p_body: body
+        });
+        if (r.error) throw r.error;
+      } else {
+        var sel = state.currentSelection;
+        if (!sel) throw new Error('Seçim yok.');
+        var r2 = await sb.rpc('add_writing_comment', {
+          p_writing_id: parseInt(state.writingId),
+          p_start: sel.start,
+          p_end: sel.end,
+          p_selected: sel.text,
+          p_category: state.editingCategory,
+          p_body: body
+        });
+        if (r2.error) throw r2.error;
+      }
+      await reloadDetail();
+      closeCommentEditor();
+    } catch (err) {
+      alert('Yorum kaydedilemedi: ' + (err.message || err));
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
+  async function deleteCurrentComment() {
+    if (!state.editingCommentId) return;
+    if (!confirm('Bu yorumu silmek istiyor musun?')) return;
+
+    try {
+      var r = await sb.rpc('delete_writing_comment', { p_comment_id: state.editingCommentId });
+      if (r.error) throw r.error;
+      await reloadDetail();
+      closeCommentEditor();
+    } catch (err) {
+      alert('Silme başarısız: ' + (err.message || err));
+    }
+  }
+
+  async function reloadDetail() {
+    var r = await sb.rpc('get_writing_detail', { p_writing_id: parseInt(state.writingId) });
+    if (r.error) throw r.error;
+    var data = r.data || {};
+    state.comments = data.comments || [];
+    state.evaluation = data.evaluation;
+    renderText();
+    renderCommentsList();
+  }
+
+  // ============ Save evaluation ============
+  async function saveEvaluation() {
+    var saveBtn = document.getElementById('wd-save');
+    var msgEl = document.getElementById('wd-save-msg');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Kaydediliyor...';
+    msgEl.className = 'wd-save-msg';
+    msgEl.textContent = '';
+
+    try {
+      var rubric = RUBRICS[state.rubricType];
+      var overall = rubric.computeOverall(state.scores);
+      var r = await sb.rpc('save_writing_evaluation', {
+        p_writing_id: parseInt(state.writingId),
+        p_rubric_type: state.rubricType,
+        p_scores: state.scores,
+        p_overall_band: overall,
+        p_summary: state.summary || null
+      });
+      if (r.error) throw r.error;
+      msgEl.className = 'wd-save-msg ok';
+      msgEl.textContent = 'Kaydedildi.';
+      setTimeout(function () { msgEl.textContent = ''; msgEl.className = 'wd-save-msg'; }, 3000);
+    } catch (err) {
+      msgEl.className = 'wd-save-msg err';
+      msgEl.textContent = 'Kaydedilemedi: ' + (err.message || err);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Değerlendirmeyi Kaydet';
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>

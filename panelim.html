@@ -3262,6 +3262,23 @@
       </div>
     </div>
 
+    <!-- ============ YAZILARIM ============ -->
+    <div id="my-writings-section" style="display: none;">
+      <div class="zone-head">
+        <span class="zone-eyebrow">Yazma</span>
+        <span class="zone-line"></span>
+        <h2>Yazılarım</h2>
+      </div>
+
+      <div id="my-writings-list" class="my-assign-list"></div>
+      <div id="my-writings-empty" class="cc-empty" style="display: none; margin-bottom: 2rem;">
+        <div class="cc-empty-body">
+          <h4>Henüz yazı yok</h4>
+          <p>Yazı pratiği yaptığında veya öğretmen <span lang="en">writing</span> ödevi atadığında burada görünür. Öğretmenin değerlendirmesi de buradan açılır.</p>
+        </div>
+      </div>
+    </div>
+
     <div id="gri-quota-area" class="" style="padding: 0 0 3rem; display: none;">
 
       <div class="zone-head">
@@ -5385,6 +5402,66 @@
         }
 
         await loadAssignments();
+
+        // Yazılarım bölümü
+        try {
+          var wSection = document.getElementById('my-writings-section');
+          var wList = document.getElementById('my-writings-list');
+          var wEmpty = document.getElementById('my-writings-empty');
+          if (wSection && wList) {
+            var wRes = await sbCli.rpc('list_my_writings');
+            if (!wRes.error) {
+              var writings = wRes.data || [];
+              if (writings.length === 0) {
+                // Sadece sınıfa kayıtlıysa veya ödev varsa göster
+                // Şimdilik gizli tutalım, yazıları olunca açılır
+                wSection.style.display = 'none';
+              } else {
+                wSection.style.display = '';
+                wEmpty.style.display = 'none';
+                wList.innerHTML = writings.map(function (w) {
+                  var hasEval = w.has_evaluation;
+                  var band = w.overall_band;
+                  var commentCount = parseInt(w.comment_count) || 0;
+                  var examLabel = (w.exam || '').toUpperCase();
+                  var dateStr = formatRelativeDate(w.created_at);
+
+                  var meta = [];
+                  if (w.class_name) meta.push('<span class="class-name">' + escMA(w.class_name) + '</span>');
+                  meta.push(examLabel);
+                  if (w.text_type) meta.push('<span lang="en">' + escMA(w.text_type) + '</span>');
+                  meta.push(w.word_count + ' kelime');
+                  meta.push(dateStr);
+
+                  var statusHtml = hasEval
+                    ? '<span class="my-assign-type" style="background:#E8F3EC; color:#2C7A4E;">Değerlendirildi' + (band != null ? ' · Band ' + band : '') + '</span>'
+                    : '<span class="my-assign-type" style="background:#FAF3E5; color:#8C6F44;">Bekliyor</span>';
+
+                  var commentBadge = commentCount > 0
+                    ? '<span class="my-assign-type" style="background:#F1E9F8; color:#8C5BB3; margin-left:0.3rem;">' + commentCount + ' yorum</span>'
+                    : '';
+
+                  return '<div class="my-assign-card">'
+                    + '<div class="my-assign-head">'
+                      + '<div class="my-assign-titles">'
+                        + statusHtml + commentBadge
+                        + '<h4 class="my-assign-title">' + escMA(w.assignment_title || w.prompt_title || 'Yazım') + '</h4>'
+                        + '<div class="my-assign-meta">' + meta.join('<span class="my-assign-meta-sep">·</span>') + '</div>'
+                      + '</div>'
+                    + '</div>'
+                    + '<div class="my-assign-actions">'
+                      + '<a href="ogrenci-yazi-feedback.html?id=' + escMA(w.writing_id) + '" class="my-assign-btn">' + (hasEval ? 'Geri Bildirimi Gör →' : 'Yazını Gör →') + '</a>'
+                    + '</div>'
+                  + '</div>';
+                }).join('');
+              }
+            } else {
+              console.warn('[my writings] rpc error:', wRes.error);
+            }
+          }
+        } catch (we) {
+          console.warn('[my writings] load failed:', we);
+        }
       } catch (e) {
         console.warn('[my assignments] init failed:', e);
       }

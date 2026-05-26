@@ -2118,20 +2118,33 @@
           }
         }
 
-        // No stored order → build from DB
+        // No stored order → build from DB via RPC (server-side sample + shuffle)
         if (!setSlugs || setSlugs.length === 0) {
-          const { data: list, error } = await supabase
-            .from('questions')
-            .select('slug')
-            .eq('active', true)
-            .in('subcategory', subcatList)
-            .order('slug');
+          // Server-side RPC: random veya sıralı, single round-trip
+          const rpcName = shuffleParam ? 'random_questions_by_subcats' : 'ordered_questions_by_subcats';
+          const rpcParams = shuffleParam
+            ? { p_subcats: subcatList, p_limit: null }
+            : { p_subcats: subcatList };
+          const { data: list, error } = await supabase.rpc(rpcName, rpcParams);
           if (error || !list || list.length === 0) {
-            showError('Bu kategoride henüz soru yok.');
-            return;
+            // Fallback: eski direkt sorgu (RPC yoksa veya hata varsa)
+            console.warn('[soru] RPC failed, fallback to direct query:', error);
+            const fb = await supabase
+              .from('questions')
+              .select('slug')
+              .eq('active', true)
+              .in('subcategory', subcatList)
+              .order('slug')
+              .range(0, 9999);
+            if (fb.error || !fb.data || fb.data.length === 0) {
+              showError('Bu kategoride henüz soru yok.');
+              return;
+            }
+            setSlugs = fb.data.map(r => r.slug);
+            if (shuffleParam) shuffleInPlace(setSlugs);
+          } else {
+            setSlugs = list.map(r => r.slug);
           }
-          setSlugs = list.map(r => r.slug);
-          if (shuffleParam) shuffleInPlace(setSlugs);
           if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
 
           // No q in URL → fresh entry, clear stale answers for this set

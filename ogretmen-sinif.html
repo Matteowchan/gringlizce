@@ -2448,14 +2448,14 @@
           });
           if (r.error) throw r.error;
           var groups = r.data || [];
+          // Tab badge'i her durumda güncelle (boş bile)
+          var totalWrong = (Array.isArray(groups) ? groups : []).reduce(function (acc, g) { return acc + (parseInt(g.question_count) || 0); }, 0);
+          var countElW = document.getElementById('sd-tab-count-wrong');
+          if (countElW) countElW.textContent = totalWrong;
           if (!Array.isArray(groups) || groups.length === 0) {
             panel.innerHTML = '<p class="sd-tab-empty">Bu öğrencinin yanlış cevabı yok.</p>';
             return;
           }
-          // Toplam yanlış sayısını tekrar hesapla (tab count güncel olsun)
-          var total = groups.reduce(function (acc, g) { return acc + (parseInt(g.question_count) || 0); }, 0);
-          var countEl = document.getElementById('sd-tab-count-wrong');
-          if (countEl) countEl.textContent = total;
           panel.innerHTML = groups.map(function (g) { return renderPassageGroup(g, 'wrong', studentId); }).join('');
           attachPassageAccordion(panel);
         } catch (e) {

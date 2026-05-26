@@ -1757,7 +1757,9 @@
           <p class="t-config-note">Her satıra bir kelime. Format: <strong>en - tr</strong> (ayraç boşluk-tire-boşluk). İsteğe bağlı 3. parça pos: <em>shy - utangaç - adj</em>. Öğrenciler flashcard tarzında çözer, kendi değerlendirir.</p>
           <div class="t-modal-row" style="margin-top:0.8rem;">
             <div>
-              <button type="button" class="btn-secondary" id="ca-v-load-vocab" style="width:100%;">Sözlüğümden Seç</button>
+              <select id="ca-v-student-select" class="btn-secondary" style="width:100%; cursor:pointer;">
+                <option value="">— Öğrenci Sözlüğünden Yükle —</option>
+              </select>
             </div>
             <div>
               <span id="ca-v-counter" style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; height:100%;">0 kelime</span>
@@ -3121,39 +3123,53 @@
         });
       }
 
-      // "Sözlüğümden Seç" — kişisel vocab listesinden kelime ekler
-      var caVocabLoadBtn = document.getElementById('ca-v-load-vocab');
-      if (caVocabLoadBtn && caVocabWords) {
-        caVocabLoadBtn.addEventListener('click', async function () {
-          caVocabLoadBtn.disabled = true;
-          var origText = caVocabLoadBtn.textContent;
-          caVocabLoadBtn.textContent = 'Yükleniyor...';
+      // "Öğrenci Sözlüğünden Yükle" dropdown — sınıftaki öğrenci seç, sözlüğünü ekle
+      var caVocabSelect = document.getElementById('ca-v-student-select');
+
+      // Modal açılırken öğrenci listesini doldur (students = üstte tanımlı class roster)
+      function populateVocabStudentSelect() {
+        if (!caVocabSelect) return;
+        caVocabSelect.innerHTML = '<option value="">— Öğrenci Sözlüğünden Yükle —</option>';
+        if (typeof students === 'undefined' || !Array.isArray(students)) return;
+        students.forEach(function (s) {
+          var vc = parseInt(s.vocab_count) || 0;
+          var opt = document.createElement('option');
+          opt.value = s.student_id;
+          opt.textContent = (s.student_email || '(e-posta yok)') + ' · ' + vc + ' kelime';
+          opt.disabled = vc === 0;
+          caVocabSelect.appendChild(opt);
+        });
+      }
+
+      if (caVocabSelect && caVocabWords) {
+        caVocabSelect.addEventListener('change', async function () {
+          var studentId = caVocabSelect.value;
+          if (!studentId) return;
+          var studentEmail = caVocabSelect.options[caVocabSelect.selectedIndex].textContent.split(' · ')[0];
+          caVocabSelect.disabled = true;
+          var placeholder = caVocabSelect.options[0];
+          var origPlaceholder = placeholder.textContent;
+          placeholder.textContent = 'Yükleniyor...';
           try {
-            var res = await sb.from('user_vocab')
-              .select('vocabulary:vocabulary_id (id, word_display, definition_json)')
-              .order('saved_at', { ascending: false })
-              .limit(100);
-            if (res.error) throw res.error;
-            var rows = res.data || [];
-            if (rows.length === 0) {
-              alert('Kişisel sözlüğünde kelime yok. Soru çözerken eklediğin kelimeler burada görünür.');
+            var r = await sb.rpc('student_vocab_for_teacher', {
+              p_class_id: classId,
+              p_student_id: studentId,
+              p_limit: 200
+            });
+            if (r.error) throw r.error;
+            var words = r.data || [];
+            if (words.length === 0) {
+              alert(studentEmail + ' adlı öğrencinin sözlüğü boş.');
               return;
             }
             var existing = caVocabWords.value.trim();
             var addedLines = [];
-            rows.forEach(function (r) {
-              var v = r.vocabulary;
-              if (!v) return;
-              var en = v.word_display || '';
-              var def = v.definition_json || {};
-              var tr = (Array.isArray(def.meanings) && def.meanings[0])
-                || def.turkish
-                || '';
-              if (!en || !tr) return;
-              addedLines.push(en + ' - ' + tr);
+            words.forEach(function (w) {
+              if (!w.en || !w.tr) return;
+              addedLines.push(w.en + ' - ' + w.tr);
             });
             if (addedLines.length === 0) {
-              alert('Sözlüğündeki kelimelerin Türkçe karşılığı bulunamadı.');
+              alert('Sözlükteki kelimelerin Türkçe karşılığı bulunamadı.');
               return;
             }
             caVocabWords.value = existing
@@ -3163,8 +3179,9 @@
           } catch (err) {
             alert('Sözlük yüklenemedi: ' + (err.message || err));
           } finally {
-            caVocabLoadBtn.disabled = false;
-            caVocabLoadBtn.textContent = origText;
+            caVocabSelect.disabled = false;
+            placeholder.textContent = origPlaceholder;
+            caVocabSelect.value = ''; // reset
           }
         });
       }
@@ -3175,6 +3192,7 @@
         document.getElementById('ca-tpl-save-name').disabled = true;
         document.getElementById('ca-preview-out').innerHTML = '';
         if (caVocabCounter) caVocabCounter.textContent = '0 kelime';
+        populateVocabStudentSelect();
         setType('questions');
         caModal.classList.add('show');
         // Şablonları async yükle (modal açılınca)

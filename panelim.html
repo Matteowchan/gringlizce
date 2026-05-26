@@ -5141,7 +5141,8 @@
         var TYPE_LABELS_S = {
           questions: 'Soru Bankası',
           writing:   'Writing',
-          reading:   'Reading'
+          reading:   'Reading',
+          vocab:     'Kelime'
         };
 
         function escMA(s) {
@@ -5196,9 +5197,41 @@
 
         async function loadAssignments() {
           try {
-            var res = await sbCli.rpc('list_my_assignments');
-            if (res.error) throw res.error;
-            var assignments = res.data || [];
+            // Paralel: hem main hem vocab ödevleri
+            var pAll = await Promise.all([
+              sbCli.rpc('list_my_assignments'),
+              sbCli.rpc('list_my_vocab_assignments_all')
+            ]);
+            var mainRes = pAll[0];
+            var vocabRes = pAll[1];
+            if (mainRes.error) throw mainRes.error;
+            if (vocabRes && vocabRes.error) console.warn('[vocab list]', vocabRes.error);
+
+            var mainAssignments = (mainRes.data || []);
+            var vocabAssignments = ((vocabRes && vocabRes.data) || []).map(function (v) {
+              var bestScore = v.best_score;
+              var wordCount = v.word_count || 0;
+              var isCompleted = bestScore !== null && bestScore !== undefined && wordCount > 0 && bestScore >= wordCount * 0.7;
+              return {
+                assignment_id: v.id,
+                title: v.title,
+                description: v.description,
+                type: 'vocab',
+                class_name: v.class_name,
+                due_date: v.deadline,
+                is_overdue: !!v.is_expired,
+                status: isCompleted ? 'completed' : (v.attempt_count > 0 ? 'in_progress' : 'pending'),
+                progress_current: bestScore || 0,
+                progress_target: wordCount,
+                config: {
+                  word_count: wordCount,
+                  best_total: v.best_total,
+                  attempt_count: v.attempt_count || 0
+                }
+              };
+            });
+
+            var assignments = mainAssignments.concat(vocabAssignments);
 
             if (assignments.length === 0) {
               // Sadece kayıtlı sınıfı varsa "Ödevlerim" zone göster

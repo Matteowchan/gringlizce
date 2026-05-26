@@ -1574,6 +1574,9 @@
         <button class="ks-tab" data-tab="assignments" type="button">
           Ödevler <span class="tab-count" id="tab-count-assignments">0</span>
         </button>
+        <button class="ks-tab" data-tab="writings" type="button">
+          Yazılar <span class="tab-count" id="tab-count-writings">0</span>
+        </button>
       </div>
 
       <!-- Tab: Students -->
@@ -1596,6 +1599,20 @@
           <div class="ks-empty-eyebrow">Başla</div>
           <h3>Henüz ödev yok</h3>
           <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
+        </div>
+      </div>
+
+      <!-- Tab: Writings -->
+      <div class="ks-tab-content" data-tab-content="writings" style="display:none;">
+        <div class="ks-section-head">
+          <h2>Yazılar</h2>
+          <span class="ks-section-hint">Öğrencilerin gönderdiği yazılar. Değerlendirmek için tıkla.</span>
+        </div>
+        <div id="ks-writings-list" class="ks-assign-list"></div>
+        <div id="ks-writings-empty" class="ks-empty" style="display:none;">
+          <div class="ks-empty-eyebrow">Bekliyor</div>
+          <h3>Henüz yazı yok</h3>
+          <p>Sınıfa bir <span lang="en">writing</span> ödevi atadıktan sonra öğrenciler yazıp gönderdikçe burada listelenir.</p>
         </div>
       </div>
     </div>
@@ -2629,9 +2646,9 @@
             loadAssignments();
             assignmentsLoaded = true;
           }
-          if (target === 'writings' && !writingsLoaded) {
+          if (target === 'writings' && !writingsLoaded_flag) {
             loadWritings();
-            writingsLoaded = true;
+            writingsLoaded_flag = true;
           }
         });
       });
@@ -2659,6 +2676,70 @@
       });
 
       var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime' };
+
+      var writingsLoaded_flag = false;
+      async function loadWritings() {
+        var list = document.getElementById('ks-writings-list');
+        var empty = document.getElementById('ks-writings-empty');
+        list.innerHTML = '<p style="color:var(--text-muted); font-style:italic; text-align:center; padding:1rem;">Yükleniyor...</p>';
+        empty.style.display = 'none';
+
+        try {
+          var r = await sb.rpc('list_class_writings', { p_class_id: classId });
+          if (r.error) throw r.error;
+          var writings = r.data || [];
+
+          document.getElementById('tab-count-writings').textContent = writings.length;
+
+          if (writings.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = '';
+            return;
+          }
+
+          list.innerHTML = writings.map(function (w) {
+            var hasEval = w.has_evaluation;
+            var commentCount = parseInt(w.comment_count) || 0;
+            var band = w.overall_band;
+            var examLabel = (w.exam || '').toUpperCase();
+            var dateStr = fmtRelative(w.created_at);
+
+            var meta = [];
+            meta.push(examLabel);
+            if (w.text_type) meta.push('<span lang="en">' + esc(w.text_type) + '</span>');
+            meta.push(w.word_count + ' kelime');
+            if (commentCount > 0) meta.push(commentCount + ' yorum');
+
+            var statusPill = hasEval
+              ? '<span class="ks-assign-type" style="background:#E8F3EC; color:#2C7A4E;">Değerlendirildi' + (band != null ? ' · ' + band : '') + '</span>'
+              : '<span class="ks-assign-type" style="background:#FAF3E5; color:#8C6F44;">Bekliyor</span>';
+
+            return '<article class="ks-assign-card" data-writing-id="' + esc(w.writing_id) + '">'
+              + '<div class="ks-assign-head-row">'
+                + '<div class="ks-assign-titles">'
+                  + statusPill
+                  + '<h3 class="ks-assign-title">' + esc(w.assignment_title || w.prompt_title || 'Yazı') + '</h3>'
+                  + '<div class="ks-assign-meta">'
+                    + '<span><strong>' + esc(w.student_email || '') + '</strong></span>'
+                    + '<span class="ks-assign-meta-sep">·</span>'
+                    + meta.join('<span class="ks-assign-meta-sep">·</span>')
+                    + '<span class="ks-assign-meta-sep">·</span>'
+                    + '<span>' + dateStr + '</span>'
+                  + '</div>'
+                + '</div>'
+              + '</div>'
+            + '</article>';
+          }).join('');
+
+          list.querySelectorAll('.ks-assign-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+              window.location.href = 'ogretmen-yazi-degerlendirme.html?id=' + encodeURIComponent(card.dataset.writingId);
+            });
+          });
+        } catch (err) {
+          list.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
 
       async function loadAssignments() {
         var list = document.getElementById('ks-assign-list');

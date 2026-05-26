@@ -14,7 +14,7 @@
 
   if (document.body && document.body.getAttribute('data-no-auth-gate') === '1') return;
 
-  var FREE_VIEW_COUNT = 1; // First N questions can be answered fully as a teaser, set to 0 to gate immediately
+  var FREE_VIEW_COUNT = 0; // Kayıt olmadan hiçbir soru çözülemez (immediate gate)
   var STORAGE_KEY = 'gri_guest_views';
 
   function waitForSupabase(cb, tries) {

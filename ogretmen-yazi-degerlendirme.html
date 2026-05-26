@@ -412,7 +412,7 @@
   // ============ Load ============
   var mainEl = document.getElementById('wd-main');
   try {
-    var r = await sb.rpc('get_writing_detail', { p_writing_id: parseInt(writingId) });
+    var r = await sb.rpc('get_writing_detail', { p_writing_id: writingId });
     if (r.error) throw r.error;
     var data = r.data || {};
     state.writing = data.writing || {};
@@ -774,7 +774,7 @@
         var sel = state.currentSelection;
         if (!sel) throw new Error('Seçim yok.');
         var r2 = await sb.rpc('add_writing_comment', {
-          p_writing_id: parseInt(state.writingId),
+          p_writing_id: state.writingId,
           p_start: sel.start,
           p_end: sel.end,
           p_selected: sel.text,
@@ -807,7 +807,7 @@
   }
 
   async function reloadDetail() {
-    var r = await sb.rpc('get_writing_detail', { p_writing_id: parseInt(state.writingId) });
+    var r = await sb.rpc('get_writing_detail', { p_writing_id: state.writingId });
     if (r.error) throw r.error;
     var data = r.data || {};
     state.comments = data.comments || [];
@@ -829,7 +829,7 @@
       var rubric = RUBRICS[state.rubricType];
       var overall = rubric.computeOverall(state.scores);
       var r = await sb.rpc('save_writing_evaluation', {
-        p_writing_id: parseInt(state.writingId),
+        p_writing_id: state.writingId,
         p_rubric_type: state.rubricType,
         p_scores: state.scores,
         p_overall_band: overall,

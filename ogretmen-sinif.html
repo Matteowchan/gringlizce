@@ -1780,6 +1780,15 @@
 
           <label for="ca-w-prompt">Prompt</label>
           <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
+
+          <!-- IELTS Task 1 görsel yükleme (JS ile show/hide) -->
+          <div id="ca-w-image-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px; border:1px dashed var(--line, #D9D2C4);">
+            <label for="ca-w-image" style="font-family:var(--font-ui); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; color:var(--text-soft);">Task 1 Görseli <span style="color:var(--text-muted); font-weight:400; text-transform:none; letter-spacing:0; font-size:0.78rem;">(chart, graph, table — PNG/JPG/PDF, maks 5MB)</span></label>
+            <input type="file" id="ca-w-image" accept="image/png,image/jpeg,image/jpg,application/pdf" style="display:block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.85rem;">
+            <div id="ca-w-image-preview" style="margin-top:0.7rem;"></div>
+            <p class="t-config-note" style="margin-top:0.5rem;">Öğrenci yazarken bu görseli prompt yanında görür.</p>
+          </div>
+
           <label for="ca-w-minwords">Minimum Kelime (Opsiyonel)</label>
           <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="250">
           <p class="t-config-note">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanabilir.</p>
@@ -3301,7 +3310,23 @@
         b.addEventListener('click', function () { setType(b.dataset.type); });
       });
 
-      document.getElementById('ca-w-exam').addEventListener('change', populateTextTypeSelect);
+      document.getElementById('ca-w-exam').addEventListener('change', function () {
+        populateTextTypeSelect();
+        toggleImageUploadSection();
+      });
+      document.getElementById('ca-w-texttype').addEventListener('change', toggleImageUploadSection);
+
+      function toggleImageUploadSection() {
+        var examSel = document.getElementById('ca-w-exam');
+        var ttSel = document.getElementById('ca-w-texttype');
+        var section = document.getElementById('ca-w-image-section');
+        if (!section) return;
+        var isIelts = examSel && examSel.value === 'ielts';
+        var ttOpt = ttSel && ttSel.options[ttSel.selectedIndex];
+        var ttName = ttOpt ? (ttOpt.textContent || '') : '';
+        var isTask1 = /task[\s_-]?1\b/i.test(ttName);
+        section.style.display = (isIelts && isTask1) ? '' : 'none';
+      }
 
       var templatesInitialized = false;
 
@@ -3329,6 +3354,23 @@
       }
 
       // Vocab textarea sayaç güncelleyici
+      // Image preview
+      var caImageInput = document.getElementById('ca-w-image');
+      var caImagePreview = document.getElementById('ca-w-image-preview');
+      if (caImageInput && caImagePreview) {
+        caImageInput.addEventListener('change', function () {
+          caImagePreview.innerHTML = '';
+          var f = caImageInput.files && caImageInput.files[0];
+          if (!f) return;
+          if (f.type === 'application/pdf') {
+            caImagePreview.innerHTML = '<div style="padding:0.5rem 0.8rem; background:var(--bg-card, #fff); border:1px solid var(--line); border-radius:4px; font-family:var(--font-ui); font-size:0.85rem;">📄 ' + f.name + ' (' + Math.round(f.size / 1024) + ' KB)</div>';
+          } else {
+            var url = URL.createObjectURL(f);
+            caImagePreview.innerHTML = '<img src="' + url + '" alt="preview" style="max-width:100%; max-height:200px; border:1px solid var(--line); border-radius:4px;">';
+          }
+        });
+      }
+
       var caVocabWords = document.getElementById('ca-v-words');
       var caVocabCounter = document.getElementById('ca-v-counter');
       if (caVocabWords && caVocabCounter) {
@@ -3405,6 +3447,10 @@
       function openCaModal() {
         caErr.textContent = '';
         caForm.reset();
+        var imgPrev = document.getElementById('ca-w-image-preview');
+        if (imgPrev) imgPrev.innerHTML = '';
+        var imgSec = document.getElementById('ca-w-image-section');
+        if (imgSec) imgSec.style.display = 'none';
         document.getElementById('ca-tpl-save-name').disabled = true;
         document.getElementById('ca-preview-out').innerHTML = '';
         if (caVocabCounter) caVocabCounter.textContent = '0 kelime';
@@ -3458,6 +3504,39 @@
           config.prompt = prompt;
           var minw = parseInt(document.getElementById('ca-w-minwords').value);
           if (minw && minw > 0) config.min_words = minw;
+
+          // IELTS Task 1 image upload (Storage'a yüklenip URL config.image_url'e konur)
+          var imageInput = document.getElementById('ca-w-image');
+          var imageSection = document.getElementById('ca-w-image-section');
+          if (imageInput && imageSection && imageSection.style.display !== 'none' && imageInput.files && imageInput.files.length > 0) {
+            var file = imageInput.files[0];
+            // Validation
+            if (file.size > 5 * 1024 * 1024) {
+              caErr.textContent = 'Görsel 5MB\'tan büyük olamaz.';
+              return;
+            }
+            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+            if (allowed.indexOf(file.type) === -1) {
+              caErr.textContent = 'Sadece PNG, JPG veya PDF yükleyebilirsin.';
+              return;
+            }
+            // Upload
+            var ext = file.name.split('.').pop().toLowerCase();
+            var filename = 'task1-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+            var path = classId + '/' + filename;
+            try {
+              var upRes = await sb.storage.from('writing-assignments').upload(path, file, { cacheControl: '3600', upsert: false });
+              if (upRes.error) throw upRes.error;
+              var pubRes = sb.storage.from('writing-assignments').getPublicUrl(path);
+              if (pubRes && pubRes.data && pubRes.data.publicUrl) {
+                config.image_url = pubRes.data.publicUrl;
+                config.image_type = file.type === 'application/pdf' ? 'pdf' : 'image';
+              }
+            } catch (upErr) {
+              caErr.textContent = 'Görsel yüklenemedi: ' + (upErr.message || upErr);
+              return;
+            }
+          }
         } else if (caCurrentType === 'reading') {
           var url = document.getElementById('ca-r-url').value.trim();
           if (!url) { caErr.textContent = 'URL boş olamaz.'; return; }

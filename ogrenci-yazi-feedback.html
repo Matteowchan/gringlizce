@@ -275,6 +275,23 @@
       ? '<div class="wf-prompt-box"><div class="wf-prompt-eyebrow">Prompt</div>' + esc(w.prompt_snapshot) + '</div>'
       : '';
 
+    // IELTS Task 1: görsel
+    var ac = w.assignment_config;
+    if (ac && ac.image_url) {
+      if (ac.image_type === 'pdf') {
+        promptHtml += '<div class="wf-prompt-box" style="border-left:3px solid var(--gold);">'
+          + '<div class="wf-prompt-eyebrow">Görsel (PDF)</div>'
+          + '<iframe src="' + ac.image_url + '" style="width:100%; height:420px; border:1px solid var(--line); border-radius:4px; margin-top:0.4rem;"></iframe>'
+          + '<a href="' + ac.image_url + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.82rem; color:var(--teal);">PDF\'yi yeni sekmede aç →</a>'
+        + '</div>';
+      } else {
+        promptHtml += '<div class="wf-prompt-box" style="border-left:3px solid var(--gold);">'
+          + '<div class="wf-prompt-eyebrow">Görsel</div>'
+          + '<a href="' + ac.image_url + '" target="_blank" rel="noopener"><img src="' + ac.image_url + '" alt="Task 1 görseli" style="max-width:100%; height:auto; border:1px solid var(--line); border-radius:4px; display:block; margin-top:0.4rem;"></a>'
+        + '</div>';
+      }
+    }
+
     // Yazı + yorumlar
     var text = w.text || '';
     var sortedComments = comments.slice().sort(function (a, b) { return a.start_offset - b.start_offset; });

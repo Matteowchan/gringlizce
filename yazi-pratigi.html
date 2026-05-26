@@ -2011,7 +2011,29 @@
         };
         document.getElementById('promptTitle').textContent = state.currentPrompt.title;
         var ptElA = document.getElementById('promptText');
-        ptElA.innerHTML = formatPromptHTML(state.currentPrompt.prompt);
+        var promptInnerHtml = formatPromptHTML(state.currentPrompt.prompt);
+
+        // IELTS Task 1: görsel varsa prompt yanında göster
+        var imgUrl = state.assignment.config.image_url;
+        var imgType = state.assignment.config.image_type;
+        if (imgUrl) {
+          var imgBlock = '';
+          if (imgType === 'pdf') {
+            imgBlock = '<div style="margin-top:1rem; padding:0.8rem; background:#FBF7EE; border:1px solid #D9D2C4; border-radius:6px;">'
+              + '<div style="font-family:var(--font-ui, Inter, sans-serif); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#6B6862; font-weight:700; margin-bottom:0.5rem;">Görsel (PDF)</div>'
+              + '<iframe src="' + imgUrl + '" style="width:100%; height:420px; border:1px solid #D9D2C4; border-radius:4px;"></iframe>'
+              + '<a href="' + imgUrl + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.5rem; font-family:var(--font-ui, Inter, sans-serif); font-size:0.85rem; color:#2C5856;">PDF\'yi yeni sekmede aç →</a>'
+            + '</div>';
+          } else {
+            imgBlock = '<div style="margin-top:1rem;">'
+              + '<div style="font-family:var(--font-ui, Inter, sans-serif); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#6B6862; font-weight:700; margin-bottom:0.5rem;">Görsel</div>'
+              + '<a href="' + imgUrl + '" target="_blank" rel="noopener"><img src="' + imgUrl + '" alt="Task 1 görseli" style="max-width:100%; height:auto; border:1px solid #D9D2C4; border-radius:6px; display:block;"></a>'
+            + '</div>';
+          }
+          promptInnerHtml += imgBlock;
+        }
+
+        ptElA.innerHTML = promptInnerHtml;
         ptElA.dataset.raw = state.currentPrompt.prompt;
         // Yeni prompt butonunu gizle (öğretmen prompt'unu zorunlu kıl)
         var npb = document.getElementById('newPromptBtn');

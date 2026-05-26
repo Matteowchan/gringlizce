@@ -473,6 +473,7 @@
         + (w.prompt_snapshot
           ? '<div class="wd-prompt-box"><div class="wd-prompt-eyebrow">Prompt</div>' + esc(w.prompt_snapshot) + '</div>'
           : '')
+        + renderAssignmentImage(w.assignment_config)
         + '<div class="wd-writing-box" style="position:relative;">'
           + '<div class="wd-writing-text" id="wd-text"></div>'
           + '<div class="wd-sel-popup" id="wd-sel-popup"><button type="button" id="wd-sel-add">Yorum ekle</button></div>'
@@ -513,6 +514,23 @@
     if (!s) return '';
     var d = new Date(s);
     return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function renderAssignmentImage(config) {
+    if (!config || !config.image_url) return '';
+    var url = config.image_url;
+    var type = config.image_type;
+    if (type === 'pdf') {
+      return '<div class="wd-prompt-box" style="border-left:3px solid var(--gold);">'
+        + '<div class="wd-prompt-eyebrow">Görsel (PDF)</div>'
+        + '<iframe src="' + url + '" style="width:100%; height:420px; border:1px solid var(--line); border-radius:4px; margin-top:0.4rem;"></iframe>'
+        + '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.82rem; color:var(--teal);">PDF\'yi yeni sekmede aç →</a>'
+      + '</div>';
+    }
+    return '<div class="wd-prompt-box" style="border-left:3px solid var(--gold);">'
+      + '<div class="wd-prompt-eyebrow">Görsel</div>'
+      + '<a href="' + url + '" target="_blank" rel="noopener"><img src="' + url + '" alt="Task 1 görseli" style="max-width:100%; height:auto; border:1px solid var(--line); border-radius:4px; display:block; margin-top:0.4rem;"></a>'
+    + '</div>';
   }
 
   function CAT_INFO(cat) {

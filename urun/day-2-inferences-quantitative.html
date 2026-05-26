@@ -3416,6 +3416,7 @@ function resetAllProgress(){
   if(rEl) rEl.classList.remove('show');
   if(sEl) sEl.style.display = 'flex';
   renderSplash();
+checkDeepLink();
 }
 
 // ============= UNLOAD WARNING =============
@@ -3731,6 +3732,28 @@ renderSplash();
   } catch (e) { /* fall back to splash */ }
 })();
 </script>
-<script src="../assets/breadcrumb.js" defer></script>
+<script src="../assets/breadcrumb.js" defer>
+// Deep link: URL'de ?m=X&q=Y varsa direkt o soruya git
+function checkDeepLink(){
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var mParam = params.get('m');
+    var qParam = params.get('q');
+    if(mParam === null || qParam === null) return;
+    var modIdx = parseInt(mParam, 10);
+    var qIdx = parseInt(qParam, 10);
+    if(isNaN(modIdx) || isNaN(qIdx)) return;
+    if(!MODULES[modIdx] || !MODULES[modIdx].questions || !MODULES[modIdx].questions[qIdx]) return;
+    currentModule = modIdx;
+    currentQ = qIdx;
+    document.getElementById('splash').style.display='none';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('topbar').classList.add('show');
+    document.getElementById('quiz').classList.add('show');
+    renderQuestion();
+  } catch(e) { console.warn('[deepLink]', e); }
+}
+
+</script>
 </body>
 </html>

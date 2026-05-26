@@ -2361,7 +2361,29 @@
             }
           }
 
-          var rowHtml = '<a class="sd-q-row" href="soru.html?q=' + encodeURIComponent(slug) + '" target="_blank" rel="noopener">'
+          // Kamp slug'ları için direkt day dosyasına yönlendir (questions tablosunda yok)
+          var slugHref = 'soru.html?q=' + encodeURIComponent(slug);
+          var campMatch = slug.match(/^sat-rw-kamp-d(\d)-m(\d)-q(\d+)$/);
+          if (campMatch) {
+            var dayNum = parseInt(campMatch[1], 10);
+            var modIdx = parseInt(campMatch[2], 10) - 1;
+            var qIdx = parseInt(campMatch[3], 10) - 1;
+            var dayFiles = {
+              1: 'day-1-information-and-ideas',
+              2: 'day-2-inferences-quantitative',
+              3: 'day-3-words-in-context',
+              4: 'day-4-structure-and-connections',
+              5: 'day-5-transitions',
+              6: 'day-6-rhetorical-synthesis',
+              7: 'day-7-mock-review',
+              8: 'day-8-final-review'
+            };
+            if (dayFiles[dayNum]) {
+              slugHref = 'urun/' + dayFiles[dayNum] + '.html?m=' + modIdx + '&q=' + qIdx;
+            }
+          }
+
+          var rowHtml = '<a class="sd-q-row" href="' + slugHref + '" target="_blank" rel="noopener">'
             + '<span class="sd-q-mark ' + markClass + '"></span>'
             + '<div class="sd-q-body">'
               + '<p class="sd-q-text">' + qText + '</p>'

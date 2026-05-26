@@ -827,10 +827,74 @@
 
     .t-type-picker {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 0.5rem;
       margin-bottom: 1.4rem;
     }
+    /* Vocab drawer */
+    .ad-vocab-section {
+      margin-bottom: 1.5rem;
+    }
+    .ad-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 1rem 0 0.6rem 0;
+    }
+    .ad-vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.5rem;
+    }
+    .ad-vocab-card {
+      background: var(--bg-soft, #F4EFE3);
+      border: 1px solid var(--border, #D6CFC0);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .ad-vocab-en {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .ad-vocab-tr {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .ad-vocab-pos {
+      font-size: 0.7rem;
+      color: var(--gold, #B89968);
+      font-style: italic;
+      text-transform: uppercase;
+    }
+    /* Vocab kart tipi badge */
+    .ks-assign-type.type-vocab {
+      background: #E8DDC8;
+      color: #6B5B40;
+    }
+    /* Btn-secondary fallback */
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border, #D6CFC0);
+      color: var(--text, #1A2230);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    .btn-secondary:hover {
+      background: var(--bg-soft, #F4EFE3);
+    }
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .t-type-btn {
       padding: 0.9rem 0.6rem;
       background: var(--bg);
@@ -1576,7 +1640,7 @@
     <div class="t-modal-box">
       <div class="t-modal-eyebrow">Yeni Ödev</div>
       <h2>Ödev Oluştur</h2>
-      <p class="modal-sub">Soru bankası, writing veya reading ödevi seç. Öğrencilerinin panelinde anında görünür.</p>
+      <p class="modal-sub">Soru bankası, <span lang="en">writing</span>, <span lang="en">reading</span> veya kelime ödevi seç. Öğrencilerinin panelinde anında görünür.</p>
 
       <form id="ca-form">
         <div class="ca-template-bar" id="ca-tpl-bar">
@@ -1598,6 +1662,9 @@
           </button>
           <button type="button" class="t-type-btn" data-type="reading">
             <span class="t-type-name" lang="en">Reading</span>
+          </button>
+          <button type="button" class="t-type-btn" data-type="vocab">
+            <span class="t-type-name">Kelime</span>
           </button>
         </div>
 
@@ -1680,6 +1747,22 @@
           <label for="ca-r-followup">Açıklama / Hedef (Opsiyonel)</label>
           <textarea id="ca-r-followup" rows="2" maxlength="500" placeholder="Okuduktan sonra 5 anahtar kelime not al"></textarea>
           <p class="t-config-note">Öğrenci okuduğunda "Okudum" butonuyla işaretler.</p>
+        </div>
+
+        <!-- Vocab config -->
+        <div class="t-config-block" data-config="vocab">
+          <div class="t-config-eyebrow">Kelime Ödevi</div>
+          <label for="ca-v-words">Kelimeler</label>
+          <textarea id="ca-v-words" rows="10" maxlength="20000" placeholder="Her satıra bir kelime, format: en - tr&#10;Örnek:&#10;shy - utangaç&#10;loud - gürültülü&#10;calm - sakin"></textarea>
+          <p class="t-config-note">Her satıra bir kelime. Format: <strong>en - tr</strong> (ayraç boşluk-tire-boşluk). İsteğe bağlı 3. parça pos: <em>shy - utangaç - adj</em>. Öğrenciler flashcard tarzında çözer, kendi değerlendirir.</p>
+          <div class="t-modal-row" style="margin-top:0.8rem;">
+            <div>
+              <button type="button" class="btn-secondary" id="ca-v-load-vocab" style="width:100%;">Sözlüğümden Seç</button>
+            </div>
+            <div>
+              <span id="ca-v-counter" style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; height:100%;">0 kelime</span>
+            </div>
+          </div>
         </div>
 
         <div class="ca-tpl-save-row">
@@ -2569,7 +2652,7 @@
         }
       });
 
-      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading' };
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime' };
 
       async function loadAssignments() {
         var list = document.getElementById('ks-assign-list');
@@ -2578,9 +2661,35 @@
         empty.style.display = 'none';
 
         try {
-          var r = await sb.rpc('list_class_assignments', { p_class_id: classId });
-          if (r.error) throw r.error;
-          var assignments = r.data || [];
+          // Paralel: hem soru bankası/writing/reading ödevleri hem vocab ödevleri
+          var [mainRes, vocabRes] = await Promise.all([
+            sb.rpc('list_class_assignments', { p_class_id: classId }),
+            sb.rpc('vocab_assignment_list', { p_class_id: classId })
+          ]);
+          if (mainRes.error) throw mainRes.error;
+          // vocabRes.error sessizce geç (RPC yoksa bile main çalışsın)
+          if (vocabRes.error) console.warn('[vocab list]', vocabRes.error);
+
+          var mainAssignments = (mainRes.data || []);
+          var vocabAssignments = (vocabRes.data || []).map(function (v) {
+            return {
+              assignment_id: v.id,
+              title: v.title,
+              description: v.description,
+              type: 'vocab',
+              config: { word_count: v.word_count },
+              due_date: v.deadline,
+              total_students: v.students_total,
+              completed_count: v.students_attempted,
+              created_at: v.created_at,
+              _kind: 'vocab'
+            };
+          });
+
+          // Birleştir + created_at desc sırala
+          var assignments = mainAssignments.concat(vocabAssignments).sort(function (a, b) {
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          });
 
           document.getElementById('tab-count-assignments').textContent = assignments.length;
 
@@ -2607,13 +2716,17 @@
             } else if (a.type === 'writing' && a.config) {
               meta.push((a.config.exam_type || '') + ' Task ' + (a.config.task_number || ''));
               if (a.config.min_words) meta.push(a.config.min_words + '+ kelime');
+            } else if (a.type === 'vocab' && a.config) {
+              meta.push((a.config.word_count || 0) + ' kelime');
+              meta.push('Flashcard');
             }
 
             var descHtml = a.description
               ? '<p class="ks-assign-desc">' + esc(a.description) + '</p>'
               : '';
 
-            return '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '">'
+            var kind = a._kind === 'vocab' ? 'vocab' : 'main';
+            return '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '" data-kind="' + kind + '" data-type="' + esc(a.type) + '">'
               + '<div class="ks-assign-head-row">'
                 + '<div class="ks-assign-titles">'
                   + '<span class="ks-assign-type type-' + a.type + '">' + TYPE_LABELS[a.type] + '</span>'
@@ -2622,12 +2735,12 @@
                     + meta.join('<span class="ks-assign-meta-sep">·</span>')
                   + '</div>'
                 + '</div>'
-                + '<button class="ks-assign-delete" data-action="delete-assign" data-id="' + esc(a.assignment_id) + '" type="button" title="Ödevi sil">×</button>'
+                + '<button class="ks-assign-delete" data-action="delete-assign" data-id="' + esc(a.assignment_id) + '" data-kind="' + kind + '" type="button" title="Ödevi sil">×</button>'
               + '</div>'
               + descHtml
               + '<div class="ks-assign-progress">'
                 + '<div class="ks-assign-progress-bar"><div class="ks-assign-progress-fill" style="width:' + pct + '%"></div></div>'
-                + '<div class="ks-assign-progress-text"><strong>' + completed + '</strong> / ' + total + ' tamamladı</div>'
+                + '<div class="ks-assign-progress-text"><strong>' + completed + '</strong> / ' + total + ' ' + (kind === 'vocab' ? 'çözdü' : 'tamamladı') + '</div>'
               + '</div>'
             + '</article>';
           }).join('');
@@ -2635,7 +2748,11 @@
           list.querySelectorAll('.ks-assign-card').forEach(function (card) {
             card.addEventListener('click', function (e) {
               if (e.target.closest('[data-action="delete-assign"]')) return;
-              openAssignDrawer(card.dataset.id, card.dataset.title);
+              if (card.dataset.kind === 'vocab') {
+                openVocabAssignDrawer(card.dataset.id, card.dataset.title);
+              } else {
+                openAssignDrawer(card.dataset.id, card.dataset.title);
+              }
             });
           });
 
@@ -2645,7 +2762,8 @@
               if (!confirm('Bu ödevi silmek istiyor musun? Öğrenci progress kayıtları da silinecek.')) return;
               btn.disabled = true;
               try {
-                var r = await sb.rpc('delete_assignment', { p_assignment_id: btn.dataset.id });
+                var rpcName = btn.dataset.kind === 'vocab' ? 'vocab_assignment_delete' : 'delete_assignment';
+                var r = await sb.rpc(rpcName, { p_assignment_id: btn.dataset.id });
                 if (r.error) throw r.error;
                 await loadAssignments();
               } catch (err) {
@@ -2656,6 +2774,69 @@
           });
         } catch (err) {
           list.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      async function openVocabAssignDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'Kelime Ödevi';
+        adBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        try {
+          var r = await sb.rpc('vocab_assignment_progress', { p_assignment_id: assignmentId });
+          if (r.error) throw r.error;
+          var data = r.data || {};
+          var assignment = data.assignment || {};
+          var students = data.students || [];
+          var words = assignment.words || [];
+
+          // Kelime listesi
+          var wordsHtml = '';
+          if (words.length > 0) {
+            wordsHtml = '<div class="ad-vocab-section">'
+              + '<h4 class="ad-section-title">Kelimeler (' + words.length + ')</h4>'
+              + '<div class="ad-vocab-grid">'
+              + words.map(function (w) {
+                  return '<div class="ad-vocab-card">'
+                    + '<span class="ad-vocab-en">' + esc(w.en) + '</span>'
+                    + '<span class="ad-vocab-tr">' + esc(w.tr) + '</span>'
+                    + (w.pos ? '<span class="ad-vocab-pos">' + esc(w.pos) + '</span>' : '')
+                  + '</div>';
+                }).join('')
+              + '</div>'
+            + '</div>';
+          }
+
+          // Öğrenci sonuç tablosu
+          var studentsHtml = '<div class="ad-vocab-section">'
+            + '<h4 class="ad-section-title">Öğrenci Sonuçları (' + students.length + ')</h4>';
+
+          if (students.length === 0) {
+            studentsHtml += '<p style="color:var(--text-muted); font-style:italic;">Henüz öğrenci yok.</p>';
+          } else {
+            studentsHtml += '<ul class="ad-list">' + students.map(function (p) {
+              var hasAttempt = p.attempt_count > 0;
+              var scoreLabel = hasAttempt
+                ? p.best_score + ' / ' + p.best_total + ' (%' + p.best_pct + ')'
+                : '—';
+              var status = hasAttempt ? (p.best_pct >= 70 ? 'completed' : 'in_progress') : 'pending';
+              var statusLabel = hasAttempt ? (p.best_pct >= 70 ? 'Başarılı' : 'Devam Ediyor') : 'Başlamadı';
+              var lastAt = p.last_attempt_at
+                ? '<span class="ad-completed-at">' + fmtRelative(p.last_attempt_at) + '</span>'
+                : '';
+              return '<li class="ad-row">'
+                + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + lastAt + '</div>'
+                + '<div class="ad-progress progress-' + status + '">' + scoreLabel + '</div>'
+                + '<span class="ad-status-pill status-' + status + '">' + statusLabel + ' · ' + (p.attempt_count || 0) + ' deneme</span>'
+              + '</li>';
+            }).join('') + '</ul>';
+          }
+          studentsHtml += '</div>';
+
+          adBody.innerHTML = studentsHtml + wordsHtml;
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
         }
       }
 
@@ -2906,11 +3087,94 @@
 
       var templatesInitialized = false;
 
+      // Vocab kelimeleri parse et: "shy - utangaç" veya "shy - utangaç - adj"
+      function parseVocabWords(raw) {
+        var lines = raw.split(/\r?\n/);
+        var words = [];
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (!line) continue;
+          var parts = line.split(/\s+-\s+|\t+/);
+          if (parts.length < 2) continue;
+          var en = parts[0].trim();
+          var tr = parts[1].trim();
+          if (!en || !tr) continue;
+          if (en.length > 100 || tr.length > 200) continue;
+          var w = { en: en, tr: tr };
+          if (parts[2]) {
+            var pos = parts[2].trim();
+            if (pos && pos.length <= 30) w.pos = pos;
+          }
+          words.push(w);
+        }
+        return words;
+      }
+
+      // Vocab textarea sayaç güncelleyici
+      var caVocabWords = document.getElementById('ca-v-words');
+      var caVocabCounter = document.getElementById('ca-v-counter');
+      if (caVocabWords && caVocabCounter) {
+        caVocabWords.addEventListener('input', function () {
+          var n = parseVocabWords(caVocabWords.value).length;
+          caVocabCounter.textContent = n + ' kelime';
+          caVocabCounter.style.color = n > 200 ? '#b33a3a' : (n > 0 ? 'var(--ink-soft, #5A6270)' : 'var(--text-muted)');
+        });
+      }
+
+      // "Sözlüğümden Seç" — kişisel vocab listesinden kelime ekler
+      var caVocabLoadBtn = document.getElementById('ca-v-load-vocab');
+      if (caVocabLoadBtn && caVocabWords) {
+        caVocabLoadBtn.addEventListener('click', async function () {
+          caVocabLoadBtn.disabled = true;
+          var origText = caVocabLoadBtn.textContent;
+          caVocabLoadBtn.textContent = 'Yükleniyor...';
+          try {
+            var res = await sb.from('user_vocab')
+              .select('vocabulary:vocabulary_id (id, word_display, definition_json)')
+              .order('saved_at', { ascending: false })
+              .limit(100);
+            if (res.error) throw res.error;
+            var rows = res.data || [];
+            if (rows.length === 0) {
+              alert('Kişisel sözlüğünde kelime yok. Soru çözerken eklediğin kelimeler burada görünür.');
+              return;
+            }
+            var existing = caVocabWords.value.trim();
+            var addedLines = [];
+            rows.forEach(function (r) {
+              var v = r.vocabulary;
+              if (!v) return;
+              var en = v.word_display || '';
+              var def = v.definition_json || {};
+              var tr = (Array.isArray(def.meanings) && def.meanings[0])
+                || def.turkish
+                || '';
+              if (!en || !tr) return;
+              addedLines.push(en + ' - ' + tr);
+            });
+            if (addedLines.length === 0) {
+              alert('Sözlüğündeki kelimelerin Türkçe karşılığı bulunamadı.');
+              return;
+            }
+            caVocabWords.value = existing
+              ? existing + '\n' + addedLines.join('\n')
+              : addedLines.join('\n');
+            caVocabWords.dispatchEvent(new Event('input'));
+          } catch (err) {
+            alert('Sözlük yüklenemedi: ' + (err.message || err));
+          } finally {
+            caVocabLoadBtn.disabled = false;
+            caVocabLoadBtn.textContent = origText;
+          }
+        });
+      }
+
       function openCaModal() {
         caErr.textContent = '';
         caForm.reset();
         document.getElementById('ca-tpl-save-name').disabled = true;
         document.getElementById('ca-preview-out').innerHTML = '';
+        if (caVocabCounter) caVocabCounter.textContent = '0 kelime';
         setType('questions');
         caModal.classList.add('show');
         // Şablonları async yükle (modal açılınca)
@@ -2966,6 +3230,13 @@
           config.url = url;
           var followup = document.getElementById('ca-r-followup').value.trim();
           if (followup) config.follow_up_note = followup;
+        } else if (caCurrentType === 'vocab') {
+          var rawWords = document.getElementById('ca-v-words').value.trim();
+          if (!rawWords) { caErr.textContent = 'Kelime listesi boş olamaz.'; return; }
+          var vocabWords = parseVocabWords(rawWords);
+          if (vocabWords.length === 0) { caErr.textContent = 'Geçerli kelime bulunamadı. Format: en - tr (her satıra bir tane).'; return; }
+          if (vocabWords.length > 200) { caErr.textContent = 'En fazla 200 kelime ekleyebilirsin.'; return; }
+          config._vocab_words = vocabWords;
         }
 
         var dueIso = dueRaw ? new Date(dueRaw).toISOString() : null;
@@ -2974,14 +3245,25 @@
         submitBtn.textContent = 'Oluşturuluyor...';
 
         try {
-          var r = await sb.rpc('create_assignment', {
-            p_class_id: classId,
-            p_type: caCurrentType,
-            p_title: title,
-            p_description: desc || null,
-            p_config: config,
-            p_due_date: dueIso
-          });
+          var r;
+          if (caCurrentType === 'vocab') {
+            r = await sb.rpc('vocab_assignment_create', {
+              p_class_id: classId,
+              p_title: title,
+              p_words: config._vocab_words,
+              p_deadline: dueIso,
+              p_description: desc || null
+            });
+          } else {
+            r = await sb.rpc('create_assignment', {
+              p_class_id: classId,
+              p_type: caCurrentType,
+              p_title: title,
+              p_description: desc || null,
+              p_config: config,
+              p_due_date: dueIso
+            });
+          }
           if (r.error) throw r.error;
 
           // Şablon kullanıldıysa sayacı artır

@@ -3023,12 +3023,28 @@
             + '</div>';
           }
 
+          // Görsel (IELTS Task 1)
+          var imageHtml = '';
+          if (config.image_url) {
+            var imgInner = '';
+            if (config.image_type === 'pdf') {
+              imgInner = '<iframe src="' + config.image_url + '" style="width:100%; height:380px; border:1px solid var(--line, #D9D2C4); border-radius:4px; margin-top:0.4rem;"></iframe>'
+                + '<a href="' + config.image_url + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.82rem; color:var(--teal, #2C5856);">PDF\'yi yeni sekmede aç →</a>';
+            } else {
+              imgInner = '<a href="' + config.image_url + '" target="_blank" rel="noopener"><img src="' + config.image_url + '" alt="Task 1 görseli" style="max-width:100%; height:auto; max-height:340px; border:1px solid var(--line, #D9D2C4); border-radius:4px; display:block; margin-top:0.4rem;"></a>';
+            }
+            imageHtml = '<div class="ad-writing-prompt" style="border-left-color:var(--gold, #B89968);">'
+              + '<div class="ad-section-title">Görsel' + (config.image_type === 'pdf' ? ' (PDF)' : '') + '</div>'
+              + imgInner
+            + '</div>';
+          }
+
           // Öğrenci listesi
-          var studentsHtml = '<div class="ad-section-title">Öğrenci Durumları (' + roster.length + ')</div>';
+          var studentsHtml = '<div class="ad-section-title" style="margin-top:1.2rem; font-family:var(--font-ui); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:0.6rem;">Öğrenci Durumları (' + roster.length + ')</div>';
           if (roster.length === 0) {
-            studentsHtml += '<p style="color:var(--text-muted); font-style:italic;">Sınıfta öğrenci yok.</p>';
+            studentsHtml += '<p style="color:var(--text-muted); font-style:italic; padding:0.5rem 0;">Sınıfta öğrenci yok.</p>';
           } else {
-            studentsHtml += '<ul class="ad-list">' + roster.map(function (s) {
+            studentsHtml += '<ul class="ad-list" style="list-style:none; padding:0; margin:0;">' + roster.map(function (s) {
               var w = writingsByStudent[s.student_id];
               if (w) {
                 var hasEval = w.has_evaluation;
@@ -3039,22 +3055,21 @@
                   : 'Yazıldı, bekliyor';
                 var statusClass = hasEval ? 'completed' : 'in_progress';
                 var detail = w.word_count + ' kelime' + (commentCount > 0 ? ' · ' + commentCount + ' yorum' : '');
-                return '<li class="ad-row" data-writing-id="' + esc(w.writing_id) + '" style="cursor:pointer;">'
+                return '<li class="ad-row" data-writing-id="' + esc(w.writing_id) + '" style="cursor:pointer; padding:0.6rem 0.8rem; border-bottom:1px solid var(--line-soft, #E8E1D2); display:flex; align-items:center; justify-content:space-between; gap:0.8rem;">'
                   + '<div class="ad-email" title="' + esc(s.student_email) + '">' + esc(s.student_email || '') + '<span class="ad-completed-at">' + fmtRelative(w.saved_at || w.created_at) + '</span></div>'
                   + '<div class="ad-progress progress-' + statusClass + '">' + esc(detail) + '</div>'
                   + '<span class="ad-status-pill status-' + statusClass + '">' + statusLabel + '</span>'
                 + '</li>';
               } else {
-                return '<li class="ad-row">'
-                  + '<div class="ad-email" title="' + esc(s.student_email) + '">' + esc(s.student_email || '') + '</div>'
-                  + '<div class="ad-progress progress-pending">—</div>'
-                  + '<span class="ad-status-pill status-pending">Yazmadı</span>'
+                return '<li class="ad-row" style="padding:0.6rem 0.8rem; border-bottom:1px solid var(--line-soft, #E8E1D2); display:flex; align-items:center; justify-content:space-between; gap:0.8rem; opacity:0.7;">'
+                  + '<div class="ad-email" title="' + esc(s.student_email) + '" style="font-family:var(--font-ui); font-size:0.88rem;">' + esc(s.student_email || '(e-posta yok)') + '</div>'
+                  + '<span class="ad-status-pill status-pending" style="padding:0.2rem 0.6rem; border-radius:999px; background:#EFE8D9; color:#6B6862; font-family:var(--font-ui); font-size:10px; letter-spacing:0.08em; font-weight:600; text-transform:uppercase;">Yazmadı</span>'
                 + '</li>';
               }
             }).join('') + '</ul>';
           }
 
-          adBody.innerHTML = metaHtml + promptHtml + studentsHtml;
+          adBody.innerHTML = metaHtml + promptHtml + imageHtml + studentsHtml;
 
           // Tıklanabilir yazı satırları
           adBody.querySelectorAll('.ad-row[data-writing-id]').forEach(function (row) {

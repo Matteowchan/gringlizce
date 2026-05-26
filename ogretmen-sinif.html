@@ -832,6 +832,35 @@
       margin-bottom: 1.4rem;
     }
     /* Vocab drawer */
+    .ad-writing-meta {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin: 0 0 1rem 0;
+      padding: 0.7rem 0.9rem;
+      background: var(--bg-soft, #EFE8D9);
+      border-radius: 6px;
+    }
+    .ad-writing-prompt {
+      margin-bottom: 1.2rem;
+      padding: 0.9rem 1rem;
+      background: #FBF7EE;
+      border: 1px solid var(--line, #D9D2C4);
+      border-left: 3px solid var(--gold, #B89968);
+      border-radius: 0 6px 6px 0;
+    }
+    .ad-writing-prompt-text {
+      font-family: var(--font-body, Georgia, serif);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-soft);
+      white-space: pre-wrap;
+      margin-top: 0.4rem;
+    }
+    .ad-row[data-writing-id]:hover {
+      background: var(--bg-soft, #F4EFE3);
+    }
+
     .ad-vocab-section {
       margin-bottom: 1.5rem;
     }
@@ -2837,6 +2866,8 @@
               if (e.target.closest('[data-action="delete-assign"]')) return;
               if (card.dataset.kind === 'vocab') {
                 openVocabAssignDrawer(card.dataset.id, card.dataset.title);
+              } else if (card.dataset.type === 'writing') {
+                openWritingAssignDrawer(card.dataset.id, card.dataset.title);
               } else {
                 openAssignDrawer(card.dataset.id, card.dataset.title);
               }
@@ -2922,6 +2953,106 @@
           studentsHtml += '</div>';
 
           adBody.innerHTML = studentsHtml + wordsHtml;
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+        }
+      }
+
+      async function openWritingAssignDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'Yazı Ödevi';
+        adBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        try {
+          // Paralel: ödev detayı + sınıfın tüm yazıları + class roster
+          var [aRes, wRes, rRes] = await Promise.all([
+            sb.rpc('list_class_assignments', { p_class_id: classId }),
+            sb.rpc('list_class_writings', { p_class_id: classId }),
+            sb.rpc('class_roster', { p_class_id: classId })
+          ]);
+
+          if (aRes.error) throw aRes.error;
+          if (wRes.error) console.warn('[writings]', wRes.error);
+          if (rRes.error) console.warn('[roster]', rRes.error);
+
+          var assignment = (aRes.data || []).find(function (a) { return a.assignment_id === assignmentId; });
+          if (!assignment) {
+            adBody.innerHTML = '<p style="color:#b33a3a;">Ödev bulunamadı.</p>';
+            return;
+          }
+          var config = assignment.config || {};
+
+          // Bu ödevin yazılarını filtrele
+          var writings = (wRes.data || []).filter(function (w) { return w.assignment_id === assignmentId; });
+          var writingsByStudent = {};
+          writings.forEach(function (w) { writingsByStudent[w.student_id] = w; });
+
+          var roster = rRes.data || [];
+
+          // Ödev meta
+          var metaHtml = '';
+          var metaItems = [];
+          if (config.exam_type) metaItems.push('<strong>' + esc(config.exam_type.toUpperCase()) + '</strong>');
+          if (config.text_type_display) metaItems.push('<span lang="en">' + esc(config.text_type_display) + '</span>');
+          if (config.min_words) metaItems.push(config.min_words + '+ kelime');
+          if (assignment.due_date) {
+            var dueLabel = fmtDueDate(assignment.due_date);
+            var overdue = new Date(assignment.due_date) < new Date();
+            metaItems.push('<span style="color:' + (overdue ? '#b33a3a' : 'var(--text-muted)') + ';">Son: ' + dueLabel + '</span>');
+          }
+          if (metaItems.length > 0) {
+            metaHtml = '<div class="ad-writing-meta">' + metaItems.join('<span class="ks-assign-meta-sep">·</span>') + '</div>';
+          }
+
+          // Prompt
+          var promptHtml = '';
+          if (config.prompt) {
+            promptHtml = '<div class="ad-writing-prompt">'
+              + '<div class="ad-section-title">Prompt</div>'
+              + '<div class="ad-writing-prompt-text">' + esc(config.prompt) + '</div>'
+            + '</div>';
+          }
+
+          // Öğrenci listesi
+          var studentsHtml = '<div class="ad-section-title">Öğrenci Durumları (' + roster.length + ')</div>';
+          if (roster.length === 0) {
+            studentsHtml += '<p style="color:var(--text-muted); font-style:italic;">Sınıfta öğrenci yok.</p>';
+          } else {
+            studentsHtml += '<ul class="ad-list">' + roster.map(function (s) {
+              var w = writingsByStudent[s.student_id];
+              if (w) {
+                var hasEval = w.has_evaluation;
+                var band = w.overall_band;
+                var commentCount = parseInt(w.comment_count) || 0;
+                var statusLabel = hasEval
+                  ? 'Değerlendirildi' + (band != null ? ' · ' + band : '')
+                  : 'Yazıldı, bekliyor';
+                var statusClass = hasEval ? 'completed' : 'in_progress';
+                var detail = w.word_count + ' kelime' + (commentCount > 0 ? ' · ' + commentCount + ' yorum' : '');
+                return '<li class="ad-row" data-writing-id="' + esc(w.writing_id) + '" style="cursor:pointer;">'
+                  + '<div class="ad-email" title="' + esc(s.student_email) + '">' + esc(s.student_email || '') + '<span class="ad-completed-at">' + fmtRelative(w.saved_at || w.created_at) + '</span></div>'
+                  + '<div class="ad-progress progress-' + statusClass + '">' + esc(detail) + '</div>'
+                  + '<span class="ad-status-pill status-' + statusClass + '">' + statusLabel + '</span>'
+                + '</li>';
+              } else {
+                return '<li class="ad-row">'
+                  + '<div class="ad-email" title="' + esc(s.student_email) + '">' + esc(s.student_email || '') + '</div>'
+                  + '<div class="ad-progress progress-pending">—</div>'
+                  + '<span class="ad-status-pill status-pending">Yazmadı</span>'
+                + '</li>';
+              }
+            }).join('') + '</ul>';
+          }
+
+          adBody.innerHTML = metaHtml + promptHtml + studentsHtml;
+
+          // Tıklanabilir yazı satırları
+          adBody.querySelectorAll('.ad-row[data-writing-id]').forEach(function (row) {
+            row.addEventListener('click', function () {
+              window.location.href = 'ogretmen-yazi-degerlendirme.html?id=' + encodeURIComponent(row.dataset.writingId);
+            });
+          });
         } catch (err) {
           adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
         }

@@ -10,7 +10,7 @@ window.GRINGLIZCE_ADS = {
   enabled: false,
 
   // ca-pub-XXXXXXXXXXXXXXXX (AdSense panelinden al)
-  clientId: '',
+  clientId: 'ca-pub-5818550785641442',
 
   // Her placement için slot ID (AdSense > Ads > By ad unit'ten al)
   slots: {
@@ -94,11 +94,15 @@ window.GRINGLIZCE_ADS = {
   }
 
   function init() {
+    // clientId varsa AdSense script'i yüklenir (doğrulama destekleyici)
+    // Ama slot render sadece enabled: true ise yapılır
+    if (C && C.clientId && C.clientId.indexOf('ca-pub-') === 0) {
+      loadAdSenseScript();
+    }
     if (!isEnabled()) {
-      // Devre dışı: slot'lar görünmez (CSS .ad-slot-active class'ı eklenmiyor)
+      // Devre dışı: slot'lar gizli kalır
       return;
     }
-    loadAdSenseScript();
     renderEager();
     renderLazy();
   }

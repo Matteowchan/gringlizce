@@ -1986,18 +1986,34 @@
       } catch (e) {}
       return v; // 'correct' | 'incorrect' | null
     }
-    function setAnswerStatus(slug, status) {
+    function getAnswerLetter(slug) {
+      // Hangi harfi seçtiğini döndür ('A','B','C','D') veya null
+      var v = sessionStorage.getItem('gri.letter.' + slug);
+      if (v) return v;
+      try {
+        v = localStorage.getItem('gri.letter.' + slug);
+        if (v) sessionStorage.setItem('gri.letter.' + slug, v);
+      } catch (e) {}
+      return v;
+    }
+    function setAnswerStatus(slug, status, selectedLetter) {
       sessionStorage.setItem('gri.answer.' + slug, status);
       try { localStorage.setItem('gri.answer.' + slug, status); } catch (e) {}
+      if (selectedLetter) {
+        sessionStorage.setItem('gri.letter.' + slug, selectedLetter);
+        try { localStorage.setItem('gri.letter.' + slug, selectedLetter); } catch (e) {}
+      }
       // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
       if (GRI_USER_ID) {
-        supabase.from('user_answers').upsert({
+        var payload = {
           user_id: GRI_USER_ID,
           question_slug: slug,
           status: status,
           answered_at: new Date().toISOString(),
           time_spent_ms: (typeof timerSeconds === 'number' ? timerSeconds * 1000 : null),
-        }, { onConflict: 'user_id,question_slug' }).then(function (r) {
+        };
+        if (selectedLetter) payload.selected_letter = selectedLetter;
+        supabase.from('user_answers').upsert(payload, { onConflict: 'user_id,question_slug' }).then(function (r) {
           if (r.error) console.warn('[answers] persist failed:', r.error.message);
         });
         // Rozet değerlendirmesi (debounced, 30 sn'de en fazla bir kez)
@@ -2009,7 +2025,11 @@
     function clearAnswersForSet(slugs) {
       slugs.forEach(function (s) {
         sessionStorage.removeItem('gri.answer.' + s);
-        try { localStorage.removeItem('gri.answer.' + s); } catch (e) {}
+        sessionStorage.removeItem('gri.letter.' + s);
+        try {
+          localStorage.removeItem('gri.answer.' + s);
+          localStorage.removeItem('gri.letter.' + s);
+        } catch (e) {}
       });
     }
 
@@ -2018,13 +2038,17 @@
       if (!GRI_USER_ID) return;
       try {
         const res = await supabase.from('user_answers')
-          .select('question_slug, status')
+          .select('question_slug, status, selected_letter')
           .eq('user_id', GRI_USER_ID);
         if (res && res.data) {
           res.data.forEach(function (row) {
             if (!sessionStorage.getItem('gri.answer.' + row.question_slug)) {
               sessionStorage.setItem('gri.answer.' + row.question_slug, row.status);
               try { localStorage.setItem('gri.answer.' + row.question_slug, row.status); } catch (e) {}
+            }
+            if (row.selected_letter && !sessionStorage.getItem('gri.letter.' + row.question_slug)) {
+              sessionStorage.setItem('gri.letter.' + row.question_slug, row.selected_letter);
+              try { localStorage.setItem('gri.letter.' + row.question_slug, row.selected_letter); } catch (e) {}
             }
           });
         }
@@ -2649,16 +2673,32 @@
       const correctLetter = optionsContainer.dataset.correct;
       const currentSlug = SUBCATEGORY_LIST[CURRENT_INDEX]?.slug;
       const priorAnswer = currentSlug ? getAnswerStatus(currentSlug) : null;
+      const priorLetter = currentSlug ? getAnswerLetter(currentSlug) : null;
       let firstAttemptRecorded = !!priorAnswer; // already answered → don't overwrite
 
       // Restore visual state if question was previously answered (any revisit)
-      if (priorAnswer) {
+      if (priorAnswer === 'correct') {
+        // Doğru cevaplanmış: doğru option yeşil, locked
         options.forEach(o => {
           const letter = o.querySelector('input')?.value;
           if (letter === correctLetter) {
             o.classList.add('answered', 'correct');
             const inp = o.querySelector('input');
             if (inp) inp.checked = true;
+          }
+        });
+        optionsContainer.classList.add('locked');
+      } else if (priorAnswer === 'incorrect') {
+        // Yanlış cevaplanmış: seçilen harf kırmızı, doğru cevap yeşil, locked
+        options.forEach(o => {
+          const inp = o.querySelector('input');
+          const letter = inp ? inp.value : null;
+          if (priorLetter && letter === priorLetter) {
+            o.classList.add('answered', 'incorrect');
+            if (inp) inp.checked = true;
+          }
+          if (letter === correctLetter) {
+            o.classList.add('answered', 'correct');
           }
         });
         optionsContainer.classList.add('locked');
@@ -2680,7 +2720,7 @@
           // Record first attempt only (subsequent retries don't change recorded status)
           if (!firstAttemptRecorded) {
             if (currentSlug) {
-              setAnswerStatus(currentSlug, isCorrect ? 'correct' : 'incorrect');
+              setAnswerStatus(currentSlug, isCorrect ? 'correct' : 'incorrect', clickedLetter);
               renderNavigator();
             }
             firstAttemptRecorded = true;

@@ -15,7 +15,6 @@
   <script src="assets/auth-gate.js" defer></script>
   <script src="assets/gri-ask.js" defer></script>
   <meta charset="UTF-8">
-  <meta name="google-adsense-account" content="ca-pub-5818550785641442">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soru | Gri English</title>
   <meta name="description" content="Gri English Soru Bankası — interaktif soru çözüm sayfası.">
@@ -1918,7 +1917,7 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
       // Then selectively un-escape allowed tags
-      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div'];
+      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div', 'ul', 'ol', 'li'];
       allowed.forEach(function (tag) {
         var openRe = new RegExp('&lt;' + tag + '&gt;', 'gi');
         var closeRe = new RegExp('&lt;/' + tag + '&gt;', 'gi');
@@ -2119,33 +2118,20 @@
           }
         }
 
-        // No stored order → build from DB via RPC (server-side sample + shuffle)
+        // No stored order → build from DB
         if (!setSlugs || setSlugs.length === 0) {
-          // Server-side RPC: random veya sıralı, single round-trip
-          const rpcName = shuffleParam ? 'random_questions_by_subcats' : 'ordered_questions_by_subcats';
-          const rpcParams = shuffleParam
-            ? { p_subcats: subcatList, p_limit: null }
-            : { p_subcats: subcatList };
-          const { data: list, error } = await supabase.rpc(rpcName, rpcParams);
+          const { data: list, error } = await supabase
+            .from('questions')
+            .select('slug')
+            .eq('active', true)
+            .in('subcategory', subcatList)
+            .order('slug');
           if (error || !list || list.length === 0) {
-            // Fallback: eski direkt sorgu (RPC yoksa veya hata varsa)
-            console.warn('[soru] RPC failed, fallback to direct query:', error);
-            const fb = await supabase
-              .from('questions')
-              .select('slug')
-              .eq('active', true)
-              .in('subcategory', subcatList)
-              .order('slug')
-              .range(0, 9999);
-            if (fb.error || !fb.data || fb.data.length === 0) {
-              showError('Bu kategoride henüz soru yok.');
-              return;
-            }
-            setSlugs = fb.data.map(r => r.slug);
-            if (shuffleParam) shuffleInPlace(setSlugs);
-          } else {
-            setSlugs = list.map(r => r.slug);
+            showError('Bu kategoride henüz soru yok.');
+            return;
           }
+          setSlugs = list.map(r => r.slug);
+          if (shuffleParam) shuffleInPlace(setSlugs);
           if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
 
           // No q in URL → fresh entry, clear stale answers for this set

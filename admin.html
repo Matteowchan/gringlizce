@@ -2266,6 +2266,21 @@
       </div>
 
       <div class="user-modal-section">
+        <h4>IELTS Writing Paketleri (Kredi)</h4>
+        <div id="um-writing-credits" style="margin-bottom: 0.7rem; font-size: 0.9rem;">Yükleniyor...</div>
+        <div class="um-action-row">
+          <select id="um-writing-pkg-select">
+            <option value="">Paket seç...</option>
+            <option value="task1_only">Sadece Task 1 (₺300)</option>
+            <option value="task2_only">Sadece Task 2 (₺300)</option>
+            <option value="both">Task 1 + Task 2 (₺500)</option>
+          </select>
+          <button class="btn-admin-action" id="um-writing-grant-btn">Kredi Ver</button>
+        </div>
+        <div class="um-msg" id="um-writing-msg"></div>
+      </div>
+
+      <div class="user-modal-section">
         <h4>AI Quota</h4>
         <div id="um-quota" style="margin-bottom: 0.6rem; font-size: 0.9rem;"></div>
         <div class="um-action-row">
@@ -3312,7 +3327,10 @@
 
         await populateProductSelect();
 
-        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg', 'um-delete-msg'].forEach(function (id) {
+        // Writing kredilerini yükle ve göster
+        await loadUserWritingCredits(u.user_id);
+
+        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg', 'um-delete-msg', 'um-writing-msg'].forEach(function (id) {
           var el = $(id);
           if (el) { el.classList.remove('show', 'success', 'error'); el.textContent = ''; }
         });
@@ -3381,6 +3399,53 @@
         loadUsers();
       } catch (e) {
         umMsg('um-mat-msg', 'Hata: ' + (e.message || e), 'err');
+      }
+    }
+
+    // ============================================================
+    // IELTS Writing Kredi yönetimi (admin)
+    // ============================================================
+    async function loadUserWritingCredits(userId) {
+      var box = $('um-writing-credits');
+      if (!box) return;
+      box.textContent = 'Yükleniyor...';
+      try {
+        var r = await sb.rpc('get_user_writing_credits', { p_user_id: userId });
+        if (r.error) throw r.error;
+        var c = r.data || {};
+        var t1 = Number(c.task1_only || 0);
+        var t2 = Number(c.task2_only || 0);
+        var bo = Number(c.both || 0);
+        var total = t1 + t2 + bo;
+        if (total === 0) {
+          box.innerHTML = '<span style="color: var(--text-muted); font-style: italic;">Aktif kredi yok</span>';
+        } else {
+          box.innerHTML =
+            '<strong>Task 1:</strong> ' + t1 +
+            ' · <strong>Task 2:</strong> ' + t2 +
+            ' · <strong>Task 1+2:</strong> ' + bo +
+            ' &nbsp;<span style="color: var(--text-muted); font-size: 0.82rem;">(tüketilmemiş)</span>';
+        }
+      } catch (e) {
+        box.innerHTML = '<span style="color: #b45046;">Yüklenemedi: ' + escHtmlAdmin(e.message || e) + '</span>';
+      }
+    }
+
+    async function grantWritingPackage() {
+      if (!currentUserDetail) return;
+      var pkg = $('um-writing-pkg-select').value;
+      if (!pkg) return umMsg('um-writing-msg', 'Paket seç', 'err');
+      try {
+        var r = await sb.rpc('admin_grant_writing_package', {
+          p_user_id: currentUserDetail.user_id,
+          p_package_type: pkg
+        });
+        if (r.error) throw r.error;
+        umMsg('um-writing-msg', 'Kredi verildi', 'ok');
+        $('um-writing-pkg-select').value = '';
+        await loadUserWritingCredits(currentUserDetail.user_id);
+      } catch (e) {
+        umMsg('um-writing-msg', 'Hata: ' + (e.message || e), 'err');
       }
     }
 
@@ -3526,6 +3591,7 @@
         if (e.target === this) closeUserModal();
       });
       $('um-grant-btn').addEventListener('click', grantMaterial);
+      $('um-writing-grant-btn').addEventListener('click', grantWritingPackage);
       $('um-bonus-btn').addEventListener('click', grantBonus);
       $('um-reset-btn').addEventListener('click', resetUserData);
       $('um-reset-mail-btn').addEventListener('click', sendResetMail);

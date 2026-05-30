@@ -9,7 +9,6 @@
   })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
   <!-- End Google Tag Manager -->
   <meta charset="UTF-8">
-  <meta name="google-adsense-account" content="ca-pub-5818550785641442">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IELTS Writing | Gri English</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -69,7 +68,6 @@
     .task-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: calc(100vh - 110px); }
     @media (max-width: 900px) { .task-wrapper { grid-template-columns: 1fr; } }
     .task-prompt, .task-editor { padding: 2rem 2.5rem; background: #fff; overflow-y: auto; max-height: calc(100vh - 110px); }
-    .task-editor { display: flex; flex-direction: column; }
     .task-prompt { border-right: 1px solid #d8d2c4; }
     @media (max-width: 900px) {
       .task-prompt { border-right: none; border-bottom: 1px solid #d8d2c4; max-height: none; }
@@ -91,8 +89,7 @@
     .editor-meta .word-display.low { background: #c63838; color: #fff; }
     .editor-textarea {
       width: 100%;
-      flex: 1 1 auto;
-      min-height: 500px;
+      min-height: 320px;
       border: 1px solid #d8d2c4;
       padding: 1rem;
       font-family: Georgia, serif;
@@ -102,26 +99,11 @@
       box-sizing: border-box;
       background: #fff;
       color: #2a2a2a;
+      overflow: hidden;
     }
     .editor-textarea:focus { outline: 2px solid var(--accent, #c89a3c); border-color: var(--accent, #c89a3c); }
 
     .editor-saved { color: #888; font-size: 0.8rem; margin-top: 0.5rem; font-style: italic; }
-
-    /* Writing credit badge */
-    .pkg-credit-badge {
-      display: inline-block;
-      background: #2d5a3d;
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 0.18rem 0.55rem;
-      border-radius: 4px;
-      margin-left: 0.55rem;
-      vertical-align: middle;
-    }
-    [data-theme="dark"] .pkg-credit-badge { background: #4a8a64; }
 
     /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
@@ -517,22 +499,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth-gate.js" defer></script>
   <script src="assets/bug-report.js" defer></script>
-  <meta name="description" content="IELTS Writing — Gri English">
-  <link rel="canonical" href="https://gringlizce.com/ielts-deneme-writing.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Gri English">
-  <meta property="og:locale" content="tr_TR">
-  <meta property="og:url" content="https://gringlizce.com/ielts-deneme-writing.html">
-  <meta property="og:title" content="IELTS Writing">
-  <meta property="og:description" content="IELTS Writing — Gri English">
-  <meta property="og:image" content="https://gringlizce.com/assets/gri-logo.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="IELTS Writing">
-  <meta name="twitter:description" content="IELTS Writing — Gri English">
-  <meta name="twitter:image" content="https://gringlizce.com/assets/gri-logo.png">
-
 </head>
 <body>
 
@@ -701,44 +667,12 @@
       timerStartedAt: null,   // running iken effective start (Date.now() - elapsed*1000)
       timerElapsed: 0,         // pause iken birikmiş saniye
       timerRunning: false,
-      // Writing kredileri (paket bazlı kalan kullanım)
-      credits: { task1_only: 0, task2_only: 0, both: 0 },
     };
-
-    async function loadUserCredits() {
-      try {
-        const { data, error } = await sb.rpc('get_user_writing_credits', { p_user_id: null });
-        if (error) { console.warn('[credits]', error); return; }
-        state.credits = Object.assign({ task1_only: 0, task2_only: 0, both: 0 }, data || {});
-        renderCreditBadges();
-      } catch (e) {
-        console.warn('[credits]', e);
-      }
-    }
-
-    function renderCreditBadges() {
-      document.querySelectorAll('.package-option').forEach(opt => {
-        const pkg = opt.dataset.pkg;
-        const existing = opt.querySelector('.pkg-credit-badge');
-        if (existing) existing.remove();
-        const credit = (state.credits && state.credits[pkg]) || 0;
-        if (credit > 0) {
-          const badge = document.createElement('span');
-          badge.className = 'pkg-credit-badge';
-          badge.textContent = 'Kredin: ' + credit;
-          const head = opt.querySelector('.pkg-head .pkg-name');
-          if (head) head.appendChild(badge);
-        }
-      });
-    }
 
     async function loadTest() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) { window.location.href = 'giris.html?next=' + encodeURIComponent(location.pathname + location.search); return; }
       state.user = user;
-
-      // Writing kredilerini yükle (background, blocking değil)
-      loadUserCredits();
 
       // Fetch Gri quota for IELTS evaluation (asynchronous, doesn't block)
       updateGriPriceLabel();
@@ -853,13 +787,21 @@
         const ta = document.getElementById('editor-' + part.part_number);
         ta.value = state.essays[part.part_number] || '';
         updateWordCount(part.part_number);
+        autoGrowTextarea(ta);
         ta.addEventListener('input', () => {
           state.essays[part.part_number] = ta.value;
           updateWordCount(part.part_number);
+          autoGrowTextarea(ta);
           saveLocal();
           document.getElementById('saved-' + part.part_number).textContent = 'Kaydedildi ' + new Date().toLocaleTimeString('tr-TR');
         });
       }
+    }
+
+    function autoGrowTextarea(ta) {
+      if (!ta) return;
+      ta.style.height = 'auto';
+      ta.style.height = Math.max(ta.scrollHeight, 320) + 'px';
     }
 
     function countWords(text) {
@@ -983,15 +925,7 @@
         state.selectedPackage = opt.dataset.pkg;
         const btn = document.getElementById('confirmSubmit');
         btn.disabled = false;
-        const pkg = state.selectedPackage;
-        const credit = (state.credits && state.credits[pkg]) || 0;
-        if (pkg === 'draft') {
-          btn.textContent = 'Kaydet ve Bitir';
-        } else if (credit > 0 && (pkg === 'task1_only' || pkg === 'task2_only' || pkg === 'both')) {
-          btn.textContent = 'Kredi ile Gönder';
-        } else {
-          btn.textContent = 'Ödemeye Geç';
-        }
+        btn.textContent = state.selectedPackage === 'draft' ? 'Kaydet ve Bitir' : 'Ödemeye Geç';
       });
     });
 
@@ -999,53 +933,13 @@
       if (state.finished || !state.selectedPackage) return;
       state.finished = true;
       const btn = document.getElementById('confirmSubmit');
-      const originalBtnText = btn.textContent;
       btn.textContent = 'Gönderiliyor…';
       btn.disabled = true;
 
       const elapsed = currentElapsed();
       const w1 = countWords(state.essays[1] || '');
       const w2 = countWords(state.essays[2] || '');
-      const pkg = state.selectedPackage;
-      const hasCredit = (pkg === 'task1_only' || pkg === 'task2_only' || pkg === 'both')
-        && ((state.credits && state.credits[pkg]) || 0) > 0;
 
-      // ============================================================
-      // YENİ AKIŞ — Kredi ile gönderim (atomic RPC, race-condition free)
-      // ============================================================
-      if (hasCredit) {
-        const { data, error } = await sb.rpc('submit_writing_with_credit', {
-          p_test_id: state.test.id,
-          p_package_type: pkg,
-          p_task1_essay: state.essays[1] || '',
-          p_task2_essay: state.essays[2] || '',
-          p_task1_word_count: w1,
-          p_task2_word_count: w2,
-          p_time_spent_seconds: elapsed,
-        });
-
-        if (error || !data || !data.success) {
-          alert('Gönderim hatası: ' + (error?.message || 'Bilinmeyen hata'));
-          state.finished = false;
-          btn.textContent = originalBtnText;
-          btn.disabled = false;
-          return;
-        }
-
-        localStorage.removeItem('ielts_writing_' + TEST_SLUG);
-
-        if (typeof window.triggerBadgeCheck === 'function') {
-          window.triggerBadgeCheck({ force: true });
-        }
-
-        // Kredi ile gönderildi → öğrenci paneline yönlendir (beklemede)
-        window.location.href = 'panelim.html?writing_submitted=' + data.submission_id;
-        return;
-      }
-
-      // ============================================================
-      // ESKİ AKIŞ — draft, gri_ai, veya kredi yok (Shopier akışı)
-      // ============================================================
       const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
         user_id: state.user.id,
         test_id: state.test.id,
@@ -1062,7 +956,7 @@
       if (error) {
         alert('Gönderim hatası: ' + error.message);
         state.finished = false;
-        btn.textContent = originalBtnText;
+        btn.textContent = 'Devam Et';
         btn.disabled = false;
         return;
       }
@@ -1159,6 +1053,5 @@
       });
     })();
   </script>
-<script src="assets/breadcrumb.js" defer></script>
 </body>
 </html>

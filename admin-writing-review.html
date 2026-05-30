@@ -11,7 +11,6 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <meta charset="UTF-8">
-  <meta name="google-adsense-account" content="ca-pub-5818550785641442">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Writing Değerlendirme | Yönetim</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -98,12 +97,13 @@
     }
     .criterion textarea {
       grid-column: 1 / -1;
-      width: 100%; min-height: 60px; resize: vertical;
+      width: 100%; min-height: 120px; resize: vertical;
       padding: 0.55rem 0.7rem;
       background: var(--bg); color: var(--text);
       border: 1px solid var(--line); border-radius: 2px;
       font-family: inherit; font-size: 0.9rem; line-height: 1.5;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
     .overall-row {
@@ -146,22 +146,6 @@
     .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <meta name="description" content="Writing Değerlendirme | Yönetim — Gri English">
-  <link rel="canonical" href="https://gringlizce.com/admin-writing-review.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Gri English">
-  <meta property="og:locale" content="tr_TR">
-  <meta property="og:url" content="https://gringlizce.com/admin-writing-review.html">
-  <meta property="og:title" content="Writing Değerlendirme | Yönetim">
-  <meta property="og:description" content="Writing Değerlendirme | Yönetim — Gri English">
-  <meta property="og:image" content="https://gringlizce.com/assets/gri-logo.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Writing Değerlendirme | Yönetim">
-  <meta name="twitter:description" content="Writing Değerlendirme | Yönetim — Gri English">
-  <meta name="twitter:image" content="https://gringlizce.com/assets/gri-logo.png">
-
 </head>
 <body>
 
@@ -432,6 +416,17 @@
         overrideSel.value = sub.overall_writing_band;
       }
 
+      // Otomatik büyüme: textarea içerik kadar uzar
+      function autoGrowTextarea(ta) {
+        if (!ta) return;
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(ta.scrollHeight, 120) + 'px';
+      }
+      document.querySelectorAll('.criterion textarea').forEach(function (ta) {
+        autoGrowTextarea(ta);
+        ta.addEventListener('input', function () { autoGrowTextarea(ta); });
+      });
+
       // Band hesaplama (yarım banda yuvarla)
       function roundHalf(n) {
         return Math.round(n * 2) / 2;
@@ -561,8 +556,6 @@
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
   </script>
-
-<script src="assets/breadcrumb.js" defer></script>
 
 </body>
 </html>

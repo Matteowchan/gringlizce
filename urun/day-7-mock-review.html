@@ -1819,6 +1819,11 @@ let currentQ = 0;
 let answers = MODULES.map(m => new Array(m.questions.length).fill(null));
 let moduleCompleted = MODULES.map(() => false);
 
+// Expose to window for sat-camp-features.js (Sözlük, Griye Sor)
+window.MODULES = MODULES;
+window.currentModule = currentModule;
+window.currentQ = currentQ;
+
 // ============= HELPERS =============
 function getModuleStatus(idx){
   const mod = MODULES[idx];
@@ -1940,6 +1945,9 @@ function renderQuestion(){
   document.getElementById('nextBtn').style.display = isLast?'none':'';
   document.getElementById('submitBtn').style.display = isLast?'':'none';
   window.scrollTo({top:0,behavior:'smooth'});
+  window.MODULES = MODULES;
+  window.currentModule = currentModule;
+  window.currentQ = currentQ;
 }
 function pickAnswer(i){ answers[currentModule][currentQ]=i; renderQuestion() }
 function goTo(i){ currentQ=i; renderQuestion() }

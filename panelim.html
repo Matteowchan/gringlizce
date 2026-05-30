@@ -4072,7 +4072,7 @@
       header.parentElement.classList.toggle('open');
     });
 
-    // X butonu: yer iminden veya yanlış listesinden çıkar
+    // X butonu: yer iminden, yanlış listesinden veya writing çalışmasından çıkar
     document.addEventListener('click', async function (e) {
       var btn = e.target.closest('.qb-card-remove');
       if (!btn) return;
@@ -4081,9 +4081,15 @@
 
       var wrap = btn.closest('.qb-list-card-wrap');
       if (!wrap) return;
-      var slug = wrap.dataset.slug;
       var type = wrap.dataset.type;
-      if (!slug || !type) return;
+      var slug = wrap.dataset.slug;
+      var subId = wrap.dataset.subId;
+      if (!type) return;
+
+      // Writing için ek onay (silme geri alınamaz)
+      if (type === 'writing') {
+        if (!confirm('Bu yazılı çalışmayı silmek istediğine emin misin? Bu işlem geri alınamaz.')) return;
+      }
 
       btn.disabled = true;
 
@@ -4112,12 +4118,22 @@
             .eq('user_id', userId)
             .eq('question_slug', slug)
             .eq('status', 'incorrect');
+        } else if (type === 'writing') {
+          delRes = await sbCli.from('ielts_writing_submissions')
+            .delete()
+            .eq('id', subId)
+            .eq('user_id', userId);
         } else {
           throw new Error('Bilinmeyen tip: ' + type);
         }
 
         if (delRes && delRes.error) {
           throw delRes.error;
+        }
+
+        // Writing cache temizliği
+        if (type === 'writing' && subId && typeof WRITING_SUBS_DATA !== 'undefined') {
+          delete WRITING_SUBS_DATA[subId];
         }
 
         // DOM'dan kaldır
@@ -4143,12 +4159,20 @@
               var emptyEl2 = document.getElementById('wrong-answers-empty');
               if (emptyEl2) emptyEl2.style.display = 'flex';
             }
+          } else if (grid && grid.id === 'writing-submissions-grid') {
+            var remainingW = grid.querySelectorAll('.qb-list-card-wrap').length;
+            var countElW = document.getElementById('writing-submissions-count');
+            if (countElW) countElW.textContent = remainingW > 0 ? remainingW + ' çalışma' : '0 çalışma';
+            if (remainingW === 0) {
+              var emptyElW = document.getElementById('writing-submissions-empty');
+              if (emptyElW) emptyElW.style.display = 'flex';
+            }
           }
         }, 200);
       } catch (err) {
         console.warn('[qb-card-remove] failed:', err);
         btn.disabled = false;
-        alert('Çıkarılamadı. Tekrar dene.');
+        alert('Silinemedi. Tekrar dene.');
       }
     });
 
@@ -5117,18 +5141,21 @@
       var wordText = wordParts.length ? ' &middot; ' + wordParts.join(' &middot; ') : '';
 
       return [
-        '<button type="button" class="qb-list-card qb-writing-card" data-sub-id="' + escHtmlPanel(sub.id) + '">',
-        '  <div class="qb-main">',
-        '    <div class="qb-head-line">',
-        '      <span class="qb-badge">IELTS &middot; WRITING</span>',
-        '      <span class="qb-cat">' + escHtmlPanel(pkg) + bandPart + '</span>',
-        '      <span class="qb-status-pill ' + statusClass + '">' + escHtmlPanel(status) + '</span>',
+        '<div class="qb-list-card-wrap" data-sub-id="' + escHtmlPanel(sub.id) + '" data-type="writing">',
+        '  <button type="button" class="qb-list-card qb-writing-card" data-sub-id="' + escHtmlPanel(sub.id) + '">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">IELTS &middot; WRITING</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(pkg) + bandPart + '</span>',
+        '        <span class="qb-status-pill ' + statusClass + '">' + escHtmlPanel(status) + '</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(testName) + wordText + '</p>',
         '    </div>',
-        '    <p class="qb-prompt">' + escHtmlPanel(testName) + wordText + '</p>',
-        '  </div>',
-        '  <span class="qb-date">' + escHtmlPanel(formatRelativeDate(sub.submitted_at)) + '</span>',
-        '  <span class="qb-cta">Aç &rsaquo;</span>',
-        '</button>'
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(sub.submitted_at)) + '</span>',
+        '    <span class="qb-cta">Aç &rsaquo;</span>',
+        '  </button>',
+        '  <button type="button" class="qb-card-remove" aria-label="Sil" title="Sil">&times;</button>',
+        '</div>'
       ].join('');
     }
 
@@ -5394,8 +5421,8 @@
 
       document.getElementById('mw-content').innerHTML = html.join('');
 
-      // Show delete option only for non-reviewed draft/unpaid
-      var allowDelete = !sub.reviewed_at && !sub.gri_evaluated && (sub.payment_status === 'draft' || sub.payment_status === 'unpaid');
+      // Modal'daki Sil butonu her zaman görünür (inline X butonuyla aynı yetki)
+      var allowDelete = true;
       var elFooter = document.getElementById('mw-footer');
       var elDelete = document.getElementById('mw-delete');
       if (allowDelete) {
@@ -5460,8 +5487,12 @@
         // Remove from cache
         delete WRITING_SUBS_DATA[subId];
 
-        // Remove card from DOM
-        var card = document.querySelector('.qb-writing-card[data-sub-id="' + subId + '"]');
+        // Remove card from DOM (wrap üzerinden)
+        var card = document.querySelector('.qb-list-card-wrap[data-sub-id="' + subId + '"]');
+        if (!card) {
+          // Fallback: eski yapı için iç butonu yakala
+          card = document.querySelector('.qb-writing-card[data-sub-id="' + subId + '"]');
+        }
         if (card) card.remove();
 
         // Update count or show empty

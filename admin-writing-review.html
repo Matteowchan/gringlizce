@@ -627,15 +627,35 @@
           if (ovT2) ovT2.value = evaluation.improvementAdvice;
         }
 
-        // specificMistakes → Task 1 overall_notes (formatted list)
+        // specificMistakes → Task 1 overall_notes (doğal öğretmen dili, AI tell yok)
         if (evaluation.specificMistakes && evaluation.specificMistakes.length > 0) {
-          var lines = evaluation.specificMistakes.map(function (m) {
-            return '- [' + (m.type || 'note') + '] ' + (m.original || '') +
-              ' \u2192 ' + (m.correction || '') +
-              (m.explanation ? ' (' + m.explanation + ')' : '');
+          // Mert tercihi: noktalı virgül ve uzun tire kullanma
+          var cleanText = function (s) {
+            return String(s || '')
+              .replace(/;\s*/g, ', ')
+              .replace(/\s*[\u2014\u2013]\s*/g, ', ')
+              .trim();
+          };
+
+          var lines = evaluation.specificMistakes.map(function (m, idx) {
+            var num = (idx + 1) + '. ';
+            var original = cleanText(m.original);
+            var correction = cleanText(m.correction);
+            var explanation = cleanText(m.explanation);
+
+            var parts = [];
+            if (original && correction) {
+              parts.push('"' + original + '" yerine "' + correction + '" olmalı.');
+            } else if (correction) {
+              parts.push('Doğrusu: "' + correction + '".');
+            } else if (original) {
+              parts.push('"' + original + '" ifadesinde dikkat edilmesi gereken bir nokta var.');
+            }
+            if (explanation) parts.push(explanation);
+            return num + parts.join(' ');
           });
           var ovT1 = document.querySelector('textarea[data-task="1"][data-crit="overall_notes"]');
-          if (ovT1) ovT1.value = 'Spesifik hatalar:\n' + lines.join('\n');
+          if (ovT1) ovT1.value = lines.join('\n\n');
         }
 
         // Recompute bands and resize textareas

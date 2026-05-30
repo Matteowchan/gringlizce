@@ -129,7 +129,7 @@
       border: 1px solid var(--line); border-radius: 2px;
     }
 
-    .save-row { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+    .save-row { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
     .save-row button {
       padding: 0.7rem 1.4rem; border: none; border-radius: 2px;
       font-weight: 600; font-size: 0.95rem; cursor: pointer;
@@ -138,6 +138,32 @@
     .save-row .btn-save:hover { opacity: 0.9; }
     .save-row .btn-save:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
     .save-row .btn-secondary { background: var(--bg-soft); color: var(--text); }
+    .save-row .btn-gri {
+      margin-right: auto;
+      background: transparent;
+      color: var(--teal);
+      border: 1px solid var(--teal);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .save-row .btn-gri:hover { background: var(--teal); color: var(--bg); }
+    .save-row .btn-gri:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--line);
+    }
+    .save-row .btn-gri svg {
+      width: 14px; height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
     .status-line { padding: 0.5rem 0; font-size: 0.9rem; }
     .status-line.ok { color: var(--teal); }
@@ -266,6 +292,19 @@
           <div class="status-line" id="saveStatus"></div>
 
           <div class="save-row">
+            <button class="btn-gri" id="griEvalBtn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2v4"/>
+                <path d="M12 18v4"/>
+                <path d="M4.93 4.93l2.83 2.83"/>
+                <path d="M16.24 16.24l2.83 2.83"/>
+                <path d="M2 12h4"/>
+                <path d="M18 12h4"/>
+                <path d="M4.93 19.07l2.83-2.83"/>
+                <path d="M16.24 7.76l2.83-2.83"/>
+              </svg>
+              Gri ile Değerlendir
+            </button>
             <button class="btn-secondary" id="cancelBtn">Geri Dön</button>
             <button class="btn-save" id="saveBtn">Kaydet ve Yayınla</button>
           </div>
@@ -544,6 +583,172 @@
 
       document.getElementById('cancelBtn').addEventListener('click', function () {
         window.location.href = 'admin.html';
+      });
+
+      // ===== Gri ile Değerlendir =====
+      function fillFromGriEvaluation(evaluation) {
+        if (!evaluation) return;
+        var scores = evaluation.scores || {};
+        var comments = evaluation.comments || {};
+
+        // Map Gri JSON keys → admin form data-crit values
+        var task1Map = {
+          'task1_achievement': 'task_achievement',
+          'task1_coherence': 'coherence',
+          'task1_lexical': 'lexical',
+          'task1_grammar': 'grammar'
+        };
+        var task2Map = {
+          'task2_response': 'task_response',
+          'task2_coherence': 'coherence',
+          'task2_lexical': 'lexical',
+          'task2_grammar': 'grammar'
+        };
+
+        Object.keys(task1Map).forEach(function (griKey) {
+          var formKey = task1Map[griKey];
+          var sel = document.querySelector('select[data-task="1"][data-crit="' + formKey + '"]');
+          var ta = document.querySelector('textarea[data-task="1"][data-crit="' + formKey + '"]');
+          if (sel && scores[griKey] != null) sel.value = scores[griKey];
+          if (ta && comments[griKey]) ta.value = comments[griKey];
+        });
+
+        Object.keys(task2Map).forEach(function (griKey) {
+          var formKey = task2Map[griKey];
+          var sel = document.querySelector('select[data-task="2"][data-crit="' + formKey + '"]');
+          var ta = document.querySelector('textarea[data-task="2"][data-crit="' + formKey + '"]');
+          if (sel && scores[griKey] != null) sel.value = scores[griKey];
+          if (ta && comments[griKey]) ta.value = comments[griKey];
+        });
+
+        // improvementAdvice → Task 2 overall_notes
+        if (evaluation.improvementAdvice) {
+          var ovT2 = document.querySelector('textarea[data-task="2"][data-crit="overall_notes"]');
+          if (ovT2) ovT2.value = evaluation.improvementAdvice;
+        }
+
+        // specificMistakes → Task 1 overall_notes (formatted list)
+        if (evaluation.specificMistakes && evaluation.specificMistakes.length > 0) {
+          var lines = evaluation.specificMistakes.map(function (m) {
+            return '- [' + (m.type || 'note') + '] ' + (m.original || '') +
+              ' \u2192 ' + (m.correction || '') +
+              (m.explanation ? ' (' + m.explanation + ')' : '');
+          });
+          var ovT1 = document.querySelector('textarea[data-task="1"][data-crit="overall_notes"]');
+          if (ovT1) ovT1.value = 'Spesifik hatalar:\n' + lines.join('\n');
+        }
+
+        // Recompute bands and resize textareas
+        recomputeBands();
+        document.querySelectorAll('.criterion textarea').forEach(function (ta) {
+          autoGrowTextarea(ta);
+        });
+      }
+
+      document.getElementById('griEvalBtn').addEventListener('click', async function () {
+        var btn = this;
+        var statusEl = document.getElementById('saveStatus');
+
+        // Mevcut form verisi kontrolü
+        var hasExistingForm = false;
+        document.querySelectorAll('.criterion select').forEach(function (s) {
+          if (s.value !== '') hasExistingForm = true;
+        });
+        document.querySelectorAll('.criterion textarea').forEach(function (ta) {
+          if (ta.value && ta.value.trim()) hasExistingForm = true;
+        });
+
+        // Daha önce Gri ile değerlendirilmiş mi
+        if (sub.gri_evaluated && sub.gri_evaluation_json) {
+          var loadExisting = confirm(
+            'Bu yazı daha önce Gri ile değerlendirilmiş. ' +
+            'Tamam = mevcut sonucu yükle (API maliyeti yok). ' +
+            'İptal = yeni değerlendirme al (API maliyeti var).'
+          );
+          if (loadExisting) {
+            fillFromGriEvaluation(sub.gri_evaluation_json);
+            statusEl.textContent = 'Mevcut Gri değerlendirmesi forma yüklendi.';
+            statusEl.className = 'status-line ok';
+            return;
+          }
+          // else: fresh evaluation, continue below
+          if (!confirm('Mevcut form verisi varsa üzerine yazılacak. Devam edilsin mi?')) return;
+        } else {
+          if (hasExistingForm) {
+            if (!confirm('Form içinde mevcut veri var. Gri değerlendirmesi üzerine yazacak. Devam edilsin mi?')) return;
+          } else {
+            if (!confirm('Gri ile yeni bir değerlendirme alınsın mı? Bu API maliyeti oluşturur.')) return;
+          }
+        }
+
+        btn.disabled = true;
+        var originalLabel = btn.innerHTML;
+        btn.textContent = 'Değerlendiriliyor...';
+        statusEl.textContent = '';
+        statusEl.className = 'status-line';
+
+        try {
+          var jwtRes = await sb.auth.getSession();
+          if (!jwtRes || !jwtRes.data || !jwtRes.data.session) {
+            throw new Error('Oturum bulunamadı');
+          }
+          var jwt = jwtRes.data.session.access_token;
+
+          var combinedText =
+            '## TASK 1\n\n' + (sub.task1_essay || '(boş)') + '\n\n' +
+            '## TASK 2\n\n' + (sub.task2_essay || '(boş)');
+          var combinedWordCount = (sub.task1_word_count || 0) + (sub.task2_word_count || 0);
+
+          var controller = new AbortController();
+          var tid = setTimeout(function () { controller.abort(); }, 70000);
+          var r;
+          try {
+            r = await fetch(SUPABASE_URL + '/functions/v1/gri-evaluate-writing', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+              body: JSON.stringify({
+                text_type_id: 'ielts-writing-complete',
+                level: null,
+                prompt_id: null,
+                prompt_snapshot: 'IELTS Writing test: Task 1 (visual description, 150-200 words) and Task 2 (argumentative essay, 250-300 words). Evaluate both tasks separately using IELTS Band Descriptors (0-9). Provide separate band scores for each criterion of each task.',
+                text: combinedText,
+                word_count: combinedWordCount,
+              }),
+              signal: controller.signal,
+            });
+          } finally {
+            clearTimeout(tid);
+          }
+
+          if (r.status === 402) {
+            var pwBody = await r.json().catch(function () { return {}; });
+            throw new Error((pwBody.error || 'Yazı havuzu bitmiş') + ' (admin hesabında bu beklenmez)');
+          }
+          if (!r.ok) {
+            var errBody = await r.json().catch(function () { return {}; });
+            throw new Error(errBody.error || ('HTTP ' + r.status));
+          }
+          var j = await r.json();
+          var evaluation = j.evaluation;
+          if (!evaluation) throw new Error('Boş değerlendirme döndü');
+
+          fillFromGriEvaluation(evaluation);
+
+          // Submission cache'i güncelle (admin tekrar tıklarsa "mevcut" görsün)
+          sub.gri_evaluated = true;
+          sub.gri_evaluation_json = evaluation;
+
+          statusEl.textContent = 'Gri değerlendirmesi forma yüklendi. Gözden geçir ve kaydet.';
+          statusEl.className = 'status-line ok';
+        } catch (err) {
+          console.error('[gri-eval]', err);
+          var msg = (err && err.name === 'AbortError') ? 'Zaman aşımı (70sn). Tekrar dene.' : (err.message || String(err));
+          statusEl.textContent = 'Gri değerlendirme hatası: ' + msg;
+          statusEl.className = 'status-line err';
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalLabel;
+        }
       });
 
       // Görünür yap

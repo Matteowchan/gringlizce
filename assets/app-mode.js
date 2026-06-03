@@ -69,6 +69,12 @@
   function injectBottomNav() {
     if (window.innerWidth > 700) return;
     if (document.querySelector('.app-bottom-nav')) return;
+
+    // Soru çözme sayfalarında (q-actionbar olanlar) bottom-nav gizle
+    if (document.querySelector('.q-actionbar')) {
+      document.body.classList.add('has-actionbar');
+      return;
+    }
     var nav = document.createElement('nav');
     nav.className = 'app-bottom-nav';
     nav.setAttribute('aria-label', 'App navigation');

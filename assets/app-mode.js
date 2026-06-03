@@ -118,3 +118,182 @@
     enter: function() { localStorage.setItem(STORAGE_KEY, 'true'); window.location.reload(); }
   };
 })();
+
+/* ===== APP HERO LOADER (Faz 1.5) ===== */
+(function() {
+  var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+
+  function isHomepage() {
+    var p = window.location.pathname;
+    return p === '/' || p === '/index.html' || p.endsWith('/index.html');
+  }
+
+  function isAppMode() {
+    return document.documentElement.classList.contains('app-mode');
+  }
+
+  function waitForSupabase(callback, retries) {
+    retries = retries || 0;
+    if (window.supabase && window.supabase.createClient) {
+      callback();
+    } else if (retries < 40) {
+      setTimeout(function() { waitForSupabase(callback, retries + 1); }, 100);
+    }
+  }
+
+  async function loadAppHero() {
+    if (!isAppMode() || !isHomepage()) return;
+
+    var sb = window.supabase.createClient(SB_URL, SB_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    var sess = await sb.auth.getSession();
+    var user = (sess && sess.data && sess.data.session) ? sess.data.session.user : null;
+
+    if (user) {
+      await loadGreeting(sb, user);
+      await loadStreak(sb);
+      await loadContinue(sb, user);
+    }
+
+    await loadWordOfDay(sb);
+  }
+
+  async function loadGreeting(sb, user) {
+    try {
+      var res = await sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+      var name = '';
+      if (res && res.data && res.data.full_name) {
+        name = res.data.full_name.split(' ')[0];
+      } else if (user.email) {
+        name = user.email.split('@')[0];
+      }
+      if (name) {
+        var el = document.getElementById('ah-name');
+        if (el) el.textContent = 'Selam, ' + name;
+      }
+    } catch (e) {
+      console.warn('[app-hero] greeting', e);
+    }
+  }
+
+  async function loadStreak(sb) {
+    try {
+      var res = await sb.rpc('get_user_stats');
+      if (res.error || !res.data) return;
+      var streak = Number(res.data.current_streak || 0);
+      if (streak > 0) {
+        document.getElementById('ah-streak-num').textContent = streak;
+        document.getElementById('ah-streak-row').style.display = 'block';
+      }
+    } catch (e) {
+      console.warn('[app-hero] streak', e);
+    }
+  }
+
+  async function loadContinue(sb, user) {
+    try {
+      var queries = await Promise.all([
+        sb.from('user_answers').select('answered_at, question_slug').eq('user_id', user.id).order('answered_at', { ascending: false }).limit(1).maybeSingle(),
+        sb.from('user_vocab').select('saved_at, vocabulary_id').eq('user_id', user.id).order('saved_at', { ascending: false }).limit(1).maybeSingle(),
+        sb.from('writing_submissions').select('created_at, exam, text_type').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      ]);
+
+      var activities = [];
+      if (queries[0].data && queries[0].data.answered_at) {
+        activities.push({
+          date: queries[0].data.answered_at,
+          title: 'Soru Bankası',
+          meta: 'En son: ' + relTime(queries[0].data.answered_at),
+          href: '/soru-bankasi.html'
+        });
+      }
+      if (queries[1].data && queries[1].data.saved_at) {
+        activities.push({
+          date: queries[1].data.saved_at,
+          title: 'Kelime Bankası',
+          meta: 'En son: ' + relTime(queries[1].data.saved_at),
+          href: '/kelime-bankasi.html'
+        });
+      }
+      if (queries[2].data && queries[2].data.created_at) {
+        var exam = (queries[2].data.exam || '').toUpperCase();
+        activities.push({
+          date: queries[2].data.created_at,
+          title: 'Yazı Pratiği' + (exam ? ' · ' + exam : ''),
+          meta: 'En son: ' + relTime(queries[2].data.created_at),
+          href: '/yazi-pratigi.html'
+        });
+      }
+
+      activities.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+      var latest = activities[0];
+      if (!latest) return;
+
+      var card = document.getElementById('ah-continue');
+      document.getElementById('ah-continue-title').textContent = latest.title;
+      document.getElementById('ah-continue-meta').textContent = latest.meta;
+      card.href = latest.href;
+      card.style.display = 'block';
+    } catch (e) {
+      console.warn('[app-hero] continue', e);
+    }
+  }
+
+  async function loadWordOfDay(sb) {
+    try {
+      var countRes = await sb.from('kelimeler').select('id', { count: 'exact', head: true }).eq('active', true);
+      var total = countRes.count || 0;
+      if (total === 0) return;
+
+      var msPerDay = 86400000;
+      var daysSinceEpoch = Math.floor(Date.now() / msPerDay);
+      var offset = daysSinceEpoch % total;
+
+      var wordRes = await sb.from('kelimeler')
+        .select('word, pos, ipa, phonetic_tr, example, fun_fact')
+        .eq('active', true)
+        .order('id', { ascending: true })
+        .range(offset, offset);
+
+      if (!wordRes.data || wordRes.data.length === 0) return;
+      var w = wordRes.data[0];
+
+      document.getElementById('ah-word-text').textContent = w.word || '';
+      document.getElementById('ah-word-pos').textContent = (w.pos || '').toUpperCase();
+      var pronParts = [];
+      if (w.ipa) pronParts.push('/' + w.ipa + '/');
+      if (w.phonetic_tr) pronParts.push(w.phonetic_tr);
+      document.getElementById('ah-word-pron').textContent = pronParts.join(' · ');
+      document.getElementById('ah-word-def').textContent = w.fun_fact || w.example || '';
+
+      document.getElementById('ah-word-label').style.display = 'block';
+      document.getElementById('ah-word-card').style.display = 'block';
+    } catch (e) {
+      console.warn('[app-hero] word', e);
+    }
+  }
+
+  function relTime(iso) {
+    var d = new Date(iso);
+    var diffMs = Date.now() - d.getTime();
+    var min = Math.floor(diffMs / 60000);
+    if (min < 1) return 'şimdi';
+    if (min < 60) return min + ' dk önce';
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return hr + ' saat önce';
+    var day = Math.floor(hr / 24);
+    if (day < 30) return day + ' gün önce';
+    return d.toLocaleDateString('tr-TR');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      waitForSupabase(loadAppHero);
+    });
+  } else {
+    waitForSupabase(loadAppHero);
+  }
+})();

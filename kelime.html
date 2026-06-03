@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/users.js"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function() {
+  // Slug 'kelime-bankasi' login zorunlu kılar; ücretsiz erişim FREE_DEMO_SLUGS whitelist üzerinden çalışır
+  var auth = window.GriAuth && window.GriAuth.requireAuth('kelime-bankasi');
+  if (!auth) return;
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelime Bankası — Çalışma | Gri English</title>
+<meta name="description" content="SAT ve TOEFL akademik kelimeleri için interaktif çalışma. Anlam, sınav kullanımı, fun fact ve örnek cümle.">
+<link rel="canonical" href="https://gringlizce.com/kelime.html">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f0ede6;color:#2a2a2a;min-height:100vh;font-size:14px}
+
+/* HEADER bar (navy) */
+#kbHeader{background:#1f3a5f;padding:11px 22px;display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:12px;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.kbh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.kbh-title{font-family:'Lora',serif;font-weight:500;font-size:13px;white-space:nowrap}
+.kbh-sep{opacity:.55}
+.kbh-meta{opacity:.82;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kbh-right{display:flex;align-items:center;gap:10px}
+.kbh-score{opacity:.78;font-size:11px;white-space:nowrap}
+.kbh-bar{width:100px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.kbh-fill{height:100%;background:#e1b85f;transition:width .35s ease;width:0%}
+.kbh-home{background:rgba(255,255,255,.13);border:none;color:#fff;padding:5px 11px;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s}
+.kbh-home:hover{background:rgba(255,255,255,.22)}
+
+/* MAIN container */
+.kb-wrap{max-width:740px;margin:0 auto;padding:0 16px}
+
+/* WORD DISPLAY */
+.kb-word-sec{padding:38px 12px 14px;text-align:center}
+.kb-word{font-family:'Lora',serif;font-size:50px;font-weight:500;color:#1f3a5f;letter-spacing:-.5px;margin-bottom:10px;line-height:1}
+.kb-pron{display:inline-flex;align-items:center;gap:10px;background:#faf7ee;border:0.5px solid #e3dfd2;padding:7px 14px 7px 10px;border-radius:20px;margin-bottom:14px}
+.kb-speaker{width:24px;height:24px;border-radius:50%;background:#2d5949;color:#faf7ee;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:transform .12s,background .15s}
+.kb-speaker:hover{background:#234638;transform:scale(1.05)}
+.kb-speaker:active{transform:scale(0.95)}
+.kb-speaker svg{width:13px;height:13px}
+.kb-ipa{font-family:'Lora',serif;font-size:13.5px;color:#3a3a3a}
+.kb-pron-sep{width:1px;height:14px;background:#d4d0c5}
+.kb-phon-tr{font-family:'Lora',serif;font-size:13.5px;color:#7a7a7a;font-style:italic}
+.kb-prompt{font-family:'Lora',serif;font-size:18px;color:#a04a32;font-style:italic}
+
+/* OPTIONS */
+.kb-options{padding:0 6px 18px;display:flex;flex-direction:column;gap:9px}
+.kb-opt{background:#fff;border-radius:10px;padding:13px 18px;display:flex;align-items:center;gap:13px;border:0.5px solid #e0dcd0;cursor:pointer;transition:all .15s ease;font-family:'Lora',serif}
+.kb-opt:hover:not(.locked){border-color:#1f3a5f;transform:translateY(-1px);box-shadow:0 2px 8px rgba(31,58,95,.06)}
+.kb-opt.locked{cursor:default}
+.kb-opt-letter{width:26px;height:26px;border-radius:50%;border:1.5px solid #b0b0b0;color:#5a5a5a;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:12px;font-weight:500;flex-shrink:0;transition:all .15s}
+.kb-opt-text{font-size:18px;color:#1a1a1a;flex:1}
+.kb-opt-icon{width:18px;flex-shrink:0;color:transparent;transition:color .15s}
+
+.kb-opt.correct{border:2px solid #2d5949;padding:12px 17px}
+.kb-opt.correct .kb-opt-letter{border-color:#2d5949;color:#2d5949}
+.kb-opt.correct .kb-opt-icon{color:#2d5949}
+
+.kb-opt.wrong{border:2px solid #b85c4a;padding:12px 17px;background:#fdf2ee}
+.kb-opt.wrong .kb-opt-letter{border-color:#b85c4a;color:#b85c4a}
+.kb-opt.wrong .kb-opt-icon{color:#b85c4a}
+
+.kb-opt.locked:not(.correct):not(.wrong){opacity:.55}
+.kb-opt.locked:not(.correct):not(.wrong) .kb-opt-text{color:#5a5a5a}
+
+/* EXPLANATION block */
+.kb-expl{margin:0 6px 22px;background:#faf7ee;border-radius:10px;padding:16px 18px 18px;border-left:3px solid #2d5949;display:none}
+.kb-expl.show{display:block}
+.kb-expl.wrong-state{border-left-color:#b85c4a}
+
+.kb-expl-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.kb-expl-head-icon{font-size:18px;line-height:1;display:inline-flex;align-items:center}
+.kb-expl-head-label{font-weight:500;font-size:14px}
+.kb-expl-head-meta{margin-left:auto;font-size:11px;color:#8a8a8a;font-style:italic}
+
+.kb-expl .ok-color{color:#2d5949}
+.kb-expl .bad-color{color:#b85c4a}
+
+.kb-expl-block{margin-bottom:14px}
+.kb-expl-block:last-child{margin-bottom:0}
+.kb-expl-lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#a04a32;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.kb-expl-lbl svg{width:13px;height:13px;color:#b88a2e}
+.kb-expl-body{font-size:13.5px;line-height:1.65;color:#3a3a3a}
+.kb-expl-body em{color:#3a3a3a;font-style:italic}
+.kb-expl-body strong{font-weight:500;color:#2d5949}
+.kb-example{font-family:'Lora',serif;font-style:italic;font-size:14px;line-height:1.6;color:#3a3a3a;background:#fff;padding:10px 14px;border-radius:6px}
+.kb-example strong{font-weight:500;color:#2d5949;font-style:normal}
+
+/* FOOTER actions */
+.kb-actions{padding:0 6px 36px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.kb-bookmark{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#7a7a7a;cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif;padding:6px 8px;border-radius:6px;transition:color .15s,background .15s}
+.kb-bookmark:hover{color:#1f3a5f;background:rgba(31,58,95,.06)}
+.kb-bookmark.active{color:#b88a2e}
+.kb-bookmark.active svg{fill:currentColor}
+.kb-bookmark svg{width:16px;height:16px}
+.kb-next{background:#2d5949;color:#faf7ee;padding:11px 24px;border-radius:8px;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:background .15s,transform .12s}
+.kb-next:hover{background:#234638}
+.kb-next:active{transform:scale(.97)}
+.kb-next:disabled{background:#b0b0b0;cursor:default}
+.kb-next svg{width:15px;height:15px}
+
+/* LOADING / EMPTY states */
+.kb-state{text-align:center;padding:80px 24px;color:#7a7a7a}
+.kb-state h2{font-family:'Lora',serif;color:#1f3a5f;margin-bottom:12px;font-weight:500;font-size:22px}
+.kb-state p{font-size:14px;line-height:1.65;max-width:420px;margin:0 auto 18px}
+.kb-state .kb-btn{background:#2d5949;color:#faf7ee;padding:10px 22px;border-radius:8px;font-size:13.5px;font-weight:500;text-decoration:none;display:inline-block;border:none;cursor:pointer;font-family:'Inter',sans-serif}
+
+/* RESPONSIVE */
+@media (max-width:520px){
+  .kb-word{font-size:42px}
+  .kbh-bar{width:60px}
+  .kbh-score{display:none}
+  .kb-pron{padding:6px 12px 6px 8px}
+  .kb-opt-text{font-size:16px}
+  .kb-prompt{font-size:16px}
+}
+
+/* DARK mode (basic — site genel temayı uygulayacak ama hazır olsun) */
+@media (prefers-color-scheme:dark){
+  body[data-theme="dark"]{background:#1a1d22;color:#e8e3da}
+  body[data-theme="dark"] .kb-word{color:#e1b85f}
+  body[data-theme="dark"] .kb-opt{background:#252a31;border-color:#3a3f47}
+  body[data-theme="dark"] .kb-opt-text{color:#e8e3da}
+  body[data-theme="dark"] .kb-expl{background:#252a31;border-left-color:#5e9078}
+  body[data-theme="dark"] .kb-pron{background:#252a31;border-color:#3a3f47}
+  body[data-theme="dark"] .kb-ipa{color:#c8c2b6}
+}
+</style>
+</head>
+<body>
+
+<div id="kbHeader">
+  <div class="kbh-left">
+    <span class="kbh-title">Kelime Bankası</span>
+    <span class="kbh-sep">·</span>
+    <span class="kbh-meta" id="kbMeta">Yükleniyor...</span>
+  </div>
+  <div class="kbh-right">
+    <span class="kbh-score" id="kbScore">0 / 0</span>
+    <div class="kbh-bar"><div class="kbh-fill" id="kbFill"></div></div>
+    <button class="kbh-home" onclick="window.location.href='kelime-bankasi.html'">Çıkış</button>
+  </div>
+</div>
+
+<div class="kb-wrap">
+
+  <div id="kbContent">
+    <div class="kb-state" id="kbLoading">
+      <h2>Kelime hazırlanıyor</h2>
+      <p>Sınava göre kelime seçimi yapılıyor...</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Supabase config -->
+<script>
+  window.SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  window.SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+</script>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+
+const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+
+// URL params
+const params = new URLSearchParams(window.location.search);
+const CATEGORY = params.get('cat'); // null = tüm kategoriler karma
+const CAT_LABELS = {
+  'zaman-ve-sureklilik': 'Zaman ve Süreklilik',
+  'argumantasyon': 'Argümantasyon ve Eleştiri',
+  'analiz-ve-cikarim': 'Analiz ve Çıkarım',
+  'sebep-etki': 'Sebep, Etki, Önleme',
+  'degisim-ve-donusum': 'Değişim ve Dönüşüm',
+  'miktar-ve-derece': 'Miktar ve Derece',
+  'akademik-tutum': 'Akademik Tutum',
+  'toplum-ve-yapi': 'Toplum ve Yapı',
+  'dusunce-ve-yargi': 'Düşünce ve Yargı',
+  'karsitlik-ve-uyum': 'Karşıtlık ve Uyum'
+};
+
+// localStorage progress
+const LS_KEY_SEEN = CATEGORY ? `kb_seen_${CATEGORY}` : 'kb_seen_karma';
+const LS_KEY_CORRECT = CATEGORY ? `kb_correct_${CATEGORY}` : 'kb_correct_karma';
+const LS_KEY_WRONG = CATEGORY ? `kb_wrong_${CATEGORY}` : 'kb_wrong_karma';
+const LS_KEY_BOOKMARK = 'kb_bookmarks';
+
+function getSet(key){
+  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function saveSet(key, set){
+  try { localStorage.setItem(key, JSON.stringify(Array.from(set))); }
+  catch(e){}
+}
+
+let seenIds = getSet(LS_KEY_SEEN);
+let correctIds = getSet(LS_KEY_CORRECT);
+let wrongIds = getSet(LS_KEY_WRONG);
+let bookmarks = getSet(LS_KEY_BOOKMARK);
+let totalInPool = 0;
+let currentWord = null;
+let isLocked = false;
+
+// SVG icons (inline for speed)
+const SVG = {
+  speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26A7 7 0 0 0 12 2z"/></svg>',
+  bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+  circleCheck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  circleX: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+};
+
+// META display
+function updateMeta(){
+  const catLabel = CATEGORY ? (CAT_LABELS[CATEGORY] || CATEGORY) : 'Karma · Tüm kategoriler';
+  document.getElementById('kbMeta').textContent =
+    `${catLabel} · ${seenIds.size + 1} / ${totalInPool}`;
+  const score = correctIds.size;
+  const seen = seenIds.size;
+  document.getElementById('kbScore').textContent = `${score} / ${seen} doğru`;
+  const pct = totalInPool > 0 ? Math.round((seenIds.size / totalInPool) * 100) : 0;
+  document.getElementById('kbFill').style.width = pct + '%';
+}
+
+// Fetch pool size and next word
+async function fetchPoolSize(){
+  let q = supabase.from('kelimeler').select('id', { count: 'exact', head: true }).eq('active', true);
+  if (CATEGORY) q = q.eq('category', CATEGORY);
+  const { count, error } = await q;
+  if (error){ console.error('pool size error:', error); return 0; }
+  return count || 0;
+}
+
+async function fetchNextWord(){
+  // 1) Try unseen first
+  let q = supabase.from('kelimeler').select('*').eq('active', true);
+  if (CATEGORY) q = q.eq('category', CATEGORY);
+  if (seenIds.size > 0) q = q.not('id', 'in', `(${Array.from(seenIds).map(id=>`"${id}"`).join(',')})`);
+
+  const { data, error } = await q;
+  if (error){ console.error('fetch error:', error); return null; }
+
+  if (data && data.length > 0){
+    return data[Math.floor(Math.random() * data.length)];
+  }
+
+  // 2) All seen — try wrong words for review
+  if (wrongIds.size > 0){
+    let qw = supabase.from('kelimeler').select('*').eq('active', true).in('id', Array.from(wrongIds));
+    if (CATEGORY) qw = qw.eq('category', CATEGORY);
+    const { data: wd } = await qw;
+    if (wd && wd.length > 0){
+      return { ...wd[Math.floor(Math.random() * wd.length)], _reviewMode: true };
+    }
+  }
+
+  // 3) Everything mastered
+  return null;
+}
+
+function showCompletion(){
+  const catLabel = CATEGORY ? CAT_LABELS[CATEGORY] : 'tüm kelimeler';
+  document.getElementById('kbContent').innerHTML = `
+    <div class="kb-state">
+      <h2>Tebrikler!</h2>
+      <p>${catLabel} kategorisindeki tüm kelimeleri başarıyla tamamladın. İlerlemen sıfırlanırsa baştan başlayabilirsin ya da farklı bir kategori seçebilirsin.</p>
+      <button class="kb-btn" onclick="window.kbReset()">İlerlemeyi Sıfırla</button>
+      <p style="margin-top:14px;font-size:12px"><a href="kelime-bankasi.html" style="color:#2d5949">Diğer kategoriler</a></p>
+    </div>`;
+}
+
+window.kbReset = function(){
+  if (!confirm('Bu kategorideki ilerlemen sıfırlanacak. Emin misin?')) return;
+  localStorage.removeItem(LS_KEY_SEEN);
+  localStorage.removeItem(LS_KEY_CORRECT);
+  localStorage.removeItem(LS_KEY_WRONG);
+  location.reload();
+};
+
+function renderWord(w){
+  currentWord = w;
+  isLocked = false;
+  const reviewBadge = w._reviewMode ? '<span style="background:#fdf2ee;color:#b85c4a;padding:2px 8px;border-radius:10px;font-size:10px;letter-spacing:.05em;margin-left:8px">Tekrar</span>' : '';
+
+  const optsHtml = w.options.map((text, i) => {
+    const letter = String.fromCharCode(65 + i); // A, B, C, D
+    return `
+      <button class="kb-opt" data-letter="${letter}" onclick="window.kbAnswer('${letter}')">
+        <span class="kb-opt-letter">${letter}</span>
+        <span class="kb-opt-text">${text}</span>
+        <span class="kb-opt-icon"></span>
+      </button>`;
+  }).join('');
+
+  document.getElementById('kbContent').innerHTML = `
+    <div class="kb-word-sec">
+      <div class="kb-word">${w.word}</div>
+      <div class="kb-pron">
+        <button class="kb-speaker" id="kbSpeaker" aria-label="Telaffuz dinle">${SVG.speaker}</button>
+        <span class="kb-ipa">${w.ipa || ''}</span>
+        ${w.phonetic_tr ? '<span class="kb-pron-sep"></span><span class="kb-phon-tr">'+w.phonetic_tr+'</span>' : ''}
+      </div>
+      <div class="kb-prompt">ne demek?${reviewBadge}</div>
+    </div>
+
+    <div class="kb-options" id="kbOptions">
+      ${optsHtml}
+    </div>
+
+    <div class="kb-expl" id="kbExpl"></div>
+
+    <div class="kb-actions">
+      <button class="kb-bookmark ${bookmarks.has(w.id) ? 'active' : ''}" id="kbBookmark" onclick="window.kbToggleBookmark()">
+        ${SVG.bookmark}<span>${bookmarks.has(w.id) ? 'İşaretli' : 'İşaretle'}</span>
+      </button>
+      <button class="kb-next" id="kbNext" onclick="window.kbNext()" disabled>Sonraki kelime ${SVG.arrow}</button>
+    </div>`;
+
+  // Speaker pronunciation via Web Speech API
+  document.getElementById('kbSpeaker').onclick = () => {
+    try {
+      if ('speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(w.word);
+        utter.lang = 'en-US';
+        utter.rate = 0.85;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+    } catch(e){ console.warn('speak error:', e); }
+  };
+
+  updateMeta();
+}
+
+window.kbAnswer = function(letter){
+  if (isLocked) return;
+  isLocked = true;
+  const w = currentWord;
+  const correctLetter = w.correct;
+  const correctIdx = correctLetter.charCodeAt(0) - 65;
+  const chosenIdx = letter.charCodeAt(0) - 65;
+  const isCorrect = letter === correctLetter;
+
+  // Lock all options
+  const opts = document.querySelectorAll('.kb-opt');
+  opts.forEach((el, i) => {
+    el.classList.add('locked');
+    if (i === correctIdx){
+      el.classList.add('correct');
+      el.querySelector('.kb-opt-icon').innerHTML = SVG.check;
+    } else if (i === chosenIdx && !isCorrect){
+      el.classList.add('wrong');
+      el.querySelector('.kb-opt-icon').innerHTML = SVG.x;
+    }
+  });
+
+  // Update progress
+  seenIds.add(w.id);
+  if (isCorrect){
+    correctIds.add(w.id);
+    wrongIds.delete(w.id); // remove from wrong if previously wrong
+  } else {
+    wrongIds.add(w.id);
+  }
+  saveSet(LS_KEY_SEEN, seenIds);
+  saveSet(LS_KEY_CORRECT, correctIds);
+  saveSet(LS_KEY_WRONG, wrongIds);
+
+  // Show explanation
+  const expl = document.getElementById('kbExpl');
+  expl.classList.add('show');
+  if (!isCorrect) expl.classList.add('wrong-state');
+
+  const headIcon = isCorrect ? SVG.circleCheck : SVG.circleX;
+  const headLbl = isCorrect ? 'Doğru' : 'Yanlış';
+  const colorCls = isCorrect ? 'ok-color' : 'bad-color';
+
+  // If wrong, show what the correct answer was
+  const wrongNote = isCorrect ? '' :
+    `<div class="kb-expl-block">
+       <div class="kb-expl-lbl">Doğru cevap</div>
+       <div class="kb-expl-body"><strong>${correctLetter}</strong> · ${w.options[correctIdx]}</div>
+     </div>`;
+
+  expl.innerHTML = `
+    <div class="kb-expl-head">
+      <span class="kb-expl-head-icon ${colorCls}">${headIcon}</span>
+      <span class="kb-expl-head-label ${colorCls}">${headLbl}</span>
+      <span class="kb-expl-head-meta">${w.pos || ''}</span>
+    </div>
+    ${wrongNote}
+    <div class="kb-expl-block">
+      <div class="kb-expl-lbl">Sınavda kullanımı</div>
+      <div class="kb-expl-body">${w.exam_use || ''}</div>
+    </div>
+    <div class="kb-expl-block">
+      <div class="kb-expl-lbl">${SVG.bulb} Fun fact</div>
+      <div class="kb-expl-body">${w.fun_fact || ''}</div>
+    </div>
+    <div class="kb-expl-block">
+      <div class="kb-expl-lbl">Örnek</div>
+      <div class="kb-example">${w.example || ''}</div>
+    </div>`;
+
+  // Enable next button
+  document.getElementById('kbNext').disabled = false;
+
+  // Scroll explanation into view smoothly
+  setTimeout(() => expl.scrollIntoView({behavior:'smooth', block:'nearest'}), 120);
+
+  updateMeta();
+};
+
+window.kbNext = async function(){
+  document.getElementById('kbContent').innerHTML = `
+    <div class="kb-state">
+      <h2>Sonraki kelime hazırlanıyor</h2>
+    </div>`;
+  const w = await fetchNextWord();
+  if (!w){ showCompletion(); return; }
+  renderWord(w);
+};
+
+window.kbToggleBookmark = function(){
+  if (!currentWord) return;
+  if (bookmarks.has(currentWord.id)){
+    bookmarks.delete(currentWord.id);
+  } else {
+    bookmarks.add(currentWord.id);
+  }
+  saveSet(LS_KEY_BOOKMARK, bookmarks);
+  const btn = document.getElementById('kbBookmark');
+  btn.classList.toggle('active', bookmarks.has(currentWord.id));
+  btn.querySelector('span').textContent = bookmarks.has(currentWord.id) ? 'İşaretli' : 'İşaretle';
+};
+
+// INIT
+(async () => {
+  totalInPool = await fetchPoolSize();
+  if (totalInPool === 0){
+    document.getElementById('kbContent').innerHTML = `
+      <div class="kb-state">
+        <h2>Bu kategoride henüz kelime yok</h2>
+        <p>Bu kategori yakında dolacak. Şimdilik diğer kategorileri inceleyebilirsin.</p>
+        <a class="kb-btn" href="kelime-bankasi.html">Kategorilere dön</a>
+      </div>`;
+    return;
+  }
+  const w = await fetchNextWord();
+  if (!w){ showCompletion(); return; }
+  renderWord(w);
+})();
+</script>
+
+</body>
+</html>

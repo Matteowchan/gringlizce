@@ -11,7 +11,6 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <meta charset="UTF-8">
-  <meta name="google-adsense-account" content="ca-pub-5818550785641442">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reading &amp; Writing — Soru Bankası | Gri English</title>
   <meta name="description" content="Digital SAT Reading &amp; Writing bölümü kategori ve alt konuları.">
@@ -80,20 +79,6 @@
       font-weight: 500;
     }
   </style>
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Gri English">
-  <meta property="og:locale" content="tr_TR">
-  <meta property="og:url" content="https://gringlizce.com/sat-soru-bankasi-rw.html">
-  <meta property="og:title" content="Reading &amp;amp; Writing — Soru Bankası">
-  <meta property="og:description" content="Digital SAT Reading &amp;amp; Writing bölümü kategori ve alt konuları.">
-  <meta property="og:image" content="https://gringlizce.com/assets/gri-logo.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Reading &amp;amp; Writing — Soru Bankası">
-  <meta name="twitter:description" content="Digital SAT Reading &amp;amp; Writing bölümü kategori ve alt konuları.">
-  <meta name="twitter:image" content="https://gringlizce.com/assets/gri-logo.png">
-
 </head>
 <body data-cat="sat">
 
@@ -182,7 +167,8 @@
               <li><a href="yds-ders-notlari.html">YDS/YÖKDİL</a></li>
             </ul>
           </li>
-          <li><a href="calisma-paketleri.html"><span style="color:#9C7F45;margin-right:0.35em;font-weight:700;" aria-hidden="true">&bull;</span>Çalışma Paketleri</a></li>
+          <li><a href="kelime-bankasi.html">Kelime Bankası</a></li>
+          <li><a href="calisma-paketleri.html"><span style="color:#9C7F45;margin-right:0.35em;font-weight:700;" aria-hidden="true">&bull;</span>Paketler</a></li>
           <li><a href="yazi-pratigi.html">Yazı Pratiği</a></li>
           <li><a href="iletisim.html">İletişim</a></li>
           <li id="navUserMount" class="nav-user-mount"></li>
@@ -556,46 +542,33 @@
 
     async function loadCounts() {
       try {
-        const counts = {};
-        let total = 0;
+        const { data, count, error } = await supabase
+          .from('questions')
+          .select('subcategory', { count: 'exact' })
+          .eq('active', true)
+          .eq('exam_type', 'sat')
+          .eq('section', 'rw')
+          .range(0, 99999);
 
-        // Önce RPC'yi dene (server-side group by, çok hızlı)
-        const { data: rpcData, error: rpcErr } = await supabase.rpc('question_counts_by_subcategory', {
-          p_exam_type: 'sat',
-          p_section: 'rw'
-        });
-
-        if (rpcData && !rpcErr) {
-          rpcData.forEach(r => {
-            counts[r.subcategory] = parseInt(r.count) || 0;
-            total += counts[r.subcategory];
+        if (error) {
+          console.error('Soru sayısı çekilirken hata:', error);
+          document.querySelectorAll('.qb-topic-count').forEach(el => {
+            el.textContent = '';
           });
-        } else {
-          // Fallback: eski direkt sorgu (RPC yoksa veya hata)
-          console.warn('[loadCounts] RPC failed, fallback:', rpcErr);
-          const { data, count, error } = await supabase
-            .from('questions')
-            .select('subcategory', { count: 'exact' })
-            .eq('active', true)
-            .eq('exam_type', 'sat')
-            .eq('section', 'rw')
-            .range(0, 9999);
-          if (error) {
-            console.error('Soru sayısı çekilirken hata:', error);
-            document.querySelectorAll('.qb-topic-count').forEach(el => { el.textContent = ''; });
-            return;
-          }
-          data.forEach(q => {
-            if (q.subcategory) {
-              counts[q.subcategory] = (counts[q.subcategory] || 0) + 1;
-            }
-          });
-          total = count ?? data.length;
+          return;
         }
 
-        // Toplam soru sayısı banner'a
+        // Toplam soru sayısı banner'a (count header — 1000 limit'inden etkilenmez)
         const totalEl = document.getElementById('qbTotalCount');
-        if (totalEl) totalEl.textContent = total;
+        if (totalEl) totalEl.textContent = (count ?? data.length);
+
+        // Group by subcategory
+        const counts = {};
+        data.forEach(q => {
+          if (q.subcategory) {
+            counts[q.subcategory] = (counts[q.subcategory] || 0) + 1;
+          }
+        });
 
         // Update each topic row
         document.querySelectorAll('.qb-topic-row[data-subcategory]').forEach(row => {
@@ -606,39 +579,41 @@
           countEl.textContent = n + ' soru';
           countEl.classList.remove('has-questions', 'is-zero');
           countEl.classList.add(n > 0 ? 'has-questions' : 'is-zero');
+
+          // Auto-activate row if it has questions
           if (n > 0) {
             activateRow(row, sub);
           }
         });
 
-        // Update category meta
+        // Update category meta: "X konu · Y soru"
         document.querySelectorAll('.qb-category-head[data-cat-key]').forEach(head => {
           const catEl = head.closest('.qb-category');
           if (!catEl) return;
           const rows = catEl.querySelectorAll('.qb-topic-row[data-subcategory]');
           let topicCount = 0;
-          let catTotal = 0;
+          let total = 0;
           rows.forEach(r => {
             const sub = r.dataset.subcategory;
             const n = counts[sub] || 0;
             if (n > 0) topicCount++;
-            catTotal += n;
+            total += n;
           });
           const metaEl = head.querySelector('.qb-cat-meta');
           if (metaEl) {
-            metaEl.textContent = topicCount + ' konu · ' + catTotal + ' soru';
+            metaEl.textContent = topicCount + ' konu · ' + total + ' soru';
           }
         });
       } catch (err) {
         console.error('Bağlantı hatası:', err);
-        document.querySelectorAll('.qb-topic-count').forEach(el => { el.textContent = ''; });
+        document.querySelectorAll('.qb-topic-count').forEach(el => {
+          el.textContent = '';
+        });
       }
     }
 
     loadCounts();
   </script>
-
-<script src="assets/breadcrumb.js" defer></script>
 
 </body>
 </html>

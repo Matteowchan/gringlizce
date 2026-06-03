@@ -95,7 +95,17 @@
     return owned;
   }
 
+  // Demo materyaller: giriş yapan herkese ücretsiz açık
+  var FREE_DEMO_SLUGS = [
+    'spelling-practice-2',
+    'spelling-practice-3',
+    'toefl-writing-practice-2',
+    'toefl-writing-practice-3',
+    'kelime-bankasi'
+  ];
+
   function hasAccess(rec, slug) {
+    if (slug && FREE_DEMO_SLUGS.indexOf(slug) !== -1) return true;
     var owned = getOwnedProducts(rec);
     if (owned === '*') return true;
     return owned.indexOf(slug) !== -1;

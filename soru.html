@@ -1478,21 +1478,6 @@
     .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
     .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
   </style>
-  <link rel="canonical" href="https://gringlizce.com/soru.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Gri English">
-  <meta property="og:locale" content="tr_TR">
-  <meta property="og:url" content="https://gringlizce.com/soru.html">
-  <meta property="og:title" content="Soru">
-  <meta property="og:description" content="Gri English Soru Bankası — interaktif soru çözüm sayfası.">
-  <meta property="og:image" content="https://gringlizce.com/assets/gri-logo.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Soru">
-  <meta name="twitter:description" content="Gri English Soru Bankası — interaktif soru çözüm sayfası.">
-  <meta name="twitter:image" content="https://gringlizce.com/assets/gri-logo.png">
-
 </head>
 <body data-cat="sat">
 
@@ -1579,7 +1564,8 @@
               <li><a href="yds-ders-notlari.html">YDS/YÖKDİL</a></li>
             </ul>
           </li>
-          <li><a href="calisma-paketleri.html"><span style="color:#9C7F45;margin-right:0.35em;font-weight:700;" aria-hidden="true">&bull;</span>Çalışma Paketleri</a></li>
+          <li><a href="kelime-bankasi.html">Kelime Bankası</a></li>
+          <li><a href="calisma-paketleri.html"><span style="color:#9C7F45;margin-right:0.35em;font-weight:700;" aria-hidden="true">&bull;</span>Paketler</a></li>
           <li><a href="yazi-pratigi.html">Yazı Pratiği</a></li>
           <li><a href="iletisim.html">İletişim</a></li>
           <li id="navUserMount" class="nav-user-mount"></li>
@@ -1705,6 +1691,10 @@
     <div class="np-header">
       <h3>Soru Bankası</h3>
       <div class="np-tools">
+        <button class="np-filter" type="button">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Cevaplandı Filtrele
+        </button>
         <button class="np-close" type="button" id="navClose" aria-label="Kapat">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -1917,7 +1907,7 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
       // Then selectively un-escape allowed tags
-      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div', 'ul', 'ol', 'li'];
+      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div'];
       allowed.forEach(function (tag) {
         var openRe = new RegExp('&lt;' + tag + '&gt;', 'gi');
         var closeRe = new RegExp('&lt;/' + tag + '&gt;', 'gi');
@@ -1960,60 +1950,20 @@
       }
       return arr;
     }
-
-    // localStorage'tan sessionStorage'a önyükleme (Supabase beklemeden UI'a yansısın)
-    (function preloadFromLocal() {
-      try {
-        for (var i = 0; i < localStorage.length; i++) {
-          var k = localStorage.key(i);
-          if (k && k.indexOf('gri.answer.') === 0) {
-            if (!sessionStorage.getItem(k)) {
-              var v = localStorage.getItem(k);
-              if (v) sessionStorage.setItem(k, v);
-            }
-          }
-        }
-      } catch (e) { /* storage erişimi engellendi */ }
-    })();
-
     function getAnswerStatus(slug) {
-      // Önce sessionStorage, yoksa localStorage'tan al (kalıcı cache)
-      var v = sessionStorage.getItem('gri.answer.' + slug);
-      if (v) return v;
-      try {
-        v = localStorage.getItem('gri.answer.' + slug);
-        if (v) sessionStorage.setItem('gri.answer.' + slug, v);
-      } catch (e) {}
-      return v; // 'correct' | 'incorrect' | null
+      return sessionStorage.getItem('gri.answer.' + slug); // 'correct' | 'incorrect' | null
     }
-    function getAnswerLetter(slug) {
-      // Hangi harfi seçtiğini döndür ('A','B','C','D') veya null
-      var v = sessionStorage.getItem('gri.letter.' + slug);
-      if (v) return v;
-      try {
-        v = localStorage.getItem('gri.letter.' + slug);
-        if (v) sessionStorage.setItem('gri.letter.' + slug, v);
-      } catch (e) {}
-      return v;
-    }
-    function setAnswerStatus(slug, status, selectedLetter) {
+    function setAnswerStatus(slug, status) {
       sessionStorage.setItem('gri.answer.' + slug, status);
-      try { localStorage.setItem('gri.answer.' + slug, status); } catch (e) {}
-      if (selectedLetter) {
-        sessionStorage.setItem('gri.letter.' + slug, selectedLetter);
-        try { localStorage.setItem('gri.letter.' + slug, selectedLetter); } catch (e) {}
-      }
       // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
       if (GRI_USER_ID) {
-        var payload = {
+        supabase.from('user_answers').upsert({
           user_id: GRI_USER_ID,
           question_slug: slug,
           status: status,
           answered_at: new Date().toISOString(),
           time_spent_ms: (typeof timerSeconds === 'number' ? timerSeconds * 1000 : null),
-        };
-        if (selectedLetter) payload.selected_letter = selectedLetter;
-        supabase.from('user_answers').upsert(payload, { onConflict: 'user_id,question_slug' }).then(function (r) {
+        }, { onConflict: 'user_id,question_slug' }).then(function (r) {
           if (r.error) console.warn('[answers] persist failed:', r.error.message);
         });
         // Rozet değerlendirmesi (debounced, 30 sn'de en fazla bir kez)
@@ -2023,14 +1973,7 @@
       }
     }
     function clearAnswersForSet(slugs) {
-      slugs.forEach(function (s) {
-        sessionStorage.removeItem('gri.answer.' + s);
-        sessionStorage.removeItem('gri.letter.' + s);
-        try {
-          localStorage.removeItem('gri.answer.' + s);
-          localStorage.removeItem('gri.letter.' + s);
-        } catch (e) {}
-      });
+      slugs.forEach(s => sessionStorage.removeItem('gri.answer.' + s));
     }
 
     // Login kullanıcının tüm cevaplarını DB'den yükle, sessionStorage'a serp
@@ -2038,17 +1981,12 @@
       if (!GRI_USER_ID) return;
       try {
         const res = await supabase.from('user_answers')
-          .select('question_slug, status, selected_letter')
+          .select('question_slug, status')
           .eq('user_id', GRI_USER_ID);
         if (res && res.data) {
           res.data.forEach(function (row) {
             if (!sessionStorage.getItem('gri.answer.' + row.question_slug)) {
               sessionStorage.setItem('gri.answer.' + row.question_slug, row.status);
-              try { localStorage.setItem('gri.answer.' + row.question_slug, row.status); } catch (e) {}
-            }
-            if (row.selected_letter && !sessionStorage.getItem('gri.letter.' + row.question_slug)) {
-              sessionStorage.setItem('gri.letter.' + row.question_slug, row.selected_letter);
-              try { localStorage.setItem('gri.letter.' + row.question_slug, row.selected_letter); } catch (e) {}
             }
           });
         }
@@ -2673,32 +2611,16 @@
       const correctLetter = optionsContainer.dataset.correct;
       const currentSlug = SUBCATEGORY_LIST[CURRENT_INDEX]?.slug;
       const priorAnswer = currentSlug ? getAnswerStatus(currentSlug) : null;
-      const priorLetter = currentSlug ? getAnswerLetter(currentSlug) : null;
       let firstAttemptRecorded = !!priorAnswer; // already answered → don't overwrite
 
       // Restore visual state if question was previously answered (any revisit)
-      if (priorAnswer === 'correct') {
-        // Doğru cevaplanmış: doğru option yeşil, locked
+      if (priorAnswer) {
         options.forEach(o => {
           const letter = o.querySelector('input')?.value;
           if (letter === correctLetter) {
             o.classList.add('answered', 'correct');
             const inp = o.querySelector('input');
             if (inp) inp.checked = true;
-          }
-        });
-        optionsContainer.classList.add('locked');
-      } else if (priorAnswer === 'incorrect') {
-        // Yanlış cevaplanmış: seçilen harf kırmızı, doğru cevap yeşil, locked
-        options.forEach(o => {
-          const inp = o.querySelector('input');
-          const letter = inp ? inp.value : null;
-          if (priorLetter && letter === priorLetter) {
-            o.classList.add('answered', 'incorrect');
-            if (inp) inp.checked = true;
-          }
-          if (letter === correctLetter) {
-            o.classList.add('answered', 'correct');
           }
         });
         optionsContainer.classList.add('locked');
@@ -2720,7 +2642,7 @@
           // Record first attempt only (subsequent retries don't change recorded status)
           if (!firstAttemptRecorded) {
             if (currentSlug) {
-              setAnswerStatus(currentSlug, isCorrect ? 'correct' : 'incorrect', clickedLetter);
+              setAnswerStatus(currentSlug, isCorrect ? 'correct' : 'incorrect');
               renderNavigator();
             }
             firstAttemptRecorded = true;
@@ -3922,8 +3844,6 @@
 
     loadQuestion();
   </script>
-
-<script src="assets/breadcrumb.js" defer></script>
 
 </body>
 </html>

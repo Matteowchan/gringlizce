@@ -2847,8 +2847,22 @@
           });
 
           // Birleştir + created_at desc sırala
-          var assignments = mainAssignments.concat(vocabAssignments).sort(function (a, b) {
-            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          // Birleştir, grupları bir arada ve Task 1 üstte tutarak sırala
+          var allAssignments = mainAssignments.concat(vocabAssignments);
+          var groupAnchor = {};
+          allAssignments.forEach(function (a) {
+            var g = a.config && a.config.group_id;
+            if (g) {
+              var t = new Date(a.created_at || 0).getTime();
+              if (groupAnchor[g] == null || t < groupAnchor[g]) groupAnchor[g] = t;
+            }
+          });
+          var assignments = allAssignments.sort(function (a, b) {
+            var ga = a.config && a.config.group_id, gb = b.config && b.config.group_id;
+            var ta = ga ? groupAnchor[ga] : new Date(a.created_at || 0).getTime();
+            var tb = gb ? groupAnchor[gb] : new Date(b.created_at || 0).getTime();
+            if (ta !== tb) return tb - ta;
+            return ((a.config && a.config.part_order) || 0) - ((b.config && b.config.part_order) || 0);
           });
 
           document.getElementById('tab-count-assignments').textContent = assignments.length;
@@ -2859,6 +2873,7 @@
             return;
           }
 
+          var seenGroups = {};
           list.innerHTML = assignments.map(function (a) {
             var total = parseInt(a.total_students) || 0;
             var completed = parseInt(a.completed_count) || 0;
@@ -2874,7 +2889,10 @@
               if (a.config.category) meta.push(humanize(a.config.category));
               meta.push('Hedef: ' + (a.config.count || 0) + ' soru');
             } else if (a.type === 'writing' && a.config) {
-              meta.push((a.config.exam_type || '') + ' Task ' + (a.config.task_number || ''));
+              var ttLabel = a.config.part === 'task1' ? 'Task 1'
+                : a.config.part === 'task2' ? 'Task 2'
+                : (a.config.text_type_display || a.config.text_type || '');
+              meta.push(((a.config.exam_type || '').toUpperCase() + ' ' + ttLabel).trim());
               if (a.config.min_words) meta.push(a.config.min_words + '+ kelime');
             } else if (a.type === 'vocab' && a.config) {
               meta.push((a.config.word_count || 0) + ' kelime');
@@ -2886,7 +2904,12 @@
               : '';
 
             var kind = a._kind === 'vocab' ? 'vocab' : 'main';
-            return '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '" data-kind="' + kind + '" data-type="' + esc(a.type) + '">'
+            var grpHeader = '';
+            if (a.config && a.config.group_id && !seenGroups[a.config.group_id]) {
+              seenGroups[a.config.group_id] = true;
+              grpHeader = '<div style="margin:0.7rem 0 0.1rem; font-family:var(--font-ui,sans-serif); font-size:0.78rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--gold,#c89a3c);">IELTS Tam Yazma · ' + esc(a.config.group_title || a.title) + '</div>';
+            }
+            return grpHeader + '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '" data-kind="' + kind + '" data-type="' + esc(a.type) + '">'
               + '<div class="ks-assign-head-row">'
                 + '<div class="ks-assign-titles">'
                   + '<span class="ks-assign-type type-' + a.type + '">' + TYPE_LABELS[a.type] + '</span>'

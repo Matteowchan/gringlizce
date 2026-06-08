@@ -65,6 +65,18 @@
     .task-section { display: none; }
     .task-section.active { display: block; }
 
+    .mobile-pane-tabs { display: none; gap: 0.5rem; padding: 0.6rem 1.1rem 0; background: #fff; }
+    .mobile-pane-tabs button { flex: 1; padding: 0.55rem; border: 1px solid #d8d2c4; background: #fff; border-radius: 8px; font-family: inherit; font-size: 0.88rem; cursor: pointer; color: #555; }
+    .mobile-pane-tabs button.active { background: var(--accent, #c89a3c); color: #fff; border-color: var(--accent, #c89a3c); font-weight: 700; }
+    [data-theme="dark"] .mobile-pane-tabs { background: #1a1f28; }
+    [data-theme="dark"] .mobile-pane-tabs button { background: #1a1f28; border-color: #2d3548; color: #aaa; }
+    @media (max-width: 900px) {
+      .mobile-pane-tabs { display: flex; }
+      .task-prompt, .task-editor { padding: 1.1rem 1.1rem !important; }
+      .task-wrapper.m-editor .task-prompt { display: none; }
+      .task-wrapper.m-prompt .task-editor { display: none; }
+    }
+
     .task-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: calc(100vh - 110px); }
     @media (max-width: 900px) { .task-wrapper { grid-template-columns: 1fr; } }
     .task-prompt, .task-editor { padding: 2rem 2.5rem; background: #fff; overflow-y: auto; max-height: calc(100vh - 110px); }
@@ -813,7 +825,11 @@
         promptHtml += `<p class="task-min-words">You should write at least ${minWords} words.</p>`;
 
         sec.innerHTML = `
-          <div class="task-wrapper">
+          <div class="mobile-pane-tabs">
+            <button type="button" data-pane="prompt">Soru</button>
+            <button type="button" data-pane="editor" class="active">Cevabım</button>
+          </div>
+          <div class="task-wrapper m-editor">
             <div class="task-prompt">${promptHtml}</div>
             <div class="task-editor">
               <div class="editor-meta">
@@ -855,6 +871,24 @@
           });
           var ta2 = document.getElementById('editor-' + state.currentTask);
           if (ta2) autoGrowTextarea(ta2);
+        });
+      });
+
+      document.querySelectorAll('.mobile-pane-tabs').forEach(function (bar) {
+        var wrapper = bar.parentElement.querySelector('.task-wrapper');
+        bar.querySelectorAll('button').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var pane = b.dataset.pane;
+            bar.querySelectorAll('button').forEach(function (x) {
+              x.classList.toggle('active', x === b);
+            });
+            wrapper.classList.toggle('m-editor', pane === 'editor');
+            wrapper.classList.toggle('m-prompt', pane === 'prompt');
+            if (pane === 'editor') {
+              var ta3 = wrapper.querySelector('.editor-textarea');
+              if (ta3) autoGrowTextarea(ta3);
+            }
+          });
         });
       });
     }

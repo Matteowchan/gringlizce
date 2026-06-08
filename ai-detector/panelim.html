@@ -270,10 +270,11 @@ async function loadHistory(userId) {
     return `
       <div class="h-row">
         <div class="h-snippet">${escapeHtml(snippet)}</div>
-        <div style="display:flex; gap:12px; align-items:center;">
+        <div style="display:flex; gap:10px; align-items:center;">
           <span class="mini-pill ${bandClass(band)}">${escapeHtml(band)}</span>
           <span class="h-meta">${formatDate(s.created_at)}</span>
           <button class="secondary" data-id="${s.id}" style="padding:6px 12px;">Ac</button>
+          <button class="secondary" data-del="${s.id}" style="padding:6px 11px; color:#b94a4a; border-color:#e0c0c0;">Sil</button>
         </div>
       </div>`;
   }).join('');
@@ -285,6 +286,16 @@ async function loadHistory(userId) {
         renderResult(row.analysis, row.final_text || '');
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
       }
+    });
+  });
+
+  c.querySelectorAll('button[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Bu kontrol kaydi silinsin mi?')) return;
+      const { error } = await supabase.from('writing_sessions').delete().eq('id', btn.dataset.del);
+      if (error) { toast('Silinemedi.'); return; }
+      toast('Silindi');
+      await loadHistory(CURRENT_USER.id);
     });
   });
 }

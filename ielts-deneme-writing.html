@@ -87,6 +87,16 @@
     .editor-meta .word-display { font-family: monospace; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 12px; background: #f0ede5; }
     .editor-meta .word-display.ok { background: #4a7a4a; color: #fff; }
     .editor-meta .word-display.low { background: #c63838; color: #fff; }
+    .editor-meta { position: sticky; top: 0; background: #fff; z-index: 5; padding: 0.4rem 0; }
+    [data-theme="dark"] .editor-meta { background: #1a1f28; }
+    .editor-meta .meta-right { display: inline-flex; align-items: center; gap: 0.6rem; }
+    .focus-toggle { background: transparent; border: 1px solid #d8d2c4; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.8rem; cursor: pointer; color: #555; font-family: inherit; }
+    .focus-toggle:hover { background: #faf7ee; }
+    .focus-toggle.active { background: var(--accent, #c89a3c); color: #fff; border-color: var(--accent, #c89a3c); }
+    [data-theme="dark"] .focus-toggle { border-color: #2d3548; color: #aaa; }
+    #testContainer.focus-mode .task-prompt { display: none; }
+    #testContainer.focus-mode .task-wrapper { grid-template-columns: 1fr; }
+    #testContainer.focus-mode .task-editor { max-width: 860px; margin: 0 auto; width: 100%; }
     .editor-textarea {
       width: 100%;
       min-height: 320px;
@@ -673,6 +683,15 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="max-width:520px; text-align:center;">
+      <div style="font-family:Georgia,serif; font-size:2.2rem; color:#4a7a4a; margin-bottom:0.4rem;">✓</div>
+      <h3 id="successTitle">Gönderildi</h3>
+      <p id="successMsg" class="modal-sub" style="margin-bottom:1.5rem;"></p>
+      <button class="btn-confirm" id="successAction" style="width:100%;">Devam</button>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
@@ -799,7 +818,10 @@
             <div class="task-editor">
               <div class="editor-meta">
                 <span class="word-target">Hedef: ${minWords}+ kelime</span>
-                <span class="word-display" id="word-display-${part.part_number}">0 kelime</span>
+                <span class="meta-right">
+                  <span class="word-display" id="word-display-${part.part_number}">0 kelime</span>
+                  <button type="button" class="focus-toggle" title="Dikkat dağıtmadan yaz">Odak</button>
+                </span>
               </div>
               <textarea class="editor-textarea" id="editor-${part.part_number}" data-task="${part.part_number}" data-min="${minWords}" placeholder="Cevabını buraya yaz..." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
               <div class="editor-saved" id="saved-${part.part_number}">Henüz kaydedilmedi</div>
@@ -822,6 +844,19 @@
           document.getElementById('saved-' + part.part_number).textContent = 'Kaydedildi ' + new Date().toLocaleTimeString('tr-TR');
         });
       }
+
+      document.querySelectorAll('.focus-toggle').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var c = document.getElementById('testContainer');
+          var on = c.classList.toggle('focus-mode');
+          document.querySelectorAll('.focus-toggle').forEach(function (x) {
+            x.classList.toggle('active', on);
+            x.textContent = on ? 'Odaktan Çık' : 'Odak';
+          });
+          var ta2 = document.getElementById('editor-' + state.currentTask);
+          if (ta2) autoGrowTextarea(ta2);
+        });
+      });
     }
 
     function autoGrowTextarea(ta) {
@@ -984,6 +1019,16 @@
       applyCreditsToModal();
     }
 
+    function showSuccess(title, msg, url, label) {
+      document.getElementById('submitModal').classList.remove('show');
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successMsg').textContent = msg;
+      var act = document.getElementById('successAction');
+      act.textContent = label || 'Devam';
+      act.onclick = function () { window.location.href = url; };
+      document.getElementById('successModal').classList.add('show');
+    }
+
     // Package selection
     document.querySelectorAll('.package-option').forEach(opt => {
       opt.addEventListener('click', () => {
@@ -1026,8 +1071,7 @@
           if (cr && cr.used_credit) {
             localStorage.removeItem('ielts_writing_' + TEST_SLUG);
             if (typeof window.triggerBadgeCheck === 'function') window.triggerBadgeCheck({ force: true });
-            alert('Yazın krediyle gönderildi. Öğretmenin değerlendirecek, sonuç panelinde görünecek.');
-            window.location.href = 'panelim.html';
+            showSuccess('Krediyle gönderildi', 'Yazın öğretmenine iletildi. Değerlendirme sonucun panelinde görünecek.', 'panelim.html', 'Panele Git');
             return;
           }
           // kredi bulunamadi (yaris) → normal akisa dus
@@ -1056,7 +1100,7 @@
         }
 
         if (pkg === 'draft') {
-          window.location.href = 'ielts-deneme.html?saved=' + sub.id;
+          showSuccess('Taslak kaydedildi', 'Yazın panelinde duruyor. İstersen sonra değerlendirme için gönderebilirsin.', 'ielts-deneme.html?saved=' + sub.id, 'Denemelere Dön');
         } else if (pkg === 'gri_ai') {
           window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
         } else {

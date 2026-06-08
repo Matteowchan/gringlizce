@@ -372,10 +372,10 @@
         { key: 'task_achievement', label: 'Task Achievement', min: 0, max: 9, step: 0.5 },
         { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
         { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
-        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+        { key: 'grammatical_range', label: 'Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
       ],
       computeOverall: function (scores) {
-        var keys = ['task_achievement','coherence_cohesion','lexical_resource','grammar'];
+        var keys = ['task_achievement','coherence_cohesion','lexical_resource','grammatical_range'];
         var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
         if (vals.length === 0) return null;
         var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
@@ -389,16 +389,42 @@
         { key: 'task_response', label: 'Task Response', min: 0, max: 9, step: 0.5 },
         { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
         { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
-        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+        { key: 'grammatical_range', label: 'Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
       ],
       computeOverall: function (scores) {
-        var keys = ['task_response','coherence_cohesion','lexical_resource','grammar'];
+        var keys = ['task_response','coherence_cohesion','lexical_resource','grammatical_range'];
         var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
         if (vals.length === 0) return null;
         var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
         return Math.round(avg * 2) / 2;
       },
       unit: 'Band'
+    },
+    ielts_writing_complete: {
+      label: 'IELTS Tam Yazma (T1+T2)',
+      criteria: [
+        { key: 'task1_achievement', label: 'Task 1: Task Achievement', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_coherence', label: 'Task 1: Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_lexical', label: 'Task 1: Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_grammar', label: 'Task 1: Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_response', label: 'Task 2: Task Response', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_coherence', label: 'Task 2: Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_lexical', label: 'Task 2: Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_grammar', label: 'Task 2: Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
+      ],
+      computeOverall: function (scores) {
+        function avg(ks) {
+          var v = ks.map(function (k) { return parseFloat(scores[k]); }).filter(function (x) { return !isNaN(x); });
+          return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+        }
+        var t1 = avg(['task1_achievement','task1_coherence','task1_lexical','task1_grammar']);
+        var t2 = avg(['task2_response','task2_coherence','task2_lexical','task2_grammar']);
+        if (t1 == null && t2 == null) return null;
+        if (t1 == null) return Math.round(t2 * 2) / 2;
+        if (t2 == null) return Math.round(t1 * 2) / 2;
+        return Math.round(((t1 + 2 * t2) / 3) * 2) / 2;
+      },
+      unit: 'Band (genel)'
     },
     ib_english_b: {
       label: 'IB English B',
@@ -477,6 +503,7 @@
 
   function autoPickRubric(exam, textType) {
     if (exam === 'ielts') {
+      if (textType && /complete|both/i.test(textType)) return 'ielts_writing_complete';
       if (textType && /task[\s_-]?1/i.test(textType)) return 'ielts_task1';
       return 'ielts_task2';
     }

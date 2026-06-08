@@ -685,6 +685,7 @@
       startedAt: null, duration: 60 * 60, user: null,
       timerInterval: null, finished: false, currentTask: 1,
       selectedPackage: null,
+      credits: { task1_only: 0, task2_only: 0, both: 0 },
       // Timer kontrolü
       timerStartedAt: null,   // running iken effective start (Date.now() - elapsed*1000)
       timerElapsed: 0,         // pause iken birikmiş saniye
@@ -940,7 +941,48 @@
 
     document.getElementById('submitBtn').addEventListener('click', () => {
       document.getElementById('submitModal').classList.add('show');
+      loadWritingCredits();
     });
+
+    function applyCreditsToModal() {
+      ['task1_only', 'task2_only', 'both'].forEach(function (pkg) {
+        var opt = document.querySelector('.package-option[data-pkg="' + pkg + '"]');
+        if (!opt) return;
+        var head = opt.querySelector('.pkg-head');
+        var old = opt.querySelector('.pkg-credit-note');
+        if (old) old.remove();
+        var n = Number(state.credits[pkg] || 0);
+        if (n > 0 && head) {
+          var note = document.createElement('div');
+          note.className = 'pkg-credit-note';
+          note.style.cssText = 'font-size:0.8rem; color:#4a7a4a; font-weight:700; margin-top:0.3rem;';
+          note.textContent = 'Krediniz var: ' + n + ' · ödeme yok, krediyle gönderilir';
+          head.appendChild(note);
+        }
+      });
+      var btn = document.getElementById('confirmSubmit');
+      if (btn && state.selectedPackage && !btn.disabled) {
+        btn.textContent = confirmLabel(state.selectedPackage);
+      }
+    }
+
+    function confirmLabel(pkg) {
+      if (pkg === 'draft') return 'Kaydet ve Bitir';
+      if (pkg === 'gri_ai') return 'Gri ile Değerlendir';
+      if (['task1_only', 'task2_only', 'both'].indexOf(pkg) !== -1 && Number(state.credits[pkg] || 0) > 0) return 'Kredinle Gönder';
+      return 'Ödemeye Geç';
+    }
+
+    async function loadWritingCredits() {
+      try {
+        var r = await sb.rpc('get_user_writing_credits');
+        if (r.error) throw r.error;
+        state.credits = r.data || { task1_only: 0, task2_only: 0, both: 0 };
+      } catch (e) {
+        state.credits = { task1_only: 0, task2_only: 0, both: 0 };
+      }
+      applyCreditsToModal();
+    }
 
     // Package selection
     document.querySelectorAll('.package-option').forEach(opt => {
@@ -950,7 +992,7 @@
         state.selectedPackage = opt.dataset.pkg;
         const btn = document.getElementById('confirmSubmit');
         btn.disabled = false;
-        btn.textContent = state.selectedPackage === 'draft' ? 'Kaydet ve Bitir' : 'Ödemeye Geç';
+        btn.textContent = confirmLabel(state.selectedPackage);
       });
     });
 
@@ -967,6 +1009,29 @@
         const elapsed = currentElapsed();
         const w1 = countWords(state.essays[1] || '');
         const w2 = countWords(state.essays[2] || '');
+        const pkg = state.selectedPackage;
+        const paidPkgs = ['task1_only', 'task2_only', 'both'];
+
+        // Ucretli paket + kredi varsa: krediyle gonder, Shopier yok
+        if (paidPkgs.indexOf(pkg) !== -1 && Number(state.credits[pkg] || 0) > 0) {
+          const { data: cr, error: crErr } = await sb.rpc('submit_writing_with_credit', {
+            p_test_id: state.test.id,
+            p_task1: state.essays[1] || '',
+            p_task2: state.essays[2] || '',
+            p_w1: w1, p_w2: w2,
+            p_package_type: pkg,
+            p_time: elapsed
+          });
+          if (crErr) throw crErr;
+          if (cr && cr.used_credit) {
+            localStorage.removeItem('ielts_writing_' + TEST_SLUG);
+            if (typeof window.triggerBadgeCheck === 'function') window.triggerBadgeCheck({ force: true });
+            alert('Yazın krediyle gönderildi. Öğretmenin değerlendirecek, sonuç panelinde görünecek.');
+            window.location.href = 'panelim.html';
+            return;
+          }
+          // kredi bulunamadi (yaris) → normal akisa dus
+        }
 
         const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
           user_id: state.user.id,
@@ -975,8 +1040,8 @@
           task2_essay: state.essays[2] || '',
           task1_word_count: w1,
           task2_word_count: w2,
-          package_type: state.selectedPackage,
-          payment_status: state.selectedPackage === 'draft' ? 'draft' : 'unpaid',
+          package_type: pkg,
+          payment_status: pkg === 'draft' ? 'draft' : 'unpaid',
           submitted_at: new Date().toISOString(),
           time_spent_seconds: elapsed,
         }).select().single();
@@ -990,9 +1055,9 @@
           window.triggerBadgeCheck({ force: true });
         }
 
-        if (state.selectedPackage === 'draft') {
+        if (pkg === 'draft') {
           window.location.href = 'ielts-deneme.html?saved=' + sub.id;
-        } else if (state.selectedPackage === 'gri_ai') {
+        } else if (pkg === 'gri_ai') {
           window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
         } else {
           window.location.href = 'https://www.shopier.com/47211439';

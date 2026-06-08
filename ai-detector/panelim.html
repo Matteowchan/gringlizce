@@ -43,7 +43,7 @@ header p { color: var(--muted); margin-top: 4px; font-size: 14px; }
 
 .panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
 .ta-wrap { position: relative; }
-textarea#essay { width: 100%; min-height: 280px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font: 15px/1.6 'Inter', sans-serif; background: #fffcf3; resize: vertical; }
+textarea#essay { width: 100%; min-height: 220px; max-height: 60vh; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font: 15px/1.6 'Inter', sans-serif; background: #fffcf3; resize: vertical; overflow-y: auto; }
 textarea#essay:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
 .ta-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
 button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 8px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
@@ -184,6 +184,11 @@ function formatDate(s) {
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' +
     d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 }
+function autoGrow(el) {
+  el.style.height = 'auto';
+  const max = Math.round(window.innerHeight * 0.6);
+  el.style.height = Math.min(el.scrollHeight, max) + 'px';
+}
 
 async function init() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -202,6 +207,7 @@ async function init() {
   const essay = document.getElementById('essay');
   essay.addEventListener('input', () => {
     document.getElementById('char-now').textContent = essay.value.trim().length;
+    autoGrow(essay);
   });
   document.getElementById('check-btn').addEventListener('click', runCheck);
   document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-input').click());
@@ -220,6 +226,7 @@ function handleFile(e) {
     const essay = document.getElementById('essay');
     essay.value = String(reader.result || '');
     document.getElementById('char-now').textContent = essay.value.trim().length;
+    autoGrow(essay);
   };
   reader.readAsText(f);
 }

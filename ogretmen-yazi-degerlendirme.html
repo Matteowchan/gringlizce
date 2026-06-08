@@ -233,6 +233,17 @@
     .wd-save-msg { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem; min-height: 1.2rem; }
     .wd-save-msg.ok { color: var(--success); font-weight: 600; }
     .wd-save-msg.err { color: var(--error); }
+    .wd-ai-eval {
+      width: 100%; margin: 0 0 0.8rem; padding: 0.6rem 1rem;
+      font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+      color: var(--teal); background: transparent;
+      border: 1.5px solid var(--gold); border-radius: 6px; cursor: pointer;
+    }
+    .wd-ai-eval:hover { background: var(--gold); color: #fff; }
+    .wd-ai-eval:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wd-ai-msg { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); margin: -0.3rem 0 0.8rem; min-height: 1rem; }
+    .wd-ai-msg.ok { color: var(--success); }
+    .wd-ai-msg.err { color: var(--error); }
 
     /* Comments list (sidebar bottom) */
     .wd-comments-list {
@@ -512,6 +523,8 @@
               return '<option value="' + k + '"' + (k === state.rubricType ? ' selected' : '') + '>' + RUBRICS[k].label + '</option>';
             }).join('')
           + '</select>'
+          + '<button type="button" class="wd-ai-eval" id="wd-ai-eval">Gri ile değerlendir</button>'
+          + '<div class="wd-ai-msg" id="wd-ai-msg"></div>'
           + '<div id="wd-criteria"></div>'
           + '<div class="wd-overall">'
             + '<div class="wd-overall-label">Genel</div>'
@@ -529,6 +542,7 @@
     renderText();
     renderCriteria();
     renderOverall();
+    updateAiBtn();
     renderCommentsList();
     bindHandlers();
   }
@@ -639,6 +653,62 @@
     document.getElementById('wd-overall-unit').textContent = (v != null && rubric.unit) ? rubric.unit : '';
   }
 
+  function updateAiBtn() {
+    var btn = document.getElementById('wd-ai-eval');
+    if (!btn) return;
+    var rubric = RUBRICS[state.rubricType];
+    var exam = (state.writing.exam || '').toLowerCase();
+    var ok = rubric && rubric.criteria.length > 0 && (exam === 'ielts' || exam === 'ib' || exam === 'toefl');
+    btn.style.display = ok ? '' : 'none';
+    var msgEl = document.getElementById('wd-ai-msg');
+    if (msgEl) msgEl.style.display = ok ? '' : 'none';
+  }
+
+  async function aiEvaluate() {
+    var rubric = RUBRICS[state.rubricType];
+    if (!rubric || !rubric.criteria.length) return;
+    var text = state.writing.text || '';
+    var msgEl = document.getElementById('wd-ai-msg');
+    var btn = document.getElementById('wd-ai-eval');
+    if (!text.trim()) { msgEl.className = 'wd-ai-msg err'; msgEl.textContent = 'Öğrenci metni yok.'; return; }
+
+    btn.disabled = true;
+    msgEl.className = 'wd-ai-msg';
+    msgEl.textContent = 'Gri değerlendiriyor...';
+    try {
+      var r = await sb.functions.invoke('gri-evaluate-rubric', {
+        body: {
+          text: text,
+          prompt: state.writing.prompt_snapshot || '',
+          exam: state.writing.exam || '',
+          text_type: state.writing.text_type || '',
+          criteria: rubric.criteria,
+          unit: rubric.unit || ''
+        }
+      });
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) throw new Error(d.error || 'Değerlendirme başarısız.');
+      if (d.scores) {
+        Object.keys(d.scores).forEach(function (k) { state.scores[k] = d.scores[k]; });
+      }
+      if (d.summary) {
+        state.summary = d.summary;
+        var sumEl = document.getElementById('wd-summary');
+        if (sumEl) sumEl.value = d.summary;
+      }
+      renderCriteria();
+      renderOverall();
+      msgEl.className = 'wd-ai-msg ok';
+      msgEl.textContent = 'Gri taslağı doldurdu. Kontrol edip Kaydet.';
+    } catch (err) {
+      msgEl.className = 'wd-ai-msg err';
+      msgEl.textContent = 'Hata: ' + (err.message || err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function renderCommentsList() {
     var box = document.getElementById('wd-comments-list');
     if (state.comments.length === 0) {
@@ -717,6 +787,7 @@
       state.scores = {}; // reset scores
       renderCriteria();
       renderOverall();
+      updateAiBtn();
     });
 
     // Summary
@@ -726,6 +797,10 @@
 
     // Save
     document.getElementById('wd-save').addEventListener('click', saveEvaluation);
+
+    // Gri ile degerlendir (AI taslak)
+    var aiBtn = document.getElementById('wd-ai-eval');
+    if (aiBtn) aiBtn.addEventListener('click', aiEvaluate);
 
     // Comment overlay
     document.getElementById('wd-comment-cancel').addEventListener('click', closeCommentEditor);

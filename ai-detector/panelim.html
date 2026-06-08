@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Detector — Ogretmen Paneli — Gri English</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #2C5856;
+  --teal-dark: #1f3f3e;
+  --gold: #c89a3c;
+  --cream: #faf7ee;
+  --ink: #1b1b1b;
+  --muted: #6a6a6a;
+  --border: #e6e0d0;
+  --bad: #b94a4a;
+  --good: #4a8a52;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
+h1, h2, h3 { font-family: 'Lora', serif; color: var(--teal-dark); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+header { border-bottom: 2px solid var(--gold); padding-bottom: 16px; margin-bottom: 28px; }
+header h1 { font-size: 28px; }
+header p { color: var(--muted); margin-top: 6px; font-size: 14px; }
+.grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; }
+@media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+.card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+.card h2 { font-size: 20px; margin-bottom: 14px; }
+label { display: block; font-size: 13px; font-weight: 600; color: var(--teal-dark); margin: 12px 0 6px; }
+input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: #fffcf3; }
+textarea { resize: vertical; min-height: 110px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+button { background: var(--teal); color: white; border: none; padding: 11px 18px; border-radius: 6px; font: 600 14px 'Inter', sans-serif; cursor: pointer; margin-top: 14px; }
+button:hover { background: var(--teal-dark); }
+button.secondary { background: white; color: var(--teal); border: 1px solid var(--teal); }
+button.gold { background: var(--gold); color: white; }
+.muted { color: var(--muted); font-size: 13px; }
+.session-list { display: flex; flex-direction: column; gap: 10px; }
+.session-row { background: #fffcf3; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+.session-row:hover { border-color: var(--gold); }
+.session-info { flex: 1; }
+.session-name { font-weight: 600; color: var(--teal-dark); }
+.session-meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.session-meta span { margin-right: 14px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge.flag-paste { background: #fde6e6; color: var(--bad); }
+.badge.flag-clean { background: #e3f0e5; color: var(--good); }
+.badge.flag-active { background: #fff4d6; color: #8c6a18; }
+.notice { background: #fffaeb; border-left: 3px solid var(--gold); padding: 10px 14px; font-size: 13px; color: #6b5318; margin-top: 12px; border-radius: 4px; }
+.credit-line { padding: 10px 14px; background: #f5f0e3; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
+.share-box { margin-top: 14px; padding: 12px; background: #f5f0e3; border-radius: 6px; }
+.share-box .url { font-family: monospace; font-size: 12px; word-break: break-all; color: var(--teal-dark); background: white; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 8px; }
+.hidden { display: none; }
+.loader { text-align: center; padding: 40px; color: var(--muted); }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+.flex { display: flex; gap: 8px; align-items: center; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AI Detector</h1>
+    <p>Ogrenci yazilarini surec analizi ile inceleyin. Yapistirma, yazma hizi, silme davranisi ve odak kayiplari AI sinyallerini gosterir.</p>
+  </header>
+
+  <div id="auth-check" class="loader">Yetkilendiriliyor...</div>
+
+  <div id="main" class="hidden">
+    <div class="credit-line">
+      <strong>Krediniz:</strong> <span id="credits-display">—</span> kontrol  
+      <span class="muted"> | Ilk 2 kontrol ucretsiz, sonraki her kontrol 1 kredi</span>
+    </div>
+
+    <div class="grid">
+      <!-- SOL: yeni oturum -->
+      <section class="card">
+        <h2>Yeni Yazma Oturumu</h2>
+        <label for="student-name">Ogrenci Adi</label>
+        <input id="student-name" placeholder="Ornek: Ayca Yilmaz" />
+        
+        <label for="task-title">Gorev Basligi</label>
+        <input id="task-title" placeholder="Ornek: IELTS Task 2 Practice 1" />
+        
+        <label for="prompt">Yazma Soru / Konu</label>
+        <textarea id="prompt" placeholder="Ornek: Some people believe that..."></textarea>
+        
+        <label for="time-limit">Sure Limiti (dakika)</label>
+        <select id="time-limit">
+          <option value="20">20 dakika (Task 1)</option>
+          <option value="40" selected>40 dakika (Task 2)</option>
+          <option value="60">60 dakika (Full essay)</option>
+          <option value="120">120 dakika (Acik suresiz)</option>
+        </select>
+        
+        <button id="create-btn">Oturum Olustur</button>
+        
+        <div id="share-section" class="share-box hidden">
+          <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Ogrencinin Linki</p>
+          <div class="url" id="share-url"></div>
+          <div class="flex">
+            <button class="secondary" id="copy-btn">Kopyala</button>
+            <button class="gold" id="new-btn">Yeni Oturum</button>
+          </div>
+        </div>
+
+        <div class="notice">
+          <strong>Not:</strong> Ogrenciye linki gonder, kendi sayfasinda yazsin. Sen submit edildikten sonra burada raporu gorursun.
+        </div>
+      </section>
+
+      <!-- SAG: oturum listesi -->
+      <section class="card">
+        <h2>Oturumlar</h2>
+        <div id="session-list-container">
+          <div class="loader">Yukleniyor...</div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // ayni mevcut sayfalarda kullandiginiz key
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+async function init() {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (!user) {
+    document.getElementById('auth-check').textContent = 'Lutfen giris yapin.';
+    setTimeout(() => location.href = '/giris.html', 1500);
+    return;
+  }
+  
+  document.getElementById('auth-check').classList.add('hidden');
+  document.getElementById('main').classList.remove('hidden');
+  
+  await loadCredits(user.id);
+  await loadSessions(user.id);
+  
+  document.getElementById('create-btn').addEventListener('click', () => createSession(user.id));
+  document.getElementById('copy-btn').addEventListener('click', copyShareUrl);
+  document.getElementById('new-btn').addEventListener('click', resetForm);
+}
+
+async function loadCredits(userId) {
+  const { data, error } = await supabase
+    .from('user_credits')
+    .select('credits_remaining')
+    .eq('user_id', userId)
+    .single();
+  
+  const credits = data?.credits_remaining ?? 0;
+  document.getElementById('credits-display').textContent = credits;
+}
+
+async function loadSessions(userId) {
+  const { data, error } = await supabase
+    .from('writing_sessions')
+    .select('*')
+    .eq('teacher_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  
+  const container = document.getElementById('session-list-container');
+  if (error) { container.innerHTML = '<p class="muted">Yukleme hatasi.</p>'; return; }
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="empty">Henuz oturum yok. Sol taraftan yeni oturum olusturun.</div>';
+    return;
+  }
+  
+  container.innerHTML = '<div class="session-list">' + data.map(s => {
+    const isActive = !s.submitted_at;
+    const isPaste = s.largest_paste_words >= 50 || s.paste_word_total > (s.word_count * 0.5);
+    const badge = isActive
+      ? '<span class="badge flag-active">Devam Ediyor</span>'
+      : isPaste
+        ? '<span class="badge flag-paste">Buyuk Paste</span>'
+        : '<span class="badge flag-clean">Temiz</span>';
+    
+    return `
+      <div class="session-row">
+        <div class="session-info">
+          <div class="session-name">${escape(s.student_name)} ${badge}</div>
+          <div class="session-meta">
+            <span>${escape(s.task_title || 'Baslik yok')}</span>
+            <span>${s.word_count || 0} kelime</span>
+            <span>${s.paste_count || 0} paste</span>
+            <span>${formatDate(s.created_at)}</span>
+          </div>
+        </div>
+        <div class="flex">
+          ${isActive 
+            ? `<button class="secondary" onclick="window.open('/ai-detector/oturum.html?id=${s.id}', '_blank')">Onizle</button>`
+            : `<button onclick="location.href='/ai-detector/oynat.html?id=${s.id}'">Raporu Gor</button>`
+          }
+        </div>
+      </div>`;
+  }).join('') + '</div>';
+}
+
+async function createSession(userId) {
+  const student_name = document.getElementById('student-name').value.trim();
+  const task_title = document.getElementById('task-title').value.trim();
+  const prompt = document.getElementById('prompt').value.trim();
+  const time_limit_minutes = parseInt(document.getElementById('time-limit').value);
+  
+  if (!student_name) { toast('Ogrenci adi gerekli.'); return; }
+  if (!prompt) { toast('Yazma sorusu gerekli.'); return; }
+  
+  const { data, error } = await supabase
+    .from('writing_sessions')
+    .insert({ 
+      teacher_id: userId, 
+      student_name, 
+      task_title: task_title || null, 
+      prompt, 
+      time_limit_minutes 
+    })
+    .select()
+    .single();
+  
+  if (error) { toast('Hata: ' + error.message); return; }
+  
+  const url = `${location.origin}/ai-detector/oturum.html?id=${data.id}`;
+  document.getElementById('share-url').textContent = url;
+  document.getElementById('share-section').classList.remove('hidden');
+  toast('Oturum olusturuldu');
+  await loadSessions(userId);
+}
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url').textContent;
+  navigator.clipboard.writeText(url).then(() => toast('Link kopyalandi'));
+}
+
+function resetForm() {
+  document.getElementById('student-name').value = '';
+  document.getElementById('task-title').value = '';
+  document.getElementById('prompt').value = '';
+  document.getElementById('share-section').classList.add('hidden');
+}
+
+function escape(s) { return (s || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function formatDate(s) {
+  const d = new Date(s);
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Detector Raporu — Gri English</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #2C5856;
+  --teal-dark: #1f3f3e;
+  --gold: #c89a3c;
+  --cream: #faf7ee;
+  --ink: #1b1b1b;
+  --muted: #6a6a6a;
+  --border: #e6e0d0;
+  --bad: #b94a4a;
+  --good: #4a8a52;
+  --paste-bg: #ffd9d9;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
+h1, h2, h3 { font-family: 'Lora', serif; color: var(--teal-dark); }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+header { margin-bottom: 20px; }
+header h1 { font-size: 26px; }
+header .meta { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.back { color: var(--teal); text-decoration: none; font-size: 13px; font-weight: 600; }
+.back:hover { text-decoration: underline; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.metric { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.metric .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.metric .value { font-family: 'Lora', serif; font-size: 24px; color: var(--teal-dark); font-weight: 700; margin-top: 4px; }
+.metric.flag .value { color: var(--bad); }
+.metric.ok .value { color: var(--good); }
+
+.layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+@media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+.replay-area { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+.replay-area h2 { font-size: 18px; margin-bottom: 14px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.tab { padding: 8px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; }
+.tab.active { color: var(--teal); border-color: var(--gold); }
+
+.replay-text { 
+  background: #fffcf3; border: 1px solid var(--border); border-radius: 6px; 
+  padding: 18px; font: 15px/1.7 'Inter', sans-serif; white-space: pre-wrap; 
+  min-height: 320px; max-height: 500px; overflow-y: auto; 
+}
+.paste-segment { background: var(--paste-bg); padding: 1px 3px; border-radius: 2px; }
+.final-text { background: #fffcf3; border: 1px solid var(--border); border-radius: 6px; padding: 18px; font: 15px/1.7 'Inter', sans-serif; white-space: pre-wrap; min-height: 320px; max-height: 500px; overflow-y: auto; }
+
+.scrubber { margin-top: 16px; }
+.scrubber input { width: 100%; }
+.scrub-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.sidebar .card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+.sidebar h3 { font-size: 15px; margin-bottom: 10px; }
+.signal-row { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.signal-row:last-child { border-bottom: none; }
+.signal-row.bad { color: var(--bad); }
+.signal-row.warn { color: #8c6a18; }
+.signal-row.ok { color: var(--good); }
+.signal-icon { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+.signal-row.bad .signal-icon { background: var(--bad); }
+.signal-row.warn .signal-icon { background: var(--gold); }
+.signal-row.ok .signal-icon { background: var(--good); }
+
+.loader { text-align: center; padding: 60px; color: var(--muted); }
+.hidden { display: none; }
+
+.legend { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend .swatch { display: inline-block; width: 12px; height: 12px; background: var(--paste-bg); border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/ai-detector/panelim.html" class="back">← Panele Don</a>
+    <h1 id="hdr-name">AI Detector Raporu</h1>
+    <div class="meta" id="hdr-meta"></div>
+  </header>
+
+  <div id="loader" class="loader">Rapor hazirlaniyor...</div>
+
+  <div id="content" class="hidden">
+
+    <div class="metrics" id="metrics"></div>
+
+    <div class="layout">
+
+      <div class="replay-area">
+        <h2>Yazi Incelemesi</h2>
+        <div class="tabs">
+          <div class="tab active" data-tab="replay">Surec Oynatma</div>
+          <div class="tab" data-tab="final">Son Hali</div>
+          <div class="tab" data-tab="prompt">Soru</div>
+        </div>
+        
+        <div id="tab-replay">
+          <div class="replay-text" id="replay-text"></div>
+          <div class="legend"><span class="swatch"></span> Yapistirilan bolumler kirmizi arkaplan</div>
+          <div class="scrubber">
+            <input type="range" id="scrubber" min="0" max="100" value="100" step="1">
+            <div class="scrub-labels">
+              <span>0:00</span>
+              <span id="scrub-time">Son</span>
+              <span id="scrub-end">--:--</span>
+            </div>
+          </div>
+        </div>
+        
+        <div id="tab-final" class="hidden">
+          <div class="final-text" id="final-text"></div>
+        </div>
+        
+        <div id="tab-prompt" class="hidden">
+          <div class="final-text" id="prompt-display"></div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="card">
+          <h3>Sinyaller</h3>
+          <div id="signals"></div>
+        </div>
+        <div class="card">
+          <h3>Olay Sayilari</h3>
+          <div id="event-stats"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const params = new URLSearchParams(location.search);
+const sessionId = params.get('id');
+
+let session = null;
+let events = [];
+let pasteSegments = [];
+
+async function init() {
+  if (!sessionId) { document.getElementById('loader').textContent = 'Gecersiz link.'; return; }
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { location.href = '/giris.html'; return; }
+  
+  const { data: s, error } = await supabase
+    .from('writing_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+  
+  if (error || !s) { document.getElementById('loader').textContent = 'Oturum bulunamadi.'; return; }
+  if (!s.submitted_at) { document.getElementById('loader').textContent = 'Bu oturum henuz tamamlanmamis.'; return; }
+  
+  session = s;
+  
+  const { data: ev } = await supabase
+    .from('writing_events')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('event_time_ms', { ascending: true });
+  
+  events = ev || [];
+  
+  document.getElementById('hdr-name').textContent = s.student_name;
+  document.getElementById('hdr-meta').textContent = `${s.task_title || 'Baslik yok'} | ${formatDate(s.submitted_at)}`;
+  
+  renderMetrics(s);
+  renderSignals(s);
+  renderEventStats();
+  renderFinal(s);
+  setupTabs();
+  setupReplay(s);
+  
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('content').classList.remove('hidden');
+}
+
+function renderMetrics(s) {
+  const dur = s.duration_seconds || 0;
+  const wpm = dur > 0 ? Math.round((s.word_count * 60) / dur) : 0;
+  const pasteRatio = s.word_count > 0 ? Math.round((s.paste_word_total * 100) / s.word_count) : 0;
+  const pasteFlag = s.largest_paste_words >= 50 || pasteRatio > 50;
+  
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="label">Kelime</div>
+      <div class="value">${s.word_count || 0}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Sure</div>
+      <div class="value">${formatDuration(dur)}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Hiz</div>
+      <div class="value">${wpm} <span style="font-size:14px;color:var(--muted);">kpm</span></div>
+    </div>
+    <div class="metric ${s.paste_count > 0 ? 'flag' : 'ok'}">
+      <div class="label">Paste Sayisi</div>
+      <div class="value">${s.paste_count || 0}</div>
+    </div>
+    <div class="metric ${pasteFlag ? 'flag' : 'ok'}">
+      <div class="label">Paste Orani</div>
+      <div class="value">${pasteRatio}%</div>
+    </div>
+    <div class="metric ${s.largest_paste_words >= 50 ? 'flag' : 'ok'}">
+      <div class="label">En Buyuk Paste</div>
+      <div class="value">${s.largest_paste_words || 0} <span style="font-size:14px;color:var(--muted);">kelime</span></div>
+    </div>
+  `;
+}
+
+function renderSignals(s) {
+  const signals = [];
+  
+  if (s.largest_paste_words >= 50) {
+    signals.push({ level: 'bad', text: `Buyuk yapistirma: ${s.largest_paste_words} kelimelik tek paste. Olasi kopyalama.` });
+  } else if (s.largest_paste_words >= 20) {
+    signals.push({ level: 'warn', text: `Orta boy yapistirma: ${s.largest_paste_words} kelime. Inceleyin.` });
+  }
+  
+  const pasteRatio = s.word_count > 0 ? (s.paste_word_total * 100) / s.word_count : 0;
+  if (pasteRatio > 50) {
+    signals.push({ level: 'bad', text: `Toplam metnin %${Math.round(pasteRatio)}'si yapistirma. Cogu yazi disardan gelmis.` });
+  } else if (pasteRatio > 25) {
+    signals.push({ level: 'warn', text: `Metnin %${Math.round(pasteRatio)}'si yapistirma kaynakli.` });
+  }
+  
+  if (s.duration_seconds > 0 && s.word_count > 0) {
+    const wpm = (s.word_count * 60) / s.duration_seconds;
+    if (wpm > 60) {
+      signals.push({ level: 'warn', text: `Yazma hizi yuksek: ${Math.round(wpm)} kelime/dakika. Tipik insan 20-40 kpm.` });
+    }
+  }
+  
+  const deleteEvents = events.filter(e => e.event_type === 'delete').length;
+  if (s.word_count > 100 && deleteEvents < 5) {
+    signals.push({ level: 'warn', text: `Cok az silme (${deleteEvents}). Dogal yazimda revizyon olur.` });
+  }
+  
+  const focusLost = events.filter(e => e.event_type === 'focus_lost').length;
+  if (focusLost > 3) {
+    signals.push({ level: 'warn', text: `Pencere odagi ${focusLost} kez kayboldu. Baska sekme veya program.` });
+  }
+  
+  if (signals.length === 0) {
+    signals.push({ level: 'ok', text: 'Sinyallerde anormallik yok. Yazi sureci dogal gozukuyor.' });
+  }
+  
+  document.getElementById('signals').innerHTML = signals.map(sig => 
+    `<div class="signal-row ${sig.level}"><span class="signal-icon"></span>${escape(sig.text)}</div>`
+  ).join('');
+}
+
+function renderEventStats() {
+  const types = {};
+  events.forEach(e => types[e.event_type] = (types[e.event_type] || 0) + 1);
+  const rows = Object.entries(types).map(([type, count]) => 
+    `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">
+      <span style="color:var(--muted);">${type}</span><strong>${count}</strong>
+    </div>`
+  ).join('');
+  document.getElementById('event-stats').innerHTML = rows || '<p style="color:var(--muted);font-size:13px;">Olay verisi yok.</p>';
+}
+
+function renderFinal(s) {
+  // Final text icinde paste'leri vurgula
+  let text = s.final_text || '';
+  const pastes = events.filter(e => e.event_type === 'paste');
+  pasteSegments = pastes.map(p => p.payload?.text).filter(Boolean);
+  
+  let html = escape(text);
+  pasteSegments.forEach(p => {
+    if (p.length > 5) {
+      const escaped = escape(p);
+      html = html.replace(escaped, `<span class="paste-segment">${escaped}</span>`);
+    }
+  });
+  document.getElementById('final-text').innerHTML = html;
+  document.getElementById('prompt-display').textContent = s.prompt || '';
+}
+
+function setupTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      ['replay', 'final', 'prompt'].forEach(name => {
+        document.getElementById('tab-' + name).classList.toggle('hidden', name !== tab.dataset.tab);
+      });
+    });
+  });
+}
+
+function setupReplay(s) {
+  const scrubber = document.getElementById('scrubber');
+  const totalMs = s.duration_seconds * 1000;
+  document.getElementById('scrub-end').textContent = formatDuration(s.duration_seconds);
+  
+  // Snapshot'lara gore reconstruct
+  const snapshots = events.filter(e => e.event_type === 'snapshot');
+  const finalSnapshot = { event_time_ms: totalMs, payload: { text: s.final_text } };
+  const allSnapshots = [...snapshots, finalSnapshot];
+  
+  function updateReplay(pct) {
+    const targetMs = (pct / 100) * totalMs;
+    document.getElementById('scrub-time').textContent = formatDuration(targetMs / 1000);
+    
+    // En yakin snapshot
+    let chosen = allSnapshots[0];
+    for (const sn of allSnapshots) {
+      if (sn.event_time_ms <= targetMs) chosen = sn;
+      else break;
+    }
+    
+    const text = chosen?.payload?.text || '';
+    let html = escape(text);
+    // O ana kadarki paste'leri vurgula
+    events.filter(e => e.event_type === 'paste' && e.event_time_ms <= targetMs).forEach(p => {
+      const ptext = p.payload?.text;
+      if (ptext && ptext.length > 5) {
+        const escaped = escape(ptext);
+        html = html.replace(escaped, `<span class="paste-segment">${escaped}</span>`);
+      }
+    });
+    document.getElementById('replay-text').innerHTML = html;
+  }
+  
+  scrubber.addEventListener('input', (e) => updateReplay(parseInt(e.target.value)));
+  updateReplay(100);
+}
+
+function escape(s) { return (s || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function formatDate(s) {
+  const d = new Date(s);
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDuration(s) {
+  s = Math.max(0, Math.floor(s));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+init();
+</script>
+</body>
+</html>

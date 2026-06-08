@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Araçları — Gri English</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/main.css">
+<link rel="stylesheet" href="../assets/site-overrides.css">
+<link rel="stylesheet" href="/assets/app-mode.css">
+<link rel="stylesheet" href="/assets/pwa-install.css">
 <style>
 :root {
   --teal: #2C5856; --teal-dark: #1f3f3e; --gold: #c89a3c; --cream: #faf7ee;
@@ -14,10 +18,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
 h1, h2, h3 { font-family: 'Lora', serif; color: var(--teal-dark); }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
-header { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-header h1 { font-size: 26px; }
-header p { color: var(--muted); margin-top: 4px; font-size: 14px; }
+.ai-wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+.ai-pagehead { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ai-pagehead h1 { font-size: 26px; }
+.ai-pagehead p { color: var(--muted); margin-top: 4px; font-size: 14px; }
 .credit-chip { font-size: 13px; background: var(--bg-soft); padding: 8px 14px; border-radius: 20px; white-space: nowrap; }
 
 .layout { display: grid; grid-template-columns: 210px 1fr; gap: 24px; align-items: start; }
@@ -39,11 +43,11 @@ textarea.essay:focus { outline: 2px solid var(--gold); border-color: var(--gold)
 .opt label { display: block; font-size: 12px; font-weight: 600; color: var(--teal-dark); margin-bottom: 4px; }
 .opt select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: #fffcf3; }
 .ta-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 8px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
-button:hover { background: var(--teal-dark); }
-button:disabled { opacity: 0.55; cursor: not-allowed; }
-button.secondary { background: white; color: var(--teal); border: 1px solid var(--teal); }
-button.gold { background: var(--gold); color: white; }
+.ai-wrap button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 8px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
+.ai-wrap button:hover { background: var(--teal-dark); }
+.ai-wrap button:disabled { opacity: 0.55; cursor: not-allowed; }
+.ai-wrap button.secondary { background: white; color: var(--teal); border: 1px solid var(--teal); }
+.ai-wrap button.gold { background: var(--gold); color: white; }
 .char-count { margin-left: auto; font-size: 13px; color: var(--muted); }
 .muted { color: var(--muted); font-size: 13px; }
 .hidden { display: none; }
@@ -95,14 +99,6 @@ button.gold { background: var(--gold); color: white; }
 .h-meta { font-size: 12px; color: var(--muted); }
 .mini-pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 
-.site-bar { background: white; border-bottom: 1px solid var(--border); }
-.site-bar .inner { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.site-bar .brand { font-family: 'Lora', serif; font-weight: 700; font-size: 20px; color: var(--teal-dark); text-decoration: none; }
-.site-bar .brand .it { font-style: italic; color: var(--teal); }
-.site-bar nav { display: flex; gap: 18px; margin-left: auto; flex-wrap: wrap; }
-.site-bar nav a { color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 500; }
-.site-bar nav a:hover { color: var(--gold); }
-@media (max-width: 600px) { .site-bar nav { margin-left: 0; width: 100%; gap: 12px; } }
 
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
 .toast.show { opacity: 1; }
@@ -110,27 +106,93 @@ button.gold { background: var(--gold); color: white; }
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
-<header class="site-bar">
-  <div class="inner">
-    <a href="../index.html" class="brand">Gri <span class="it">English</span></a>
-    <nav>
-      <a href="../index.html">Ana Sayfa</a>
-      <a href="../soru-bankasi.html">Soru Bankasi</a>
-      <a href="../kelime-bankasi.html">Kelime Bankasi</a>
-      <a href="../yazi-pratigi.html">Yazi Pratigi</a>
-      <a href="../panelim.html">Calisma Masam</a>
-    </nav>
-  </div>
-</header>
+<header class="site-header">
+    <div class="wrap nav">
+      <a href="../index.html" class="brand">
+        Gri <span class="it">English</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-dropdown" data-dropdown="exams">
+            <a href="../sat.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle><span class="nw1">Sınav <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg></span><span class="nw2">Bilgisi</span></a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="../sat.html">SAT</a></li>
+              <li><a href="../ielts.html">IELTS</a></li>
+              <li><a href="../toefl.html">TOEFL</a></li>
+              <li><a href="../ib.html">IB</a></li>
+              <li><a href="../udsp.html">UDSP</a></li>
+              <li><a href="../ydt.html">YDT</a></li>
+              <li><a href="../yds.html">YDS/YÖKDİL</a></li>
+            </ul>
+          </li>
+          <li class="nav-dropdown" data-dropdown="bank">
+            <a href="../soru-bankasi.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle><span class="nw1">Soru <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg></span><span class="nw2">Bankası</span></a>
+            <ul class="nav-dropdown-menu">
+              <li class="nav-submenu">
+                <a href="../sat-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>SAT</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="../sat-soru-bankasi-rw.html">Reading &amp; Writing</a></li>
+                  <li><a href="../sat-soru-bankasi-math.html">Math</a></li>
+                </ul>
+              </li>
+              <li class="nav-submenu">
+                <a href="../ielts-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>IELTS</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="../ielts-deneme.html">Tam Deneme</a></li>
+                  <li><a href="../ielts-bolum-calisma.html">Bölüm Bazlı</a></li>
+                </ul>
+              </li>
+              <li><a href="../toefl-soru-bankasi.html">TOEFL</a></li>
+              <li><a href="../udsp-soru-bankasi.html">UDSP</a></li>
+              <li><a href="../ydt-soru-bankasi.html">YDT</a></li>
+              <li class="nav-submenu">
+                <a href="../yds-soru-bankasi.html" class="nav-submenu-trigger" data-submenu-toggle>
+                  <span>YDS/YÖKDİL</span>
+                  <svg class="caret-right" viewBox="0 0 12 12" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M4 2l4 4-4 4z"/></svg>
+                </a>
+                <ul class="nav-submenu-list">
+                  <li><a href="../yds-soru-bankasi-yds.html">YDS</a></li>
+                  <li><a href="../yds-soru-bankasi-yokdil-fen.html">YÖKDİL Fen</a></li>
+                  <li><a href="../yds-soru-bankasi-yokdil-sosyal.html">YÖKDİL Sosyal</a></li>
+                  <li><a href="../yds-soru-bankasi-yokdil-saglik.html">YÖKDİL Sağlık</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li><a href="../kelime-bankasi.html"><span class="nw1">Kelime</span><span class="nw2">Bankası</span></a></li>
+          <li class="nav-dropdown" data-dropdown="notes">
+            <a href="../ders-notlari.html" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" data-dropdown-toggle><span class="nw1">Ders <svg class="caret" viewBox="0 0 12 12" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M2 4l4 4 4-4z"/></svg></span><span class="nw2">Notları</span></a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="../sat-ders-notlari.html">SAT</a></li>
+              <li><a href="../ielts-ders-notlari.html">IELTS</a></li>
+              <li><a href="../toefl-ders-notlari.html">TOEFL</a></li>
+              <li><a href="../ib-ders-notlari.html">IB</a></li>
+              <li><a href="../ydt-ders-notlari.html">YDT</a></li>
+              <li><a href="../yds-ders-notlari.html">YDS/YÖKDİL</a></li>
+            </ul>
+          </li>
+          <li><a href="../yazi-pratigi.html"><span class="nw1">Yazı</span><span class="nw2">Pratiği</span></a></li>
+          <li><a href="panelim.html"><span class="nw1">AI</span><span class="nw2">Detector</span></a></li>
+          <li><a href="../calisma-paketleri.html"><span class="nw1">Çalışma</span><span class="nw2">Paketleri</span></a></li>
+          <li><a href="../iletisim.html"><span class="nw1">Bize</span><span class="nw2">Ulaşın</span></a></li>
+          <li id="navUserMount" class="nav-user-mount"></li>
+        </ul>
+      </nav>
 
-<div class="wrap">
-  <header>
+<div class="ai-wrap">
+  <div class="ai-pagehead">
     <div>
       <h1 id="hdr-title">AI Araçları</h1>
       <p id="hdr-desc">Soldan bir araç seç.</p>
     </div>
     <div class="credit-chip" id="credit-chip">—</div>
-  </header>
+  </div>
 
   <div id="auth-check" class="loader">Yetkilendiriliyor...</div>
 
@@ -175,6 +237,11 @@ button.gold { background: var(--gold); color: white; }
 
 <div class="toast" id="toast"></div>
 
+<script src="../assets/theme.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="../assets/site-config.js" defer></script>
+<script src="/assets/app-mode.js" defer></script>
+<script src="/assets/pwa-install.js" defer></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -269,7 +336,7 @@ async function setChip(feature) {
       const bonusRem = Math.max(0, Number((data && data.bonus_quota) || 0) - Number((data && data.bonus_used) || 0));
       const bonusChecks = Math.floor(bonusRem / BONUS_COST_DETECTOR);
       document.getElementById('credit-chip').innerHTML =
-        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Token ile: <strong>' + bonusChecks + '</strong> kontrol';
+        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Bakiye: <strong>' + bonusRem + '</strong> token (kontrol 10 token)';
     } else {
       const [{ data: tu }, { data: q }] = await Promise.all([
         supabase.from('tool_usage_daily').select('used_date, used_count').eq('user_id', CURRENT_USER.id).eq('feature', feature).maybeSingle(),
@@ -280,7 +347,7 @@ async function setChip(feature) {
       const dailyFree = Math.max(0, FREE_PER_DAY - used);
       const bonusRem = Math.max(0, Number((q && q.bonus_quota) || 0) - Number((q && q.bonus_used) || 0));
       document.getElementById('credit-chip').innerHTML =
-        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Token: <strong>' + bonusRem + '</strong>';
+        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Bakiye: <strong>' + bonusRem + '</strong> token (1 token)';
     }
   } catch (e) { document.getElementById('credit-chip').textContent = ''; }
 }
@@ -480,8 +547,10 @@ function renderResult(a, original) {
   if (!a) return;
   LAST_TEXT = original || '';
   const band = a.band || '—', low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0), mid = Math.round((low + high) / 2), color = bandColor(band);
-  const flaggedHtml = (a.flagged_sentences && a.flagged_sentences.length)
-    ? a.flagged_sentences.map(f => '<div class="reason-item"><div class="rtext">"' + escapeHtml(f.text) + '"</div><div class="rwhy">' + escapeHtml(f.reason) + '</div></div>').join('')
+  const fl = a.flagged_sentences || [];
+  const flaggedHtml = fl.length
+    ? fl.slice(0, 6).map(f => '<div class="reason-item"><div class="rtext">"' + escapeHtml(f.text) + '"</div><div class="rwhy">' + escapeHtml(f.reason) + '</div></div>').join('') +
+      (fl.length > 6 ? '<p class="muted" style="margin-top:8px;">...ve ' + (fl.length - 6) + ' cumle daha isaretlendi (metinde kirmizi).</p>' : '')
     : '<p class="muted">Belirgin sekilde isaretlenecek cumle bulunmadi.</p>';
   const textHtml = original ? highlightText(original, a.flagged_sentences) : '<span class="muted">Metin saklanmadi.</span>';
   document.getElementById('result').innerHTML =

@@ -87,6 +87,12 @@ textarea.essay:focus { outline: 2px solid var(--gold); border-color: var(--gold)
 .reason-item .rtext { font-style: italic; }
 .reason-item .rwhy { color: var(--muted); }
 .esl-box { background: #f1f6f1; border-radius: 6px; padding: 12px 14px; font-size: 14px; }
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; font-size: 13px; margin-bottom: 12px; }
+.sig-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f0ead9; padding: 5px 0; }
+.sig-bars { display: flex; flex-direction: column; gap: 7px; }
+.sig-bar .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.sig-bar .track { height: 6px; background: #eee; border-radius: 4px; overflow: hidden; }
+.sig-bar .fill { height: 100%; background: var(--teal); }
 .disclaimer { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
 .paywall { background: #fff5f5; border: 1px solid #f0d0d0; border-radius: 8px; padding: 16px; margin-top: 18px; }
 .paywall a { display: inline-block; margin: 6px 8px 0 0; padding: 8px 14px; background: var(--gold); color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; }
@@ -545,6 +551,32 @@ function highlightText(original, flagged) {
   });
   return html.replace(/\n/g, '<br>');
 }
+function sigBar(label, val) {
+  const v = Math.max(0, Math.min(100, Number(val) || 0));
+  return '<div class="sig-bar"><div class="lbl"><span>' + label + '</span><span>' + v + '</span></div><div class="track"><div class="fill" style="width:' + v + '%"></div></div></div>';
+}
+function signalsHtml(a) {
+  const s = a.signals; if (!s) return '';
+  const sc = s.scores || {};
+  const row = (l, v) => '<div class="sig-row"><span>' + l + '</span><span>' + v + '</span></div>';
+  return '<div class="detail"><h3>Sinyaller (rubrik)</h3>' +
+    '<div class="sig-grid">' +
+      row('Hata yogunlugu', (s.error_density != null ? s.error_density : '-') + ' / 100 kelime (' + (s.errors_count || 0) + ' hata)') +
+      row('Cumle cesitliligi (cv)', s.burstiness_cv != null ? s.burstiness_cv : '-') +
+      row('Baglac orani', s.connector_rate != null ? s.connector_rate : '-') +
+      row('Kelime cesitliligi (ttr)', s.ttr != null ? s.ttr : '-') +
+      row('Cumle sayisi', s.sentence_count != null ? s.sentence_count : '-') +
+      row('Ort. cumle uzunlugu', s.mean_len != null ? s.mean_len : '-') +
+    '</div>' +
+    '<div class="sig-bars">' +
+      sigBar('Hata (AI yonu)', sc.error_ai) +
+      sigBar('Idiomatiklik', sc.idiom_ai) +
+      sigBar('Burstiness', sc.burst_ai) +
+      sigBar('Sablon yapi', sc.structure_ai) +
+      sigBar('Baglac', sc.connector_ai) +
+    '</div></div>';
+}
+
 function renderResult(a, original) {
   if (!a) return;
   LAST_TEXT = original || '';
@@ -565,6 +597,7 @@ function renderResult(a, original) {
     '<div class="detail"><h3>Ozet</h3><p style="font-size:14px;">' + escapeHtml(a.summary || '') + '</p></div>' +
     '<div class="detail"><h3>Isaretli Cumleler ve Gerekce</h3>' + flaggedHtml + '</div>' +
     '<div class="detail"><h3>ESL Degerlendirmesi</h3><div class="esl-box">' + escapeHtml(a.esl_note || '') + '</div></div>' +
+    signalsHtml(a) +
     '<div class="disclaimer">Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin.</div>' +
     '<button class="gold" id="pdf-btn" style="margin-top:14px;">Rapor (PDF)</button>';
   document.getElementById('pdf-btn').addEventListener('click', () => exportPdf(a, LAST_TEXT));

@@ -764,6 +764,9 @@
       document.querySelectorAll('.task-section').forEach(el => el.classList.toggle('active', el.dataset.partNumber == n));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.part == n));
       window.scrollTo(0, 0);
+      // Sekme gizliyken autoGrow scrollHeight 0 okur, gorununce yeniden buyut
+      var ta = document.getElementById('editor-' + n);
+      if (ta) autoGrowTextarea(ta);
     }
 
     function renderTasks() {
@@ -952,53 +955,53 @@
     });
 
     document.getElementById('confirmSubmit').addEventListener('click', async () => {
-      if (state.finished || !state.selectedPackage) return;
-      state.finished = true;
+      if (!state.selectedPackage) { alert('Lütfen bir paket seç.'); return; }
+      if (state.finished) return;
       const btn = document.getElementById('confirmSubmit');
+      const prevText = btn.textContent;
+      state.finished = true;
       btn.textContent = 'Gönderiliyor…';
       btn.disabled = true;
 
-      const elapsed = currentElapsed();
-      const w1 = countWords(state.essays[1] || '');
-      const w2 = countWords(state.essays[2] || '');
+      try {
+        const elapsed = currentElapsed();
+        const w1 = countWords(state.essays[1] || '');
+        const w2 = countWords(state.essays[2] || '');
 
-      const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
-        user_id: state.user.id,
-        test_id: state.test.id,
-        task1_essay: state.essays[1] || '',
-        task2_essay: state.essays[2] || '',
-        task1_word_count: w1,
-        task2_word_count: w2,
-        package_type: state.selectedPackage,
-        payment_status: state.selectedPackage === 'draft' ? 'draft' : 'unpaid',
-        submitted_at: new Date().toISOString(),
-        time_spent_seconds: elapsed,
-      }).select().single();
+        const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
+          user_id: state.user.id,
+          test_id: state.test.id,
+          task1_essay: state.essays[1] || '',
+          task2_essay: state.essays[2] || '',
+          task1_word_count: w1,
+          task2_word_count: w2,
+          package_type: state.selectedPackage,
+          payment_status: state.selectedPackage === 'draft' ? 'draft' : 'unpaid',
+          submitted_at: new Date().toISOString(),
+          time_spent_seconds: elapsed,
+        }).select().single();
 
-      if (error) {
-        alert('Gönderim hatası: ' + error.message);
+        if (error) throw error;
+        if (!sub || !sub.id) throw new Error('Kayıt oluşturulamadı (boş yanıt).');
+
+        localStorage.removeItem('ielts_writing_' + TEST_SLUG);
+
+        if (typeof window.triggerBadgeCheck === 'function') {
+          window.triggerBadgeCheck({ force: true });
+        }
+
+        if (state.selectedPackage === 'draft') {
+          window.location.href = 'ielts-deneme.html?saved=' + sub.id;
+        } else if (state.selectedPackage === 'gri_ai') {
+          window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
+        } else {
+          window.location.href = 'https://www.shopier.com/47211439';
+        }
+      } catch (err) {
+        alert('Gönderim hatası: ' + (err && err.message ? err.message : err));
         state.finished = false;
-        btn.textContent = 'Devam Et';
+        btn.textContent = prevText && prevText !== 'Gönderiliyor…' ? prevText : 'Kaydet ve Bitir';
         btn.disabled = false;
-        return;
-      }
-
-      localStorage.removeItem('ielts_writing_' + TEST_SLUG);
-
-      // Rozet değerlendirmesi (writing_count + potentially writing_band sonradan grade verildiğinde)
-      if (typeof window.triggerBadgeCheck === 'function') {
-        window.triggerBadgeCheck({ force: true });
-      }
-
-      if (state.selectedPackage === 'draft') {
-        // Sadece kaydet
-        window.location.href = 'ielts-deneme.html?saved=' + sub.id;
-      } else if (state.selectedPackage === 'gri_ai') {
-        // Gri AI değerlendirme — yeni feedback sayfasına git
-        window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
-      } else {
-        // Tüm ücretli paketler Shopier'a yönlendirilir (Task 1, Task 2, Task 1+2)
-        window.location.href = 'https://www.shopier.com/47211439';
       }
     });
 

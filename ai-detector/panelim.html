@@ -3,21 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Detector — Gri English</title>
+<title>AI Araçları — Gri English</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --teal: #2C5856;
-  --teal-dark: #1f3f3e;
-  --gold: #c89a3c;
-  --cream: #faf7ee;
-  --ink: #1b1b1b;
-  --muted: #6a6a6a;
-  --border: #e6e0d0;
-  --bad: #b94a4a;
-  --warn: #c08a2c;
-  --good: #4a8a52;
-  --bg-soft: #f5f0e3;
+  --teal: #2C5856; --teal-dark: #1f3f3e; --gold: #c89a3c; --cream: #faf7ee;
+  --ink: #1b1b1b; --muted: #6a6a6a; --border: #e6e0d0; --bad: #b94a4a;
+  --warn: #c08a2c; --good: #4a8a52; --bg-soft: #f5f0e3;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
@@ -37,14 +29,15 @@ header p { color: var(--muted); margin-top: 4px; font-size: 14px; }
 .tool-item.active { background: var(--teal); color: white; font-weight: 600; }
 .tool-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex: none; }
 .tool-item.active .dot { background: white; }
-.tool-item.soon { color: var(--muted); cursor: default; }
-.tool-item.soon .dot { background: #cdc6b6; }
-.tool-item .soon-tag { margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
 
 .panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
-.ta-wrap { position: relative; }
-textarea#essay { width: 100%; min-height: 220px; max-height: 60vh; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font: 15px/1.6 'Inter', sans-serif; background: #fffcf3; resize: vertical; overflow-y: auto; }
-textarea#essay:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.panel h2 { font-size: 18px; margin-bottom: 4px; }
+.panel .pdesc { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+textarea.essay { width: 100%; min-height: 220px; max-height: 60vh; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font: 15px/1.6 'Inter', sans-serif; background: #fffcf3; resize: vertical; overflow-y: auto; }
+textarea.essay:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.opts { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.opt label { display: block; font-size: 12px; font-weight: 600; color: var(--teal-dark); margin-bottom: 4px; }
+.opt select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: #fffcf3; }
 .ta-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
 button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 8px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
 button:hover { background: var(--teal-dark); }
@@ -56,6 +49,17 @@ button.gold { background: var(--gold); color: white; }
 .hidden { display: none; }
 .loader { text-align: center; padding: 40px; color: var(--muted); }
 
+/* Tool output */
+.out-box { margin-top: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fffcf3; font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+.out-head { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.out-head h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.corr-item { font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid #f0ead9; }
+.corr-item:last-child { border-bottom: none; }
+.corr-item .co { color: var(--bad); text-decoration: line-through; }
+.corr-item .cc { color: var(--good); font-weight: 600; }
+.corr-item .ce { color: var(--muted); display: block; margin-top: 2px; }
+
+/* Detector sonuc */
 #result { margin-top: 22px; }
 .res-top { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: #fffcf3; }
 .donut { flex: none; }
@@ -68,12 +72,10 @@ button.gold { background: var(--gold); color: white; }
 .band-Orta { background: #fbf0d8; color: var(--warn); }
 .band-Dusuk { background: #e3f0e5; color: var(--good); }
 .res-headline .range { font-size: 13px; color: var(--muted); margin-top: 6px; }
-
 .text-box { margin-top: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 15px; line-height: 1.7; background: white; }
 .text-box mark.ai-hl { background: #fde0d0; color: #8a2f1a; padding: 1px 2px; border-radius: 3px; }
 .legend { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .legend mark { background: #fde0d0; padding: 1px 6px; border-radius: 3px; }
-
 .detail { margin-top: 18px; }
 .detail h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 8px; }
 .reason-item { font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid #f0ead9; }
@@ -82,7 +84,7 @@ button.gold { background: var(--gold); color: white; }
 .reason-item .rwhy { color: var(--muted); }
 .esl-box { background: #f1f6f1; border-radius: 6px; padding: 12px 14px; font-size: 14px; }
 .disclaimer { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
-.paywall { background: #fff5f5; border: 1px solid #f0d0d0; border-radius: 8px; padding: 16px; }
+.paywall { background: #fff5f5; border: 1px solid #f0d0d0; border-radius: 8px; padding: 16px; margin-top: 18px; }
 .paywall a { display: inline-block; margin: 6px 8px 0 0; padding: 8px 14px; background: var(--gold); color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; }
 
 .history { margin-top: 26px; }
@@ -93,9 +95,6 @@ button.gold { background: var(--gold); color: white; }
 .h-meta { font-size: 12px; color: var(--muted); }
 .mini-pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
-.toast.show { opacity: 1; }
-
 .site-bar { background: white; border-bottom: 1px solid var(--border); }
 .site-bar .inner { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .site-bar .brand { font-family: 'Lora', serif; font-weight: 700; font-size: 20px; color: var(--teal-dark); text-decoration: none; }
@@ -104,6 +103,9 @@ button.gold { background: var(--gold); color: white; }
 .site-bar nav a { color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 500; }
 .site-bar nav a:hover { color: var(--gold); }
 @media (max-width: 600px) { .site-bar nav { margin-left: 0; width: 100%; gap: 12px; } }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
+.toast.show { opacity: 1; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 </head>
@@ -120,13 +122,14 @@ button.gold { background: var(--gold); color: white; }
     </nav>
   </div>
 </header>
+
 <div class="wrap">
   <header>
     <div>
-      <h1>AI Detector</h1>
-      <p>Metni yapistir, tahmini yapay zeka olasiligini ve isaretli cumleleri gor.</p>
+      <h1 id="hdr-title">AI Araçları</h1>
+      <p id="hdr-desc">Soldan bir araç seç.</p>
     </div>
-    <div class="credit-chip"><strong>Kredi:</strong> <span id="credits-display">—</span> &nbsp;|&nbsp; ilk 2 ucretsiz, sonra 1 kredi</div>
+    <div class="credit-chip" id="credit-chip">—</div>
   </header>
 
   <div id="auth-check" class="loader">Yetkilendiriliyor...</div>
@@ -136,33 +139,34 @@ button.gold { background: var(--gold); color: white; }
 
       <nav class="tools" id="tools">
         <div class="tool-item active" data-tool="detector"><span class="dot"></span> AI Detector</div>
-        <div class="tool-item soon" data-tool="humanizer"><span class="dot"></span> AI Humanizer <span class="soon-tag">Yakinda</span></div>
-        <div class="tool-item soon" data-tool="plagiarism"><span class="dot"></span> Intihal Kontrolu <span class="soon-tag">Yakinda</span></div>
-        <div class="tool-item soon" data-tool="summarizer"><span class="dot"></span> Ozetleyici <span class="soon-tag">Yakinda</span></div>
-        <div class="tool-item soon" data-tool="paraphraser"><span class="dot"></span> Paraphraser <span class="soon-tag">Yakinda</span></div>
-        <div class="tool-item soon" data-tool="grammar"><span class="dot"></span> Gramer Kontrolu <span class="soon-tag">Yakinda</span></div>
-        <div class="tool-item soon" data-tool="translator"><span class="dot"></span> Ceviri <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item" data-tool="humanizer"><span class="dot"></span> AI Humanizer</div>
+        <div class="tool-item" data-tool="summarizer"><span class="dot"></span> Ozetleyici</div>
+        <div class="tool-item" data-tool="paraphraser"><span class="dot"></span> Paraphraser</div>
+        <div class="tool-item" data-tool="grammar"><span class="dot"></span> Gramer Kontrolu</div>
+        <div class="tool-item" data-tool="translator"><span class="dot"></span> Ceviri</div>
       </nav>
 
       <div>
-        <div class="panel">
-          <div class="ta-wrap">
-            <textarea id="essay" placeholder="Kontrol edilecek Ingilizce metni buraya yapistir..."></textarea>
+        <!-- DETECTOR PANELI -->
+        <div id="panel-detector">
+          <div class="panel">
+            <textarea id="essay" class="essay" placeholder="Kontrol edilecek Ingilizce metni buraya yapistir..."></textarea>
+            <div class="ta-bar">
+              <button id="check-btn">Kontrol Et</button>
+              <button class="secondary" id="upload-btn">Dosya Yukle</button>
+              <input type="file" id="file-input" accept=".txt,.docx" class="hidden" />
+              <span class="char-count"><span id="char-now">0</span> / 15000 karakter</span>
+            </div>
           </div>
-          <div class="ta-bar">
-            <button id="check-btn">Kontrol Et</button>
-            <button class="secondary" id="upload-btn">Dosya Yukle</button>
-            <input type="file" id="file-input" accept=".txt,.docx" class="hidden" />
-            <span class="char-count"><span id="char-now">0</span> / 15000 karakter</span>
+          <div id="result"></div>
+          <div class="history">
+            <h3>Gecmis Kontroller</h3>
+            <div id="history-area"><div class="loader">Yukleniyor...</div></div>
           </div>
         </div>
 
-        <div id="result"></div>
-
-        <div class="history">
-          <h3>Gecmis Kontroller</h3>
-          <div id="history-area"><div class="loader">Yukleniyor...</div></div>
-        </div>
+        <!-- DIGER ARAÇLAR PANELI -->
+        <div id="panel-tool" class="hidden"></div>
       </div>
 
     </div>
@@ -177,40 +181,34 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
 const CHECK_ENDPOINT = SUPABASE_URL + '/functions/v1/ai-detector-check';
+const TOOLS_ENDPOINT = SUPABASE_URL + '/functions/v1/ai-tools';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let CURRENT_USER = null;
-let LAST_TEXT = '';
+const FREE_PER_DAY = 2, BONUS_COST_DETECTOR = 10;
+let CURRENT_USER = null, LAST_TEXT = '', CURRENT_TOOL = 'detector';
+
+const META = {
+  detector:    { label: 'AI Detector', desc: 'Metni yapistir, tahmini yapay zeka olasiligini ve isaretli cumleleri gor.' },
+  humanizer:   { label: 'AI Humanizer', desc: 'Metni daha dogal, daha az tekduze hale getirir.', placeholder: 'Dogallastirilacak Ingilizce metni yapistir...', run: 'Dogallastir', options: [] },
+  summarizer:  { label: 'Ozetleyici', desc: 'Metni ozetler.', placeholder: 'Ozetlenecek metni yapistir...', run: 'Ozetle', options: [{ key: 'length', label: 'Uzunluk', choices: [['kisa', 'Kisa'], ['orta', 'Orta'], ['uzun', 'Uzun']], def: 'orta' }] },
+  paraphraser: { label: 'Paraphraser', desc: 'Metni yeniden yazar.', placeholder: 'Yeniden yazilacak metni yapistir...', run: 'Yeniden Yaz', options: [{ key: 'tone', label: 'Ton', choices: [['sade', 'Sade'], ['akademik', 'Akademik'], ['resmi', 'Resmi']], def: 'sade' }] },
+  grammar:     { label: 'Gramer Kontrolu', desc: 'Hatalari bulur ve duzeltir, hata listesi verir.', placeholder: 'Kontrol edilecek metni yapistir...', run: 'Kontrol Et', options: [] },
+  translator:  { label: 'Ceviri', desc: 'Metni cevirir.', placeholder: 'Cevrilecek metni yapistir...', run: 'Cevir', options: [{ key: 'target', label: 'Hedef dil', choices: [['en', 'Ingilizce'], ['tr', 'Turkce'], ['de', 'Almanca']], def: 'tr' }] },
+};
 
 function toast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2600);
 }
-function escapeHtml(s) {
-  return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-}
-function bandClass(band) {
-  if (band === 'Yüksek') return 'band-Yuksek';
-  if (band === 'Orta') return 'band-Orta';
-  return 'band-Dusuk';
-}
-function bandColor(band) {
-  if (band === 'Yüksek') return '#b94a4a';
-  if (band === 'Orta') return '#c08a2c';
-  return '#4a8a52';
-}
+function escapeHtml(s) { return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+function bandClass(b) { return b === 'Yüksek' ? 'band-Yuksek' : b === 'Orta' ? 'band-Orta' : 'band-Dusuk'; }
+function bandColor(b) { return b === 'Yüksek' ? '#b94a4a' : b === 'Orta' ? '#c08a2c' : '#4a8a52'; }
 function formatDate(s) {
   const d = new Date(s);
-  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' +
-    d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 }
-function autoGrow(el) {
-  el.style.height = 'auto';
-  const max = Math.round(window.innerHeight * 0.6);
-  el.style.height = Math.min(el.scrollHeight, max) + 'px';
-}
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, Math.round(window.innerHeight * 0.6)) + 'px'; }
 
 async function init() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -223,271 +221,299 @@ async function init() {
   document.getElementById('auth-check').classList.add('hidden');
   document.getElementById('main').classList.remove('hidden');
 
-  await loadCredits(user.id);
-  await loadHistory(user.id);
-
+  // Detector input
   const essay = document.getElementById('essay');
-  essay.addEventListener('input', () => {
-    document.getElementById('char-now').textContent = essay.value.trim().length;
-    autoGrow(essay);
-  });
+  essay.addEventListener('input', () => { document.getElementById('char-now').textContent = essay.value.trim().length; autoGrow(essay); });
   document.getElementById('check-btn').addEventListener('click', runCheck);
   document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-input').click());
   document.getElementById('file-input').addEventListener('change', handleFile);
 
-  document.querySelectorAll('.tool-item.soon').forEach(t => {
-    t.addEventListener('click', () => toast('Bu arac yakinda eklenecek.'));
+  // Sidebar
+  document.querySelectorAll('.tool-item').forEach(el => {
+    el.addEventListener('click', () => switchTool(el.dataset.tool));
+  });
+
+  switchTool('detector');
+  await loadHistory(user.id);
+}
+
+function switchTool(key) {
+  CURRENT_TOOL = key;
+  document.querySelectorAll('.tool-item').forEach(el => el.classList.toggle('active', el.dataset.tool === key));
+  document.getElementById('hdr-title').textContent = META[key].label;
+  document.getElementById('hdr-desc').textContent = META[key].desc;
+
+  if (key === 'detector') {
+    document.getElementById('panel-detector').classList.remove('hidden');
+    document.getElementById('panel-tool').classList.add('hidden');
+  } else {
+    document.getElementById('panel-detector').classList.add('hidden');
+    document.getElementById('panel-tool').classList.remove('hidden');
+    renderToolPanel(key);
+  }
+  setChip(key);
+}
+
+/* ====== Kredi gosterimi ====== */
+async function setChip(feature) {
+  try {
+    if (feature === 'detector') {
+      const { data } = await supabase.from('ai_quota')
+        .select('bonus_quota, bonus_used, detector_daily_used_count, detector_last_used_date, detector_daily_limit')
+        .eq('user_id', CURRENT_USER.id).maybeSingle();
+      const today = new Date().toISOString().slice(0, 10);
+      const last = data && data.detector_last_used_date ? data.detector_last_used_date : null;
+      const limit = Number((data && data.detector_daily_limit != null) ? data.detector_daily_limit : FREE_PER_DAY);
+      const used = (last === today) ? Number((data && data.detector_daily_used_count) || 0) : 0;
+      const dailyFree = Math.max(0, limit - used);
+      const bonusRem = Math.max(0, Number((data && data.bonus_quota) || 0) - Number((data && data.bonus_used) || 0));
+      const bonusChecks = Math.floor(bonusRem / BONUS_COST_DETECTOR);
+      document.getElementById('credit-chip').innerHTML =
+        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Token ile: <strong>' + bonusChecks + '</strong> kontrol';
+    } else {
+      const [{ data: tu }, { data: q }] = await Promise.all([
+        supabase.from('tool_usage_daily').select('used_date, used_count').eq('user_id', CURRENT_USER.id).eq('feature', feature).maybeSingle(),
+        supabase.from('ai_quota').select('bonus_quota, bonus_used').eq('user_id', CURRENT_USER.id).maybeSingle(),
+      ]);
+      const today = new Date().toISOString().slice(0, 10);
+      const used = (tu && tu.used_date === today) ? Number(tu.used_count || 0) : 0;
+      const dailyFree = Math.max(0, FREE_PER_DAY - used);
+      const bonusRem = Math.max(0, Number((q && q.bonus_quota) || 0) - Number((q && q.bonus_used) || 0));
+      document.getElementById('credit-chip').innerHTML =
+        'Bugun ucretsiz: <strong>' + dailyFree + '</strong> / ' + FREE_PER_DAY + ' &nbsp;|&nbsp; Token: <strong>' + bonusRem + '</strong>';
+    }
+  } catch (e) { document.getElementById('credit-chip').textContent = ''; }
+}
+
+/* ====== Diger araç paneli ====== */
+function renderToolPanel(key) {
+  const m = META[key];
+  const optsHtml = (m.options || []).map(o => {
+    const choices = o.choices.map(c => '<option value="' + c[0] + '"' + (c[0] === o.def ? ' selected' : '') + '>' + c[1] + '</option>').join('');
+    return '<div class="opt"><label>' + o.label + '</label><select data-opt="' + o.key + '">' + choices + '</select></div>';
+  }).join('');
+
+  document.getElementById('panel-tool').innerHTML =
+    '<div class="panel">' +
+      '<h2>' + m.label + '</h2><div class="pdesc">' + m.desc + '</div>' +
+      (optsHtml ? '<div class="opts">' + optsHtml + '</div>' : '') +
+      '<textarea id="tool-essay" class="essay" placeholder="' + m.placeholder + '"></textarea>' +
+      '<div class="ta-bar">' +
+        '<button id="tool-run">' + m.run + '</button>' +
+        '<button class="secondary" id="tool-upload">Dosya Yukle</button>' +
+        '<input type="file" id="tool-file" accept=".txt,.docx" class="hidden" />' +
+        '<span class="char-count"><span id="tool-char">0</span> / 15000 karakter</span>' +
+      '</div>' +
+    '</div>' +
+    '<div id="tool-output"></div>';
+
+  const ta = document.getElementById('tool-essay');
+  ta.addEventListener('input', () => { document.getElementById('tool-char').textContent = ta.value.trim().length; autoGrow(ta); });
+  document.getElementById('tool-run').addEventListener('click', () => runTool(key));
+  document.getElementById('tool-upload').addEventListener('click', () => document.getElementById('tool-file').click());
+  document.getElementById('tool-file').addEventListener('change', (e) => handleFileInto(e, ta, 'tool-char'));
+}
+
+async function runTool(key) {
+  const ta = document.getElementById('tool-essay');
+  const text = ta.value.trim();
+  if (text.length < 20) { toast('Metin cok kisa.'); return; }
+  const options = {};
+  document.querySelectorAll('#panel-tool select[data-opt]').forEach(s => { options[s.dataset.opt] = s.value; });
+
+  const btn = document.getElementById('tool-run');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Calisiyor...';
+  document.getElementById('tool-output').innerHTML = '<div class="loader">Isleniyor...</div>';
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { toast('Oturum bulunamadi.'); return; }
+    const res = await fetch(TOOLS_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ tool: key, text, options }),
+    });
+    let data = null; try { data = await res.json(); } catch (e) { data = null; }
+
+    if (res.status === 402 && data && data.error === 'quota_exhausted') { renderToolPaywall(data); return; }
+    if (!res.ok || !data || data.ok === false) {
+      const msg = (data && (data.detail || data.error)) || ('HTTP ' + res.status);
+      document.getElementById('tool-output').innerHTML = '<p class="muted" style="padding:14px;">Bir sorun olustu: ' + escapeHtml(String(msg)) + '</p>';
+      return;
+    }
+    renderToolOutput(key, data);
+    await setChip(key);
+    toast(data.cost > 0 ? data.cost + ' token harcandi' : 'Ucretsiz');
+  } catch (e) {
+    console.error(e);
+    document.getElementById('tool-output').innerHTML = '<p class="muted" style="padding:14px;">Ag hatasi.</p>';
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+function renderToolOutput(key, data) {
+  const out = escapeHtml(data.output || '');
+  let corrHtml = '';
+  if (key === 'grammar' && Array.isArray(data.corrections) && data.corrections.length) {
+    corrHtml = '<div class="detail"><h3>Duzeltmeler</h3>' + data.corrections.map(c =>
+      '<div class="corr-item"><span class="co">' + escapeHtml(c.original) + '</span> &rarr; <span class="cc">' + escapeHtml(c.correction) + '</span><span class="ce">' + escapeHtml(c.explanation) + '</span></div>'
+    ).join('') + '</div>';
+  }
+  document.getElementById('tool-output').innerHTML =
+    '<div class="out-head"><h3>Sonuc</h3><button class="secondary" id="copy-out" style="padding:6px 14px;">Kopyala</button></div>' +
+    '<div class="out-box">' + out + '</div>' + corrHtml;
+  document.getElementById('copy-out').addEventListener('click', () => {
+    navigator.clipboard.writeText(data.output || '').then(() => toast('Kopyalandi'));
   });
 }
 
-async function handleFile(e) {
-  const f = e.target.files[0];
-  if (!f) return;
-  const essay = document.getElementById('essay');
+function renderToolPaywall(data) {
+  const packs = (data.packs || []).map(p => '<a href="' + escapeHtml(p.url) + '" target="_blank" rel="noopener">' + escapeHtml(p.name) + ' · ' + p.price + ' TL</a>').join('');
+  document.getElementById('tool-output').innerHTML =
+    '<div class="paywall"><p style="font-weight:600; color:var(--bad); margin-bottom:6px;">Hak bitti</p><p class="muted" style="margin-bottom:8px;">' + escapeHtml(data.message || '') + '</p>' + packs + '</div>';
+}
+
+/* ====== Dosya yukleme ====== */
+async function handleFileInto(e, target, charSpanId) {
+  const f = e.target.files[0]; if (!f) return;
   const name = (f.name || '').toLowerCase();
   try {
     if (name.endsWith('.docx')) {
       if (!window.mammoth) { toast('Docx okuyucu yuklenemedi.'); return; }
       const buf = await f.arrayBuffer();
       const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
-      essay.value = (result && result.value) || '';
-    } else {
-      essay.value = await f.text();
-    }
-    document.getElementById('char-now').textContent = essay.value.trim().length;
-    autoGrow(essay);
-  } catch (err) {
-    console.error('file read failed:', err);
-    toast('Dosya okunamadi.');
-  } finally {
-    e.target.value = '';
-  }
+      target.value = (result && result.value) || '';
+    } else { target.value = await f.text(); }
+    if (charSpanId) document.getElementById(charSpanId).textContent = target.value.trim().length;
+    autoGrow(target);
+  } catch (err) { console.error(err); toast('Dosya okunamadi.'); }
+  finally { e.target.value = ''; }
 }
+function handleFile(e) { handleFileInto(e, document.getElementById('essay'), 'char-now'); }
 
-async function loadCredits(userId) {
-  const { data } = await supabase
-    .from('user_credits').select('credits_remaining').eq('user_id', userId).maybeSingle();
-  document.getElementById('credits-display').textContent = data?.credits_remaining ?? 0;
-}
-
+/* ====== DETECTOR ====== */
 async function loadHistory(userId) {
-  const { data, error } = await supabase
-    .from('writing_sessions')
+  const { data, error } = await supabase.from('writing_sessions')
     .select('id, final_text, created_at, analysis')
-    .eq('teacher_id', userId)
-    .eq('check_type', 'paste')
-    .order('created_at', { ascending: false })
-    .limit(50);
-
+    .eq('teacher_id', userId).eq('check_type', 'paste')
+    .order('created_at', { ascending: false }).limit(50);
   const c = document.getElementById('history-area');
   if (error) { c.innerHTML = '<p class="muted">Gecmis yuklenemedi.</p>'; return; }
-  if (!data || data.length === 0) {
-    c.innerHTML = '<p class="muted">Henuz kontrol yok.</p>';
-    return;
-  }
+  if (!data || data.length === 0) { c.innerHTML = '<p class="muted">Henuz kontrol yok.</p>'; return; }
   c.innerHTML = data.map(s => {
-    const band = s.analysis?.band || '—';
+    const band = s.analysis && s.analysis.band ? s.analysis.band : '—';
     const snippet = (s.final_text || '').slice(0, 90);
-    return `
-      <div class="h-row">
-        <div class="h-snippet">${escapeHtml(snippet)}</div>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <span class="mini-pill ${bandClass(band)}">${escapeHtml(band)}</span>
-          <span class="h-meta">${formatDate(s.created_at)}</span>
-          <button class="secondary" data-id="${s.id}" style="padding:6px 12px;">Ac</button>
-          <button class="secondary" data-del="${s.id}" style="padding:6px 11px; color:#b94a4a; border-color:#e0c0c0;">Sil</button>
-        </div>
-      </div>`;
+    return '<div class="h-row"><div class="h-snippet">' + escapeHtml(snippet) + '</div>' +
+      '<div style="display:flex; gap:10px; align-items:center;">' +
+      '<span class="mini-pill ' + bandClass(band) + '">' + escapeHtml(band) + '</span>' +
+      '<span class="h-meta">' + formatDate(s.created_at) + '</span>' +
+      '<button class="secondary" data-id="' + s.id + '" style="padding:6px 12px;">Ac</button>' +
+      '<button class="secondary" data-del="' + s.id + '" style="padding:6px 11px; color:#b94a4a; border-color:#e0c0c0;">Sil</button>' +
+      '</div></div>';
   }).join('');
-
-  c.querySelectorAll('button[data-id]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = data.find(x => x.id === btn.dataset.id);
-      if (row && row.analysis) {
-        renderResult(row.analysis, row.final_text || '');
-        document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  });
-
-  c.querySelectorAll('button[data-del]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Bu kontrol kaydi silinsin mi?')) return;
-      const { error } = await supabase.from('writing_sessions').delete().eq('id', btn.dataset.del);
-      if (error) { toast('Silinemedi.'); return; }
-      toast('Silindi');
-      await loadHistory(CURRENT_USER.id);
-    });
-  });
+  c.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
+    const row = data.find(x => x.id === btn.dataset.id);
+    if (row && row.analysis) { renderResult(row.analysis, row.final_text || ''); document.getElementById('result').scrollIntoView({ behavior: 'smooth' }); }
+  }));
+  c.querySelectorAll('button[data-del]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('Bu kontrol kaydi silinsin mi?')) return;
+    const { error } = await supabase.from('writing_sessions').delete().eq('id', btn.dataset.del);
+    if (error) { toast('Silinemedi.'); return; }
+    toast('Silindi'); await loadHistory(CURRENT_USER.id);
+  }));
 }
 
 async function runCheck() {
   const text = document.getElementById('essay').value.trim();
   if (text.length < 100) { toast('En az 100 karakter gerekli.'); return; }
-
   const btn = document.getElementById('check-btn');
   btn.disabled = true; btn.textContent = 'Inceleniyor...';
   document.getElementById('result').innerHTML = '<div class="loader">Metin inceleniyor...</div>';
-
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { toast('Oturum bulunamadi.'); btn.disabled = false; btn.textContent = 'Kontrol Et'; return; }
-
+    if (!session) { toast('Oturum bulunamadi.'); return; }
     const res = await fetch(CHECK_ENDPOINT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + session.access_token,
-        'apikey': SUPABASE_ANON_KEY,
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({ text }),
     });
-
-    let data = null;
-    try { data = await res.json(); } catch (e) { data = null; }
-
-    if (res.status === 402 && data && data.error === 'quota_exhausted') {
-      renderPaywall(data); return;
-    }
+    let data = null; try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 402 && data && data.error === 'quota_exhausted') { renderDetectorPaywall(data); return; }
     if (!res.ok || !data || data.ok === false) {
       const msg = (data && (data.detail || data.error)) || ('HTTP ' + res.status);
       document.getElementById('result').innerHTML = '<p class="muted" style="padding:16px;">Bir sorun olustu: ' + escapeHtml(String(msg)) + '</p>';
       return;
     }
-
     renderResult(data.analysis, text);
-    await loadCredits(CURRENT_USER.id);
-    await loadHistory(CURRENT_USER.id);
-    toast(data.is_paid ? '1 kredi harcandi' : 'Ucretsiz kontrol');
+    await setChip('detector'); await loadHistory(CURRENT_USER.id);
+    toast(data.cost > 0 ? data.cost + ' token harcandi' : 'Ucretsiz kontrol');
   } catch (e) {
-    console.error('check failed:', e);
+    console.error(e);
     document.getElementById('result').innerHTML = '<p class="muted" style="padding:16px;">Ag hatasi.</p>';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Kontrol Et';
-  }
+  } finally { btn.disabled = false; btn.textContent = 'Kontrol Et'; }
 }
 
-function renderPaywall(data) {
-  const packs = (data.packs || []).map(p =>
-    `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.name)} · ${p.price} TL</a>`).join('');
-  document.getElementById('result').innerHTML =
-    `<div class="paywall">
-       <p style="font-weight:600; color:var(--bad); margin-bottom:6px;">Kredi bitti</p>
-       <p class="muted" style="margin-bottom:8px;">${escapeHtml(data.message || 'Devam icin token paketi al.')}</p>
-       ${packs}
-     </div>`;
+function renderDetectorPaywall(data) {
+  const packs = (data.packs || []).map(p => '<a href="' + escapeHtml(p.url) + '" target="_blank" rel="noopener">' + escapeHtml(p.name) + ' · ' + p.price + ' TL</a>').join('');
+  document.getElementById('result').innerHTML = '<div class="paywall"><p style="font-weight:600; color:var(--bad); margin-bottom:6px;">Hak bitti</p><p class="muted" style="margin-bottom:8px;">' + escapeHtml(data.message || '') + '</p>' + packs + '</div>';
 }
 
 function donutSvg(pct, color) {
-  const r = 52, circ = 2 * Math.PI * r;
-  const off = circ * (1 - Math.max(0, Math.min(100, pct)) / 100);
-  return `<svg class="donut" viewBox="0 0 120 120" width="120" height="120">
-    <circle cx="60" cy="60" r="${r}" fill="none" stroke="#eee" stroke-width="12"/>
-    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="12"
-      stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
-      stroke-linecap="round" transform="rotate(-90 60 60)"/>
-    <text class="pct" x="60" y="58" text-anchor="middle">${pct}%</text>
-    <text class="lbl" x="60" y="74" text-anchor="middle">TAHMINI</text>
-  </svg>`;
+  const r = 52, circ = 2 * Math.PI * r, off = circ * (1 - Math.max(0, Math.min(100, pct)) / 100);
+  return '<svg class="donut" viewBox="0 0 120 120" width="120" height="120">' +
+    '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="#eee" stroke-width="12"/>' +
+    '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="12" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 60 60)"/>' +
+    '<text class="pct" x="60" y="58" text-anchor="middle">' + pct + '%</text>' +
+    '<text class="lbl" x="60" y="74" text-anchor="middle">TAHMINI</text></svg>';
 }
-
 function highlightText(original, flagged) {
   let html = escapeHtml(original);
   (flagged || []).forEach(f => {
     const esc = escapeHtml(f.text || '');
-    if (esc && esc.length > 8 && html.indexOf(esc) !== -1) {
-      html = html.split(esc).join('<mark class="ai-hl">' + esc + '</mark>');
-    }
+    if (esc && esc.length > 8 && html.indexOf(esc) !== -1) html = html.split(esc).join('<mark class="ai-hl">' + esc + '</mark>');
   });
   return html.replace(/\n/g, '<br>');
 }
-
 function renderResult(a, original) {
   if (!a) return;
   LAST_TEXT = original || '';
-  const band = a.band || '—';
-  const low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0);
-  const mid = Math.round((low + high) / 2);
-  const color = bandColor(band);
-
+  const band = a.band || '—', low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0), mid = Math.round((low + high) / 2), color = bandColor(band);
   const flaggedHtml = (a.flagged_sentences && a.flagged_sentences.length)
-    ? a.flagged_sentences.map(f =>
-        `<div class="reason-item"><div class="rtext">"${escapeHtml(f.text)}"</div><div class="rwhy">${escapeHtml(f.reason)}</div></div>`).join('')
+    ? a.flagged_sentences.map(f => '<div class="reason-item"><div class="rtext">"' + escapeHtml(f.text) + '"</div><div class="rwhy">' + escapeHtml(f.reason) + '</div></div>').join('')
     : '<p class="muted">Belirgin sekilde isaretlenecek cumle bulunmadi.</p>';
-
-  const textHtml = original ? highlightText(original, a.flagged_sentences) : '<span class="muted">Metin saklanmadi. Gecmis kayitlarda yalnizca analiz tutulur.</span>';
-
+  const textHtml = original ? highlightText(original, a.flagged_sentences) : '<span class="muted">Metin saklanmadi.</span>';
   document.getElementById('result').innerHTML =
-    `<div class="res-top">
-       ${donutSvg(mid, color)}
-       <div class="res-headline">
-         <div class="big">Bu metin tahminen yuzde ${mid} yapay zeka</div>
-         <span class="band-pill ${bandClass(band)}">Risk: ${escapeHtml(band)}</span>
-         <div class="range">Tahmini aralik: yuzde ${low}-${high}</div>
-       </div>
-     </div>
-
-     <div class="text-box">${textHtml}</div>
-     ${original ? '<div class="legend"><mark>kirmizi</mark> isaretli kisimlar daha cok yapay zekaya benziyor</div>' : ''}
-
-     <div class="detail">
-       <h3>Ozet</h3>
-       <p style="font-size:14px;">${escapeHtml(a.summary || '')}</p>
-     </div>
-
-     <div class="detail">
-       <h3>Isaretli Cumleler ve Gerekce</h3>
-       ${flaggedHtml}
-     </div>
-
-     <div class="detail">
-       <h3>ESL Degerlendirmesi</h3>
-       <div class="esl-box">${escapeHtml(a.esl_note || '')}</div>
-     </div>
-
-     <div class="disclaimer">
-       Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin, ogrenciyle konusarak teyit edin.
-     </div>
-
-     <button class="gold" id="pdf-btn" style="margin-top:14px;">Rapor (PDF)</button>`;
-
+    '<div class="res-top">' + donutSvg(mid, color) +
+      '<div class="res-headline"><div class="big">Bu metin tahminen yuzde ' + mid + ' yapay zeka</div>' +
+      '<span class="band-pill ' + bandClass(band) + '">Risk: ' + escapeHtml(band) + '</span>' +
+      '<div class="range">Tahmini aralik: yuzde ' + low + '-' + high + '</div></div></div>' +
+    '<div class="text-box">' + textHtml + '</div>' +
+    (original ? '<div class="legend"><mark>kirmizi</mark> isaretli kisimlar daha cok yapay zekaya benziyor</div>' : '') +
+    '<div class="detail"><h3>Ozet</h3><p style="font-size:14px;">' + escapeHtml(a.summary || '') + '</p></div>' +
+    '<div class="detail"><h3>Isaretli Cumleler ve Gerekce</h3>' + flaggedHtml + '</div>' +
+    '<div class="detail"><h3>ESL Degerlendirmesi</h3><div class="esl-box">' + escapeHtml(a.esl_note || '') + '</div></div>' +
+    '<div class="disclaimer">Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin.</div>' +
+    '<button class="gold" id="pdf-btn" style="margin-top:14px;">Rapor (PDF)</button>';
   document.getElementById('pdf-btn').addEventListener('click', () => exportPdf(a, LAST_TEXT));
 }
-
 function exportPdf(a, original) {
-  const band = a.band || '—';
-  const low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0);
-  const mid = Math.round((low + high) / 2);
+  const band = a.band || '—', low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0), mid = Math.round((low + high) / 2);
   const flagged = (a.flagged_sentences && a.flagged_sentences.length)
-    ? a.flagged_sentences.map(f => `<div style="border-left:3px solid #c08a2c; padding:8px 12px; margin-bottom:8px; background:#fffcf3;"><em>"${escapeHtml(f.text)}"</em><div style="font-size:12px; color:#6a6a6a; margin-top:4px;">${escapeHtml(f.reason)}</div></div>`).join('')
+    ? a.flagged_sentences.map(f => '<div style="border-left:3px solid #c08a2c; padding:8px 12px; margin-bottom:8px; background:#fffcf3;"><em>"' + escapeHtml(f.text) + '"</em><div style="font-size:12px; color:#6a6a6a; margin-top:4px;">' + escapeHtml(f.reason) + '</div></div>').join('')
     : '<p style="color:#6a6a6a;">Isaretli cumle yok.</p>';
-  const textBlock = original
-    ? `<h2>Incelenen Metin</h2><div style="border:1px solid #e6e0d0; padding:12px; white-space:pre-wrap; font-size:13px;">${escapeHtml(original)}</div>`
-    : '';
-
-  const html =
-    `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AI Detector Raporu</title>
-     <style>
-       body { font-family: Arial, sans-serif; color:#1b1b1b; max-width: 760px; margin: 40px auto; padding: 0 24px; line-height: 1.5; }
-       h1 { color:#1f3f3e; font-size: 22px; border-bottom: 2px solid #c89a3c; padding-bottom: 8px; }
-       h2 { color:#1f3f3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 22px; }
-       .meta { color:#6a6a6a; font-size: 13px; margin: 8px 0 18px; }
-       .band { display:inline-block; padding: 5px 14px; border-radius: 16px; font-weight: 700; font-size: 13px; background:#f0e8d0; }
-       .disc { background:#fffaeb; border-left:3px solid #c89a3c; padding: 12px 14px; font-size: 12px; color:#6b5318; margin-top: 22px; }
-     </style></head><body>
-     <h1>AI Detector - Indikatif Rapor</h1>
-     <div class="meta">Tarih: ${new Date().toLocaleString('tr-TR')}</div>
-     <p><span class="band">Risk: ${escapeHtml(band)}</span> &nbsp; Tahmini yuzde ${mid} (aralik ${low}-${high})</p>
-     <h2>Ozet</h2><p>${escapeHtml(a.summary || '')}</p>
-     <h2>Isaretli Cumleler</h2>${flagged}
-     <h2>ESL Degerlendirmesi</h2><p>${escapeHtml(a.esl_note || '')}</p>
-     ${textBlock}
-     <div class="disc">Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin.</div>
-     <script>window.onload=function(){window.print();}<\/script>
-     </body></html>`;
-
+  const textBlock = original ? '<h2>Incelenen Metin</h2><div style="border:1px solid #e6e0d0; padding:12px; white-space:pre-wrap; font-size:13px;">' + escapeHtml(original) + '</div>' : '';
+  const html = '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AI Detector Raporu</title>' +
+    '<style>body{font-family:Arial,sans-serif;color:#1b1b1b;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.5;}h1{color:#1f3f3e;font-size:22px;border-bottom:2px solid #c89a3c;padding-bottom:8px;}h2{color:#1f3f3e;font-size:14px;text-transform:uppercase;letter-spacing:0.04em;margin-top:22px;}.meta{color:#6a6a6a;font-size:13px;margin:8px 0 18px;}.band{display:inline-block;padding:5px 14px;border-radius:16px;font-weight:700;font-size:13px;background:#f0e8d0;}.disc{background:#fffaeb;border-left:3px solid #c89a3c;padding:12px 14px;font-size:12px;color:#6b5318;margin-top:22px;}</style></head><body>' +
+    '<h1>AI Detector - Indikatif Rapor</h1><div class="meta">Tarih: ' + new Date().toLocaleString('tr-TR') + '</div>' +
+    '<p><span class="band">Risk: ' + escapeHtml(band) + '</span> &nbsp; Tahmini yuzde ' + mid + ' (aralik ' + low + '-' + high + ')</p>' +
+    '<h2>Ozet</h2><p>' + escapeHtml(a.summary || '') + '</p><h2>Isaretli Cumleler</h2>' + flagged +
+    '<h2>ESL Degerlendirmesi</h2><p>' + escapeHtml(a.esl_note || '') + '</p>' + textBlock +
+    '<div class="disc">Indikatif sonuc. Modelin tahminidir, olcum degildir. Tek basina kanit olarak kullanmayin.</div>' +
+    '<script>window.onload=function(){window.print();}<\/script></body></html>';
   const w = window.open('', '_blank');
-  if (!w) { toast('Pop-up engellendi. Izin ver.'); return; }
+  if (!w) { toast('Pop-up engellendi.'); return; }
   w.document.write(html); w.document.close();
 }
 

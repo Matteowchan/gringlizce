@@ -96,6 +96,7 @@ button.gold { background: var(--gold); color: white; }
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
 .toast.show { opacity: 1; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -129,8 +130,8 @@ button.gold { background: var(--gold); color: white; }
           </div>
           <div class="ta-bar">
             <button id="check-btn">Kontrol Et</button>
-            <button class="secondary" id="upload-btn">Dosya Yukle (.txt)</button>
-            <input type="file" id="file-input" accept=".txt" class="hidden" />
+            <button class="secondary" id="upload-btn">Dosya Yukle</button>
+            <input type="file" id="file-input" accept=".txt,.docx" class="hidden" />
             <span class="char-count"><span id="char-now">0</span> / 15000 karakter</span>
           </div>
         </div>
@@ -218,17 +219,28 @@ async function init() {
   });
 }
 
-function handleFile(e) {
+async function handleFile(e) {
   const f = e.target.files[0];
   if (!f) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const essay = document.getElementById('essay');
-    essay.value = String(reader.result || '');
+  const essay = document.getElementById('essay');
+  const name = (f.name || '').toLowerCase();
+  try {
+    if (name.endsWith('.docx')) {
+      if (!window.mammoth) { toast('Docx okuyucu yuklenemedi.'); return; }
+      const buf = await f.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+      essay.value = (result && result.value) || '';
+    } else {
+      essay.value = await f.text();
+    }
     document.getElementById('char-now').textContent = essay.value.trim().length;
     autoGrow(essay);
-  };
-  reader.readAsText(f);
+  } catch (err) {
+    console.error('file read failed:', err);
+    toast('Dosya okunamadi.');
+  } finally {
+    e.target.value = '';
+  }
 }
 
 async function loadCredits(userId) {

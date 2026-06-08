@@ -4982,6 +4982,26 @@
             section.style.display = '';
             empty.style.display = 'none';
 
+            // Grupları ilk göründükleri yerde kümele (Task 1 -> Task 2), genel sırayı bozma
+            var byGroupS = {};
+            assignments.forEach(function (a) {
+              var g = a.config && a.config.group_id;
+              if (g) { (byGroupS[g] = byGroupS[g] || []).push(a); }
+            });
+            Object.keys(byGroupS).forEach(function (g) {
+              byGroupS[g].sort(function (x, y) { return ((x.config.part_order) || 0) - ((y.config.part_order) || 0); });
+            });
+            var orderedS = [];
+            var emittedGroupsS = {};
+            assignments.forEach(function (a) {
+              var g = a.config && a.config.group_id;
+              if (g) {
+                if (!emittedGroupsS[g]) { emittedGroupsS[g] = true; orderedS = orderedS.concat(byGroupS[g]); }
+              } else { orderedS.push(a); }
+            });
+            assignments = orderedS;
+
+            var seenGroupsS = {};
             list.innerHTML = assignments.map(function (a) {
               var pct = a.progress_target > 0 ? Math.round(100 * a.progress_current / a.progress_target) : 0;
               var isCompleted = a.status === 'completed';
@@ -5018,7 +5038,10 @@
                   actionsHtml = '<span class="my-assign-completed-pill">Tamamlandı</span>';
                 }
               } else if (a.type === 'writing') {
-                if (cfg.exam_type) meta.push(humanizeMA(cfg.exam_type) + ' Task ' + (cfg.task_number || ''));
+                var ttLabelS = cfg.part === 'task1' ? 'Task 1'
+                  : cfg.part === 'task2' ? 'Task 2'
+                  : (cfg.text_type_display || cfg.text_type || '');
+                if (cfg.exam_type) meta.push((humanizeMA(cfg.exam_type) + ' ' + ttLabelS).trim());
                 if (cfg.min_words) meta.push(cfg.min_words + '+ kelime');
 
                 if (cfg.prompt) {
@@ -5053,7 +5076,12 @@
                 }
               }
 
-              return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
+              var grpHeaderS = '';
+              if (a.config && a.config.group_id && !seenGroupsS[a.config.group_id]) {
+                seenGroupsS[a.config.group_id] = true;
+                grpHeaderS = '<div style="margin:0.7rem 0 0.1rem; font-family:var(--font-ui,Inter),system-ui,sans-serif; font-size:0.76rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--gold,#c89a3c);">IELTS Tam Yazma · ' + escMA(a.config.group_title || a.title) + '</div>';
+              }
+              return grpHeaderS + '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
                 + '<div class="my-assign-head">'
                 + '<div class="my-assign-titles">'
                 + '<span class="my-assign-type type-' + a.type + '">' + TYPE_LABELS_S[a.type] + '</span>'

@@ -667,6 +667,8 @@
     var addBtn = document.getElementById('wd-sel-add');
 
     document.addEventListener('selectionchange', function () {
+      // Yorum penceresi acikken secimi koru, canli secime dokunma
+      if (document.getElementById('wd-overlay').classList.contains('show')) return;
       var sel = window.getSelection();
       if (!sel.rangeCount || sel.isCollapsed) {
         popup.classList.remove('show');
@@ -765,6 +767,7 @@
 
   // ============ Comment editor ============
   function openNewComment(sel) {
+    state.currentSelection = sel; // secimi pencere acilirken sabitle
     state.editingCommentId = null;
     state.editingCategory = 'other';
     document.getElementById('wd-comment-title').textContent = 'Yeni Yorum';

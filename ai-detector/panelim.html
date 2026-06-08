@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Detector — Ogretmen Paneli — Gri English</title>
+<title>AI Detector — Gri English</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -17,63 +17,80 @@
   --bad: #b94a4a;
   --warn: #c08a2c;
   --good: #4a8a52;
+  --bg-soft: #f5f0e3;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
 h1, h2, h3 { font-family: 'Lora', serif; color: var(--teal-dark); }
-.wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
-header { border-bottom: 2px solid var(--gold); padding-bottom: 16px; margin-bottom: 28px; }
-header h1 { font-size: 28px; }
-header p { color: var(--muted); margin-top: 6px; font-size: 14px; }
-.grid { display: grid; grid-template-columns: 420px 1fr; gap: 28px; align-items: start; }
-@media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
-.card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
-.card h2 { font-size: 20px; margin-bottom: 14px; }
-label { display: block; font-size: 13px; font-weight: 600; color: var(--teal-dark); margin: 12px 0 6px; }
-input, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: #fffcf3; }
-textarea { resize: vertical; }
-textarea#essay { min-height: 240px; }
-input:focus, textarea:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
-button { background: var(--teal); color: white; border: none; padding: 11px 18px; border-radius: 6px; font: 600 14px 'Inter', sans-serif; cursor: pointer; margin-top: 14px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+header { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+header h1 { font-size: 26px; }
+header p { color: var(--muted); margin-top: 4px; font-size: 14px; }
+.credit-chip { font-size: 13px; background: var(--bg-soft); padding: 8px 14px; border-radius: 20px; white-space: nowrap; }
+
+.layout { display: grid; grid-template-columns: 210px 1fr; gap: 24px; align-items: start; }
+@media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+
+.tools { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 8px; position: sticky; top: 16px; }
+.tool-item { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--ink); }
+.tool-item:hover { background: var(--bg-soft); }
+.tool-item.active { background: var(--teal); color: white; font-weight: 600; }
+.tool-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex: none; }
+.tool-item.active .dot { background: white; }
+.tool-item.soon { color: var(--muted); cursor: default; }
+.tool-item.soon .dot { background: #cdc6b6; }
+.tool-item .soon-tag { margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+
+.panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+.ta-wrap { position: relative; }
+textarea#essay { width: 100%; min-height: 280px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font: 15px/1.6 'Inter', sans-serif; background: #fffcf3; resize: vertical; }
+textarea#essay:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.ta-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 8px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
 button:hover { background: var(--teal-dark); }
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 button.secondary { background: white; color: var(--teal); border: 1px solid var(--teal); }
 button.gold { background: var(--gold); color: white; }
+.char-count { margin-left: auto; font-size: 13px; color: var(--muted); }
 .muted { color: var(--muted); font-size: 13px; }
-.credit-line { padding: 10px 14px; background: #f5f0e3; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
-.char-count { font-size: 12px; color: var(--muted); margin-top: 4px; text-align: right; }
 .hidden { display: none; }
 .loader { text-align: center; padding: 40px; color: var(--muted); }
-.empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
-.flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-/* Sonuc */
-.result-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-.band-pill { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 14px; }
+#result { margin-top: 22px; }
+.res-top { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: #fffcf3; }
+.donut { flex: none; }
+.donut text.pct { font: 700 24px 'Inter', sans-serif; fill: var(--ink); }
+.donut text.lbl { font: 500 9px 'Inter', sans-serif; fill: var(--muted); }
+.res-headline { flex: 1; min-width: 200px; }
+.res-headline .big { font-size: 19px; font-weight: 600; color: var(--teal-dark); }
+.band-pill { display: inline-block; padding: 4px 14px; border-radius: 16px; font-weight: 700; font-size: 13px; margin-top: 6px; }
 .band-Yuksek { background: #fde6e6; color: var(--bad); }
 .band-Orta { background: #fbf0d8; color: var(--warn); }
 .band-Dusuk { background: #e3f0e5; color: var(--good); }
-.est-line { font-size: 15px; font-weight: 600; color: var(--teal-dark); }
-.meter { position: relative; height: 14px; background: linear-gradient(90deg, #e3f0e5 0%, #fbf0d8 50%, #fde6e6 100%); border-radius: 8px; margin: 8px 0 18px; }
-.meter .range { position: absolute; top: -3px; height: 20px; background: rgba(44,88,86,0.85); border-radius: 4px; border: 2px solid white; }
-.section-block { margin-bottom: 18px; }
-.section-block h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 8px; }
-.section-block p { font-size: 14px; }
-.flagged { border: 1px solid var(--border); border-left: 3px solid var(--warn); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: #fffcf3; }
-.flagged .ftext { font-style: italic; color: var(--ink); }
-.flagged .freason { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.res-headline .range { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+.text-box { margin-top: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 15px; line-height: 1.7; background: white; }
+.text-box mark.ai-hl { background: #fde0d0; color: #8a2f1a; padding: 1px 2px; border-radius: 3px; }
+.legend { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend mark { background: #fde0d0; padding: 1px 6px; border-radius: 3px; }
+
+.detail { margin-top: 18px; }
+.detail h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 8px; }
+.reason-item { font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid #f0ead9; }
+.reason-item:last-child { border-bottom: none; }
+.reason-item .rtext { font-style: italic; }
+.reason-item .rwhy { color: var(--muted); }
 .esl-box { background: #f1f6f1; border-radius: 6px; padding: 12px 14px; font-size: 14px; }
-.disclaimer { background: #fffaeb; border-left: 3px solid var(--gold); padding: 12px 14px; font-size: 12.5px; color: #6b5318; border-radius: 4px; margin-top: 16px; }
+.disclaimer { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
 .paywall { background: #fff5f5; border: 1px solid #f0d0d0; border-radius: 8px; padding: 16px; }
 .paywall a { display: inline-block; margin: 6px 8px 0 0; padding: 8px 14px; background: var(--gold); color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; }
 
-/* Gecmis */
-.session-list { display: flex; flex-direction: column; gap: 10px; }
-.session-row { background: #fffcf3; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.session-row:hover { border-color: var(--gold); }
-.session-name { font-weight: 600; color: var(--teal-dark); font-size: 14px; }
-.session-meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-.session-meta span { margin-right: 12px; }
+.history { margin-top: 26px; }
+.history h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 10px; }
+.h-row { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.h-row:hover { border-color: var(--gold); }
+.h-snippet { font-size: 13.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.h-meta { font-size: 12px; color: var(--muted); }
 .mini-pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
@@ -83,52 +100,49 @@ button.gold { background: var(--gold); color: white; }
 <body>
 <div class="wrap">
   <header>
-    <h1>AI Detector</h1>
-    <p>Bitmis bir ogrenci metnini yapistir, indikatif AI degerlendirmesi al. Sonuc kesin hukum degildir.</p>
+    <div>
+      <h1>AI Detector</h1>
+      <p>Metni yapistir, tahmini yapay zeka olasiligini ve isaretli cumleleri gor.</p>
+    </div>
+    <div class="credit-chip"><strong>Kredi:</strong> <span id="credits-display">—</span> &nbsp;|&nbsp; ilk 2 ucretsiz, sonra 1 kredi</div>
   </header>
 
   <div id="auth-check" class="loader">Yetkilendiriliyor...</div>
 
   <div id="main" class="hidden">
-    <div class="credit-line">
-      <strong>Krediniz:</strong> <span id="credits-display">—</span> kontrol
-      <span class="muted"> | Ilk 2 kontrol ucretsiz, sonraki her kontrol 1 kredi</span>
-    </div>
+    <div class="layout">
 
-    <div class="grid">
-      <!-- SOL: metin gir -->
-      <section class="card">
-        <h2>Metni Kontrol Et</h2>
+      <nav class="tools" id="tools">
+        <div class="tool-item active" data-tool="detector"><span class="dot"></span> AI Detector</div>
+        <div class="tool-item soon" data-tool="humanizer"><span class="dot"></span> AI Humanizer <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item soon" data-tool="plagiarism"><span class="dot"></span> Intihal Kontrolu <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item soon" data-tool="summarizer"><span class="dot"></span> Ozetleyici <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item soon" data-tool="paraphraser"><span class="dot"></span> Paraphraser <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item soon" data-tool="grammar"><span class="dot"></span> Gramer Kontrolu <span class="soon-tag">Yakinda</span></div>
+        <div class="tool-item soon" data-tool="translator"><span class="dot"></span> Ceviri <span class="soon-tag">Yakinda</span></div>
+      </nav>
 
-        <label for="student-name">Ogrenci Adi (opsiyonel)</label>
-        <input id="student-name" placeholder="Ornek: Ayca Yilmaz" />
-
-        <label for="task-title">Gorev (opsiyonel)</label>
-        <input id="task-title" placeholder="Ornek: IELTS Task 2 Practice 1" />
-
-        <label for="essay">Ogrenci Metni</label>
-        <textarea id="essay" placeholder="Ogrencinin yazdigi Ingilizce metni buraya yapistir..."></textarea>
-        <div class="char-count"><span id="char-now">0</span> karakter (min 200)</div>
-
-        <button id="check-btn">Kontrol Et</button>
-
-        <div class="disclaimer" style="margin-top: 16px;">
-          Bu arac bir AI-detektoru degildir. Sonuc modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin.
-        </div>
-      </section>
-
-      <!-- SAG: sonuc + gecmis -->
-      <section class="card">
-        <h2 id="right-title">Sonuc</h2>
-        <div id="result-area">
-          <div class="empty">Sol taraftan bir metin yapistir ve "Kontrol Et"e bas. Sonuc burada gorunur.</div>
+      <div>
+        <div class="panel">
+          <div class="ta-wrap">
+            <textarea id="essay" placeholder="Kontrol edilecek Ingilizce metni buraya yapistir..."></textarea>
+          </div>
+          <div class="ta-bar">
+            <button id="check-btn">Kontrol Et</button>
+            <button class="secondary" id="upload-btn">Dosya Yukle (.txt)</button>
+            <input type="file" id="file-input" accept=".txt" class="hidden" />
+            <span class="char-count"><span id="char-now">0</span> / 15000 karakter</span>
+          </div>
         </div>
 
-        <div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 18px;">
-          <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 10px;">Gecmis Kontroller</h3>
+        <div id="result"></div>
+
+        <div class="history">
+          <h3>Gecmis Kontroller</h3>
           <div id="history-area"><div class="loader">Yukleniyor...</div></div>
         </div>
-      </section>
+      </div>
+
     </div>
   </div>
 </div>
@@ -144,6 +158,7 @@ const CHECK_ENDPOINT = SUPABASE_URL + '/functions/v1/ai-detector-check';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let CURRENT_USER = null;
+let LAST_TEXT = '';
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -151,17 +166,19 @@ function toast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2600);
 }
-
 function escapeHtml(s) {
   return (s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 }
-
 function bandClass(band) {
   if (band === 'Yüksek') return 'band-Yuksek';
   if (band === 'Orta') return 'band-Orta';
   return 'band-Dusuk';
 }
-
+function bandColor(band) {
+  if (band === 'Yüksek') return '#b94a4a';
+  if (band === 'Orta') return '#c08a2c';
+  return '#4a8a52';
+}
 function formatDate(s) {
   const d = new Date(s);
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) + ' ' +
@@ -187,21 +204,36 @@ async function init() {
     document.getElementById('char-now').textContent = essay.value.trim().length;
   });
   document.getElementById('check-btn').addEventListener('click', runCheck);
+  document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('file-input').addEventListener('change', handleFile);
+
+  document.querySelectorAll('.tool-item.soon').forEach(t => {
+    t.addEventListener('click', () => toast('Bu arac yakinda eklenecek.'));
+  });
+}
+
+function handleFile(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const essay = document.getElementById('essay');
+    essay.value = String(reader.result || '');
+    document.getElementById('char-now').textContent = essay.value.trim().length;
+  };
+  reader.readAsText(f);
 }
 
 async function loadCredits(userId) {
   const { data } = await supabase
-    .from('user_credits')
-    .select('credits_remaining')
-    .eq('user_id', userId)
-    .maybeSingle();
+    .from('user_credits').select('credits_remaining').eq('user_id', userId).maybeSingle();
   document.getElementById('credits-display').textContent = data?.credits_remaining ?? 0;
 }
 
 async function loadHistory(userId) {
   const { data, error } = await supabase
     .from('writing_sessions')
-    .select('id, student_name, task_title, word_count, created_at, analysis')
+    .select('id, final_text, created_at, analysis')
     .eq('teacher_id', userId)
     .eq('check_type', 'paste')
     .order('created_at', { ascending: false })
@@ -210,33 +242,29 @@ async function loadHistory(userId) {
   const c = document.getElementById('history-area');
   if (error) { c.innerHTML = '<p class="muted">Gecmis yuklenemedi.</p>'; return; }
   if (!data || data.length === 0) {
-    c.innerHTML = '<div class="empty" style="padding: 20px;">Henuz kontrol yok.</div>';
+    c.innerHTML = '<p class="muted">Henuz kontrol yok.</p>';
     return;
   }
-
-  c.innerHTML = '<div class="session-list">' + data.map(s => {
+  c.innerHTML = data.map(s => {
     const band = s.analysis?.band || '—';
-    const cls = bandClass(band);
+    const snippet = (s.final_text || '').slice(0, 90);
     return `
-      <div class="session-row">
-        <div>
-          <div class="session-name">${escapeHtml(s.student_name)} <span class="mini-pill ${cls}">${escapeHtml(band)}</span></div>
-          <div class="session-meta">
-            <span>${escapeHtml(s.task_title || 'Baslik yok')}</span>
-            <span>${s.word_count || 0} kelime</span>
-            <span>${formatDate(s.created_at)}</span>
-          </div>
+      <div class="h-row">
+        <div class="h-snippet">${escapeHtml(snippet)}</div>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <span class="mini-pill ${bandClass(band)}">${escapeHtml(band)}</span>
+          <span class="h-meta">${formatDate(s.created_at)}</span>
+          <button class="secondary" data-id="${s.id}" style="padding:6px 12px;">Ac</button>
         </div>
-        <button class="secondary" data-id="${s.id}">Raporu Gor</button>
       </div>`;
-  }).join('') + '</div>';
+  }).join('');
 
   c.querySelectorAll('button[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       const row = data.find(x => x.id === btn.dataset.id);
       if (row && row.analysis) {
-        renderResult(row.analysis, { student_name: row.student_name, task_title: row.task_title, text: '' });
-        document.getElementById('result-area').scrollIntoView({ behavior: 'smooth' });
+        renderResult(row.analysis, row.final_text || '');
+        document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
       }
     });
   });
@@ -244,19 +272,15 @@ async function loadHistory(userId) {
 
 async function runCheck() {
   const text = document.getElementById('essay').value.trim();
-  const student_name = document.getElementById('student-name').value.trim();
-  const task_title = document.getElementById('task-title').value.trim();
-
-  if (text.length < 200) { toast('En az 200 karakter gerekli.'); return; }
+  if (text.length < 100) { toast('En az 100 karakter gerekli.'); return; }
 
   const btn = document.getElementById('check-btn');
-  btn.disabled = true;
-  btn.textContent = 'Inceleniyor...';
-  document.getElementById('result-area').innerHTML = '<div class="loader">Metin inceleniyor...</div>';
+  btn.disabled = true; btn.textContent = 'Inceleniyor...';
+  document.getElementById('result').innerHTML = '<div class="loader">Metin inceleniyor...</div>';
 
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { toast('Oturum bulunamadi. Tekrar giris yap.'); btn.disabled = false; btn.textContent = 'Kontrol Et'; return; }
+    if (!session) { toast('Oturum bulunamadi.'); btn.disabled = false; btn.textContent = 'Kontrol Et'; return; }
 
     const res = await fetch(CHECK_ENDPOINT, {
       method: 'POST',
@@ -265,84 +289,107 @@ async function runCheck() {
         'Authorization': 'Bearer ' + session.access_token,
         'apikey': SUPABASE_ANON_KEY,
       },
-      body: JSON.stringify({ text, student_name, task_title }),
+      body: JSON.stringify({ text }),
     });
 
     let data = null;
     try { data = await res.json(); } catch (e) { data = null; }
 
     if (res.status === 402 && data && data.error === 'quota_exhausted') {
-      renderPaywall(data);
-      btn.disabled = false; btn.textContent = 'Kontrol Et';
-      return;
+      renderPaywall(data); return;
     }
     if (!res.ok || !data || data.ok === false) {
       const msg = (data && (data.detail || data.error)) || ('HTTP ' + res.status);
-      document.getElementById('result-area').innerHTML = '<p class="muted">Bir sorun olustu: ' + escapeHtml(String(msg)) + '</p>';
-      btn.disabled = false; btn.textContent = 'Kontrol Et';
+      document.getElementById('result').innerHTML = '<p class="muted" style="padding:16px;">Bir sorun olustu: ' + escapeHtml(String(msg)) + '</p>';
       return;
     }
 
-    renderResult(data.analysis, { student_name, task_title, text });
+    renderResult(data.analysis, text);
     await loadCredits(CURRENT_USER.id);
     await loadHistory(CURRENT_USER.id);
-    toast(data.is_paid ? '1 token harcandi' : 'Ucretsiz kontrol');
+    toast(data.is_paid ? '1 kredi harcandi' : 'Ucretsiz kontrol');
   } catch (e) {
     console.error('check failed:', e);
-    document.getElementById('result-area').innerHTML = '<p class="muted">Ag hatasi. Baglantini kontrol et.</p>';
+    document.getElementById('result').innerHTML = '<p class="muted" style="padding:16px;">Ag hatasi.</p>';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Kontrol Et';
+    btn.disabled = false; btn.textContent = 'Kontrol Et';
   }
 }
 
 function renderPaywall(data) {
   const packs = (data.packs || []).map(p =>
-    `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.name)} · ${p.price} TL</a>`
-  ).join('');
-  document.getElementById('result-area').innerHTML =
+    `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.name)} · ${p.price} TL</a>`).join('');
+  document.getElementById('result').innerHTML =
     `<div class="paywall">
-       <p style="font-weight: 600; color: var(--bad); margin-bottom: 6px;">Kredi bitti</p>
-       <p class="muted" style="margin-bottom: 8px;">${escapeHtml(data.message || 'Devam etmek icin token paketi al.')}</p>
+       <p style="font-weight:600; color:var(--bad); margin-bottom:6px;">Kredi bitti</p>
+       <p class="muted" style="margin-bottom:8px;">${escapeHtml(data.message || 'Devam icin token paketi al.')}</p>
        ${packs}
      </div>`;
 }
 
-function renderResult(a, meta) {
+function donutSvg(pct, color) {
+  const r = 52, circ = 2 * Math.PI * r;
+  const off = circ * (1 - Math.max(0, Math.min(100, pct)) / 100);
+  return `<svg class="donut" viewBox="0 0 120 120" width="120" height="120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="#eee" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="12"
+      stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 60 60)"/>
+    <text class="pct" x="60" y="58" text-anchor="middle">${pct}%</text>
+    <text class="lbl" x="60" y="74" text-anchor="middle">TAHMINI</text>
+  </svg>`;
+}
+
+function highlightText(original, flagged) {
+  let html = escapeHtml(original);
+  (flagged || []).forEach(f => {
+    const esc = escapeHtml(f.text || '');
+    if (esc && esc.length > 8 && html.indexOf(esc) !== -1) {
+      html = html.split(esc).join('<mark class="ai-hl">' + esc + '</mark>');
+    }
+  });
+  return html.replace(/\n/g, '<br>');
+}
+
+function renderResult(a, original) {
   if (!a) return;
+  LAST_TEXT = original || '';
   const band = a.band || '—';
-  const cls = bandClass(band);
-  const low = Number(a.estimate_low || 0);
-  const high = Number(a.estimate_high || 0);
-  const rangeLeft = Math.max(0, Math.min(100, low));
-  const rangeWidth = Math.max(2, Math.min(100, high) - rangeLeft);
+  const low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0);
+  const mid = Math.round((low + high) / 2);
+  const color = bandColor(band);
 
   const flaggedHtml = (a.flagged_sentences && a.flagged_sentences.length)
     ? a.flagged_sentences.map(f =>
-        `<div class="flagged">
-           <div class="ftext">"${escapeHtml(f.text)}"</div>
-           <div class="freason">${escapeHtml(f.reason)}</div>
-         </div>`).join('')
+        `<div class="reason-item"><div class="rtext">"${escapeHtml(f.text)}"</div><div class="rwhy">${escapeHtml(f.reason)}</div></div>`).join('')
     : '<p class="muted">Belirgin sekilde isaretlenecek cumle bulunmadi.</p>';
 
-  document.getElementById('result-area').innerHTML =
-    `<div class="result-head">
-       <span class="band-pill ${cls}">Risk: ${escapeHtml(band)}</span>
-       <span class="est-line">Tahmini AI olasiligi: yuzde ${low}-${high}</span>
-     </div>
-     <div class="meter"><div class="range" style="left:${rangeLeft}%; width:${rangeWidth}%;"></div></div>
+  const textHtml = original ? highlightText(original, a.flagged_sentences) : '<span class="muted">Metin saklanmadi. Gecmis kayitlarda yalnizca analiz tutulur.</span>';
 
-     <div class="section-block">
+  document.getElementById('result').innerHTML =
+    `<div class="res-top">
+       ${donutSvg(mid, color)}
+       <div class="res-headline">
+         <div class="big">Bu metin tahminen yuzde ${mid} yapay zeka</div>
+         <span class="band-pill ${bandClass(band)}">Risk: ${escapeHtml(band)}</span>
+         <div class="range">Tahmini aralik: yuzde ${low}-${high}</div>
+       </div>
+     </div>
+
+     <div class="text-box">${textHtml}</div>
+     ${original ? '<div class="legend"><mark>kirmizi</mark> isaretli kisimlar daha cok yapay zekaya benziyor</div>' : ''}
+
+     <div class="detail">
        <h3>Ozet</h3>
-       <p>${escapeHtml(a.summary || '')}</p>
+       <p style="font-size:14px;">${escapeHtml(a.summary || '')}</p>
      </div>
 
-     <div class="section-block">
-       <h3>Isaretli Cumleler</h3>
+     <div class="detail">
+       <h3>Isaretli Cumleler ve Gerekce</h3>
        ${flaggedHtml}
      </div>
 
-     <div class="section-block">
+     <div class="detail">
        <h3>ESL Degerlendirmesi</h3>
        <div class="esl-box">${escapeHtml(a.esl_note || '')}</div>
      </div>
@@ -351,18 +398,21 @@ function renderResult(a, meta) {
        Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin, ogrenciyle konusarak teyit edin.
      </div>
 
-     <button class="gold" id="pdf-btn">Rapor (PDF)</button>`;
+     <button class="gold" id="pdf-btn" style="margin-top:14px;">Rapor (PDF)</button>`;
 
-  document.getElementById('pdf-btn').addEventListener('click', () => exportPdf(a, meta));
+  document.getElementById('pdf-btn').addEventListener('click', () => exportPdf(a, LAST_TEXT));
 }
 
-function exportPdf(a, meta) {
+function exportPdf(a, original) {
   const band = a.band || '—';
-  const low = Number(a.estimate_low || 0);
-  const high = Number(a.estimate_high || 0);
+  const low = Number(a.estimate_low || 0), high = Number(a.estimate_high || 0);
+  const mid = Math.round((low + high) / 2);
   const flagged = (a.flagged_sentences && a.flagged_sentences.length)
     ? a.flagged_sentences.map(f => `<div style="border-left:3px solid #c08a2c; padding:8px 12px; margin-bottom:8px; background:#fffcf3;"><em>"${escapeHtml(f.text)}"</em><div style="font-size:12px; color:#6a6a6a; margin-top:4px;">${escapeHtml(f.reason)}</div></div>`).join('')
     : '<p style="color:#6a6a6a;">Isaretli cumle yok.</p>';
+  const textBlock = original
+    ? `<h2>Incelenen Metin</h2><div style="border:1px solid #e6e0d0; padding:12px; white-space:pre-wrap; font-size:13px;">${escapeHtml(original)}</div>`
+    : '';
 
   const html =
     `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AI Detector Raporu</title>
@@ -371,28 +421,23 @@ function exportPdf(a, meta) {
        h1 { color:#1f3f3e; font-size: 22px; border-bottom: 2px solid #c89a3c; padding-bottom: 8px; }
        h2 { color:#1f3f3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 22px; }
        .meta { color:#6a6a6a; font-size: 13px; margin: 8px 0 18px; }
-       .band { display:inline-block; padding: 5px 14px; border-radius: 16px; font-weight: 700; font-size: 13px; }
+       .band { display:inline-block; padding: 5px 14px; border-radius: 16px; font-weight: 700; font-size: 13px; background:#f0e8d0; }
        .disc { background:#fffaeb; border-left:3px solid #c89a3c; padding: 12px 14px; font-size: 12px; color:#6b5318; margin-top: 22px; }
      </style></head><body>
      <h1>AI Detector - Indikatif Rapor</h1>
-     <div class="meta">
-       ${meta.student_name ? 'Ogrenci: ' + escapeHtml(meta.student_name) + '<br>' : ''}
-       ${meta.task_title ? 'Gorev: ' + escapeHtml(meta.task_title) + '<br>' : ''}
-       Tarih: ${new Date().toLocaleString('tr-TR')}
-     </div>
-     <p><span class="band" style="background:#f0e8d0;">Risk: ${escapeHtml(band)}</span>
-        &nbsp; Tahmini AI olasiligi: yuzde ${low}-${high}</p>
+     <div class="meta">Tarih: ${new Date().toLocaleString('tr-TR')}</div>
+     <p><span class="band">Risk: ${escapeHtml(band)}</span> &nbsp; Tahmini yuzde ${mid} (aralik ${low}-${high})</p>
      <h2>Ozet</h2><p>${escapeHtml(a.summary || '')}</p>
      <h2>Isaretli Cumleler</h2>${flagged}
      <h2>ESL Degerlendirmesi</h2><p>${escapeHtml(a.esl_note || '')}</p>
+     ${textBlock}
      <div class="disc">Indikatif sonuc. Modelin tahminidir, olcum degildir. Ana dili Ingilizce olmayan ogrencilerde yanlis pozitif olabilir. Tek basina kanit olarak kullanmayin.</div>
-     <script>window.onload = function(){ window.print(); }<\/script>
+     <script>window.onload=function(){window.print();}<\/script>
      </body></html>`;
 
   const w = window.open('', '_blank');
   if (!w) { toast('Pop-up engellendi. Izin ver.'); return; }
-  w.document.write(html);
-  w.document.close();
+  w.document.write(html); w.document.close();
 }
 
 init();

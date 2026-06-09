@@ -1812,6 +1812,18 @@
             <p class="t-config-note" style="margin-top:0.5rem;">Öğrenci yazarken bu görseli prompt yanında görür.</p>
           </div>
 
+          <!-- IELTS tam yazma: Task 2 ekle (sadece IELTS Task 1 secilince gorunur) -->
+          <div id="ca-w-combined-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px;">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-family:var(--font-ui); font-size:0.85rem; cursor:pointer;">
+              <input type="checkbox" id="ca-w-combined"> Bu bir IELTS tam yazma, Task 2'yi de ekle
+            </label>
+            <div id="ca-w-task2-block" style="display:none; margin-top:0.8rem;">
+              <label for="ca-w-prompt2">Task 2 Prompt</label>
+              <textarea id="ca-w-prompt2" rows="4" maxlength="2000" placeholder="Some people believe... To what extent do you agree or disagree?"></textarea>
+              <p class="t-config-note">Task 1 ve Task 2 ayri gonderi olarak olusturulur. Her biri kendi rubrigiyle ayri degerlendirilir, ogrenci her birini ayri yazar.</p>
+            </div>
+          </div>
+
           <label for="ca-w-minwords">Minimum Kelime (Opsiyonel)</label>
           <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="250">
           <p class="t-config-note">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanabilir.</p>
@@ -2835,8 +2847,22 @@
           });
 
           // Birleştir + created_at desc sırala
-          var assignments = mainAssignments.concat(vocabAssignments).sort(function (a, b) {
-            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          // Birleştir, grupları bir arada ve Task 1 üstte tutarak sırala
+          var allAssignments = mainAssignments.concat(vocabAssignments);
+          var groupAnchor = {};
+          allAssignments.forEach(function (a) {
+            var g = a.config && a.config.group_id;
+            if (g) {
+              var t = new Date(a.created_at || 0).getTime();
+              if (groupAnchor[g] == null || t < groupAnchor[g]) groupAnchor[g] = t;
+            }
+          });
+          var assignments = allAssignments.sort(function (a, b) {
+            var ga = a.config && a.config.group_id, gb = b.config && b.config.group_id;
+            var ta = ga ? groupAnchor[ga] : new Date(a.created_at || 0).getTime();
+            var tb = gb ? groupAnchor[gb] : new Date(b.created_at || 0).getTime();
+            if (ta !== tb) return tb - ta;
+            return ((a.config && a.config.part_order) || 0) - ((b.config && b.config.part_order) || 0);
           });
 
           document.getElementById('tab-count-assignments').textContent = assignments.length;
@@ -2847,6 +2873,7 @@
             return;
           }
 
+          var seenGroups = {};
           list.innerHTML = assignments.map(function (a) {
             var total = parseInt(a.total_students) || 0;
             var completed = parseInt(a.completed_count) || 0;
@@ -2862,7 +2889,10 @@
               if (a.config.category) meta.push(humanize(a.config.category));
               meta.push('Hedef: ' + (a.config.count || 0) + ' soru');
             } else if (a.type === 'writing' && a.config) {
-              meta.push((a.config.exam_type || '') + ' Task ' + (a.config.task_number || ''));
+              var ttLabel = a.config.part === 'task1' ? 'Task 1'
+                : a.config.part === 'task2' ? 'Task 2'
+                : (a.config.text_type_display || a.config.text_type || '');
+              meta.push(((a.config.exam_type || '').toUpperCase() + ' ' + ttLabel).trim());
               if (a.config.min_words) meta.push(a.config.min_words + '+ kelime');
             } else if (a.type === 'vocab' && a.config) {
               meta.push((a.config.word_count || 0) + ' kelime');
@@ -2874,7 +2904,12 @@
               : '';
 
             var kind = a._kind === 'vocab' ? 'vocab' : 'main';
-            return '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '" data-kind="' + kind + '" data-type="' + esc(a.type) + '">'
+            var grpHeader = '';
+            if (a.config && a.config.group_id && !seenGroups[a.config.group_id]) {
+              seenGroups[a.config.group_id] = true;
+              grpHeader = '<div style="margin:0.7rem 0 0.1rem; font-family:var(--font-ui,sans-serif); font-size:0.78rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--gold,#c89a3c);">IELTS Tam Yazma · ' + esc(a.config.group_title || a.title) + '</div>';
+            }
+            return grpHeader + '<article class="ks-assign-card' + (isOverdue ? ' overdue' : '') + '" data-id="' + esc(a.assignment_id) + '" data-title="' + esc(a.title) + '" data-kind="' + kind + '" data-type="' + esc(a.type) + '">'
               + '<div class="ks-assign-head-row">'
                 + '<div class="ks-assign-titles">'
                   + '<span class="ks-assign-type type-' + a.type + '">' + TYPE_LABELS[a.type] + '</span>'
@@ -3354,6 +3389,12 @@
       });
       document.getElementById('ca-w-texttype').addEventListener('change', toggleImageUploadSection);
 
+      var combinedChkEl = document.getElementById('ca-w-combined');
+      if (combinedChkEl) combinedChkEl.addEventListener('change', function () {
+        var t2b = document.getElementById('ca-w-task2-block');
+        if (t2b) t2b.style.display = combinedChkEl.checked ? '' : 'none';
+      });
+
       function toggleImageUploadSection() {
         var examSel = document.getElementById('ca-w-exam');
         var ttSel = document.getElementById('ca-w-texttype');
@@ -3364,6 +3405,17 @@
         var ttName = ttOpt ? (ttOpt.textContent || '') : '';
         var isTask1 = /task[\s_-]?1\b/i.test(ttName);
         section.style.display = (isIelts && isTask1) ? '' : 'none';
+        var combinedSec = document.getElementById('ca-w-combined-section');
+        if (combinedSec) {
+          var showCombined = (isIelts && isTask1);
+          combinedSec.style.display = showCombined ? '' : 'none';
+          if (!showCombined) {
+            var cb = document.getElementById('ca-w-combined');
+            if (cb) cb.checked = false;
+            var t2b = document.getElementById('ca-w-task2-block');
+            if (t2b) t2b.style.display = 'none';
+          }
+        }
       }
 
       var templatesInitialized = false;
@@ -3519,6 +3571,9 @@
         if (!title) { caErr.textContent = 'Başlık boş olamaz.'; return; }
 
         var config = {};
+        var secondConfig = null;
+        var firstTitle = title;
+        var secondTitle = '';
         if (caCurrentType === 'questions') {
           config.exam_type = document.getElementById('ca-q-exam').value;
           var cat = document.getElementById('ca-q-cat').value.trim();
@@ -3575,6 +3630,35 @@
               return;
             }
           }
+
+          // IELTS tam yazma: Task 2 icin bagli ikinci config
+          var combinedChk2 = document.getElementById('ca-w-combined');
+          if (combinedChk2 && combinedChk2.checked && config.exam_type === 'ielts') {
+            var prompt2 = document.getElementById('ca-w-prompt2').value.trim();
+            if (!prompt2) { caErr.textContent = 'Task 2 prompt boş olamaz.'; return; }
+            var allTypes = await loadWritingTextTypes();
+            var t2 = (allTypes || []).find(function (t) { return t.exam === 'ielts' && t.text_type === 'task2'; });
+            if (!t2) { caErr.textContent = 'IELTS Task 2 text type bulunamadı.'; return; }
+            var groupId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+              : ('grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+            config.group_id = groupId;
+            config.part = 'task1';
+            config.part_order = 1;
+            config.group_title = title;
+            secondConfig = {
+              exam_type: 'ielts',
+              text_type_id: t2.id,
+              text_type: t2.text_type,
+              text_type_display: t2.display_name,
+              prompt: prompt2,
+              group_id: groupId,
+              part: 'task2',
+              part_order: 2,
+              group_title: title
+            };
+            firstTitle = title + ' · Task 1';
+            secondTitle = title + ' · Task 2';
+          }
         } else if (caCurrentType === 'reading') {
           var url = document.getElementById('ca-r-url').value.trim();
           if (!url) { caErr.textContent = 'URL boş olamaz.'; return; }
@@ -3605,6 +3689,18 @@
               p_deadline: dueIso,
               p_description: desc || null
             });
+          } else if (caCurrentType === 'writing' && secondConfig) {
+            var r1 = await sb.rpc('create_assignment', {
+              p_class_id: classId, p_type: 'writing', p_title: firstTitle,
+              p_description: desc || null, p_config: config, p_due_date: dueIso
+            });
+            if (r1.error) throw r1.error;
+            var r2 = await sb.rpc('create_assignment', {
+              p_class_id: classId, p_type: 'writing', p_title: secondTitle,
+              p_description: desc || null, p_config: secondConfig, p_due_date: dueIso
+            });
+            if (r2.error) throw r2.error;
+            r = r2;
           } else {
             r = await sb.rpc('create_assignment', {
               p_class_id: classId,

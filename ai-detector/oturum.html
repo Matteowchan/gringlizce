@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yazma Oturumu — Gri English</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #2C5856;
+  --teal-dark: #1f3f3e;
+  --gold: #c89a3c;
+  --cream: #faf7ee;
+  --ink: #1b1b1b;
+  --muted: #6a6a6a;
+  --border: #e6e0d0;
+  --bad: #b94a4a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.5; }
+h1, h2 { font-family: 'Lora', serif; color: var(--teal-dark); }
+.wrap { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+.bar { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px 22px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.bar h1 { font-size: 18px; }
+.timer { font-family: 'Lora', serif; font-size: 22px; color: var(--teal-dark); font-weight: 700; }
+.timer.warn { color: var(--gold); }
+.timer.bad { color: var(--bad); }
+.consent { background: #fffaeb; border-left: 3px solid var(--gold); padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #6b5318; margin-bottom: 16px; }
+.prompt-box { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 14px; }
+.prompt-box h2 { font-size: 17px; margin-bottom: 10px; }
+.prompt-text { white-space: pre-wrap; color: var(--ink); line-height: 1.65; font-size: 15px; }
+.editor-box { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+textarea#editor { width: 100%; min-height: 480px; border: none; outline: none; resize: vertical; font: 16px/1.7 'Inter', sans-serif; color: var(--ink); background: transparent; }
+.controls { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.counter { font-size: 14px; color: var(--muted); }
+.counter strong { color: var(--teal-dark); }
+button { background: var(--teal); color: white; border: none; padding: 12px 22px; border-radius: 6px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
+button:hover { background: var(--teal-dark); }
+button:disabled { background: #aaa; cursor: not-allowed; }
+.loader { text-align: center; padding: 60px 20px; color: var(--muted); }
+.hidden { display: none; }
+.success-box { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 40px 24px; text-align: center; }
+.success-box h1 { color: var(--teal); margin-bottom: 10px; }
+.success-box p { color: var(--muted); }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-dark); color: white; padding: 12px 20px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity 0.3s; max-width: 300px; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loader" class="loader">Oturum yukleniyor...</div>
+
+  <div id="active-view" class="hidden">
+    <div class="bar">
+      <h1 id="task-title">Yazma Oturumu</h1>
+      <div class="timer" id="timer">--:--</div>
+    </div>
+
+    <div class="consent">
+      <strong>Bilgilendirme:</strong> Bu yazma surecin kaydediliyor (tus vurus zamanlari, yapistirma, silme, otomatik surumler). Lutfen sureci dogal yasa. Yapistirma yapabilirsin ama buyuk yapistirmalar ogretmenin raporunda gorunur.
+    </div>
+
+    <div class="prompt-box">
+      <h2>Soru</h2>
+      <div class="prompt-text" id="prompt-text"></div>
+    </div>
+
+    <div class="editor-box">
+      <textarea id="editor" placeholder="Yazmaya buradan basla..." autofocus></textarea>
+      <div class="controls">
+        <div class="counter">
+          <strong id="word-count">0</strong> kelime  
+           |  <strong id="elapsed">0:00</strong> gecti
+        </div>
+        <button id="submit-btn">Gonder</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="submitted-view" class="hidden">
+    <div class="success-box">
+      <h1>Tesekkurler</h1>
+      <p>Yazin gonderildi. Ogretmenin raporunu inceleyecek.</p>
+    </div>
+  </div>
+
+  <div id="error-view" class="hidden">
+    <div class="success-box">
+      <h1 style="color: var(--bad);">Oturum Bulunamadi</h1>
+      <p>Bu link gecersiz veya oturum kapatilmis. Ogretmeninle iletisime gec.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const params = new URLSearchParams(location.search);
+const sessionId = params.get('id');
+
+let session = null;
+let startTime = null;
+let lastSnapshotMs = 0;
+let lastText = '';
+let pasteCount = 0;
+let pasteWordTotal = 0;
+let largestPasteWords = 0;
+let submitted = false;
+let eventBuffer = [];
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function ms() { return Date.now() - startTime; }
+function countWords(s) { return (s.trim().match(/\S+/g) || []).length; }
+function escape(s) { return (s || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+
+function pushEvent(event_type, payload) {
+  if (submitted) return;
+  eventBuffer.push({ session_id: sessionId, event_type, event_time_ms: ms(), payload });
+  if (eventBuffer.length >= 50) flushEvents();
+}
+
+async function flushEvents() {
+  if (eventBuffer.length === 0) return;
+  const batch = eventBuffer.splice(0);
+  await supabase.from('writing_events').insert(batch);
+}
+
+setInterval(flushEvents, 8000);
+window.addEventListener('beforeunload', flushEvents);
+
+async function init() {
+  if (!sessionId) { showError(); return; }
+  
+  const { data, error } = await supabase
+    .from('writing_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+  
+  if (error || !data) { showError(); return; }
+  if (data.submitted_at) {
+    document.getElementById('loader').classList.add('hidden');
+    document.getElementById('submitted-view').classList.remove('hidden');
+    return;
+  }
+  
+  session = data;
+  startTime = data.started_at ? new Date(data.started_at).getTime() : Date.now();
+  
+  if (!data.started_at) {
+    await supabase.from('writing_sessions')
+      .update({ started_at: new Date().toISOString() })
+      .eq('id', sessionId);
+  }
+  
+  document.getElementById('task-title').textContent = data.task_title || 'Yazma Oturumu';
+  document.getElementById('prompt-text').textContent = data.prompt || '';
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('active-view').classList.remove('hidden');
+  
+  setupEditor();
+  startTimer();
+  
+  pushEvent('start', { time_limit_minutes: data.time_limit_minutes });
+}
+
+function setupEditor() {
+  const editor = document.getElementById('editor');
+  
+  editor.addEventListener('input', (e) => {
+    const text = editor.value;
+    document.getElementById('word-count').textContent = countWords(text);
+    
+    // Snapshot her 20 saniyede
+    if (ms() - lastSnapshotMs > 20000) {
+      pushEvent('snapshot', { text });
+      lastSnapshotMs = ms();
+    }
+    
+    // Keystroke (single char)
+    if (text.length === lastText.length + 1) {
+      const idx = findDiffIndex(lastText, text);
+      pushEvent('keystroke', { char: text[idx], pos: idx });
+    } else if (text.length < lastText.length) {
+      const diff = lastText.length - text.length;
+      pushEvent('delete', { count: diff });
+    }
+    
+    lastText = text;
+  });
+  
+  editor.addEventListener('paste', (e) => {
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const words = countWords(pasted);
+    pasteCount++;
+    pasteWordTotal += words;
+    largestPasteWords = Math.max(largestPasteWords, words);
+    pushEvent('paste', { text: pasted, words, length: pasted.length });
+    if (words >= 30) toast('Buyuk yapistirma kaydedildi (' + words + ' kelime)');
+  });
+  
+  editor.addEventListener('blur', () => pushEvent('focus_lost', {}));
+  editor.addEventListener('focus', () => pushEvent('focus_back', {}));
+  
+  document.getElementById('submit-btn').addEventListener('click', submit);
+}
+
+function findDiffIndex(a, b) {
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return i;
+  return a.length;
+}
+
+function startTimer() {
+  const limit = session.time_limit_minutes * 60;
+  setInterval(() => {
+    const elapsed = Math.floor(ms() / 1000);
+    const remaining = limit - elapsed;
+    const tEl = document.getElementById('timer');
+    const eEl = document.getElementById('elapsed');
+    
+    eEl.textContent = formatTime(elapsed);
+    
+    if (remaining <= 0) {
+      tEl.textContent = 'Sure bitti';
+      tEl.classList.add('bad');
+    } else if (remaining < 300) {
+      tEl.textContent = formatTime(remaining);
+      tEl.classList.add('warn');
+    } else {
+      tEl.textContent = formatTime(remaining);
+    }
+  }, 1000);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+async function submit() {
+  if (submitted) return;
+  const editor = document.getElementById('editor');
+  const text = editor.value;
+  if (text.trim().length < 20) { toast('En az 20 karakter yazmalisin.'); return; }
+  
+  if (!confirm('Yaziyi gondermek istediginden emin misin? Bu islem geri alinamaz.')) return;
+  
+  submitted = true;
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('submit-btn').textContent = 'Gonderiliyor...';
+  
+  pushEvent('submit', { word_count: countWords(text) });
+  await flushEvents();
+  
+  const duration = Math.floor(ms() / 1000);
+  
+  const { error } = await supabase
+    .from('writing_sessions')
+    .update({
+      submitted_at: new Date().toISOString(),
+      final_text: text,
+      word_count: countWords(text),
+      duration_seconds: duration,
+      paste_count: pasteCount,
+      paste_word_total: pasteWordTotal,
+      largest_paste_words: largestPasteWords
+    })
+    .eq('id', sessionId);
+  
+  if (error) {
+    toast('Gonderim hatasi: ' + error.message);
+    submitted = false;
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('submit-btn').textContent = 'Gonder';
+    return;
+  }
+  
+  document.getElementById('active-view').classList.add('hidden');
+  document.getElementById('submitted-view').classList.remove('hidden');
+}
+
+function showError() {
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('error-view').classList.remove('hidden');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -233,6 +233,17 @@
     .wd-save-msg { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem; min-height: 1.2rem; }
     .wd-save-msg.ok { color: var(--success); font-weight: 600; }
     .wd-save-msg.err { color: var(--error); }
+    .wd-ai-eval {
+      width: 100%; margin: 0 0 0.8rem; padding: 0.6rem 1rem;
+      font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+      color: var(--teal); background: transparent;
+      border: 1.5px solid var(--gold); border-radius: 6px; cursor: pointer;
+    }
+    .wd-ai-eval:hover { background: var(--gold); color: #fff; }
+    .wd-ai-eval:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wd-ai-msg { font-family: var(--font-ui); font-size: 0.78rem; color: var(--text-muted); margin: -0.3rem 0 0.8rem; min-height: 1rem; }
+    .wd-ai-msg.ok { color: var(--success); }
+    .wd-ai-msg.err { color: var(--error); }
 
     /* Comments list (sidebar bottom) */
     .wd-comments-list {
@@ -361,10 +372,10 @@
         { key: 'task_achievement', label: 'Task Achievement', min: 0, max: 9, step: 0.5 },
         { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
         { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
-        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+        { key: 'grammatical_range', label: 'Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
       ],
       computeOverall: function (scores) {
-        var keys = ['task_achievement','coherence_cohesion','lexical_resource','grammar'];
+        var keys = ['task_achievement','coherence_cohesion','lexical_resource','grammatical_range'];
         var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
         if (vals.length === 0) return null;
         var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
@@ -378,16 +389,42 @@
         { key: 'task_response', label: 'Task Response', min: 0, max: 9, step: 0.5 },
         { key: 'coherence_cohesion', label: 'Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
         { key: 'lexical_resource', label: 'Lexical Resource', min: 0, max: 9, step: 0.5 },
-        { key: 'grammar', label: 'Grammar', min: 0, max: 9, step: 0.5 }
+        { key: 'grammatical_range', label: 'Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
       ],
       computeOverall: function (scores) {
-        var keys = ['task_response','coherence_cohesion','lexical_resource','grammar'];
+        var keys = ['task_response','coherence_cohesion','lexical_resource','grammatical_range'];
         var vals = keys.map(function (k) { return parseFloat(scores[k]); }).filter(function (v) { return !isNaN(v); });
         if (vals.length === 0) return null;
         var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
         return Math.round(avg * 2) / 2;
       },
       unit: 'Band'
+    },
+    ielts_writing_complete: {
+      label: 'IELTS Tam Yazma (T1+T2)',
+      criteria: [
+        { key: 'task1_achievement', label: 'Task 1: Task Achievement', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_coherence', label: 'Task 1: Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_lexical', label: 'Task 1: Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'task1_grammar', label: 'Task 1: Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_response', label: 'Task 2: Task Response', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_coherence', label: 'Task 2: Coherence & Cohesion', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_lexical', label: 'Task 2: Lexical Resource', min: 0, max: 9, step: 0.5 },
+        { key: 'task2_grammar', label: 'Task 2: Grammatical Range & Accuracy', min: 0, max: 9, step: 0.5 }
+      ],
+      computeOverall: function (scores) {
+        function avg(ks) {
+          var v = ks.map(function (k) { return parseFloat(scores[k]); }).filter(function (x) { return !isNaN(x); });
+          return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+        }
+        var t1 = avg(['task1_achievement','task1_coherence','task1_lexical','task1_grammar']);
+        var t2 = avg(['task2_response','task2_coherence','task2_lexical','task2_grammar']);
+        if (t1 == null && t2 == null) return null;
+        if (t1 == null) return Math.round(t2 * 2) / 2;
+        if (t2 == null) return Math.round(t1 * 2) / 2;
+        return Math.round(((t1 + 2 * t2) / 3) * 2) / 2;
+      },
+      unit: 'Band (genel)'
     },
     ib_english_b: {
       label: 'IB English B',
@@ -466,6 +503,7 @@
 
   function autoPickRubric(exam, textType) {
     if (exam === 'ielts') {
+      if (textType && /complete|both/i.test(textType)) return 'ielts_writing_complete';
       if (textType && /task[\s_-]?1/i.test(textType)) return 'ielts_task1';
       return 'ielts_task2';
     }
@@ -512,6 +550,8 @@
               return '<option value="' + k + '"' + (k === state.rubricType ? ' selected' : '') + '>' + RUBRICS[k].label + '</option>';
             }).join('')
           + '</select>'
+          + '<button type="button" class="wd-ai-eval" id="wd-ai-eval">Gri ile değerlendir</button>'
+          + '<div class="wd-ai-msg" id="wd-ai-msg"></div>'
           + '<div id="wd-criteria"></div>'
           + '<div class="wd-overall">'
             + '<div class="wd-overall-label">Genel</div>'
@@ -529,6 +569,7 @@
     renderText();
     renderCriteria();
     renderOverall();
+    updateAiBtn();
     renderCommentsList();
     bindHandlers();
   }
@@ -639,6 +680,62 @@
     document.getElementById('wd-overall-unit').textContent = (v != null && rubric.unit) ? rubric.unit : '';
   }
 
+  function updateAiBtn() {
+    var btn = document.getElementById('wd-ai-eval');
+    if (!btn) return;
+    var rubric = RUBRICS[state.rubricType];
+    var exam = (state.writing.exam || '').toLowerCase();
+    var ok = rubric && rubric.criteria.length > 0 && (exam === 'ielts' || exam === 'ib' || exam === 'toefl');
+    btn.style.display = ok ? '' : 'none';
+    var msgEl = document.getElementById('wd-ai-msg');
+    if (msgEl) msgEl.style.display = ok ? '' : 'none';
+  }
+
+  async function aiEvaluate() {
+    var rubric = RUBRICS[state.rubricType];
+    if (!rubric || !rubric.criteria.length) return;
+    var text = state.writing.text || '';
+    var msgEl = document.getElementById('wd-ai-msg');
+    var btn = document.getElementById('wd-ai-eval');
+    if (!text.trim()) { msgEl.className = 'wd-ai-msg err'; msgEl.textContent = 'Öğrenci metni yok.'; return; }
+
+    btn.disabled = true;
+    msgEl.className = 'wd-ai-msg';
+    msgEl.textContent = 'Gri değerlendiriyor...';
+    try {
+      var r = await sb.functions.invoke('gri-evaluate-rubric', {
+        body: {
+          text: text,
+          prompt: state.writing.prompt_snapshot || '',
+          exam: state.writing.exam || '',
+          text_type: state.writing.text_type || '',
+          criteria: rubric.criteria,
+          unit: rubric.unit || ''
+        }
+      });
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) throw new Error(d.error || 'Değerlendirme başarısız.');
+      if (d.scores) {
+        Object.keys(d.scores).forEach(function (k) { state.scores[k] = d.scores[k]; });
+      }
+      if (d.summary) {
+        state.summary = d.summary;
+        var sumEl = document.getElementById('wd-summary');
+        if (sumEl) sumEl.value = d.summary;
+      }
+      renderCriteria();
+      renderOverall();
+      msgEl.className = 'wd-ai-msg ok';
+      msgEl.textContent = 'Gri taslağı doldurdu. Kontrol edip Kaydet.';
+    } catch (err) {
+      msgEl.className = 'wd-ai-msg err';
+      msgEl.textContent = 'Hata: ' + (err.message || err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function renderCommentsList() {
     var box = document.getElementById('wd-comments-list');
     if (state.comments.length === 0) {
@@ -667,6 +764,8 @@
     var addBtn = document.getElementById('wd-sel-add');
 
     document.addEventListener('selectionchange', function () {
+      // Yorum penceresi acikken secimi koru, canli secime dokunma
+      if (document.getElementById('wd-overlay').classList.contains('show')) return;
       var sel = window.getSelection();
       if (!sel.rangeCount || sel.isCollapsed) {
         popup.classList.remove('show');
@@ -715,6 +814,7 @@
       state.scores = {}; // reset scores
       renderCriteria();
       renderOverall();
+      updateAiBtn();
     });
 
     // Summary
@@ -724,6 +824,10 @@
 
     // Save
     document.getElementById('wd-save').addEventListener('click', saveEvaluation);
+
+    // Gri ile degerlendir (AI taslak)
+    var aiBtn = document.getElementById('wd-ai-eval');
+    if (aiBtn) aiBtn.addEventListener('click', aiEvaluate);
 
     // Comment overlay
     document.getElementById('wd-comment-cancel').addEventListener('click', closeCommentEditor);
@@ -765,6 +869,7 @@
 
   // ============ Comment editor ============
   function openNewComment(sel) {
+    state.currentSelection = sel; // secimi pencere acilirken sabitle
     state.editingCommentId = null;
     state.editingCategory = 'other';
     document.getElementById('wd-comment-title').textContent = 'Yeni Yorum';

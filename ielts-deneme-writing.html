@@ -65,6 +65,18 @@
     .task-section { display: none; }
     .task-section.active { display: block; }
 
+    .mobile-pane-tabs { display: none; gap: 0.5rem; padding: 0.6rem 1.1rem 0; background: #fff; }
+    .mobile-pane-tabs button { flex: 1; padding: 0.55rem; border: 1px solid #d8d2c4; background: #fff; border-radius: 8px; font-family: inherit; font-size: 0.88rem; cursor: pointer; color: #555; }
+    .mobile-pane-tabs button.active { background: var(--accent, #c89a3c); color: #fff; border-color: var(--accent, #c89a3c); font-weight: 700; }
+    [data-theme="dark"] .mobile-pane-tabs { background: #1a1f28; }
+    [data-theme="dark"] .mobile-pane-tabs button { background: #1a1f28; border-color: #2d3548; color: #aaa; }
+    @media (max-width: 900px) {
+      .mobile-pane-tabs { display: flex; }
+      .task-prompt, .task-editor { padding: 1.1rem 1.1rem !important; }
+      .task-wrapper.m-editor .task-prompt { display: none; }
+      .task-wrapper.m-prompt .task-editor { display: none; }
+    }
+
     .task-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: calc(100vh - 110px); }
     @media (max-width: 900px) { .task-wrapper { grid-template-columns: 1fr; } }
     .task-prompt, .task-editor { padding: 2rem 2.5rem; background: #fff; overflow-y: auto; max-height: calc(100vh - 110px); }
@@ -87,6 +99,16 @@
     .editor-meta .word-display { font-family: monospace; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 12px; background: #f0ede5; }
     .editor-meta .word-display.ok { background: #4a7a4a; color: #fff; }
     .editor-meta .word-display.low { background: #c63838; color: #fff; }
+    .editor-meta { position: sticky; top: 0; background: #fff; z-index: 5; padding: 0.4rem 0; }
+    [data-theme="dark"] .editor-meta { background: #1a1f28; }
+    .editor-meta .meta-right { display: inline-flex; align-items: center; gap: 0.6rem; }
+    .focus-toggle { background: transparent; border: 1px solid #d8d2c4; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.8rem; cursor: pointer; color: #555; font-family: inherit; }
+    .focus-toggle:hover { background: #faf7ee; }
+    .focus-toggle.active { background: var(--accent, #c89a3c); color: #fff; border-color: var(--accent, #c89a3c); }
+    [data-theme="dark"] .focus-toggle { border-color: #2d3548; color: #aaa; }
+    #testContainer.focus-mode .task-prompt { display: none; }
+    #testContainer.focus-mode .task-wrapper { grid-template-columns: 1fr; }
+    #testContainer.focus-mode .task-editor { max-width: 860px; margin: 0 auto; width: 100%; }
     .editor-textarea {
       width: 100%;
       min-height: 320px;
@@ -685,6 +707,15 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="max-width:520px; text-align:center;">
+      <div style="font-family:Georgia,serif; font-size:2.2rem; color:#4a7a4a; margin-bottom:0.4rem;">✓</div>
+      <h3 id="successTitle">Gönderildi</h3>
+      <p id="successMsg" class="modal-sub" style="margin-bottom:1.5rem;"></p>
+      <button class="btn-confirm" id="successAction" style="width:100%;">Devam</button>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
@@ -697,6 +728,7 @@
       startedAt: null, duration: 60 * 60, user: null,
       timerInterval: null, finished: false, currentTask: 1,
       selectedPackage: null,
+      credits: { task1_only: 0, task2_only: 0, both: 0 },
       // Timer kontrolü
       timerStartedAt: null,   // running iken effective start (Date.now() - elapsed*1000)
       timerElapsed: 0,         // pause iken birikmiş saniye
@@ -776,6 +808,9 @@
       document.querySelectorAll('.task-section').forEach(el => el.classList.toggle('active', el.dataset.partNumber == n));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.part == n));
       window.scrollTo(0, 0);
+      // Sekme gizliyken autoGrow scrollHeight 0 okur, gorununce yeniden buyut
+      var ta = document.getElementById('editor-' + n);
+      if (ta) autoGrowTextarea(ta);
     }
 
     function renderTasks() {
@@ -802,12 +837,19 @@
         promptHtml += `<p class="task-min-words">You should write at least ${minWords} words.</p>`;
 
         sec.innerHTML = `
-          <div class="task-wrapper">
+          <div class="mobile-pane-tabs">
+            <button type="button" data-pane="prompt">Soru</button>
+            <button type="button" data-pane="editor" class="active">Cevabım</button>
+          </div>
+          <div class="task-wrapper m-editor">
             <div class="task-prompt">${promptHtml}</div>
             <div class="task-editor">
               <div class="editor-meta">
                 <span class="word-target">Hedef: ${minWords}+ kelime</span>
-                <span class="word-display" id="word-display-${part.part_number}">0 kelime</span>
+                <span class="meta-right">
+                  <span class="word-display" id="word-display-${part.part_number}">0 kelime</span>
+                  <button type="button" class="focus-toggle" title="Dikkat dağıtmadan yaz">Odak</button>
+                </span>
               </div>
               <textarea class="editor-textarea" id="editor-${part.part_number}" data-task="${part.part_number}" data-min="${minWords}" placeholder="Cevabını buraya yaz..." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
               <div class="editor-saved" id="saved-${part.part_number}">Henüz kaydedilmedi</div>
@@ -830,6 +872,37 @@
           document.getElementById('saved-' + part.part_number).textContent = 'Kaydedildi ' + new Date().toLocaleTimeString('tr-TR');
         });
       }
+
+      document.querySelectorAll('.focus-toggle').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var c = document.getElementById('testContainer');
+          var on = c.classList.toggle('focus-mode');
+          document.querySelectorAll('.focus-toggle').forEach(function (x) {
+            x.classList.toggle('active', on);
+            x.textContent = on ? 'Odaktan Çık' : 'Odak';
+          });
+          var ta2 = document.getElementById('editor-' + state.currentTask);
+          if (ta2) autoGrowTextarea(ta2);
+        });
+      });
+
+      document.querySelectorAll('.mobile-pane-tabs').forEach(function (bar) {
+        var wrapper = bar.parentElement.querySelector('.task-wrapper');
+        bar.querySelectorAll('button').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var pane = b.dataset.pane;
+            bar.querySelectorAll('button').forEach(function (x) {
+              x.classList.toggle('active', x === b);
+            });
+            wrapper.classList.toggle('m-editor', pane === 'editor');
+            wrapper.classList.toggle('m-prompt', pane === 'prompt');
+            if (pane === 'editor') {
+              var ta3 = wrapper.querySelector('.editor-textarea');
+              if (ta3) autoGrowTextarea(ta3);
+            }
+          });
+        });
+      });
     }
 
     function autoGrowTextarea(ta) {
@@ -949,7 +1022,58 @@
 
     document.getElementById('submitBtn').addEventListener('click', () => {
       document.getElementById('submitModal').classList.add('show');
+      loadWritingCredits();
     });
+
+    function applyCreditsToModal() {
+      ['task1_only', 'task2_only', 'both'].forEach(function (pkg) {
+        var opt = document.querySelector('.package-option[data-pkg="' + pkg + '"]');
+        if (!opt) return;
+        var head = opt.querySelector('.pkg-head');
+        var old = opt.querySelector('.pkg-credit-note');
+        if (old) old.remove();
+        var n = Number(state.credits[pkg] || 0);
+        if (n > 0 && head) {
+          var note = document.createElement('div');
+          note.className = 'pkg-credit-note';
+          note.style.cssText = 'font-size:0.8rem; color:#4a7a4a; font-weight:700; margin-top:0.3rem;';
+          note.textContent = 'Krediniz var: ' + n + ' · ödeme yok, krediyle gönderilir';
+          head.appendChild(note);
+        }
+      });
+      var btn = document.getElementById('confirmSubmit');
+      if (btn && state.selectedPackage && !btn.disabled) {
+        btn.textContent = confirmLabel(state.selectedPackage);
+      }
+    }
+
+    function confirmLabel(pkg) {
+      if (pkg === 'draft') return 'Kaydet ve Bitir';
+      if (pkg === 'gri_ai') return 'Gri ile Değerlendir';
+      if (['task1_only', 'task2_only', 'both'].indexOf(pkg) !== -1 && Number(state.credits[pkg] || 0) > 0) return 'Kredinle Gönder';
+      return 'Ödemeye Geç';
+    }
+
+    async function loadWritingCredits() {
+      try {
+        var r = await sb.rpc('get_user_writing_credits');
+        if (r.error) throw r.error;
+        state.credits = r.data || { task1_only: 0, task2_only: 0, both: 0 };
+      } catch (e) {
+        state.credits = { task1_only: 0, task2_only: 0, both: 0 };
+      }
+      applyCreditsToModal();
+    }
+
+    function showSuccess(title, msg, url, label) {
+      document.getElementById('submitModal').classList.remove('show');
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successMsg').textContent = msg;
+      var act = document.getElementById('successAction');
+      act.textContent = label || 'Devam';
+      act.onclick = function () { window.location.href = url; };
+      document.getElementById('successModal').classList.add('show');
+    }
 
     // Package selection
     document.querySelectorAll('.package-option').forEach(opt => {
@@ -959,58 +1083,80 @@
         state.selectedPackage = opt.dataset.pkg;
         const btn = document.getElementById('confirmSubmit');
         btn.disabled = false;
-        btn.textContent = state.selectedPackage === 'draft' ? 'Kaydet ve Bitir' : 'Ödemeye Geç';
+        btn.textContent = confirmLabel(state.selectedPackage);
       });
     });
 
     document.getElementById('confirmSubmit').addEventListener('click', async () => {
-      if (state.finished || !state.selectedPackage) return;
-      state.finished = true;
+      if (!state.selectedPackage) { alert('Lütfen bir paket seç.'); return; }
+      if (state.finished) return;
       const btn = document.getElementById('confirmSubmit');
+      const prevText = btn.textContent;
+      state.finished = true;
       btn.textContent = 'Gönderiliyor…';
       btn.disabled = true;
 
-      const elapsed = currentElapsed();
-      const w1 = countWords(state.essays[1] || '');
-      const w2 = countWords(state.essays[2] || '');
+      try {
+        const elapsed = currentElapsed();
+        const w1 = countWords(state.essays[1] || '');
+        const w2 = countWords(state.essays[2] || '');
+        const pkg = state.selectedPackage;
+        const paidPkgs = ['task1_only', 'task2_only', 'both'];
 
-      const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
-        user_id: state.user.id,
-        test_id: state.test.id,
-        task1_essay: state.essays[1] || '',
-        task2_essay: state.essays[2] || '',
-        task1_word_count: w1,
-        task2_word_count: w2,
-        package_type: state.selectedPackage,
-        payment_status: state.selectedPackage === 'draft' ? 'draft' : 'unpaid',
-        submitted_at: new Date().toISOString(),
-        time_spent_seconds: elapsed,
-      }).select().single();
+        // Ucretli paket + kredi varsa: krediyle gonder, Shopier yok
+        if (paidPkgs.indexOf(pkg) !== -1 && Number(state.credits[pkg] || 0) > 0) {
+          const { data: cr, error: crErr } = await sb.rpc('submit_writing_with_credit', {
+            p_test_id: state.test.id,
+            p_task1: state.essays[1] || '',
+            p_task2: state.essays[2] || '',
+            p_w1: w1, p_w2: w2,
+            p_package_type: pkg,
+            p_time: elapsed
+          });
+          if (crErr) throw crErr;
+          if (cr && cr.used_credit) {
+            localStorage.removeItem('ielts_writing_' + TEST_SLUG);
+            if (typeof window.triggerBadgeCheck === 'function') window.triggerBadgeCheck({ force: true });
+            showSuccess('Krediyle gönderildi', 'Yazın öğretmenine iletildi. Değerlendirme sonucun panelinde görünecek.', 'panelim.html', 'Panele Git');
+            return;
+          }
+          // kredi bulunamadi (yaris) → normal akisa dus
+        }
 
-      if (error) {
-        alert('Gönderim hatası: ' + error.message);
+        const { data: sub, error } = await sb.from('ielts_writing_submissions').insert({
+          user_id: state.user.id,
+          test_id: state.test.id,
+          task1_essay: state.essays[1] || '',
+          task2_essay: state.essays[2] || '',
+          task1_word_count: w1,
+          task2_word_count: w2,
+          package_type: pkg,
+          payment_status: pkg === 'draft' ? 'draft' : 'unpaid',
+          submitted_at: new Date().toISOString(),
+          time_spent_seconds: elapsed,
+        }).select().single();
+
+        if (error) throw error;
+        if (!sub || !sub.id) throw new Error('Kayıt oluşturulamadı (boş yanıt).');
+
+        localStorage.removeItem('ielts_writing_' + TEST_SLUG);
+
+        if (typeof window.triggerBadgeCheck === 'function') {
+          window.triggerBadgeCheck({ force: true });
+        }
+
+        if (pkg === 'draft') {
+          showSuccess('Taslak kaydedildi', 'Yazın panelinde duruyor. İstersen sonra değerlendirme için gönderebilirsin.', 'ielts-deneme.html?saved=' + sub.id, 'Denemelere Dön');
+        } else if (pkg === 'gri_ai') {
+          window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
+        } else {
+          window.location.href = 'https://www.shopier.com/47211439';
+        }
+      } catch (err) {
+        alert('Gönderim hatası: ' + (err && err.message ? err.message : err));
         state.finished = false;
-        btn.textContent = 'Devam Et';
+        btn.textContent = prevText && prevText !== 'Gönderiliyor…' ? prevText : 'Kaydet ve Bitir';
         btn.disabled = false;
-        return;
-      }
-
-      localStorage.removeItem('ielts_writing_' + TEST_SLUG);
-
-      // Rozet değerlendirmesi (writing_count + potentially writing_band sonradan grade verildiğinde)
-      if (typeof window.triggerBadgeCheck === 'function') {
-        window.triggerBadgeCheck({ force: true });
-      }
-
-      if (state.selectedPackage === 'draft') {
-        // Sadece kaydet
-        window.location.href = 'ielts-deneme.html?saved=' + sub.id;
-      } else if (state.selectedPackage === 'gri_ai') {
-        // Gri AI değerlendirme — yeni feedback sayfasına git
-        window.location.href = 'ielts-deneme-writing-feedback.html?submission=' + sub.id;
-      } else {
-        // Tüm ücretli paketler Shopier'a yönlendirilir (Task 1, Task 2, Task 1+2)
-        window.location.href = 'https://www.shopier.com/47211439';
       }
     });
 

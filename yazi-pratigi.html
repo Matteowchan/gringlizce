@@ -1991,6 +1991,10 @@
       // Selector bar'ı gizle — öğretmen seçimini zorla
       var selBar = document.getElementById('selectorBar');
       if (selBar) selBar.style.display = 'none';
+
+      // Ödev modunda kaydet butonu = gönder ve tamamla
+      var aSaveBtn = document.getElementById('saveBtn');
+      if (aSaveBtn && a.status !== 'completed') aSaveBtn.textContent = 'Gönder ve Tamamla';
     }
 
     // ========================================================
@@ -2028,6 +2032,18 @@
         var ptElA = document.getElementById('promptText');
         ptElA.innerHTML = formatPromptHTML(state.currentPrompt.prompt);
         ptElA.dataset.raw = state.currentPrompt.prompt;
+        // Ödev görseli (ör. IELTS Task 1 grafik) varsa prompt altında göster
+        var aCfgImg = state.assignment.config;
+        if (aCfgImg && aCfgImg.image_url) {
+          var aImgHtml;
+          if (aCfgImg.image_type === 'pdf') {
+            aImgHtml = '<iframe src="' + aCfgImg.image_url + '" style="width:100%;height:420px;border:1px solid var(--line,#D9D2C4);border-radius:6px;margin-top:0.9rem;"></iframe>'
+              + '<a href="' + aCfgImg.image_url + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:0.5rem;font-family:var(--font-ui);font-size:0.82rem;color:var(--teal,#2C5856);">Görseli yeni sekmede aç &rarr;</a>';
+          } else {
+            aImgHtml = '<img src="' + aCfgImg.image_url + '" alt="Task 1 görseli" style="max-width:100%;border:1px solid var(--line,#D9D2C4);border-radius:6px;margin-top:0.9rem;display:block;">';
+          }
+          ptElA.innerHTML += aImgHtml;
+        }
         // Yeni prompt butonunu gizle (öğretmen prompt'unu zorunlu kıl)
         var npb = document.getElementById('newPromptBtn');
         if (npb) {
@@ -2328,8 +2344,9 @@
       }
       var wc = countWords(text);
       var saveBtn = document.getElementById('saveBtn');
+      var inAssignment = !!state.assignmentId;
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Kaydediliyor...';
+      saveBtn.textContent = inAssignment ? 'Gönderiliyor...' : 'Kaydediliyor...';
       try {
         var res = await sb.from('user_saved_writings').insert({
           user_id: state.user.id,
@@ -2340,10 +2357,15 @@
           prompt_title: state.currentPrompt ? state.currentPrompt.title : null,
           prompt_snapshot: document.getElementById('promptText').dataset.raw || '',
           text: text,
-          word_count: wc
+          word_count: wc,
+          assignment_id: state.assignmentId || null
         });
         if (res.error) {
           toast('Kaydetme başarısız: ' + res.error.message, 'error');
+        } else if (inAssignment) {
+          state.assignmentSubmitted = true;
+          toast('Gönderildi. Öğretmenine iletildi, ödev tamamlandı.', 'success');
+          markAssignmentCompleteIfApplicable();
         } else {
           toast('Yazı kaydedildi. Masamdan erişebilirsin.', 'success');
         }
@@ -2351,7 +2373,7 @@
         toast('Hata: ' + (e.message || e), 'error');
       } finally {
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Yazıyı Kaydet';
+        saveBtn.textContent = inAssignment ? 'Gönder ve Tamamla' : 'Yazıyı Kaydet';
       }
     }
 
@@ -2442,9 +2464,13 @@
           renderQuotaPill();
         }
 
-        // Ödev modu: değerlendirme başarılıysa otomatik tamamla
+        // Ödev modu: değerlendirme başarılıysa yazıyı kaydet ve otomatik tamamla
         if (state.assignmentId) {
-          markAssignmentCompleteIfApplicable();
+          if (!state.assignmentSubmitted) {
+            saveWritingToDb();
+          } else {
+            markAssignmentCompleteIfApplicable();
+          }
         }
 
       } catch (err) {

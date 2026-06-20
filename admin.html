@@ -1830,6 +1830,9 @@
         <div class="field-row" style="display:block;">
           <label style="display:block; margin-bottom:0.4rem;">Metin</label>
           <input type="text" id="banner-text" placeholder="Örn. UDSP yaklaşıyor, soruları çöz" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.4rem; line-height:1.6;">
+            Biçimlendirme: <code>**kalın**</code>, <code>*italik*</code>, <code>__altı çizili__</code>, <code>[yazı](link)</code>. Örnek: UDSP yaklaşıyor, [denemeyi çöz](udsp-soru-bankasi.html).
+          </div>
         </div>
 
         <div class="field-row" style="flex-wrap:wrap; gap:1.4rem; align-items:center;">
@@ -2600,14 +2603,29 @@
       };
     }
 
+    function parseBannerTextAdmin(raw) {
+      var s = escHtmlAdmin(raw);
+      s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, t, u) {
+        u = u.trim();
+        if (/^(javascript|data):/i.test(u)) { return t; }
+        return '<a href="' + u + '" style="color:inherit;text-decoration:underline;">' + t + '</a>';
+      });
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__([^_]+)__/g, '<u>$1</u>');
+      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return s;
+    }
+
     function buildBannerHtmlAdmin(b) {
       var s = [];
       if (b.color) { s.push('color:' + b.color); }
       if (b.bold) { s.push('font-weight:700'); }
       if (b.italic) { s.push('font-style:italic'); }
       if (b.size) { s.push('font-size:' + parseInt(b.size, 10) + 'px'); }
-      var inner = '<span style="' + s.join(';') + '">' + escHtmlAdmin(b.text) + '</span>';
-      if (b.link) { inner = '<a href="' + escHtmlAdmin(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>'; }
+      var inner = '<span style="' + s.join(';') + '">' + parseBannerTextAdmin(b.text) + '</span>';
+      if (b.link && b.text.indexOf('](') === -1) {
+        inner = '<a href="' + escHtmlAdmin(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>';
+      }
       return inner;
     }
 

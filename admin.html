@@ -3025,18 +3025,27 @@
       var box = $('ov-activity');
       if (!box) { return; }
       try {
-        var res = await sb.rpc('admin_recent_activity', { p_limit: 30 });
+        var res = await sb.rpc('admin_recent_activity', { p_limit: 40 });
         if (res.error) { throw res.error; }
         var rows = res.data || [];
         if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz hareket yok.</div>'; return; }
         box.innerHTML = rows.map(function (r) {
-          var ok = (r.status === 'correct');
-          var i = denemeOrBankLink(r.question_slug);
+          var marker, mid;
+          if (r.kind === 'answer') {
+            var ok = (r.status === 'correct');
+            var i = denemeOrBankLink(r.slug);
+            marker = '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>';
+            mid = '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(i.label) + '</a>';
+          } else {
+            var tag = (r.kind === 'vocab') ? 'Kelime' : 'Yazı';
+            marker = '<span style="flex-shrink:0; font-size:0.62rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--gold-deep); border:1px solid var(--line); border-radius:999px; padding:0.05rem 0.4rem;">' + tag + '</span>';
+            mid = '<span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(r.detail || '') + '</span>';
+          }
           return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid var(--line);">' +
-            '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>' +
+            marker +
             '<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(r.email || '') + '</span>' +
-            '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(i.label) + '</a>' +
-            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (r.answered_at ? fmtDate(r.answered_at) : '') + '</span>' +
+            mid +
+            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (r.at ? fmtDate(r.at) : '') + '</span>' +
           '</div>';
         }).join('');
       } catch (e) {

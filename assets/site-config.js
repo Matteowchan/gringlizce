@@ -87,14 +87,29 @@
     return '<span class="currency">₺</span>' + fmt(Number(variant.price));
   }
 
+  function parseBannerText(raw) {
+    var s = escapeHtml(raw);
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, t, u) {
+      u = u.trim();
+      if (/^(javascript|data):/i.test(u)) { return t; }
+      return '<a href="' + u + '" style="color:inherit;text-decoration:underline;">' + t + '</a>';
+    });
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__([^_]+)__/g, '<u>$1</u>');
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    return s;
+  }
+
   function buildBannerHtml(b) {
     var s = [];
     if (b.color) { s.push('color:' + b.color); }
     if (b.bold) { s.push('font-weight:700'); }
     if (b.italic) { s.push('font-style:italic'); }
     if (b.size) { s.push('font-size:' + parseInt(b.size, 10) + 'px'); }
-    var inner = '<span style="' + s.join(';') + '">' + escapeHtml(b.text) + '</span>';
-    if (b.link) { inner = '<a href="' + escapeHtml(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>'; }
+    var inner = '<span style="' + s.join(';') + '">' + parseBannerText(b.text) + '</span>';
+    if (b.link && b.text.indexOf('](') === -1) {
+      inner = '<a href="' + escapeHtml(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>';
+    }
     return inner;
   }
 

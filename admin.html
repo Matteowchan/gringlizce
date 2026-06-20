@@ -1828,8 +1828,44 @@
         </div>
 
         <div class="field-row" style="display:block;">
-          <label style="display:block; margin-bottom:0.4rem;">Metin (HTML kullanabilirsin, örneğin &lt;strong&gt;):</label>
-          <textarea class="admin-textarea" id="banner-text" placeholder="Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde"></textarea>
+          <label style="display:block; margin-bottom:0.4rem;">Metin</label>
+          <input type="text" id="banner-text" placeholder="Örn. UDSP yaklaşıyor, soruları çöz" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+        </div>
+
+        <div class="field-row" style="flex-wrap:wrap; gap:1.4rem; align-items:center;">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="switch"><input type="checkbox" id="banner-color-on"><span class="slider"></span></span>
+            <label style="margin:0;">Özel renk</label>
+            <input type="color" id="banner-color" value="#9C7F45" style="width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer;">
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="switch"><input type="checkbox" id="banner-bold"><span class="slider"></span></span>
+            <label style="margin:0;">Kalın</label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="switch"><input type="checkbox" id="banner-italic"><span class="slider"></span></span>
+            <label style="margin:0;">İtalik</label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label style="margin:0;">Boyut</label>
+            <select id="banner-size" style="padding:0.4rem 0.6rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+              <option value="">Varsayılan</option>
+              <option value="11">Küçük</option>
+              <option value="13">Orta</option>
+              <option value="15">Büyük</option>
+              <option value="18">Çok büyük</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Link (opsiyonel)</label>
+          <input type="text" id="banner-link" placeholder="Örn. udsp-soru-bankasi.html" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Önizleme</label>
+          <div id="banner-preview" class="launch-banner" style="display:block; border-radius:6px;"></div>
         </div>
 
         <button class="save-btn" id="save-banner">Banner'ı Kaydet</button>
@@ -2551,10 +2587,51 @@
       showReverifyPrompt(true);
     }
 
+    function bannerPayload() {
+      return {
+        v: 2,
+        enabled: $('banner-enabled').checked,
+        text: ($('banner-text').value || '').trim(),
+        color: $('banner-color-on').checked ? $('banner-color').value : '',
+        bold: $('banner-bold').checked,
+        italic: $('banner-italic').checked,
+        size: $('banner-size').value || '',
+        link: ($('banner-link').value || '').trim()
+      };
+    }
+
+    function buildBannerHtmlAdmin(b) {
+      var s = [];
+      if (b.color) { s.push('color:' + b.color); }
+      if (b.bold) { s.push('font-weight:700'); }
+      if (b.italic) { s.push('font-style:italic'); }
+      if (b.size) { s.push('font-size:' + parseInt(b.size, 10) + 'px'); }
+      var inner = '<span style="' + s.join(';') + '">' + escHtmlAdmin(b.text) + '</span>';
+      if (b.link) { inner = '<a href="' + escHtmlAdmin(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>'; }
+      return inner;
+    }
+
+    function updateBannerPreview() {
+      var b = bannerPayload();
+      var el = $('banner-preview');
+      if (!el) { return; }
+      el.innerHTML = b.text ? buildBannerHtmlAdmin(b) : '<span style="opacity:0.45;">(önizleme)</span>';
+      el.style.opacity = b.enabled ? '1' : '0.5';
+    }
+
     function renderBanner() {
-      var b = state.cfg.banner || { enabled: false, text: '' };
+      var b = state.cfg.banner || {};
       $('banner-enabled').checked = !!b.enabled;
-      $('banner-text').value = b.text || '';
+      var txt = b.text || '';
+      if (b.v !== 2 && /[<>]/.test(txt)) { txt = txt.replace(/<[^>]*>/g, ''); }
+      $('banner-text').value = txt;
+      $('banner-color').value = b.color || '#9C7F45';
+      $('banner-color-on').checked = !!b.color;
+      $('banner-bold').checked = !!b.bold;
+      $('banner-italic').checked = !!b.italic;
+      $('banner-size').value = b.size || '';
+      $('banner-link').value = b.link || '';
+      updateBannerPreview();
     }
 
     function renderDiscount() {
@@ -2566,10 +2643,7 @@
     async function saveBanner() {
       var btn = $('save-banner');
       btn.disabled = true;
-      var payload = {
-        enabled: $('banner-enabled').checked,
-        text: $('banner-text').value.trim()
-      };
+      var payload = bannerPayload();
       try {
         var res = await sb.from('site_config').upsert({
           key: 'banner',
@@ -4542,6 +4616,9 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       $('save-banner').addEventListener('click', saveBanner);
+      ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-link'].forEach(function (id) {
+        var el = $(id); if (el) { el.addEventListener('input', updateBannerPreview); el.addEventListener('change', updateBannerPreview); }
+      });
       $('save-discount').addEventListener('click', saveDiscount);
       $('reverify-submit').addEventListener('click', attemptReverify);
       $('reverify-password').addEventListener('keydown', function (e) {

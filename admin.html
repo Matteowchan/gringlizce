@@ -1792,6 +1792,12 @@
           </div>
         </div>
 
+        <div class="stats-section-title">Son 14 Gün Cevap</div>
+        <div id="ov-daily-chart" style="display:flex; align-items:flex-end; gap:4px; padding:0.5rem 0; overflow-x:auto;"></div>
+
+        <div class="stats-section-title">Son Hareketler</div>
+        <div id="ov-activity" style="font-size:0.86rem; max-height:340px; overflow-y:auto;"></div>
+
         <div class="stats-section-title">Hızlı Erişim</div>
         <div class="dash-links">
           <a href="#" class="dash-link-card" data-tab-jump="writing">
@@ -2982,11 +2988,59 @@
         if (badge) {
           badge.style.display = (Number(s.pending_writing) > 0) ? 'inline-block' : 'none';
         }
+        loadDailyAnswers();
+        loadRecentActivity();
       } catch (e) {
         console.warn('[Stats] yüklenemedi:', e);
         ['stat-total','stat-dau','stat-wau','stat-mau','stat-new30','stat-pending'].forEach(function (id) {
           var el = $(id); if (el) el.textContent = '—';
         });
+      }
+    }
+
+    async function loadDailyAnswers() {
+      var box = $('ov-daily-chart');
+      if (!box) { return; }
+      try {
+        var res = await sb.rpc('admin_daily_answers', { p_days: 14 });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        var max = rows.reduce(function (m, r) { return Math.max(m, Number(r.cnt) || 0); }, 1);
+        box.innerHTML = rows.map(function (r) {
+          var c = Number(r.cnt) || 0;
+          var hpx = Math.max(2, Math.round((c / max) * 90));
+          var label = String(r.day || '').slice(5);
+          return '<div title="' + r.day + ': ' + c + '" style="flex:1; min-width:20px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:2px;">' +
+            '<div style="font-size:0.64rem; color:var(--text-muted);">' + c + '</div>' +
+            '<div style="width:70%; height:' + hpx + 'px; background:var(--teal); border-radius:3px 3px 0 0;"></div>' +
+            '<div style="font-size:0.58rem; color:var(--text-muted); white-space:nowrap;">' + label + '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Grafik yüklenemedi.</div>';
+      }
+    }
+
+    async function loadRecentActivity() {
+      var box = $('ov-activity');
+      if (!box) { return; }
+      try {
+        var res = await sb.rpc('admin_recent_activity', { p_limit: 30 });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz hareket yok.</div>'; return; }
+        box.innerHTML = rows.map(function (r) {
+          var ok = (r.status === 'correct');
+          var i = denemeOrBankLink(r.question_slug);
+          return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid var(--line);">' +
+            '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>' +
+            '<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(r.email || '') + '</span>' +
+            '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(i.label) + '</a>' +
+            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (r.answered_at ? fmtDate(r.answered_at) : '') + '</span>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Hareketler yüklenemedi.</div>';
       }
     }
 

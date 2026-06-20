@@ -2297,6 +2297,13 @@
   </main>
 
   <!-- ============ USER DETAIL MODAL ============ -->
+  <style>
+    .user-modal-section.collapsible > h4 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .user-modal-section.collapsible > h4::after { content: '+'; font-weight: 400; color: var(--text-muted); margin-left: 0.5rem; }
+    .user-modal-section.collapsible.open > h4::after { content: '\2212'; }
+    .user-modal-section.collapsible:not(.open) > *:not(h4) { display: none !important; }
+    .um-w-group { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0.6rem 0 0.4rem; }
+  </style>
   <div class="user-modal-overlay" id="user-modal-overlay">
     <div class="user-modal" role="dialog" aria-modal="true">
       <button class="user-modal-close" id="user-modal-close" aria-label="Kapat">&times;</button>
@@ -2313,7 +2320,7 @@
         <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
       </div>
 
-      <div class="user-modal-section">
+      <div class="user-modal-section" id="um-sec-answers">
         <h4>Çözdüğü Sorular</h4>
         <div id="um-answers" style="font-size: 0.86rem;"></div>
         <div class="um-action-row" style="margin-top: 0.6rem;">
@@ -2322,7 +2329,7 @@
         <div class="um-msg" id="um-answers-msg"></div>
       </div>
 
-      <div class="user-modal-section">
+      <div class="user-modal-section" id="um-sec-writings">
         <h4>Yazıları</h4>
         <div id="um-writings" style="font-size: 0.86rem;"></div>
         <div class="um-msg" id="um-writings-msg"></div>
@@ -3447,16 +3454,71 @@
       if (!box) { return; }
       box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
       try {
-        var res = await sb.rpc('admin_user_ielts_writings', { p_user_id: userId });
-        if (res.error) { throw res.error; }
-        var rows = res.data || [];
-        if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz yazı yok.</div>'; return; }
-        box.innerHTML = rows.map(writingCardHtml).join('');
+        var r1 = await sb.rpc('admin_user_ielts_writings', { p_user_id: userId });
+        if (r1.error) { throw r1.error; }
+        var r2 = await sb.rpc('admin_user_saved_writings', { p_user_id: userId });
+        if (r2.error) { throw r2.error; }
+        var ielts = r1.data || [];
+        var saved = r2.data || [];
+        if (!ielts.length && !saved.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz yazı yok.</div>'; return; }
+        var html = '';
+        if (ielts.length) { html += '<div class="um-w-group">IELTS Deneme</div>' + ielts.map(writingCardHtml).join(''); }
+        if (saved.length) { html += '<div class="um-w-group">Pratik / IB</div>' + saved.map(savedWritingCardHtml).join(''); }
+        box.innerHTML = html;
         if (msg) { msg.textContent = ''; }
       } catch (e) {
         box.innerHTML = '';
         if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
       }
+    }
+
+    function setupModalAccordion(userId) {
+      var modal = document.querySelector('#user-modal-overlay .user-modal');
+      if (!modal) { return; }
+      modal.querySelectorAll('.user-modal-section').forEach(function (sec) {
+        if (sec.querySelector('h4')) { sec.classList.add('collapsible'); sec.classList.add('open'); }
+      });
+      ['um-sec-answers', 'um-sec-writings'].forEach(function (id) {
+        var sec = document.getElementById(id);
+        if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
+      });
+      if (!modal.dataset.accWired) {
+        modal.dataset.accWired = '1';
+        modal.addEventListener('click', function (ev) {
+          var h4 = ev.target.closest('h4');
+          if (!h4) { return; }
+          var sec = h4.parentElement;
+          if (!sec || !sec.classList.contains('user-modal-section') || !sec.classList.contains('collapsible')) { return; }
+          var nowOpen = sec.classList.toggle('open');
+          if (nowOpen) {
+            var uid = currentUserDetail && currentUserDetail.user_id;
+            if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
+            if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
+          }
+        });
+      }
+    }
+
+    function savedWritingCardHtml(s) {
+      var parts = [];
+      if (s.exam) { parts.push(String(s.exam).toUpperCase()); }
+      if (s.text_type) { parts.push(s.text_type); }
+      if (s.level) { parts.push(s.level); }
+      var title = parts.join(' \u00b7 ') || 'Yazı';
+      var when = s.saved_at ? fmtDate(s.saved_at) : '';
+      var sub = (s.prompt_title ? escHtmlAdmin(s.prompt_title) + ' \u00b7 ' : '') + when + ' \u00b7 ' + (s.word_count || 0) + ' kelime';
+      return '<div data-w-card style="border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; overflow:hidden;">' +
+        '<div data-w-toggle style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.8rem; cursor:pointer;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-weight:600;">' + escHtmlAdmin(title) + '</div>' +
+            '<div style="color:var(--text-muted); font-size:0.76rem;">' + sub + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="um-w-body" style="display:none; padding:0 0.8rem 0.8rem;">' +
+          (s.prompt_snapshot ? essayBlock('Konu', s.prompt_snapshot) : '') +
+          essayBlock('Yazı', s.body) +
+        '</div>' +
+      '</div>';
     }
 
     async function openUserDetail(userId) {
@@ -3467,8 +3529,7 @@
         if (!u) throw new Error('Kullanıcı bulunamadı');
 
         currentUserDetail = u;
-        loadUserAnswers(userId, 0, false);
-        loadUserWritings(userId);
+        setupModalAccordion(userId);
 
         $('um-email').textContent = u.email || '—';
         var isBanned = u.banned_until && new Date(u.banned_until) > new Date();

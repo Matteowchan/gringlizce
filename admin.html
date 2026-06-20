@@ -2323,6 +2323,12 @@
       </div>
 
       <div class="user-modal-section">
+        <h4>Yazıları</h4>
+        <div id="um-writings" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-writings-msg"></div>
+      </div>
+
+      <div class="user-modal-section">
         <h4>Materyaller</h4>
         <div id="um-purchases" style="margin-bottom: 0.7rem;"></div>
         <div class="um-action-row">
@@ -3405,6 +3411,54 @@
       }
     }
 
+    function essayBlock(label, text) {
+      if (!text) { return ''; }
+      return '<div style="margin-top:0.5rem;">' +
+        '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted);">' + label + '</div>' +
+        '<div style="white-space:pre-wrap; font-size:0.84rem; line-height:1.5; max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:6px; padding:0.5rem; margin-top:0.25rem; background:var(--bg-soft);">' + escHtmlAdmin(text) + '</div>' +
+        '</div>';
+    }
+
+    function writingCardHtml(w) {
+      var bands = [];
+      if (w.task1_band) { bands.push('T1 ' + w.task1_band); }
+      if (w.task2_band) { bands.push('T2 ' + w.task2_band); }
+      if (w.overall_band) { bands.push('Genel ' + w.overall_band); }
+      var bandStr = bands.length ? bands.join(' \u00b7 ') : 'puanlanmadı';
+      var when = w.submitted_at ? fmtDate(w.submitted_at) : '';
+      return '<div data-w-card style="border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; overflow:hidden;">' +
+        '<div data-w-toggle style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.8rem; cursor:pointer;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-weight:600;">' + escHtmlAdmin(w.test_name || 'IELTS Writing') + '</div>' +
+            '<div style="color:var(--text-muted); font-size:0.76rem;">' + escHtmlAdmin(w.package_type || '') + ' \u00b7 ' + when + ' \u00b7 ' + (w.word_count || 0) + ' kelime \u00b7 ' + escHtmlAdmin(w.payment_status || '') + '</div>' +
+          '</div>' +
+          '<span style="font-size:0.78rem; color:var(--teal); white-space:nowrap;">' + escHtmlAdmin(bandStr) + '</span>' +
+        '</div>' +
+        '<div class="um-w-body" style="display:none; padding:0 0.8rem 0.8rem;">' +
+          essayBlock('Task 1', w.task1_essay) +
+          essayBlock('Task 2', w.task2_essay) +
+          '<a href="ielts-deneme-writing-feedback.html?submission=' + encodeURIComponent(w.id) + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.6rem; font-size:0.8rem; color:var(--teal);">Tam değerlendirme</a>' +
+        '</div>' +
+      '</div>';
+    }
+
+    async function loadUserWritings(userId) {
+      var box = $('um-writings'); var msg = $('um-writings-msg');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var res = await sb.rpc('admin_user_ielts_writings', { p_user_id: userId });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz yazı yok.</div>'; return; }
+        box.innerHTML = rows.map(writingCardHtml).join('');
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
     async function openUserDetail(userId) {
       try {
         var res = await sb.rpc('admin_user_overview', { p_user_id: userId });
@@ -3414,6 +3468,7 @@
 
         currentUserDetail = u;
         loadUserAnswers(userId, 0, false);
+        loadUserWritings(userId);
 
         $('um-email').textContent = u.email || '—';
         var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
@@ -4693,6 +4748,14 @@
       $('save-banner').addEventListener('click', saveBanner);
       var umMore = $('um-answers-more');
       if (umMore) { umMore.addEventListener('click', function () { loadUserAnswers(umAnswersUserId, umAnswersOffset, true); }); }
+      var umW = $('um-writings');
+      if (umW) {
+        umW.addEventListener('click', function (ev) {
+          var h = ev.target.closest('[data-w-toggle]'); if (!h) { return; }
+          var card = h.closest('[data-w-card]'); var body = card && card.querySelector('.um-w-body');
+          if (body) { body.style.display = (body.style.display === 'none' || !body.style.display) ? 'block' : 'none'; }
+        });
+      }
       ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-link'].forEach(function (id) {
         var el = $(id); if (el) { el.addEventListener('input', updateBannerPreview); el.addEventListener('change', updateBannerPreview); }
       });

@@ -306,7 +306,7 @@
     $("dnFlagBtn").classList.toggle("active", !!state.flags[state.idx]);
     $("dnFlagBtn").textContent = state.flags[state.idx] ? "Yer İmi ✓" : "Yer İmi";
     $("dnPrev").disabled = state.idx === 0;
-    $("dnNext").textContent = state.idx === TOTAL-1 ? "Sonuncu" : "Sonraki";
+    $("dnNext").textContent = state.idx === TOTAL-1 ? "Sonucu Göster" : "Sonraki";
     $("dnQuestion").querySelectorAll(".dn-option").forEach(el=>{
       el.addEventListener("click", ()=>{ state.answers[state.idx] = el.dataset.l; saveState(); renderQuestion(); });
     });
@@ -552,7 +552,7 @@
     if(saved){ $("dnResumeWrap").style.display = "block"; $("dnResumeBtn").addEventListener("click", ()=>{ state = saved; startExam(true); }); }
     $("dnStartBtn").addEventListener("click", ()=>{ clearState(); startExam(false); });
     $("dnPrev").addEventListener("click", ()=>go(state.idx-1));
-    $("dnNext").addEventListener("click", ()=>go(state.idx+1));
+    $("dnNext").addEventListener("click", ()=>{ if(state.idx === TOTAL-1) finishExam(false); else go(state.idx+1); });
     $("dnFlagBtn").addEventListener("click", toggleFlag);
     $("dnPaletteBtn").addEventListener("click", openPalette);
     $("dnPaletteClose").addEventListener("click", closePalette);

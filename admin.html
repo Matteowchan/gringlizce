@@ -2314,6 +2314,15 @@
       </div>
 
       <div class="user-modal-section">
+        <h4>Çözdüğü Sorular</h4>
+        <div id="um-answers" style="font-size: 0.86rem;"></div>
+        <div class="um-action-row" style="margin-top: 0.6rem;">
+          <button class="btn-admin-action" id="um-answers-more" style="display:none;">Daha fazla</button>
+        </div>
+        <div class="um-msg" id="um-answers-msg"></div>
+      </div>
+
+      <div class="user-modal-section">
         <h4>Materyaller</h4>
         <div id="um-purchases" style="margin-bottom: 0.7rem;"></div>
         <div class="um-action-row">
@@ -3349,6 +3358,53 @@
       });
     }
 
+    function denemeOrBankLink(slug) {
+      var m = /^udsp-deneme-(\d+)-q(\d+)$/.exec(slug);
+      if (m) { return { href: 'udsp-deneme-' + m[1] + '.html?review=1', label: 'Deneme ' + m[1] + ' \u00b7 Soru ' + m[2] }; }
+      return { href: 'soru.html?q=' + encodeURIComponent(slug), label: slug };
+    }
+
+    var UM_ANSWERS_LIMIT = 50;
+    var umAnswersOffset = 0;
+    var umAnswersUserId = null;
+
+    function answerRowHtml(r) {
+      var ok = (r.status === 'correct' || r.status === 'dogru' || r.status === 'true' || r.status === 'right');
+      var info = denemeOrBankLink(r.question_slug);
+      var when = r.answered_at ? fmtDate(r.answered_at) : '';
+      var secs = (r.time_spent_ms != null) ? Math.round(Number(r.time_spent_ms) / 1000) + ' sn' : '';
+      return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0; border-bottom:1px solid var(--line);">' +
+        '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>' +
+        '<a href="' + info.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(info.label) + '</a>' +
+        '<span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap;">' + (ok ? 'Doğru' : 'Yanlış') + (secs ? ' \u00b7 ' + secs : '') + '</span>' +
+        '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + when + '</span>' +
+        '</div>';
+    }
+
+    async function loadUserAnswers(userId, offset, append) {
+      var box = $('um-answers'); var moreBtn = $('um-answers-more'); var msg = $('um-answers-msg');
+      if (!box) { return; }
+      umAnswersUserId = userId;
+      if (!append) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>'; umAnswersOffset = 0; }
+      try {
+        var res = await sb.rpc('admin_user_answers', { p_user_id: userId, p_limit: UM_ANSWERS_LIMIT, p_offset: offset });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        if (!append) { box.innerHTML = ''; }
+        if (!rows.length && !append) {
+          box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz çözülen soru yok.</div>';
+          if (moreBtn) { moreBtn.style.display = 'none'; }
+          return;
+        }
+        box.insertAdjacentHTML('beforeend', rows.map(answerRowHtml).join(''));
+        umAnswersOffset = offset + rows.length;
+        if (moreBtn) { moreBtn.style.display = (rows.length === UM_ANSWERS_LIMIT) ? '' : 'none'; }
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
     async function openUserDetail(userId) {
       try {
         var res = await sb.rpc('admin_user_overview', { p_user_id: userId });
@@ -3357,6 +3413,7 @@
         if (!u) throw new Error('Kullanıcı bulunamadı');
 
         currentUserDetail = u;
+        loadUserAnswers(userId, 0, false);
 
         $('um-email').textContent = u.email || '—';
         var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
@@ -4634,6 +4691,8 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       $('save-banner').addEventListener('click', saveBanner);
+      var umMore = $('um-answers-more');
+      if (umMore) { umMore.addEventListener('click', function () { loadUserAnswers(umAnswersUserId, umAnswersOffset, true); }); }
       ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-link'].forEach(function (id) {
         var el = $(id); if (el) { el.addEventListener('input', updateBannerPreview); el.addEventListener('change', updateBannerPreview); }
       });

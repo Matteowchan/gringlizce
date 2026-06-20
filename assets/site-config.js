@@ -87,12 +87,23 @@
     return '<span class="currency">₺</span>' + fmt(Number(variant.price));
   }
 
+  function buildBannerHtml(b) {
+    var s = [];
+    if (b.color) { s.push('color:' + b.color); }
+    if (b.bold) { s.push('font-weight:700'); }
+    if (b.italic) { s.push('font-style:italic'); }
+    if (b.size) { s.push('font-size:' + parseInt(b.size, 10) + 'px'); }
+    var inner = '<span style="' + s.join(';') + '">' + escapeHtml(b.text) + '</span>';
+    if (b.link) { inner = '<a href="' + escapeHtml(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>'; }
+    return inner;
+  }
+
   function applyBanner(cfg) {
     var banner = cfg.banner || { enabled: false, text: '' };
     document.querySelectorAll('[data-site-banner]').forEach(function (el) {
       if (banner.enabled && banner.text) {
-        el.innerHTML = banner.text;
-        el.style.display = '';
+        el.innerHTML = (banner.v === 2) ? buildBannerHtml(banner) : banner.text;
+        el.style.display = 'block';
       } else {
         el.style.display = 'none';
       }

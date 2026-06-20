@@ -2335,6 +2335,12 @@
         <div class="um-msg" id="um-writings-msg"></div>
       </div>
 
+      <div class="user-modal-section" id="um-sec-study">
+        <h4>Çalışma İzleri</h4>
+        <div id="um-study" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-study-msg"></div>
+      </div>
+
       <div class="user-modal-section">
         <h4>Materyaller</h4>
         <div id="um-purchases" style="margin-bottom: 0.7rem;"></div>
@@ -3478,7 +3484,7 @@
       modal.querySelectorAll('.user-modal-section').forEach(function (sec) {
         if (sec.querySelector('h4')) { sec.classList.add('collapsible'); sec.classList.add('open'); }
       });
-      ['um-sec-answers', 'um-sec-writings'].forEach(function (id) {
+      ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
       });
@@ -3494,6 +3500,7 @@
             var uid = currentUserDetail && currentUserDetail.user_id;
             if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
             if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
+            if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }
           }
         });
       }
@@ -3519,6 +3526,42 @@
           essayBlock('Yazı', s.body) +
         '</div>' +
       '</div>';
+    }
+
+    async function loadUserStudy(userId) {
+      var box = $('um-study'); var msg = $('um-study-msg');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var res = await sb.rpc('admin_user_study', { p_user_id: userId });
+        if (res.error) { throw res.error; }
+        var d = res.data || {};
+        var bm = d.bookmarks || []; var notes = d.notes || [];
+        if (!bm.length && !notes.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yer imi ya da not yok.</div>'; return; }
+        var html = '';
+        if (bm.length) {
+          html += '<div class="um-w-group">Yer İmleri (' + bm.length + ')</div>';
+          html += bm.map(function (b) {
+            var i = denemeOrBankLink(b.slug);
+            return '<div style="padding:0.3rem 0; border-bottom:1px solid var(--line); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none;">' + escHtmlAdmin(i.label) + '</a></div>';
+          }).join('');
+        }
+        if (notes.length) {
+          html += '<div class="um-w-group">Notlar (' + notes.length + ')</div>';
+          html += notes.map(function (n) {
+            var i = denemeOrBankLink(n.slug);
+            return '<div style="padding:0.45rem 0; border-bottom:1px solid var(--line);">' +
+              '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:none; font-size:0.8rem;">' + escHtmlAdmin(i.label) + '</a>' +
+              '<div style="white-space:pre-wrap; font-size:0.84rem; margin-top:0.2rem;">' + escHtmlAdmin(n.note || '') + '</div>' +
+              '</div>';
+          }).join('');
+        }
+        box.innerHTML = html;
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
     }
 
     async function openUserDetail(userId) {

@@ -2322,6 +2322,10 @@
 
       <div class="user-modal-section" id="um-sec-answers">
         <h4>Çözdüğü Sorular</h4>
+        <div class="um-action-row" style="margin-bottom: 0.5rem;">
+          <button class="btn-admin-action active" id="um-ans-filter-all">Hepsi</button>
+          <button class="btn-admin-action" id="um-ans-filter-wrong">Yanlış</button>
+        </div>
         <div id="um-answers" style="font-size: 0.86rem;"></div>
         <div class="um-action-row" style="margin-top: 0.6rem;">
           <button class="btn-admin-action" id="um-answers-more" style="display:none;">Daha fazla</button>
@@ -3385,6 +3389,7 @@
 
     var UM_ANSWERS_LIMIT = 50;
     var umAnswersOffset = 0;
+    var umAnswersOnlyWrong = false;
     var umAnswersUserId = null;
 
     function answerRowHtml(r) {
@@ -3406,7 +3411,7 @@
       umAnswersUserId = userId;
       if (!append) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>'; umAnswersOffset = 0; }
       try {
-        var res = await sb.rpc('admin_user_answers', { p_user_id: userId, p_limit: UM_ANSWERS_LIMIT, p_offset: offset });
+        var res = await sb.rpc('admin_user_answers', { p_user_id: userId, p_limit: UM_ANSWERS_LIMIT, p_offset: offset, p_only_wrong: umAnswersOnlyWrong });
         if (res.error) { throw res.error; }
         var rows = res.data || [];
         if (!append) { box.innerHTML = ''; }
@@ -3484,6 +3489,9 @@
       modal.querySelectorAll('.user-modal-section').forEach(function (sec) {
         if (sec.querySelector('h4')) { sec.classList.add('collapsible'); sec.classList.add('open'); }
       });
+      umAnswersOnlyWrong = false;
+      var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
+      var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
       ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
@@ -3536,8 +3544,8 @@
         var res = await sb.rpc('admin_user_study', { p_user_id: userId });
         if (res.error) { throw res.error; }
         var d = res.data || {};
-        var bm = d.bookmarks || []; var notes = d.notes || [];
-        if (!bm.length && !notes.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yer imi ya da not yok.</div>'; return; }
+        var bm = d.bookmarks || []; var notes = d.notes || []; var vocab = d.vocab || [];
+        if (!bm.length && !notes.length && !vocab.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yer imi, not ya da kelime yok.</div>'; return; }
         var html = '';
         if (bm.length) {
           html += '<div class="um-w-group">Yer İmleri (' + bm.length + ')</div>';
@@ -3555,6 +3563,12 @@
               '<div style="white-space:pre-wrap; font-size:0.84rem; margin-top:0.2rem;">' + escHtmlAdmin(n.note || '') + '</div>' +
               '</div>';
           }).join('');
+        }
+        if (vocab.length) {
+          html += '<div class="um-w-group">Kelimeler (' + vocab.length + ')</div>';
+          html += '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + vocab.map(function (v) {
+            return '<span style="border:1px solid var(--line); border-radius:999px; padding:0.15rem 0.6rem; font-size:0.82rem;">' + escHtmlAdmin(v.word || '') + '</span>';
+          }).join('') + '</div>';
         }
         box.innerHTML = html;
         if (msg) { msg.textContent = ''; }
@@ -4852,6 +4866,15 @@
       $('save-banner').addEventListener('click', saveBanner);
       var umMore = $('um-answers-more');
       if (umMore) { umMore.addEventListener('click', function () { loadUserAnswers(umAnswersUserId, umAnswersOffset, true); }); }
+      var umFAll = $('um-ans-filter-all'), umFWrong = $('um-ans-filter-wrong');
+      function setAnsFilter(wrong) {
+        umAnswersOnlyWrong = wrong;
+        if (umFAll) { umFAll.classList.toggle('active', !wrong); }
+        if (umFWrong) { umFWrong.classList.toggle('active', wrong); }
+        loadUserAnswers(umAnswersUserId, 0, false);
+      }
+      if (umFAll) { umFAll.addEventListener('click', function () { setAnsFilter(false); }); }
+      if (umFWrong) { umFWrong.addEventListener('click', function () { setAnsFilter(true); }); }
       var umW = $('um-writings');
       if (umW) {
         umW.addEventListener('click', function (ev) {

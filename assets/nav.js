@@ -11,23 +11,18 @@
     "[data-theme='orman']{--gri-accent:#3E6B4A;--gri-accent-soft:#DFEBE1;--gri-accent-deep:#20402B}",
     "[data-theme='kum']{--gri-accent:#A9772E;--gri-accent-soft:#F3E7CD;--gri-accent-deep:#6E4B18}",
     "[data-theme='gece']{--gri-bg:#151210;--gri-surface:#201C17;--gri-surface-2:#1B1813;--gri-ink:#F1E9D9;--gri-ink-soft:#B7AB96;--gri-ink-faint:#7E7362;--gri-line:#332C22;--gri-line-soft:#2A241C;--gri-gold:#D8B25A;--gri-accent:#6FB6AF;--gri-accent-soft:#22322F;--gri-accent-deep:#A9D6D1;--gri-info:#8B6BA9;--gri-nav-bg:#1C1813;--gri-shadow:0 2px 4px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.4)}",
-    ".gri-infobar{background:var(--gri-info);color:var(--gri-info-ink);font-family:Inter,sans-serif;font-size:13px}",
-    ".gri-infobar .in{max-width:1200px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:12px;min-height:38px}",
-    ".gri-infobar .tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,255,255,.18);padding:2px 8px;border-radius:20px;white-space:nowrap}",
-    ".gri-infobar .msg{flex:1;opacity:.96;padding:6px 0}.gri-infobar a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}",
-    ".gri-infobar .x{cursor:pointer;opacity:.75;font-size:16px;line-height:1}",
-    ".gri-nav{position:sticky;top:0;z-index:60;background:var(--gri-nav-bg);border-bottom:1px solid var(--gri-line);box-shadow:0 1px 0 rgba(40,30,20,.03),0 6px 18px rgba(40,30,20,.04);font-family:Inter,sans-serif}",
-    ".gri-nav .in{max-width:1200px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:20px;height:62px}",
-    ".gri-nav .brand{display:flex;align-items:center;font-family:'Playfair Display',serif;font-weight:800;font-size:1.3rem;letter-spacing:-.01em;white-space:nowrap;color:var(--gri-ink);text-decoration:none}",
-    ".gri-nav .brand .it{font-style:italic;font-weight:600;color:var(--gri-accent);margin-left:.28em}",
-    ".gri-nav .links{display:flex;align-items:center;gap:4px;margin-left:4px;font-size:13.5px;font-weight:500}",
-    ".gri-nav .links>a,.gri-dd>button{color:var(--gri-ink-soft);background:none;border:none;cursor:pointer;font:inherit;font-weight:500;padding:8px 9px;border-radius:9px;white-space:nowrap;display:flex;align-items:center;gap:4px;text-decoration:none}",
-    ".gri-nav .links>a:hover,.gri-dd>button:hover{color:var(--gri-ink);background:var(--gri-surface-2)}",
-    ".gri-nav .links>a.here,.gri-dd.here>button{color:var(--gri-ink);font-weight:600}",
+    ".gri-nav{position:sticky;top:0;z-index:60;background:var(--gri-surface);border-bottom:1px solid var(--gri-line);font-family:Inter,sans-serif}",
+    ".gri-nav .in{max-width:1200px;margin:0 auto;padding:0 26px;display:flex;align-items:center;gap:20px;height:66px}",
+    ".gri-nav .brand{display:flex;align-items:baseline;font-family:'Playfair Display',serif;font-weight:600;font-size:1.45rem;letter-spacing:-.01em;white-space:nowrap;color:var(--gri-ink);text-decoration:none}",
+    ".gri-nav .brand .it{font-style:italic;font-weight:400;color:var(--gri-accent);margin-left:.32em}",
+    ".gri-nav .links{display:flex;align-items:stretch;gap:1.5rem;margin-left:10px;font-family:'Crimson Pro',Georgia,serif}",
+    ".gri-nav .links>a,.gri-dd>button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;line-height:1.2;color:var(--gri-ink-soft);background:none;border:none;border-bottom:1.5px solid transparent;cursor:pointer;padding:5px 0;white-space:nowrap;text-decoration:none;font-family:inherit}",".gri-nav .nw1{font-size:13px;font-weight:500;color:var(--gri-ink);display:inline-flex;align-items:center;gap:4px}",".gri-nav .nw2{font-size:12px;font-weight:400;color:var(--gri-ink-faint)}",
+    ".gri-nav .links>a:hover,.gri-dd:hover>button,.gri-nav .links>a.here,.gri-dd.here>button{border-bottom-color:var(--gri-gold)}",".gri-nav .links>a:hover .nw1,.gri-dd:hover .nw1,.gri-nav .links>a.here .nw1,.gri-dd.here .nw1,.gri-nav .links>a:hover .nw2,.gri-dd:hover .nw2,.gri-nav .links>a.here .nw2,.gri-dd.here .nw2{color:var(--gri-accent)}",
+    
     ".gri-dd{position:relative}",
-    ".gri-dd>button .cv{width:9px;height:9px;transition:.2s;opacity:.7}.gri-dd.open>button .cv{transform:rotate(180deg)}",
+    ".gri-dd .cv{width:8px;height:8px;opacity:.5;transition:.2s}.gri-dd.open .cv,.gri-dd:hover .cv{transform:rotate(180deg)}",
     ".gri-dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:210px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:14px;box-shadow:var(--gri-shadow);padding:8px;display:none;z-index:70}",
-    ".gri-dd.open .gri-dd-menu{display:block}",
+    ".gri-dd.open .gri-dd-menu,.gri-dd:hover .gri-dd-menu{display:block}",
     ".gri-dd-menu a{display:block;padding:8px 11px;border-radius:9px;color:var(--gri-ink-soft);text-decoration:none;font-size:13.5px;white-space:nowrap}",
     ".gri-dd-menu a:hover{background:var(--gri-surface-2);color:var(--gri-ink)}",
     ".gri-grp{padding:4px 0}.gri-grp+.gri-grp{border-top:1px solid var(--gri-line-soft);margin-top:4px}",
@@ -65,6 +60,8 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
+  function twoline(label, caret) { var i = label.indexOf(" "); var w1 = i === -1 ? label : label.slice(0, i); var w2 = i === -1 ? "" : label.slice(i + 1); return '<span class="nw1">' + esc(w1) + (caret ? CVDOWN : "") + '</span>' + (w2 ? '<span class="nw2">' + esc(w2) + "</span>" : ""); }
+
   function readTheme() { try { return localStorage.getItem("gri-theme") || "krem"; } catch (e) { return "krem"; } }
   function applyTheme(t) {
     document.documentElement.setAttribute("data-theme", t);
@@ -82,12 +79,11 @@
   function build() {
     if (document.querySelector(".gri-nav")) return;
     var MENU = window.GRI_NAV || [];
-    var info = window.GRI_INFO || null;
     var here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
 
     var links = MENU.map(function (it) {
       var active = hrefsOf(it, []).indexOf(here) !== -1;
-      if (!it.children) return '<a href="' + esc(it.href) + '"' + (active ? ' class="here"' : "") + ">" + esc(it.label) + "</a>";
+      if (!it.children) return '<a href="' + esc(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
       var groups = it.children.map(function (ch) {
         if (ch.children) {
           var subs = ch.children.map(function (g) { return '<a href="' + esc(g.href) + '">' + esc(g.label) + "</a>"; }).join("");
@@ -95,7 +91,7 @@
         }
         return '<a href="' + esc(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
-      return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd>' + esc(it.label) + CVDOWN + '</button><div class="gri-dd-menu">' + groups + "</div></div>";
+      return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd>' + twoline(it.label, true) + '</button><div class="gri-dd-menu">' + groups + "</div></div>";
     }).join("");
 
     var mrows = MENU.map(function (it) {
@@ -113,17 +109,10 @@
     var frag = document.createElement("div");
     frag.insertAdjacentHTML("beforeend", SPRITE);
 
-    var dismissed = false; try { dismissed = sessionStorage.getItem("gri-info-x") === "1"; } catch (e) {}
-    if (info && !dismissed) {
-      frag.insertAdjacentHTML("beforeend",
-        '<div class="gri-infobar" id="gri-infobar"><div class="in"><span class="tag">' + esc(info.tag) + '</span>' +
-        '<span class="msg">' + esc(info.message) + (info.linkText ? ' <a href="' + esc(info.linkHref || "#") + '">' + esc(info.linkText) + "</a>" : "") +
-        '</span><span class="x" id="gri-info-x" title="Kapat">&times;</span></div></div>');
-    }
 
     frag.insertAdjacentHTML("beforeend",
       '<header class="gri-nav"><div class="in">' +
-      '<a href="ogrenme-haritasi.html" class="brand">Gri<span class="it">English</span></a>' +
+      '<a href="index.html" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right"><div class="gri-themes" id="gri-themes">' + themesHtml + "</div>" +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
@@ -134,7 +123,9 @@
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' + mrows +
       '<div class="gri-mth">' + themesHtml + "<button data-t='gece' style='background:#201C17'></button></div></div></div></header>");
 
-    while (frag.firstChild) document.body.insertBefore(frag.firstChild, document.body.firstChild);
+    var _lb = document.querySelector(".launch-banner");
+    var _ref = _lb ? _lb.nextSibling : document.body.firstChild;
+    while (frag.firstChild) document.body.insertBefore(frag.firstChild, _ref);
     applyTheme(readTheme());
 
     document.addEventListener("click", function (e) {
@@ -163,8 +154,6 @@
     });
     var burger = document.getElementById("gri-burger");
     if (burger) burger.addEventListener("click", function () { document.getElementById("gri-mmenu").classList.toggle("open"); });
-    var ix = document.getElementById("gri-info-x");
-    if (ix) ix.addEventListener("click", function () { var b = document.getElementById("gri-infobar"); if (b) b.style.display = "none"; try { sessionStorage.setItem("gri-info-x", "1"); } catch (e) {} });
   }
 
   if (document.readyState !== "loading") build();

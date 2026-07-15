@@ -62,45 +62,40 @@ var EXAMS=[
 ];
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,
     PULSE: { overall: 0, streak: 0, weekLessons: 0, newBadges: 0 } };
-  window.GRI_INFO = window.GRI_INFO || {
-    tag: "Duyuru",
-    message: "SAT Haziran kampi kayitlari acildi.",
-    linkText: "Detaylar",
-    linkHref: "#"
-  };
+  window.GRI_INFO = null; // gercek launch-banner korunur; ileride admin kaynagina baglanir
   window.GRI_NAV = [
-    { label: "Ogrenme Haritasi", href: "ogrenme-haritasi.html" },
-    { label: "Sinav Bilgisi", href: "sat.html", children: [
+    { label: "Öğrenme Haritası", href: "ogrenme-haritasi.html" },
+    { label: "Sınav Bilgisi", href: "sat.html", children: [
       { label: "SAT", href: "sat.html" }, { label: "IELTS", href: "ielts.html" },
       { label: "TOEFL", href: "toefl.html" }, { label: "IB", href: "ib.html" },
       { label: "UDSP", href: "udsp.html" }, { label: "YDT", href: "ydt.html" },
-      { label: "YDS / YOKDIL", href: "yds.html" }
+      { label: "YDS / YÖKDİL", href: "yds.html" }
     ] },
-    { label: "Soru Bankasi", href: "soru-bankasi.html", children: [
+    { label: "Soru Bankası", href: "soru-bankasi.html", children: [
       { label: "SAT", href: "sat-soru-bankasi.html", children: [
         { label: "Reading & Writing", href: "sat-soru-bankasi-rw.html" },
         { label: "Math", href: "sat-soru-bankasi-math.html" } ] },
       { label: "IELTS", href: "ielts-soru-bankasi.html", children: [
         { label: "Tam Deneme", href: "ielts-deneme.html" },
-        { label: "Bolum Bazli", href: "ielts-bolum-calisma.html" } ] },
+        { label: "Bölüm Bazlı", href: "ielts-bolum-calisma.html" } ] },
       { label: "TOEFL", href: "toefl-soru-bankasi.html" },
       { label: "UDSP", href: "udsp-soru-bankasi.html" },
       { label: "YDT", href: "ydt-soru-bankasi.html" },
-      { label: "YDS / YOKDIL", href: "yds-soru-bankasi.html", children: [
+      { label: "YDS / YÖKDİL", href: "yds-soru-bankasi.html", children: [
         { label: "YDS", href: "yds-soru-bankasi-yds.html" },
-        { label: "YOKDIL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
-        { label: "YOKDIL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
-        { label: "YOKDIL Saglik", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
+        { label: "YÖKDİL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
+        { label: "YÖKDİL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
+        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
     ] },
-    { label: "Kelime Bankasi", href: "kelime-bankasi.html" },
-    { label: "Ders Notlari", href: "ders-notlari.html", children: [
+    { label: "Kelime Bankası", href: "kelime-bankasi.html" },
+    { label: "Ders Notları", href: "ders-notlari.html", children: [
       { label: "SAT", href: "sat-ders-notlari.html" }, { label: "IELTS", href: "ielts-ders-notlari.html" },
       { label: "TOEFL", href: "toefl-ders-notlari.html" }, { label: "IB", href: "ib-ders-notlari.html" },
-      { label: "YDT", href: "ydt-ders-notlari.html" }, { label: "YDS / YOKDIL", href: "yds-ders-notlari.html" }
+      { label: "YDT", href: "ydt-ders-notlari.html" }, { label: "YDS / YÖKDİL", href: "yds-ders-notlari.html" }
     ] },
-    { label: "Yazi Pratigi", href: "yazi-pratigi.html" },
+    { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
-    { label: "Calisma Paketleri", href: "calisma-paketleri.html" },
-    { label: "Bize Ulasin", href: "iletisim.html" }
+    { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
+    { label: "Bize Ulaşın", href: "iletisim.html" }
   ];
 })();

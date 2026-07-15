@@ -11,11 +11,6 @@
     "[data-theme='orman']{--gri-accent:#3E6B4A;--gri-accent-soft:#DFEBE1;--gri-accent-deep:#20402B}",
     "[data-theme='kum']{--gri-accent:#A9772E;--gri-accent-soft:#F3E7CD;--gri-accent-deep:#6E4B18}",
     "[data-theme='gece']{--gri-bg:#151210;--gri-surface:#201C17;--gri-surface-2:#1B1813;--gri-ink:#F1E9D9;--gri-ink-soft:#B7AB96;--gri-ink-faint:#7E7362;--gri-line:#332C22;--gri-line-soft:#2A241C;--gri-gold:#D8B25A;--gri-accent:#6FB6AF;--gri-accent-soft:#22322F;--gri-accent-deep:#A9D6D1;--gri-info:#8B6BA9;--gri-nav-bg:#1C1813;--gri-shadow:0 2px 4px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.4)}",
-    ".gri-infobar{background:var(--gri-info);color:var(--gri-info-ink);font-family:Inter,sans-serif;font-size:13px}",
-    ".gri-infobar .in{max-width:1200px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:12px;min-height:38px}",
-    ".gri-infobar .tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,255,255,.18);padding:2px 8px;border-radius:20px;white-space:nowrap}",
-    ".gri-infobar .msg{flex:1;opacity:.96;padding:6px 0}.gri-infobar a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}",
-    ".gri-infobar .x{cursor:pointer;opacity:.75;font-size:16px;line-height:1}",
     ".gri-nav{position:sticky;top:0;z-index:60;background:var(--gri-surface);border-bottom:1px solid var(--gri-line);font-family:Inter,sans-serif}",
     ".gri-nav .in{max-width:1200px;margin:0 auto;padding:0 26px;display:flex;align-items:center;gap:20px;height:66px}",
     ".gri-nav .brand{display:flex;align-items:baseline;font-family:'Playfair Display',serif;font-weight:600;font-size:1.45rem;letter-spacing:-.01em;white-space:nowrap;color:var(--gri-ink);text-decoration:none}",
@@ -84,7 +79,6 @@
   function build() {
     if (document.querySelector(".gri-nav")) return;
     var MENU = window.GRI_NAV || [];
-    var info = window.GRI_INFO || null;
     var here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
 
     var links = MENU.map(function (it) {
@@ -115,17 +109,10 @@
     var frag = document.createElement("div");
     frag.insertAdjacentHTML("beforeend", SPRITE);
 
-    var dismissed = false; try { dismissed = sessionStorage.getItem("gri-info-x") === "1"; } catch (e) {}
-    if (info && !dismissed) {
-      frag.insertAdjacentHTML("beforeend",
-        '<div class="gri-infobar" id="gri-infobar"><div class="in"><span class="tag">' + esc(info.tag) + '</span>' +
-        '<span class="msg">' + esc(info.message) + (info.linkText ? ' <a href="' + esc(info.linkHref || "#") + '">' + esc(info.linkText) + "</a>" : "") +
-        '</span><span class="x" id="gri-info-x" title="Kapat">&times;</span></div></div>');
-    }
 
     frag.insertAdjacentHTML("beforeend",
       '<header class="gri-nav"><div class="in">' +
-      '<a href="ogrenme-haritasi.html" class="brand">Gri<span class="it">English</span></a>' +
+      '<a href="index.html" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right"><div class="gri-themes" id="gri-themes">' + themesHtml + "</div>" +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
@@ -167,8 +154,6 @@
     });
     var burger = document.getElementById("gri-burger");
     if (burger) burger.addEventListener("click", function () { document.getElementById("gri-mmenu").classList.toggle("open"); });
-    var ix = document.getElementById("gri-info-x");
-    if (ix) ix.addEventListener("click", function () { var b = document.getElementById("gri-infobar"); if (b) b.style.display = "none"; try { sessionStorage.setItem("gri-info-x", "1"); } catch (e) {} });
   }
 
   if (document.readyState !== "loading") build();

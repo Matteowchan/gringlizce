@@ -102,15 +102,12 @@ button{font-family:inherit}
 .exa-name{font-family:"Playfair Display",serif;font-weight:800;font-size:1.3rem;letter-spacing:-.01em;line-height:1.1}
 .exam.big .exa-name{font-size:1.7rem}
 .exa-desc{font-family:Inter,sans-serif;font-size:12.5px;color:var(--gri-ink-soft);margin-top:3px}
-.exa-prog{display:flex;align-items:center;gap:9px;width:120px;flex:none}
-.exa-prog .bar{flex:1;height:6px;background:var(--gri-line-soft);border-radius:3px;overflow:hidden}
-.exa-prog .bar i{display:block;height:100%;background:var(--gri-accent);border-radius:3px}
-.exa-prog span{font-family:Inter,sans-serif;font-size:11px;color:var(--gri-ink-faint);font-weight:600}
+.exa-ring{flex:none;display:flex;align-items:center;justify-content:center}
 .exa-chev{width:18px;height:18px;color:var(--gri-ink-faint);transition:.22s;flex:none}
 .exam.open .exa-chev{transform:rotate(90deg)}
 .exa-body{display:none;border-top:1px solid var(--gri-line-soft)}
 .exam.open .exa-body{display:block}
-@media(max-width:640px){.exa-prog{display:none}}
+@media(max-width:640px){.exa-ring{display:none}}
 
 /* tools row (each expands info + link) */
 .tools{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 22px 6px}
@@ -223,8 +220,8 @@ button{font-family:inherit}
 
   <div class="pulse">
     <div class="pcard ring-card">
-      <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--gri-line)" stroke-width="4"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--gri-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5" transform="rotate(-90 20 20)"/></svg>
-      <div><div class="pn">%0</div><div class="pl">Genel ilerleme</div></div>
+      <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--gri-line)" stroke-width="4"/><circle id="ovRing" cx="20" cy="20" r="16" fill="none" stroke="var(--gri-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5" transform="rotate(-90 20 20)"/></svg>
+      <div><div class="pn" id="ovPct">%0</div><div class="pl">Genel ilerleme</div></div>
     </div>
     <div class="pcard">
       <span class="pic"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2c2 3 4 4 4 8a4 4 0 11-8 0c0-1 .5-2 1-2.5C7 8 8 5 10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
@@ -267,6 +264,8 @@ const {IC,EXAMS,PULSE}=window.GRI_DATA;
 
 
 
+function ring(pct,size){size=size||46;var r=(size-7)/2,c=2*Math.PI*r,off=c*(1-(pct||0)/100);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--gri-line)" stroke-width="4"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--gri-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle" font-family="Inter,sans-serif" font-size="${(size*0.28).toFixed(0)}" font-weight="700" fill="var(--gri-ink)">${pct||0}</text></svg>`;}
 const CHEV='<svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHEVX=(cls)=>`<svg class="${cls}" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const GO='<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M4 3l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -290,7 +289,7 @@ function examBlock(e){
     <div class="exa-head" data-exam-head>
       <div class="exa-mark">${e.mark}</div>
       <div class="exa-meta"><div class="exa-name">${e.name}</div><div class="exa-desc">${e.desc}</div></div>
-      <div class="exa-prog"><span class="bar"><i style="width:${e.pct}%"></i></span><span>%${e.pct}</span></div>
+      <div class="exa-ring">${ring(e.pct,46)}</div>
       ${CHEVX('exa-chev')}
     </div>
     <div class="exa-body">
@@ -303,6 +302,9 @@ function render(){document.getElementById('examList').innerHTML=EXAMS.map(examBl
   // open SAT by default
   const sat=document.querySelector('.exam[data-exam="sat"]');if(sat)sat.classList.add('open');}
 render();
+(function(){var xs=EXAMS.map(function(e){return e.pct||0;});var avg=xs.length?Math.round(xs.reduce(function(a,b){return a+b;},0)/xs.length):0;
+  var p=document.getElementById('ovPct'); if(p)p.textContent='%'+avg;
+  var r=document.getElementById('ovRing'); if(r){var C=2*Math.PI*16;r.setAttribute('stroke-dashoffset',(C*(1-avg/100)).toFixed(1));}})();
 
 /* ============ INTERACTION ============ */
 document.addEventListener('click',e=>{

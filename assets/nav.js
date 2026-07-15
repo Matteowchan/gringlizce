@@ -87,27 +87,31 @@
 
   function build() {
     if (document.querySelector(".gri-nav")) return;
+    var _segs = location.pathname.split("/").filter(Boolean);
+    var _inDir = location.pathname.slice(-1) === "/" ? _segs.length : _segs.length - 1;
+    var BASE = _inDir > 0 ? new Array(_inDir + 1).join("../") : "";
+    function href(h){ return esc((/^(https?:|\/|#)/.test(h) ? "" : BASE) + h); }
     var MENU = window.GRI_NAV || [];
     var here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
 
     var links = MENU.map(function (it) {
       var active = hrefsOf(it, []).indexOf(here) !== -1;
-      if (!it.children) return '<a href="' + esc(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
+      if (!it.children) return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
       var groups = it.children.map(function (ch) {
         if (ch.children) {
-          var subs = ch.children.map(function (g) { return '<a href="' + esc(g.href) + '">' + esc(g.label) + "</a>"; }).join("");
-          return '<div class="gri-grp"><a class="gh" href="' + esc(ch.href) + '">' + esc(ch.label) + '</a><div class="gri-sub">' + subs + "</div></div>";
+          var subs = ch.children.map(function (g) { return '<a href="' + href(g.href) + '">' + esc(g.label) + "</a>"; }).join("");
+          return '<div class="gri-grp"><a class="gh" href="' + href(ch.href) + '">' + esc(ch.label) + '</a><div class="gri-sub">' + subs + "</div></div>";
         }
-        return '<a href="' + esc(ch.href) + '">' + esc(ch.label) + "</a>";
+        return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
       return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd>' + twoline(it.label, true) + '</button><div class="gri-dd-menu">' + groups + "</div></div>";
     }).join("");
 
     var mrows = MENU.map(function (it) {
-      if (!it.children) return '<div class="gri-mrow"><a href="' + esc(it.href) + '">' + esc(it.label) + "</a></div>";
+      if (!it.children) return '<div class="gri-mrow"><a href="' + href(it.href) + '">' + esc(it.label) + "</a></div>";
       var subs = it.children.map(function (ch) {
-        var head = '<a href="' + esc(ch.href) + '">' + esc(ch.label) + "</a>";
-        var gk = ch.children ? ch.children.map(function (g) { return '<a href="' + esc(g.href) + '">' + esc(g.label) + "</a>"; }).join("") : "";
+        var head = '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
+        var gk = ch.children ? ch.children.map(function (g) { return '<a href="' + href(g.href) + '">' + esc(g.label) + "</a>"; }).join("") : "";
         return head + gk;
       }).join("");
       return '<div class="gri-msec"><div class="gri-mrow" data-msec><span>' + esc(it.label) + "</span>" + CVDOWN + '</div><div class="gri-msub">' + subs + "</div></div>";
@@ -121,7 +125,7 @@
 
     frag.insertAdjacentHTML("beforeend",
       '<header class="gri-nav"><div class="in">' +
-      '<a href="index.html" class="brand">Gri<span class="it">English</span></a>' +
+      '<a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
@@ -131,14 +135,14 @@
       "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' + mrows +
-      '<a class="gri-mrow" href="panelim.html">Çalışma Masam</a><div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
+      '<a class="gri-mrow" href="' + BASE + 'panelim.html">Çalışma Masam</a><div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
     var _ref = _lb ? _lb.nextSibling : document.body.firstChild;
     while (frag.firstChild) document.body.insertBefore(frag.firstChild, _ref);
     applyTheme(readTheme());
     var _mnt = document.getElementById("navUserMount");
-    if (_mnt && !_mnt.innerHTML.trim()) _mnt.innerHTML = '<a href="giris.html" class="gri-giris">Giriş</a>';
+    if (_mnt && !_mnt.innerHTML.trim()) _mnt.innerHTML = '<a href="' + BASE + 'giris.html" class="gri-giris">Giriş</a>';
 
     document.addEventListener("click", function (e) {
       var t = e.target;

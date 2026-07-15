@@ -2558,18 +2558,6 @@
   <!-- PWA INSTALL -->
   <link rel="stylesheet" href="/assets/pwa-install.css">
   <script src="/assets/pwa-install.js" defer></script>
-  <!-- gri-seo-org -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Gri English",
-    "alternateName": ["Gringlizce", "gringlizce.com"],
-    "url": "https://gringlizce.com/",
-    "logo": "https://gringlizce.com/apple-touch-icon.png",
-    "sameAs": ["https://www.instagram.com/gringlizce/"]
-  }
-  </script>
   <script src="assets/curriculum.js"></script>
   <script src="assets/nav.js"></script>
 </head>
@@ -2860,7 +2848,6 @@
           <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="cc-body"><div class="cc-body-inner">
-          <div id="writing-credits-banner" style="display: none; margin-bottom: 0.8rem; padding: 0.7rem 0.9rem; background: rgba(74,122,74,0.10); border: 1px solid rgba(74,122,74,0.3); border-radius: 8px; font-size: 0.88rem; color: #2f5a2f;"></div>
           <div id="writing-submissions-bar" style="display: none;"></div>
           <div id="writing-submissions-grid" class="qb-list-grid"></div>
           <div id="writing-submissions-empty" class="cc-empty" style="display: none;">
@@ -3214,8 +3201,7 @@
             <li><a href="iletisim.html"><span class="nw1">Bize</span><span class="nw2">Ulaşın</span></a></li>
             <li><a href="giris.html">Giriş Yap</a></li>
             <li><a href="giris.html#signup">Ücretsiz Hesap Aç</a></li>
-                      <li><!-- gri-seo-ig --><a href="https://www.instagram.com/gringlizce/" target="_blank" rel="noopener">Instagram</a></li>
-</ul>
+          </ul>
         </div>
       </div>
 
@@ -3936,6 +3922,8 @@
       if (parseKampSlug(slug)) return renderKampCard(slug, date, type);
       // Mock slug'ı ise mock kartı dön
       if (parseMockSlug(slug)) return renderMockCard(slug, date, type);
+      // UDSP deneme slug'ı ise UDSP deneme kartı dön
+      if (parseUdspDenemeSlug(slug)) return renderUdspDenemeCard(slug, date, type);
       return [
         '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <div class="qb-list-card qb-missing">',
@@ -3987,6 +3975,42 @@
       var preview = 'Soru #' + info.q;
       var available = !!page;
       var cta = available ? (type === 'wrong' ? 'Soruyu Çöz' : 'Soruyu Aç') : 'Deneme Sayfası';
+      return [
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+        '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line">',
+        '        <span class="qb-badge">' + badge + '</span>',
+        '        <span class="qb-cat">' + escHtmlPanel(catLabel) + '</span>',
+        '      </div>',
+        '      <p class="qb-prompt">' + escHtmlPanel(preview) + '</p>',
+        '    </div>',
+        '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+        '    <span class="qb-cta">' + cta + ' &rsaquo;</span>',
+        '  </a>',
+        '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+        '</div>'
+      ].join('');
+    }
+
+    // ============================================================
+    // UDSP DENEME (tam deneme) slug resolver
+    // Format: udsp-deneme-{N}-q{Q}   Q: 1-based
+    // ============================================================
+    function parseUdspDenemeSlug(slug) {
+      var m = /^udsp-deneme-(\d+)-q(\d+)$/.exec(slug || '');
+      if (!m) return null;
+      return { denemeNumber: parseInt(m[1], 10), q: parseInt(m[2], 10) };
+    }
+    function renderUdspDenemeCard(slug, date, type) {
+      var info = parseUdspDenemeSlug(slug);
+      if (!info) return null;
+      var page = 'udsp-deneme-' + info.denemeNumber + '.html';
+      var href = page + '?review=1&q=' + info.q;
+      var badge = 'UDSP Deneme ' + info.denemeNumber;
+      var catLabel = 'Tam Deneme';
+      var preview = 'Soru #' + info.q;
+      var cta = 'Soruyu Aç';
       return [
         '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <a href="' + escHtmlPanel(href) + '" class="qb-list-card">',
@@ -4917,26 +4941,6 @@
             section.style.display = '';
             empty.style.display = 'none';
 
-            // Grupları ilk göründükleri yerde kümele (Task 1 -> Task 2), genel sırayı bozma
-            var byGroupS = {};
-            assignments.forEach(function (a) {
-              var g = a.config && a.config.group_id;
-              if (g) { (byGroupS[g] = byGroupS[g] || []).push(a); }
-            });
-            Object.keys(byGroupS).forEach(function (g) {
-              byGroupS[g].sort(function (x, y) { return ((x.config.part_order) || 0) - ((y.config.part_order) || 0); });
-            });
-            var orderedS = [];
-            var emittedGroupsS = {};
-            assignments.forEach(function (a) {
-              var g = a.config && a.config.group_id;
-              if (g) {
-                if (!emittedGroupsS[g]) { emittedGroupsS[g] = true; orderedS = orderedS.concat(byGroupS[g]); }
-              } else { orderedS.push(a); }
-            });
-            assignments = orderedS;
-
-            var seenGroupsS = {};
             list.innerHTML = assignments.map(function (a) {
               var pct = a.progress_target > 0 ? Math.round(100 * a.progress_current / a.progress_target) : 0;
               var isCompleted = a.status === 'completed';
@@ -4973,10 +4977,7 @@
                   actionsHtml = '<span class="my-assign-completed-pill">Tamamlandı</span>';
                 }
               } else if (a.type === 'writing') {
-                var ttLabelS = cfg.part === 'task1' ? 'Task 1'
-                  : cfg.part === 'task2' ? 'Task 2'
-                  : (cfg.text_type_display || cfg.text_type || '');
-                if (cfg.exam_type) meta.push((humanizeMA(cfg.exam_type) + ' ' + ttLabelS).trim());
+                if (cfg.exam_type) meta.push(humanizeMA(cfg.exam_type) + ' Task ' + (cfg.task_number || ''));
                 if (cfg.min_words) meta.push(cfg.min_words + '+ kelime');
 
                 if (cfg.prompt) {
@@ -4985,7 +4986,8 @@
 
                 if (!isCompleted) {
                   actionsHtml = ''
-                    + '<a href="yazi-pratigi.html?assignment_id=' + escMA(a.assignment_id) + '" target="_blank" rel="noopener" class="my-assign-btn">Yazmaya Git →</a>';
+                    + '<a href="yazi-pratigi.html?assignment_id=' + escMA(a.assignment_id) + '" target="_blank" rel="noopener" class="my-assign-btn">Yazmaya Git →</a>'
+                    + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
                 } else {
                   actionsHtml = ''
                     + '<span class="my-assign-completed-pill">Tamamlandı</span>'
@@ -5010,12 +5012,7 @@
                 }
               }
 
-              var grpHeaderS = '';
-              if (a.config && a.config.group_id && !seenGroupsS[a.config.group_id]) {
-                seenGroupsS[a.config.group_id] = true;
-                grpHeaderS = '<div style="margin:0.7rem 0 0.1rem; font-family:var(--font-ui,Inter),system-ui,sans-serif; font-size:0.76rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--gold,#c89a3c);">IELTS Tam Yazma · ' + escMA(a.config.group_title || a.title) + '</div>';
-              }
-              return grpHeaderS + '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
+              return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
                 + '<div class="my-assign-head">'
                 + '<div class="my-assign-titles">'
                 + '<span class="my-assign-type type-' + a.type + '">' + TYPE_LABELS_S[a.type] + '</span>'
@@ -5126,25 +5123,6 @@
         var elCount = document.getElementById('writing-submissions-count');
         var elEmpty = document.getElementById('writing-submissions-empty');
         if (!elArea || !elGrid) return;
-
-        // Kalan yazma kredisi banner
-        try {
-          var crRes = await sbCli.rpc('get_user_writing_credits');
-          if (!crRes.error && crRes.data) {
-            var c = crRes.data;
-            var parts = [];
-            if (Number(c.task1_only) > 0) parts.push('Task 1: ' + c.task1_only);
-            if (Number(c.task2_only) > 0) parts.push('Task 2: ' + c.task2_only);
-            if (Number(c.both) > 0) parts.push('Task 1+2: ' + c.both);
-            var banner = document.getElementById('writing-credits-banner');
-            if (banner && parts.length) {
-              banner.innerHTML = '<strong>Kalan yazma kredin:</strong> ' + parts.join(' &middot; ') +
-                ' &nbsp; Yeni bir IELTS denemesi yazıp ilgili paketi seçtiğinde ödeme olmadan öğretmen değerlendirmesine gönderilir.';
-              banner.style.display = '';
-              elArea.style.display = '';
-            }
-          }
-        } catch (e) { /* sessiz */ }
 
         var subsRes = await sbCli.from('ielts_writing_submissions')
           .select('id, test_id, task1_essay, task2_essay, task1_word_count, task2_word_count, package_type, payment_status, overall_writing_band, submitted_at, time_spent_seconds, task1_feedback, task2_feedback, task1_band, task2_band, reviewed_at, gri_evaluated, gri_evaluated_at, gri_evaluation_json, test:test_id (slug, name)')

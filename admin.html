@@ -1780,6 +1780,12 @@
           </div>
         </div>
 
+        <div class="stats-section-title">Son 14 Gün Cevap</div>
+        <div id="ov-daily-chart" style="display:flex; align-items:flex-end; gap:4px; padding:0.5rem 0; overflow-x:auto;"></div>
+
+        <div class="stats-section-title">Son Hareketler</div>
+        <div id="ov-activity" style="font-size:0.86rem; max-height:340px; overflow-y:auto;"></div>
+
         <div class="stats-section-title">Hızlı Erişim</div>
         <div class="dash-links">
           <a href="#" class="dash-link-card" data-tab-jump="writing">
@@ -1809,15 +1815,54 @@
 
         <div class="field-row">
           <label>Aktif:</label>
-          <span class="switch">
+          <label class="switch">
             <input type="checkbox" id="banner-enabled">
             <span class="slider"></span>
-          </span>
+          </label>
         </div>
 
         <div class="field-row" style="display:block;">
-          <label style="display:block; margin-bottom:0.4rem;">Metin (HTML kullanabilirsin, örneğin &lt;strong&gt;):</label>
-          <textarea class="admin-textarea" id="banner-text" placeholder="Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde"></textarea>
+          <label style="display:block; margin-bottom:0.4rem;">Metin</label>
+          <input type="text" id="banner-text" placeholder="Örn. UDSP yaklaşıyor, soruları çöz" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.4rem; line-height:1.6;">
+            Biçimlendirme: <code>**kalın**</code>, <code>*italik*</code>, <code>__altı çizili__</code>, <code>[yazı](link)</code>. Örnek: UDSP yaklaşıyor, [denemeyi çöz](udsp-soru-bankasi.html).
+          </div>
+        </div>
+
+        <div class="field-row" style="flex-wrap:wrap; gap:1.4rem; align-items:center;">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label class="switch"><input type="checkbox" id="banner-color-on"><span class="slider"></span></label>
+            <label style="margin:0;">Özel renk</label>
+            <input type="color" id="banner-color" value="#9C7F45" style="width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer;">
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label class="switch"><input type="checkbox" id="banner-bold"><span class="slider"></span></label>
+            <label style="margin:0;">Kalın</label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label class="switch"><input type="checkbox" id="banner-italic"><span class="slider"></span></label>
+            <label style="margin:0;">İtalik</label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label style="margin:0;">Boyut</label>
+            <select id="banner-size" style="padding:0.4rem 0.6rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+              <option value="">Varsayılan</option>
+              <option value="11">Küçük</option>
+              <option value="13">Orta</option>
+              <option value="15">Büyük</option>
+              <option value="18">Çok büyük</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Link (opsiyonel)</label>
+          <input type="text" id="banner-link" placeholder="Örn. udsp-soru-bankasi.html" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Önizleme</label>
+          <div id="banner-preview" class="launch-banner" style="display:block; border-radius:6px;"></div>
         </div>
 
         <button class="save-btn" id="save-banner">Banner'ı Kaydet</button>
@@ -2246,6 +2291,13 @@
   </main>
 
   <!-- ============ USER DETAIL MODAL ============ -->
+  <style>
+    .user-modal-section.collapsible > h4 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .user-modal-section.collapsible > h4::after { content: '+'; font-weight: 400; color: var(--text-muted); margin-left: 0.5rem; }
+    .user-modal-section.collapsible.open > h4::after { content: '\2212'; }
+    .user-modal-section.collapsible:not(.open) > *:not(h4) { display: none !important; }
+    .um-w-group { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0.6rem 0 0.4rem; }
+  </style>
   <div class="user-modal-overlay" id="user-modal-overlay">
     <div class="user-modal" role="dialog" aria-modal="true">
       <button class="user-modal-close" id="user-modal-close" aria-label="Kapat">&times;</button>
@@ -2260,6 +2312,31 @@
       <div class="user-modal-section">
         <h4>Kazandığı Rozetler</h4>
         <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-answers">
+        <h4>Çözdüğü Sorular</h4>
+        <div class="um-action-row" style="margin-bottom: 0.5rem;">
+          <button class="btn-admin-action active" id="um-ans-filter-all">Hepsi</button>
+          <button class="btn-admin-action" id="um-ans-filter-wrong">Yanlış</button>
+        </div>
+        <div id="um-answers" style="font-size: 0.86rem;"></div>
+        <div class="um-action-row" style="margin-top: 0.6rem;">
+          <button class="btn-admin-action" id="um-answers-more" style="display:none;">Daha fazla</button>
+        </div>
+        <div class="um-msg" id="um-answers-msg"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-writings">
+        <h4>Yazıları</h4>
+        <div id="um-writings" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-writings-msg"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-study">
+        <h4>Çalışma İzleri</h4>
+        <div id="um-study" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-study-msg"></div>
       </div>
 
       <div class="user-modal-section">
@@ -2539,10 +2616,66 @@
       showReverifyPrompt(true);
     }
 
+    function bannerPayload() {
+      return {
+        v: 2,
+        enabled: $('banner-enabled').checked,
+        text: ($('banner-text').value || '').trim(),
+        color: $('banner-color-on').checked ? $('banner-color').value : '',
+        bold: $('banner-bold').checked,
+        italic: $('banner-italic').checked,
+        size: $('banner-size').value || '',
+        link: ($('banner-link').value || '').trim()
+      };
+    }
+
+    function parseBannerTextAdmin(raw) {
+      var s = escHtmlAdmin(raw);
+      s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, t, u) {
+        u = u.trim();
+        if (/^(javascript|data):/i.test(u)) { return t; }
+        return '<a href="' + u + '" style="color:inherit;text-decoration:underline;">' + t + '</a>';
+      });
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__([^_]+)__/g, '<u>$1</u>');
+      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return s;
+    }
+
+    function buildBannerHtmlAdmin(b) {
+      var s = [];
+      if (b.color) { s.push('color:' + b.color); }
+      if (b.bold) { s.push('font-weight:700'); }
+      if (b.italic) { s.push('font-style:italic'); }
+      if (b.size) { s.push('font-size:' + parseInt(b.size, 10) + 'px'); }
+      var inner = '<span style="' + s.join(';') + '">' + parseBannerTextAdmin(b.text) + '</span>';
+      if (b.link && b.text.indexOf('](') === -1) {
+        inner = '<a href="' + escHtmlAdmin(b.link) + '" style="color:inherit;text-decoration:none;">' + inner + '</a>';
+      }
+      return inner;
+    }
+
+    function updateBannerPreview() {
+      var b = bannerPayload();
+      var el = $('banner-preview');
+      if (!el) { return; }
+      el.innerHTML = b.text ? buildBannerHtmlAdmin(b) : '<span style="opacity:0.45;">(önizleme)</span>';
+      el.style.opacity = b.enabled ? '1' : '0.5';
+    }
+
     function renderBanner() {
-      var b = state.cfg.banner || { enabled: false, text: '' };
+      var b = state.cfg.banner || {};
       $('banner-enabled').checked = !!b.enabled;
-      $('banner-text').value = b.text || '';
+      var txt = b.text || '';
+      if (b.v !== 2 && /[<>]/.test(txt)) { txt = txt.replace(/<[^>]*>/g, ''); }
+      $('banner-text').value = txt;
+      $('banner-color').value = b.color || '#9C7F45';
+      $('banner-color-on').checked = !!b.color;
+      $('banner-bold').checked = !!b.bold;
+      $('banner-italic').checked = !!b.italic;
+      $('banner-size').value = b.size || '';
+      $('banner-link').value = b.link || '';
+      updateBannerPreview();
     }
 
     function renderDiscount() {
@@ -2554,10 +2687,7 @@
     async function saveBanner() {
       var btn = $('save-banner');
       btn.disabled = true;
-      var payload = {
-        enabled: $('banner-enabled').checked,
-        text: $('banner-text').value.trim()
-      };
+      var payload = bannerPayload();
       try {
         var res = await sb.from('site_config').upsert({
           key: 'banner',
@@ -2846,11 +2976,68 @@
         if (badge) {
           badge.style.display = (Number(s.pending_writing) > 0) ? 'inline-block' : 'none';
         }
+        loadDailyAnswers();
+        loadRecentActivity();
       } catch (e) {
         console.warn('[Stats] yüklenemedi:', e);
         ['stat-total','stat-dau','stat-wau','stat-mau','stat-new30','stat-pending'].forEach(function (id) {
           var el = $(id); if (el) el.textContent = '—';
         });
+      }
+    }
+
+    async function loadDailyAnswers() {
+      var box = $('ov-daily-chart');
+      if (!box) { return; }
+      try {
+        var res = await sb.rpc('admin_daily_answers', { p_days: 14 });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        var max = rows.reduce(function (m, r) { return Math.max(m, Number(r.cnt) || 0); }, 1);
+        box.innerHTML = rows.map(function (r) {
+          var c = Number(r.cnt) || 0;
+          var hpx = Math.max(2, Math.round((c / max) * 90));
+          var label = String(r.day || '').slice(5);
+          return '<div title="' + r.day + ': ' + c + '" style="flex:1; min-width:20px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:2px;">' +
+            '<div style="font-size:0.64rem; color:var(--text-muted);">' + c + '</div>' +
+            '<div style="width:70%; height:' + hpx + 'px; background:var(--teal); border-radius:3px 3px 0 0;"></div>' +
+            '<div style="font-size:0.58rem; color:var(--text-muted); white-space:nowrap;">' + label + '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Grafik yüklenemedi.</div>';
+      }
+    }
+
+    async function loadRecentActivity() {
+      var box = $('ov-activity');
+      if (!box) { return; }
+      try {
+        var res = await sb.rpc('admin_recent_activity', { p_limit: 40 });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz hareket yok.</div>'; return; }
+        box.innerHTML = rows.map(function (r) {
+          var marker, mid;
+          if (r.kind === 'answer') {
+            var ok = (r.status === 'correct');
+            var i = denemeOrBankLink(r.slug);
+            marker = '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>';
+            mid = '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(i.label) + '</a>';
+          } else {
+            var tag = (r.kind === 'vocab') ? 'Kelime' : 'Yazı';
+            marker = '<span style="flex-shrink:0; font-size:0.62rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--gold-deep); border:1px solid var(--line); border-radius:999px; padding:0.05rem 0.4rem;">' + tag + '</span>';
+            mid = '<span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(r.detail || '') + '</span>';
+          }
+          return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid var(--line);">' +
+            marker +
+            '<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(r.email || '') + '</span>' +
+            mid +
+            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (r.at ? fmtDate(r.at) : '') + '</span>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Hareketler yüklenemedi.</div>';
       }
     }
 
@@ -3245,6 +3432,203 @@
       });
     }
 
+    function denemeOrBankLink(slug) {
+      var m = /^udsp-deneme-(\d+)-q(\d+)$/.exec(slug);
+      if (m) { return { href: 'udsp-deneme-' + m[1] + '.html?review=1', label: 'Deneme ' + m[1] + ' \u00b7 Soru ' + m[2] }; }
+      return { href: 'soru.html?q=' + encodeURIComponent(slug), label: slug };
+    }
+
+    var UM_ANSWERS_LIMIT = 50;
+    var umAnswersOffset = 0;
+    var umAnswersOnlyWrong = false;
+    var umAnswersUserId = null;
+
+    function answerRowHtml(r) {
+      var ok = (r.status === 'correct' || r.status === 'dogru' || r.status === 'true' || r.status === 'right');
+      var info = denemeOrBankLink(r.question_slug);
+      var when = r.answered_at ? fmtDate(r.answered_at) : '';
+      var secs = (r.time_spent_ms != null) ? Math.round(Number(r.time_spent_ms) / 1000) + ' sn' : '';
+      return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0; border-bottom:1px solid var(--line);">' +
+        '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>' +
+        '<a href="' + info.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(info.label) + '</a>' +
+        '<span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap;">' + (ok ? 'Doğru' : 'Yanlış') + (secs ? ' \u00b7 ' + secs : '') + '</span>' +
+        '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + when + '</span>' +
+        '</div>';
+    }
+
+    async function loadUserAnswers(userId, offset, append) {
+      var box = $('um-answers'); var moreBtn = $('um-answers-more'); var msg = $('um-answers-msg');
+      if (!box) { return; }
+      umAnswersUserId = userId;
+      if (!append) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>'; umAnswersOffset = 0; }
+      try {
+        var res = await sb.rpc('admin_user_answers', { p_user_id: userId, p_limit: UM_ANSWERS_LIMIT, p_offset: offset, p_only_wrong: umAnswersOnlyWrong });
+        if (res.error) { throw res.error; }
+        var rows = res.data || [];
+        if (!append) { box.innerHTML = ''; }
+        if (!rows.length && !append) {
+          box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz çözülen soru yok.</div>';
+          if (moreBtn) { moreBtn.style.display = 'none'; }
+          return;
+        }
+        box.insertAdjacentHTML('beforeend', rows.map(answerRowHtml).join(''));
+        umAnswersOffset = offset + rows.length;
+        if (moreBtn) { moreBtn.style.display = (rows.length === UM_ANSWERS_LIMIT) ? '' : 'none'; }
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
+    function essayBlock(label, text) {
+      if (!text) { return ''; }
+      return '<div style="margin-top:0.5rem;">' +
+        '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted);">' + label + '</div>' +
+        '<div style="white-space:pre-wrap; font-size:0.84rem; line-height:1.5; max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:6px; padding:0.5rem; margin-top:0.25rem; background:var(--bg-soft);">' + escHtmlAdmin(text) + '</div>' +
+        '</div>';
+    }
+
+    function writingCardHtml(w) {
+      var bands = [];
+      if (w.task1_band) { bands.push('T1 ' + w.task1_band); }
+      if (w.task2_band) { bands.push('T2 ' + w.task2_band); }
+      if (w.overall_band) { bands.push('Genel ' + w.overall_band); }
+      var bandStr = bands.length ? bands.join(' \u00b7 ') : 'puanlanmadı';
+      var when = w.submitted_at ? fmtDate(w.submitted_at) : '';
+      return '<div data-w-card style="border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; overflow:hidden;">' +
+        '<div data-w-toggle style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.8rem; cursor:pointer;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-weight:600;">' + escHtmlAdmin(w.test_name || 'IELTS Writing') + '</div>' +
+            '<div style="color:var(--text-muted); font-size:0.76rem;">' + escHtmlAdmin(w.package_type || '') + ' \u00b7 ' + when + ' \u00b7 ' + (w.word_count || 0) + ' kelime \u00b7 ' + escHtmlAdmin(w.payment_status || '') + '</div>' +
+          '</div>' +
+          '<span style="font-size:0.78rem; color:var(--teal); white-space:nowrap;">' + escHtmlAdmin(bandStr) + '</span>' +
+        '</div>' +
+        '<div class="um-w-body" style="display:none; padding:0 0.8rem 0.8rem;">' +
+          essayBlock('Task 1', w.task1_essay) +
+          essayBlock('Task 2', w.task2_essay) +
+          '<a href="ielts-deneme-writing-feedback.html?submission=' + encodeURIComponent(w.id) + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.6rem; font-size:0.8rem; color:var(--teal);">Tam değerlendirme</a>' +
+        '</div>' +
+      '</div>';
+    }
+
+    async function loadUserWritings(userId) {
+      var box = $('um-writings'); var msg = $('um-writings-msg');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var r1 = await sb.rpc('admin_user_ielts_writings', { p_user_id: userId });
+        if (r1.error) { throw r1.error; }
+        var r2 = await sb.rpc('admin_user_saved_writings', { p_user_id: userId });
+        if (r2.error) { throw r2.error; }
+        var ielts = r1.data || [];
+        var saved = r2.data || [];
+        if (!ielts.length && !saved.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz yazı yok.</div>'; return; }
+        var html = '';
+        if (ielts.length) { html += '<div class="um-w-group">IELTS Deneme</div>' + ielts.map(writingCardHtml).join(''); }
+        if (saved.length) { html += '<div class="um-w-group">Pratik / IB</div>' + saved.map(savedWritingCardHtml).join(''); }
+        box.innerHTML = html;
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
+    function setupModalAccordion(userId) {
+      var modal = document.querySelector('#user-modal-overlay .user-modal');
+      if (!modal) { return; }
+      modal.querySelectorAll('.user-modal-section').forEach(function (sec) {
+        if (sec.querySelector('h4')) { sec.classList.add('collapsible'); sec.classList.add('open'); }
+      });
+      umAnswersOnlyWrong = false;
+      var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
+      var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
+      ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
+        var sec = document.getElementById(id);
+        if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
+      });
+      if (!modal.dataset.accWired) {
+        modal.dataset.accWired = '1';
+        modal.addEventListener('click', function (ev) {
+          var h4 = ev.target.closest('h4');
+          if (!h4) { return; }
+          var sec = h4.parentElement;
+          if (!sec || !sec.classList.contains('user-modal-section') || !sec.classList.contains('collapsible')) { return; }
+          var nowOpen = sec.classList.toggle('open');
+          if (nowOpen) {
+            var uid = currentUserDetail && currentUserDetail.user_id;
+            if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
+            if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
+            if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }
+          }
+        });
+      }
+    }
+
+    function savedWritingCardHtml(s) {
+      var parts = [];
+      if (s.exam) { parts.push(String(s.exam).toUpperCase()); }
+      if (s.text_type) { parts.push(s.text_type); }
+      if (s.level) { parts.push(s.level); }
+      var title = parts.join(' \u00b7 ') || 'Yazı';
+      var when = s.saved_at ? fmtDate(s.saved_at) : '';
+      var sub = (s.prompt_title ? escHtmlAdmin(s.prompt_title) + ' \u00b7 ' : '') + when + ' \u00b7 ' + (s.word_count || 0) + ' kelime';
+      return '<div data-w-card style="border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; overflow:hidden;">' +
+        '<div data-w-toggle style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.8rem; cursor:pointer;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-weight:600;">' + escHtmlAdmin(title) + '</div>' +
+            '<div style="color:var(--text-muted); font-size:0.76rem;">' + sub + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="um-w-body" style="display:none; padding:0 0.8rem 0.8rem;">' +
+          (s.prompt_snapshot ? essayBlock('Konu', s.prompt_snapshot) : '') +
+          essayBlock('Yazı', s.body) +
+        '</div>' +
+      '</div>';
+    }
+
+    async function loadUserStudy(userId) {
+      var box = $('um-study'); var msg = $('um-study-msg');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var res = await sb.rpc('admin_user_study', { p_user_id: userId });
+        if (res.error) { throw res.error; }
+        var d = res.data || {};
+        var bm = d.bookmarks || []; var notes = d.notes || []; var vocab = d.vocab || [];
+        if (!bm.length && !notes.length && !vocab.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yer imi, not ya da kelime yok.</div>'; return; }
+        var html = '';
+        if (bm.length) {
+          html += '<div class="um-w-group">Yer İmleri (' + bm.length + ')</div>';
+          html += bm.map(function (b) {
+            var i = denemeOrBankLink(b.slug);
+            return '<div style="padding:0.3rem 0; border-bottom:1px solid var(--line); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none;">' + escHtmlAdmin(i.label) + '</a></div>';
+          }).join('');
+        }
+        if (notes.length) {
+          html += '<div class="um-w-group">Notlar (' + notes.length + ')</div>';
+          html += notes.map(function (n) {
+            var i = denemeOrBankLink(n.slug);
+            return '<div style="padding:0.45rem 0; border-bottom:1px solid var(--line);">' +
+              '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:none; font-size:0.8rem;">' + escHtmlAdmin(i.label) + '</a>' +
+              '<div style="white-space:pre-wrap; font-size:0.84rem; margin-top:0.2rem;">' + escHtmlAdmin(n.note || '') + '</div>' +
+              '</div>';
+          }).join('');
+        }
+        if (vocab.length) {
+          html += '<div class="um-w-group">Kelimeler (' + vocab.length + ')</div>';
+          html += '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + vocab.map(function (v) {
+            return '<span style="border:1px solid var(--line); border-radius:999px; padding:0.15rem 0.6rem; font-size:0.82rem;">' + escHtmlAdmin(v.word || '') + '</span>';
+          }).join('') + '</div>';
+        }
+        box.innerHTML = html;
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
     async function openUserDetail(userId) {
       try {
         var res = await sb.rpc('admin_user_overview', { p_user_id: userId });
@@ -3253,6 +3637,7 @@
         if (!u) throw new Error('Kullanıcı bulunamadı');
 
         currentUserDetail = u;
+        setupModalAccordion(userId);
 
         $('um-email').textContent = u.email || '—';
         var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
@@ -3688,7 +4073,7 @@
           }).join('');
         }
 
-        var probRes = await sb.rpc('admin_problematic_questions', { p_max_accuracy: 30, p_min_attempts: 20, p_limit: 30 });
+        var probRes = await sb.rpc('admin_problematic_questions', { p_max_accuracy: 30, p_min_attempts: 3, p_limit: 50 });
         if (probRes.error) throw probRes.error;
         var probs = probRes.data || [];
         $('cnt-prob').textContent = probs.length;
@@ -3700,7 +4085,7 @@
               '<td style="font-family: SF Mono, Menlo, monospace; font-size: 0.82rem;" lang="en">' + escHtml(q.question_slug) + '</td>' +
               '<td>' + q.total_attempts + '</td>' +
               '<td><strong style="color: #b45046;">%' + (q.accuracy || 0) + '</strong></td>' +
-              '<td><a href="#" class="row-action" data-slug="' + escHtml(q.question_slug) + '">İncele</a></td>' +
+              '<td><a href="' + denemeOrBankLink(q.question_slug).href + '" target="_blank" rel="noopener" class="row-action">İncele</a></td>' +
               '</tr>';
           }).join('');
         }
@@ -4530,6 +4915,28 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       $('save-banner').addEventListener('click', saveBanner);
+      var umMore = $('um-answers-more');
+      if (umMore) { umMore.addEventListener('click', function () { loadUserAnswers(umAnswersUserId, umAnswersOffset, true); }); }
+      var umFAll = $('um-ans-filter-all'), umFWrong = $('um-ans-filter-wrong');
+      function setAnsFilter(wrong) {
+        umAnswersOnlyWrong = wrong;
+        if (umFAll) { umFAll.classList.toggle('active', !wrong); }
+        if (umFWrong) { umFWrong.classList.toggle('active', wrong); }
+        loadUserAnswers(umAnswersUserId, 0, false);
+      }
+      if (umFAll) { umFAll.addEventListener('click', function () { setAnsFilter(false); }); }
+      if (umFWrong) { umFWrong.addEventListener('click', function () { setAnsFilter(true); }); }
+      var umW = $('um-writings');
+      if (umW) {
+        umW.addEventListener('click', function (ev) {
+          var h = ev.target.closest('[data-w-toggle]'); if (!h) { return; }
+          var card = h.closest('[data-w-card]'); var body = card && card.querySelector('.um-w-body');
+          if (body) { body.style.display = (body.style.display === 'none' || !body.style.display) ? 'block' : 'none'; }
+        });
+      }
+      ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-link'].forEach(function (id) {
+        var el = $(id); if (el) { el.addEventListener('input', updateBannerPreview); el.addEventListener('change', updateBannerPreview); }
+      });
       $('save-discount').addEventListener('click', saveDiscount);
       $('reverify-submit').addEventListener('click', attemptReverify);
       $('reverify-password').addEventListener('keydown', function (e) {

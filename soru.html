@@ -2937,6 +2937,14 @@
           reportFeedback.textContent = '';
           reportFeedback.className = 'q-modal-feedback';
           try {
+            let reporterEmail = null, reporterId = GRI_USER_ID;
+            try {
+              const sess = await supabase.auth.getSession();
+              if (sess && sess.data && sess.data.session && sess.data.session.user) {
+                reporterEmail = sess.data.session.user.email || null;
+                reporterId = sess.data.session.user.id || GRI_USER_ID;
+              }
+            } catch (e) {}
             const { error } = await supabase
               .from('soru_bildirimleri')
               .insert({
@@ -2944,7 +2952,9 @@
                 detay: detail,
                 soru_slug: currentSlug || null,
                 soru_url: window.location.href,
-                user_agent: navigator.userAgent
+                user_agent: navigator.userAgent,
+                user_id: reporterId,
+                reporter_email: reporterEmail
               });
             if (!error) {
               reportFeedback.textContent = 'Teşekkürler. Bildiriminiz iletildi.';

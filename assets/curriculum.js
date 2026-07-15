@@ -10,7 +10,7 @@ var IC={
   deneme:'<path d="M4 3h10l2 2v12H4z M7 8h6 M7 11h6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
 };
 var EXAMS=[
- {id:"sat",big:true,name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:22,
+ {id:"sat",big:true,name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:0,
   tools:[
     {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankasi, kategori kategori cozum ve aciklamalarla.",href:"sat-soru-bankasi.html"},
     {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gercek sinav formatinda, adaptif ve puanli.",href:"sat-mock-1.html"},
@@ -19,9 +19,9 @@ var EXAMS=[
   ],
   sections:[{label:"Ogren . Reading & Writing",units:[
     {name:"Unite 1 . Information and Ideas",desc:"Command of Evidence, Central Ideas, Inferences",state:"live",lessons:[
-      {name:"Command of Evidence: Textual",s:"done",href:"sat-unite-1.html"},
-      {name:"Command of Evidence: Quantitative",s:"done",href:"sat-unite-1.html"},
-      {name:"Central Ideas and Details",s:"prog",href:"sat-unite-1.html"},
+      {name:"Command of Evidence: Textual",s:"todo",href:"sat-unite-1.html"},
+      {name:"Command of Evidence: Quantitative",s:"todo",href:"sat-unite-1.html"},
+      {name:"Central Ideas and Details",s:"todo",href:"sat-unite-1.html"},
       {name:"Inferences",s:"todo",href:"sat-unite-1.html"}]},
     {name:"Unite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"soon",lessons:[
       {name:"Words in Context",s:"todo"},{name:"Text Structure and Purpose",s:"todo"},{name:"Cross-Text Connections",s:"todo"}]},
@@ -29,7 +29,7 @@ var EXAMS=[
       {name:"Transitions",s:"todo"},{name:"Rhetorical Synthesis",s:"todo"}]}]},
    {label:"Ogren . Math",units:[
     {name:"Algebra",desc:"Linear, sistemler, esitsizlikler",state:"soon",lessons:[{name:"Linear denklemler",s:"todo"}]}]}]},
- {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:30,
+ {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-writing.html"},
     {ic:"soru",label:"Pratik",desc:"Okuma ve dinleme pratikleri, 11 soru tipi, transkript uzerinden calisma.",href:"ielts-pratik.html"},
@@ -38,42 +38,69 @@ var EXAMS=[
   ],
   sections:[{label:"Ogren . Beceriler",units:[
     {name:"Reading",desc:"11 soru tipi, 3 pratik test",state:"live",lessons:[
-      {name:"True/False/Not Given",s:"done",href:"#"},{name:"Matching Headings",s:"done",href:"#"},{name:"Summary Completion",s:"prog",href:"#"}]},
+      {name:"True/False/Not Given",s:"todo",href:"#"},{name:"Matching Headings",s:"todo",href:"#"},{name:"Summary Completion",s:"todo",href:"#"}]},
     {name:"Writing",desc:"Task 1 ve Task 2",state:"live",lessons:[
-      {name:"Task 1 . Grafik betimleme",s:"done",href:"#"},{name:"Task 2 . Deneme yapisi",s:"prog",href:"#"}]},
+      {name:"Task 1 . Grafik betimleme",s:"todo",href:"#"},{name:"Task 2 . Deneme yapisi",s:"todo",href:"#"}]},
     {name:"Listening",desc:"Transkript uzerinden calisma",state:"live",lessons:[
-      {name:"Form ve not tamamlama",s:"prog",href:"#"},{name:"Harita ve plan",s:"todo",href:"#"}]},
+      {name:"Form ve not tamamlama",s:"todo",href:"#"},{name:"Harita ve plan",s:"todo",href:"#"}]},
     {name:"Speaking",desc:"Uc bolum, akicilik",state:"soon",lessons:[{name:"Part 2 . Cue card",s:"todo"}]}]}]},
- {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:18,
+ {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,
   tools:[{ic:"yazi",label:"Yazi",desc:"Integrated ve academic discussion pratikleri. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Integrated Writing",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
- {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1 metin turleri",pct:25,
+ {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1 metin turleri",pct:0,
   tools:[{ic:"soru",label:"Metin turleri",desc:"Makale, deneme, konusma, poster. Amac, kitle, ton karsilastirmalari. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Paper 1 metin turleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
- {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:12,
+ {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
   tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce kelime listeleri. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Kelime listeleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
- {id:"ydt",name:"YDT",mark:"Y",desc:"Gramer ve kelime setleri",pct:20,
+ {id:"ydt",name:"YDT",mark:"Y",desc:"Gramer ve kelime setleri",pct:0,
   tools:[{ic:"soru",label:"Soru",desc:"YDT gramer ve kelime soru setleri. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Gramer setleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
- {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"960 soruluk paketler",pct:15,
+ {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"960 soruluk paketler",pct:0,
   tools:[{ic:"soru",label:"Soru",desc:"YDS ve YOKDIL soru paketleri, cozumleriyle. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Soru paketleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
 ];
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,
-    PULSE: { overall: 24, streak: 7, weekLessons: 12, newBadges: 3 } };
+    PULSE: { overall: 0, streak: 0, weekLessons: 0, newBadges: 0 } };
   window.GRI_INFO = window.GRI_INFO || {
     tag: "Duyuru",
     message: "SAT Haziran kampi kayitlari acildi.",
     linkText: "Detaylar",
     linkHref: "#"
   };
-  window.GRI_NAV_LINKS = [
+  window.GRI_NAV = [
     { label: "Ogrenme Haritasi", href: "ogrenme-haritasi.html" },
-    { label: "Soru Bankasi", href: "sat-soru-bankasi.html" },
-    { label: "Kelime", href: "kelime-bankasi.html" },
-    { label: "Yazi Pratigi", href: "ielts-writing.html" },
-    { label: "AI Detector", href: "ai-detector.html" },
-    { label: "Calisma Paketleri", href: "calisma-paketleri.html" }
+    { label: "Sinav Bilgisi", href: "sat.html", children: [
+      { label: "SAT", href: "sat.html" }, { label: "IELTS", href: "ielts.html" },
+      { label: "TOEFL", href: "toefl.html" }, { label: "IB", href: "ib.html" },
+      { label: "UDSP", href: "udsp.html" }, { label: "YDT", href: "ydt.html" },
+      { label: "YDS / YOKDIL", href: "yds.html" }
+    ] },
+    { label: "Soru Bankasi", href: "soru-bankasi.html", children: [
+      { label: "SAT", href: "sat-soru-bankasi.html", children: [
+        { label: "Reading & Writing", href: "sat-soru-bankasi-rw.html" },
+        { label: "Math", href: "sat-soru-bankasi-math.html" } ] },
+      { label: "IELTS", href: "ielts-soru-bankasi.html", children: [
+        { label: "Tam Deneme", href: "ielts-deneme.html" },
+        { label: "Bolum Bazli", href: "ielts-bolum-calisma.html" } ] },
+      { label: "TOEFL", href: "toefl-soru-bankasi.html" },
+      { label: "UDSP", href: "udsp-soru-bankasi.html" },
+      { label: "YDT", href: "ydt-soru-bankasi.html" },
+      { label: "YDS / YOKDIL", href: "yds-soru-bankasi.html", children: [
+        { label: "YDS", href: "yds-soru-bankasi-yds.html" },
+        { label: "YOKDIL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
+        { label: "YOKDIL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
+        { label: "YOKDIL Saglik", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
+    ] },
+    { label: "Kelime Bankasi", href: "kelime-bankasi.html" },
+    { label: "Ders Notlari", href: "ders-notlari.html", children: [
+      { label: "SAT", href: "sat-ders-notlari.html" }, { label: "IELTS", href: "ielts-ders-notlari.html" },
+      { label: "TOEFL", href: "toefl-ders-notlari.html" }, { label: "IB", href: "ib-ders-notlari.html" },
+      { label: "YDT", href: "ydt-ders-notlari.html" }, { label: "YDS / YOKDIL", href: "yds-ders-notlari.html" }
+    ] },
+    { label: "Yazi Pratigi", href: "yazi-pratigi.html" },
+    { label: "AI Detector", href: "ai-araclari.html" },
+    { label: "Calisma Paketleri", href: "calisma-paketleri.html" },
+    { label: "Bize Ulasin", href: "iletisim.html" }
   ];
 })();

@@ -244,5 +244,37 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
   else if(a==='remed')serveRemed();
   else if(a==='advance')advance();
   else if(a==='nav'){const t=el.dataset.target;if(t==='lesson')lessonView();else if(t==='practice')startPractice();}});
-lessonView();Progress.boot();
+(function(){
+  var SB_U=(window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co');
+  var SB_K=(window.SUPABASE_KEY||'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g');
+  function showGate(){
+    var ret=encodeURIComponent('/'+location.pathname.split('/').pop());
+    main.setAttribute('data-mode','lesson');
+    app.innerHTML='<div class="head"><div class="eyebrow">Uyelere ozel</div>'+
+      '<h1>Bu icerik giris gerektirir</h1></div>'+
+      '<div class="pad"><p>SAT unitelerini calismak icin ucretsiz hesabinla giris yap. '+
+      'Giristen sonra bu sayfaya geri donersin.</p>'+
+      '<div class="row"><a class="btn" href="giris.html?return='+ret+'">Giris Yap</a>'+
+      '<a class="btn ghost" href="kayit.html">Ucretsiz Hesap Ac</a></div></div>';
+    railEl.innerHTML='';
+    window.scrollTo(0,0);
+  }
+  function boot(cb){
+    if(window.supabase&&window.supabase.createClient)return cb();
+    var t=0,iv=setInterval(function(){t++;if(window.supabase&&window.supabase.createClient){clearInterval(iv);cb();}else if(t>30){clearInterval(iv);cb();}},100);
+  }
+  app.innerHTML='<div class="head"><div class="eyebrow">Yukleniyor</div><h1>&nbsp;</h1></div>';
+  boot(async function(){
+    var ok=false;
+    try{
+      if(window.supabase&&window.supabase.createClient){
+        var c=window.supabase.createClient(SB_U,SB_K);
+        var r=await c.auth.getSession();
+        ok=!!(r&&r.data&&r.data.session);
+      }
+    }catch(e){ ok=false; }
+    if(ok){ lessonView(); Progress.boot(); }
+    else { showGate(); }
+  });
+})();
 </script></body></html>

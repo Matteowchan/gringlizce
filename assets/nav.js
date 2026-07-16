@@ -15,7 +15,7 @@
     ".gri-nav .in{max-width:1200px;margin:0 auto;padding:0 26px;display:flex;align-items:center;gap:20px;height:66px}",
     ".gri-nav .brand{display:flex;align-items:baseline;font-family:'Playfair Display',serif;font-weight:600;font-size:1.45rem;letter-spacing:-.01em;white-space:nowrap;color:var(--gri-ink);text-decoration:none}",
     ".gri-nav .brand .it{font-style:italic;font-weight:400;color:var(--gri-accent);margin-left:.32em}",
-    ".gri-nav .links{display:flex;align-items:stretch;gap:1.5rem;margin-left:10px;font-family:'Crimson Pro',Georgia,serif}",
+    ".gri-nav .links,.gri-nav .links .gri-dd>button{font-family:'Crimson Pro',Georgia,serif}",".gri-nav .links{display:flex;align-items:stretch;gap:1.5rem;margin-left:10px}",
     ".gri-nav .links>a,.gri-dd>button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;line-height:1.2;color:var(--gri-ink-soft);background:none;border:none;border-bottom:1.5px solid transparent;cursor:pointer;padding:5px 0;white-space:nowrap;text-decoration:none;font-family:inherit}",".gri-nav .nw1{font-size:13px;font-weight:500;color:var(--gri-ink-soft);display:inline-flex;align-items:center;gap:4px}",".gri-nav .nw2{font-size:13px;font-weight:500;color:var(--gri-ink-soft)}",
     ".gri-nav .links>a:hover,.gri-dd:hover>button,.gri-nav .links>a.here,.gri-dd.here>button{border-bottom-color:var(--gri-gold)}",".gri-nav .links>a:hover .nw1,.gri-dd:hover .nw1,.gri-nav .links>a.here .nw1,.gri-dd.here .nw1,.gri-nav .links>a:hover .nw2,.gri-dd:hover .nw2,.gri-nav .links>a.here .nw2,.gri-dd.here .nw2{color:var(--gri-accent)}",
     
@@ -138,7 +138,8 @@
       '<a class="gri-mrow" href="' + BASE + 'panelim.html">Çalışma Masam</a><div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
-    var _ref = _lb ? _lb.nextSibling : document.body.firstChild;
+    var _ref = (_lb && _lb.parentNode === document.body) ? _lb.nextSibling : document.body.firstChild;
+    if (_ref && _ref.parentNode !== document.body) _ref = null; // gecersiz referansta basa/sona guvenli ekle
     while (frag.firstChild) document.body.insertBefore(frag.firstChild, _ref);
     applyTheme(readTheme());
     var _mnt = document.getElementById("navUserMount");

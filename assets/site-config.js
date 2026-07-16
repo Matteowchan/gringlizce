@@ -390,6 +390,31 @@
     mount.appendChild(a);
   }
 
+  (function injectUserNavCss(){
+    if (document.getElementById('gri-usernav-css')) return;
+    var css = document.createElement('style');
+    css.id = 'gri-usernav-css';
+    css.textContent =
+      '.nav-user{position:relative;display:inline-flex;align-items:center}' +
+      '.nav-user-btn{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;' +
+        'background:var(--teal,#2C5856);color:#fff;font-family:Inter,system-ui,sans-serif;' +
+        'font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;' +
+        'line-height:1;padding:0;transition:filter .15s}' +
+      '.nav-user-btn:hover{filter:brightness(1.08)}' +
+      '.nav-user-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;background:#fff;' +
+        'border:1px solid var(--line,#E3D8C5);border-radius:12px;box-shadow:0 14px 40px rgba(20,15,10,.18);' +
+        'padding:6px;display:none;z-index:1000}' +
+      '.nav-user-menu.open{display:block}' +
+      '.nav-user-head{padding:9px 11px 8px;border-bottom:1px solid var(--line,#E3D8C5);margin-bottom:4px}' +
+      '.nav-user-name{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:13.5px;color:var(--text,#1A2230)}' +
+      '.nav-user-email{font-family:Inter,system-ui,sans-serif;font-size:11.5px;color:var(--text-muted,#8A7F6E);margin-top:2px}' +
+      '.nav-user-menu a,.nav-user-menu .nav-user-logout{display:block;width:100%;text-align:left;' +
+        'padding:8px 11px;border-radius:8px;font-family:Inter,system-ui,sans-serif;font-size:13px;' +
+        'color:var(--text,#1A2230);text-decoration:none;background:none;border:none;cursor:pointer}' +
+      '.nav-user-menu a:hover,.nav-user-menu .nav-user-logout:hover{background:var(--teal-soft,#DDEBE9)}' +
+      '.nav-user-logout{color:#A8382F}';
+    document.head.appendChild(css);
+  })();
   function renderUserAvatar(mount, user) {
     var email = (user && user.email) || '';
     var meta = (user && user.user_metadata) || {};

@@ -23,8 +23,10 @@ var EXAMS=[
       {name:"Command of Evidence: Quantitative",s:"todo",href:"sat-unite-1.html"},
       {name:"Central Ideas and Details",s:"todo",href:"sat-unite-1.html"},
       {name:"Inferences",s:"todo",href:"sat-unite-1.html"}]},
-    {name:"Unite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"soon",lessons:[
-      {name:"Words in Context",s:"todo"},{name:"Text Structure and Purpose",s:"todo"},{name:"Cross-Text Connections",s:"todo"}]},
+    {name:"Unite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"live",lessons:[
+      {name:"Words in Context",s:"todo",href:"sat-unite-2.html"},
+      {name:"Text Structure and Purpose",s:"todo",href:"sat-unite-2.html"},
+      {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"}]},
     {name:"Unite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"soon",lessons:[
       {name:"Transitions",s:"todo"},{name:"Rhetorical Synthesis",s:"todo"}]}]},
    {label:"Ogren . Math",units:[

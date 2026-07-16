@@ -455,17 +455,28 @@
     document.head.appendChild(styleEl);
 
     var bar = document.createElement('div');
-    bar.className = 'gri-bc-bar';
+ bar.className = 'gri-bc-bar';
     bar.innerHTML = buildBarHTML(data, filename);
+    placeBar(bar, 0);
+  }
 
-    // Site header'ın HEMEN SONRASINA inject et
+  // Breadcrumb'i dogru yere koy: once yeni nav (.gri-nav), sonra eski header, sonra body basi.
+  function placeBar(bar, tries) {
+    var nav = document.querySelector('.gri-nav');
+    if (nav && nav.parentNode) {
+      nav.parentNode.insertBefore(bar, nav.nextSibling);
+      return;
+    }
     var header = document.querySelector('.site-header');
     if (header && header.parentNode) {
       header.parentNode.insertBefore(bar, header.nextSibling);
-    } else {
-      // Header yoksa body'nin başına
-      document.body.insertBefore(bar, document.body.firstChild);
+      return;
     }
+    if (tries < 20) {
+      setTimeout(function () { placeBar(bar, tries + 1); }, 50);
+      return;
+    }
+    document.body.insertBefore(bar, document.body.firstChild);
   }
 
   if (document.readyState === 'loading') {

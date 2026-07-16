@@ -459,9 +459,12 @@
     });
   }
 
-  async function updateAuthNav() {
+ async function updateAuthNav(_tries) {
     var mount = document.getElementById('navUserMount');
-    if (!mount) return;
+    if (!mount) {
+      if ((_tries || 0) < 20) return void setTimeout(function(){ updateAuthNav((_tries||0)+1); }, 100);
+      return;
+    }
 
     var user = null;
     try {
@@ -478,11 +481,14 @@
     }
   }
 
-  function startTracking() {
+ function startTracking() {
     trackActivity();
     setInterval(trackActivity, ACTIVITY_INTERVAL_MS);
     joinPresence();
     updateAuthNav();
+    try {
+      sb.auth.onAuthStateChange(function(){ updateAuthNav(); });
+    } catch (e) {}
   }
 
   if (document.readyState === 'loading') {

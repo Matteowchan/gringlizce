@@ -27,8 +27,9 @@ var EXAMS=[
       {name:"Words in Context",s:"todo",href:"sat-unite-2.html"},
       {name:"Text Structure and Purpose",s:"todo",href:"sat-unite-2.html"},
       {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"}]},
-    {name:"Unite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"soon",lessons:[
-      {name:"Transitions",s:"todo"},{name:"Rhetorical Synthesis",s:"todo"}]}]},
+    {name:"Unite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"live",lessons:[
+      {name:"Transitions",s:"todo",href:"sat-unite-3.html"},
+      {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"}]}]},
    {label:"Ogren . Math",units:[
     {name:"Algebra",desc:"Linear, sistemler, esitsizlikler",state:"soon",lessons:[{name:"Linear denklemler",s:"todo"}]}]}]},
  {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,

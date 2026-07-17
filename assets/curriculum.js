@@ -85,9 +85,23 @@ var EXAMS=[
  {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
   tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},
- {id:"ydt",name:"YDT",mark:"Y",desc:"Gramer ve kelime setleri",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"YDT kelime, dilbilgisi, baglac ve cloze drilleri, bes sikli.",href:"ydt-ogren.html"}],
-  sections:[{label:"Ogren",units:[{name:"YDT drilleri",desc:"Kelime, dilbilgisi, baglac, cloze",state:"live",lessons:[{name:"Kelime, dilbilgisi, baglac, cloze",s:"todo",href:"ydt-ogren.html"}]}]}]},
+ {id:"ydt",name:"YDT",mark:"Y",desc:"Yabanci Dil . tum soru tipleri, bes sikli",pct:0,
+  tools:[{ic:"soru",label:"Drilller",desc:"Kelime, dilbilgisi, baglac, cloze, cumle tamamlama, diyalog, restatement, ceviri ve paragraf drilleri. Bes sikli, puanli.",href:"ydt-ogren.html"}],
+  sections:[{label:"Ogren",units:[
+    {name:"Yapi ve Strateji",desc:"YDT yapisi, puanlama, taktik",state:"live",lessons:[
+      {name:"YDT Yapisi",s:"todo",href:"ydt-ogren.html#basla"}]},
+    {name:"Dil Bilgisi ve Kelime",desc:"Kelime, dilbilgisi, baglaclar",state:"live",lessons:[
+      {name:"Kelime",s:"todo",href:"ydt-ogren.html#kelime"},
+      {name:"Dilbilgisi",s:"todo",href:"ydt-ogren.html#dilbilgisi"},
+      {name:"Baglaclar ve Gecisler",s:"todo",href:"ydt-ogren.html#baglac"}]},
+    {name:"Soru Tipleri",desc:"Cloze, cumle tamamlama, diyalog, restatement, ceviri, paragraf",state:"live",lessons:[
+      {name:"Cloze Test",s:"todo",href:"ydt-ogren.html#cloze"},
+      {name:"Cumle Tamamlama",s:"todo",href:"ydt-ogren.html#cumletam"},
+      {name:"Diyalog Tamamlama",s:"todo",href:"ydt-ogren.html#diyalog"},
+      {name:"Restatement",s:"todo",href:"ydt-ogren.html#restatement"},
+      {name:"Ceviri",s:"todo",href:"ydt-ogren.html#ceviri"},
+      {name:"Paragraf",s:"todo",href:"ydt-ogren.html#paragraf"}]}
+  ]}]},
  {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"960 soruluk paketler",pct:0,
   tools:[{ic:"soru",label:"Drilller",desc:"YDS ve YOKDIL akademik kelime, dilbilgisi, baglac ve cloze drilleri.",href:"yds-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"YDS / YOKDIL drilleri",desc:"Akademik kelime, dilbilgisi, baglac, cloze",state:"live",lessons:[{name:"Akademik kelime, dilbilgisi, baglac, cloze",s:"todo",href:"yds-ogren.html"}]}]}]},

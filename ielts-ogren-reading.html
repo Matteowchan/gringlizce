@@ -101,6 +101,8 @@ const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]
 const S={view:'lesson',id:D.lessons[0].id};
 
 function norm(s){return (s||'').toLowerCase().replace(/[.,;:!?"'’]/g,'').replace(/\s+/g,' ').trim();}
+function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'IELTS Reading')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:(D.title||'IELTS Reading'),q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
+function clearErr(q){try{const k='gri_errors';const key=(D.title||'IELTS Reading')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
 
 // ---------- RAIL ----------
 function renderRail(){
@@ -249,6 +251,8 @@ function checkScope(scope,btn){
     }
     q.classList.add(ok?'correct':'incorrect');if(ok)correct++;
     const ansTxt = Array.isArray(rec.ans)? rec.ans[0] : rec.ans;
+    const qtx=(q.querySelector('.qtext')?q.querySelector('.qtext').textContent:('Soru '+qn));
+    if(ok)clearErr(qtx);else logErr(qtx, String(ansTxt));
     const fb=q.querySelector('.fb');fb.style.display='block';fb.className='fb '+(ok?'ok':'no');
     fb.innerHTML = ok ? `<span class="ans">Doğru.</span> ${esc(rec.why||'')}`
       : `<span class="ans">Yanlış.</span> Senin cevabın: ${esc(shown)}. Doğru cevap: <b>${esc(String(ansTxt))}</b>. ${esc(rec.why||'')}`;

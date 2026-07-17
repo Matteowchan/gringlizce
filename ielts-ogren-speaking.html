@@ -93,6 +93,19 @@ p{margin:0 0 12px}
 .qz .qzfb.no{background:var(--wrong-soft);color:#7c2a23;border:1px solid #E4C4BC}
 .qz .diff{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-left:8px}
 .qscore{font-family:Inter,sans-serif;font-weight:700;font-size:15px;color:var(--accent-deep);background:var(--accent-soft);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:11px 15px;margin:14px 0}
+.mcq{border-top:1px solid var(--line);padding:12px 0}
+.mcq .mstem{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5;margin-bottom:8px}
+.mcq .mstem .mn{font-weight:700;color:var(--accent-deep)}
+.mcq .opts{display:flex;flex-direction:column;gap:5px}
+.mcq .opts label{font-family:Inter,sans-serif;font-size:14px;display:flex;gap:9px;align-items:flex-start;padding:6px 10px;border:1.5px solid var(--line);border-radius:9px;cursor:pointer;background:#fff}
+.mcq .opts label:hover{border-color:var(--accent)}
+.mcq .opts label.pick{border-color:var(--accent);background:var(--accent-soft)}
+.mcq .opts .ol{flex:none;font-weight:700;color:var(--accent-deep)}
+.mcq.correct{background:linear-gradient(90deg,var(--good-soft),transparent)}
+.mcq.incorrect{background:linear-gradient(90deg,var(--wrong-soft),transparent)}
+.mcq .mfb{display:none;font-family:Inter,sans-serif;font-size:13px;line-height:1.5;margin-top:8px;border-radius:9px;padding:8px 11px}
+.mcq .mfb.ok{background:var(--good-soft);color:#1d4a34;border:1px solid #C4DCCB}
+.mcq .mfb.no{background:var(--wrong-soft);color:#7c2a23;border:1px solid #E4C4BC}
 .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 18px rgba(24,40,60,.06)}
 .rc .u{display:inline-block;font-family:Inter,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--accent);font-weight:700;padding:3px 9px;border-radius:20px}
 .rc .ut{font-family:"Playfair Display",serif;font-size:1.02rem;color:var(--ink);margin:9px 0 12px;line-height:1.2}
@@ -117,13 +130,15 @@ const D=JSON.parse(document.getElementById('data').textContent);
 const app=document.getElementById('app'),railEl=document.getElementById('rail');
 const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'’]/g,'').replace(/\s+/g,' ').trim();
+function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
+function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
 const S={id:D.lessons[0].id};
 function renderRail(){
   const groups=D.groups.map(g=>{
     const items=D.lessons.filter(l=>l.group===g).map(l=>`<div class="rlink ${S.id===l.id?'cur':''}" data-go="${l.id}"><span class="dot"></span>${esc(l.name)}</div>`).join('');
     return `<div class="rsec">${esc(g)}</div>${items}`;
   }).join('');
-  railEl.innerHTML=`<div class="rc"><span class="u">IELTS</span><div class="ut">${esc(D.title)}</div>${groups}</div>`;
+  railEl.innerHTML=`<div class="rc"><span class="u">${esc(D.badge||'IELTS')}</span><div class="ut">${esc(D.title)}</div>${groups}</div>`;
   railEl.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>show(e.getAttribute('data-go')));
 }
 function blockHTML(b,i){
@@ -161,6 +176,12 @@ function blockHTML(b,i){
     h+='<div class="check">'+b.items.map(c=>`<div class="ci"><span class="box">✓</span><span class="ct">${esc(c)}</span></div>`).join('')+'</div>';
     return h;
   }
+  if(b.t==='mcqquiz'){
+    let h='';
+    b.items.forEach(it=>{h+=`<div class="mcq" data-ans="${esc(it.ans)}"><div class="mstem"><span class="mn">${it.n}.</span> ${esc(it.stem)}</div><div class="opts">`+Object.keys(it.choices).map(k=>`<label data-k="${k}"><span class="ol">${k}</span><span>${esc(it.choices[k])}</span></label>`).join('')+`</div><div class="mwhy" style="display:none">${esc(it.why||'')}</div><div class="mfb"></div></div>`;});
+    h+=`<button class="btn mcheck">Cevabı kontrol et</button><div class="qscore" style="display:none"></div>`;
+    return h;
+  }
   if(b.t==='quiz'){
     let h='';
     if(b.box)h+='<div class="chips">'+b.box.map(w=>`<span class="chip">${esc(w)}</span>`).join('')+'</div>';
@@ -184,6 +205,24 @@ function wire(){
   app.querySelectorAll('.wz .editor').forEach(t=>{const cnt=t.closest('.wz').querySelector('.cnt');const wc=t.closest('.wz').querySelector('.wc');const tg=parseInt(t.getAttribute('data-target'),10);
     const upd=()=>{const n=(t.value.trim().match(/\S+/g)||[]).length;cnt.textContent=n;wc.classList.toggle('ok',n>=tg);};t.addEventListener('input',upd);upd();});
   app.querySelectorAll('.rec .recbtn').forEach(btn=>setupRecorder(btn));
+  app.querySelectorAll('.mcq .opts').forEach(box=>box.querySelectorAll('label').forEach(l=>l.onclick=()=>{
+    if(box.closest('.mcq').classList.contains('done'))return;
+    box.querySelectorAll('label').forEach(x=>x.classList.remove('pick'));l.classList.add('pick');}));
+  app.querySelectorAll('.mcheck').forEach(btn=>btn.onclick=()=>{
+    let ok=0,tot=0;
+    app.querySelectorAll('.mcq').forEach(q=>{tot++;q.classList.add('done');
+      const want=q.getAttribute('data-ans');const pick=q.querySelector('.opts label.pick');const val=pick?pick.getAttribute('data-k'):'';
+      const good=val===want;if(good)ok++;q.classList.add(good?'correct':'incorrect');
+      const stem=q.querySelector('.mstem')?q.querySelector('.mstem').textContent:'';
+      const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
+      const ansTxt=want+(ct?'. '+ct.textContent:'');
+      if(good)clearErr(stem);else logErr(stem,ansTxt);
+      const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
+      const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
+      fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
+    });
+    btn.disabled=true;const sc=btn.nextElementSibling;if(sc&&sc.classList.contains('qscore')){sc.style.display='block';sc.textContent=`Doğru: ${ok} / ${tot}`;}
+  });
   app.querySelectorAll('.qzcheck').forEach(btn=>btn.onclick=()=>{
     let ok=0,tot=0;
     app.querySelectorAll('.qz').forEach(q=>{tot++;
@@ -191,6 +230,8 @@ function wire(){
       const inp=q.querySelector('input');const val=inp.value||'';
       const good=norm(val)===norm(want)||alt.some(a=>norm(a)===norm(val));
       inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
+      const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
+      if(good)clearErr(qtext);else logErr(qtext,want);
       const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
       fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>`;
     });

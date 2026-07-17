@@ -14,8 +14,8 @@ var EXAMS=[
   tools:[
     {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankasi, kategori kategori cozum ve aciklamalarla.",href:"sat-soru-bankasi.html"},
     {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gercek sinav formatinda, adaptif ve puanli.",href:"sat-mock-1.html"},
-    {ic:"kelime",label:"Kelime",desc:"Tematik SAT kelime setleri ve tekrar quizleri.",href:"kelime-bankasi.html"},
-    {ic:"yazi",label:"Gramer Drill",desc:"Punctuation, boundaries ve transitions icin kisa hedefli alistirmalar.",href:"#"},
+    {ic:"kelime",label:"Kelime",desc:"Words in Context kelime setleri, Turkce karsilik ve SAT formatinda quizler.",href:"sat-kelime.html"},
+    {ic:"yazi",label:"Gramer Drill",desc:"Punctuation, boundaries, transitions ve daha fazlasi. Turkce aciklamali drilller.",href:"sat-grammar-drill.html"},
   ],
   sections:[{label:"Ogren . Reading & Writing",units:[
     {name:"Unite 1 . Information and Ideas",desc:"Command of Evidence, Central Ideas, Inferences",state:"live",lessons:[
@@ -34,7 +34,7 @@ var EXAMS=[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
       {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"}]}]},
    {label:"Ogren . Math",units:[
-    {name:"Algebra",desc:"Linear, sistemler, esitsizlikler",state:"soon",lessons:[{name:"Linear denklemler",s:"todo"}]}]}]},
+    {name:"Math",desc:"Algebra, veri, ileri matematik, geometri",state:"live",lessons:[{name:"Dort konu drilleri",s:"todo",href:"sat-math.html"}]}]}]},
  {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
@@ -58,20 +58,20 @@ var EXAMS=[
     {name:"Gramer Dogrulugu",desc:"Yedi hata turu, 113 alistirma",state:"live",lessons:[
       {name:"Yedi hata turu, 113 alistirma",s:"todo",href:"ielts-gramer.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,
-  tools:[{ic:"yazi",label:"Yazi",desc:"Integrated ve academic discussion pratikleri. Hazirlaniyor.",href:"#"}],
-  sections:[{label:"Ogren",units:[{name:"Integrated Writing",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
+  tools:[{ic:"yazi",label:"Ogren",desc:"Yapi, Reading ve Listening stratejisi, Speaking sablonlari, Integrated ve Academic Discussion Writing.",href:"toefl-ogren.html"}],
+  sections:[{label:"Ogren",units:[{name:"TOEFL iBT",desc:"Yapi, Speaking ve Writing sablonlari",state:"live",lessons:[{name:"Yapi, Speaking ve Writing",s:"todo",href:"toefl-ogren.html"}]}]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1 metin turleri",pct:0,
-  tools:[{ic:"soru",label:"Metin turleri",desc:"Makale, deneme, konusma, poster. Amac, kitle, ton karsilastirmalari. Hazirlaniyor.",href:"#"}],
-  sections:[{label:"Ogren",units:[{name:"Paper 1 metin turleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
+  tools:[{ic:"soru",label:"Metin turleri",desc:"Makale, blog, konusma, brosur, gorus yazisi, resmi mektup. Amac, kitle, ton karsilastirmalari.",href:"ib-ogren.html"}],
+  sections:[{label:"Ogren",units:[{name:"Paper 1 ve metin turleri",desc:"Metin turleri, kriterler, Paper 1 yazma",state:"live",lessons:[{name:"Metin turleri ve Paper 1",s:"todo",href:"ib-ogren.html"}]}]}]},
  {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
-  tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce kelime listeleri. Hazirlaniyor.",href:"#"}],
-  sections:[{label:"Ogren",units:[{name:"Kelime listeleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
+  tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
+  sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},
  {id:"ydt",name:"YDT",mark:"Y",desc:"Gramer ve kelime setleri",pct:0,
-  tools:[{ic:"soru",label:"Soru",desc:"YDT gramer ve kelime soru setleri. Hazirlaniyor.",href:"#"}],
-  sections:[{label:"Ogren",units:[{name:"Gramer setleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
+  tools:[{ic:"soru",label:"Drilller",desc:"YDT kelime, dilbilgisi, baglac ve cloze drilleri, bes sikli.",href:"ydt-ogren.html"}],
+  sections:[{label:"Ogren",units:[{name:"YDT drilleri",desc:"Kelime, dilbilgisi, baglac, cloze",state:"live",lessons:[{name:"Kelime, dilbilgisi, baglac, cloze",s:"todo",href:"ydt-ogren.html"}]}]}]},
  {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"960 soruluk paketler",pct:0,
-  tools:[{ic:"soru",label:"Soru",desc:"YDS ve YOKDIL soru paketleri, cozumleriyle. Hazirlaniyor.",href:"#"}],
-  sections:[{label:"Ogren",units:[{name:"Soru paketleri",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},
+  tools:[{ic:"soru",label:"Drilller",desc:"YDS ve YOKDIL akademik kelime, dilbilgisi, baglac ve cloze drilleri.",href:"yds-ogren.html"}],
+  sections:[{label:"Ogren",units:[{name:"YDS / YOKDIL drilleri",desc:"Akademik kelime, dilbilgisi, baglac, cloze",state:"live",lessons:[{name:"Akademik kelime, dilbilgisi, baglac, cloze",s:"todo",href:"yds-ogren.html"}]}]}]},
 ];
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,
     PULSE: { overall: 0, streak: 0, weekLessons: 0, newBadges: 0 } };
@@ -101,6 +101,7 @@ var EXAMS=[
         { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
+    { label: "Yanlış Defteri", href: "yanlis-defteri.html" },
     { label: "Ders Notları", href: "ders-notlari.html", children: [
       { label: "SAT", href: "sat-ders-notlari.html" }, { label: "IELTS", href: "ielts-ders-notlari.html" },
       { label: "TOEFL", href: "toefl-ders-notlari.html" }, { label: "IB", href: "ib-ders-notlari.html" },

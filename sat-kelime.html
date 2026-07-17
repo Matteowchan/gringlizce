@@ -1,57 +1,60 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gri SAT . Kelime</title>
 <meta name="description" content="Digital SAT Words in Context kelime modulu. Yuksek frekansli SAT kelimeleri, Turkce karsilik, ornek cumle ve SAT formatinda coktan secmeli drilller.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --cream:#EFE7D8; --ink:#26201A; --muted:#8A7F6E; --line:#E3D8C5;
+  --bg:#F4F5F7; --ink:#1B2330; --muted:#6B7280; --line:#EAEBEF;
   --accent:#2E6E6A; --accent-deep:#123C39; --accent-soft:#DDEBE9; --panel:#E7F0EE;
-  --good:#2E6E4E; --good-soft:#DCEBE1; --wrong:#A8382F; --wrong-soft:#F2E1DC;
-  --paper:#FBF6EC; --card:#FCFAF4;
+  --good:#1FA971; --good-soft:#E7F6EF; --wrong:#D8503F; --wrong-soft:#FBEAE6;
+  --paper:#FFFFFF; --card:#FFFFFF;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--cream);color:var(--ink);font-family:"Crimson Pro",Georgia,serif;font-size:19px;line-height:1.55}
-.shell{max-width:1180px;margin:0 auto;padding:26px 22px 90px;display:flex;gap:32px;align-items:flex-start}
-.main{flex:1;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:0 0 34px;overflow:hidden}
-.pad{padding:0 34px}
-.rail{width:262px;flex:none;position:sticky;top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.shell{max-width:1140px;margin:0 auto;padding:24px 22px 90px;display:flex;gap:24px;align-items:flex-start}
+.main{flex:1;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:0 0 32px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,.04)}
+.pad{padding:0 30px}
+.rail{width:288px;flex:none;position:sticky;top:20px}
 @media(max-width:900px){.shell{flex-direction:column;gap:16px;padding:16px 14px 70px}.rail{width:100%;position:static;order:-1}.pad{padding:0 20px}}
-.head{background:var(--panel);border-bottom:2px solid var(--accent);padding:26px 34px 22px}
-.eyebrow{font-family:Inter,sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700}
-h1{font-family:"Playfair Display",serif;font-weight:700;font-size:1.9rem;margin:.3rem 0 .15rem;line-height:1.14;color:var(--ink)}
-.lead{font-family:Inter,sans-serif;font-size:12.5px;color:var(--muted)}
-h2{font-family:"Playfair Display",serif;color:var(--accent-deep);font-size:1.3rem;margin:26px 0 5px}
-.rule{height:3px;width:56px;background:var(--accent);border-radius:2px;margin:0 0 15px}
-h3{font-family:Inter,sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+.head{background:linear-gradient(120deg,var(--accent),var(--accent-deep));padding:26px 30px 24px;color:#fff}
+.eyebrow{font-family:Inter,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#fff;opacity:.85;font-weight:700;display:flex;align-items:center;gap:7px}
+.eyebrow::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.9}
+h1{font-family:Inter,sans-serif;font-weight:800;font-size:1.65rem;letter-spacing:-.02em;margin:.35rem 0 .15rem;line-height:1.15;color:#fff}
+.lead{font-family:Inter,sans-serif;font-size:12.5px;color:#fff;opacity:.82}
+h2{font-family:Inter,sans-serif;font-weight:700;color:var(--ink);font-size:1.12rem;letter-spacing:-.01em;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+.rule{height:0;margin:0}
+h3{font-family:Inter,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:22px 0 8px}
 p{margin:0 0 12px}
-.btn{display:inline-flex;align-items:center;gap:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:#fff;background:var(--accent);padding:9px 17px;border-radius:22px;cursor:pointer;border:none}
-.btn:hover{filter:brightness(1.06)}
-.btn.ghost{color:var(--accent-deep);background:transparent;border:1.5px solid var(--accent)}
-.btn.ghost:hover{background:var(--accent-soft)}
-.btn:disabled{opacity:.5;cursor:default}
-.dt{border-collapse:collapse;width:100%;font-family:Inter,sans-serif;font-size:13.5px;margin:8px 0 14px}
-.dt th,.dt td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;color:#fff;background:var(--accent);padding:11px 18px;border-radius:12px;cursor:pointer;border:none;transition:filter .14s,transform .06s,box-shadow .14s;box-shadow:0 2px 8px rgba(30,40,70,.12)}
+.btn:hover{filter:brightness(1.05);box-shadow:0 4px 14px rgba(30,40,70,.18)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{color:var(--accent-deep);background:var(--accent-soft);border:none;box-shadow:none}
+.btn.ghost:hover{filter:brightness(.97)}
+.btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+.dt{border-collapse:separate;border-spacing:0;width:100%;font-family:Inter,sans-serif;font-size:13.5px;margin:10px 0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.dt th,.dt td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+.dt tr:last-child td{border-bottom:none}
 .dt th{background:var(--accent-soft);color:var(--accent-deep);font-weight:700}
-.note{margin:14px 0;border-radius:14px;padding:14px 16px;font-family:Inter,sans-serif;font-size:13.5px;line-height:1.5;border:1px solid var(--line);background:var(--card)}
-.note .nt{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
-.note.dikkat{background:var(--wrong-soft);border-color:#E4C4BC}.note.dikkat .nt{color:var(--wrong)}
-.note.ipucu{background:var(--accent-soft);border-color:rgba(0,0,0,.08)}.note.ipucu .nt{color:var(--accent-deep)}
-.note.protokol{background:var(--good-soft);border-color:#C4DCCB}.note.protokol .nt{color:var(--good)}
-.note.hedef{background:var(--accent-soft);border-color:rgba(0,0,0,.08)}.note.hedef .nt{color:var(--accent-deep)}
+.note{margin:14px 0;border-radius:14px;padding:14px 16px;font-family:Inter,sans-serif;font-size:13.5px;line-height:1.5;border:1px solid var(--line);background:#F7F8FA}
+.note .nt{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.note.dikkat{background:var(--wrong-soft);border-color:#F1D4CD}.note.dikkat .nt{color:var(--wrong)}
+.note.ipucu{background:var(--accent-soft);border-color:transparent}.note.ipucu .nt{color:var(--accent-deep)}
+.note.protokol{background:var(--good-soft);border-color:#CBEBDC}.note.protokol .nt{color:var(--good)}
+.note.hedef{background:var(--accent-soft);border-color:transparent}.note.hedef .nt{color:var(--accent-deep)}
 .note ul{margin:0;padding-left:18px}.note li{margin:3px 0}
-.given{background:var(--accent-soft);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px 15px;font-family:Inter,sans-serif;font-size:14px;line-height:1.6;margin:0 0 14px}
-.given .gl{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent-deep);margin-bottom:5px}
-.figure{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 12px;margin:0 0 14px;overflow-x:auto}
+.given{background:#F7F8FA;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-family:Inter,sans-serif;font-size:14px;line-height:1.6;margin:0 0 14px}
+.given .gl{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent-deep);margin-bottom:5px}
+.figure{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 14px;margin:0 0 14px;overflow-x:auto}
 .figure svg{max-width:100%;height:auto;display:block;margin:0 auto}
 .figcap{font-family:Inter,sans-serif;font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
-.task{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 16px;font-family:Inter,sans-serif;font-size:14.5px;line-height:1.55;margin:0 0 14px}
-.task .tl{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:6px}
+.task{background:#F7F8FA;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 16px;font-family:Inter,sans-serif;font-size:14.5px;line-height:1.55;margin:0 0 14px}
+.task .tl{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:6px}
 .qlist{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5}
 .qlist .qh{font-weight:700;color:var(--accent-deep);margin:12px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
 .qlist ol{margin:0 0 6px;padding-left:22px}.qlist li{margin:4px 0}
 .plan{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
 @media(max-width:560px){.plan{grid-template-columns:1fr}}
-.plan .pf{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px}
+.plan .pf{background:#F7F8FA;border:1.5px solid var(--line);border-radius:12px;padding:9px 11px}
 .plan .pf label{display:block;font-family:Inter,sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .plan .pf textarea{width:100%;border:none;outline:none;resize:vertical;min-height:44px;font-family:Inter,sans-serif;font-size:13.5px;color:var(--ink);background:transparent}
 .wz textarea.editor{width:100%;min-height:230px;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-family:Inter,sans-serif;font-size:15px;line-height:1.6;color:var(--ink);background:#fff;resize:vertical}
@@ -60,20 +63,20 @@ p{margin:0 0 12px}
 .wc b{color:var(--accent-deep)}
 .wc.ok b{color:var(--good)}
 .check{font-family:Inter,sans-serif;font-size:14px;margin:6px 0 12px}
-.check .ci{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.check .ci{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .check .ci:last-child{border-bottom:none}
-.check .box{flex:none;width:20px;height:20px;border:1.6px solid var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:#fff}
+.check .box{flex:none;width:20px;height:20px;border:1.6px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:#fff}
 .check .ci.on .box{background:var(--accent)}
 .check .ci.on .ct{color:var(--muted);text-decoration:line-through}
 .reveal{margin:8px 0 14px}
 .reveal .body{display:none;margin-top:10px}
 .reveal.open .body{display:block}
-.drill{border-top:1px solid var(--line);padding:11px 0;font-family:Inter,sans-serif;font-size:14.5px}
-.drill .dq{margin-bottom:6px}
-.drill .da{display:none;font-size:13.5px;color:var(--good);background:var(--good-soft);border:1px solid #C4DCCB;border-radius:9px;padding:8px 11px}
+.drill{border-top:1px solid var(--line);padding:12px 0;font-family:Inter,sans-serif;font-size:14.5px}
+.drill .dq{margin-bottom:8px}
+.drill .da{display:none;font-size:13.5px;color:#166a4a;background:var(--good-soft);border:1px solid #CBEBDC;border-radius:10px;padding:9px 12px}
 .drill.open .da{display:block}
-.drill .db{font-size:12px;font-weight:600;color:var(--accent-deep);background:transparent;border:1.5px solid var(--accent);border-radius:18px;padding:4px 12px;cursor:pointer;font-family:Inter,sans-serif}
-.rec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+.drill .db{font-size:12px;font-weight:700;color:var(--accent-deep);background:var(--accent-soft);border:none;border-radius:10px;padding:6px 14px;cursor:pointer;font-family:Inter,sans-serif}
+.rec{background:#F7F8FA;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0}
 .rec .rl{font-family:Inter,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
 .rec .rrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .rec .dotrec{width:11px;height:11px;border-radius:50%;background:#c33;display:none}
@@ -83,39 +86,44 @@ p{margin:0 0 12px}
 .rec audio{margin-top:10px;width:100%}
 .rec .warn{font-family:Inter,sans-serif;font-size:12.5px;color:var(--wrong);margin-top:8px;display:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
-.chip{font-family:Inter,sans-serif;font-size:13.5px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);border:1px solid rgba(0,0,0,.08);border-radius:20px;padding:5px 12px}
-.qz{border-top:1px solid var(--line);padding:11px 0}
-.qz .qzq{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5;margin-bottom:7px}
+.chip{font-family:Inter,sans-serif;font-size:13.5px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);border:none;border-radius:20px;padding:6px 13px;transition:transform .1s}
+.chip:hover{transform:translateY(-1px)}
+.qz{border-top:1px solid var(--line);padding:12px 0}
+.qz .qzq{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5;margin-bottom:8px}
 .qz .qzn{font-weight:700;color:var(--accent-deep)}
-.qz input{font-family:Inter,sans-serif;font-size:14px;padding:6px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);min-width:200px}
+.qz input{font-family:Inter,sans-serif;font-size:14px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:200px}
 .qz input:focus{outline:none;border-color:var(--accent)}
-.qz.correct{background:linear-gradient(90deg,var(--good-soft),transparent)}
-.qz.incorrect{background:linear-gradient(90deg,var(--wrong-soft),transparent)}
-.qz .qzfb{display:none;font-family:Inter,sans-serif;font-size:13px;margin-top:7px;border-radius:9px;padding:7px 11px}
-.qz .qzfb.ok{background:var(--good-soft);color:#1d4a34;border:1px solid #C4DCCB}
-.qz .qzfb.no{background:var(--wrong-soft);color:#7c2a23;border:1px solid #E4C4BC}
+.qz.correct{background:var(--good-soft);border-radius:12px;box-shadow:inset 3px 0 0 var(--good)}
+.qz.incorrect{background:var(--wrong-soft);border-radius:12px;box-shadow:inset 3px 0 0 var(--wrong)}
+.qz .qzfb{display:none;font-family:Inter,sans-serif;font-size:13px;margin-top:8px;border-radius:10px;padding:8px 12px}
+.qz .qzfb.ok{background:#fff;color:#166a4a;border:1px solid #CBEBDC}
+.qz .qzfb.no{background:#fff;color:#a8382f;border:1px solid #F1D4CD}
+.qz.correct,.qz.incorrect{padding-left:13px;padding-right:13px}
 .qz .diff{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-left:8px}
-.qscore{font-family:Inter,sans-serif;font-weight:700;font-size:15px;color:var(--accent-deep);background:var(--accent-soft);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:11px 15px;margin:14px 0}
-.mcq{border-top:1px solid var(--line);padding:12px 0}
-.mcq .mstem{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5;margin-bottom:8px}
+.qscore{font-family:Inter,sans-serif;font-weight:700;font-size:15px;color:var(--accent-deep);background:var(--accent-soft);border:none;border-radius:12px;padding:12px 16px;margin:14px 0}
+.mcq{border-top:1px solid var(--line);padding:13px 0}
+.mcq .mstem{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5;margin-bottom:9px}
 .mcq .mstem .mn{font-weight:700;color:var(--accent-deep)}
-.mcq .opts{display:flex;flex-direction:column;gap:5px}
-.mcq .opts label{font-family:Inter,sans-serif;font-size:14px;display:flex;gap:9px;align-items:flex-start;padding:6px 10px;border:1.5px solid var(--line);border-radius:9px;cursor:pointer;background:#fff}
+.mcq .opts{display:flex;flex-direction:column;gap:7px}
+.mcq .opts label{font-family:Inter,sans-serif;font-size:14px;display:flex;gap:10px;align-items:center;padding:10px 13px;border:1.6px solid var(--line);border-radius:12px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s,transform .05s}
 .mcq .opts label:hover{border-color:var(--accent)}
+.mcq .opts label:active{transform:translateY(1px)}
 .mcq .opts label.pick{border-color:var(--accent);background:var(--accent-soft)}
-.mcq .opts .ol{flex:none;font-weight:700;color:var(--accent-deep)}
-.mcq.correct{background:linear-gradient(90deg,var(--good-soft),transparent)}
-.mcq.incorrect{background:linear-gradient(90deg,var(--wrong-soft),transparent)}
-.mcq .mfb{display:none;font-family:Inter,sans-serif;font-size:13px;line-height:1.5;margin-top:8px;border-radius:9px;padding:8px 11px}
-.mcq .mfb.ok{background:var(--good-soft);color:#1d4a34;border:1px solid #C4DCCB}
-.mcq .mfb.no{background:var(--wrong-soft);color:#7c2a23;border:1px solid #E4C4BC}
-.rc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 18px rgba(24,40,60,.06)}
-.rc .u{display:inline-block;font-family:Inter,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--accent);font-weight:700;padding:3px 9px;border-radius:20px}
-.rc .ut{font-family:"Playfair Display",serif;font-size:1.02rem;color:var(--ink);margin:9px 0 12px;line-height:1.2}
-.rsec{font-family:Inter,sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:14px 0 4px}
-.rlink{display:flex;align-items:center;gap:9px;font-family:Inter,sans-serif;font-size:13.5px;padding:8px 6px;border-radius:9px;cursor:pointer;color:var(--ink);border-bottom:1px solid var(--line)}
-.rlink:last-child{border-bottom:none}.rlink:hover{background:var(--accent-soft)}
-.rlink.cur{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.mcq .opts .ol{flex:none;width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent-deep);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.mcq .opts label.pick .ol{background:var(--accent);color:#fff}
+.mcq.correct{background:var(--good-soft);border-radius:12px;box-shadow:inset 3px 0 0 var(--good)}
+.mcq.incorrect{background:var(--wrong-soft);border-radius:12px;box-shadow:inset 3px 0 0 var(--wrong)}
+.mcq.correct,.mcq.incorrect{padding-left:13px;padding-right:13px}
+.mcq .mfb{display:none;font-family:Inter,sans-serif;font-size:13px;line-height:1.5;margin-top:9px;border-radius:10px;padding:9px 12px}
+.mcq .mfb.ok{background:#fff;color:#166a4a;border:1px solid #CBEBDC}
+.mcq .mfb.no{background:#fff;color:#a8382f;border:1px solid #F1D4CD}
+.rc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 1px 3px rgba(20,30,50,.05)}
+.rc .u{display:inline-block;font-family:Inter,sans-serif;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--accent);font-weight:700;padding:4px 10px;border-radius:20px}
+.rc .ut{font-family:Inter,sans-serif;font-weight:800;letter-spacing:-.01em;font-size:1.1rem;color:var(--ink);margin:10px 0 14px;line-height:1.2}
+.rsec{font-family:Inter,sans-serif;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 6px}
+.rlink{display:flex;align-items:center;gap:10px;font-family:Inter,sans-serif;font-size:13.5px;padding:9px 10px;border-radius:10px;cursor:pointer;color:var(--ink);transition:background .12s}
+.rlink:hover{background:#F4F5F7}
+.rlink.cur{background:var(--accent-soft);color:var(--accent-deep);font-weight:700}
 .rlink .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
 .rlink.cur .dot{background:var(--accent)}
 </style>
@@ -123,27 +131,15 @@ p{margin:0 0 12px}
 <script src="assets/nav.js"></script>
 <script src="assets/site-config.js" defer></script>
 <style>.launch-banner{display:none;background:#1A2230;color:#F4EFE3;text-align:center;padding:.55rem 1rem;font-family:Inter,system-ui,sans-serif;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500;line-height:1.5}.launch-banner strong{color:#C89A3C;font-weight:600}
-/* face lift */
-h1{letter-spacing:-.012em}
-.eyebrow::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:7px;vertical-align:1px}
-.btn{box-shadow:0 1px 2px rgba(30,20,10,.12);transition:filter .14s,transform .06s,box-shadow .14s}
-.btn:hover{box-shadow:0 3px 10px rgba(30,20,10,.14)}
-.btn:active{transform:translateY(1px)}
-.rc{box-shadow:0 8px 28px rgba(30,25,18,.08)}
-.rlink{transition:background .12s,box-shadow .12s}
-.rlink.cur{box-shadow:inset 3px 0 0 var(--accent)}
-.mcq .opts label,.opts label{transition:border-color .12s,background .12s,transform .05s}
-.mcq .opts label:active,.opts label:active{transform:translateY(1px)}
-.chip{transition:transform .1s}.chip:hover{transform:translateY(-1px)}
+/* modern refinements */
+h2 svg{width:18px;height:18px;color:var(--accent);flex:none}
 .head{position:relative}
-.qz.correct,.mcq.correct{box-shadow:inset 3px 0 0 var(--good)}
-.qz.incorrect,.mcq.incorrect{box-shadow:inset 3px 0 0 var(--wrong)}
 </style>
 <script src="assets/track.js" defer></script>
 </head><body>
 <div class="launch-banner" data-site-banner></div>
 <div class="shell"><div class="main" id="main"><div id="app"></div></div><div class="rail" id="rail"></div></div>
-<script id="data" type="application/json">{"title": "SAT Kelime", "badge": "SAT", "groups": ["Öğren", "Kelime Paketleri"], "lessons": [{"id": "basla", "group": "Öğren", "name": "Nasıl Çalışılır", "eyebrow": "Öğren", "blocks": [{"t": "p", "x": "Digital SAT kelimeyi Words in Context sorusuyla ölçer: bir cümlede boşluk vardır, dört yakın anlamlı kelimeden bağlama en uygun olanı seçersin. Bu modül kelimeyi önce tanıtır, sonra tam SAT formatında çalıştırır."}, {"t": "note", "k": "ipucu", "title": "Puanlama", "lines": ["Digital SAT toplam 400-1600. Reading and Writing bolumu 200-800 puandir.", "Words in Context, Craft and Structure alan puaninin onemli bir parcasidir."]}, {"t": "note", "k": "ipucu", "title": "Words in Context stratejisi", "lines": ["Boşluğa kendi kelimeni koy, sonra ona en yakın şıkkı bul. Şıklara önce bakma.", "Kelimenin sözlük anlamını değil, cümledeki tonunu ve ilişkisini düşün. SAT çoğu zaman olumlu-olumsuz tonu test eder.", "Her paketin altında kelimelerin Türkçe karşılığı ve örnek cümlesi var. Önce onları çalış, sonra quizi çöz."]}]}, {"id": "p1", "group": "Kelime Paketleri", "name": "Paket 1", "eyebrow": "P1", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["candid", "samimi, açık sözlü", "In a candid interview, the actor admitted his early films were weak."], ["compelling", "ikna edici, etkileyici", "The lawyer presented a compelling argument that swayed the jury."], ["concede", "kabul etmek (haklılığı/yenilgiyi)", "She refused to concede that her plan had any flaws."], ["deliberate", "kasıtlı; ölçülü, dikkatli", "His slow, deliberate movements suggested careful planning."], ["diminish", "azalmak, azaltmak", "Interest in the project began to diminish after the funding was cut."], ["feasible", "yapılabilir, uygulanabilir", "Building a bridge here is not financially feasible."], ["inevitable", "kaçınılmaz", "Given the evidence, the verdict seemed inevitable."], ["plausible", "akla yatkın, makul", "He offered a plausible explanation for his absence."], ["prudent", "sağduyulu, tedbirli", "It would be prudent to save money for emergencies."], ["refute", "çürütmek", "New data allowed the scientist to refute the earlier claim."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "The committee found the proposal financially ______, so they approved the budget without delay.", "choices": {"A": "feasible", "B": "inevitable", "C": "candid", "D": "prudent"}, "ans": "A", "why": "feasible = yapılabilir, uygulanabilir. Bütçe onaylandıysa proje uygulanabilir bulunmuştur."}, {"n": 2, "stem": "Rather than deny the mistake, the manager was ______ about what had gone wrong.", "choices": {"A": "deliberate", "B": "candid", "C": "plausible", "D": "compelling"}, "ans": "B", "why": "candid = açık sözlü, samimi. Hatayı inkar etmeyip açıkça konuşmak."}, {"n": 3, "stem": "Enthusiasm for the campaign began to ______ once the initial excitement faded.", "choices": {"A": "refute", "B": "diminish", "C": "concede", "D": "convince"}, "ans": "B", "why": "diminish = azalmak. Heyecan sönünce coşku azalır."}, {"n": 4, "stem": "Her ______ argument, backed by strong evidence, convinced even the skeptics.", "choices": {"A": "prudent", "B": "inevitable", "C": "compelling", "D": "candid"}, "ans": "C", "why": "compelling = ikna edici, etkileyici. Şüphecileri bile ikna eden argüman."}, {"n": 5, "stem": "The detective's ______ search of the room, inch by inch, revealed a hidden note.", "choices": {"A": "diminished", "B": "feasible", "C": "deliberate", "D": "plausible"}, "ans": "C", "why": "deliberate = ölçülü, dikkatli, metodik. Santim santim yapılan dikkatli arama."}, {"n": 6, "stem": "Faced with overwhelming proof, he finally ______ that he had been wrong.", "choices": {"A": "refuted", "B": "compelled", "C": "diminished", "D": "conceded"}, "ans": "D", "why": "concede = (haklılığı) kabul etmek. Kanıt karşısında yanıldığını kabul etmek."}, {"n": 7, "stem": "Setting aside money for the future is a ______ financial decision.", "choices": {"A": "plausible", "B": "inevitable", "C": "prudent", "D": "candid"}, "ans": "C", "why": "prudent = sağduyulu, tedbirli. Geleceğe para ayırmak tedbirli bir karardır."}, {"n": 8, "stem": "The story sounded ______ enough, but no one could verify the details.", "choices": {"A": "plausible", "B": "prudent", "C": "deliberate", "D": "feasible"}, "ans": "A", "why": "plausible = akla yatkın, makul (ama kanıtlanmamış). Kulağa makul gelen ama doğrulanamayan hikaye."}, {"n": 9, "stem": "With the storm approaching and no shelter nearby, some damage seemed ______.", "choices": {"A": "feasible", "B": "candid", "C": "plausible", "D": "inevitable"}, "ans": "D", "why": "inevitable = kaçınılmaz. Fırtına yaklaşırken hasar kaçınılmaz görünür."}, {"n": 10, "stem": "Using fresh experimental data, the team was able to ______ the popular but flawed theory.", "choices": {"A": "concede", "B": "convince", "C": "diminish", "D": "refute"}, "ans": "D", "why": "refute = çürütmek. Yeni veriyle hatalı teoriyi çürütmek."}]}]}, {"id": "p2", "group": "Kelime Paketleri", "name": "Paket 2", "eyebrow": "P2", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["ambiguous", "belirsiz, iki anlamlı", "The instructions were so ambiguous that no one knew what to do."], ["arbitrary", "keyfi, rastgele", "The rule seemed arbitrary, with no clear reason behind it."], ["empirical", "deneysel, gözleme dayalı", "The claim lacked empirical support."], ["nuance", "ince ayrım, incelik", "A good translator captures the nuances of the original text."], ["obscure", "belirsiz, az bilinen", "The exact origin of the tradition remains obscure."], ["prevalent", "yaygın", "This belief was prevalent in the nineteenth century."], ["profound", "derin, köklü", "The discovery had a profound effect on medicine."], ["rigorous", "titiz, sıkı", "The new drug underwent rigorous testing."], ["scrutiny", "yakın inceleme", "The plan came under close scrutiny."], ["skeptical", "şüpheci", "Scientists were skeptical of the surprising result."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "The wording of the contract was ______, leaving both sides unsure of their obligations.", "choices": {"A": "prevalent", "B": "ambiguous", "C": "profound", "D": "rigorous"}, "ans": "B", "why": "ambiguous = belirsiz, iki anlamlı. Tarafların ne yapacağını bilememesi belirsizlikten."}, {"n": 2, "stem": "Without ______ evidence from experiments, the hypothesis remained just a guess.", "choices": {"A": "empirical", "B": "arbitrary", "C": "obscure", "D": "skeptical"}, "ans": "A", "why": "empirical = deneysel, gözleme dayalı. Deneyden gelen kanıt."}, {"n": 3, "stem": "Smartphones are now so ______ that it is rare to see anyone without one.", "choices": {"A": "prevalent", "B": "profound", "C": "ambiguous", "D": "arbitrary"}, "ans": "A", "why": "prevalent = yaygın. Herkeste bulunacak kadar yaygın."}, {"n": 4, "stem": "The professor was known for her ______ standards; every claim had to be backed by data.", "choices": {"A": "prevalent", "B": "obscure", "C": "rigorous", "D": "ambiguous"}, "ans": "C", "why": "rigorous = titiz, sıkı. Her iddianın veriyle desteklenmesini isteyen titiz standart."}, {"n": 5, "stem": "The seemingly small change had a ______ impact on the entire system.", "choices": {"A": "obscure", "B": "arbitrary", "C": "skeptical", "D": "profound"}, "ans": "D", "why": "profound = derin, köklü. Küçük değişimin derin etkisi."}, {"n": 6, "stem": "Investors remained ______ about the company's bold promises.", "choices": {"A": "skeptical", "B": "prevalent", "C": "empirical", "D": "profound"}, "ans": "A", "why": "skeptical = şüpheci. İddialı vaatlere şüpheyle bakmak."}, {"n": 7, "stem": "Choosing winners by drawing names felt ______ and unfair to the participants.", "choices": {"A": "rigorous", "B": "arbitrary", "C": "profound", "D": "empirical"}, "ans": "B", "why": "arbitrary = keyfi, rastgele. İsim çekerek seçmek keyfi görünür."}, {"n": 8, "stem": "A skilled diplomat understands the subtle ______ of every phrase.", "choices": {"A": "rigor", "B": "scrutiny", "C": "nuance", "D": "prevalence"}, "ans": "C", "why": "nuance = ince ayrım, incelik. Her ifadenin ince anlam farkı."}, {"n": 9, "stem": "After the scandal, the mayor's finances came under intense ______.", "choices": {"A": "prevalence", "B": "nuance", "C": "empirical", "D": "scrutiny"}, "ans": "D", "why": "scrutiny = yakın inceleme. Mali durumun yakından incelenmesi."}, {"n": 10, "stem": "The writer stayed ______ during his lifetime and became famous only after his death.", "choices": {"A": "rigorous", "B": "prevalent", "C": "obscure", "D": "profound"}, "ans": "C", "why": "obscure = az bilinen, belirsiz. Yaşarken az bilinen yazar."}]}]}, {"id": "p3", "group": "Kelime Paketleri", "name": "Paket 3", "eyebrow": "P3", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["alleviate", "hafifletmek", "Medicine can alleviate the pain but not cure the illness."], ["coherent", "tutarlı, anlaşılır", "She gave a clear, coherent explanation."], ["condone", "hoş görmek, göz yummak", "The school does not condone cheating."], ["hinder", "engellemek", "Poor planning hindered progress."], ["mitigate", "hafifletmek, azaltmak", "Steps were taken to mitigate the damage."], ["pragmatic", "pratik, gerçekçi", "He took a pragmatic approach to the problem."], ["reconcile", "uzlaştırmak, bağdaştırmak", "It is hard to reconcile the two accounts."], ["resilient", "dayanıklı, çabuk toparlanan", "Children are often remarkably resilient."], ["substantiate", "kanıtlamak, doğrulamak", "He could not substantiate his claims."], ["undermine", "zayıflatmak, baltalamak", "Constant criticism can undermine confidence."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "Painkillers can ______ the discomfort but do not cure the underlying illness.", "choices": {"A": "undermine", "B": "alleviate", "C": "hinder", "D": "condone"}, "ans": "B", "why": "alleviate = hafifletmek. Ağrıyı hafifletir ama iyileştirmez."}, {"n": 2, "stem": "The essay was well organized and ______, moving logically from point to point.", "choices": {"A": "pragmatic", "B": "coherent", "C": "resilient", "D": "arbitrary"}, "ans": "B", "why": "coherent = tutarlı, anlaşılır. Mantıklı ilerleyen düzenli metin."}, {"n": 3, "stem": "The company took measures to ______ the environmental impact of its factory.", "choices": {"A": "mitigate", "B": "condone", "C": "undermine", "D": "hinder"}, "ans": "A", "why": "mitigate = azaltmak, hafifletmek. Çevresel etkiyi azaltacak önlemler."}, {"n": 4, "stem": "Heavy traffic and roadworks ______ the delivery, which arrived hours late.", "choices": {"A": "alleviated", "B": "hindered", "C": "reconciled", "D": "substantiated"}, "ans": "B", "why": "hinder = engellemek. Trafik teslimatı engelledi."}, {"n": 5, "stem": "Although idealistic at heart, she remained ______ about what could actually be achieved.", "choices": {"A": "ambiguous", "B": "coherent", "C": "resilient", "D": "pragmatic"}, "ans": "D", "why": "pragmatic = gerçekçi, pratik. Neyin gerçekten başarılabileceği konusunda gerçekçi."}, {"n": 6, "stem": "Spreading false rumors can ______ trust within a team.", "choices": {"A": "alleviate", "B": "undermine", "C": "substantiate", "D": "reconcile"}, "ans": "B", "why": "undermine = baltalamak, zayıflatmak. Yalan söylenti güveni zayıflatır."}, {"n": 7, "stem": "The witness could not ______ her story with any physical evidence.", "choices": {"A": "substantiate", "B": "hinder", "C": "condone", "D": "mitigate"}, "ans": "A", "why": "substantiate = kanıtlamak, doğrulamak. Hikayeyi kanıtla destekleyememek."}, {"n": 8, "stem": "The community proved ______, rebuilding quickly after the flood.", "choices": {"A": "resilient", "B": "arbitrary", "C": "coherent", "D": "obscure"}, "ans": "A", "why": "resilient = dayanıklı, çabuk toparlanan. Seldan sonra hızla toparlanmak."}, {"n": 9, "stem": "The school will not ______ bullying of any kind.", "choices": {"A": "substantiate", "B": "mitigate", "C": "reconcile", "D": "condone"}, "ans": "D", "why": "condone = göz yummak, hoş görmek. Zorbalığa göz yummamak."}, {"n": 10, "stem": "It was difficult to ______ his friendly public image with his harsh private behavior.", "choices": {"A": "alleviate", "B": "undermine", "C": "reconcile", "D": "hinder"}, "ans": "C", "why": "reconcile = bağdaştırmak, uzlaştırmak. İki zıt yönü bağdaştırmakta zorlanmak."}]}]}]}</script>
+<script id="data" type="application/json">{"title": "SAT Kelime", "badge": "SAT", "ns": "satk", "groups": ["Öğren", "Kelime Paketleri"], "lessons": [{"id": "basla", "group": "Öğren", "name": "Nasıl Çalışılır", "eyebrow": "Öğren", "blocks": [{"t": "p", "x": "Digital SAT kelimeyi Words in Context sorusuyla ölçer: bir cümlede boşluk vardır, dört yakın anlamlı kelimeden bağlama en uygun olanı seçersin. Bu modül kelimeyi önce tanıtır, sonra tam SAT formatında çalıştırır."}, {"t": "note", "k": "ipucu", "title": "Puanlama", "lines": ["Digital SAT toplam 400-1600. Reading and Writing bolumu 200-800 puandir.", "Words in Context, Craft and Structure alan puaninin onemli bir parcasidir."]}, {"t": "note", "k": "ipucu", "title": "Words in Context stratejisi", "lines": ["Boşluğa kendi kelimeni koy, sonra ona en yakın şıkkı bul. Şıklara önce bakma.", "Kelimenin sözlük anlamını değil, cümledeki tonunu ve ilişkisini düşün. SAT çoğu zaman olumlu-olumsuz tonu test eder.", "Her paketin altında kelimelerin Türkçe karşılığı ve örnek cümlesi var. Önce onları çalış, sonra quizi çöz."]}]}, {"id": "p1", "group": "Kelime Paketleri", "name": "Paket 1", "eyebrow": "P1", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["candid", "samimi, açık sözlü", "In a candid interview, the actor admitted his early films were weak."], ["compelling", "ikna edici, etkileyici", "The lawyer presented a compelling argument that swayed the jury."], ["concede", "kabul etmek (haklılığı/yenilgiyi)", "She refused to concede that her plan had any flaws."], ["deliberate", "kasıtlı; ölçülü, dikkatli", "His slow, deliberate movements suggested careful planning."], ["diminish", "azalmak, azaltmak", "Interest in the project began to diminish after the funding was cut."], ["feasible", "yapılabilir, uygulanabilir", "Building a bridge here is not financially feasible."], ["inevitable", "kaçınılmaz", "Given the evidence, the verdict seemed inevitable."], ["plausible", "akla yatkın, makul", "He offered a plausible explanation for his absence."], ["prudent", "sağduyulu, tedbirli", "It would be prudent to save money for emergencies."], ["refute", "çürütmek", "New data allowed the scientist to refute the earlier claim."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "The committee found the proposal financially ______, so they approved the budget without delay.", "choices": {"A": "feasible", "B": "inevitable", "C": "candid", "D": "prudent"}, "ans": "A", "why": "feasible = yapılabilir, uygulanabilir. Bütçe onaylandıysa proje uygulanabilir bulunmuştur.", "slug": "gri-mod-satk-p1-4-1"}, {"n": 2, "stem": "Rather than deny the mistake, the manager was ______ about what had gone wrong.", "choices": {"A": "deliberate", "B": "candid", "C": "plausible", "D": "compelling"}, "ans": "B", "why": "candid = açık sözlü, samimi. Hatayı inkar etmeyip açıkça konuşmak.", "slug": "gri-mod-satk-p1-4-2"}, {"n": 3, "stem": "Enthusiasm for the campaign began to ______ once the initial excitement faded.", "choices": {"A": "refute", "B": "diminish", "C": "concede", "D": "convince"}, "ans": "B", "why": "diminish = azalmak. Heyecan sönünce coşku azalır.", "slug": "gri-mod-satk-p1-4-3"}, {"n": 4, "stem": "Her ______ argument, backed by strong evidence, convinced even the skeptics.", "choices": {"A": "prudent", "B": "inevitable", "C": "compelling", "D": "candid"}, "ans": "C", "why": "compelling = ikna edici, etkileyici. Şüphecileri bile ikna eden argüman.", "slug": "gri-mod-satk-p1-4-4"}, {"n": 5, "stem": "The detective's ______ search of the room, inch by inch, revealed a hidden note.", "choices": {"A": "diminished", "B": "feasible", "C": "deliberate", "D": "plausible"}, "ans": "C", "why": "deliberate = ölçülü, dikkatli, metodik. Santim santim yapılan dikkatli arama.", "slug": "gri-mod-satk-p1-4-5"}, {"n": 6, "stem": "Faced with overwhelming proof, he finally ______ that he had been wrong.", "choices": {"A": "refuted", "B": "compelled", "C": "diminished", "D": "conceded"}, "ans": "D", "why": "concede = (haklılığı) kabul etmek. Kanıt karşısında yanıldığını kabul etmek.", "slug": "gri-mod-satk-p1-4-6"}, {"n": 7, "stem": "Setting aside money for the future is a ______ financial decision.", "choices": {"A": "plausible", "B": "inevitable", "C": "prudent", "D": "candid"}, "ans": "C", "why": "prudent = sağduyulu, tedbirli. Geleceğe para ayırmak tedbirli bir karardır.", "slug": "gri-mod-satk-p1-4-7"}, {"n": 8, "stem": "The story sounded ______ enough, but no one could verify the details.", "choices": {"A": "plausible", "B": "prudent", "C": "deliberate", "D": "feasible"}, "ans": "A", "why": "plausible = akla yatkın, makul (ama kanıtlanmamış). Kulağa makul gelen ama doğrulanamayan hikaye.", "slug": "gri-mod-satk-p1-4-8"}, {"n": 9, "stem": "With the storm approaching and no shelter nearby, some damage seemed ______.", "choices": {"A": "feasible", "B": "candid", "C": "plausible", "D": "inevitable"}, "ans": "D", "why": "inevitable = kaçınılmaz. Fırtına yaklaşırken hasar kaçınılmaz görünür.", "slug": "gri-mod-satk-p1-4-9"}, {"n": 10, "stem": "Using fresh experimental data, the team was able to ______ the popular but flawed theory.", "choices": {"A": "concede", "B": "convince", "C": "diminish", "D": "refute"}, "ans": "D", "why": "refute = çürütmek. Yeni veriyle hatalı teoriyi çürütmek.", "slug": "gri-mod-satk-p1-4-10"}]}]}, {"id": "p2", "group": "Kelime Paketleri", "name": "Paket 2", "eyebrow": "P2", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["ambiguous", "belirsiz, iki anlamlı", "The instructions were so ambiguous that no one knew what to do."], ["arbitrary", "keyfi, rastgele", "The rule seemed arbitrary, with no clear reason behind it."], ["empirical", "deneysel, gözleme dayalı", "The claim lacked empirical support."], ["nuance", "ince ayrım, incelik", "A good translator captures the nuances of the original text."], ["obscure", "belirsiz, az bilinen", "The exact origin of the tradition remains obscure."], ["prevalent", "yaygın", "This belief was prevalent in the nineteenth century."], ["profound", "derin, köklü", "The discovery had a profound effect on medicine."], ["rigorous", "titiz, sıkı", "The new drug underwent rigorous testing."], ["scrutiny", "yakın inceleme", "The plan came under close scrutiny."], ["skeptical", "şüpheci", "Scientists were skeptical of the surprising result."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "The wording of the contract was ______, leaving both sides unsure of their obligations.", "choices": {"A": "prevalent", "B": "ambiguous", "C": "profound", "D": "rigorous"}, "ans": "B", "why": "ambiguous = belirsiz, iki anlamlı. Tarafların ne yapacağını bilememesi belirsizlikten.", "slug": "gri-mod-satk-p2-4-1"}, {"n": 2, "stem": "Without ______ evidence from experiments, the hypothesis remained just a guess.", "choices": {"A": "empirical", "B": "arbitrary", "C": "obscure", "D": "skeptical"}, "ans": "A", "why": "empirical = deneysel, gözleme dayalı. Deneyden gelen kanıt.", "slug": "gri-mod-satk-p2-4-2"}, {"n": 3, "stem": "Smartphones are now so ______ that it is rare to see anyone without one.", "choices": {"A": "prevalent", "B": "profound", "C": "ambiguous", "D": "arbitrary"}, "ans": "A", "why": "prevalent = yaygın. Herkeste bulunacak kadar yaygın.", "slug": "gri-mod-satk-p2-4-3"}, {"n": 4, "stem": "The professor was known for her ______ standards; every claim had to be backed by data.", "choices": {"A": "prevalent", "B": "obscure", "C": "rigorous", "D": "ambiguous"}, "ans": "C", "why": "rigorous = titiz, sıkı. Her iddianın veriyle desteklenmesini isteyen titiz standart.", "slug": "gri-mod-satk-p2-4-4"}, {"n": 5, "stem": "The seemingly small change had a ______ impact on the entire system.", "choices": {"A": "obscure", "B": "arbitrary", "C": "skeptical", "D": "profound"}, "ans": "D", "why": "profound = derin, köklü. Küçük değişimin derin etkisi.", "slug": "gri-mod-satk-p2-4-5"}, {"n": 6, "stem": "Investors remained ______ about the company's bold promises.", "choices": {"A": "skeptical", "B": "prevalent", "C": "empirical", "D": "profound"}, "ans": "A", "why": "skeptical = şüpheci. İddialı vaatlere şüpheyle bakmak.", "slug": "gri-mod-satk-p2-4-6"}, {"n": 7, "stem": "Choosing winners by drawing names felt ______ and unfair to the participants.", "choices": {"A": "rigorous", "B": "arbitrary", "C": "profound", "D": "empirical"}, "ans": "B", "why": "arbitrary = keyfi, rastgele. İsim çekerek seçmek keyfi görünür.", "slug": "gri-mod-satk-p2-4-7"}, {"n": 8, "stem": "A skilled diplomat understands the subtle ______ of every phrase.", "choices": {"A": "rigor", "B": "scrutiny", "C": "nuance", "D": "prevalence"}, "ans": "C", "why": "nuance = ince ayrım, incelik. Her ifadenin ince anlam farkı.", "slug": "gri-mod-satk-p2-4-8"}, {"n": 9, "stem": "After the scandal, the mayor's finances came under intense ______.", "choices": {"A": "prevalence", "B": "nuance", "C": "empirical", "D": "scrutiny"}, "ans": "D", "why": "scrutiny = yakın inceleme. Mali durumun yakından incelenmesi.", "slug": "gri-mod-satk-p2-4-9"}, {"n": 10, "stem": "The writer stayed ______ during his lifetime and became famous only after his death.", "choices": {"A": "rigorous", "B": "prevalent", "C": "obscure", "D": "profound"}, "ans": "C", "why": "obscure = az bilinen, belirsiz. Yaşarken az bilinen yazar.", "slug": "gri-mod-satk-p2-4-10"}]}]}, {"id": "p3", "group": "Kelime Paketleri", "name": "Paket 3", "eyebrow": "P3", "blocks": [{"t": "p", "x": "Önce kelimeleri çalış, sonra aşağıdaki Words in Context quizini çöz."}, {"t": "table", "head": ["Kelime", "Türkçe", "Örnek cümle"], "rows": [["alleviate", "hafifletmek", "Medicine can alleviate the pain but not cure the illness."], ["coherent", "tutarlı, anlaşılır", "She gave a clear, coherent explanation."], ["condone", "hoş görmek, göz yummak", "The school does not condone cheating."], ["hinder", "engellemek", "Poor planning hindered progress."], ["mitigate", "hafifletmek, azaltmak", "Steps were taken to mitigate the damage."], ["pragmatic", "pratik, gerçekçi", "He took a pragmatic approach to the problem."], ["reconcile", "uzlaştırmak, bağdaştırmak", "It is hard to reconcile the two accounts."], ["resilient", "dayanıklı, çabuk toparlanan", "Children are often remarkably resilient."], ["substantiate", "kanıtlamak, doğrulamak", "He could not substantiate his claims."], ["undermine", "zayıflatmak, baltalamak", "Constant criticism can undermine confidence."]]}, {"t": "h", "x": "Words in Context"}, {"t": "p", "x": "Her cümledeki boşluğa bağlama en uygun kelimeyi seç."}, {"t": "mcqquiz", "items": [{"n": 1, "stem": "Painkillers can ______ the discomfort but do not cure the underlying illness.", "choices": {"A": "undermine", "B": "alleviate", "C": "hinder", "D": "condone"}, "ans": "B", "why": "alleviate = hafifletmek. Ağrıyı hafifletir ama iyileştirmez.", "slug": "gri-mod-satk-p3-4-1"}, {"n": 2, "stem": "The essay was well organized and ______, moving logically from point to point.", "choices": {"A": "pragmatic", "B": "coherent", "C": "resilient", "D": "arbitrary"}, "ans": "B", "why": "coherent = tutarlı, anlaşılır. Mantıklı ilerleyen düzenli metin.", "slug": "gri-mod-satk-p3-4-2"}, {"n": 3, "stem": "The company took measures to ______ the environmental impact of its factory.", "choices": {"A": "mitigate", "B": "condone", "C": "undermine", "D": "hinder"}, "ans": "A", "why": "mitigate = azaltmak, hafifletmek. Çevresel etkiyi azaltacak önlemler.", "slug": "gri-mod-satk-p3-4-3"}, {"n": 4, "stem": "Heavy traffic and roadworks ______ the delivery, which arrived hours late.", "choices": {"A": "alleviated", "B": "hindered", "C": "reconciled", "D": "substantiated"}, "ans": "B", "why": "hinder = engellemek. Trafik teslimatı engelledi.", "slug": "gri-mod-satk-p3-4-4"}, {"n": 5, "stem": "Although idealistic at heart, she remained ______ about what could actually be achieved.", "choices": {"A": "ambiguous", "B": "coherent", "C": "resilient", "D": "pragmatic"}, "ans": "D", "why": "pragmatic = gerçekçi, pratik. Neyin gerçekten başarılabileceği konusunda gerçekçi.", "slug": "gri-mod-satk-p3-4-5"}, {"n": 6, "stem": "Spreading false rumors can ______ trust within a team.", "choices": {"A": "alleviate", "B": "undermine", "C": "substantiate", "D": "reconcile"}, "ans": "B", "why": "undermine = baltalamak, zayıflatmak. Yalan söylenti güveni zayıflatır.", "slug": "gri-mod-satk-p3-4-6"}, {"n": 7, "stem": "The witness could not ______ her story with any physical evidence.", "choices": {"A": "substantiate", "B": "hinder", "C": "condone", "D": "mitigate"}, "ans": "A", "why": "substantiate = kanıtlamak, doğrulamak. Hikayeyi kanıtla destekleyememek.", "slug": "gri-mod-satk-p3-4-7"}, {"n": 8, "stem": "The community proved ______, rebuilding quickly after the flood.", "choices": {"A": "resilient", "B": "arbitrary", "C": "coherent", "D": "obscure"}, "ans": "A", "why": "resilient = dayanıklı, çabuk toparlanan. Seldan sonra hızla toparlanmak.", "slug": "gri-mod-satk-p3-4-8"}, {"n": 9, "stem": "The school will not ______ bullying of any kind.", "choices": {"A": "substantiate", "B": "mitigate", "C": "reconcile", "D": "condone"}, "ans": "D", "why": "condone = göz yummak, hoş görmek. Zorbalığa göz yummamak.", "slug": "gri-mod-satk-p3-4-9"}, {"n": 10, "stem": "It was difficult to ______ his friendly public image with his harsh private behavior.", "choices": {"A": "alleviate", "B": "undermine", "C": "reconcile", "D": "hinder"}, "ans": "C", "why": "reconcile = bağdaştırmak, uzlaştırmak. İki zıt yönü bağdaştırmakta zorlanmak.", "slug": "gri-mod-satk-p3-4-10"}]}]}]}</script>
 <script>
 const D=JSON.parse(document.getElementById('data').textContent);
 const app=document.getElementById('app'),railEl=document.getElementById('rail');
@@ -151,6 +147,7 @@ const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]
 const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'’]/g,'').replace(/\s+/g,' ').trim();
 function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
 function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
+function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
 const S={id:D.lessons[0].id};
 function renderRail(){
   const groups=D.groups.map(g=>{
@@ -198,14 +195,14 @@ function blockHTML(b,i){
   }
   if(b.t==='mcqquiz'){
     let h='';
-    b.items.forEach(it=>{h+=`<div class="mcq" data-ans="${esc(it.ans)}"><div class="mstem"><span class="mn">${it.n}.</span> ${esc(it.stem)}</div><div class="opts">`+Object.keys(it.choices).map(k=>`<label data-k="${k}"><span class="ol">${k}</span><span>${esc(it.choices[k])}</span></label>`).join('')+`</div><div class="mwhy" style="display:none">${esc(it.why||'')}</div><div class="mfb"></div></div>`;});
+    b.items.forEach(it=>{h+=`<div class="mcq" data-ans="${esc(it.ans)}"${it.slug?` data-slug="${esc(it.slug)}"`:''}><div class="mstem"><span class="mn">${it.n}.</span> ${esc(it.stem)}</div><div class="opts">`+Object.keys(it.choices).map(k=>`<label data-k="${k}"><span class="ol">${k}</span><span>${esc(it.choices[k])}</span></label>`).join('')+`</div><div class="mwhy" style="display:none">${esc(it.why||'')}</div><div class="mfb"></div></div>`;});
     h+=`<button class="btn mcheck">Cevabı kontrol et</button><div class="qscore" style="display:none"></div>`;
     return h;
   }
   if(b.t==='quiz'){
     let h='';
     if(b.box)h+='<div class="chips">'+b.box.map(w=>`<span class="chip">${esc(w)}</span>`).join('')+'</div>';
-    b.items.forEach(it=>{h+=`<div class="qz" data-ans="${esc(it.ans)}"${it.alt?` data-alt="${esc(it.alt.join('|'))}"`:''}><div class="qzq"><span class="qzn">${it.n}.</span> ${esc(it.q)}${it.diff?`<span class="diff">${esc(it.diff)}</span>`:''}</div><input type="text" autocomplete="off" placeholder="${esc(b.ph||'cevabını yaz')}"><div class="qzwhy" style="display:none">${esc(it.why||'')}</div><div class="qzfb"></div></div>`;});
+    b.items.forEach(it=>{h+=`<div class="qz" data-ans="${esc(it.ans)}"${it.slug?` data-slug="${esc(it.slug)}"`:''}${it.alt?` data-alt="${esc(it.alt.join('|'))}"`:''}><div class="qzq"><span class="qzn">${it.n}.</span> ${esc(it.q)}${it.diff?`<span class="diff">${esc(it.diff)}</span>`:''}</div><input type="text" autocomplete="off" placeholder="${esc(b.ph||'cevabını yaz')}"><div class="qzwhy" style="display:none">${esc(it.why||'')}</div><div class="qzfb"></div></div>`;});
     h+=`<button class="btn qzcheck">Cevabı kontrol et</button><div class="qscore" style="display:none"></div>`;
     return h;
   }
@@ -237,6 +234,7 @@ function wire(){
       const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
       const ansTxt=want+(ct?'. '+ct.textContent:'');
       if(good)clearErr(stem);else logErr(stem,ansTxt);
+      recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
       const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
       const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
       fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
@@ -252,6 +250,7 @@ function wire(){
       inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
       if(good)clearErr(qtext);else logErr(qtext,want);
+      recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
       const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
       const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
       fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');
@@ -288,7 +287,7 @@ function setupRecorder(btn){
       '<a class="btn ghost" href="kayit.html">Ücretsiz Hesap Aç</a></div></div>';railEl.innerHTML='';}
   function boot(cb){if(window.supabase&&window.supabase.createClient)return cb();var t=0,iv=setInterval(function(){t++;if(window.supabase&&window.supabase.createClient){clearInterval(iv);cb();}else if(t>30){clearInterval(iv);cb();}},100);}
   app.innerHTML='<div class="head"><div class="eyebrow">Yükleniyor</div><h1>&nbsp;</h1></div>';
-  boot(async function(){var ok=false;try{if(window.supabase&&window.supabase.createClient){var c=window.supabase.createClient(SB_U,SB_K);var r=await c.auth.getSession();ok=!!(r&&r.data&&r.data.session);}}catch(e){ok=false;}
+  boot(async function(){var ok=false;try{if(window.supabase&&window.supabase.createClient){var c=window.griTrackSB||window.supabase.createClient(SB_U,SB_K);window.griTrackSB=c;var r=await c.auth.getSession();ok=!!(r&&r.data&&r.data.session);if(ok){window.GRI_SB=c;window.GRI_UID=r.data.session.user.id;}}}catch(e){ok=false;}
     if(ok){show(D.lessons[0].id);}else{showGate();}});
 })();
 </script>

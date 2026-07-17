@@ -37,18 +37,18 @@ var EXAMS=[
     {name:"Algebra",desc:"Linear, sistemler, esitsizlikler",state:"soon",lessons:[{name:"Linear denklemler",s:"todo"}]}]}]},
  {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
-    {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-writing.html"},
-    {ic:"soru",label:"Pratik",desc:"Okuma ve dinleme pratikleri, 11 soru tipi, transkript uzerinden calisma.",href:"ielts-pratik.html"},
+    {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
+    {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bolum bazli calisma.",href:"ielts-bolum-calisma.html"},
     {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, bilim, cevre, egitim ve daha fazlasi.",href:"kelime-bankasi.html"},
-    {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"#"},
+    {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"ielts-deneme.html"},
   ],
   sections:[{label:"Ogren . Beceriler",units:[
     {name:"Reading",desc:"11 soru tipi, 3 tam deneme, 120 soru",state:"live",lessons:[
       {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Uc tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
-    {name:"Writing",desc:"Task 1 ve Task 2, mini yazma sihirbazi",state:"live",lessons:[
-      {name:"Task 1 . Dort paragraf ve yedi gorev",s:"todo",href:"ielts-ogren-writing.html"},{name:"Task 2 . Yapi ve dort gorev",s:"todo",href:"ielts-ogren-writing.html"}]},
-    {name:"Listening",desc:"Yapi, soru tipleri ve cevap kurallari",state:"live",lessons:[
-      {name:"Yapi ve soru tipleri",s:"todo",href:"ielts-ogren-listening.html"},{name:"Cevap yazim kurallari ve bes tuzak",s:"todo",href:"ielts-ogren-listening.html"}]},
+    {name:"Writing",desc:"Bolum bazli denemeler ve ogren modulu",state:"live",lessons:[
+      {name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"},{name:"Ogren . Task 1, Task 2 ve yazma sihirbazi",s:"todo",href:"ielts-ogren-writing.html"}]},
+    {name:"Listening",desc:"Bolum bazli denemeler ve ogren modulu",state:"live",lessons:[
+      {name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"},{name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"}]},
     {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[
       {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,

@@ -45,10 +45,10 @@ var EXAMS=[
   sections:[{label:"Ogren . Beceriler",units:[
     {name:"Reading",desc:"11 soru tipi, 3 tam deneme, 120 soru",state:"live",lessons:[
       {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Uc tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
-    {name:"Writing",desc:"Bolum bazli denemeler ve ogren modulu",state:"live",lessons:[
-      {name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"},{name:"Ogren . Task 1, Task 2 ve yazma sihirbazi",s:"todo",href:"ielts-ogren-writing.html"}]},
-    {name:"Listening",desc:"Bolum bazli denemeler ve ogren modulu",state:"live",lessons:[
-      {name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"},{name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"}]},
+    {name:"Writing",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
+      {name:"Ogren . Task 1, Task 2 ve yazma sihirbazi",s:"todo",href:"ielts-ogren-writing.html"},{name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"}]},
+    {name:"Listening",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
+      {name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"},{name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"}]},
     {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[
       {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,

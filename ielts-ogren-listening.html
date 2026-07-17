@@ -214,6 +214,7 @@ function show(id){
   let h=`<div class="head"><div class="eyebrow">${esc(l.eyebrow||l.group)}</div><h1>${esc(l.name)}</h1><div class="lead">${esc(l.lead||D.title)}</div></div><div class="pad">`;
   (l.blocks||[]).forEach((b,i)=>h+=blockHTML(b,i));
   h+=`</div>`;app.innerHTML=h;wire();
+  try{location.hash!=='#'+id&&history.replaceState(null,'','#'+id);localStorage.setItem('gri_resume',JSON.stringify({exam:D.badge||D.title,lesson:(l.name||''),url:location.pathname.split('/').pop()+'#'+id,t:Date.now()}));}catch(e){}
 }
 function wire(){
   app.querySelectorAll('.check .ci').forEach(ci=>ci.onclick=()=>ci.classList.toggle('on'));
@@ -288,7 +289,7 @@ function setupRecorder(btn){
   function boot(cb){if(window.supabase&&window.supabase.createClient)return cb();var t=0,iv=setInterval(function(){t++;if(window.supabase&&window.supabase.createClient){clearInterval(iv);cb();}else if(t>30){clearInterval(iv);cb();}},100);}
   app.innerHTML='<div class="head"><div class="eyebrow">Yükleniyor</div><h1>&nbsp;</h1></div>';
   boot(async function(){var ok=false;try{if(window.supabase&&window.supabase.createClient){var c=window.griTrackSB||window.supabase.createClient(SB_U,SB_K);window.griTrackSB=c;var r=await c.auth.getSession();ok=!!(r&&r.data&&r.data.session);if(ok){window.GRI_SB=c;window.GRI_UID=r.data.session.user.id;}}}catch(e){ok=false;}
-    if(ok){show(D.lessons[0].id);}else{showGate();}});
+    if(ok){var hh=(location.hash||'').replace(/^#/,'');var st=D.lessons.find(function(x){return x.id===hh;})?hh:D.lessons[0].id;show(st);}else{showGate();}});
 })();
 </script>
 </body></html>

@@ -173,6 +173,7 @@ function groupHTML(g,gi){
 }
 
 // ---------- VIEWS ----------
+function saveResume(name,go){try{history.replaceState(null,'','#'+go);localStorage.setItem('gri_resume',JSON.stringify({exam:(D.badge||'IELTS'),lesson:(name||''),url:location.pathname.split('/').pop()+'#'+go,t:Date.now()}));}catch(e){}}
 function lessonView(id){
   S.view='lesson';S.id=id;renderRail();window.scrollTo(0,0);
   const l=D.lessons.find(x=>x.id===id);
@@ -182,7 +183,7 @@ function lessonView(id){
   if(l.groups){ (l.groups).forEach((g,gi)=>h+=groupHTML(g,gi));
     h+=`<button class="btn" data-check="lesson">Cevabı kontrol et</button><div class="score" style="display:none"></div>`;
   }
-  h+=`</div>`;app.innerHTML=h;attach();
+  h+=`</div>`;app.innerHTML=h;attach();saveResume(l.name,'lesson:'+id);
 }
 
 function testView(id){
@@ -198,7 +199,7 @@ function testView(id){
     h+=`<button class="btn" data-check="passage" data-pi="${pi}">Passage ${p.no} . Cevabı kontrol et</button><div class="score" style="display:none"></div>`;
     h+=`</div>`;
   });
-  h+=`</div>`;app.innerHTML=h;attach();
+  h+=`</div>`;app.innerHTML=h;attach();saveResume(t.name,'test:'+id);
 }
 
 // ---------- INTERACTION ----------
@@ -287,7 +288,7 @@ function checkScope(scope,btn){
   boot(async function(){
     var ok=false;
     try{ if(window.supabase&&window.supabase.createClient){var c=window.griTrackSB||window.supabase.createClient(SB_U,SB_K);window.griTrackSB=c;var r=await c.auth.getSession();ok=!!(r&&r.data&&r.data.session);if(ok){window.GRI_SB=c;window.GRI_UID=r.data.session.user.id;}} }catch(e){ok=false;}
-    if(ok){ lessonView(D.lessons[0].id); } else { showGate(); }
+    if(ok){ var hh=(location.hash||'').replace(/^#/,''); if(/^(lesson|test):/.test(hh)){route(hh);} else { lessonView(D.lessons[0].id); } } else { showGate(); }
   });
 })();
 </script>

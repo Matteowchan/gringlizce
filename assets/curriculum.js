@@ -43,13 +43,14 @@ var EXAMS=[
     {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"#"},
   ],
   sections:[{label:"Ogren . Beceriler",units:[
-    {name:"Reading",desc:"11 soru tipi, 3 pratik test",state:"live",lessons:[
-      {name:"True/False/Not Given",s:"todo",href:"#"},{name:"Matching Headings",s:"todo",href:"#"},{name:"Summary Completion",s:"todo",href:"#"}]},
-    {name:"Writing",desc:"Task 1 ve Task 2",state:"live",lessons:[
-      {name:"Task 1 . Grafik betimleme",s:"todo",href:"#"},{name:"Task 2 . Deneme yapisi",s:"todo",href:"#"}]},
-    {name:"Listening",desc:"Transkript uzerinden calisma",state:"live",lessons:[
-      {name:"Form ve not tamamlama",s:"todo",href:"#"},{name:"Harita ve plan",s:"todo",href:"#"}]},
-    {name:"Speaking",desc:"Uc bolum, akicilik",state:"soon",lessons:[{name:"Part 2 . Cue card",s:"todo"}]}]}]},
+    {name:"Reading",desc:"11 soru tipi, 3 tam deneme, 120 soru",state:"live",lessons:[
+      {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Uc tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
+    {name:"Writing",desc:"Task 1 ve Task 2, mini yazma sihirbazi",state:"live",lessons:[
+      {name:"Task 1 . Dort paragraf ve yedi gorev",s:"todo",href:"ielts-ogren-writing.html"},{name:"Task 2 . Yapi ve dort gorev",s:"todo",href:"ielts-ogren-writing.html"}]},
+    {name:"Listening",desc:"Yapi, soru tipleri ve cevap kurallari",state:"live",lessons:[
+      {name:"Yapi ve soru tipleri",s:"todo",href:"ielts-ogren-listening.html"},{name:"Cevap yazim kurallari ve bes tuzak",s:"todo",href:"ielts-ogren-listening.html"}]},
+    {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[
+      {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,
   tools:[{ic:"yazi",label:"Yazi",desc:"Integrated ve academic discussion pratikleri. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Integrated Writing",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},

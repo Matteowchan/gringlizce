@@ -41,6 +41,9 @@ p{margin:0 0 12px}
 .note ul{margin:0;padding-left:18px}.note li{margin:3px 0}
 .given{background:var(--accent-soft);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px 15px;font-family:Inter,sans-serif;font-size:14px;line-height:1.6;margin:0 0 14px}
 .given .gl{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent-deep);margin-bottom:5px}
+.figure{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 12px;margin:0 0 14px;overflow-x:auto}
+.figure svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.figcap{font-family:Inter,sans-serif;font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
 .task{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 16px;font-family:Inter,sans-serif;font-size:14.5px;line-height:1.55;margin:0 0 14px}
 .task .tl{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:6px}
 .qlist{font-family:Inter,sans-serif;font-size:14.5px;line-height:1.5}
@@ -167,6 +170,7 @@ function blockHTML(b,i){
     return `<div class="note ${b.k||'ipucu'}"><span class="nt">${esc(b.title)}</span><ul>${li}</ul></div>`;}
   if(b.t==='task')return `<div class="task"><span class="tl">${esc(b.title||'Görev')}</span>${b.lines.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`;
   if(b.t==='given')return `<div class="given"><span class="gl">${esc(b.title)}</span>${esc(b.x)}</div>`;
+  if(b.t==='svg')return `<div class="figure">${b.svg}${b.cap?`<div class="figcap">${esc(b.cap)}</div>`:''}</div>`;
   if(b.t==='qlist'){let h='<div class="qlist">';(b.groups||[]).forEach(gr=>{h+=`<div class="qh">${esc(gr.h)}</div><ol>`+gr.items.map(q=>`<li>${esc(q)}</li>`).join('')+'</ol>';});return h+'</div>';}
   if(b.t==='plan'){return `<div class="plan">`+b.fields.map(f=>`<div class="pf"><label>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;}
   if(b.t==='cue'){return `<div class="task"><span class="tl">Cue card</span><div><b>${esc(b.title)}</b></div><div style="margin-top:6px">You should say:</div><ul style="margin:4px 0 0;padding-left:20px">`+b.points.map(p=>`<li>${esc(p)}</li>`).join('')+`</ul></div>`;}

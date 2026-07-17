@@ -45,8 +45,8 @@ var EXAMS=[
   sections:[{label:"Ogren . Beceriler",units:[
     {name:"Reading",desc:"11 soru tipi, 3 tam deneme, 120 soru",state:"live",lessons:[
       {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Uc tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
-    {name:"Writing",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
-      {name:"Ogren . Task 1, Task 2 ve yazma sihirbazi",s:"todo",href:"ielts-ogren-writing.html"},{name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"}]},
+    {name:"Writing",desc:"Task 1 ve Task 2 ayri, bolum bazli denemeler",state:"live",lessons:[
+      {name:"Task 1 . grafik betimleme",s:"todo",href:"ielts-writing-task1.html"},{name:"Task 2 . deneme yazma",s:"todo",href:"ielts-writing-task2.html"},{name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"}]},
     {name:"Listening",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
       {name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"},{name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"}]},
     {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[

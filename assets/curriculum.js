@@ -79,9 +79,33 @@ var EXAMS=[
       {name:"Write an Email",s:"todo",href:"toefl-ogren.html#write-email"},
       {name:"Academic Discussion",s:"todo",href:"toefl-ogren.html#write-discussion"}]}
   ]}]},
- {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1 metin turleri",pct:0,
-  tools:[{ic:"soru",label:"Metin turleri",desc:"Makale, blog, konusma, brosur, gorus yazisi, resmi mektup. Amac, kitle, ton karsilastirmalari.",href:"ib-ogren.html"}],
-  sections:[{label:"Ogren",units:[{name:"Paper 1 ve metin turleri",desc:"Metin turleri, kriterler, Paper 1 yazma",state:"live",lessons:[{name:"Metin turleri ve Paper 1",s:"todo",href:"ib-ogren.html"}]}]}]},
+ {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin turu + Gri AI",pct:0,
+  tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin turu (makale, blog, gunluk, roportaj, haber, inceleme, rapor, oneri, yonerge, deneme...). Her biri sozlesme + model + Gri AI'li yazma sihirbazi.",href:"ib-ogren.html"}],
+  sections:[{label:"Ogren . Paper 1",units:[
+    {name:"Giris ve Kriterler",desc:"Paper 1, A/B/C kriterleri, tur secimi",state:"live",lessons:[
+      {name:"Paper 1 ve Kriterler",s:"todo",href:"ib-ogren.html#basla"},
+      {name:"Karsilastirma Tablosu",s:"todo",href:"ib-ogren.html#karsilastirma"}]},
+    {name:"Kisisel Turler",desc:"Blog, gunluk, gayriresmi mektup",state:"live",lessons:[
+      {name:"Blog / Gunluk",s:"todo",href:"ib-ogren.html#t-blog"},
+      {name:"Gunluk (Diary)",s:"todo",href:"ib-ogren.html#t-diary"},
+      {name:"Gayriresmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-informal"}]},
+    {name:"Profesyonel Turler",desc:"Resmi mektup, rapor, oneri, yonerge, deneme",state:"live",lessons:[
+      {name:"Resmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-letter"},
+      {name:"Resmi Rapor (Report)",s:"todo",href:"ib-ogren.html#t-report"},
+      {name:"Oneri / Teklif (Proposal, HL)",s:"todo",href:"ib-ogren.html#t-proposal"},
+      {name:"Yonerge (Instructions)",s:"todo",href:"ib-ogren.html#t-instructions"},
+      {name:"Deneme (Essay, SL)",s:"todo",href:"ib-ogren.html#t-essay"}]},
+    {name:"Kitle Iletisim Turleri",desc:"Makale, konusma, brosur, gorus, roportaj, haber, inceleme",state:"live",lessons:[
+      {name:"Makale (Article)",s:"todo",href:"ib-ogren.html#t-article"},
+      {name:"Konusma (Speech)",s:"todo",href:"ib-ogren.html#t-speech"},
+      {name:"Brosur (Brochure)",s:"todo",href:"ib-ogren.html#t-brochure"},
+      {name:"Gorus Yazisi (Opinion Column)",s:"todo",href:"ib-ogren.html#t-opinion"},
+      {name:"Roportaj (Interview)",s:"todo",href:"ib-ogren.html#t-interview"},
+      {name:"Haber (News Report)",s:"todo",href:"ib-ogren.html#t-news"},
+      {name:"Inceleme (Review)",s:"todo",href:"ib-ogren.html#t-review"}]},
+    {name:"Writing",desc:"Paper 1 yazma + Gri AI degerlendirme",state:"live",lessons:[
+      {name:"Paper 1 Yazma",s:"todo",href:"ib-ogren.html#paper1"}]}
+  ]}]},
  {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
   tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},

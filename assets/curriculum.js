@@ -92,13 +92,13 @@ var EXAMS=[
     {name:"Profesyonel Turler",desc:"Resmi mektup, rapor, oneri, yonerge, deneme",state:"live",lessons:[
       {name:"Resmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-letter"},
       {name:"Resmi Rapor (Report)",s:"todo",href:"ib-ogren.html#t-report"},
-      {name:"Oneri / Teklif (Proposal, HL)",s:"todo",href:"ib-ogren.html#t-proposal"},
+      {name:"Oneri (Proposal, HL)",s:"todo",href:"ib-ogren.html#t-proposal"},
       {name:"Yonerge (Instructions)",s:"todo",href:"ib-ogren.html#t-instructions"},
-      {name:"Deneme (Essay, SL)",s:"todo",href:"ib-ogren.html#t-essay"}]},
+      {name:"Deneme (Essay)",s:"todo",href:"ib-ogren.html#t-essay"}]},
     {name:"Kitle Iletisim Turleri",desc:"Makale, konusma, brosur, gorus, roportaj, haber, inceleme",state:"live",lessons:[
       {name:"Makale (Article)",s:"todo",href:"ib-ogren.html#t-article"},
       {name:"Konusma (Speech)",s:"todo",href:"ib-ogren.html#t-speech"},
-      {name:"Brosur (Brochure)",s:"todo",href:"ib-ogren.html#t-brochure"},
+      {name:"Brosur / Leaflet",s:"todo",href:"ib-ogren.html#t-brochure"},
       {name:"Gorus Yazisi (Opinion Column)",s:"todo",href:"ib-ogren.html#t-opinion"},
       {name:"Roportaj (Interview)",s:"todo",href:"ib-ogren.html#t-interview"},
       {name:"Haber (News Report)",s:"todo",href:"ib-ogren.html#t-news"},

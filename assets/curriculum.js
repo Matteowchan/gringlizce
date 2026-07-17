@@ -57,9 +57,28 @@ var EXAMS=[
       {name:"Bes yazim ve exact wording drilli",s:"todo",href:"ielts-spelling.html"}]},
     {name:"Gramer Dogrulugu",desc:"Yedi hata turu, 113 alistirma",state:"live",lessons:[
       {name:"Yedi hata turu, 113 alistirma",s:"todo",href:"ielts-gramer.html"}]}]}]},
- {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,
-  tools:[{ic:"yazi",label:"Ogren",desc:"Yapi, Reading ve Listening stratejisi, Speaking sablonlari, Integrated ve Academic Discussion Writing.",href:"toefl-ogren.html"}],
-  sections:[{label:"Ogren",units:[{name:"TOEFL iBT",desc:"Yapi, Speaking ve Writing sablonlari",state:"live",lessons:[{name:"Yapi, Speaking ve Writing",s:"todo",href:"toefl-ogren.html"}]}]}]},
+ {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT 2026 . adaptive, dort beceri",pct:0,
+  tools:[{ic:"yazi",label:"Ogren",desc:"2026 formati: Reading, Listening, Speaking (Listen and Repeat, Take an Interview) ve Writing (Email, Academic Discussion). Strateji + puanli alistirmalar.",href:"toefl-ogren.html"}],
+  sections:[{label:"Ogren . 2026 Format",units:[
+    {name:"Genel . 2026 Yapisi",desc:"Adaptive format, dort bolum",state:"live",lessons:[
+      {name:"2026 Yeni Format",s:"todo",href:"toefl-ogren.html#yapi"}]},
+    {name:"Reading",desc:"Complete the Words, Daily Life, Academic Passage",state:"live",lessons:[
+      {name:"Yapi ve Strateji",s:"todo",href:"toefl-ogren.html#read-genel"},
+      {name:"Complete the Words & Daily Life",s:"todo",href:"toefl-ogren.html#read-words-daily"},
+      {name:"Academic Passage",s:"todo",href:"toefl-ogren.html#read-academic"}]},
+    {name:"Listening",desc:"Dort gorev tipi, not alma",state:"live",lessons:[
+      {name:"Dort Gorev ve Not Alma",s:"todo",href:"toefl-ogren.html#listen-genel"},
+      {name:"Announcement & Academic Talk",s:"todo",href:"toefl-ogren.html#listen-mono"},
+      {name:"Choose a Response & Conversation",s:"todo",href:"toefl-ogren.html#listen-dialog"}]},
+    {name:"Speaking",desc:"Listen and Repeat, Take an Interview",state:"live",lessons:[
+      {name:"Kriterler ve IRT",s:"todo",href:"toefl-ogren.html#speak-genel"},
+      {name:"Listen and Repeat",s:"todo",href:"toefl-ogren.html#speak-repeat"},
+      {name:"Take an Interview",s:"todo",href:"toefl-ogren.html#speak-interview"}]},
+    {name:"Writing",desc:"Build a Sentence, Email, Academic Discussion",state:"live",lessons:[
+      {name:"Uc Gorev ve Build a Sentence",s:"todo",href:"toefl-ogren.html#write-genel"},
+      {name:"Write an Email",s:"todo",href:"toefl-ogren.html#write-email"},
+      {name:"Academic Discussion",s:"todo",href:"toefl-ogren.html#write-discussion"}]}
+  ]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1 metin turleri",pct:0,
   tools:[{ic:"soru",label:"Metin turleri",desc:"Makale, blog, konusma, brosur, gorus yazisi, resmi mektup. Amac, kitle, ton karsilastirmalari.",href:"ib-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"Paper 1 ve metin turleri",desc:"Metin turleri, kriterler, Paper 1 yazma",state:"live",lessons:[{name:"Metin turleri ve Paper 1",s:"todo",href:"ib-ogren.html"}]}]}]},

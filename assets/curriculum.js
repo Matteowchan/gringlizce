@@ -39,7 +39,7 @@ var EXAMS=[
   tools:[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
     {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bolum bazli calisma.",href:"ielts-bolum-calisma.html"},
-    {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, bilim, cevre, egitim ve daha fazlasi.",href:"kelime-bankasi.html"},
+    {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, 150 kelime, otomatik puanli.",href:"ielts-kelime.html"},
     {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"ielts-deneme.html"},
   ],
   sections:[{label:"Ogren . Beceriler",units:[
@@ -50,7 +50,13 @@ var EXAMS=[
     {name:"Listening",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
       {name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"},{name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"}]},
     {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[
-      {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]}]}]},
+      {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]},
+    {name:"Kelime",desc:"15 tema paketi, 150 kelime, otomatik puanli quizler",state:"live",lessons:[
+      {name:"15 kelime paketi ve quizler",s:"todo",href:"ielts-kelime.html"}]},
+    {name:"Spelling ve Exact Wording",desc:"Yazim, cogul, kelime siniri ve homofon drilleri",state:"live",lessons:[
+      {name:"Bes yazim ve exact wording drilli",s:"todo",href:"ielts-spelling.html"}]},
+    {name:"Gramer Dogrulugu",desc:"Yedi hata turu, 113 alistirma",state:"live",lessons:[
+      {name:"Yedi hata turu, 113 alistirma",s:"todo",href:"ielts-gramer.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT . Integrated Writing, Academic Discussion",pct:0,
   tools:[{ic:"yazi",label:"Yazi",desc:"Integrated ve academic discussion pratikleri. Hazirlaniyor.",href:"#"}],
   sections:[{label:"Ogren",units:[{name:"Integrated Writing",desc:"hazirlaniyor",state:"soon",lessons:[{name:"Yakinda",s:"todo"}]}]}]},

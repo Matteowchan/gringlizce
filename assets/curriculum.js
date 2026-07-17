@@ -88,7 +88,8 @@ var EXAMS=[
     {name:"Kisisel Turler",desc:"Blog, gunluk, gayriresmi mektup",state:"live",lessons:[
       {name:"Blog / Gunluk",s:"todo",href:"ib-ogren.html#t-blog"},
       {name:"Gunluk (Diary)",s:"todo",href:"ib-ogren.html#t-diary"},
-      {name:"Gayriresmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-informal"}]},
+      {name:"Gayriresmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-informal"},
+      {name:"Sosyal Medya Gonderisi",s:"todo",href:"ib-ogren.html#t-social"}]},
     {name:"Profesyonel Turler",desc:"Resmi mektup, rapor, oneri, yonerge, deneme",state:"live",lessons:[
       {name:"Resmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-letter"},
       {name:"Resmi Rapor (Report)",s:"todo",href:"ib-ogren.html#t-report"},
@@ -102,7 +103,9 @@ var EXAMS=[
       {name:"Gorus Yazisi (Opinion Column)",s:"todo",href:"ib-ogren.html#t-opinion"},
       {name:"Roportaj (Interview)",s:"todo",href:"ib-ogren.html#t-interview"},
       {name:"Haber (News Report)",s:"todo",href:"ib-ogren.html#t-news"},
-      {name:"Inceleme (Review)",s:"todo",href:"ib-ogren.html#t-review"}]},
+      {name:"Inceleme (Review)",s:"todo",href:"ib-ogren.html#t-review"},
+      {name:"Reklam (Advertisement)",s:"todo",href:"ib-ogren.html#t-ad"},
+      {name:"Web Sayfasi (Web Page)",s:"todo",href:"ib-ogren.html#t-webpage"}]},
     {name:"Writing",desc:"Paper 1 yazma + Gri AI degerlendirme",state:"live",lessons:[
       {name:"Paper 1 Yazma",s:"todo",href:"ib-ogren.html#paper1"}]}
   ]}]},

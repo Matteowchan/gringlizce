@@ -34,7 +34,60 @@ var EXAMS=[
     {name:"Unite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
       {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"}]}]},
-   {label:"Ogren . Math",units:[
+      {label:"Ogren . Ucretsiz Soru Modulu",units:[
+        {name:"Dilbilgisi",desc:"Standard English Conventions - noktalama, uyum, niteleyici, paralel yapi, zaman",state:"live",lessons:[
+            {name:"Sentence Boundaries",s:"todo",href:"sat-ogren.html#g11"},
+            {name:"Punctuation — Commas",s:"todo",href:"sat-ogren.html#g12"},
+            {name:"Punctuation — Colons, Semicolons & Dashes",s:"todo",href:"sat-ogren.html#g13"},
+            {name:"Subject–Verb Agreement",s:"todo",href:"sat-ogren.html#g14"},
+            {name:"Pronoun Reference & Agreement",s:"todo",href:"sat-ogren.html#g15"},
+            {name:"Modifiers — Dangling & Misplaced",s:"todo",href:"sat-ogren.html#g16"},
+            {name:"Parallel Structure",s:"todo",href:"sat-ogren.html#g17"},
+            {name:"Verb Tense & Mood",s:"todo",href:"sat-ogren.html#g18"},
+            {name:"Relative Clauses & Subordination",s:"todo",href:"sat-ogren.html#g19"},
+            {name:"Mixed Grammar Review",s:"todo",href:"sat-ogren.html#g110"},
+            {name:"Boundaries in Paragraph Context",s:"todo",href:"sat-ogren.html#g21"},
+            {name:"Commas — Advanced",s:"todo",href:"sat-ogren.html#g22"},
+            {name:"Colons & Semicolons in Context",s:"todo",href:"sat-ogren.html#g23"},
+            {name:"Agreement in Complex Sentences",s:"todo",href:"sat-ogren.html#g24"},
+            {name:"Pronoun Clarity",s:"todo",href:"sat-ogren.html#g25"},
+            {name:"Modifiers — Advanced",s:"todo",href:"sat-ogren.html#g26"},
+            {name:"Parallel Structure II",s:"todo",href:"sat-ogren.html#g27"},
+            {name:"Tense Consistency",s:"todo",href:"sat-ogren.html#g28"},
+            {name:"Subordinate Clauses",s:"todo",href:"sat-ogren.html#g29"},
+            {name:"Mixed Grammar Review II",s:"todo",href:"sat-ogren.html#g210"},
+            {name:"Apostrophes & Possessives",s:"todo",href:"sat-ogren.html#g31"},
+            {name:"Concision & Redundancy",s:"todo",href:"sat-ogren.html#g32"},
+            {name:"Nonrestrictive vs Restrictive Elements",s:"todo",href:"sat-ogren.html#g33"},
+            {name:"Indefinite Pronoun Agreement",s:"todo",href:"sat-ogren.html#g34"},
+            {name:"Verb Forms — Gerunds, Infinitives, Participles",s:"todo",href:"sat-ogren.html#g35"},
+            {name:"Faulty Comparisons",s:"todo",href:"sat-ogren.html#g36"},
+            {name:"Sentence Combining — Reduction & Subordination",s:"todo",href:"sat-ogren.html#g37"},
+            {name:"Style, Register & Tone Consistency",s:"todo",href:"sat-ogren.html#g38"},
+            {name:"Pronoun Case — Who/Whom & Reflexives",s:"todo",href:"sat-ogren.html#g39"},
+            {name:"Mixed Grammar Review III",s:"todo",href:"sat-ogren.html#g310"},
+            {name:"Transitions in Paragraph Context",s:"todo",href:"sat-ogren.html#sp1"},
+            {name:"Logical Sentence Placement",s:"todo",href:"sat-ogren.html#sp2"}]},
+        {name:"Kelime",desc:"Words in Context - baglamda kelime",state:"live",lessons:[
+            {name:"Foundation Vocabulary",s:"todo",href:"sat-ogren.html#v1"},
+            {name:"Academic & Scientific Vocabulary",s:"todo",href:"sat-ogren.html#v2"},
+            {name:"Critical Thinking Vocabulary",s:"todo",href:"sat-ogren.html#v3"},
+            {name:"Literature & Arts Vocabulary",s:"todo",href:"sat-ogren.html#v4"},
+            {name:"Social & Political Vocabulary",s:"todo",href:"sat-ogren.html#v5"},
+            {name:"Philosophical & Analytical Vocabulary",s:"todo",href:"sat-ogren.html#v6"},
+            {name:"Argumentation & Logic Vocabulary",s:"todo",href:"sat-ogren.html#v7"},
+            {name:"Historical & Institutional Vocabulary",s:"todo",href:"sat-ogren.html#v8"},
+            {name:"Rhetoric & Expression Vocabulary",s:"todo",href:"sat-ogren.html#v9"},
+            {name:"Mixed Review — Advanced Vocabulary",s:"todo",href:"sat-ogren.html#v10"}]},
+        {name:"Yazım",desc:"Akademik kelime yazimi - kelimeyi yaz",state:"live",lessons:[
+            {name:"Academic Verbs",s:"todo",href:"sat-ogren.html#spell1"},
+            {name:"Research & Analysis",s:"todo",href:"sat-ogren.html#spell2"},
+            {name:"Social Science & Society",s:"todo",href:"sat-ogren.html#spell3"},
+            {name:"Science & Technology",s:"todo",href:"sat-ogren.html#spell4"},
+            {name:"Academic Adjectives & Adverbs",s:"todo",href:"sat-ogren.html#spell5"},
+            {name:"Advanced Academic & TOEFL",s:"todo",href:"sat-ogren.html#spell6"}]}]}
+,
+{label:"Ogren . Math",units:[
     {name:"Math",desc:"Algebra, veri, ileri matematik, geometri",state:"live",lessons:[{name:"Dort konu drilleri",s:"todo",href:"sat-math.html"}]}]}]},
  {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
@@ -177,7 +230,11 @@ var EXAMS=[
       {name:"Diyalog Tamamlama",s:"todo",href:"ydt-ogren.html#diyalog"},
       {name:"Restatement",s:"todo",href:"ydt-ogren.html#restatement"},
       {name:"Ceviri",s:"todo",href:"ydt-ogren.html#ceviri"},
-      {name:"Paragraf",s:"todo",href:"ydt-ogren.html#paragraf"}]}
+      {name:"Paragraf",s:"todo",href:"ydt-ogren.html#paragraf"},
+      {name:"Koşul Cümleleri",s:"todo",href:"ydt-ogren.html#conditionals"},
+      {name:"Kip Fiilleri (Modals)",s:"todo",href:"ydt-ogren.html#modals"},
+      {name:"İlgi Cümlecikleri (Relative Clauses)",s:"todo",href:"ydt-ogren.html#relative"},
+      {name:"Zamanlar (Tenses)",s:"todo",href:"ydt-ogren.html#tenses"}]}
   ]}]},
  {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"Akademik . tum soru tipleri, bes sikli",pct:0,
   tools:[{ic:"soru",label:"Drilller",desc:"Akademik kelime, dilbilgisi, baglac, cloze, cumle tamamlama, restatement, ceviri, paragraf ve diyalog drilleri. Bes sikli, puanli.",href:"yds-ogren.html"}],
@@ -194,7 +251,10 @@ var EXAMS=[
       {name:"Restatement",s:"todo",href:"yds-ogren.html#restatement"},
       {name:"Ceviri",s:"todo",href:"yds-ogren.html#ceviri"},
       {name:"Paragraf",s:"todo",href:"yds-ogren.html#paragraf"},
-      {name:"Diyalog Tamamlama",s:"todo",href:"yds-ogren.html#diyalog"}]}
+      {name:"Diyalog Tamamlama",s:"todo",href:"yds-ogren.html#diyalog"},
+      {name:"Mini Deneme 1",s:"todo",href:"yds-ogren.html#deneme1"},
+      {name:"Mini Deneme 2",s:"todo",href:"yds-ogren.html#deneme2"},
+      {name:"Mini Deneme 3",s:"todo",href:"yds-ogren.html#deneme3"}]}
   ]}]},
 ];
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,

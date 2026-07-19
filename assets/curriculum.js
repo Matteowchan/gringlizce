@@ -81,7 +81,12 @@ var EXAMS=[
             {name:"Mixed Review — Advanced Vocabulary",s:"todo",href:"sat-ogren.html#v10"}]}]}
 ,
 {label:"Ogren . Math",units:[
-    {name:"Math",desc:"Algebra, veri, ileri matematik, geometri",state:"live",lessons:[{name:"Dort konu drilleri",s:"todo",href:"sat-math.html"}]}]}]},
+    {name:"Math",desc:"Dort ana konu, konu konu cozumlu - 120 soru, dort sikli, ucretsiz",state:"live",lessons:[
+      {name:"SAT Math Yapisi",s:"todo",href:"sat-math.html#basla"},
+      {name:"Heart of Algebra (30 soru)",s:"todo",href:"sat-math.html#algebra"},
+      {name:"Problem Solving & Data (30 soru)",s:"todo",href:"sat-math.html#data"},
+      {name:"Advanced Math (30 soru)",s:"todo",href:"sat-math.html#advanced"},
+      {name:"Geometry & Trigonometri (30 soru)",s:"todo",href:"sat-math.html#geometry"}]}]}]},
  {id:"ielts",name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},

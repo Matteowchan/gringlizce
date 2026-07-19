@@ -16,6 +16,7 @@
   <meta name="theme-color" content="#1a2a28">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/site-overrides.css">
+  <script>try{var t=localStorage.getItem('gri-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <style>
     body { background: #fafaf7; margin: 0; }
 
@@ -1024,5 +1025,132 @@
     })();
   </script>
 <script src="assets/breadcrumb.js" defer></script>
+<!-- ============ GRI EXAM ENHANCE (görsel + gezgin + flag) ============ -->
+<style id="ex-enhance">
+  :root{--ex-bg:#F4F2EC;--ex-surf:#FBF6EC;--ex-surf2:#FFFFFF;--ex-ink:#241E17;--ex-muted:#6E6353;--ex-line:#E3D8C3;--ex-accent:#2E6E6A;--ex-accent-ink:#FFFFFF;--ex-accent-soft:#DDEBE8;--ex-good:#1FA971;--ex-good-bg:#E1F3EA;--ex-warn:#B0791C;--ex-warn-bg:#F7ECD2;--ex-shadow:0 4px 18px rgba(40,30,20,.10);}
+  html[data-theme="dark"]{--ex-bg:#15130F;--ex-surf:#201C17;--ex-surf2:#221E18;--ex-ink:#F1E9D9;--ex-muted:#B7AB96;--ex-line:#332C22;--ex-accent:#6FB6AF;--ex-accent-ink:#15130F;--ex-accent-soft:#22322F;--ex-good:#5DCAA5;--ex-good-bg:rgba(31,169,113,.18);--ex-warn:#D8B25A;--ex-warn-bg:rgba(216,178,90,.16);--ex-shadow:0 6px 24px rgba(0,0,0,.4);}
+  body{background:var(--ex-bg)!important;}
+  .timer-bar{background:var(--ex-surf)!important;color:var(--ex-ink)!important;border-bottom:1px solid var(--ex-line);}
+  .timer-bar .timer strong{color:var(--ex-accent)!important;}
+  .font-zoom-btn{background:transparent!important;color:var(--ex-muted)!important;border-color:var(--ex-line)!important;}
+  .font-zoom-btn.active{background:var(--ex-accent)!important;color:var(--ex-accent-ink)!important;}
+  .tab-bar{background:var(--ex-surf)!important;border-bottom-color:var(--ex-line)!important;}
+  .tab-btn{color:var(--ex-muted)!important;}
+  .tab-btn:hover{color:var(--ex-ink)!important;background:transparent!important;}
+  .tab-btn.active{color:var(--ex-ink)!important;border-bottom-color:var(--ex-accent)!important;}
+  .tab-btn .tab-progress{background:var(--ex-accent-soft)!important;color:var(--ex-accent)!important;}
+  .tab-btn.active .tab-progress{background:var(--ex-accent)!important;color:var(--ex-accent-ink)!important;}
+  .tab-btn.completed .tab-progress{background:var(--ex-good)!important;color:#fff!important;}
+  .passage-left,.passage-right{background:var(--ex-surf2)!important;}
+  .passage-left{border-right-color:var(--ex-line)!important;}
+  .passage-title{color:var(--ex-ink)!important;border-bottom-color:var(--ex-accent)!important;}
+  .passage-content{color:var(--ex-ink)!important;}
+  .passage-content strong{color:var(--ex-accent)!important;}
+  .question-group{border-top-color:var(--ex-line)!important;}
+  .group-header .q-range{color:var(--ex-ink)!important;}
+  .group-header .instructions{color:var(--ex-muted)!important;}
+  .q-num-prefix{background:var(--ex-accent)!important;color:var(--ex-accent-ink)!important;border-radius:7px!important;}
+  .match-item,.mcq-question{background:var(--ex-surf)!important;border:1px solid var(--ex-line)!important;border-left:1px solid var(--ex-line)!important;border-radius:11px!important;}
+  .match-item select,.q-input{color:var(--ex-ink);}
+  .match-item select{border:1.5px solid var(--ex-line)!important;background:var(--ex-surf2)!important;border-radius:8px!important;}
+  .match-item select:focus,.q-input:focus{border-color:var(--ex-accent)!important;}
+  .match-item select.answered,.q-input.answered{background:var(--ex-good-bg)!important;border-color:var(--ex-good)!important;}
+  .q-input{border-bottom:2px solid var(--ex-line)!important;color:var(--ex-ink)!important;}
+  .mcq-options label{border:1px solid var(--ex-line);border-radius:9px;margin:5px 0;transition:border-color .12s,background .12s;}
+  .mcq-options label:hover{border-color:var(--ex-accent);background:var(--ex-accent-soft)!important;}
+  .mcq-options input:checked + .opt-letter{color:var(--ex-accent);}
+  .mcq-options label:has(input:checked){border-color:var(--ex-accent);background:var(--ex-accent-soft)!important;}
+  .mcq-options .opt-letter{color:var(--ex-accent)!important;}
+  .next-part-btn{background:var(--ex-surf2)!important;border-color:var(--ex-accent)!important;color:var(--ex-accent)!important;border-radius:9px!important;}
+  .next-part-btn:hover{background:var(--ex-accent)!important;color:var(--ex-accent-ink)!important;}
+  .modal{background:var(--ex-surf2)!important;border-radius:14px!important;}
+  .modal h3{color:var(--ex-ink)!important;} .modal p{color:var(--ex-muted)!important;}
+  /* flag button per question */
+  .ex-flag{background:none;border:none;cursor:pointer;color:var(--ex-line);font-size:15px;padding:2px 4px;line-height:1;vertical-align:middle;margin-left:4px;transition:color .12s;}
+  .ex-flag:hover{color:var(--ex-warn);}
+  .ex-flag.on{color:var(--ex-warn);}
+  /* floating navigator */
+  .ex-fab{position:fixed;right:18px;bottom:18px;z-index:150;background:var(--ex-accent);color:var(--ex-accent-ink);border:none;border-radius:24px;padding:11px 18px;font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:var(--ex-shadow);display:flex;align-items:center;gap:8px;}
+  .ex-fab b{font-variant-numeric:tabular-nums;}
+  .ex-navpanel{position:fixed;right:18px;bottom:66px;z-index:150;background:var(--ex-surf2);border:1px solid var(--ex-line);border-radius:14px;box-shadow:var(--ex-shadow);padding:14px;width:min(340px,88vw);display:none;}
+  .ex-navpanel.open{display:block;}
+  .ex-navpanel h4{margin:0 0 10px;font-family:Inter,system-ui,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ex-muted);}
+  .ex-navgrid{display:flex;flex-wrap:wrap;gap:6px;max-height:46vh;overflow:auto;}
+  .ex-navbtn{width:30px;height:30px;border-radius:7px;border:1px solid var(--ex-line);background:var(--ex-surf2);color:var(--ex-muted);font-size:12px;font-family:Inter,system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .ex-navbtn.answered{background:var(--ex-accent);color:var(--ex-accent-ink);border-color:var(--ex-accent);}
+  .ex-navbtn.flag{background:var(--ex-warn-bg);color:var(--ex-warn);border-color:var(--ex-warn);}
+  .ex-navbtn.flag.answered{background:var(--ex-warn);color:#fff;}
+  .ex-legend{display:flex;gap:12px;margin-top:11px;font-size:11px;color:var(--ex-muted);font-family:Inter,system-ui,sans-serif;flex-wrap:wrap;}
+  .ex-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px;}
+</style>
+<button class="ex-fab" id="exFab" type="button" aria-label="Soru gezgini"><span>Sorular</span><b id="exCount">0/0</b></button>
+<div class="ex-navpanel" id="exNav"><h4>Soru Gezgini</h4><div class="ex-navgrid" id="exGrid"></div>
+  <div class="ex-legend"><span><i style="background:var(--ex-accent)"></i>cevaplı</span><span><i style="border:1px solid var(--ex-line)"></i>boş</span><span><i style="background:var(--ex-warn-bg);border:1px solid var(--ex-warn)"></i>işaretli</span></div>
+</div>
+<script>
+(function(){
+  var flagged={}, container, built=false;
+  function el(id){return document.getElementById(id);}
+  function inputsFor(n){return (container||document).querySelectorAll('[data-q="'+n+'"]');}
+  function isAnswered(n){
+    var els=inputsFor(n); if(!els.length) return false;
+    for(var i=0;i<els.length;i++){var e=els[i];
+      if(e.type==='checkbox'){ if((container||document).querySelectorAll('input[type=checkbox][data-q="'+n+'"]:checked').length)return true; }
+      else if((e.value||'')!=='') return true;
+    }
+    return false;
+  }
+  function collectItems(){
+    var items=[], seen={};
+    (container||document).querySelectorAll('.q-num-prefix').forEach(function(pf){
+      var t=pf.textContent.replace(/[–—]/g,'-').trim();
+      var m=t.match(/^(\d+)/); if(!m) return;
+      var num=m[1]; if(seen[num]) return; seen[num]=1;
+      var sec=pf.closest('.passage-section');
+      items.push({num:num,label:t,part:sec?sec.getAttribute('data-part-number'):null,anchor:pf});
+      // inject flag button once
+      if(!pf.parentNode.querySelector('.ex-flag')){
+        var b=document.createElement('button'); b.type='button'; b.className='ex-flag'+(flagged[num]?' on':''); b.title='İşaretle / sonra dön'; b.setAttribute('data-flag',num);
+        b.innerHTML='&#9873;';
+        b.addEventListener('click',function(ev){ev.stopPropagation();flagged[num]=!flagged[num];b.classList.toggle('on',!!flagged[num]);refresh();});
+        pf.insertAdjacentElement('afterend',b);
+      }
+    });
+    items.sort(function(a,b){return (+a.num)-(+b.num);});
+    return items;
+  }
+  var cache=[];
+  function build(){
+    container=el('passagesContainer'); if(!container) return;
+    cache=collectItems(); if(!cache.length){built=false;return;}
+    built=true;
+    var g=el('exGrid'); g.innerHTML='';
+    cache.forEach(function(it){
+      var b=document.createElement('button'); b.type='button'; b.className='ex-navbtn'; b.textContent=it.num; b.setAttribute('data-nav',it.num);
+      b.addEventListener('click',function(){
+        try{ if(it.part && typeof setActivePart==='function') setActivePart(parseInt(it.part)); }catch(e){}
+        setTimeout(function(){ it.anchor.scrollIntoView({behavior:'smooth',block:'center'}); },60);
+        el('exNav').classList.remove('open');
+      });
+      g.appendChild(b);
+    });
+    refresh();
+  }
+  function refresh(){
+    if(!built) return; var ans=0;
+    cache.forEach(function(it){
+      var a=isAnswered(it.num); if(a)ans++;
+      var b=el('exGrid').querySelector('[data-nav="'+it.num+'"]'); if(b){b.classList.toggle('answered',a);b.classList.toggle('flag',!!flagged[it.num]);}
+    });
+    el('exCount').textContent=ans+'/'+cache.length;
+  }
+  document.addEventListener('input',function(e){ if(e.target.closest&&e.target.closest('#passagesContainer')) refresh(); });
+  document.addEventListener('change',function(e){ if(e.target.closest&&e.target.closest('#passagesContainer')) refresh(); });
+  el('exFab').addEventListener('click',function(){ if(!built)build(); el('exNav').classList.toggle('open'); });
+  // rebuild when passages render (async Supabase load)
+  var obs=new MutationObserver(function(){ var c=el('passagesContainer'); if(c && c.querySelector('.q-num-prefix') && (!built||c.querySelectorAll('.q-num-prefix').length!==cache.length)) build(); });
+  document.addEventListener('DOMContentLoaded',function(){ var c=el('passagesContainer'); if(c) obs.observe(c,{childList:true,subtree:true}); setTimeout(build,800); });
+})();
+</script>
 </body>
 </html>

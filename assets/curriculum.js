@@ -167,9 +167,23 @@ var EXAMS=[
       {name:"Ceviri",s:"todo",href:"ydt-ogren.html#ceviri"},
       {name:"Paragraf",s:"todo",href:"ydt-ogren.html#paragraf"}]}
   ]}]},
- {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"960 soruluk paketler",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"YDS ve YOKDIL akademik kelime, dilbilgisi, baglac ve cloze drilleri.",href:"yds-ogren.html"}],
-  sections:[{label:"Ogren",units:[{name:"YDS / YOKDIL drilleri",desc:"Akademik kelime, dilbilgisi, baglac, cloze",state:"live",lessons:[{name:"Akademik kelime, dilbilgisi, baglac, cloze",s:"todo",href:"yds-ogren.html"}]}]}]},
+ {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"Akademik . tum soru tipleri, bes sikli",pct:0,
+  tools:[{ic:"soru",label:"Drilller",desc:"Akademik kelime, dilbilgisi, baglac, cloze, cumle tamamlama, restatement, ceviri, paragraf ve diyalog drilleri. Bes sikli, puanli.",href:"yds-ogren.html"}],
+  sections:[{label:"Ogren",units:[
+    {name:"Yapi ve Strateji",desc:"YDS/YOKDIL yapisi, puanlama",state:"live",lessons:[
+      {name:"YDS / YOKDIL Yapisi",s:"todo",href:"yds-ogren.html#basla"}]},
+    {name:"Dil Bilgisi ve Kelime",desc:"Akademik kelime, dilbilgisi, baglaclar",state:"live",lessons:[
+      {name:"Akademik Kelime",s:"todo",href:"yds-ogren.html#kelime"},
+      {name:"Dilbilgisi",s:"todo",href:"yds-ogren.html#dilbilgisi"},
+      {name:"Baglaclar",s:"todo",href:"yds-ogren.html#baglac"}]},
+    {name:"Soru Tipleri",desc:"Cloze, cumle tamamlama, restatement, ceviri, paragraf, diyalog",state:"live",lessons:[
+      {name:"Cloze Test",s:"todo",href:"yds-ogren.html#cloze"},
+      {name:"Cumle Tamamlama",s:"todo",href:"yds-ogren.html#cumletam"},
+      {name:"Restatement",s:"todo",href:"yds-ogren.html#restatement"},
+      {name:"Ceviri",s:"todo",href:"yds-ogren.html#ceviri"},
+      {name:"Paragraf",s:"todo",href:"yds-ogren.html#paragraf"},
+      {name:"Diyalog Tamamlama",s:"todo",href:"yds-ogren.html#diyalog"}]}
+  ]}]},
 ];
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,
     PULSE: { overall: 0, streak: 0, weekLessons: 0, newBadges: 0 } };

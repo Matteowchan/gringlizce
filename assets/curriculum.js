@@ -226,7 +226,6 @@ var EXAMS=[
         { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
-    { label: "Yanlış Defteri", href: "yanlis-defteri.html" },
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
     { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },

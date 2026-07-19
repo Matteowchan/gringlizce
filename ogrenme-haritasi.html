@@ -144,17 +144,10 @@ button{font-family:inherit}
 .pinbox{position:absolute;right:0;top:2px;display:inline-flex;align-items:center;gap:6px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:20px;padding:6px 13px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:var(--gri-ink-soft);transition:.15s}
 .pinbox svg{width:15px;height:15px}
 .pinbox:hover,.pinbox.on{border-color:var(--gri-gold);color:var(--gri-gold)}
-.lesson .pin{flex:none;width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--gri-line);font-size:16px;line-height:1;padding:0;transition:.15s;order:3}
-.lesson .pin:hover{color:var(--gri-gold);transform:scale(1.15)}
-.lesson.pinned .pin{color:var(--gri-gold)}
-.pinned-panel{background:var(--gri-surface);border:1px solid var(--gri-gold);border-radius:14px;padding:13px 18px;margin-bottom:18px}
-.pinned-panel .pp-h{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;margin-bottom:8px;color:var(--gri-ink);display:flex;align-items:center;gap:8px}
-.pinned-panel .pp-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--gri-line-soft)}
-.pinned-panel .pp-row a{flex:1;color:var(--gri-accent);text-decoration:none;font-family:Inter,sans-serif;font-size:13.5px;font-weight:600}
-.pinned-panel .pp-row a:hover{text-decoration:underline}
-.pinned-panel .pp-ex{font-family:Inter,sans-serif;font-size:11px;color:var(--gri-ink-faint)}
-.pinned-panel .pp-x{border:none;background:none;cursor:pointer;color:var(--gri-ink-faint);font-size:18px;line-height:1;padding:0 4px}
-.pinned-panel .pp-x:hover{color:var(--gri-gold)}
+.exa-pin{align-self:center;flex:none;border:none;background:none;cursor:pointer;color:var(--gri-line);font-size:21px;line-height:1;padding:0 6px;transition:.15s}
+.exa-pin:hover{color:var(--gri-gold);transform:scale(1.18)}
+.exam-pinned .exa-pin{color:var(--gri-gold)}
+.exam-pinned{box-shadow:inset 3px 0 0 var(--gri-gold)}
 
 /* ============ PULSE STRIP ============ */
 .pulse{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin:6px 0 2px}
@@ -261,7 +254,6 @@ button{font-family:inherit}
       <span class="pinbox-n">0</span>
     </button>
   </div>
-  <div class="pinned-panel" id="pinnedPanel" hidden></div>
   <div class="exam-list" id="examList"></div>
 
   <div class="adslot">
@@ -289,8 +281,7 @@ const GO='<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M
 function lessonRow(l){
   const cls=l.s==='done'?'done':l.s==='prog'?'prog':'';
   const right=l.href?`<a class="go" href="${l.href}">${l.s==='todo'?'Basla':'Ac'}</a>`:`<span class="soon"><svg class="sleepcat" viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px;margin-right:5px"><use href="#cat-sleep"/></svg>hazirlaniyor</span>`;
-  const pin=l.href?`<button class="pin" data-pin title="Yer imine ekle / cikar" aria-label="Yer imi">&#9733;</button>`:'';
-  return `<div class="lesson ${cls}"${l.href?` data-lk="${l.href}"`:''}><span class="dot"></span><span class="ln">${l.name}</span>${right}${pin}</div>`;
+  return `<div class="lesson ${cls}"><span class="dot"></span><span class="ln">${l.name}</span>${right}</div>`;
 }
 function unitBlock(u){
   const st=u.state==='live'?'st-live':'st-soon', lbl=u.state==='live'?'aktif':'yakinda';
@@ -304,10 +295,12 @@ function toolCard(t){
 function examBlock(e){
   const tools=e.tools.map(toolCard).join('');
   const learn=e.sections.map(s=>`<div class="sec-label">${s.label}</div>${s.units.map(unitBlock).join('')}`).join('');
-  return `<div class="exam ${e.big?'big':''}" data-exam="${e.id}">
+  const pinned=getPinnedExams().indexOf(e.id)>=0;
+  return `<div class="exam ${e.big?'big':''}${pinned?' exam-pinned':''}" data-exam="${e.id}">
     <div class="exa-head" data-exam-head>
       <div class="exa-mark">${e.mark}</div>
       <div class="exa-meta"><div class="exa-name">${e.name}</div><div class="exa-desc">${e.desc}</div></div>
+      <button class="exa-pin" data-exam-pin="${e.id}" title="Yer imi (en uste al)" aria-label="Yer imi">&#9733;</button>
       <div class="exa-ring">${ring(e.pct,46)}</div>
       ${CHEVX('exa-chev')}
     </div>
@@ -317,31 +310,37 @@ function examBlock(e){
     </div>
   </div>`;
 }
-function render(){document.getElementById('examList').innerHTML=EXAMS.map(examBlock).join('');}
-render();
-
-/* ===== yer imi (pin) ===== */
-function getPins(){try{return JSON.parse(localStorage.getItem('gri_pins')||'[]');}catch(e){return [];}}
-function setPins(a){try{localStorage.setItem('gri_pins',JSON.stringify(a));}catch(e){}}
-function lessonMeta(href){for(var i=0;i<EXAMS.length;i++){var ex=EXAMS[i];var secs=ex.sections||[];for(var j=0;j<secs.length;j++){var us=secs[j].units||[];for(var k=0;k<us.length;k++){var ls=us[k].lessons||[];for(var m=0;m<ls.length;m++){if(ls[m].href===href)return {name:ls[m].name,exam:ex.name};}}}}return null;}
-function renderPinned(){
-  var pins=getPins();
-  var box=document.getElementById('pinbox');if(box){var n=box.querySelector('.pinbox-n');if(n)n.textContent=pins.length;}
-  document.querySelectorAll('.lesson[data-lk]').forEach(function(el){el.classList.toggle('pinned',pins.indexOf(el.getAttribute('data-lk'))>=0);});
-  var panel=document.getElementById('pinnedPanel');if(!panel)return;
-  if(!pins.length){panel.innerHTML='';panel.hidden=true;if(box)box.classList.remove('on');return;}
-  panel.innerHTML='<div class="pp-h">Isaretli dersler</div>'+pins.map(function(h){var mm=lessonMeta(h);return mm?'<div class="pp-row"><a href="'+h+'">'+mm.name+'</a><span class="pp-ex">'+mm.exam+'</span><button class="pp-x" data-unpin="'+h+'" title="Kaldir">&times;</button></div>':'';}).join('');
+/* ===== yer imi: sinav (exam) seviyesinde, isaretli en uste ===== */
+function getPinnedExams(){try{return JSON.parse(localStorage.getItem('gri_pinned_exams')||'[]');}catch(e){return [];}}
+function setPinnedExams(a){try{localStorage.setItem('gri_pinned_exams',JSON.stringify(a));}catch(e){}}
+function updatePinCount(){var box=document.getElementById('pinbox');if(box){var n=box.querySelector('.pinbox-n');if(n)n.textContent=getPinnedExams().length;box.classList.toggle('on',getPinnedExams().length>0);}}
+function reorderExams(){
+  var list=document.getElementById('examList');if(!list)return;
+  var pins=getPinnedExams();
+  var nodes=[].slice.call(list.children);
+  nodes.sort(function(a,b){
+    var pa=pins.indexOf(a.getAttribute('data-exam'))>=0?0:1, pb=pins.indexOf(b.getAttribute('data-exam'))>=0?0:1;
+    if(pa!==pb)return pa-pb;
+    var ia=EXAMS.findIndex(function(x){return x.id===a.getAttribute('data-exam');});
+    var ib=EXAMS.findIndex(function(x){return x.id===b.getAttribute('data-exam');});
+    return ia-ib;
+  });
+  nodes.forEach(function(n){list.appendChild(n);});
 }
-renderPinned();
+function render(){
+  var pins=getPinnedExams();
+  var ordered=EXAMS.filter(function(e){return pins.indexOf(e.id)>=0;}).concat(EXAMS.filter(function(e){return pins.indexOf(e.id)<0;}));
+  document.getElementById('examList').innerHTML=ordered.map(examBlock).join('');
+  updatePinCount();
+}
+render();
 
 /* ============ INTERACTION ============ */
 document.addEventListener('click',e=>{
-  const pin=e.target.closest('[data-pin]');
-  if(pin){const row=pin.closest('.lesson');const lk=row&&row.getAttribute('data-lk');if(lk){let p=getPins();const i=p.indexOf(lk);if(i>=0)p.splice(i,1);else p.push(lk);setPins(p);renderPinned();}return;}
-  const up=e.target.closest('[data-unpin]');
-  if(up){const lk=up.getAttribute('data-unpin');let p=getPins();const i=p.indexOf(lk);if(i>=0){p.splice(i,1);setPins(p);renderPinned();}return;}
+  const ep=e.target.closest('[data-exam-pin]');
+  if(ep){var id=ep.getAttribute('data-exam-pin');var p=getPinnedExams();var i=p.indexOf(id);if(i>=0)p.splice(i,1);else p.push(id);setPinnedExams(p);var card=ep.closest('.exam');if(card)card.classList.toggle('exam-pinned',p.indexOf(id)>=0);reorderExams();updatePinCount();return;}
   const pb=e.target.closest('#pinbox');
-  if(pb){const panel=document.getElementById('pinnedPanel');if(panel&&getPins().length){panel.hidden=!panel.hidden;pb.classList.toggle('on',!panel.hidden);}return;}
+  if(pb){var el=document.getElementById('examList');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});return;}
   const eh=e.target.closest('[data-exam-head]');
   if(eh){eh.closest('.exam').classList.toggle('open');return;}
   const th=e.target.closest('[data-tool]');

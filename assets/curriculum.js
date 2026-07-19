@@ -78,14 +78,7 @@ var EXAMS=[
             {name:"Argumentation & Logic Vocabulary",s:"todo",href:"sat-ogren.html#v7"},
             {name:"Historical & Institutional Vocabulary",s:"todo",href:"sat-ogren.html#v8"},
             {name:"Rhetoric & Expression Vocabulary",s:"todo",href:"sat-ogren.html#v9"},
-            {name:"Mixed Review — Advanced Vocabulary",s:"todo",href:"sat-ogren.html#v10"}]},
-        {name:"Yazım",desc:"Akademik kelime yazimi - kelimeyi yaz",state:"live",lessons:[
-            {name:"Academic Verbs",s:"todo",href:"sat-ogren.html#spell1"},
-            {name:"Research & Analysis",s:"todo",href:"sat-ogren.html#spell2"},
-            {name:"Social Science & Society",s:"todo",href:"sat-ogren.html#spell3"},
-            {name:"Science & Technology",s:"todo",href:"sat-ogren.html#spell4"},
-            {name:"Academic Adjectives & Adverbs",s:"todo",href:"sat-ogren.html#spell5"},
-            {name:"Advanced Academic & TOEFL",s:"todo",href:"sat-ogren.html#spell6"}]}]}
+            {name:"Mixed Review — Advanced Vocabulary",s:"todo",href:"sat-ogren.html#v10"}]}]}
 ,
 {label:"Ogren . Math",units:[
     {name:"Math",desc:"Algebra, veri, ileri matematik, geometri",state:"live",lessons:[{name:"Dort konu drilleri",s:"todo",href:"sat-math.html"}]}]}]},

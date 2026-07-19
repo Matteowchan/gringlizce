@@ -12,26 +12,26 @@ var IC={
 var EXAMS=[
  {id:"sat",name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:0,
   tools:[
-    {ic:"yazi",label:"Ogren Modulu",desc:"Standard English Conventions dilbilgisi ve Words in Context kelime, konu konu 1000 soru, dort sikli SAT formati, aciklamali. Ucretsiz.",href:"sat-ogren.html"},
-    {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankasi, kategori kategori cozum ve aciklamalarla.",href:"sat-soru-bankasi.html"},
-    {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gercek sinav formatinda, adaptif ve puanli.",href:"sat-mock-1.html"},
-    {ic:"kelime",label:"Kelime",desc:"Words in Context kelime setleri, Turkce karsilik ve SAT formatinda quizler.",href:"sat-kelime.html"},
-    {ic:"yazi",label:"Gramer Drill",desc:"Punctuation, boundaries, transitions ve daha fazlasi. Turkce aciklamali drilller.",href:"sat-grammar-drill.html"},
+    {ic:"yazi",label:"Ogren Modulu",desc:"Standard English Conventions dilbilgisi ve Words in Context kelime, konu konu 1000 soru, dört şıklı SAT formatı, açıklamalı. Ücretsiz.",href:"sat-ogren.html"},
+    {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankası, kategori kategori çözüm ve açıklamalarla.",href:"sat-soru-bankasi.html"},
+    {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gerçek sınav formatında, adaptif ve puanlı.",href:"sat-mock-1.html"},
+    {ic:"kelime",label:"Kelime",desc:"Words in Context kelime setleri, Türkçe karşılık ve SAT formatında quizler.",href:"sat-kelime.html"},
+    {ic:"yazi",label:"Gramer Drill",desc:"Punctuation, boundaries, transitions ve daha fazlası. Türkçe açıklamalı driller.",href:"sat-grammar-drill.html"},
   ],
   sections:[{label:"Ogren . Reading & Writing",units:[
-    {name:"Unite 1 . Information and Ideas",desc:"Command of Evidence, Central Ideas, Inferences",state:"live",lessons:[
+    {name:"Ünite 1 . Information and Ideas",desc:"Command of Evidence, Central Ideas, Inferences",state:"live",lessons:[
       {name:"Command of Evidence: Textual",s:"todo",href:"sat-unite-1.html"},
       {name:"Command of Evidence: Quantitative",s:"todo",href:"sat-unite-1.html"},
       {name:"Central Ideas and Details",s:"todo",href:"sat-unite-1.html"},
       {name:"Inferences",s:"todo",href:"sat-unite-1.html"}]},
-    {name:"Unite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"live",lessons:[
+    {name:"Ünite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"live",lessons:[
       {name:"Words in Context",s:"todo",href:"sat-unite-2.html"},
       {name:"Text Structure and Purpose",s:"todo",href:"sat-unite-2.html"},
       {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"}]},
-    {name:"Unite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"live",lessons:[
+    {name:"Ünite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"live",lessons:[
       {name:"Transitions",s:"todo",href:"sat-unite-3.html"},
       {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"}]},
-    {name:"Unite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
+    {name:"Ünite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
       {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"}]}]},
       {label:"Ogren . Ucretsiz Soru Modulu",units:[
@@ -68,7 +68,7 @@ var EXAMS=[
             {name:"Mixed Grammar Review III",s:"todo",href:"sat-ogren.html#g310"},
             {name:"Transitions in Paragraph Context",s:"todo",href:"sat-ogren.html#sp1"},
             {name:"Logical Sentence Placement",s:"todo",href:"sat-ogren.html#sp2"}]},
-        {name:"Kelime",desc:"Words in Context - baglamda kelime",state:"live",lessons:[
+        {name:"Kelime",desc:"Words in Context - bağlamda kelime",state:"live",lessons:[
             {name:"Foundation Vocabulary",s:"todo",href:"sat-ogren.html#v1"},
             {name:"Academic & Scientific Vocabulary",s:"todo",href:"sat-ogren.html#v2"},
             {name:"Critical Thinking Vocabulary",s:"todo",href:"sat-ogren.html#v3"},
@@ -81,46 +81,46 @@ var EXAMS=[
             {name:"Mixed Review — Advanced Vocabulary",s:"todo",href:"sat-ogren.html#v10"}]}]}
 ,
 {label:"Ogren . Math",units:[
-    {name:"Math",desc:"Dort ana konu, konu konu cozumlu - 120 soru, dort sikli, ucretsiz",state:"live",lessons:[
+    {name:"Math",desc:"Dört ana konu, konu konu çözümlü - 120 soru, dört şıklı, ücretsiz",state:"live",lessons:[
       {name:"SAT Math Yapisi",s:"todo",href:"sat-math.html#basla"},
       {name:"Heart of Algebra (30 soru)",s:"todo",href:"sat-math.html#algebra"},
       {name:"Problem Solving & Data (30 soru)",s:"todo",href:"sat-math.html#data"},
       {name:"Advanced Math (30 soru)",s:"todo",href:"sat-math.html#advanced"},
       {name:"Geometry & Trigonometri (30 soru)",s:"todo",href:"sat-math.html#geometry"}]}]}]},
- {id:"ielts",name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
+ {id:"ielts",name:"IELTS",mark:"I",desc:"Academic . dört beceri, kelime, gramer",pct:0,
   tools:[
-    {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
-    {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bolum bazli calisma.",href:"ielts-bolum-calisma.html"},
-    {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, 150 kelime, otomatik puanli.",href:"ielts-kelime.html"},
+    {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 için AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
+    {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bölüm bazlı çalışma.",href:"ielts-bolum-calisma.html"},
+    {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, 150 kelime, otomatik puanlı.",href:"ielts-kelime.html"},
     {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"ielts-deneme.html"},
   ],
   sections:[{label:"Ogren . Beceriler",units:[
     {name:"Reading",desc:"11 soru tipi, 3 tam deneme, 120 soru",state:"live",lessons:[
-      {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Uc tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
-    {name:"Writing",desc:"Task 1 ve Task 2 ayri, bolum bazli denemeler",state:"live",lessons:[
-      {name:"Task 1 . grafik betimleme",s:"todo",href:"ielts-writing-task1.html"},{name:"Task 2 . deneme yazma",s:"todo",href:"ielts-writing-task2.html"},{name:"Writing denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"}]},
-    {name:"Listening",desc:"Ogren modulu ve bolum bazli denemeler",state:"live",lessons:[
-      {name:"Ogren . yapi, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"},{name:"Listening denemeleri . bolum bazli",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"}]},
-    {name:"Speaking",desc:"Kayit protokolu ve on iki kayit gorevi",state:"live",lessons:[
-      {name:"Kayit protokolu ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayit gorevi",s:"todo",href:"ielts-ogren-speaking.html"}]},
-    {name:"Kelime",desc:"15 tema paketi, 150 kelime, otomatik puanli quizler",state:"live",lessons:[
+      {name:"Strateji: Not Given ve paraphrase",s:"todo",href:"ielts-ogren-reading.html"},{name:"Üç tam deneme, 120 soru",s:"todo",href:"ielts-ogren-reading.html"}]},
+    {name:"Writing",desc:"Task 1 ve Task 2 ayrı, bölüm bazlı denemeler",state:"live",lessons:[
+      {name:"Task 1 . grafik betimleme",s:"todo",href:"ielts-writing-task1.html"},{name:"Task 2 . deneme yazma",s:"todo",href:"ielts-writing-task2.html"},{name:"Writing denemeleri . bölüm bazlı",s:"todo",href:"ielts-bolum-calisma.html?bolum=writing"}]},
+    {name:"Listening",desc:"Öğren modülü ve bölüm bazlı denemeler",state:"live",lessons:[
+      {name:"Öğren . yapı, soru tipleri ve kurallar",s:"todo",href:"ielts-ogren-listening.html"},{name:"Listening denemeleri . bölüm bazlı",s:"todo",href:"ielts-bolum-calisma.html?bolum=listening"}]},
+    {name:"Speaking",desc:"Kayıt protokolü ve on iki kayıt görevi",state:"live",lessons:[
+      {name:"Kayıt protokolü ve cevap iskeletleri",s:"todo",href:"ielts-ogren-speaking.html"},{name:"On iki kayıt görevi",s:"todo",href:"ielts-ogren-speaking.html"}]},
+    {name:"Kelime",desc:"15 tema paketi, 150 kelime, otomatik puanlı quizler",state:"live",lessons:[
       {name:"15 kelime paketi ve quizler",s:"todo",href:"ielts-kelime.html"}]},
-    {name:"Spelling ve Exact Wording",desc:"Yazim, cogul, kelime siniri ve homofon drilleri",state:"live",lessons:[
-      {name:"Bes yazim ve exact wording drilli",s:"todo",href:"ielts-spelling.html"},
+    {name:"Spelling ve Exact Wording",desc:"Yazım, çoğul, kelime sınırı ve homofon drilleri",state:"live",lessons:[
+      {name:"Beş yazım ve exact wording drilli",s:"todo",href:"ielts-spelling.html"},
       {name:"Academic Kelime Yazımı (300 kelime, ipuçlu)",s:"todo",href:"toefl-ogren.html#spell1"}]},
-    {name:"Gramer Dogrulugu",desc:"Yedi hata turu, 113 alistirma",state:"live",lessons:[
-      {name:"Yedi hata turu, 113 alistirma",s:"todo",href:"ielts-gramer.html"}]}]}]},
- {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT 2026 . adaptive, dort beceri",pct:0,
-  tools:[{ic:"yazi",label:"Ogren",desc:"2026 formati: Reading, Listening, Speaking (Listen and Repeat, Take an Interview) ve Writing (Email, Academic Discussion). Strateji + puanli alistirmalar.",href:"toefl-ogren.html"}],
+    {name:"Gramer Doğruluğu",desc:"Yedi hata türü, 113 alıştırma",state:"live",lessons:[
+      {name:"Yedi hata türü, 113 alıştırma",s:"todo",href:"ielts-gramer.html"}]}]}]},
+ {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT 2026 . adaptive, dört beceri",pct:0,
+  tools:[{ic:"yazi",label:"Ogren",desc:"2026 formatı: Reading, Listening, Speaking (Listen and Repeat, Take an Interview) ve Writing (Email, Academic Discussion). Strateji + puanlı alıştırmalar.",href:"toefl-ogren.html"}],
   sections:[{label:"Ogren . 2026 Format",units:[
-    {name:"Genel . 2026 Yapisi",desc:"Adaptive format, dort bolum",state:"live",lessons:[
+    {name:"Genel . 2026 Yapisi",desc:"Adaptive format, dört bölüm",state:"live",lessons:[
       {name:"2026 Yeni Format",s:"todo",href:"toefl-ogren.html#yapi"}]},
     {name:"Reading",desc:"Complete the Words, Daily Life, Academic Passage",state:"live",lessons:[
-      {name:"Yapi ve Strateji",s:"todo",href:"toefl-ogren.html#read-genel"},
+      {name:"Yapı ve Strateji",s:"todo",href:"toefl-ogren.html#read-genel"},
       {name:"Complete the Words & Daily Life",s:"todo",href:"toefl-ogren.html#read-words-daily"},
       {name:"Academic Passage",s:"todo",href:"toefl-ogren.html#read-academic"}]},
-    {name:"Listening",desc:"Dort gorev tipi, not alma",state:"live",lessons:[
-      {name:"Dort Gorev ve Not Alma",s:"todo",href:"toefl-ogren.html#listen-genel"},
+    {name:"Listening",desc:"Dört görev tipi, not alma",state:"live",lessons:[
+      {name:"Dört Görev ve Not Alma",s:"todo",href:"toefl-ogren.html#listen-genel"},
       {name:"Announcement & Academic Talk",s:"todo",href:"toefl-ogren.html#listen-mono"},
       {name:"Choose a Response & Conversation",s:"todo",href:"toefl-ogren.html#listen-dialog"}]},
     {name:"Speaking",desc:"Listen and Repeat, Take an Interview",state:"live",lessons:[
@@ -128,10 +128,10 @@ var EXAMS=[
       {name:"Listen and Repeat",s:"todo",href:"toefl-ogren.html#speak-repeat"},
       {name:"Take an Interview",s:"todo",href:"toefl-ogren.html#speak-interview"}]},
     {name:"Writing",desc:"Build a Sentence, Email, Academic Discussion",state:"live",lessons:[
-      {name:"Uc Gorev ve Build a Sentence",s:"todo",href:"toefl-ogren.html#write-genel"},
+      {name:"Üç Görev ve Build a Sentence",s:"todo",href:"toefl-ogren.html#write-genel"},
       {name:"Write an Email",s:"todo",href:"toefl-ogren.html#write-email"},
       {name:"Academic Discussion",s:"todo",href:"toefl-ogren.html#write-discussion"}]},
-    {name:"Kelime Yazımı (Academic Vocabulary)",desc:"Turkce anlamdan kelimeyi yaz - ilk harf + es/zit anlam ipucu, 300 kelime",state:"live",lessons:[
+    {name:"Kelime Yazımı (Academic Vocabulary)",desc:"Türkçe anlamdan kelimeyi yaz - ilk harf + eş/zıt anlam ipucu, 300 kelime",state:"live",lessons:[
       {name:"Academic Verbs",s:"todo",href:"toefl-ogren.html#spell1"},
       {name:"Research & Analysis",s:"todo",href:"toefl-ogren.html#spell2"},
       {name:"Social Science & Society",s:"todo",href:"toefl-ogren.html#spell3"},
@@ -139,80 +139,80 @@ var EXAMS=[
       {name:"Academic Adjectives & Adverbs",s:"todo",href:"toefl-ogren.html#spell5"},
       {name:"Advanced Academic & TOEFL",s:"todo",href:"toefl-ogren.html#spell6"}]}
   ]}]},
- {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin turu + Gri AI",pct:0,
-  tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin turu (makale, blog, gunluk, roportaj, haber, inceleme, rapor, oneri, yonerge, deneme...). Her biri sozlesme + model + Gri AI'li yazma sihirbazi.",href:"ib-ogren.html"}],
+ {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin türü + Gri AI",pct:0,
+  tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin türü (makale, blog, günlük, röportaj, haber, inceleme, rapor, öneri, yönerge, deneme...). Her biri sözleşme + model + Gri AI'li yazma sihirbazı.",href:"ib-ogren.html"}],
   sections:[{label:"Ogren . Paper 1",units:[
-    {name:"Giris ve Kriterler",desc:"Paper 1, A/B/C kriterleri, tur secimi",state:"live",lessons:[
+    {name:"Giriş ve Kriterler",desc:"Paper 1, A/B/C kriterleri, tur secimi",state:"live",lessons:[
       {name:"Paper 1 ve Kriterler",s:"todo",href:"ib-ogren.html#basla"},
       {name:"Karsilastirma Tablosu",s:"todo",href:"ib-ogren.html#karsilastirma"}]},
-    {name:"Kisisel Turler",desc:"Blog, gunluk, gayriresmi mektup",state:"live",lessons:[
-      {name:"Blog / Gunluk",s:"todo",href:"ib-ogren.html#t-blog"},
-      {name:"Gunluk (Diary)",s:"todo",href:"ib-ogren.html#t-diary"},
+    {name:"Kisisel Turler",desc:"Blog, günlük, gayriresmi mektup",state:"live",lessons:[
+      {name:"Blog / Günlük",s:"todo",href:"ib-ogren.html#t-blog"},
+      {name:"Günlük (Diary)",s:"todo",href:"ib-ogren.html#t-diary"},
       {name:"Gayriresmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-informal"},
       {name:"Sosyal Medya Gonderisi",s:"todo",href:"ib-ogren.html#t-social"}]},
-    {name:"Profesyonel Turler",desc:"Resmi mektup, rapor, oneri, yonerge, deneme",state:"live",lessons:[
+    {name:"Profesyonel Turler",desc:"Resmi mektup, rapor, öneri, yönerge, deneme",state:"live",lessons:[
       {name:"Resmi Mektup / E-posta",s:"todo",href:"ib-ogren.html#t-letter"},
       {name:"Resmi Rapor (Report)",s:"todo",href:"ib-ogren.html#t-report"},
-      {name:"Oneri (Proposal, HL)",s:"todo",href:"ib-ogren.html#t-proposal"},
-      {name:"Yonerge (Instructions)",s:"todo",href:"ib-ogren.html#t-instructions"},
+      {name:"Öneri (Proposal, HL)",s:"todo",href:"ib-ogren.html#t-proposal"},
+      {name:"Yönerge (Instructions)",s:"todo",href:"ib-ogren.html#t-instructions"},
       {name:"Deneme (Essay)",s:"todo",href:"ib-ogren.html#t-essay"}]},
-    {name:"Kitle Iletisim Turleri",desc:"Makale, konusma, brosur, gorus, roportaj, haber, inceleme",state:"live",lessons:[
+    {name:"Kitle Iletisim Turleri",desc:"Makale, konuşma, broşür, görüş, röportaj, haber, inceleme",state:"live",lessons:[
       {name:"Makale (Article)",s:"todo",href:"ib-ogren.html#t-article"},
-      {name:"Konusma (Speech)",s:"todo",href:"ib-ogren.html#t-speech"},
-      {name:"Brosur / Leaflet",s:"todo",href:"ib-ogren.html#t-brochure"},
-      {name:"Gorus Yazisi (Opinion Column)",s:"todo",href:"ib-ogren.html#t-opinion"},
-      {name:"Roportaj (Interview)",s:"todo",href:"ib-ogren.html#t-interview"},
+      {name:"Konuşma (Speech)",s:"todo",href:"ib-ogren.html#t-speech"},
+      {name:"Broşür / Leaflet",s:"todo",href:"ib-ogren.html#t-brochure"},
+      {name:"Görüş Yazısı (Opinion Column)",s:"todo",href:"ib-ogren.html#t-opinion"},
+      {name:"Röportaj (Interview)",s:"todo",href:"ib-ogren.html#t-interview"},
       {name:"Haber (News Report)",s:"todo",href:"ib-ogren.html#t-news"},
       {name:"Inceleme (Review)",s:"todo",href:"ib-ogren.html#t-review"},
       {name:"Reklam (Advertisement)",s:"todo",href:"ib-ogren.html#t-ad"},
       {name:"Web Sayfasi (Web Page)",s:"todo",href:"ib-ogren.html#t-webpage"}]},
-    {name:"Writing",desc:"Paper 1 yazma + Gri AI degerlendirme",state:"live",lessons:[
+    {name:"Writing",desc:"Paper 1 yazma + Gri AI değerlendirme",state:"live",lessons:[
       {name:"Paper 1 Yazma",s:"todo",href:"ib-ogren.html#paper1"}]}
   ]}]},
  {id:"deutsch",name:"Deutsch B",mark:"DE",desc:"IB Almanca . Paper 1, 15 Textsorte + model",pct:0,
-  tools:[{ic:"soru",label:"Textsorten",desc:"15 Alman metin turu (Blog, Brief, Bericht, Artikel, Rede, Rezension...). Her biri sozlesme + adim-adim + Almanca model + oz-kontrol.",href:"deutsch-ogren.html"}],
+  tools:[{ic:"soru",label:"Textsorten",desc:"15 Alman metin türü (Blog, Brief, Bericht, Artikel, Rede, Rezension...). Her biri sözleşme + adım-adım + Almanca model + öz-kontrol.",href:"deutsch-ogren.html"}],
   sections:[{label:"Ogren . Paper 1",units:[
-    {name:"Giris ve Kriterler",desc:"Paper 1, A/B/C kriterleri, du/Sie",state:"live",lessons:[
+    {name:"Giriş ve Kriterler",desc:"Paper 1, A/B/C kriterleri, du/Sie",state:"live",lessons:[
       {name:"Paper 1 ve Kriterler",s:"todo",href:"deutsch-ogren.html#basla"},
       {name:"Karsilastirma Tablosu",s:"todo",href:"deutsch-ogren.html#karsilastirma"}]},
     {name:"Kisisel Turler",desc:"Blog, Tagebuch, informeller Brief",state:"live",lessons:[
       {name:"Blog",s:"todo",href:"deutsch-ogren.html#t-blog"},
-      {name:"Tagebuch (Gunluk)",s:"todo",href:"deutsch-ogren.html#t-tagebuch"},
+      {name:"Tagebuch (Günlük)",s:"todo",href:"deutsch-ogren.html#t-tagebuch"},
       {name:"Informeller Brief",s:"todo",href:"deutsch-ogren.html#t-informell"}]},
     {name:"Profesyonel Turler",desc:"Brief, Bericht, Vorschlag, Anleitung, Aufsatz",state:"live",lessons:[
       {name:"Formeller Brief",s:"todo",href:"deutsch-ogren.html#t-formell"},
       {name:"Bericht (Rapor)",s:"todo",href:"deutsch-ogren.html#t-bericht"},
-      {name:"Vorschlag (Oneri, HL)",s:"todo",href:"deutsch-ogren.html#t-vorschlag"},
-      {name:"Anleitung (Yonerge)",s:"todo",href:"deutsch-ogren.html#t-anleitung"},
+      {name:"Vorschlag (Öneri, HL)",s:"todo",href:"deutsch-ogren.html#t-vorschlag"},
+      {name:"Anleitung (Yönerge)",s:"todo",href:"deutsch-ogren.html#t-anleitung"},
       {name:"Aufsatz (Deneme, SL)",s:"todo",href:"deutsch-ogren.html#t-aufsatz"}]},
     {name:"Kitle Iletisim Turleri",desc:"Artikel, Rede, Broschuere, Kommentar, Interview, Nachricht, Rezension",state:"live",lessons:[
       {name:"Artikel (Makale)",s:"todo",href:"deutsch-ogren.html#t-artikel"},
-      {name:"Rede (Konusma)",s:"todo",href:"deutsch-ogren.html#t-rede"},
+      {name:"Rede (Konuşma)",s:"todo",href:"deutsch-ogren.html#t-rede"},
       {name:"Broschuere / Flyer",s:"todo",href:"deutsch-ogren.html#t-broschuere"},
       {name:"Meinungsartikel / Kommentar",s:"todo",href:"deutsch-ogren.html#t-meinung"},
-      {name:"Interview (Roportaj)",s:"todo",href:"deutsch-ogren.html#t-interview"},
+      {name:"Interview (Röportaj)",s:"todo",href:"deutsch-ogren.html#t-interview"},
       {name:"Nachrichtenbericht (Haber)",s:"todo",href:"deutsch-ogren.html#t-nachricht"},
       {name:"Rezension (Inceleme)",s:"todo",href:"deutsch-ogren.html#t-rezension"}]},
     {name:"Writing",desc:"Paper 1 yazma + model",state:"live",lessons:[
       {name:"Paper 1 Yazma",s:"todo",href:"deutsch-ogren.html#paper1"}]}
   ]}]},
  {id:"tok",name:"TOK",mark:"TK",desc:"Theory of Knowledge . Essay + Exhibition",pct:0,
-  tools:[{ic:"yazi",label:"TOK Rehberi",desc:"Bilgi Sorulari, AOK'lar, TOK Essay ve Exhibition icin adim-adim rehber + model metinler ve yazma sihirbazlari.",href:"tok-ogren.html"}],
+  tools:[{ic:"yazi",label:"TOK Rehberi",desc:"Bilgi Soruları, AOK'lar, TOK Essay ve Exhibition için adım-adım rehber + model metinler ve yazma sihirbazları.",href:"tok-ogren.html"}],
   sections:[{label:"Ogren",units:[
     {name:"Temeller",desc:"TOK nedir, Knowledge Questions, AOK'lar",state:"live",lessons:[
       {name:"TOK Nedir?",s:"todo",href:"tok-ogren.html#basla"},
       {name:"Knowledge Questions",s:"todo",href:"tok-ogren.html#bilgi-sorulari"},
-      {name:"AOK'lar ve Cekirdek Tema",s:"todo",href:"tok-ogren.html#aok"}]},
-    {name:"Degerlendirme",desc:"Essay ve Exhibition",state:"live",lessons:[
+      {name:"AOK'lar ve Çekirdek Tema",s:"todo",href:"tok-ogren.html#aok"}]},
+    {name:"Değerlendirme",desc:"Essay ve Exhibition",state:"live",lessons:[
       {name:"TOK Essay Nasil Yazilir",s:"todo",href:"tok-ogren.html#essay"},
       {name:"TOK Exhibition Nasil Yapilir",s:"todo",href:"tok-ogren.html#exhibition"}]}
   ]}]},
- {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca + Ingilizce . 8 tema paketi",pct:0,
-  tools:[{ic:"kelime",label:"Kelime",desc:"8 tema paketi (Alltag, Schule, Reisen, Essen, Familie, Natur, Stadt, Arbeit). Almanca-Ingilizce-Turkce + eslestirme quizleri.",href:"udsp-ogren.html"}],
+ {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca + İngilizce . 8 tema paketi",pct:0,
+  tools:[{ic:"kelime",label:"Kelime",desc:"8 tema paketi (Alltag, Schule, Reisen, Essen, Familie, Natur, Stadt, Arbeit). Almanca-İngilizce-Türkçe + eşleştirme quizleri.",href:"udsp-ogren.html"}],
   sections:[{label:"Ogren",units:[
-    {name:"Kelime Paketleri",desc:"Almanca-Ingilizce, tema tema, quizli",state:"live",lessons:[
+    {name:"Kelime Paketleri",desc:"Almanca-İngilizce, tema tema, quizli",state:"live",lessons:[
       {name:"UDSP Hakkinda",s:"todo",href:"udsp-ogren.html#basla"},
-      {name:"1. Alltag (Gunluk)",s:"todo",href:"udsp-ogren.html#p1"},
+      {name:"1. Alltag (Günlük)",s:"todo",href:"udsp-ogren.html#p1"},
       {name:"2. Schule (Okul)",s:"todo",href:"udsp-ogren.html#p2"},
       {name:"3. Reisen (Seyahat)",s:"todo",href:"udsp-ogren.html#p3"},
       {name:"4. Essen und Trinken",s:"todo",href:"udsp-ogren.html#p4"},
@@ -221,41 +221,41 @@ var EXAMS=[
       {name:"7. Stadt und Verkehr",s:"todo",href:"udsp-ogren.html#p7"},
       {name:"8. Arbeit und Zeit",s:"todo",href:"udsp-ogren.html#p8"}]}
   ]}]},
- {id:"ydt",name:"YDT",mark:"Y",desc:"Yabanci Dil . tum soru tipleri, bes sikli",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"Kelime, dilbilgisi, baglac, cloze, cumle tamamlama, diyalog, restatement, ceviri ve paragraf drilleri. Bes sikli, puanli.",href:"ydt-ogren.html"}],
+ {id:"ydt",name:"YDT",mark:"Y",desc:"Yabancı Dil . tüm soru tipleri, beş şıklı",pct:0,
+  tools:[{ic:"soru",label:"Drilller",desc:"Kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, diyalog, restatement, çeviri ve paragraf drilleri. Beş şıklı, puanlı.",href:"ydt-ogren.html"}],
   sections:[{label:"Ogren",units:[
-    {name:"Yapi ve Strateji",desc:"YDT yapisi, puanlama, taktik",state:"live",lessons:[
+    {name:"Yapı ve Strateji",desc:"YDT yapisi, puanlama, taktik",state:"live",lessons:[
       {name:"YDT Yapisi",s:"todo",href:"ydt-ogren.html#basla"}]},
-    {name:"Dil Bilgisi ve Kelime",desc:"Kelime, dilbilgisi, baglaclar",state:"live",lessons:[
+    {name:"Dil Bilgisi ve Kelime",desc:"Kelime, dilbilgisi, bağlaçlar",state:"live",lessons:[
       {name:"Kelime",s:"todo",href:"ydt-ogren.html#kelime"},
       {name:"Dilbilgisi",s:"todo",href:"ydt-ogren.html#dilbilgisi"},
-      {name:"Baglaclar ve Gecisler",s:"todo",href:"ydt-ogren.html#baglac"}]},
-    {name:"Soru Tipleri",desc:"Cloze, cumle tamamlama, diyalog, restatement, ceviri, paragraf",state:"live",lessons:[
+      {name:"Bağlaçlar ve Geçişler",s:"todo",href:"ydt-ogren.html#baglac"}]},
+    {name:"Soru Tipleri",desc:"Cloze, cümle tamamlama, diyalog, restatement, çeviri, paragraf",state:"live",lessons:[
       {name:"Cloze Test",s:"todo",href:"ydt-ogren.html#cloze"},
-      {name:"Cumle Tamamlama",s:"todo",href:"ydt-ogren.html#cumletam"},
+      {name:"Cümle Tamamlama",s:"todo",href:"ydt-ogren.html#cumletam"},
       {name:"Diyalog Tamamlama",s:"todo",href:"ydt-ogren.html#diyalog"},
       {name:"Restatement",s:"todo",href:"ydt-ogren.html#restatement"},
-      {name:"Ceviri",s:"todo",href:"ydt-ogren.html#ceviri"},
+      {name:"Çeviri",s:"todo",href:"ydt-ogren.html#ceviri"},
       {name:"Paragraf",s:"todo",href:"ydt-ogren.html#paragraf"},
       {name:"Koşul Cümleleri",s:"todo",href:"ydt-ogren.html#conditionals"},
       {name:"Kip Fiilleri (Modals)",s:"todo",href:"ydt-ogren.html#modals"},
       {name:"İlgi Cümlecikleri (Relative Clauses)",s:"todo",href:"ydt-ogren.html#relative"},
       {name:"Zamanlar (Tenses)",s:"todo",href:"ydt-ogren.html#tenses"}]}
   ]}]},
- {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"Akademik . tum soru tipleri, bes sikli",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"Akademik kelime, dilbilgisi, baglac, cloze, cumle tamamlama, restatement, ceviri, paragraf ve diyalog drilleri. Bes sikli, puanli.",href:"yds-ogren.html"}],
+ {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"Akademik . tüm soru tipleri, beş şıklı",pct:0,
+  tools:[{ic:"soru",label:"Drilller",desc:"Akademik kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, restatement, çeviri, paragraf ve diyalog drilleri. Beş şıklı, puanlı.",href:"yds-ogren.html"}],
   sections:[{label:"Ogren",units:[
-    {name:"Yapi ve Strateji",desc:"YDS/YOKDIL yapisi, puanlama",state:"live",lessons:[
+    {name:"Yapı ve Strateji",desc:"YDS/YOKDIL yapisi, puanlama",state:"live",lessons:[
       {name:"YDS / YOKDIL Yapisi",s:"todo",href:"yds-ogren.html#basla"}]},
-    {name:"Dil Bilgisi ve Kelime",desc:"Akademik kelime, dilbilgisi, baglaclar",state:"live",lessons:[
+    {name:"Dil Bilgisi ve Kelime",desc:"Akademik kelime, dilbilgisi, bağlaçlar",state:"live",lessons:[
       {name:"Akademik Kelime",s:"todo",href:"yds-ogren.html#kelime"},
       {name:"Dilbilgisi",s:"todo",href:"yds-ogren.html#dilbilgisi"},
-      {name:"Baglaclar",s:"todo",href:"yds-ogren.html#baglac"}]},
-    {name:"Soru Tipleri",desc:"Cloze, cumle tamamlama, restatement, ceviri, paragraf, diyalog",state:"live",lessons:[
+      {name:"Bağlaçlar",s:"todo",href:"yds-ogren.html#baglac"}]},
+    {name:"Soru Tipleri",desc:"Cloze, cümle tamamlama, restatement, çeviri, paragraf, diyalog",state:"live",lessons:[
       {name:"Cloze Test",s:"todo",href:"yds-ogren.html#cloze"},
-      {name:"Cumle Tamamlama",s:"todo",href:"yds-ogren.html#cumletam"},
+      {name:"Cümle Tamamlama",s:"todo",href:"yds-ogren.html#cumletam"},
       {name:"Restatement",s:"todo",href:"yds-ogren.html#restatement"},
-      {name:"Ceviri",s:"todo",href:"yds-ogren.html#ceviri"},
+      {name:"Çeviri",s:"todo",href:"yds-ogren.html#ceviri"},
       {name:"Paragraf",s:"todo",href:"yds-ogren.html#paragraf"},
       {name:"Diyalog Tamamlama",s:"todo",href:"yds-ogren.html#diyalog"},
       {name:"Mini Deneme 1",s:"todo",href:"yds-ogren.html#deneme1"},

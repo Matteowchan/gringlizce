@@ -204,7 +204,7 @@ function gotoLesson(i){S.cur=i;S.remedFor=null;S.remedCount=0;lessonView();}
 function lessonView(){
   setMode('lesson');renderRail();const l=curL(),t=l.teaching;
   const secKT=(t.kavramsal_temel&&t.kavramsal_temel.length)?`<h2>Kavramsal temel</h2><div class="rule"></div>${t.kavramsal_temel.map(x=>`<p>${esc(x)}</p>`).join('')}`:'';
-  const secWEX=(t.cozumlu_ornekler&&t.cozumlu_ornekler.length)?`<h2>Çözümlü örnekler</h2><div class="rule"></div>${t.cozumlu_ornekler.map((e,i)=>`<div class="wex"><div class="wex-h">Ornek ${i+1}</div>${e.passage?`<div class="wex-p">${esc(e.passage).replace(/\n/g,"<br>")}</div>`:''}<p class="wex-stem">${esc(e.stem)}</p><div class="wex-opts">${L.map(x=>`<div class="wex-opt${e.correct===x?' ok':''}"><span class="wl">${x}</span><span>${esc(e.choices[x])}</span></div>`).join('')}</div><div class="wex-sol"><div class="wex-sl">Çözüm adımları</div><ol class="steps">${e.adimlar.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p class="wex-ans"><b>Dogru cevap ${e.correct}.</b> ${esc(e.sonuc||'')}</p></div></div>`).join('')}`:'';
+  const secWEX=(t.cozumlu_ornekler&&t.cozumlu_ornekler.length)?`<h2>Çözümlü örnekler</h2><div class="rule"></div>${t.cozumlu_ornekler.map((e,i)=>`<div class="wex"><div class="wex-h">Ornek ${i+1}</div>${e.passage?`<div class="wex-p">${esc(e.passage).replace(/\n/g,"<br>")}</div>`:''}<p class="wex-stem">${esc(e.stem)}</p><div class="wex-opts">${L.map(x=>`<div class="wex-opt${e.correct===x?' ok':''}"><span class="wl">${x}</span><span>${esc(e.choices[x])}</span></div>`).join('')}</div><div class="wex-sol"><div class="wex-sl">Çözüm adımları</div><ol class="steps">${e.adimlar.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p class="wex-ans"><b>Doğru cevap ${e.correct}.</b> ${esc(e.sonuc||'')}</p></div></div>`).join('')}`:'';
   const secMISS=(t.sik_hatalar&&t.sik_hatalar.length)?`<h2>Sık hatalar</h2><div class="rule"></div>${t.sik_hatalar.map(m=>`<div class="miss"><b>${esc(m.hata)}</b><p style="margin:.4rem 0 0">${esc(m.cozum)}</p></div>`).join('')}`:'';
   const secSTR=(t.strateji&&t.strateji.length)?`<h2>Sınav stratejisi</h2><div class="rule"></div><ol class="steps">${t.strateji.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:'';
   app.innerHTML=`<div class="head"><div class="eyebrow">Ders ${l.no} . Konu anlatimi</div>
@@ -228,7 +228,7 @@ function showQ(q,kind){
   S.activeQ=q;S.picked=null;S.locked=false;lp().seen.add(q.id);renderRail();
   const remed=kind==='remed'?`<div class="remedbar">Telafi . hedef tuzak: ${esc(sf(S.remedFor))} . deneme ${S.remedCount}/2</div>`:'';
   const count=kind==='main'?`<div class="qcount">Soru ${S.idx+1} / ${S.queue.length}</div>`:'';
-  app.innerHTML=`<div class="head"><div class="eyebrow">Ders ${curL().no} . Alistirma</div><h1>${esc(curL().name)}</h1>
+  app.innerHTML=`<div class="head"><div class="eyebrow">Ders ${curL().no} . Alıştırma</div><h1>${esc(curL().name)}</h1>
      <button class="backbtn" data-action="nav" data-target="lesson">&lsaquo; Konu anlatımına dön</button></div>
    <div class="pad">${count}${remed}
     ${q.passage?`<div class="passage">${esc(q.passage).replace(/\n/g,"<br>")}</div>`:''}${tableHTML(q.table)}
@@ -321,7 +321,7 @@ function testResult(){
       ${q.passage?`<div class="passage">${esc(q.passage).replace(/\n/g,"<br>")}</div>`:''}${tableHTML(q.table)}
       <p class="stem">${esc(q.stem)}</p>
       ${L.map(x=>`<div class="opt locked ${x===q.correct?'correct':''} ${x===r.picked&&r.picked!==q.correct?'wrong':''}"><span class="ltr">${x}</span><span>${esc(q.choices[x])}</span></div>`).join('')}
-      <div class="fb ok" style="margin-top:12px"><b>Dogru cevap ${q.correct}.</b> ${esc(q.why_correct)}</div>
+      <div class="fb ok" style="margin-top:12px"><b>Doğru cevap ${q.correct}.</b> ${esc(q.why_correct)}</div>
       ${!r.ok?`<div class="fb no" style="margin-top:8px"><b>Senin cevabin ${r.picked}.</b> ${esc(q.why_wrong[r.picked]||'')}</div>`:''}
     </div></div>`;}).join('');
   const verdict=pct>=70?'Geçtin':'Biraz daha çalışma gerek';

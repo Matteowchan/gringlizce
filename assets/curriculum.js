@@ -109,6 +109,33 @@ var EXAMS=[
     {name:"Writing",desc:"Paper 1 yazma + Gri AI degerlendirme",state:"live",lessons:[
       {name:"Paper 1 Yazma",s:"todo",href:"ib-ogren.html#paper1"}]}
   ]}]},
+ {id:"deutsch",name:"Deutsch B",mark:"DE",desc:"IB Almanca . Paper 1, 15 Textsorte + model",pct:0,
+  tools:[{ic:"soru",label:"Textsorten",desc:"15 Alman metin turu (Blog, Brief, Bericht, Artikel, Rede, Rezension...). Her biri sozlesme + adim-adim + Almanca model + oz-kontrol.",href:"deutsch-ogren.html"}],
+  sections:[{label:"Ogren . Paper 1",units:[
+    {name:"Giris ve Kriterler",desc:"Paper 1, A/B/C kriterleri, du/Sie",state:"live",lessons:[
+      {name:"Paper 1 ve Kriterler",s:"todo",href:"deutsch-ogren.html#basla"},
+      {name:"Karsilastirma Tablosu",s:"todo",href:"deutsch-ogren.html#karsilastirma"}]},
+    {name:"Kisisel Turler",desc:"Blog, Tagebuch, informeller Brief",state:"live",lessons:[
+      {name:"Blog",s:"todo",href:"deutsch-ogren.html#t-blog"},
+      {name:"Tagebuch (Gunluk)",s:"todo",href:"deutsch-ogren.html#t-tagebuch"},
+      {name:"Informeller Brief",s:"todo",href:"deutsch-ogren.html#t-informell"}]},
+    {name:"Profesyonel Turler",desc:"Brief, Bericht, Vorschlag, Anleitung, Aufsatz",state:"live",lessons:[
+      {name:"Formeller Brief",s:"todo",href:"deutsch-ogren.html#t-formell"},
+      {name:"Bericht (Rapor)",s:"todo",href:"deutsch-ogren.html#t-bericht"},
+      {name:"Vorschlag (Oneri, HL)",s:"todo",href:"deutsch-ogren.html#t-vorschlag"},
+      {name:"Anleitung (Yonerge)",s:"todo",href:"deutsch-ogren.html#t-anleitung"},
+      {name:"Aufsatz (Deneme, SL)",s:"todo",href:"deutsch-ogren.html#t-aufsatz"}]},
+    {name:"Kitle Iletisim Turleri",desc:"Artikel, Rede, Broschuere, Kommentar, Interview, Nachricht, Rezension",state:"live",lessons:[
+      {name:"Artikel (Makale)",s:"todo",href:"deutsch-ogren.html#t-artikel"},
+      {name:"Rede (Konusma)",s:"todo",href:"deutsch-ogren.html#t-rede"},
+      {name:"Broschuere / Flyer",s:"todo",href:"deutsch-ogren.html#t-broschuere"},
+      {name:"Meinungsartikel / Kommentar",s:"todo",href:"deutsch-ogren.html#t-meinung"},
+      {name:"Interview (Roportaj)",s:"todo",href:"deutsch-ogren.html#t-interview"},
+      {name:"Nachrichtenbericht (Haber)",s:"todo",href:"deutsch-ogren.html#t-nachricht"},
+      {name:"Rezension (Inceleme)",s:"todo",href:"deutsch-ogren.html#t-rezension"}]},
+    {name:"Writing",desc:"Paper 1 yazma + model",state:"live",lessons:[
+      {name:"Paper 1 Yazma",s:"todo",href:"deutsch-ogren.html#paper1"}]}
+  ]}]},
  {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
   tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},
@@ -141,6 +168,7 @@ var EXAMS=[
     { label: "Sınav Bilgisi", href: "sat.html", children: [
       { label: "SAT", href: "sat.html" }, { label: "IELTS", href: "ielts.html" },
       { label: "TOEFL", href: "toefl.html" }, { label: "IB", href: "ib.html" },
+      { label: "Deutsch B", href: "deutsch-ogren.html" },
       { label: "UDSP", href: "udsp.html" }, { label: "YDT", href: "ydt.html" },
       { label: "YDS / YÖKDİL", href: "yds.html" }
     ] },

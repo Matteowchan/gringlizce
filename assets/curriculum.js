@@ -226,11 +226,6 @@ var EXAMS=[
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
     { label: "Yanlış Defteri", href: "yanlis-defteri.html" },
-    { label: "Ders Notları", href: "ders-notlari.html", children: [
-      { label: "SAT", href: "sat-ders-notlari.html" }, { label: "IELTS", href: "ielts-ders-notlari.html" },
-      { label: "TOEFL", href: "toefl-ders-notlari.html" }, { label: "IB", href: "ib-ders-notlari.html" },
-      { label: "YDT", href: "ydt-ders-notlari.html" }, { label: "YDS / YÖKDİL", href: "yds-ders-notlari.html" }
-    ] },
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
     { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },

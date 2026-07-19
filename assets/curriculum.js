@@ -101,7 +101,8 @@ var EXAMS=[
     {name:"Kelime",desc:"15 tema paketi, 150 kelime, otomatik puanli quizler",state:"live",lessons:[
       {name:"15 kelime paketi ve quizler",s:"todo",href:"ielts-kelime.html"}]},
     {name:"Spelling ve Exact Wording",desc:"Yazim, cogul, kelime siniri ve homofon drilleri",state:"live",lessons:[
-      {name:"Bes yazim ve exact wording drilli",s:"todo",href:"ielts-spelling.html"}]},
+      {name:"Bes yazim ve exact wording drilli",s:"todo",href:"ielts-spelling.html"},
+      {name:"Academic Kelime Yazımı (300 kelime, ipuçlu)",s:"todo",href:"toefl-ogren.html#spell1"}]},
     {name:"Gramer Dogrulugu",desc:"Yedi hata turu, 113 alistirma",state:"live",lessons:[
       {name:"Yedi hata turu, 113 alistirma",s:"todo",href:"ielts-gramer.html"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT 2026 . adaptive, dort beceri",pct:0,
@@ -124,7 +125,14 @@ var EXAMS=[
     {name:"Writing",desc:"Build a Sentence, Email, Academic Discussion",state:"live",lessons:[
       {name:"Uc Gorev ve Build a Sentence",s:"todo",href:"toefl-ogren.html#write-genel"},
       {name:"Write an Email",s:"todo",href:"toefl-ogren.html#write-email"},
-      {name:"Academic Discussion",s:"todo",href:"toefl-ogren.html#write-discussion"}]}
+      {name:"Academic Discussion",s:"todo",href:"toefl-ogren.html#write-discussion"}]},
+    {name:"Kelime Yazımı (Academic Vocabulary)",desc:"Turkce anlamdan kelimeyi yaz - ilk harf + es/zit anlam ipucu, 300 kelime",state:"live",lessons:[
+      {name:"Academic Verbs",s:"todo",href:"toefl-ogren.html#spell1"},
+      {name:"Research & Analysis",s:"todo",href:"toefl-ogren.html#spell2"},
+      {name:"Social Science & Society",s:"todo",href:"toefl-ogren.html#spell3"},
+      {name:"Science & Technology",s:"todo",href:"toefl-ogren.html#spell4"},
+      {name:"Academic Adjectives & Adverbs",s:"todo",href:"toefl-ogren.html#spell5"},
+      {name:"Advanced Academic & TOEFL",s:"todo",href:"toefl-ogren.html#spell6"}]}
   ]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin turu + Gri AI",pct:0,
   tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin turu (makale, blog, gunluk, roportaj, haber, inceleme, rapor, oneri, yonerge, deneme...). Her biri sozlesme + model + Gri AI'li yazma sihirbazi.",href:"ib-ogren.html"}],

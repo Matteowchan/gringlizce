@@ -1518,6 +1518,19 @@
   @media (prefers-reduced-motion: reduce) {
     .b-reveal { opacity: 1; transform: none; transition: none; }
   }
+  /* reveal-scroll (pazarlama bolumleri) + stagger — scroll'da yumusak beliriş */
+  .reveal-scroll:not([data-stagger]){opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+  .reveal-scroll:not([data-stagger]).is-visible{opacity:1;transform:none}
+  [data-stagger] > *{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+  [data-stagger].is-visible > *{opacity:1;transform:none}
+  [data-stagger].is-visible > *:nth-child(2){transition-delay:.06s}
+  [data-stagger].is-visible > *:nth-child(3){transition-delay:.12s}
+  [data-stagger].is-visible > *:nth-child(4){transition-delay:.18s}
+  [data-stagger].is-visible > *:nth-child(5){transition-delay:.24s}
+  [data-stagger].is-visible > *:nth-child(6){transition-delay:.30s}
+  [data-stagger].is-visible > *:nth-child(7){transition-delay:.36s}
+  [data-stagger].is-visible > *:nth-child(8){transition-delay:.42s}
+  @media (prefers-reduced-motion: reduce){.reveal-scroll,[data-stagger] > *{opacity:1 !important;transform:none !important;transition:none !important}}
 
   /* ===========================================================
      HERO — Manifesto (2-column with cat + slideshow + PIP)
@@ -3846,7 +3859,7 @@
         <h2>Hangi sınava hazırlanıyorsun?</h2>
         <div class="divider"><span class="dia"></span></div>
         <p style="max-width: 680px; margin: 1rem auto 0; font-size: 1.02rem; color: var(--text-soft); line-height: 1.7;">
-          Her sınav için özelleştirilmiş soru bankası, deneme havuzu ve materyal seti. Hangi yola bakıyorsan onunla başla.
+          Her sınav için ücretsiz öğrenme modülü, çözümlü soru bankası ve deneme havuzu. Hangi yola bakıyorsan onunla başla — çekirdek tamamen bedava.
         </p>
 
         <div class="yazi-stats-row">
@@ -3868,12 +3881,12 @@
           <div class="ex-sub">Academic</div>
         </a>
         <a href="toefl.html" class="exam-card cat-toefl">
-          <span class="ex-badge">Yakında</span>
+          <span class="ex-badge active">Ücretsiz Modül</span>
           <div class="ex-name">TOEFL</div>
           <div class="ex-sub">iBT &middot; Versant</div>
         </a>
         <a href="ib.html" class="exam-card cat-ib">
-          <span class="ex-badge">Yakında</span>
+          <span class="ex-badge active">Ücretsiz Modül</span>
           <div class="ex-name">IB</div>
           <div class="ex-sub">English B &middot; TOK</div>
         </a>
@@ -3899,11 +3912,11 @@
   <section id="materyaller" style="background: var(--bg-soft); border-top: 1px solid var(--line);">
     <div class="wrap">
       <div class="section-head reveal-scroll">
-        <span class="eyebrow">Derinleşmek için</span>
-        <h2>Öne çıkan materyaller</h2>
+        <span class="eyebrow">İstersen daha fazlası</span>
+        <h2>Opsiyonel paketler</h2>
         <div class="divider"><span class="dia"></span></div>
         <p style="max-width: 680px; margin: 1rem auto 0; font-size: 1rem; color: var(--text-soft); line-height: 1.7;">
-          Soru bankası yeterli gelmediğinde veya bir konuda yoğun pratik istediğinde başvurabileceğin paketler.
+          Çekirdeğin tamamı ücretsiz. Ama daha da yoğun pratik, tam denemeler veya bire bir koçluk istersen — bunlar tamamen sana kalmış, opsiyonel.
         </p>
       </div>
 
@@ -3925,7 +3938,7 @@
         </div>
 
       <div style="text-align: center; margin-top: 3rem;">
-        <a href="sat.html" class="btn btn-outline">Tüm Materyalleri Gör</a>
+        <a href="calisma-paketleri.html" class="btn btn-outline">Tüm Paketleri Gör</a>
       </div>
     </div>
   </section>
@@ -3966,6 +3979,8 @@
         });
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
       document.querySelectorAll('.reveal-scroll').forEach(function(el) { io.observe(el); });
+      // guvenlik agi: tetiklenmemis reveal'lari 2.5sn sonra zorla goster (icerik gizli kalmasin)
+      setTimeout(function(){ document.querySelectorAll('.reveal-scroll:not(.is-visible)').forEach(function(el){ el.classList.add('is-visible'); }); }, 2500);
     })();
   </script>
 

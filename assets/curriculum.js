@@ -12,6 +12,7 @@ var IC={
 var EXAMS=[
  {id:"sat",big:true,name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:0,
   tools:[
+    {ic:"yazi",label:"Ogren Modulu",desc:"Standard English Conventions dilbilgisi ve Words in Context kelime, konu konu 1000 soru, dort sikli SAT formati, aciklamali. Ucretsiz.",href:"sat-ogren.html"},
     {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankasi, kategori kategori cozum ve aciklamalarla.",href:"sat-soru-bankasi.html"},
     {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gercek sinav formatinda, adaptif ve puanli.",href:"sat-mock-1.html"},
     {ic:"kelime",label:"Kelime",desc:"Words in Context kelime setleri, Turkce karsilik ve SAT formatinda quizler.",href:"sat-kelime.html"},

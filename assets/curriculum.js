@@ -136,6 +136,17 @@ var EXAMS=[
     {name:"Writing",desc:"Paper 1 yazma + model",state:"live",lessons:[
       {name:"Paper 1 Yazma",s:"todo",href:"deutsch-ogren.html#paper1"}]}
   ]}]},
+ {id:"tok",name:"TOK",mark:"TK",desc:"Theory of Knowledge . Essay + Exhibition",pct:0,
+  tools:[{ic:"yazi",label:"TOK Rehberi",desc:"Bilgi Sorulari, AOK'lar, TOK Essay ve Exhibition icin adim-adim rehber + model metinler ve yazma sihirbazlari.",href:"tok-ogren.html"}],
+  sections:[{label:"Ogren",units:[
+    {name:"Temeller",desc:"TOK nedir, Knowledge Questions, AOK'lar",state:"live",lessons:[
+      {name:"TOK Nedir?",s:"todo",href:"tok-ogren.html#basla"},
+      {name:"Knowledge Questions",s:"todo",href:"tok-ogren.html#bilgi-sorulari"},
+      {name:"AOK'lar ve Cekirdek Tema",s:"todo",href:"tok-ogren.html#aok"}]},
+    {name:"Degerlendirme",desc:"Essay ve Exhibition",state:"live",lessons:[
+      {name:"TOK Essay Nasil Yazilir",s:"todo",href:"tok-ogren.html#essay"},
+      {name:"TOK Exhibition Nasil Yapilir",s:"todo",href:"tok-ogren.html#exhibition"}]}
+  ]}]},
  {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
   tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
   sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},
@@ -168,7 +179,7 @@ var EXAMS=[
     { label: "Sınav Bilgisi", href: "sat.html", children: [
       { label: "SAT", href: "sat.html" }, { label: "IELTS", href: "ielts.html" },
       { label: "TOEFL", href: "toefl.html" }, { label: "IB", href: "ib.html" },
-      { label: "Deutsch B", href: "deutsch-ogren.html" },
+      { label: "Deutsch B", href: "deutsch-ogren.html" }, { label: "TOK", href: "tok-ogren.html" },
       { label: "UDSP", href: "udsp.html" }, { label: "YDT", href: "ydt.html" },
       { label: "YDS / YÖKDİL", href: "yds.html" }
     ] },

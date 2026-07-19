@@ -147,9 +147,20 @@ var EXAMS=[
       {name:"TOK Essay Nasil Yazilir",s:"todo",href:"tok-ogren.html#essay"},
       {name:"TOK Exhibition Nasil Yapilir",s:"todo",href:"tok-ogren.html#exhibition"}]}
   ]}]},
- {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca ve Ingilizce",pct:0,
-  tools:[{ic:"kelime",label:"Kelime",desc:"Almanca ve Ingilizce tema paketleri, Turkce karsilik ve eslestirme quizleri.",href:"udsp-ogren.html"}],
-  sections:[{label:"Ogren",units:[{name:"Kelime paketleri",desc:"Almanca ve Ingilizce, tema tema",state:"live",lessons:[{name:"Almanca-Ingilizce kelime paketleri",s:"todo",href:"udsp-ogren.html"}]}]}]},
+ {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca + Ingilizce . 8 tema paketi",pct:0,
+  tools:[{ic:"kelime",label:"Kelime",desc:"8 tema paketi (Alltag, Schule, Reisen, Essen, Familie, Natur, Stadt, Arbeit). Almanca-Ingilizce-Turkce + eslestirme quizleri.",href:"udsp-ogren.html"}],
+  sections:[{label:"Ogren",units:[
+    {name:"Kelime Paketleri",desc:"Almanca-Ingilizce, tema tema, quizli",state:"live",lessons:[
+      {name:"UDSP Hakkinda",s:"todo",href:"udsp-ogren.html#basla"},
+      {name:"1. Alltag (Gunluk)",s:"todo",href:"udsp-ogren.html#p1"},
+      {name:"2. Schule (Okul)",s:"todo",href:"udsp-ogren.html#p2"},
+      {name:"3. Reisen (Seyahat)",s:"todo",href:"udsp-ogren.html#p3"},
+      {name:"4. Essen und Trinken",s:"todo",href:"udsp-ogren.html#p4"},
+      {name:"5. Familie und Menschen",s:"todo",href:"udsp-ogren.html#p5"},
+      {name:"6. Natur und Wetter",s:"todo",href:"udsp-ogren.html#p6"},
+      {name:"7. Stadt und Verkehr",s:"todo",href:"udsp-ogren.html#p7"},
+      {name:"8. Arbeit und Zeit",s:"todo",href:"udsp-ogren.html#p8"}]}
+  ]}]},
  {id:"ydt",name:"YDT",mark:"Y",desc:"Yabanci Dil . tum soru tipleri, bes sikli",pct:0,
   tools:[{ic:"soru",label:"Drilller",desc:"Kelime, dilbilgisi, baglac, cloze, cumle tamamlama, diyalog, restatement, ceviri ve paragraf drilleri. Bes sikli, puanli.",href:"ydt-ogren.html"}],
   sections:[{label:"Ogren",units:[

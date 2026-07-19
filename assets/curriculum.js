@@ -10,7 +10,7 @@ var IC={
   deneme:'<path d="M4 3h10l2 2v12H4z M7 8h6 M7 11h6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
 };
 var EXAMS=[
- {id:"sat",big:true,name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:0,
+ {id:"sat",name:"SAT",mark:"S",desc:"Digital SAT . Reading & Writing ve Math",pct:0,
   tools:[
     {ic:"yazi",label:"Ogren Modulu",desc:"Standard English Conventions dilbilgisi ve Words in Context kelime, konu konu 1000 soru, dort sikli SAT formati, aciklamali. Ucretsiz.",href:"sat-ogren.html"},
     {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankasi, kategori kategori cozum ve aciklamalarla.",href:"sat-soru-bankasi.html"},
@@ -82,7 +82,7 @@ var EXAMS=[
 ,
 {label:"Ogren . Math",units:[
     {name:"Math",desc:"Algebra, veri, ileri matematik, geometri",state:"live",lessons:[{name:"Dort konu drilleri",s:"todo",href:"sat-math.html"}]}]}]},
- {id:"ielts",big:true,name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
+ {id:"ielts",name:"IELTS",mark:"I",desc:"Academic . dort beceri, kelime, gramer",pct:0,
   tools:[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 icin AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma.html?bolum=writing"},
     {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bolum bazli calisma.",href:"ielts-bolum-calisma.html"},

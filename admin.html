@@ -2327,6 +2327,13 @@
         <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
       </div>
 
+      <div class="user-modal-section" id="um-sec-events">
+        <h4>Aktivite Zaman Çizelgesi</h4>
+        <div class="um-action-row" style="margin-bottom: 0.5rem;" id="um-events-filters"></div>
+        <div id="um-events" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-events-msg"></div>
+      </div>
+
       <div class="user-modal-section" id="um-sec-answers">
         <h4>Çözdüğü Sorular</h4>
         <div class="um-action-row" style="margin-bottom: 0.5rem;">
@@ -3556,7 +3563,7 @@
       umAnswersOnlyWrong = false;
       var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
       var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
-      ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
+      ['um-sec-events', 'um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
       });
@@ -3570,6 +3577,7 @@
           var nowOpen = sec.classList.toggle('open');
           if (nowOpen) {
             var uid = currentUserDetail && currentUserDetail.user_id;
+            if (sec.id === 'um-sec-events' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserEvents(uid); }
             if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
             if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
             if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }
@@ -3598,6 +3606,101 @@
           essayBlock('Yazı', s.body) +
         '</div>' +
       '</div>';
+    }
+
+    // Aktivite zaman çizelgesi — events tablosundan her ince hareket
+    var EV_META = {
+      login:          { icon: '🔓', label: 'Giriş yaptı',            color: '#2E6E6A' },
+      page_view:      { icon: '👁', label: 'Sayfa gezdi',            color: '#8A7F6E' },
+      question_answer:{ icon: '✏️', label: 'Soru çözdü',             color: '#B78A2E' },
+      vocab_answer:   { icon: '🔤', label: 'Kelime çalıştı',         color: '#6E4A8E' },
+      deneme:         { icon: '📝', label: 'Deneme',                 color: '#2E6E6A' },
+      writing_submit: { icon: '📄', label: 'Yazma gönderdi',         color: '#B78A2E' },
+      unit_test_done: { icon: '✅', label: 'Ünite testi bitirdi',    color: '#1FA971' },
+      ai_ask:         { icon: '🤖', label: "Gri'ye sordu",           color: '#6E4A8E' }
+    };
+    var umEventsAll = [];
+    var umEventsFilter = '';
+
+    function evDetail(ev) {
+      var d = ev.event_data || {};
+      var bits = [];
+      if (ev.event_type === 'page_view') {
+        var pg = ev.page || d.path || d.page || '';
+        if (d.title) bits.push(escHtmlAdmin(d.title));
+        if (pg) bits.push('<span style="color:var(--text-muted);">' + escHtmlAdmin(String(pg).replace(/^https?:\/\/[^/]+/, '')) + '</span>');
+      } else {
+        if (d.slug) bits.push(escHtmlAdmin(d.slug));
+        if (d.word) bits.push(escHtmlAdmin(d.word));
+        if (d.title) bits.push(escHtmlAdmin(d.title));
+        if (d.exam) bits.push(escHtmlAdmin(d.exam));
+        if (d.correct != null) bits.push(d.correct ? '<span style="color:#1FA971;">doğru</span>' : '<span style="color:#c0392b;">yanlış</span>');
+        if (d.score != null) bits.push('skor ' + escHtmlAdmin(String(d.score)));
+        if (ev.page && ev.event_type !== 'login') bits.push('<span style="color:var(--text-muted);">' + escHtmlAdmin(String(ev.page).replace(/^https?:\/\/[^/]+/, '')) + '</span>');
+      }
+      return bits.join(' · ');
+    }
+
+    function renderUserEvents() {
+      var box = $('um-events'); if (!box) { return; }
+      var rows = umEventsFilter ? umEventsAll.filter(function (e) { return e.event_type === umEventsFilter; }) : umEventsAll;
+      if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Bu filtrede aktivite yok.</div>'; return; }
+      var html = '<div style="position:relative; padding-left:1.1rem;">';
+      var lastDay = '';
+      rows.forEach(function (ev) {
+        var dt = ev.at ? new Date(ev.at) : null;
+        var day = dt ? dt.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', weekday: 'short' }) : '';
+        var time = dt ? dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+        if (day !== lastDay) {
+          lastDay = day;
+          html += '<div style="font-family:var(--font-display); font-size:0.76rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin:0.7rem 0 0.3rem;">' + escHtmlAdmin(day) + '</div>';
+        }
+        var m = EV_META[ev.event_type] || { icon: '•', label: ev.event_type, color: '#8A7F6E' };
+        var det = evDetail(ev);
+        html += '<div style="display:flex; gap:0.55rem; align-items:baseline; padding:0.28rem 0; border-left:2px solid ' + m.color + '22; margin-left:-1.1rem; padding-left:0.9rem;">' +
+          '<span style="font-size:0.9rem; width:1.3rem; text-align:center;">' + m.icon + '</span>' +
+          '<span style="color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:0.78rem; min-width:2.7rem;">' + time + '</span>' +
+          '<span style="flex:1;"><strong style="color:' + m.color + '; font-weight:600;">' + escHtmlAdmin(m.label) + '</strong>' + (det ? ' <span style="font-size:0.82rem;">' + det + '</span>' : '') + '</span>' +
+          '</div>';
+      });
+      html += '</div>';
+      box.innerHTML = html;
+    }
+
+    async function loadUserEvents(userId) {
+      var box = $('um-events'); var msg = $('um-events-msg'); var filt = $('um-events-filters');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      if (msg) { msg.textContent = ''; }
+      try {
+        var res = await sb.rpc('admin_user_events', { p_user_id: userId, p_limit: 300 });
+        if (res.error) { throw res.error; }
+        umEventsAll = res.data || [];
+        umEventsFilter = '';
+        if (!umEventsAll.length) { if (filt) filt.innerHTML = ''; box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Kayıtlı aktivite yok.</div>'; return; }
+        // Filtre çipleri (sadece mevcut tiplerden)
+        var counts = {}; umEventsAll.forEach(function (e) { counts[e.event_type] = (counts[e.event_type] || 0) + 1; });
+        if (filt) {
+          var chips = '<button class="btn-admin-action active" data-ev="">Hepsi (' + umEventsAll.length + ')</button>';
+          Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).forEach(function (t) {
+            var m = EV_META[t] || { icon: '•', label: t };
+            chips += '<button class="btn-admin-action" data-ev="' + escHtmlAdmin(t) + '">' + m.icon + ' ' + escHtmlAdmin(m.label) + ' (' + counts[t] + ')</button>';
+          });
+          filt.innerHTML = chips;
+          filt.querySelectorAll('button[data-ev]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              umEventsFilter = b.dataset.ev;
+              filt.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+              b.classList.add('active');
+              renderUserEvents();
+            });
+          });
+        }
+        renderUserEvents();
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
     }
 
     async function loadUserStudy(userId) {

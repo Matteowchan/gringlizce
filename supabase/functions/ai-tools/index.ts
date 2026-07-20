@@ -18,7 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 
 // Gri AI araçları — Fable modeli (hızlı, ekonomik yazma/dönüştürme işleri için)
 const MODEL = "claude-fable-5";
@@ -92,6 +92,7 @@ List at most 12 corrections, only real errors. If there are none, return the tex
 }
 
 async function callModel(system: string, user: string, jsonMode: boolean): Promise<string> {
+  if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY secret is not set");
   // Anthropic Messages API. JSON modu icin assistant turn'u "{" ile prefill edip
   // modeli gecerli JSON uretmeye zorlariz (Anthropic'te response_format yok).
   const messages: Array<Record<string, unknown>> = [{ role: "user", content: user }];
@@ -101,7 +102,9 @@ async function callModel(system: string, user: string, jsonMode: boolean): Promi
     model: MODEL,
     system,
     messages,
-    max_tokens: 1500,
+    // Girdi siniri 15000 karakter; grammar/humanizer tam metni yeniden uretir.
+    // Dusuk limit ciktiyi ortadan keser (grammar'da yarim JSON'a yol acar).
+    max_tokens: 8192,
     temperature: 0.5,
   };
 
@@ -120,8 +123,14 @@ async function callModel(system: string, user: string, jsonMode: boolean): Promi
     throw new Error(`Anthropic request failed: ${res.status}`);
   }
   const data = await res.json();
-  const content = data?.content?.[0]?.text;
+  // Ilk blok her zaman text olmayabilir; text tipli blogu bul
+  const block = Array.isArray(data?.content) ? data.content.find((b: any) => b?.type === "text") : null;
+  const content = block?.text;
   if (!content || typeof content !== "string") throw new Error("Anthropic returned no content");
+  if (data?.stop_reason === "max_tokens") {
+    console.error("Anthropic output truncated at max_tokens; tool output may be incomplete");
+    if (jsonMode) throw new Error("Output truncated (max_tokens) in JSON mode");
+  }
   // prefill ettigimiz "{" yaniti tamamlar; ham JSON'u yeniden birlestir
   return jsonMode ? ("{" + content).trim() : content.trim();
 }

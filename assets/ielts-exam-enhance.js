@@ -72,6 +72,17 @@
     var obs=new MutationObserver(function(){ if(container.querySelector('.q-num-prefix') && (!built || container.querySelectorAll('.q-num-prefix').length!==cache.length)) build(); });
     obs.observe(container,{childList:true,subtree:true});
     setTimeout(build,900);
+
+    // Passage highlight (reading): metni seç → sarı işaret; işarete tıkla → kaldır
+    document.addEventListener('mouseup',function(){
+      var sel=window.getSelection(); if(!sel||sel.isCollapsed||!sel.rangeCount) return;
+      var r=sel.getRangeAt(0), a=r.commonAncestorContainer, node=a.nodeType===1?a:a.parentNode;
+      if(!node.closest||!node.closest('.passage-content')) return;
+      try{ var m=document.createElement('mark'); m.className='ex-hl'; r.surroundContents(m); sel.removeAllRanges(); }catch(e){}
+    });
+    document.addEventListener('click',function(e){
+      var t=e.target; if(t.classList&&t.classList.contains('ex-hl')){ var p=t.parentNode; while(t.firstChild)p.insertBefore(t.firstChild,t); p.removeChild(t); if(p.normalize)p.normalize(); }
+    });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();

@@ -18,9 +18,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
-const MODEL = "gpt-4o-mini";
+// Gri AI araçları — Fable modeli (hızlı, ekonomik yazma/dönüştürme işleri için)
+const MODEL = "claude-fable-5";
 const ADMIN_EMAILS = ["mertatasal@gmail.com", "atasal@gringlizce.com"];
 const FREE_PER_DAY = 2;
 const TOKEN_COST = 10;
@@ -90,32 +91,39 @@ List at most 12 corrections, only real errors. If there are none, return the tex
   return { system, user: text, jsonMode };
 }
 
-async function callOpenAI(system: string, user: string, jsonMode: boolean): Promise<string> {
+async function callModel(system: string, user: string, jsonMode: boolean): Promise<string> {
+  // Anthropic Messages API. JSON modu icin assistant turn'u "{" ile prefill edip
+  // modeli gecerli JSON uretmeye zorlariz (Anthropic'te response_format yok).
+  const messages: Array<Record<string, unknown>> = [{ role: "user", content: user }];
+  if (jsonMode) messages.push({ role: "assistant", content: "{" });
+
   const reqBody: Record<string, unknown> = {
     model: MODEL,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
+    system,
+    messages,
     max_tokens: 1500,
     temperature: 0.5,
   };
-  if (jsonMode) reqBody.response_format = { type: "json_object" };
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(reqBody),
   });
   if (!res.ok) {
     const t = await res.text();
-    console.error("OpenAI error:", res.status, t);
-    throw new Error(`OpenAI request failed: ${res.status}`);
+    console.error("Anthropic error:", res.status, t);
+    throw new Error(`Anthropic request failed: ${res.status}`);
   }
   const data = await res.json();
-  const content = data?.choices?.[0]?.message?.content;
-  if (!content || typeof content !== "string") throw new Error("OpenAI returned no content");
-  return content.trim();
+  const content = data?.content?.[0]?.text;
+  if (!content || typeof content !== "string") throw new Error("Anthropic returned no content");
+  // prefill ettigimiz "{" yaniti tamamlar; ham JSON'u yeniden birlestir
+  return jsonMode ? ("{" + content).trim() : content.trim();
 }
 
 interface ToolQuota { daily_free_remaining: number; bonus_tokens: number; total_remaining: number; }
@@ -183,7 +191,7 @@ Deno.serve(async (req) => {
   const { system, user, jsonMode } = buildPrompts(tool, text, options);
   let raw: string;
   try {
-    raw = await callOpenAI(system, user, jsonMode);
+    raw = await callModel(system, user, jsonMode);
   } catch (e) {
     console.error("AI call failed:", e);
     return json({ ok: false, error: "ai_unavailable", detail: String(e).slice(0, 300) }, 502);

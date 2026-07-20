@@ -63,6 +63,15 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 .wcount{font-size:.82rem;color:var(--muted);margin:4px 0 6px;text-align:right;}
 .wcount.ok{color:var(--good);font-weight:600;}
 .wtask ul{margin:6px 0 0 18px;font-size:.9rem;color:var(--muted);}
+.stepper{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:2px 0 16px;}
+.stepdot{width:22px;height:6px;border-radius:3px;background:#ddd3bf;cursor:pointer;transition:.15s;}
+.stepdot.done{background:var(--teal);}
+.stepdot.cur{background:var(--gold);width:32px;}
+.stepdot:hover{opacity:.75;}
+.step[hidden]{display:none;}
+.stepnav{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;bottom:0;background:var(--cream);padding:12px 4px;border-top:1px solid var(--border);margin-top:6px;}
+#stepinfo{font-size:.88rem;color:var(--muted);font-weight:600;text-align:center;flex:1;}
+.stepnav .btn{white-space:nowrap;}
 /* results */
 .band-big{text-align:center;padding:10px 0 6px;}
 .band-big .cefr{font-family:'Lora',serif;font-size:3.2rem;color:var(--teal);line-height:1;}
@@ -434,42 +443,58 @@ function renderQ(q,gid){
   h+='</div>';
   return h;
 }
+var STEPS=[], CURSTEP=0;
 function renderExam(){
-  var h=''; QIDX=0; STATE.order=[];
+  QIDX=0; STATE.order=[]; STEPS=[];
   EXAM.forEach(function(paper){
-    h+='<div class="sb-card"><div class="paper-h"><span class="eyebrow">'+esc(paper.paper.split('—')[0])+'</span></div><h2>'+esc(paper.paper.replace(/^PAPER \d+ — /,''))+'</h2>';
+    var pShort=esc(paper.paper.replace(/^PAPER \d+ — /,''));
+    var eyebrow=esc(paper.paper.split('—')[0]);
     paper.parts.forEach(function(part){
-      h+='<h3 class="part-h">'+esc(part.title)+'</h3><p class="instr">'+esc(part.instr)+'</p>';
-      if(part.audio){h+='<div class="audio-box"><div class="al">'+esc(part.audio.label)+'</div><audio controls preload="none" src="'+part.audio.src+'"></audio></div>';}
-      if(part.passageTitle){h+='<div class="passage"><h4>'+esc(part.passageTitle)+'</h4>'+esc(part.passage||'')+'</div>';}
-      if(part.courses){h+=courseBox();}
-      if(part.gapsentences){h+=gapBox();}
-      part.qs.forEach(function(q){
-        QIDX++; q.dispNum=QIDX; var gid='q'+QIDX;
-        STATE.order.push({gid:gid,q:q,skill:part.skill});
-        h+=renderQ(q,gid);
-      });
+      var b='<div class="sb-card"><div class="paper-h"><span class="eyebrow">'+eyebrow+'</span></div><h3 class="part-h" style="border-top:none;padding-top:0;margin-top:2px">'+esc(part.title)+'</h3><p class="instr">'+esc(part.instr)+'</p>';
+      if(part.audio){b+='<div class="audio-box"><div class="al">'+esc(part.audio.label)+'</div><audio controls preload="none" src="'+part.audio.src+'"></audio></div>';}
+      if(part.passageTitle){b+='<div class="passage"><h4>'+esc(part.passageTitle)+'</h4>'+esc(part.passage||'')+'</div>';}
+      if(part.courses){b+=courseBox();}
+      if(part.gapsentences){b+=gapBox();}
+      part.qs.forEach(function(q){ QIDX++; q.dispNum=QIDX; var gid='q'+QIDX; STATE.order.push({gid:gid,q:q,skill:part.skill}); b+=renderQ(q,gid); });
+      b+='</div>';
+      STEPS.push({paper:pShort, body:b});
     });
-    h+='</div>';
   });
-  h+=renderWriting();
-  h+='<div class="sb-card" style="text-align:center"><p class="instr">Tüm cevaplarını ve yazma görevlerini gözden geçir. Hazırsan değerlendir.</p><button class="btn gold" id="submit-btn">Sınavı Bitir &amp; Sonucu Gör</button></div>';
+  STEPS.push({paper:'Writing', body:renderWriting()});
+
+  var h='<div class="stepper" id="stepper"></div><div id="steps">';
+  STEPS.forEach(function(s,i){ h+='<div class="step" data-step="'+i+'"'+(i===0?'':' hidden')+'>'+s.body+'</div>'; });
+  h+='</div><div class="stepnav"><button class="btn ghost" id="prev-btn">‹ Önceki</button><span id="stepinfo"></span><button class="btn" id="next-btn">Sonraki ›</button></div>';
   app.innerHTML=h;
-  document.getElementById('submit-btn').addEventListener('click',function(){ if(confirm('Sınavı bitirip sonucu görmek istediğine emin misin?')) finish(); });
+  CURSTEP=0; updateStep();
+
+  document.getElementById('prev-btn').addEventListener('click',function(){ gotoStep(CURSTEP-1); });
+  document.getElementById('next-btn').addEventListener('click',function(){
+    if(CURSTEP>=STEPS.length-1){ if(confirm('Sınavı bitirip sonucu görmek istediğine emin misin?')) finish(); }
+    else gotoStep(CURSTEP+1);
+  });
+  document.getElementById('stepper').addEventListener('click',function(e){ var d=e.target.closest('[data-goto]'); if(d) gotoStep(+d.dataset.goto); });
+
   if(app._wired) return; app._wired=true;
-  // radio seçim görseli (bir kez bağlanır)
   app.addEventListener('change',function(e){
     var t=e.target;
     if(t.name && t.type==='radio'){
       STATE.answers[t.name]=t.value;
       var q=t.closest('.q'); q.querySelectorAll('.opt').forEach(function(o){o.classList.remove('sel');});
       t.closest('.opt').classList.add('sel');
-    } else if(t.name && (t.tagName==='SELECT'||t.type==='text')){
-      STATE.answers[t.name]=t.value;
-    }
+    } else if(t.name && (t.tagName==='SELECT'||t.type==='text')){ STATE.answers[t.name]=t.value; }
   });
   app.addEventListener('input',function(e){ if(e.target.type==='text' && e.target.name){STATE.answers[e.target.name]=e.target.value;} });
 }
+function updateStep(){
+  document.querySelectorAll('#steps .step').forEach(function(el){ el.hidden=(+el.dataset.step!==CURSTEP); });
+  var last=CURSTEP>=STEPS.length-1;
+  document.getElementById('stepinfo').textContent='Bölüm '+(CURSTEP+1)+' / '+STEPS.length+' · '+STEPS[CURSTEP].paper;
+  var prev=document.getElementById('prev-btn'); prev.style.visibility=CURSTEP===0?'hidden':'visible';
+  var nx=document.getElementById('next-btn'); nx.textContent=last?'Sınavı Bitir ✓':'Sonraki ›'; nx.classList.toggle('gold',last);
+  document.getElementById('stepper').innerHTML=STEPS.map(function(x,i){ return '<span class="stepdot'+(i===CURSTEP?' cur':(i<CURSTEP?' done':''))+'" data-goto="'+i+'" title="'+esc(x.paper)+'"></span>'; }).join('');
+}
+function gotoStep(i){ if(i<0||i>=STEPS.length)return; CURSTEP=i; updateStep(); window.scrollTo(0,0); }
 
 /* timer bar */
 function fmt(s){var m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss;}

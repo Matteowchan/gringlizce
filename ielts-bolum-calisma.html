@@ -677,12 +677,25 @@
       // (bölüm-bazlı çalışmalar diğer bölümlerin listesini kirletmesin; ağ hatasında hepsini göster)
       const allIds = tests.map(t => t.id);
       const { data: secRows, error: secErr } = await sb.from('ielts_sections')
-        .select('test_id').eq('section', bolum).in('test_id', allIds);
+        .select('id, test_id').eq('section', bolum).in('test_id', allIds);
       const shownTests = (secErr || !secRows) ? tests
         : (function () { const has = new Set(secRows.map(s => s.test_id)); return tests.filter(t => has.has(t.id)); })();
       if (!shownTests.length) {
         document.getElementById('emptyTests').style.display = 'block';
         return;
+      }
+
+      // Writing: her testin Task 1 / Task 2 tipini (part.title) çek — kartta göster
+      let typeByTest = {};
+      if (bolum === 'writing' && secRows && secRows.length) {
+        const secToTest = {}; secRows.forEach(s => { secToTest[s.id] = s.test_id; });
+        const { data: prts } = await sb.from('ielts_parts')
+          .select('section_id, part_number, title')
+          .in('section_id', secRows.map(s => s.id));
+        (prts || []).forEach(p => {
+          const tid = secToTest[p.section_id]; if (!tid || !p.title) return;
+          (typeByTest[tid] = typeByTest[tid] || {})[p.part_number] = p.title;
+        });
       }
 
       // Status fetch
@@ -713,15 +726,23 @@
 
       const list = document.getElementById('testsList');
       let h = '';
-      for (const t of tests) {
+      for (const t of shownTests) {
         const status = statusByTest[t.id];
         // Bölüm-bazlıda "Gri Deneme N" yerine tipe/temaya göre isim (Tam Deneme sayfasi ayri, dokunulmaz)
         const num = (String(t.name || '').match(/\d+/) || [''])[0];
         let topicTags = Array.isArray(t.topic_tags) ? t.topic_tags.slice() : [];
         let cardEyebrow, cardName;
         if (bolum === 'writing') {
-          cardEyebrow = 'IELTS Writing';
-          cardName = 'Task 1 + Task 2' + (num ? ' · ' + num : '');
+          const wt = typeByTest[t.id] || {};
+          const t1 = wt[1], t2 = wt[2];
+          cardEyebrow = 'IELTS Writing' + (num ? ' · ' + num : '');
+          if (t1 || t2) {
+            // Task 1 tipi başlıkta, Task 2 tipi alt satırda
+            cardName = 'Task 1 · ' + (t1 || '—');
+            topicTags = t2 ? ['Task 2 · ' + t2] : [];
+          } else {
+            cardName = 'Task 1 + Task 2' + (num ? ' · ' + num : '');
+          }
         } else {
           const skill = bolum === 'reading' ? 'Reading' : 'Listening';
           const theme = topicTags.length ? topicTags.shift() : skill;

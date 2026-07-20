@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
 const DETECT_MODEL = "gpt-4o";
 const ADMIN_EMAILS = ["mertatasal@gmail.com", "atasal@gringlizce.com"];
@@ -119,6 +119,7 @@ interface Rubric {
 }
 
 async function callRubric(text: string, m: Metrics): Promise<Rubric> {
+  if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY secret is not set");
   const metricsBlock = `OLCULEN METRIKLER:
 - Cumle sayisi: ${m.sentence_count}
 - Ortalama cumle uzunlugu: ${m.mean_len} kelime
@@ -136,7 +137,9 @@ async function callRubric(text: string, m: Metrics): Promise<Rubric> {
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: metricsBlock + "\n\nINCELENECEK METIN:\n\n" + text },
       ],
-      max_tokens: 2500,
+      // "TUM hatalari eksiksiz bul" + 40 flagged cumle isteniyor; 15000 karakterlik
+      // hata-yogun metinde dusuk limit JSON'u ortadan keser -> parse hatasi -> 502.
+      max_tokens: 6000,
       temperature: 0.2,
       response_format: { type: "json_object" },
     }),
@@ -147,8 +150,10 @@ async function callRubric(text: string, m: Metrics): Promise<Rubric> {
     throw new Error(`OpenAI request failed: ${res.status}`);
   }
   const data = await res.json();
-  const content = data?.choices?.[0]?.message?.content;
+  const choice = data?.choices?.[0];
+  const content = choice?.message?.content;
   if (!content || typeof content !== "string") throw new Error("OpenAI returned no content");
+  if (choice?.finish_reason === "length") throw new Error("Rubric output truncated at max_tokens");
 
   let p: Record<string, unknown>;
   try { p = JSON.parse(content); } catch { throw new Error("OpenAI returned non-JSON content"); }

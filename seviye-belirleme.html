@@ -81,6 +81,14 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 .review .ri:last-child{border-bottom:none;}
 .review .rx{color:var(--bad);font-weight:700;}.review .rc{color:var(--good);font-weight:700;}
 .hidden{display:none;}
+.sb-overlay{position:fixed;inset:0;background:rgba(20,15,10,.72);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;backdrop-filter:blur(2px);}
+.sb-overlay.on{display:flex;}
+.sb-modal{background:#fff;border-radius:18px;max-width:440px;width:100%;padding:28px 26px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.35);border-top:6px solid var(--bad);}
+.sb-modal .ic{font-size:2.6rem;line-height:1;}
+.sb-modal h3{color:var(--bad);margin:.5rem 0 .3rem;font-size:1.3rem;}
+.sb-modal p{font-size:.95rem;color:var(--ink);margin:.5rem 0;line-height:1.5;}
+.sb-modal .cnt{font-size:1.7rem;font-weight:700;color:var(--bad);font-family:'Lora',serif;margin:.3rem 0;}
+.sb-modal .btn{margin-top:16px;}
 @media(max-width:560px){.sb-wrap{padding:14px 12px 60px;}.sb-card{padding:18px 16px;}.sb-hero h1{font-size:1.6rem;}}
 </style>
 <script src="assets/curriculum.js"></script>
@@ -115,6 +123,9 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
   <div id="results" class="hidden"></div>
 
 </div>
+
+<!-- SEKME UYARI POPUP -->
+<div class="sb-overlay" id="sb-overlay"><div class="sb-modal" id="sb-modal"></div></div>
 
 <script>
 "use strict";
@@ -351,7 +362,9 @@ function renderExam(){
   });
   h+='<div class="sb-card" style="text-align:center"><p class="instr">Tüm cevaplarını gözden geçir. Hazırsan değerlendir.</p><button class="btn gold" id="submit-btn">Sınavı Bitir &amp; Sonucu Gör</button></div>';
   app.innerHTML=h;
-  // radio seçim görseli
+  document.getElementById('submit-btn').addEventListener('click',function(){ if(confirm('Sınavı bitirip sonucu görmek istediğine emin misin?')) finish(); });
+  if(app._wired) return; app._wired=true;
+  // radio seçim görseli (bir kez bağlanır)
   app.addEventListener('change',function(e){
     var t=e.target;
     if(t.name && t.type==='radio'){
@@ -363,7 +376,6 @@ function renderExam(){
     }
   });
   app.addEventListener('input',function(e){ if(e.target.type==='text' && e.target.name){STATE.answers[e.target.name]=e.target.value;} });
-  document.getElementById('submit-btn').addEventListener('click',function(){ if(confirm('Sınavı bitirip sonucu görmek istediğine emin misin?')) finish(); });
 }
 
 /* timer bar */
@@ -378,7 +390,7 @@ function tick(){
 }
 function start(){
   intro.classList.add('hidden'); app.classList.remove('hidden');
-  STATE.started=true; renderBar(); renderExam();
+  STATE.started=true; examActive=true; renderBar(); renderExam();
   STATE.timer=setInterval(tick,1000);
   window.scrollTo(0,0);
 }
@@ -393,7 +405,7 @@ function isCorrect(item){
   return q.a.some(function(a){return norm(a)===nv;});
 }
 function finish(){
-  if(STATE.timer)clearInterval(STATE.timer);
+  examActive=false; if(STATE.timer)clearInterval(STATE.timer);
   var bySkill={}, wrong=[], total=0, correct=0;
   STATE.order.forEach(function(item){
     total++; var ok=isCorrect(item);
@@ -454,6 +466,44 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   resDiv.innerHTML=h;
   window.scrollTo(0,0);
   try{ if(window.track)window.track('placement_done',{score:correct,total:total,cefr:band.cefr}); }catch(e){}
+}
+
+/* ============ SEKME GÜVENLİĞİ (sınavdan ayrılma uyarısı) ============ */
+var WARN_MAX=3, warnCount=0, examActive=false, pendingWarn=false;
+var overlay=document.getElementById('sb-overlay'), modal=document.getElementById('sb-modal');
+function showWarn(){
+  warnCount++;
+  if(warnCount>=WARN_MAX){
+    modal.innerHTML='<div class="ic">⛔</div><h3>Sınav başa döndü</h3>'+
+      '<p>Sınav ekranından <b>3 kez</b> ayrıldın. Kurallara göre sınav <b>baştan başlıyor</b> ve tüm cevapların silindi.</p>'+
+      '<p class="cnt">3 / 3</p>'+
+      '<p>Bu sefer sekmeden/pencereden ayrılmadan çöz.</p>'+
+      '<button class="btn" id="warn-reset">Yeniden Başla</button>';
+    overlay.classList.add('on');
+    document.getElementById('warn-reset').onclick=function(){ overlay.classList.remove('on'); resetExam(); };
+  } else {
+    modal.innerHTML='<div class="ic">⚠️</div><h3>Sınavdan ayrıldın!</h3>'+
+      '<p>Sınav sırasında <b>başka sekmeye ya da pencereye geçmek yasaktır</b>. Lütfen sınav ekranında kal.</p>'+
+      '<p class="cnt">'+warnCount+' / '+WARN_MAX+' uyarı</p>'+
+      '<p><b>'+WARN_MAX+'. uyarıda sınav BAŞA DÖNER</b> ve tüm cevapların silinir.</p>'+
+      '<button class="btn" id="warn-ok">Anladım, Devam Et</button>';
+    overlay.classList.add('on');
+    document.getElementById('warn-ok').onclick=function(){ overlay.classList.remove('on'); };
+  }
+}
+document.addEventListener('visibilitychange',function(){
+  if(!examActive) return;
+  if(document.hidden){ pendingWarn=true; }
+  else if(pendingWarn){ pendingWarn=false; showWarn(); }
+});
+function resetExam(){
+  warnCount=0; pendingWarn=false;
+  STATE.answers={}; STATE.remaining=50*60;
+  if(STATE.timer)clearInterval(STATE.timer);
+  renderBar(); renderExam();
+  examActive=true;
+  STATE.timer=setInterval(tick,1000);
+  window.scrollTo(0,0);
 }
 
 document.getElementById('start-btn').addEventListener('click',start);

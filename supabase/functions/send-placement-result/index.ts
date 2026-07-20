@@ -26,6 +26,7 @@ interface Result {
   cefr: string; cefrName: string; score: number; total: number; pct: number;
   skills: Skill[]; missedTopics: string[]; wrongCount: number;
   writing?: { type: string; text: string; words: number }[];
+  writingEval?: { type: string; cefr: string; overall20: number; scores: { content: number; communication: number; organisation: number; language: number }; strengths: string; improvements: string; comment: string }[];
 }
 
 const CEFR_DESC: Record<string, string> = {
@@ -82,6 +83,10 @@ function buildEmail(name: string, r: Result): string {
        <ul style="font-size:13.5px;color:#1b1b1b;padding-left:18px;margin:8px 0">${r.missedTopics.map((t) => `<li style="margin:4px 0">${esc(t)}</li>`).join("")}</ul>`
     : `<p style="font-size:13.5px;color:#4a8a52;margin-top:20px"><b>Tebrikler!</b> Dilbilgisi ve kelime bölümlerinde belirgin bir eksik konu çıkmadı.</p>`;
 
+  const wEval = (r.writingEval && r.writingEval.length)
+    ? `<h2 style="font-family:Georgia,serif;color:#1f3f3e;font-size:17px;border-bottom:2px solid #c89a3c;padding-bottom:6px;margin-top:26px">Gri AI writing değerlendirmesi</h2>${r.writingEval.map((e) => { const s = e.scores || { content: 0, communication: 0, organisation: 0, language: 0 }; return `<div style="background:#faf7ee;border-radius:10px;padding:12px 14px;margin:8px 0"><div style="font-weight:700;color:#1f3f3e;font-size:14px">${esc(e.type)} — <span style="color:#2C5856">${esc(e.cefr)} · ${e.overall20}/20</span></div><div style="font-size:12.5px;color:#4a4a4a;margin-top:4px">Content ${s.content}/5 · Communication ${s.communication}/5 · Organisation ${s.organisation}/5 · Language ${s.language}/5</div>${e.comment ? `<div style="font-size:13px;margin-top:6px">${esc(e.comment)}</div>` : ""}${e.strengths ? `<div style="font-size:12.5px;color:#4a8a52;margin-top:3px"><b>Güçlü:</b> ${esc(e.strengths)}</div>` : ""}${e.improvements ? `<div style="font-size:12.5px;color:#c08a2c;margin-top:3px"><b>Geliştir:</b> ${esc(e.improvements)}</div>` : ""}</div>`; }).join("")}`
+    : "";
+
   return `<!DOCTYPE html><html><body style="margin:0;background:#f2ede0;font-family:Arial,Helvetica,sans-serif">
   <div style="max-width:640px;margin:0 auto;background:#fff">
     <div style="background:#1f3f3e;padding:22px 28px">
@@ -111,6 +116,8 @@ function buildEmail(name: string, r: Result): string {
       ${topics}
 
       ${(r.writing && r.writing.some((w) => w.text)) ? `<h2 style="font-family:Georgia,serif;color:#1f3f3e;font-size:17px;border-bottom:2px solid #c89a3c;padding-bottom:6px;margin-top:26px">Writing — yazdıkların</h2><p style="font-size:12px;color:#6a6a6a;margin:6px 0">Bu bölüm otomatik puanlanmaz; bir öğretmen ya da Gri AI değerlendirmelidir.</p>${r.writing.map((w) => `<div style="margin:10px 0"><div style="font-weight:700;color:#1f3f3e;font-size:14px">${esc(w.type)} · ${w.words} kelime</div><div style="background:#faf7ee;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-top:4px">${w.text ? esc(w.text) : "<i>Boş bırakıldı</i>"}</div></div>`).join("")}` : ""}
+
+      ${wEval}
 
       <div style="text-align:center;margin:28px 0 8px">
         <a href="https://gringlizce.com/ogrenme-haritasi.html" style="display:inline-block;background:#2C5856;color:#fff;text-decoration:none;border-radius:22px;padding:12px 26px;font-size:14px;font-weight:700">Öğrenme Haritasına Git</a>

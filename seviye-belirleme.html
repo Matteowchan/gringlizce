@@ -108,6 +108,14 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 .sb-modal .cnt{font-size:1.7rem;font-weight:700;color:var(--bad);font-family:'Lora',serif;margin:.3rem 0;}
 .sb-modal .btn{margin-top:16px;}
 @media(max-width:560px){.sb-wrap{padding:14px 12px 60px;}.sb-card{padding:18px 16px;}.sb-hero h1{font-size:1.6rem;}}
+@media print{
+  nav,.gri-nav,#site-nav,header,.launch-banner,#sb-barmount,.sb-bar,.stepnav,.stepper,#intro,#exam,#auth-gate,.no-print,.sb-note{display:none !important;}
+  body{background:#fff !important;}
+  .sb-wrap{max-width:100%;padding:0;}
+  .sb-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid;margin-bottom:14px;}
+  .detail,.skillrow,.chart-donut,.chart-radar{break-inside:avoid;}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+}
 </style>
 <script src="assets/curriculum.js"></script>
 <script src="assets/nav.js"></script>
@@ -604,14 +612,14 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   h+='</div>';
 
   // ---- e-posta raporu kartı ----
-  h+='<div class="sb-card"><h2>Detaylı raporunu al</h2><p class="instr">CEFR seviyeni, beceri grafiğini, <b>hangi tense/yapı ve konularda</b> eksiğin olduğunu ve kişisel çalışma planını içeren profesyonel raporu e-postana gönderelim.</p>'+
-    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="email" class="fill" id="mail-input" placeholder="ornek@mail.com" value="'+((window.USER&&USER.email)?esc(USER.email):'')+'"><button class="btn" id="mail-send">Raporu E-postama Gönder</button><button class="btn ghost" id="pdf-btn">PDF / Yazdır</button></div>'+
+  h+='<div class="sb-card no-print"><h2>Raporu al</h2><p class="instr">Raporu <b>PDF olarak indir</b> (önerilen) ya da kayıtlı e-postana gönder. PDF; CEFR seviyeni, grafikleri, eksik konuları, çalışma planını ve Gri AI writing değerlendirmesini içerir.</p>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn gold" id="pdf-btn">📄 PDF olarak indir</button><input type="email" class="fill" id="mail-input" placeholder="kayıtlı e-postan" value="'+((window.USER&&USER.email)?esc(USER.email):'')+'"><button class="btn ghost" id="mail-send">E-postama gönder</button></div>'+
     '<p id="mail-status" class="instr" style="margin-top:10px"></p></div>';
 
-  h+='<div class="sb-card" style="text-align:center"><a class="btn ghost" href="ogrenme-haritasi.html">Öğrenme Haritasına Git</a> &nbsp; <button class="btn" onclick="location.reload()">Tekrar Çöz</button></div>';
+  h+='<div class="sb-card no-print" style="text-align:center"><a class="btn ghost" href="ogrenme-haritasi.html">Öğrenme Haritasına Git</a> &nbsp; <button class="btn" onclick="location.reload()">Tekrar Çöz</button></div>';
   resDiv.innerHTML=h;
   var mb=document.getElementById('mail-send'); if(mb)mb.addEventListener('click',sendReport);
-  var pb=document.getElementById('pdf-btn'); if(pb)pb.addEventListener('click',function(){window.print();});
+  var pb=document.getElementById('pdf-btn'); if(pb)pb.addEventListener('click',printReport);
   evalWriting();
   window.scrollTo(0,0);
   try{ if(window.track)window.track('placement_done',{score:correct,total:total,cefr:band.cefr}); }catch(e){}
@@ -713,6 +721,17 @@ function evalWriting(){
      box.innerHTML=evals.map(writingEvalHtml).join('');
    })
    .catch(function(err){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi hatası: '+esc(err.message)+'</p>'; });
+}
+function printReport(){
+  var box=document.getElementById('ai-writing-eval');
+  var loading=box && (/değerlendiriyor|Hazırlanıyor/.test(box.textContent));
+  if(!loading){ window.print(); return; }
+  var btn=document.getElementById('pdf-btn'); if(btn){btn.disabled=true;btn.textContent='AI değerlendirmesi bekleniyor…';}
+  var tries=0, iv=setInterval(function(){
+    tries++; var b=document.getElementById('ai-writing-eval');
+    var done=b && (b.querySelector('.detail') || /alınamadı|yapılmadı|hatası/.test(b.textContent));
+    if(done||tries>18){ clearInterval(iv); if(btn){btn.disabled=false;btn.textContent='📄 PDF olarak indir';} window.print(); }
+  },700);
 }
 function writingEvalHtml(e){
   var sc=e.scores||{};

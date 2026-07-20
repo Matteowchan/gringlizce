@@ -23,17 +23,17 @@ var EXAMS=[
       {name:"Command of Evidence: Textual",s:"todo",href:"sat-unite-1.html"},
       {name:"Command of Evidence: Quantitative",s:"todo",href:"sat-unite-1.html"},
       {name:"Central Ideas and Details",s:"todo",href:"sat-unite-1.html"},
-      {name:"Inferences",s:"todo",href:"sat-unite-1.html"},{name:"🎯 Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=info&mode=checkpoint&form=A",ck:1}]},
+      {name:"Inferences",s:"todo",href:"sat-unite-1.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=info&mode=checkpoint&form=A",ck:1}]},
     {name:"Ünite 2 . Craft and Structure",desc:"Words in Context, Text Structure, Cross-Text",state:"live",lessons:[
       {name:"Words in Context",s:"todo",href:"sat-unite-2.html"},
       {name:"Text Structure and Purpose",s:"todo",href:"sat-unite-2.html"},
-      {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"},{name:"🎯 Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=craft&mode=checkpoint&form=A",ck:1}]},
+      {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=craft&mode=checkpoint&form=A",ck:1}]},
     {name:"Ünite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"live",lessons:[
-      {name:"Transitions",s:"todo",href:"sat-unite-3.html"},{name:"🎯 Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=expression&mode=checkpoint&form=A",ck:1},
+      {name:"Transitions",s:"todo",href:"sat-unite-3.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=expression&mode=checkpoint&form=A",ck:1},
       {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"}]},
     {name:"Ünite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
-      {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"},{name:"🎯 Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=conventions&mode=checkpoint&form=A",ck:1}]}]},
+      {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=conventions&mode=checkpoint&form=A",ck:1}]}]},
       {label:"Ogren . Ucretsiz Soru Modulu",units:[
         {name:"Dilbilgisi",desc:"Standard English Conventions - noktalama, uyum, niteleyici, paralel yapi, zaman",state:"live",lessons:[
             {name:"Sentence Boundaries",s:"todo",href:"sat-ogren.html#g11"},

@@ -31,7 +31,7 @@ h1{font-family:"Playfair Display",serif;font-weight:700;font-size:1.95rem;margin
 .backbtn{margin-top:13px;font-family:Inter,sans-serif;font-size:12.5px;font-weight:600;color:var(--accent-deep);background:transparent;border:1.5px solid var(--accent);border-radius:22px;padding:7px 15px;cursor:pointer;transition:.14s}
 .backbtn:hover{background:var(--accent-soft)}
 h2{font-family:"Playfair Display",serif;color:var(--accent-deep);font-size:1.32rem;margin:26px 0 5px}
-.rule{height:3px;width:56px;background:var(--accent);border-radius:2px;margin:0 0 15px;transition:background .45s}.sub-intro{color:#6b5d49;margin:0 0 14px;font-style:italic}.subtopic{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:11px;padding:4px 18px 14px;margin:0 0 14px;background:var(--warm-soft)}.subtopic h3{font-family:"Playfair Display",serif;color:var(--accent-deep);font-size:1.08rem;margin:14px 0 6px}.subtopic p{margin:.35rem 0}.subrule,.subex{margin:.6rem 0 0;padding:.5rem .75rem;border-radius:8px;font-size:.95em}.subrule{background:var(--warm-panel)}.subex{background:#fff;border:1px dashed var(--line)}.subrule-l,.subex-l{display:inline-block;font-weight:700;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-deep);margin-right:.4rem}
+.rule{height:3px;width:56px;background:var(--accent);border-radius:2px;margin:0 0 15px;transition:background .45s}.sub-intro{color:#6b5d49;margin:0 0 14px;font-style:italic}.subtopic{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:11px;padding:4px 18px 14px;margin:0 0 14px;background:var(--warm-soft)}.subtopic h3{font-family:"Playfair Display",serif;color:var(--accent-deep);font-size:1.08rem;margin:14px 0 6px}.subtopic p{margin:.35rem 0}.subrule,.subex{margin:.6rem 0 0;padding:.5rem .75rem;border-radius:8px;font-size:.95em}.subrule{background:var(--warm-panel)}.subex{background:#fff;border:1px dashed var(--line)}.subrule-l,.subex-l{display:inline-block;font-weight:700;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-deep);margin-right:.4rem}.aknav{margin:1px 0 3px 24px;display:flex;flex-direction:column;gap:1px;border-left:1px dashed var(--line);padding-left:9px}.aklink{font-size:11.5px;color:#8a7c66;cursor:pointer;padding:2px 5px;border-radius:5px;line-height:1.3}.aklink:hover{background:var(--warm-soft);color:var(--accent-deep)}
 h3{font-family:Inter,sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
 p{margin:0 0 12px}
 .rc{background:#FCFAF4;border:1px solid var(--line);border-radius:16px;padding:16px 16px 18px;box-shadow:0 3px 18px rgba(24,60,57,.06)}
@@ -192,7 +192,8 @@ function renderRail(){
     const active=i===S.cur;
     const done=S.lp[i].phaseDone.practice;
     const cls=active?'les active':(done?'les done':'les');
-    const sub=active?`<div class="sub">${link('lesson','Konu anlatimi',false)}${link('practice','Alistirma',false)}${link('test','Ünite Testi',false)}</div>`:'';
+    const akList=(active&&curL().teaching.alt_konular&&curL().teaching.alt_konular.length)?`<div class="aknav">${curL().teaching.alt_konular.map((s,ai)=>`<a class="aklink" data-action="akjump" data-ak="${ai}">${esc(s.baslik)}</a>`).join('')}</div>`:'';
+    const sub=active?`<div class="sub">${link('lesson','Konu anlatimi',false)}${akList}${link('practice','Alistirma',false)}${link('test','Ünite Testi',false)}</div>`:'';
     return `<div class="${cls}"><div class="lh" data-action="goto" data-lesson="${i}"><span class="n">${i+1}</span><span class="lt">${esc(l.name)}</span></div>${sub}</div>`;
   }).join('');
   const quads=curL().families.map(f=>{const st=lp().family[f];
@@ -205,7 +206,7 @@ function gotoLesson(i){S.cur=i;S.remedFor=null;S.remedCount=0;lessonView();}
 function lessonView(){
   setMode('lesson');renderRail();const l=curL(),t=l.teaching;
   const secKT=(t.kavramsal_temel&&t.kavramsal_temel.length)?`<h2>Kavramsal temel</h2><div class="rule"></div>${t.kavramsal_temel.map(x=>`<p>${esc(x)}</p>`).join('')}`:'';
-  const secSUB=(t.alt_konular&&t.alt_konular.length)?`<h2>${esc(t.alt_konular_baslik||'Konunun alt başlıkları')}</h2><div class="rule"></div><p class="sub-intro">${esc(t.alt_konular_intro||'')}</p>${t.alt_konular.map(s=>`<div class="subtopic"><h3>${esc(s.baslik)}</h3>${(s.govde||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${s.kural?`<div class="subrule"><span class="subrule-l">Kural</span> ${esc(s.kural)}</div>`:''}${s.ornek?`<div class="subex"><span class="subex-l">Mini örnek</span> ${esc(s.ornek)}</div>`:''}</div>`).join('')}`:'';
+  const secSUB=(t.alt_konular&&t.alt_konular.length)?`<h2>${esc(t.alt_konular_baslik||'Konunun alt başlıkları')}</h2><div class="rule"></div><p class="sub-intro">${esc(t.alt_konular_intro||'')}</p>${t.alt_konular.map((s,ai)=>`<div class="subtopic" id="ak-${ai}"><h3>${esc(s.baslik)}</h3>${(s.govde||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${s.kural?`<div class="subrule"><span class="subrule-l">Kural</span> ${esc(s.kural)}</div>`:''}${s.ornek?`<div class="subex"><span class="subex-l">Mini örnek</span> ${esc(s.ornek)}</div>`:''}</div>`).join('')}`:'';
   const secWEX=(t.cozumlu_ornekler&&t.cozumlu_ornekler.length)?`<h2>Çözümlü örnekler</h2><div class="rule"></div>${t.cozumlu_ornekler.map((e,i)=>`<div class="wex"><div class="wex-h">Ornek ${i+1}</div>${e.passage?`<div class="wex-p">${esc(e.passage).replace(/\n/g,"<br>")}</div>`:''}<p class="wex-stem">${esc(e.stem)}</p><div class="wex-opts">${L.map(x=>`<div class="wex-opt${e.correct===x?' ok':''}"><span class="wl">${x}</span><span>${esc(e.choices[x])}</span></div>`).join('')}</div><div class="wex-sol"><div class="wex-sl">Çözüm adımları</div><ol class="steps">${e.adimlar.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p class="wex-ans"><b>Doğru cevap ${e.correct}.</b> ${esc(e.sonuc||'')}</p></div></div>`).join('')}`:'';
   const secMISS=(t.sik_hatalar&&t.sik_hatalar.length)?`<h2>Sık hatalar</h2><div class="rule"></div>${t.sik_hatalar.map(m=>`<div class="miss"><b>${esc(m.hata)}</b><p style="margin:.4rem 0 0">${esc(m.cozum)}</p></div>`).join('')}`:'';
   const secSTR=(t.strateji&&t.strateji.length)?`<h2>Sınav stratejisi</h2><div class="rule"></div><ol class="steps">${t.strateji.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:'';
@@ -349,6 +350,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
   else if(a==='test-next')testNext();
   else if(a==='test-quit')lessonView();
   else if(a==='test-review')toggleReview(+el.dataset.i);
+  else if(a==='akjump'){if(S.phase!=='lesson')lessonView();var _t=document.getElementById('ak-'+el.dataset.ak);if(_t)_t.scrollIntoView({behavior:'smooth',block:'start'});}
   else if(a==='nav'){const t=el.dataset.target;if(t==='lesson')lessonView();else if(t==='practice')startPractice();else if(t==='test')startTest();}});
 (function(){
   var SB_U=(window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co');
@@ -385,27 +387,3 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
   });
 })();
 </script></body></html>
-<style>
-.ua-bar{position:fixed;left:0;right:0;bottom:0;z-index:120;background:#241E17;color:#fff;display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;padding:.55rem 1rem;font-family:Inter,system-ui,sans-serif;box-shadow:0 -2px 14px rgba(0,0,0,.18);}
-.ua-bar b{font-size:.82rem;margin-right:.3rem;}
-.ua-bar a{text-decoration:none;border-radius:8px;padding:.4rem .9rem;font-weight:600;font-size:.82rem;border:1px solid rgba(255,255,255,.35);color:#fff;white-space:nowrap;}
-.ua-bar a.primary{background:#2E6E6A;border-color:#2E6E6A;}
-.ua-bar a.gold{background:#B78A2E;border-color:#B78A2E;}
-.ua-bar .ua-x{cursor:pointer;opacity:.6;font-size:1.15rem;line-height:1;padding:0 .3rem;}
-body{padding-bottom:66px;}
-@media(max-width:640px){.ua-bar b{width:100%;text-align:center;}}
-</style>
-<script>(function(){
-  var KEY='expression';
-  function inject(){
-    if(document.querySelector('.ua-bar'))return;
-    var b=document.createElement('div');b.className='ua-bar';
-    b.innerHTML='<b>Ünite Testi:</b>'+
-      '<a class="primary" href="sat-unite-test.html?unite='+KEY+'&mode=checkpoint&form=A">Konu Geçiş Testi A</a>'+
-            '<a class="gold" href="sat-unite-test.html?unite='+KEY+'&mode=final">Final Deneme</a>'+
-      '<span class="ua-x" title="Kapat">×</span>';
-    document.body.appendChild(b);
-    b.querySelector('.ua-x').addEventListener('click',function(){b.remove();document.body.style.paddingBottom='';});
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);else inject();
-})();</script>

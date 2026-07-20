@@ -19,7 +19,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
-const DETECT_MODEL = "gpt-4o";
+const DETECT_MODEL = "gpt-4.1";
 const ADMIN_EMAILS = ["mertatasal@gmail.com", "atasal@gringlizce.com"];
 const FREE_PER_DAY = 2;
 const BONUS_COST = 10;
@@ -210,6 +210,9 @@ function buildAnalysis(m: Metrics, r: Rubric) {
   else if (errPer100 >= 3) estimate = Math.min(estimate, 30);
   // Cok temiz + cok tekdüze metin yukari sabitlenir
   if (errPer100 < 0.5 && burst_ai > 70) estimate = Math.max(estimate, 70);
+  // Akici-insan korumasi: dogal cumle varyasyonu (yuksek cv) + kalipsiz baglac kullanimi
+  // insan isaretidir; temiz ama insansi metni "Yüksek" banda itme (yanlis pozitif keser)
+  if (m.cv >= 0.55 && connector_ai < 40) estimate = Math.min(estimate, 55);
   estimate = clamp(estimate, 0, 100);
 
   const low = clamp(estimate - 8, 0, 100);
@@ -263,7 +266,7 @@ Deno.serve(async (req) => {
   let body: { text?: string };
   try { body = await req.json(); } catch { return json({ ok: false, error: "invalid_body" }, 400); }
   const text = String(body.text || "").trim();
-  if (text.length < 100) return json({ ok: false, error: "text_too_short", detail: "En az 100 karakter gerekli" }, 400);
+  if (text.length < 250) return json({ ok: false, error: "text_too_short", detail: "En az 250 karakter gerekli" }, 400);
   if (text.length > 15000) return json({ ok: false, error: "text_too_long", detail: "En fazla 15000 karakter" }, 400);
 
   const { data: quotaRow } = await supabase

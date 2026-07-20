@@ -2332,6 +2332,7 @@
       <button class="user-modal-close" id="user-modal-close" aria-label="Kapat">&times;</button>
       <h3 id="um-email">—</h3>
       <div class="user-modal-meta" id="um-meta">—</div>
+      <div id="um-login-hist" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"></div>
 
       <div class="user-modal-section">
         <h4>İstatistikler</h4>
@@ -2972,6 +2973,8 @@
           loadUsers();
           state.usersLoaded = true;
         }
+        // Lazy tab yukleyicisi (content/ai-health/gamification/comms/logs) — jump-linkler icin de calisir
+        if (typeof triggerTabLoader === 'function') { triggerTabLoader(name); }
       }
 
       tabs.forEach(function (t) {
@@ -3571,7 +3574,8 @@
       umAnswersOnlyWrong = false;
       var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
       var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
-      ['um-sec-events', 'um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
+      // um-sec-events acik kalir (aktivite timeline'i user acilisinda eager yuklenir)
+      ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
       });
@@ -3685,6 +3689,15 @@
         if (res.error) { throw res.error; }
         umEventsAll = res.data || [];
         umEventsFilter = '';
+        // Header giriş özeti (aynı veriden)
+        var lh = $('um-login-hist');
+        if (lh) {
+          var logins = umEventsAll.filter(function (e) { return e.event_type === 'login'; });
+          if (logins.length) {
+            var last3 = logins.slice(0, 3).map(function (e) { return e.at ? new Date(e.at).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''; }).filter(Boolean);
+            lh.innerHTML = '🔓 Son girişler: ' + last3.map(escHtmlAdmin).join('  ·  ');
+          } else { lh.innerHTML = ''; }
+        }
         if (!umEventsAll.length) { if (filt) filt.innerHTML = ''; box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Kayıtlı aktivite yok.</div>'; return; }
         // Filtre çipleri (sadece mevcut tiplerden)
         var counts = {}; umEventsAll.forEach(function (e) { counts[e.event_type] = (counts[e.event_type] || 0) + 1; });
@@ -3726,7 +3739,7 @@
           html += '<div class="um-w-group">Yer İmleri (' + bm.length + ')</div>';
           html += bm.map(function (b) {
             var i = denemeOrBankLink(b.slug);
-            return '<div style="padding:0.3rem 0; border-bottom:1px solid var(--line); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none;">' + escHtmlAdmin(i.label) + '</a></div>';
+            return '<div style="display:flex; justify-content:space-between; gap:0.5rem; padding:0.3rem 0; border-bottom:1px solid var(--line);"><a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text); text-decoration:none; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(i.label) + '</a><span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (b.at ? fmtDate(b.at) : '') + '</span></div>';
           }).join('');
         }
         if (notes.length) {
@@ -3734,7 +3747,7 @@
           html += notes.map(function (n) {
             var i = denemeOrBankLink(n.slug);
             return '<div style="padding:0.45rem 0; border-bottom:1px solid var(--line);">' +
-              '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:none; font-size:0.8rem;">' + escHtmlAdmin(i.label) + '</a>' +
+              '<div style="display:flex; justify-content:space-between; gap:0.5rem;"><a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:none; font-size:0.8rem;">' + escHtmlAdmin(i.label) + '</a><span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (n.at ? fmtDate(n.at) : '') + '</span></div>' +
               '<div style="white-space:pre-wrap; font-size:0.84rem; margin-top:0.2rem;">' + escHtmlAdmin(n.note || '') + '</div>' +
               '</div>';
           }).join('');
@@ -3742,7 +3755,7 @@
         if (vocab.length) {
           html += '<div class="um-w-group">Kelimeler (' + vocab.length + ')</div>';
           html += '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + vocab.map(function (v) {
-            return '<span style="border:1px solid var(--line); border-radius:999px; padding:0.15rem 0.6rem; font-size:0.82rem;">' + escHtmlAdmin(v.word || '') + '</span>';
+            return '<span title="' + (v.at ? escHtmlAdmin(fmtDate(v.at)) : '') + '" style="border:1px solid var(--line); border-radius:999px; padding:0.15rem 0.6rem; font-size:0.82rem;">' + escHtmlAdmin(v.word || '') + '</span>';
           }).join('') + '</div>';
         }
         box.innerHTML = html;
@@ -3772,6 +3785,10 @@
           isBanned ? 'BANLI' : 'aktif'
         ].join(' · ');
         $('um-meta').textContent = meta;
+
+        // Aktivite timeline'ini user acilisinda eager yukle (header giris ozetini de doldurur)
+        var evSecEager = $('um-sec-events'); if (evSecEager) { evSecEager.dataset.loadedUser = userId; }
+        loadUserEvents(userId);
 
         var s = u.stats || {};
         $('um-stats').innerHTML = [
@@ -4125,22 +4142,20 @@
     // ===================================================================
     var NEW_TAB_LOADED = { content: false, 'ai-health': false, gamification: false, comms: false, logs: false };
 
+    // Top-level: hem tab click'i hem de dashboard jump-linkleri (activate) buradan tetikler
+    function triggerTabLoader(t) {
+      if (!Object.prototype.hasOwnProperty.call(NEW_TAB_LOADED, t) || NEW_TAB_LOADED[t]) return;
+      NEW_TAB_LOADED[t] = true;
+      if (t === 'content')      loadContentTab();
+      if (t === 'ai-health')    loadAiHealthTab();
+      if (t === 'gamification') loadGamificationTab();
+      if (t === 'comms')        loadCommsTab();
+      if (t === 'logs')         loadLogsTab();
+    }
     function initNewTabs() {
-      function triggerLoader(t) {
-        if (NEW_TAB_LOADED[t]) return;
-        NEW_TAB_LOADED[t] = true;
-        if (t === 'content')      loadContentTab();
-        if (t === 'ai-health')    loadAiHealthTab();
-        if (t === 'gamification') loadGamificationTab();
-        if (t === 'comms')        loadCommsTab();
-        if (t === 'logs')         loadLogsTab();
-      }
-      document.querySelectorAll('.admin-tab').forEach(function (btn) {
-        btn.addEventListener('click', function () { triggerLoader(btn.dataset.tab); });
-      });
-      // Also fire loader if a new tab is already active when this runs
+      // Aktif tab zaten lazy bir tab ise ilk acilista yukle
       var active = document.querySelector('.admin-tab.active');
-      if (active) triggerLoader(active.dataset.tab);
+      if (active) triggerTabLoader(active.dataset.tab);
     }
 
     function escHtml(s) {

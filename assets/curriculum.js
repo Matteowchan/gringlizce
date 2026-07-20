@@ -296,6 +296,7 @@ var EXAMS=[
     { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
     { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
+    { label: "Blog", href: "blog.html" },
     { label: "Bize Ulaşın", href: "iletisim.html" }
   ];
 })();

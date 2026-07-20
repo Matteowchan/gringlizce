@@ -228,30 +228,44 @@
     /* ============ TAB NAVIGATION ============ */
     .admin-tabs {
       display: flex;
-      gap: 0;
+      align-items: center;
+      gap: 0.1rem;
       border-bottom: 1px solid var(--line);
       margin-bottom: 2rem;
-      flex-wrap: wrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
     }
+    .admin-tabs::-webkit-scrollbar { height: 4px; }
+    .admin-tabs::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
     .admin-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      padding: 0.9rem 1.4rem;
+      padding: 0.8rem 1.0rem;
       font-family: var(--font-ui);
       font-size: 11px;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text-muted);
       cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
       margin-bottom: -1px;
+      border-radius: 7px 7px 0 0;
     }
-    .admin-tab:hover { color: var(--text); }
+    .admin-tab .tab-ico { font-size: 14px; line-height: 1; filter: grayscale(0.4); opacity: 0.85; }
+    .admin-tab:hover { color: var(--text); background: rgba(46,110,106,0.05); }
     .admin-tab.active {
       color: var(--text);
       border-bottom-color: var(--gold);
+      background: rgba(200,154,60,0.07);
     }
+    .admin-tab.active .tab-ico { filter: none; opacity: 1; }
+    .tab-sep { width: 1px; height: 20px; background: var(--line); margin: 0 0.35rem; flex: 0 0 auto; }
     .admin-tab-content { display: none; }
     .admin-tab-content.active { display: block; }
 
@@ -1719,16 +1733,18 @@
       <p class="admin-sub">Site istatistikleri, banner, indirim, ürünler ve writing değerlendirmeleri.</p>
 
       <div class="admin-tabs" role="tablist">
-        <button class="admin-tab" data-tab="overview" role="tab">Genel Bakış</button>
-        <button class="admin-tab" data-tab="users" role="tab">Kullanıcılar</button>
-        <button class="admin-tab" data-tab="content" role="tab">İçerik</button>
-        <button class="admin-tab" data-tab="settings" role="tab">Ayarlar</button>
-        <button class="admin-tab" data-tab="products" role="tab">Ürünler</button>
-        <button class="admin-tab" data-tab="writing" role="tab"><span lang="en">Writing Review</span></button>
-        <button class="admin-tab" data-tab="ai-health" role="tab">AI Sağlık</button>
-        <button class="admin-tab" data-tab="gamification" role="tab"><span lang="en">Gamification</span></button>
-        <button class="admin-tab" data-tab="comms" role="tab">İletişim</button>
-        <button class="admin-tab" data-tab="logs" role="tab"><span lang="en">Audit Log</span></button>
+        <button class="admin-tab" data-tab="overview" role="tab"><span class="tab-ico">📊</span>Genel Bakış</button>
+        <button class="admin-tab" data-tab="users" role="tab"><span class="tab-ico">👥</span>Kullanıcılar</button>
+        <button class="admin-tab" data-tab="content" role="tab"><span class="tab-ico">📚</span>İçerik</button>
+        <button class="admin-tab" data-tab="writing" role="tab"><span class="tab-ico">✍️</span><span lang="en">Writing</span></button>
+        <span class="tab-sep" aria-hidden="true"></span>
+        <button class="admin-tab" data-tab="ai-health" role="tab"><span class="tab-ico">🩺</span>AI Sağlık</button>
+        <button class="admin-tab" data-tab="comms" role="tab"><span class="tab-ico">✉️</span>İletişim</button>
+        <button class="admin-tab" data-tab="gamification" role="tab"><span class="tab-ico">🏅</span>Rozetler</button>
+        <button class="admin-tab" data-tab="logs" role="tab"><span class="tab-ico">📜</span><span lang="en">Log</span></button>
+        <span class="tab-sep" aria-hidden="true"></span>
+        <button class="admin-tab" data-tab="products" role="tab"><span class="tab-ico">🛒</span>Ürünler</button>
+        <button class="admin-tab" data-tab="settings" role="tab"><span class="tab-ico">⚙️</span>Ayarlar</button>
       </div>
 
       <!-- ============ OVERVIEW TAB ============ -->
@@ -3033,31 +3049,23 @@
       var box = $('ov-activity');
       if (!box) { return; }
       try {
-        var res = await sb.rpc('admin_recent_activity', { p_limit: 40 });
+        // Zengin canlı akış: login/page_view dahil TUM event tipleri (admin_recent_events -> events tablosu)
+        var res = await sb.rpc('admin_recent_events', { p_limit: 50 });
         if (res.error) { throw res.error; }
         var rows = res.data || [];
         if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Henüz hareket yok.</div>'; return; }
         box.innerHTML = rows.map(function (r) {
-          var marker, mid;
-          if (r.kind === 'answer') {
-            var ok = (r.status === 'correct');
-            var i = denemeOrBankLink(r.slug);
-            marker = '<span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:' + (ok ? 'var(--teal)' : '#b4504a') + ';"></span>';
-            mid = '<a href="' + i.href + '" target="_blank" rel="noopener" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(i.label) + '</a>';
-          } else {
-            var tag = (r.kind === 'vocab') ? 'Kelime' : 'Yazı';
-            marker = '<span style="flex-shrink:0; font-size:0.62rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--gold-deep); border:1px solid var(--line); border-radius:999px; padding:0.05rem 0.4rem;">' + tag + '</span>';
-            mid = '<span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis;">' + escHtmlAdmin(r.detail || '') + '</span>';
-          }
-          return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid var(--line);">' +
-            marker +
-            '<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(r.email || '') + '</span>' +
-            mid +
-            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap;">' + (r.at ? fmtDate(r.at) : '') + '</span>' +
+          var m = EV_META[r.event_type] || { icon: '•', label: r.event_type, color: '#8A7F6E' };
+          var det = evDetail(r);
+          return '<div style="display:flex; align-items:center; gap:0.55rem; padding:0.4rem 0; border-bottom:1px solid var(--line);">' +
+            '<span style="font-size:0.95rem; width:1.2rem; text-align:center; flex-shrink:0;">' + m.icon + '</span>' +
+            '<span style="color:' + m.color + '; font-weight:600; font-size:0.76rem; white-space:nowrap; flex-shrink:0;">' + escHtmlAdmin(m.label) + '</span>' +
+            '<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.82rem;">' + escHtmlAdmin(r.email || '—') + (det ? ' <span style="color:var(--text-muted);">· ' + det + '</span>' : '') + '</span>' +
+            '<span style="color:var(--text-muted); font-size:0.74rem; white-space:nowrap; flex-shrink:0;">' + (r.at ? fmtDate(r.at) : '') + '</span>' +
           '</div>';
         }).join('');
       } catch (e) {
-        box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Hareketler yüklenemedi.</div>';
+        box.innerHTML = '<div style="color:#b4504a; font-style:italic;">Hareketler yüklenemedi: ' + escHtmlAdmin(e.message || String(e)) + '</div>';
       }
     }
 

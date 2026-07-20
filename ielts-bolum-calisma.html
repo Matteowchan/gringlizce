@@ -673,8 +673,20 @@
         return;
       }
 
+      // Sadece bu bölüme ait section'ı olan testleri göster
+      // (bölüm-bazlı çalışmalar diğer bölümlerin listesini kirletmesin; ağ hatasında hepsini göster)
+      const allIds = tests.map(t => t.id);
+      const { data: secRows, error: secErr } = await sb.from('ielts_sections')
+        .select('test_id').eq('section', bolum).in('test_id', allIds);
+      const shownTests = (secErr || !secRows) ? tests
+        : (function () { const has = new Set(secRows.map(s => s.test_id)); return tests.filter(t => has.has(t.id)); })();
+      if (!shownTests.length) {
+        document.getElementById('emptyTests').style.display = 'block';
+        return;
+      }
+
       // Status fetch
-      const testIds = tests.map(t => t.id);
+      const testIds = shownTests.map(t => t.id);
       let statusByTest = {};
 
       if (bolum === 'writing') {

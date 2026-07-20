@@ -742,7 +742,10 @@
         let cardEyebrow, cardName;
         if (bolum === 'writing') {
           const wt = typeByTest[t.id] || {};
-          const t1 = wt[1], t2 = wt[2];
+          // "Writing Task 1", "Task 2" gibi jenerik başlıkları anlamlı tip saymayız
+          const isType = s => s && !/^(writing\s+)?task\s*\d+$/i.test(String(s).trim());
+          const t1 = isType(wt[1]) ? wt[1] : null;
+          const t2 = isType(wt[2]) ? wt[2] : null;
           cardEyebrow = 'IELTS Writing' + (num ? ' · ' + num : '');
           if (t1 || t2) {
             // Task 1 tipi başlıkta, Task 2 tipi alt satırda

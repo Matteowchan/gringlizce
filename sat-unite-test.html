@@ -29,6 +29,10 @@
   .st-expl{margin-top:.7rem;border-top:1px dashed var(--st-line);padding-top:.7rem;font-size:.88rem;line-height:1.55;display:none;}
   .st-expl.show{display:block;}
   .st-expl h5{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--st-gold);margin:.6rem 0 .2rem;}
+  .st-expl .ex-t{font:600 13px Inter,system-ui,sans-serif;color:var(--st-accent);margin:.5rem 0 .15rem;}
+  .st-expl .ex-q{margin:.3rem 0;padding:.35rem .7rem;border-left:3px solid var(--st-gold);background:rgba(0,0,0,.035);font-style:italic;border-radius:0 6px 6px 0;}
+  .st-expl .ex-b{margin:.2rem 0;}
+  .st-expl .ex-w{margin:.45rem 0;padding-left:.2rem;}
   .st-btn{background:var(--st-accent);color:#fff;border:none;border-radius:9px;padding:.75rem 1.6rem;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-block;}
 .st-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:1.1rem;}
 .st-btn.gold{background:var(--st-gold);}
@@ -202,20 +206,36 @@ function renderQuestions(passages){
   document.getElementById('st-submit').addEventListener('click', submitModule);
 }
 
+// explanations per-şık bir OBJE olabilir: {steps:[{title,body,quote?}],status} — ya da düz string
+function exNode(node){
+  if (node==null) return '';
+  if (typeof node==='string') return '<p class="ex-b">'+esc(node)+'</p>';
+  const steps = Array.isArray(node.steps) ? node.steps : null;
+  if (steps){
+    return steps.map(s=>{
+      let x='';
+      if (s.title) x+='<div class="ex-t">'+esc(s.title)+'</div>';
+      if (s.quote) x+='<blockquote class="ex-q">'+esc(s.quote)+'</blockquote>';
+      if (s.body)  x+='<p class="ex-b">'+esc(s.body)+'</p>';
+      return x;
+    }).join('');
+  }
+  if (typeof node.body==='string') return '<p class="ex-b">'+esc(node.body)+'</p>';
+  return '';
+}
 function explHtml(q){
   const e = q.explanations || {};
   const ca = q.correct_answer;
   let h = '';
-  // 8-alanlı standart: mevcut alanlar + per-şık; eksikse başlıkla göster
-  h += '<h5>Doğru cevap</h5>'+esc(ca)+(e[ca]?' — '+esc(e[ca]):'');
+  h += '<h5>Doğru cevap: '+esc(ca)+'</h5>'+exNode(e[ca]);
   const wrongs = (Array.isArray(q.options)?q.options:[]).map(o=>o.letter).filter(l=>l!==ca);
-  if (wrongs.some(w=>e[w])){
+  const anyWrong = wrongs.some(w=>{ const n=e[w]; return n && (typeof n==='string' || (n.steps&&n.steps.length) || n.body); });
+  if (anyWrong){
     h += '<h5>Yanlış şıklar neden yanlış</h5>';
-    wrongs.forEach(w=>{ if(e[w]) h += '<div><strong>'+esc(w)+'.</strong> '+esc(e[w])+'</div>'; });
+    wrongs.forEach(w=>{ const b=exNode(e[w]); if(b) h += '<div class="ex-w"><strong>'+esc(w)+'.</strong> '+b+'</div>'; });
   }
-  if (e.type) h = '<h5>Soru tipi</h5>'+esc(e.type)+h;
-  if (e.trick) h += '<h5>Tuzak / ipucu</h5>'+esc(e.trick);
-  if (e.vocab) h += '<h5>Kelimeler (TR)</h5>'+esc(e.vocab);
+  if (e.type)  h = '<h5>Soru tipi</h5><p class="ex-b">'+esc(e.type)+'</p>'+h;
+  if (e.trick) h += '<h5>Tuzak / ipucu</h5><p class="ex-b">'+esc(e.trick)+'</p>';
   return h;
 }
 

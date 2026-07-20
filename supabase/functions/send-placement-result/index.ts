@@ -21,7 +21,7 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface Skill { name: string; c: number; t: number; pct: number; level: string; what?: string; comment?: string; study?: string; }
+interface Skill { name: string; short?: string; c: number; t: number; pct: number; level: string; what?: string; comment?: string; study?: string; }
 interface Result {
   cefr: string; cefrName: string; score: number; total: number; pct: number;
   skills: Skill[]; missedTopics: string[]; wrongCount: number;
@@ -54,6 +54,11 @@ function bar(pct: number, color: string): string {
 
 function buildEmail(name: string, r: Result): string {
   const cefrDesc = CEFR_DESC[r.cefr] || "";
+  const enc = (o: unknown) => encodeURIComponent(JSON.stringify(o));
+  const barCfg = { type: "horizontalBar", data: { labels: r.skills.map((s) => s.short || s.name), datasets: [{ data: r.skills.map((s) => s.pct), backgroundColor: r.skills.map((s) => barColor(s.level)) }] }, options: { legend: { display: false }, title: { display: true, text: "Beceri profili (% dogru)", fontColor: "#1f3f3e", fontSize: 15 }, scales: { xAxes: [{ ticks: { min: 0, max: 100, fontColor: "#6a6a6a" } }], yAxes: [{ ticks: { fontColor: "#333", fontSize: 11 } }] } } };
+  const barUrl = "https://quickchart.io/chart?bkg=white&w=560&h=300&c=" + enc(barCfg);
+  const doughCfg = { type: "doughnut", data: { labels: ["Dogru", "Yanlis"], datasets: [{ data: [r.score, Math.max(0, r.total - r.score)], backgroundColor: ["#2C5856", "#e6ddca"] }] }, options: { legend: { position: "bottom", labels: { fontColor: "#333" } }, cutoutPercentage: 62, title: { display: true, text: r.cefr + " · %" + r.pct, fontColor: "#2C5856", fontSize: 18 } } };
+  const doughUrl = "https://quickchart.io/chart?bkg=white&w=320&h=280&c=" + enc(doughCfg);
   const skillRows = r.skills.map((s) => `
     <tr><td style="padding:9px 0;border-bottom:1px solid #efe8d6">
       <div style="font-size:14px;color:#1b1b1b">${esc(s.name)}
@@ -93,7 +98,9 @@ function buildEmail(name: string, r: Result): string {
         <div style="font-size:13px;color:#4a4a4a;margin-top:8px;max-width:460px;margin-left:auto;margin-right:auto">${esc(cefrDesc)}</div>
       </div>
 
+      <div style="text-align:center;margin:2px 0 14px"><img src="${doughUrl}" alt="Genel skor" width="300" style="max-width:100%"></div>
       <h2 style="font-family:Georgia,serif;color:#1f3f3e;font-size:17px;border-bottom:2px solid #c89a3c;padding-bottom:6px">Beceri kırılımı</h2>
+      <div style="text-align:center;margin:10px 0"><img src="${barUrl}" alt="Beceri grafiği" width="560" style="max-width:100%;border:1px solid #efe8d6;border-radius:8px"></div>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${skillRows}</table>
 
       <h2 style="font-family:Georgia,serif;color:#1f3f3e;font-size:17px;border-bottom:2px solid #c89a3c;padding-bottom:6px;margin-top:26px">Detaylı analiz &amp; çalışma planı</h2>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seviye Belirleme Sınavı — Gri English</title>
-<meta name="description" content="50 dakikalık İngilizce seviye belirleme sınavı: Reading, Use of English ve Listening. Sonunda CEFR seviyeni ve eksik konularını detaylı gör.">
+<meta name="description" content="60 dakikalık İngilizce seviye belirleme sınavı: Reading, Use of English ve Listening. Sonunda CEFR seviyeni ve eksik konularını detaylı gör.">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/main.css">
 <link rel="stylesheet" href="assets/site-overrides.css">
@@ -58,6 +58,11 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 .audio-box{background:#eef6f5;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:10px 0 14px;}
 .audio-box .al{font-size:.82rem;color:var(--muted);margin-bottom:6px;}
 .audio-box audio{width:100%;}
+.wtext{width:100%;min-height:170px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font:inherit;font-size:.95rem;line-height:1.6;background:#fff;resize:vertical;}
+.wtext:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(44,88,86,.12);}
+.wcount{font-size:.82rem;color:var(--muted);margin:4px 0 6px;text-align:right;}
+.wcount.ok{color:var(--good);font-weight:600;}
+.wtask ul{margin:6px 0 0 18px;font-size:.9rem;color:var(--muted);}
 /* results */
 .band-big{text-align:center;padding:10px 0 6px;}
 .band-big .cefr{font-family:'Lora',serif;font-size:3.2rem;color:var(--teal);line-height:1;}
@@ -121,11 +126,11 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
       <h1>İngilizce Seviye Belirleme Sınavı</h1>
       <p class="sub">Nerede olduğunu öğren. Reading, Use of English ve Listening bölümleriyle CEFR seviyeni ölçer, sonunda <b>hangi konularda eksiğin olduğunu çok detaylı</b> gösterir.</p>
       <div class="sb-facts">
-        <div class="sb-fact"><b>50 dk</b><span>Toplam süre (sayaç otomatik)</span></div>
-        <div class="sb-fact"><b>54 soru</b><span>36 Reading &amp; Use of English + 18 Listening</span></div>
+        <div class="sb-fact"><b>60 dk</b><span>Toplam süre (sayaç otomatik)</span></div>
+        <div class="sb-fact"><b>54 soru + Writing</b><span>Reading &amp; UoE + Listening + Yazma</span></div>
         <div class="sb-fact"><b>CEFR</b><span>A1 → C1 seviye tahmini</span></div>
       </div>
-      <div class="sb-note">Sınav başlayınca <b>50 dakikalık sayaç</b> işler; süre bitince cevapların otomatik değerlendirilir. Listening bölümünde sesleri istediğin kadar dinleyebilirsin (gerçek sınavda iki kez çalınır). Sessiz bir ortamda, kulaklıkla çözmeni öneririz.</div>
+      <div class="sb-note">Sınav başlayınca <b>60 dakikalık sayaç</b> işler; süre bitince cevapların otomatik değerlendirilir. Önerilen süre dağılımı: <b>Reading &amp; Use of English ~25 dk · Listening ~15 dk · Writing ~20 dk</b>. Listening'de sesleri istediğin kadar dinleyebilirsin. Sessiz bir ortamda, kulaklıkla çözmeni öneririz.</div>
       <button class="btn gold" id="start-btn">Sınavı Başlat &rsaquo;</button>
     </div>
   </div>
@@ -269,6 +274,31 @@ var EXAM = [
  ]}
 ];
 
+/* Writing görevleri (otomatik puanlanmaz; öğretmen/AI değerlendirir, rapora eklenir) */
+var WRITING=[
+ {no:1,type:"Story",min:150,max:180,
+  prompt:"Write a story that begins with this sentence:",
+  lead:"When Deniz opened the old box, she could not believe what was inside.",
+  hints:["create interest for the reader","use a range of past tenses","organise your ideas into clear paragraphs"]},
+ {no:2,type:"Essay",min:180,max:200,
+  prompt:"Write an essay giving your opinion on the following statement:",
+  lead:"Some people think students should wear a school uniform. Others believe students should be free to choose their own clothes. Discuss both views and give your own opinion.",
+  hints:["present both points of view","support your ideas with reasons and examples","state your own position clearly","use formal, academic language"]}
+];
+function wordCount(s){s=(s||'').trim();return s?s.split(/\s+/).length:0;}
+function wcount(no){var el=document.getElementById('wr'+no),c=document.getElementById('wc'+no);if(!el||!c)return;var w=wordCount(el.value),W=WRITING.find(function(x){return x.no===no;});c.textContent=w+' kelime (hedef '+W.min+'–'+W.max+')';c.classList.toggle('ok',w>=W.min&&w<=W.max+20);}
+function renderWriting(){
+  var h='<div class="sb-card"><div class="paper-h"><span class="eyebrow">Paper 3</span></div><h2>Writing</h2>'
+   +'<p class="instr">İki görevi de yanıtla. Bu bölüm otomatik puanlanmaz; yazın raporuna eklenir ve bir öğretmen (ya da Gri AI) tarafından değerlendirilir. <b>Önerilen süre: ~20 dakika.</b></p>';
+  WRITING.forEach(function(w){
+    h+='<div class="wtask"><h3 class="part-h">Part '+w.no+' — '+esc(w.type)+' ('+w.min+'–'+w.max+' kelime)</h3>'
+     +'<div class="passage"><p>'+esc(w.prompt)+'</p><p style="font-weight:600;font-style:italic">"'+esc(w.lead)+'"</p><p style="margin:.4rem 0 0">In your writing, try to:</p><ul>'+w.hints.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>'
+     +'<textarea class="wtext" id="wr'+w.no+'" placeholder="Write your '+w.type.toLowerCase()+' here..." oninput="wcount('+w.no+')"></textarea>'
+     +'<div class="wcount" id="wc'+w.no+'">0 kelime (hedef '+w.min+'–'+w.max+')</div></div>';
+  });
+  return h+'</div>';
+}
+
 /* skill meta: ad + detaylı geri bildirim (güçlü / orta / zayıf) */
 var SKILLS = {
  reading_scan:{name:"Okuma — Tarama & Eşleştirme (Reading: scanning)",
@@ -351,7 +381,7 @@ var BANDS = [
 /* ============ RENDER ============ */
 var app=document.getElementById('exam'), intro=document.getElementById('intro'),
     resDiv=document.getElementById('results'), barMount=document.getElementById('sb-barmount');
-var STATE={answers:{},started:false,remaining:50*60,timer:null,order:[]};
+var STATE={answers:{},started:false,remaining:60*60,timer:null,order:[]};
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
 function norm(s){return (s||'').toLowerCase().trim().replace(/\s+/g,' ').replace(/[.’']/g,function(c){return c==='.'?'':"'";}).replace(/[.,;!?]+$/,'');}
 
@@ -422,7 +452,8 @@ function renderExam(){
     });
     h+='</div>';
   });
-  h+='<div class="sb-card" style="text-align:center"><p class="instr">Tüm cevaplarını gözden geçir. Hazırsan değerlendir.</p><button class="btn gold" id="submit-btn">Sınavı Bitir &amp; Sonucu Gör</button></div>';
+  h+=renderWriting();
+  h+='<div class="sb-card" style="text-align:center"><p class="instr">Tüm cevaplarını ve yazma görevlerini gözden geçir. Hazırsan değerlendir.</p><button class="btn gold" id="submit-btn">Sınavı Bitir &amp; Sonucu Gör</button></div>';
   app.innerHTML=h;
   document.getElementById('submit-btn').addEventListener('click',function(){ if(confirm('Sınavı bitirip sonucu görmek istediğine emin misin?')) finish(); });
   if(app._wired) return; app._wired=true;
@@ -468,6 +499,7 @@ function isCorrect(item){
 }
 function finish(){
   examActive=false; if(STATE.timer)clearInterval(STATE.timer);
+  STATE.writing={}; WRITING.forEach(function(w){var el=document.getElementById('wr'+w.no);STATE.writing[w.no]=el?el.value.trim():'';});
   var bySkill={}, wrong=[], total=0, correct=0;
   STATE.order.forEach(function(item){
     total++; var ok=isCorrect(item);
@@ -536,7 +568,13 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
     var M=SKILLS[s],o=bySkill[s],p=skillPct(o);
     return {name:M.name,short:SHORT[s]||M.name,level:(p>=75?'g':p>=50?'w':'b'),pct:p,c:o.c,t:o.t,what:M.what,comment:(p>=75?M.g:M.w),study:(p<75?M.study:'')};
   }).sort(function(a,b){return a.pct-b.pct;});
-  window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length};
+  var writingData=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {type:w.type,text:t,words:wordCount(t)};});
+  window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length,writing:writingData};
+
+  // ---- Writing (yazdıkların) kartı ----
+  h+='<div class="sb-card"><h2>Writing — yazdıkların</h2><p class="instr">Bu bölüm objektif puana katılmaz; CEFR tahmini Reading / Use of English / Listening üzerinden hesaplanır. Yazıların rapora eklendi; bir öğretmen veya Gri AI ayrıca değerlendirebilir.</p>';
+  WRITING.forEach(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';h+='<h4>Part '+w.no+' — '+esc(w.type)+' · '+wordCount(t)+' kelime</h4><div class="passage" style="white-space:pre-wrap">'+(t?esc(t):'<i style="color:var(--muted)">Boş bırakıldı</i>')+'</div>';});
+  h+='</div>';
 
   // ---- e-posta raporu kartı ----
   h+='<div class="sb-card"><h2>Detaylı raporunu al</h2><p class="instr">CEFR seviyeni, beceri grafiğini, <b>hangi tense/yapı ve konularda</b> eksiğin olduğunu ve kişisel çalışma planını içeren profesyonel raporu e-postana gönderelim.</p>'+
@@ -581,7 +619,7 @@ document.addEventListener('visibilitychange',function(){
 });
 function resetExam(){
   warnCount=0; pendingWarn=false;
-  STATE.answers={}; STATE.remaining=50*60;
+  STATE.answers={}; STATE.remaining=60*60;
   if(STATE.timer)clearInterval(STATE.timer);
   renderBar(); renderExam();
   examActive=true;

@@ -88,15 +88,12 @@ const UNITS = {
 };
 
 // ---- Yaklaşık ham->ölçekli puan dönüşümü (TAHMİN — resmi değil) ----
-// Digital SAT R&W bölümü 54 soru, 200-800 ölçek. Upper yol tavana ulaşır, Lower yol kapaklıdır.
+// 3 modül × 27 = 81 soru, 200-800 ölçek. Yol adaptif zorluğa göre tavanı belirler.
 function scaledScore(raw, path){
-  const r = Math.max(0, Math.min(54, raw));
-  if (path === 'lower'){
-    // Alt yol yaklaşık 200-610 ile kapaklı (gerçek testte alt modül tavanı düşüktür)
-    return Math.round(200 + (410) * Math.pow(r/54, 0.92));
-  }
-  // Upper yol 300-800
-  return Math.round(300 + (500) * Math.pow(r/54, 0.98));
+  const f = Math.max(0, Math.min(81, raw)) / 81;
+  if (path === 'lower') return Math.round(200 + 380 * Math.pow(f, 0.90));  // kolay yol ~200-580
+  if (path === 'mid')   return Math.round(240 + 460 * Math.pow(f, 0.95));  // orta yol ~240-700
+  return Math.round(300 + 500 * Math.pow(f, 0.98));                        // zor yol ~300-800
 }
 
 function param(k){ return new URLSearchParams(location.search).get(k); }
@@ -172,15 +169,16 @@ function passageHtml(texts){
   }).join('');
 }
 
-let STATE = { questions:[], answers:{}, submitted:false, module:1, m1raw:0, path:null };
+let STATE = { questions:[], answers:{}, submitted:false, module:1, m1raw:0, m2raw:0, m2hard:false, m3hard:false };
 
 function renderModuleHeader(){
   let rule='';
   if (mode==='checkpoint'){
     rule = '<div class="st-rulecard">Bu bir <strong>konu geçiş testidir</strong> (Form '+form+'). 27 sorudan <strong>19 veya üzeri</strong> (yüzde 70) doğru yaparsan bir sonraki bölüme geçebilirsin. 19 altında kalırsan öğretim bölümüne dön, tam tekrar et, sonra Form '+(form==='A'?'B':'A')+' testini çöz.</div>';
   } else {
-    if (STATE.module===1) rule = '<div class="st-rulecard"><strong>Final — Modül 1 (27 soru).</strong> Sonuçta: <strong>18 veya üzeri</strong> doğru yaparsan zor Modül 2 (Upper) yoluna, altında kalırsan kolay Modül 2 (Lower) yoluna yönlendirilirsin. Toplam 54 soru sonunda tahmini 200-800 puanın hesaplanır.</div>';
-    else rule = '<div class="st-rulecard"><strong>Final — Modül 2 ('+(STATE.path==='upper'?'Upper / zor':'Lower / kolay')+').</strong> Modül 1 sonucuna göre yönlendirildin. Bu modül bittiğinde toplam ham puanın 200-800 ölçeğine çevrilir (tahmin).</div>';
+    if (STATE.module===1) rule = '<div class="st-rulecard"><strong>Final — Modül 1 / 3 (27 soru).</strong> <strong>19 veya üzeri</strong> (yüzde 70) doğru yaparsan zor Modül 2\'ye, altında kalırsan kolay Modül 2\'ye yönlendirilirsin. Toplam 3 modül (81 soru) sonunda tahmini 200-800 puanın hesaplanır.</div>';
+    else if (STATE.module===2) rule = '<div class="st-rulecard"><strong>Final — Modül 2 / 3 ('+(STATE.m2hard?'zor':'kolay')+').</strong> Modül 1 sonucuna göre yönlendirildin. Bu modülde 19+ yaparsan Modül 3 zor olur (tavan açık kalır).</div>';
+    else rule = '<div class="st-rulecard"><strong>Final — Modül 3 / 3 ('+(STATE.m3hard?'zor':'kolay')+').</strong> Son modül. Bittiğinde toplam ham puanın (/81) 200-800 ölçeğine çevrilir (tahmin).</div>';
   }
   return rule;
 }
@@ -246,7 +244,7 @@ function explHtml(q){
 }
 
 function submitModule(){
-  if (STATE.submitted && !(mode==='final' && STATE.module===1)) return;
+  if (STATE.submitted && !(mode==='final' && STATE.module<3)) return;
   let correct = 0;
   STATE.questions.forEach((q,i)=>{
     const ans = STATE.answers[i];
@@ -266,7 +264,7 @@ function submitModule(){
 
 function convTable(path){
   let rows='';
-  for (let r=0;r<=54;r+=6){ rows += '<tr><td>'+r+'</td><td>'+scaledScore(r,path)+'</td></tr>'; }
+  for (let r=0;r<=81;r+=9){ rows += '<tr><td>'+r+'</td><td>'+scaledScore(r,path)+'</td></tr>'; }
   return '<table class="st-conv"><tr><th>Ham</th><th>Tahmini Puan</th></tr>'+rows+'</table>';
 }
 
@@ -304,37 +302,53 @@ function showResult(correct){
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
-  // FINAL
+  // FINAL — 3 modül adaptif (M1 -> M2 -> M3), her modül 27 soru, %70 = 19/27
   if (STATE.module===1){
     STATE.m1raw = correct;
-    STATE.path = correct>=18 ? 'upper' : 'lower';
-    const box='<div class="st-result"><div class="st-eyebrow">Final · Modül 1</div>'+
+    STATE.m2hard = correct>=19;               // %70+ -> zor Modül 2
+    const box='<div class="st-result"><div class="st-eyebrow">Final · Modül 1 / 3</div>'+
       '<div class="st-score">'+correct+' / 27</div>'+
-      '<div class="st-pill '+(STATE.path==='upper'?'pass':'fail')+'">Yönlendirme: Modül 2 '+(STATE.path==='upper'?'Upper (zor)':'Lower (kolay)')+'</div>'+
-      '<p class="st-note">'+(STATE.path==='upper'?'18+ yaptın, zor yola gidiyorsun (tavana ulaşır).':'18 altında kaldın, kolay yola gidiyorsun (puan kapaklı).')+'</p>'+
-      '<button class="st-btn" id="st-next">Modül 2\'ye Geç</button></div>';
+      '<div class="st-pill '+(STATE.m2hard?'pass':'fail')+'">Yönlendirme: Modül 2 '+(STATE.m2hard?'zor':'kolay')+'</div>'+
+      '<p class="st-note">'+(STATE.m2hard?'%70+ yaptın, zor Modül 2\'ye geçiyorsun (üst puanların yolu).':'%70 altında kaldın, kolay Modül 2\'ye geçiyorsun.')+'</p>'+
+      '<button class="st-btn gold" id="st-next">Modül 2\'ye Geç &rsaquo;</button></div>';
     app.insertAdjacentHTML('afterbegin', box);
     window.scrollTo({top:0,behavior:'smooth'});
-    document.getElementById('st-next').addEventListener('click', loadModule2);
+    document.getElementById('st-next').addEventListener('click', ()=>loadModule(2, STATE.m2hard));
     return;
   }
-  // Modül 2 bitti -> toplam + puan
-  const raw = STATE.m1raw + correct;
-  const scaled = scaledScore(raw, STATE.path);
-  const box='<div class="st-result"><div class="st-eyebrow">Final Sonucu · '+(STATE.path==='upper'?'Upper yol':'Lower yol')+'</div>'+
+  if (STATE.module===2){
+    STATE.m2raw = correct;
+    STATE.m3hard = correct>=19;               // Modül 2'de %70+ -> zor Modül 3
+    const box='<div class="st-result"><div class="st-eyebrow">Final · Modül 2 / 3</div>'+
+      '<div class="st-score">'+correct+' / 27</div>'+
+      '<div class="st-pill '+(STATE.m3hard?'pass':'fail')+'">Yönlendirme: Modül 3 '+(STATE.m3hard?'zor':'kolay')+'</div>'+
+      '<p class="st-note">Son modül. '+(STATE.m3hard?'Zor Modül 3 tavanı açık tutar.':'Kolay Modül 3 ile bitiriyorsun.')+'</p>'+
+      '<button class="st-btn gold" id="st-next">Modül 3\'e Geç &rsaquo;</button></div>';
+    app.insertAdjacentHTML('afterbegin', box);
+    window.scrollTo({top:0,behavior:'smooth'});
+    document.getElementById('st-next').addEventListener('click', ()=>loadModule(3, STATE.m3hard));
+    return;
+  }
+  // Modül 3 bitti -> toplam /81 + puan
+  const raw = STATE.m1raw + STATE.m2raw + correct;
+  const path = (STATE.m2hard && STATE.m3hard) ? 'upper' : (STATE.m2hard || STATE.m3hard) ? 'mid' : 'lower';
+  const yol = path==='upper' ? 'Zor yol' : path==='mid' ? 'Orta yol' : 'Kolay yol';
+  const scaled = scaledScore(raw, path);
+  const box='<div class="st-result"><div class="st-eyebrow">Final Sonucu · '+yol+'</div>'+
     '<div class="st-score">~'+scaled+'</div>'+
-    '<div class="st-pill pass">Ham: '+raw+' / 54 (M1 '+STATE.m1raw+' + M2 '+correct+')</div>'+
+    '<div class="st-pill pass">Ham: '+raw+' / 81 (M1 '+STATE.m1raw+' + M2 '+STATE.m2raw+' + M3 '+correct+')</div>'+
     '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir. Gerçek Digital SAT her forma göre eşitlenir.</p>'+
-    convTable(STATE.path)+'</div>';
+    convTable(path)+'</div>';
   app.insertAdjacentHTML('afterbegin', box);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-async function loadModule2(){
-  STATE.module=2; STATE.submitted=false; STATE.answers={}; document.querySelector('.st-result').remove();
-  const diffs = STATE.path==='upper' ? ['medium','hard','hard'] : ['easy','easy','medium'];
+async function loadModule(n, hard){
+  STATE.module=n; STATE.submitted=false; STATE.answers={};
+  const rc=document.querySelector('.st-result'); if(rc) rc.remove();
+  const diffs = hard ? ['medium','hard','hard'] : ['easy','easy','medium'];
   const pool = await fetchPool(U.cat, [...new Set(diffs)]);
-  const set = buildSet(pool, 27, form==='A'?2:3);
+  const set = buildSet(pool, 27, n-1);        // offset n-1 (0,1,2) -> modüller ayrık sorular
   const passages = await fetchPassages(set.map(q=>q.passage_id));
   STATE.questions=set;
   renderQuestions(passages);

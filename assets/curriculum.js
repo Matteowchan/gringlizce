@@ -296,7 +296,13 @@ var EXAMS=[
     { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
     { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
-    { label: "Blog", href: "blog.html" },
+    { label: "Blog", href: "blog.html", children: [
+      { label: "SAT", href: "blog-sat.html" },
+      { label: "IELTS", href: "blog-ielts.html" },
+      { label: "TOEFL", href: "blog-toefl.html" },
+      { label: "YDS / YÖKDİL", href: "blog-yds.html" },
+      { label: "YDT", href: "blog-ydt.html" }
+    ] },
     { label: "Bize Ulaşın", href: "iletisim.html" }
   ];
 })();

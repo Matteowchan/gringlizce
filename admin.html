@@ -1741,7 +1741,6 @@
         <button class="admin-tab" data-tab="ai-health" role="tab"><span class="tab-ico">🩺</span>AI Sağlık</button>
         <button class="admin-tab" data-tab="comms" role="tab"><span class="tab-ico">✉️</span>İletişim</button>
         <button class="admin-tab" data-tab="gamification" role="tab"><span class="tab-ico">🏅</span>Rozetler</button>
-        <button class="admin-tab" data-tab="logs" role="tab"><span class="tab-ico">📜</span><span lang="en">Log</span></button>
         <span class="tab-sep" aria-hidden="true"></span>
         <button class="admin-tab" data-tab="products" role="tab"><span class="tab-ico">🛒</span>Ürünler</button>
         <button class="admin-tab" data-tab="settings" role="tab"><span class="tab-ico">⚙️</span>Ayarlar</button>
@@ -2292,28 +2291,6 @@
         </section>
       </div>
 
-      <!-- ============ AUDIT LOG TAB ============ -->
-      <div class="admin-tab-content" data-tab-content="logs">
-        <section class="admin-section">
-          <span class="sec-eyebrow">Denetim</span>
-          <h2><span lang="en">Audit Log</span></h2>
-          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem; line-height: 1.5;">
-            Admin işlem geçmişi ve sistem olayları. Her admin işlemi otomatik loglanır.
-          </p>
-
-          <div class="filter-row" style="margin-bottom: 1rem;">
-            <button class="filter-chip active" data-log-level="all">Tümü</button>
-            <button class="filter-chip" data-log-level="audit"><span lang="en">Audit</span></button>
-            <button class="filter-chip" data-log-level="info"><span lang="en">Info</span></button>
-            <button class="filter-chip" data-log-level="warn"><span lang="en">Warning</span></button>
-            <button class="filter-chip" data-log-level="error"><span lang="en">Error</span></button>
-          </div>
-
-          <div style="background: var(--bg-card); border: 1px solid var(--line);" id="log-rows">
-            <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic;">Yükleniyor...</div>
-          </div>
-        </section>
-      </div>
 
     </div>
 
@@ -2992,7 +2969,7 @@
       var saved = 'overview';
       try { saved = localStorage.getItem(TAB_KEY) || 'overview'; } catch (e) {}
       // Doğrulama: kayıtlı tab gerçekten var mı
-      var valid = ['overview', 'users', 'content', 'settings', 'products', 'writing', 'ai-health', 'gamification', 'comms', 'logs'];
+      var valid = ['overview', 'users', 'content', 'settings', 'products', 'writing', 'ai-health', 'gamification', 'comms'];
       if (valid.indexOf(saved) === -1) saved = 'overview';
       activate(saved);
     }
@@ -4140,7 +4117,7 @@
     // ===================================================================
     // NEW TABS: Content, AI Health, Gamification, Comms, Audit Log
     // ===================================================================
-    var NEW_TAB_LOADED = { content: false, 'ai-health': false, gamification: false, comms: false, logs: false };
+    var NEW_TAB_LOADED = { content: false, 'ai-health': false, gamification: false, comms: false };
 
     // Top-level: hem tab click'i hem de dashboard jump-linkleri (activate) buradan tetikler
     function triggerTabLoader(t) {
@@ -4150,7 +4127,6 @@
       if (t === 'ai-health')    loadAiHealthTab();
       if (t === 'gamification') loadGamificationTab();
       if (t === 'comms')        loadCommsTab();
-      if (t === 'logs')         loadLogsTab();
     }
     function initNewTabs() {
       // Aktif tab zaten lazy bir tab ise ilk acilista yukle

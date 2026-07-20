@@ -238,6 +238,30 @@
       margin: 0 0 0.5rem;
       padding-right: 1.2rem;
     }
+    /* Writing kartı: Task 1 / Task 2 tipleri — hizalı, eşit ağırlıklı iki satır */
+    .deneme-card .task-spec { margin: 0.15rem 0 0.6rem; }
+    .deneme-card .task-row {
+      display: grid;
+      grid-template-columns: 3.1rem 1fr;
+      align-items: baseline;
+      column-gap: 0.7rem;
+      padding: 0.4rem 0;
+    }
+    .deneme-card .task-row + .task-row { border-top: 1px solid #efeadf; }
+    .deneme-card .tlabel {
+      font-size: 0.63rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #a39a88;
+      font-weight: 700;
+    }
+    .deneme-card .ttype {
+      font-family: Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink, #1a2a28);
+      line-height: 1.25;
+    }
 
     .deneme-card .status-dot {
       position: absolute;
@@ -754,21 +778,16 @@
         // Bölüm-bazlıda "Gri Deneme N" yerine tipe/temaya göre isim (Tam Deneme sayfasi ayri, dokunulmaz)
         const num = (String(t.name || '').match(/\d+/) || [''])[0];
         let topicTags = Array.isArray(t.topic_tags) ? t.topic_tags.slice() : [];
-        let cardEyebrow, cardName;
+        let cardEyebrow, cardName, wType1 = null, wType2 = null;
         if (bolum === 'writing') {
           const wt = typeByTest[t.id] || {};
           // "Writing Task 1", "Task 2" gibi jenerik başlıkları anlamlı tip saymayız
           const isType = s => s && !/^(writing\s+)?task\s*\d+$/i.test(String(s).trim());
-          const t1 = isType(wt[1]) ? wt[1] : null;
-          const t2 = isType(wt[2]) ? wt[2] : null;
+          wType1 = isType(wt[1]) ? wt[1] : null;
+          wType2 = isType(wt[2]) ? wt[2] : null;
           cardEyebrow = 'IELTS Writing' + (num ? ' · ' + num : '');
-          if (t1 || t2) {
-            // Task 1 tipi başlıkta, Task 2 tipi alt satırda
-            cardName = 'Task 1 · ' + (t1 || '—');
-            topicTags = t2 ? ['Task 2 · ' + t2] : [];
-          } else {
-            cardName = 'Task 1 + Task 2' + (num ? ' · ' + num : '');
-          }
+          cardName = 'Task 1 + Task 2' + (num ? ' · ' + num : ''); // tip yoksa yedek
+          topicTags = [];
         } else {
           const skill = bolum === 'reading' ? 'Reading' : 'Listening';
           const theme = topicTags.length ? topicTags.shift() : skill;
@@ -808,11 +827,16 @@
           ? '<div class="topics">' + topicTags.map(escapeHtml).join(' · ') + '</div>'
           : '';
 
+        // Writing'de Task tipleri varsa hizalı iki-satır spec; değilse standart başlık
+        const taskRow = (lbl, val) => '<div class="task-row"><span class="tlabel">' + lbl + '</span><span class="ttype">' + escapeHtml(val) + '</span></div>';
+        const cardBody = (bolum === 'writing' && (wType1 || wType2))
+          ? '<div class="task-spec">' + taskRow('Task 1', wType1 || '—') + taskRow('Task 2', wType2 || '—') + '</div>'
+          : '<div class="name">' + escapeHtml(cardName) + '</div>' + topics;
+
         h += '<a href="' + meta.examUrl + '?test=' + encodeURIComponent(t.slug) + '" class="deneme-card' + cardClass + '">'
            + dotHtml
            + '<div class="eyebrow">' + escapeHtml(cardEyebrow) + '</div>'
-           + '<div class="name">' + escapeHtml(cardName) + '</div>'
-           + topics
+           + cardBody
            + '<div class="detail' + detailExtra + '"><span>' + escapeHtml(detailText) + '</span><span class="arrow">→</span></div>'
            + '</a>';
       }

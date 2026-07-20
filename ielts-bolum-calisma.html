@@ -640,8 +640,11 @@
       if (pubIds.length) {
         const { data: secs } = await sb.from('ielts_sections')
           .select('test_id, section').in('test_id', pubIds);
+        // Yalnızca tek-section testleri (bölüm-bazlı pratikler) say; tam denemeler hariç
+        const secCount = {};
+        (secs || []).forEach(s => { secCount[s.test_id] = (secCount[s.test_id] || 0) + 1; });
         const sets = { listening: new Set(), reading: new Set(), writing: new Set() };
-        (secs || []).forEach(s => { if (sets[s.section]) sets[s.section].add(s.test_id); });
+        (secs || []).forEach(s => { if (sets[s.section] && secCount[s.test_id] === 1) sets[s.section].add(s.test_id); });
         per.listening = sets.listening.size;
         per.reading = sets.reading.size;
         per.writing = sets.writing.size;
@@ -681,13 +684,23 @@
         return;
       }
 
-      // Sadece bu bölüme ait section'ı olan testleri göster
-      // (bölüm-bazlı çalışmalar diğer bölümlerin listesini kirletmesin; ağ hatasında hepsini göster)
+      // Yalnızca BÖLÜM-BAZLI pratikleri göster: tek section'lı testler.
+      // Tam denemeler (listening+reading+writing = çok section) buraya girmez; onlar "Tam Deneme" sayfasında.
       const allIds = tests.map(t => t.id);
-      const { data: secRows, error: secErr } = await sb.from('ielts_sections')
-        .select('id, test_id').eq('section', bolum).in('test_id', allIds);
-      const shownTests = (secErr || !secRows) ? tests
-        : (function () { const has = new Set(secRows.map(s => s.test_id)); return tests.filter(t => has.has(t.id)); })();
+      const { data: allSecs, error: secErr } = await sb.from('ielts_sections')
+        .select('id, test_id, section').in('test_id', allIds);
+      let shownTests, bolumSecRows = [];
+      if (secErr || !allSecs) {
+        shownTests = tests; // ağ hatasında hepsini göster
+      } else {
+        const secCount = {}, hasBolum = {};
+        allSecs.forEach(s => {
+          secCount[s.test_id] = (secCount[s.test_id] || 0) + 1;
+          if (s.section === bolum) hasBolum[s.test_id] = true;
+        });
+        shownTests = tests.filter(t => hasBolum[t.id] && secCount[t.id] === 1);
+        bolumSecRows = allSecs.filter(s => s.section === bolum);
+      }
       if (!shownTests.length) {
         document.getElementById('emptyTests').style.display = 'block';
         return;
@@ -695,11 +708,13 @@
 
       // Writing: her testin Task 1 / Task 2 tipini (part.title) çek — kartta göster
       let typeByTest = {};
-      if (bolum === 'writing' && secRows && secRows.length) {
-        const secToTest = {}; secRows.forEach(s => { secToTest[s.id] = s.test_id; });
+      if (bolum === 'writing' && bolumSecRows.length) {
+        const shownSet = new Set(shownTests.map(t => t.id));
+        const secToTest = {}, secIds = [];
+        bolumSecRows.forEach(s => { if (shownSet.has(s.test_id)) { secToTest[s.id] = s.test_id; secIds.push(s.id); } });
         const { data: prts } = await sb.from('ielts_parts')
           .select('section_id, part_number, title')
-          .in('section_id', secRows.map(s => s.id));
+          .in('section_id', secIds);
         (prts || []).forEach(p => {
           const tid = secToTest[p.section_id]; if (!tid || !p.title) return;
           (typeByTest[tid] = typeByTest[tid] || {})[p.part_number] = p.title;

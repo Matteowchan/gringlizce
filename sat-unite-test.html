@@ -29,7 +29,10 @@
   .st-expl{margin-top:.7rem;border-top:1px dashed var(--st-line);padding-top:.7rem;font-size:.88rem;line-height:1.55;display:none;}
   .st-expl.show{display:block;}
   .st-expl h5{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--st-gold);margin:.6rem 0 .2rem;}
-  .st-btn{background:var(--st-accent);color:#fff;border:none;border-radius:9px;padding:.75rem 1.6rem;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;}
+  .st-btn{background:var(--st-accent);color:#fff;border:none;border-radius:9px;padding:.75rem 1.6rem;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-block;}
+.st-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:1.1rem;}
+.st-btn.gold{background:var(--st-gold);}
+.st-btn:hover{filter:brightness(.95);}
   .st-btn:disabled{opacity:.5;cursor:not-allowed;}
   .st-result{background:var(--st-card);border:1px solid var(--st-line);border-radius:14px;padding:1.6rem;text-align:center;margin-bottom:1.3rem;}
   .st-score{font-family:Georgia,serif;font-size:2.6rem;color:var(--st-accent);}
@@ -239,10 +242,31 @@ function showResult(correct){
   const total = STATE.questions.length;
   if (mode==='checkpoint'){
     const pass = correct>=19;
+    const moduleFile = {info:'sat-unite-1.html',craft:'sat-unite-2.html',expression:'sat-unite-3.html',conventions:'sat-unite-4.html'}[unitKey] || 'ogrenme-haritasi.html';
+    let actions='';
+    if (pass){
+      actions='<div class="st-actions">'+
+        '<a class="st-btn" href="'+moduleFile+'">Konu anlatımına dön</a>'+
+        '<a class="st-btn gold" href="sat-unite-test.html?unite='+unitKey+'&mode=final">Final Denemeye Geç</a></div>';
+    } else if (form==='A'){
+      // Form A geçilemedi -> Form B ancak burada açılır
+      actions='<div class="st-actions">'+
+        '<a class="st-btn" href="'+moduleFile+'">Önce konuyu tekrar et</a>'+
+        '<a class="st-btn gold" href="sat-unite-test.html?unite='+unitKey+'&mode=checkpoint&form=B">Form B ile tekrar dene</a></div>';
+    } else {
+      // Form B de geçilemedi
+      actions='<div class="st-actions">'+
+        '<a class="st-btn gold" href="'+moduleFile+'">Konu anlatımına dön, tam tekrar et</a></div>';
+    }
+    const note = pass
+      ? 'Bu üniteyi geçtin. Final denemeyle puan tahminini görebilirsin.'
+      : (form==='A'
+          ? 'Baraja takıldın. Konuyu bir tur tekrar et, sonra <b>Form B</b> (aynı zorlukta, farklı sorular) ile yeniden dene.'
+          : 'Form B\'de de baraja takıldın. Öğretim bölümüne dönüp eksik alt-becerileri çalış, sonra baştan dene.');
     const box='<div class="st-result"><div class="st-eyebrow">Geçiş Testi · Form '+form+'</div>'+
       '<div class="st-score">'+correct+' / 27</div>'+
       '<div class="st-pill '+(pass?'pass':'fail')+'">'+(pass?'GEÇTİN (yüzde 70+)':'GEÇEMEDİN (19 gerekli)')+'</div>'+
-      '<p class="st-note">'+(pass?'Bir sonraki bölüme geçebilirsin.':'Öğretim bölümüne dön, tam tekrar et, sonra Form '+(form==='A'?'B':'A')+' testini çöz.')+'</p></div>';
+      '<p class="st-note">'+note+'</p>'+actions+'</div>';
     app.insertAdjacentHTML('afterbegin', box);
     window.scrollTo({top:0,behavior:'smooth'});
     return;

@@ -131,6 +131,8 @@ function buildSet(pool, n, offset){
 async function fetchPool(cat, difficulties){
   let q = sb.from('questions').select('id,subcategory,difficulty,question_text,options,correct_answer,explanations,passage_id')
     .eq('active',true).eq('exam_type','sat').eq('section','rw').eq('category',cat);
+  // Üniteye ait gerçek beceriler (yanlış kategorilenmiş soruları hariç tut, veriye dokunmadan)
+  if (U.skills && U.skills.length) q = q.in('subcategory', U.skills);
   if (difficulties) q = q.in('difficulty', difficulties);
   const { data, error } = await q.range(0, 4999);
   if (error) throw error;

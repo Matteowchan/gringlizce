@@ -269,6 +269,24 @@ Deno.serve(async (req) => {
   if (text.length < 250) return json({ ok: false, error: "text_too_short", detail: "En az 250 karakter gerekli" }, 400);
   if (text.length > 15000) return json({ ok: false, error: "text_too_long", detail: "En fazla 15000 karakter" }, 400);
 
+  // Ayni-metin cache: kullanici ayni metni daha once kontrol ettiyse sonucu
+  // yeniden hesaplamadan don (kota YANMAZ, API maliyeti olusmaz).
+  // Kota kontrolunden ONCE: hakki bitmis kullanici da eski sonucunu gorebilsin.
+  try {
+    const { data: cached } = await supabase.from("writing_sessions")
+      .select("analysis, is_paid_check")
+      .eq("teacher_id", userId).eq("check_type", "paste").eq("final_text", text)
+      .not("analysis", "is", null)
+      .order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+    if (cached?.analysis) {
+      const { data: qRow } = await supabase.from("ai_quota")
+        .select("bonus_quota, bonus_used, detector_daily_used_count, detector_last_used_date, detector_daily_limit")
+        .eq("user_id", userId).maybeSingle();
+      return json({ ok: true, analysis: cached.analysis, is_paid: false, cost: 0,
+        is_cached: true, quota: computeDetectorQuota(qRow as Record<string, any> | null) });
+    }
+  } catch (e) { console.error("cache lookup failed:", e); }
+
   const { data: quotaRow } = await supabase
     .from("ai_quota")
     .select("bonus_quota, bonus_used, detector_daily_used_count, detector_last_used_date, detector_daily_limit")

@@ -392,6 +392,34 @@ async function handleFileInto(e, target, charSpanId) {
 function handleFile(e) { handleFileInto(e, document.getElementById('essay'), 'char-now'); }
 
 /* ====== DETECTOR ====== */
+// Gelişim grafiği: geçmiş kontrollerin tahmini AI yüzdesi, kronolojik çizgi
+function trendChart(rows) {
+  const pts = rows
+    .filter(s => s.analysis && s.analysis.estimate_low != null)
+    .map(s => ({
+      t: new Date(s.created_at).getTime(),
+      mid: Math.round((Number(s.analysis.estimate_low || 0) + Number(s.analysis.estimate_high || 0)) / 2),
+      band: s.analysis.band || '—',
+    }))
+    .sort((a, b) => a.t - b.t);
+  if (pts.length < 2) return '';
+  const W = 640, H = 120, padX = 14, padY = 14;
+  const x = i => padX + (W - 2 * padX) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
+  const y = v => (H - padY) - (H - 2 * padY) * (Math.max(0, Math.min(100, v)) / 100);
+  const line = pts.map((p, i) => x(i).toFixed(1) + ',' + y(p.mid).toFixed(1)).join(' ');
+  const dots = pts.map((p, i) =>
+    '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.mid).toFixed(1) + '" r="4" fill="' + bandColor(p.band) + '"><title>' + p.mid + '% · ' + escapeHtml(p.band) + '</title></circle>'
+  ).join('');
+  const grid = [25, 50, 75].map(v =>
+    '<line x1="' + padX + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - padX) + '" y2="' + y(v).toFixed(1) + '" stroke="#eee8da" stroke-width="1"/>' +
+    '<text x="' + (W - padX + 2) + '" y="' + (y(v) + 3).toFixed(1) + '" font-size="9" fill="#b0a890">' + v + '</text>'
+  ).join('');
+  return '<div style="border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:14px; background:#fffdf6;">' +
+    '<div style="font-size:12px; font-weight:600; color:#6a6a6a; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:6px;">Gelişimin — tahmini AI yüzdesi (eski → yeni)</div>' +
+    '<svg viewBox="0 0 ' + (W + 20) + ' ' + H + '" style="width:100%; height:auto; display:block;">' + grid +
+    '<polyline points="' + line + '" fill="none" stroke="#2E6E6A" stroke-width="2"/>' + dots + '</svg></div>';
+}
+
 async function loadHistory(userId) {
   const { data, error } = await supabase.from('writing_sessions')
     .select('id, final_text, created_at, analysis')
@@ -400,7 +428,7 @@ async function loadHistory(userId) {
   const c = document.getElementById('history-area');
   if (error) { c.innerHTML = '<p class="muted">Geçmiş yüklenemedi.</p>'; return; }
   if (!data || data.length === 0) { c.innerHTML = '<p class="muted">Henuz kontrol yok.</p>'; return; }
-  c.innerHTML = data.map(s => {
+  c.innerHTML = trendChart(data) + data.map(s => {
     const band = s.analysis && s.analysis.band ? s.analysis.band : '—';
     const snippet = (s.final_text || '').slice(0, 90);
     return '<div class="h-row"><div class="h-snippet">' + escapeHtml(snippet) + '</div>' +
@@ -446,7 +474,8 @@ async function runCheck() {
     }
     renderResult(data.analysis, text);
     await setChip('detector'); await loadHistory(CURRENT_USER.id);
-    toast(data.cost > 0 ? data.cost + ' token harcandi' : 'Ücretsiz kontrol');
+    toast(data.is_cached ? 'Bu metni daha önce kontrol etmiştin — sonuç önbellekten geldi, hakkın yanmadı.'
+      : data.cost > 0 ? data.cost + ' token harcandi' : 'Ücretsiz kontrol');
   } catch (e) {
     console.error(e);
     document.getElementById('result').innerHTML = '<p class="muted" style="padding:16px;">Ag hatasi.</p>';

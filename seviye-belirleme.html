@@ -37,7 +37,7 @@ h1,h2,h3,h4{font-family:'Lora',serif;color:var(--teal-dark);}
 .part-h{font-size:1.05rem;margin:20px 0 4px;border-top:1px solid var(--border);padding-top:16px;}
 .part-h:first-of-type{border-top:none;}
 .instr{font-size:.9rem;color:var(--muted);margin:2px 0 12px;}
-.passage{background:var(--bg-soft);border-radius:10px;padding:14px 18px;font-size:.94rem;line-height:1.65;white-space:pre-line;margin:8px 0 16px;}
+.passage{background:var(--bg-soft);border-radius:10px;padding:14px 18px;font-size:.94rem;line-height:1.65;white-space:pre-line;margin:8px 0 16px;overflow-wrap:break-word;word-break:break-word;}
 .passage h4{font-size:1rem;margin:0 0 8px;}
 .optbox{background:#f8f4ea;border:1px dashed var(--border);border-radius:10px;padding:12px 16px;margin:8px 0 16px;font-size:.9rem;}
 .optbox b{color:var(--teal-dark);}
@@ -600,6 +600,7 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   // ---- Writing (yazdıkların) kartı ----
   h+='<div class="sb-card"><h2>Writing — yazdıkların</h2><p class="instr">Bu bölüm objektif puana katılmaz; CEFR tahmini Reading / Use of English / Listening üzerinden hesaplanır. Yazıların rapora eklendi; bir öğretmen veya Gri AI ayrıca değerlendirebilir.</p>';
   WRITING.forEach(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';h+='<h4>Part '+w.no+' — '+esc(w.type)+' · '+wordCount(t)+' kelime</h4><div class="passage" style="white-space:pre-wrap">'+(t?esc(t):'<i style="color:var(--muted)">Boş bırakıldı</i>')+'</div>';});
+  h+='<h3 class="part-h">Gri AI değerlendirmesi</h3><div id="ai-writing-eval"><p class="instr">Hazırlanıyor…</p></div>';
   h+='</div>';
 
   // ---- e-posta raporu kartı ----
@@ -611,6 +612,7 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   resDiv.innerHTML=h;
   var mb=document.getElementById('mail-send'); if(mb)mb.addEventListener('click',sendReport);
   var pb=document.getElementById('pdf-btn'); if(pb)pb.addEventListener('click',function(){window.print();});
+  evalWriting();
   window.scrollTo(0,0);
   try{ if(window.track)window.track('placement_done',{score:correct,total:total,cefr:band.cefr}); }catch(e){}
 }
@@ -693,6 +695,34 @@ function sendReport(){
       if(res.ok && res.j && res.j.sent){ status.style.color='var(--good)'; status.textContent='✓ Detaylı rapor '+email+' adresine gönderildi. Gelen kutunu (ve spam klasörünü) kontrol et.'; }
       else { status.style.color='var(--bad)'; status.textContent='Gönderilemedi: '+((res.j&&res.j.error)||'bilinmeyen hata')+'. Lütfen tekrar dene.'; }
     }).catch(function(e){ btn.disabled=false; status.style.color='var(--bad)'; status.textContent='Ağ hatası: '+e.message; });
+}
+
+/* ============ WRITING'İ GRİ AI İLE DEĞERLENDİR ============ */
+function evalWriting(){
+  var box=document.getElementById('ai-writing-eval'); if(!box)return;
+  var tasks=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {type:w.type,prompt:w.lead,text:t,min:w.min,max:w.max};}).filter(function(x){return x.text && wordCount(x.text)>=5;});
+  if(!tasks.length){ box.innerHTML='<p class="instr">Yazma görevleri boş ya da çok kısa; AI değerlendirmesi yapılmadı.</p>'; return; }
+  box.innerHTML='<p class="instr">✍️ Gri AI yazılarını değerlendiriyor…</p>';
+  var token=window.__SB_TOKEN||SBKEY;
+  fetch(SBURL+'/functions/v1/evaluate-placement-writing',{method:'POST',headers:{'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+token},body:JSON.stringify({tasks:tasks})})
+   .then(function(r){return r.json();})
+   .then(function(j){
+     var evals=(j&&j.evaluations)||[];
+     if(!evals.length){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi alınamadı'+(j&&j.error?': '+esc(j.error):'')+'. Sonuçların yine de geçerli.</p>'; return; }
+     if(window.LAST_RESULT) window.LAST_RESULT.writingEval=evals;
+     box.innerHTML=evals.map(writingEvalHtml).join('');
+   })
+   .catch(function(err){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi hatası: '+esc(err.message)+'</p>'; });
+}
+function writingEvalHtml(e){
+  var sc=e.scores||{};
+  function b(label,v){v=+v||0;var p=Math.round(v/5*100),col=p>=70?'var(--good)':p>=45?'var(--warn)':'var(--bad)';return '<div style="margin:5px 0"><div style="display:flex;justify-content:space-between;font-size:.85rem"><span>'+label+'</span><span style="font-weight:700;color:'+col+'">'+v+'/5</span></div><div class="track"><div class="fill" style="width:'+p+'%;background:'+col+'"></div></div></div>';}
+  return '<div class="detail"><h4>'+esc(e.type||'Yazı')+' <span class="tag" style="background:var(--teal);color:#fff">'+esc(e.cefr||'')+(e.overall20!=null?' · '+e.overall20+'/20':'')+'</span></h4>'
+    +b('Content (içerik)',sc.content)+b('Communication (üslup)',sc.communication)+b('Organisation (düzen)',sc.organisation)+b('Language (dil)',sc.language)
+    +(e.comment?'<p style="margin:.55rem 0 0"><b>Özet:</b> '+esc(e.comment)+'</p>':'')
+    +(e.strengths?'<p style="margin:.3rem 0 0;color:var(--good)"><b>Güçlü yönler:</b> '+esc(e.strengths)+'</p>':'')
+    +(e.improvements?'<p style="margin:.3rem 0 0;color:var(--warn)"><b>Geliştir:</b> '+esc(e.improvements)+'</p>':'')
+    +'</div>';
 }
 </script>
 <script src="assets/site-config.js" defer></script>

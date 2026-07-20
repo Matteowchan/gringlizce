@@ -25,6 +25,7 @@ interface Skill { name: string; short?: string; c: number; t: number; pct: numbe
 interface Result {
   cefr: string; cefrName: string; score: number; total: number; pct: number;
   skills: Skill[]; missedTopics: string[]; wrongCount: number;
+  writing?: { type: string; text: string; words: number }[];
 }
 
 const CEFR_DESC: Record<string, string> = {
@@ -108,6 +109,8 @@ function buildEmail(name: string, r: Result): string {
       ${details}
 
       ${topics}
+
+      ${(r.writing && r.writing.some((w) => w.text)) ? `<h2 style="font-family:Georgia,serif;color:#1f3f3e;font-size:17px;border-bottom:2px solid #c89a3c;padding-bottom:6px;margin-top:26px">Writing — yazdıkların</h2><p style="font-size:12px;color:#6a6a6a;margin:6px 0">Bu bölüm otomatik puanlanmaz; bir öğretmen ya da Gri AI değerlendirmelidir.</p>${r.writing.map((w) => `<div style="margin:10px 0"><div style="font-weight:700;color:#1f3f3e;font-size:14px">${esc(w.type)} · ${w.words} kelime</div><div style="background:#faf7ee;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-top:4px">${w.text ? esc(w.text) : "<i>Boş bırakıldı</i>"}</div></div>`).join("")}` : ""}
 
       <div style="text-align:center;margin:28px 0 8px">
         <a href="https://gringlizce.com/ogrenme-haritasi.html" style="display:inline-block;background:#2C5856;color:#fff;text-decoration:none;border-radius:22px;padding:12px 26px;font-size:14px;font-weight:700">Öğrenme Haritasına Git</a>

@@ -33,7 +33,7 @@ var EXAMS=[
       {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"}]},
     {name:"Ünite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
-      {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=conventions&mode=checkpoint&form=A",ck:1}]}]},
+      {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=conventions&mode=checkpoint&form=A",ck:1},{name:"Final Deneme — 54 soru · puan tahmini",s:"todo",href:"sat-unite-test.html?unite=all&mode=final",fin:1}]}]},
       {label:"Ogren . Ucretsiz Soru Modulu",units:[
         {name:"Dilbilgisi",desc:"Standard English Conventions - noktalama, uyum, niteleyici, paralel yapi, zaman",state:"live",lessons:[
             {name:"Sentence Boundaries",s:"todo",href:"sat-ogren.html#g11"},

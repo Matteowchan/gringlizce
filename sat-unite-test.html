@@ -71,6 +71,11 @@ const UNITS = {
                  skills:['rhetorical_synthesis','transitions'] },
   conventions: { cat:'standard_english_conventions', title:'Standard English Conventions', tr:'Standart İngilizce Kuralları',
                  skills:['boundaries','form_structure_and_sense'] },
+  // Tüm R&W kapsayan final (4 kategori karışık)
+  all:         { cat:null, title:'Reading & Writing', tr:'Reading & Writing',
+                 skills:['central_ideas_and_details','command_of_evidence','inferences',
+                         'words_in_context','text_structure_and_purpose','cross_text_connections',
+                         'rhetorical_synthesis','transitions','boundaries','form_structure_and_sense'] },
 };
 
 // ---- Yaklaşık ham->ölçekli puan dönüşümü (TAHMİN — resmi değil) ----
@@ -133,7 +138,8 @@ function buildSet(pool, n, offset){
 
 async function fetchPool(cat, difficulties){
   let q = sb.from('questions').select('id,subcategory,difficulty,question_text,options,correct_answer,explanations,passage_id')
-    .eq('active',true).eq('exam_type','sat').eq('section','rw').eq('category',cat);
+    .eq('active',true).eq('exam_type','sat').eq('section','rw');
+  if (cat) q = q.eq('category',cat);   // cat yoksa (all) tüm R&W kategorileri
   // Üniteye ait gerçek beceriler (yanlış kategorilenmiş soruları hariç tut, veriye dokunmadan)
   if (U.skills && U.skills.length) q = q.in('subcategory', U.skills);
   if (difficulties) q = q.in('difficulty', difficulties);

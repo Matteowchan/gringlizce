@@ -92,31 +92,40 @@ const mode = param('mode') || 'checkpoint';   // checkpoint | final
 const form = (param('form') || 'A').toUpperCase();
 const U = UNITS[unitKey] || UNITS.info;
 
-// Deterministik ama forma göre farklı seçim için basit tohum
-function seedPick(arr, n, offset){
-  const out = []; const used = new Set();
-  for (let k=0; out.length<n && used.size<arr.length; k++){
-    const idx = (k*7 + offset*13) % arr.length;
-    if (!used.has(idx)){ used.add(idx); out.push(arr[idx]); }
-  }
-  return out;
+// Doğru şık, seçenekler arasında EN UZUN olan mı (öyleyse kaçın)
+function longestIsCorrect(q){
+  const opts = Array.isArray(q.options)?q.options:[];
+  const co = opts.find(o=>o.letter===q.correct_answer);
+  if (!co) return false;
+  const cl = (co.text||'').length;
+  return opts.every(o=>(o.text||'').length <= cl) && opts.some(o=>o.letter!==q.correct_answer && (o.text||'').length < cl);
 }
 
-// Cevap dağılımı + zorluk dengesi gözeterek seçim
+// Form A/B kesişmesin (id'ye göre mod-4 disjoint partition) + zorluk kotası
+// + cevap A/B/C/D dengesi + doğru-şık-en-uzun kaçınma
 function buildSet(pool, n, offset){
-  // zorluk kotaları (gerçekçi): ~%35 easy, %40 medium, %25 hard
+  const sorted = pool.slice().sort((a,b)=> (a.id<b.id?-1:(a.id>b.id?1:0)));
+  const part = sorted.filter((q,i)=> (i%4)===(offset%4));
+  const src = part.length>=n ? part : sorted; // partition küçükse tüm havuz
   const by = { easy:[], medium:[], hard:[] };
-  pool.forEach(q => { (by[q.difficulty]||by.medium).push(q); });
-  Object.values(by).forEach(a=>shuffle(a));
-  const want = { easy:Math.round(n*0.35), medium:Math.round(n*0.40), hard:n-Math.round(n*0.35)-Math.round(n*0.40) };
-  let chosen = [];
-  for (const d of ['easy','medium','hard']){ chosen = chosen.concat(by[d].slice(offset*want[d], offset*want[d]+want[d])); }
-  // eksik kalırsa doldur
-  const rest = shuffle(pool.filter(q=>!chosen.includes(q)));
-  while (chosen.length < n && rest.length) chosen.push(rest.pop());
-  chosen = chosen.slice(0, n);
-  // doğru şık en uzun olmasın diye eleme: mümkünse böyle soruları at
-  return chosen;
+  src.forEach(q=>{ (by[q.difficulty]||by.medium).push(q); });
+  const want = { easy:Math.round(n*0.35), medium:Math.round(n*0.40) };
+  want.hard = n - want.easy - want.medium;
+  const chosen = []; const ac = { A:0,B:0,C:0,D:0 };
+  function take(bucket, count){
+    const avail = bucket.slice();
+    for (let k=0; k<count && avail.length; k++){
+      avail.sort((a,b)=>{
+        const ba=longestIsCorrect(a)?1:0, bb=longestIsCorrect(b)?1:0;
+        if (ba!==bb) return ba-bb;                                  // önce en-uzun-değil
+        return (ac[a.correct_answer]||0)-(ac[b.correct_answer]||0); // sonra en az temsil edilen cevap
+      });
+      const q = avail.shift(); chosen.push(q); ac[q.correct_answer]=(ac[q.correct_answer]||0)+1;
+    }
+  }
+  take(by.easy, want.easy); take(by.medium, want.medium); take(by.hard, want.hard);
+  for (const q of src){ if (chosen.length>=n) break; if (!chosen.includes(q)) chosen.push(q); } // eksik doldur
+  return chosen.slice(0, n);
 }
 
 async function fetchPool(cat, difficulties){

@@ -703,7 +703,19 @@
       let h = '';
       for (const t of tests) {
         const status = statusByTest[t.id];
-        const dateStr = formatDate(t.test_date) || 'Tam Deneme';
+        // Bölüm-bazlıda "Gri Deneme N" yerine tipe/temaya göre isim (Tam Deneme sayfasi ayri, dokunulmaz)
+        const num = (String(t.name || '').match(/\d+/) || [''])[0];
+        let topicTags = Array.isArray(t.topic_tags) ? t.topic_tags.slice() : [];
+        let cardEyebrow, cardName;
+        if (bolum === 'writing') {
+          cardEyebrow = 'IELTS Writing';
+          cardName = 'Task 1 + Task 2' + (num ? ' · ' + num : '');
+        } else {
+          const skill = bolum === 'reading' ? 'Reading' : 'Listening';
+          const theme = topicTags.length ? topicTags.shift() : skill;
+          cardEyebrow = 'IELTS ' + skill;
+          cardName = theme + (num ? ' · ' + num : '');
+        }
 
         let dotClass = '';
         let detailText = 'Henüz başlanmadı';
@@ -733,14 +745,14 @@
         }
 
         const dotHtml = dotClass ? '<span class="status-dot ' + dotClass + '"></span>' : '';
-        const topics = Array.isArray(t.topic_tags) && t.topic_tags.length
-          ? '<div class="topics">' + t.topic_tags.map(escapeHtml).join(' · ') + '</div>'
+        const topics = topicTags.length
+          ? '<div class="topics">' + topicTags.map(escapeHtml).join(' · ') + '</div>'
           : '';
 
         h += '<a href="' + meta.examUrl + '?test=' + encodeURIComponent(t.slug) + '" class="deneme-card' + cardClass + '">'
            + dotHtml
-           + '<div class="eyebrow">' + escapeHtml(dateStr) + '</div>'
-           + '<div class="name">' + escapeHtml(t.name) + '</div>'
+           + '<div class="eyebrow">' + escapeHtml(cardEyebrow) + '</div>'
+           + '<div class="name">' + escapeHtml(cardName) + '</div>'
            + topics
            + '<div class="detail' + detailExtra + '"><span>' + escapeHtml(detailText) + '</span><span class="arrow">→</span></div>'
            + '</a>';

@@ -29,8 +29,8 @@ var EXAMS=[
       {name:"Text Structure and Purpose",s:"todo",href:"sat-unite-2.html"},
       {name:"Cross-Text Connections",s:"todo",href:"sat-unite-2.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=craft&mode=checkpoint&form=A",ck:1}]},
     {name:"Ünite 3 . Expression of Ideas",desc:"Transitions, Rhetorical Synthesis",state:"live",lessons:[
-      {name:"Transitions",s:"todo",href:"sat-unite-3.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=expression&mode=checkpoint&form=A",ck:1},
-      {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"}]},
+      {name:"Transitions",s:"todo",href:"sat-unite-3.html"},
+      {name:"Rhetorical Synthesis",s:"todo",href:"sat-unite-3.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=expression&mode=checkpoint&form=A",ck:1}]},
     {name:"Ünite 4 . Standard English Conventions",desc:"Boundaries, Form Structure and Sense",state:"live",lessons:[
       {name:"Boundaries",s:"todo",href:"sat-unite-4.html"},
       {name:"Form, Structure, and Sense",s:"todo",href:"sat-unite-4.html"},{name:"Ünite Geçiş Testi — 27 soru · %70 baraj",s:"todo",href:"sat-unite-test.html?unite=conventions&mode=checkpoint&form=A",ck:1}]}]},

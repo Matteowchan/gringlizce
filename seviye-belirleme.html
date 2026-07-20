@@ -63,6 +63,10 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 .band-big .cefr{font-family:'Lora',serif;font-size:3.2rem;color:var(--teal);line-height:1;}
 .band-big .lvlname{font-size:1.05rem;color:var(--muted);}
 .band-big .score{margin-top:8px;font-size:1.1rem;}
+.charts-row{display:flex;gap:24px;align-items:center;justify-content:center;flex-wrap:wrap;margin:6px 0 10px;}
+.chart-donut{text-align:center;}
+.chart-radar{flex:1;min-width:280px;max-width:380px;}
+.chart-cap{text-align:center;font-size:.82rem;color:var(--muted);margin-bottom:2px;font-weight:600;}
 .scale{display:flex;gap:3px;margin:16px 0;}
 .scale .seg{flex:1;text-align:center;padding:7px 2px;border-radius:6px;font-size:.7rem;font-weight:700;background:#eee7d5;color:#9a8e73;}
 .scale .seg.on{background:var(--teal);color:#fff;}
@@ -351,6 +355,29 @@ var STATE={answers:{},started:false,remaining:50*60,timer:null,order:[]};
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
 function norm(s){return (s||'').toLowerCase().trim().replace(/\s+/g,' ').replace(/[.’']/g,function(c){return c==='.'?'':"'";}).replace(/[.,;!?]+$/,'');}
 
+/* ---- Görsel grafikler (saf SVG) ---- */
+var SHORT={reading_scan:"Tarama",reading_cohesion:"Bütünlük",reading_detail:"Anlama",vocab:"Kelime",word_formation:"Türetme",grammar:"Dilbilgisi",listen_detail:"Din. Detay",listen_gist:"Din. Fikir"};
+function skColor(p){return p>=75?'#4a8a52':p>=50?'#c08a2c':'#b94a4a';}
+function donutSVG(pct,color,big,small){
+  var r=54,c=(2*Math.PI*r),off=(c*(1-Math.max(0,Math.min(100,pct))/100));
+  return '<svg viewBox="0 0 140 140" width="158" height="158" style="max-width:100%">'
+   +'<circle cx="70" cy="70" r="'+r+'" fill="none" stroke="#ece4d2" stroke-width="15"/>'
+   +'<circle cx="70" cy="70" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="15" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 70 70)"/>'
+   +'<text x="70" y="66" text-anchor="middle" font-family="Lora,serif" font-size="30" font-weight="700" fill="'+color+'">'+esc(big)+'</text>'
+   +'<text x="70" y="92" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="#6a6a6a">'+esc(small)+'</text></svg>';
+}
+function radarSVG(entries){
+  var cx=150,cy=145,R=92,n=entries.length,rings=[25,50,75,100];
+  function pt(i,rad){var a=Math.PI*2*i/n-Math.PI/2;return [cx+rad*Math.cos(a),cy+rad*Math.sin(a)];}
+  var s='<svg viewBox="0 0 300 290" width="100%" style="max-width:360px">';
+  rings.forEach(function(rr){var pts=[];for(var i=0;i<n;i++){var p=pt(i,R*rr/100);pts.push(p[0].toFixed(1)+','+p[1].toFixed(1));}s+='<polygon points="'+pts.join(' ')+'" fill="none" stroke="#e6ddca" stroke-width="1"/>';});
+  for(var i=0;i<n;i++){var p=pt(i,R);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="#e6ddca" stroke-width="1"/>';var lp=pt(i,R+15);var an=Math.abs(lp[0]-cx)<10?'middle':(lp[0]<cx?'end':'start');s+='<text x="'+lp[0].toFixed(1)+'" y="'+(lp[1]+3).toFixed(1)+'" text-anchor="'+an+'" font-family="Inter,sans-serif" font-size="10.5" fill="#5a5347">'+esc(entries[i].label)+'</text>';}
+  var d=[];for(var i=0;i<n;i++){var p=pt(i,R*Math.max(4,entries[i].pct)/100);d.push(p[0].toFixed(1)+','+p[1].toFixed(1));}
+  s+='<polygon points="'+d.join(' ')+'" fill="rgba(44,88,86,.20)" stroke="#2C5856" stroke-width="2"/>';
+  for(var i=0;i<n;i++){var p=pt(i,R*Math.max(4,entries[i].pct)/100);s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.4" fill="'+entries[i].color+'"/>';}
+  return s+'</svg>';
+}
+
 function courseBox(){
   return '<div class="optbox"><b>Kurslar:</b><br>'+COURSES.map(function(c){return '<b>'+c[0]+'.</b> '+esc(c[1]);}).join('<br>')+'</div>';
 }
@@ -457,7 +484,13 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   var h='';
   // özet
   var scaleSegs=BANDS.slice().reverse().map(function(b){return '<div class="seg'+(b.cefr===band.cefr?' on':'')+'" style="'+(b.cefr===band.cefr?'background:'+b.color:'')+'">'+b.cefr+'</div>';}).join('');
-  h+='<div class="sb-card"><div class="band-big"><div class="cefr" style="color:'+band.color+'">'+band.cefr+'</div><div class="lvlname">'+esc(band.name)+'</div><div class="score">Toplam: <b>'+correct+' / '+total+'</b> doğru (%'+Math.round(ratio*100)+')</div></div>';
+  var radarEntries=Object.keys(SKILLS).filter(function(s){return bySkill[s];}).map(function(s){var p=skillPct(bySkill[s]);return {label:SHORT[s]||s,pct:p,color:skColor(p)};});
+  h+='<div class="sb-card">';
+  h+='<div class="charts-row">'
+     +'<div class="chart-donut"><div class="chart-cap">Genel sonuç</div>'+donutSVG(Math.round(ratio*100),band.color,band.cefr,'%'+Math.round(ratio*100))+'<div class="lvlname" style="margin-top:2px">'+esc(band.name)+'</div></div>'
+     +'<div class="chart-radar"><div class="chart-cap">Beceri profili</div>'+radarSVG(radarEntries)+'</div>'
+     +'</div>';
+  h+='<div style="text-align:center;font-size:1.06rem;margin:2px 0 12px">Toplam: <b>'+correct+' / '+total+'</b> doğru &nbsp;·&nbsp; %'+Math.round(ratio*100)+'</div>';
   h+='<div class="scale">'+scaleSegs+'</div>';
   h+='<p class="instr" style="text-align:center">Bu, objektif (Reading, Use of English, Listening) bölümlere dayalı bir <b>tahmindir</b>. Writing ve Speaking bir öğretmen tarafından ayrıca değerlendirilmelidir.</p></div>';
 
@@ -501,7 +534,7 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   var missedTopics=[]; wrong.forEach(function(w){ if(TOPICS[w.n] && missedTopics.indexOf(TOPICS[w.n])<0) missedTopics.push(TOPICS[w.n]); });
   var analysis=Object.keys(SKILLS).filter(function(s){return bySkill[s];}).map(function(s){
     var M=SKILLS[s],o=bySkill[s],p=skillPct(o);
-    return {name:M.name,level:(p>=75?'g':p>=50?'w':'b'),pct:p,c:o.c,t:o.t,what:M.what,comment:(p>=75?M.g:M.w),study:(p<75?M.study:'')};
+    return {name:M.name,short:SHORT[s]||M.name,level:(p>=75?'g':p>=50?'w':'b'),pct:p,c:o.c,t:o.t,what:M.what,comment:(p>=75?M.g:M.w),study:(p<75?M.study:'')};
   }).sort(function(a,b){return a.pct-b.pct;});
   window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length};
 

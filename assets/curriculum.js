@@ -268,13 +268,6 @@ var EXAMS=[
   window.GRI_INFO = null; // gercek launch-banner korunur; ileride admin kaynagina baglanir
   window.GRI_NAV = [
     { label: "Öğrenme Haritası", href: "ogrenme-haritasi.html" },
-    { label: "Sınav Bilgisi", href: "sat.html", children: [
-      { label: "SAT", href: "sat.html" }, { label: "IELTS", href: "ielts.html" },
-      { label: "TOEFL", href: "toefl.html" }, { label: "IB", href: "ib.html" },
-      { label: "Deutsch B", href: "deutsch-ogren.html" }, { label: "TOK", href: "tok-ogren.html" },
-      { label: "UDSP", href: "udsp.html" }, { label: "YDT", href: "ydt.html" },
-      { label: "YDS / YÖKDİL", href: "yds.html" }
-    ] },
     { label: "Soru Bankası", href: "soru-bankasi.html", children: [
       { label: "SAT", href: "sat-soru-bankasi.html", children: [
         { label: "Reading & Writing", href: "sat-soru-bankasi-rw.html" },

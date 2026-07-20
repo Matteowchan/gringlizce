@@ -94,6 +94,7 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 <script src="assets/curriculum.js"></script>
 <script src="assets/nav.js"></script>
 <script src="assets/track.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="launch-banner" data-site-banner></div>
@@ -101,8 +102,17 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 <div id="sb-barmount"></div>
 <div class="sb-wrap">
 
+  <!-- AUTH GATE -->
+  <div id="auth-gate" class="hidden">
+    <div class="sb-card sb-hero" style="text-align:center">
+      <h1>Seviye Belirleme Sınavı</h1>
+      <p class="sub">Bu sınava girmek ve kişisel raporunu almak için <b>ücretsiz hesabınla giriş yapmalısın</b>. Böylece sonuçların kaydedilir ve e-posta raporun sana özel hazırlanır.</p>
+      <div id="auth-actions"></div>
+    </div>
+  </div>
+
   <!-- INTRO -->
-  <div id="intro">
+  <div id="intro" class="hidden">
     <div class="sb-card sb-hero">
       <h1>İngilizce Seviye Belirleme Sınavı</h1>
       <p class="sub">Nerede olduğunu öğren. Reading, Use of English ve Listening bölümleriyle CEFR seviyeni ölçer, sonunda <b>hangi konularda eksiğin olduğunu çok detaylı</b> gösterir.</p>
@@ -299,6 +309,31 @@ var SKILLS = {
    study:"Multiple-choice listening (tutum/amaç soruları); podcast dinleyip özet çıkar."}
 };
 
+/* Soru bazlı konu etiketleri (granüler eksik analizi için) — görünen soru no ile */
+var TOPICS={
+ 16:"Sıfat/anlam seçimi: 'true' (this is not true)",
+ 17:"Belirleyici: 'any' (herhangi bir — genel bağlam)",
+ 18:"'be willing to' — istekli olmak (sıfat+to)",
+ 19:"Phrasal verb: 'give up' (pes etmek)",
+ 20:"Zaman zarfı: 'soon' (yakında)",
+ 21:"Eşdizim: 'lead to' (yol açmak)",
+ 22:"'say' vs 'tell/talk/speak' ayrımı",
+ 23:"Bağlaç: 'instead of' (yerine)",
+ 24:"Ek –able: enjoy → enjoyable (sıfat)",
+ 25:"Ek –ful: use → useful (sıfat)",
+ 26:"Ek –tion: concentrate → concentration (isim)",
+ 27:"Ek –ful: stress → stressful (sıfat)",
+ 28:"Ek –ful: wonder → wonderful (sıfat)",
+ 29:"Düzensiz isim: know → knowledge",
+ 30:"–ing sıfatı: interest → interesting",
+ 31:"Present Perfect Continuous + 'for' (have been …-ing for)",
+ 32:"Zorunluluğun olumsuzu: 'don't have to' (gereksizlik)",
+ 33:"Vurgu yapısı: 'such a/an + sıfat + isim'",
+ 34:"Olasılık modalı: 'might be'",
+ 35:"Edilgen aktarım: 'is said to be' (passive reporting)",
+ 36:"Present Perfect: 'the first time I have + V3'"
+};
+
 /* CEFR bantları (54 üzerinden) */
 var BANDS = [
  {min:0.90,cefr:"C1",name:"İleri — bu sınavın üstünde",color:"#2C5856"},
@@ -462,8 +497,23 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
     h+='<div class="sb-card"><h2>🎉 Tüm soruları doğru yaptın!</h2><p class="instr">Bu sınav seviyeni tam ölçemeyebilir; daha üst seviye materyallere geçebilirsin.</p></div>';
   }
 
+  // ---- rapor verisi (e-posta + PDF için) ----
+  var missedTopics=[]; wrong.forEach(function(w){ if(TOPICS[w.n] && missedTopics.indexOf(TOPICS[w.n])<0) missedTopics.push(TOPICS[w.n]); });
+  var analysis=Object.keys(SKILLS).filter(function(s){return bySkill[s];}).map(function(s){
+    var M=SKILLS[s],o=bySkill[s],p=skillPct(o);
+    return {name:M.name,level:(p>=75?'g':p>=50?'w':'b'),pct:p,c:o.c,t:o.t,what:M.what,comment:(p>=75?M.g:M.w),study:(p<75?M.study:'')};
+  }).sort(function(a,b){return a.pct-b.pct;});
+  window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length};
+
+  // ---- e-posta raporu kartı ----
+  h+='<div class="sb-card"><h2>Detaylı raporunu al</h2><p class="instr">CEFR seviyeni, beceri grafiğini, <b>hangi tense/yapı ve konularda</b> eksiğin olduğunu ve kişisel çalışma planını içeren profesyonel raporu e-postana gönderelim.</p>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="email" class="fill" id="mail-input" placeholder="ornek@mail.com" value="'+((window.USER&&USER.email)?esc(USER.email):'')+'"><button class="btn" id="mail-send">Raporu E-postama Gönder</button><button class="btn ghost" id="pdf-btn">PDF / Yazdır</button></div>'+
+    '<p id="mail-status" class="instr" style="margin-top:10px"></p></div>';
+
   h+='<div class="sb-card" style="text-align:center"><a class="btn ghost" href="ogrenme-haritasi.html">Öğrenme Haritasına Git</a> &nbsp; <button class="btn" onclick="location.reload()">Tekrar Çöz</button></div>';
   resDiv.innerHTML=h;
+  var mb=document.getElementById('mail-send'); if(mb)mb.addEventListener('click',sendReport);
+  var pb=document.getElementById('pdf-btn'); if(pb)pb.addEventListener('click',function(){window.print();});
   window.scrollTo(0,0);
   try{ if(window.track)window.track('placement_done',{score:correct,total:total,cefr:band.cefr}); }catch(e){}
 }
@@ -507,6 +557,46 @@ function resetExam(){
 }
 
 document.getElementById('start-btn').addEventListener('click',start);
+
+/* ============ GİRİŞ ZORUNLU (auth gate) ============ */
+var SBURL='https://vazbvbqgvtlaqkytfsbi.supabase.co', SBKEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+window.USER=null; window.__SB_TOKEN=null;
+(function initAuth(){
+  var gate=document.getElementById('auth-gate'), actions=document.getElementById('auth-actions');
+  function showGate(){
+    gate.classList.remove('hidden');
+    var ret=encodeURIComponent('/seviye-belirleme.html');
+    actions.innerHTML='<a class="btn gold" href="giris.html?return='+ret+'">Giriş Yap</a> &nbsp; <a class="btn ghost" href="giris.html#signup">Ücretsiz Hesap Aç</a>';
+  }
+  var sb=null;
+  try{ sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SBURL,SBKEY):null; }catch(e){}
+  if(!sb){ showGate(); return; }
+  sb.auth.getSession().then(function(r){
+    var sess=r&&r.data&&r.data.session;
+    if(sess){ window.USER=sess.user; window.__SB_TOKEN=sess.access_token; intro.classList.remove('hidden'); }
+    else showGate();
+  }).catch(function(){ showGate(); });
+})();
+
+/* ============ RAPORU E-POSTA İLE GÖNDER ============ */
+function sendReport(){
+  var status=document.getElementById('mail-status'), input=document.getElementById('mail-input'), btn=document.getElementById('mail-send');
+  var email=(input.value||'').trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ status.style.color='var(--bad)'; status.textContent='Geçerli bir e-posta adresi gir.'; return; }
+  if(!window.LAST_RESULT){ status.style.color='var(--bad)'; status.textContent='Rapor verisi bulunamadı.'; return; }
+  btn.disabled=true; status.style.color='var(--muted)'; status.textContent='Rapor hazırlanıp gönderiliyor...';
+  var token=window.__SB_TOKEN||SBKEY;
+  fetch(SBURL+'/functions/v1/send-placement-result',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+token},
+    body:JSON.stringify({ to:email, name:(window.USER&&USER.email)||email, result:window.LAST_RESULT })
+  }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+    .then(function(res){
+      btn.disabled=false;
+      if(res.ok && res.j && res.j.sent){ status.style.color='var(--good)'; status.textContent='✓ Detaylı rapor '+email+' adresine gönderildi. Gelen kutunu (ve spam klasörünü) kontrol et.'; }
+      else { status.style.color='var(--bad)'; status.textContent='Gönderilemedi: '+((res.j&&res.j.error)||'bilinmeyen hata')+'. Lütfen tekrar dene.'; }
+    }).catch(function(e){ btn.disabled=false; status.style.color='var(--bad)'; status.textContent='Ağ hatası: '+e.message; });
+}
 </script>
 <script src="assets/site-config.js" defer></script>
 </body>

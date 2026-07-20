@@ -419,7 +419,7 @@
           <ul class="stats">
             <li><span>Süre</span><strong>60 dakika</strong></li>
             <li><span>Task</span><strong>2</strong></li>
-            <li><span>Değerlendirme</span><strong>Uzman geri bildirim</strong></li>
+            <li><span>Değerlendirme</span><strong>Gri ile değerlendir</strong></li>
           </ul>
           <div class="test-count" id="count-writing"><strong>—</strong> sınav mevcut</div>
           <span class="cta">Sınav Seç →</span>
@@ -551,7 +551,7 @@
         pills: [
           { label: 'Süre', value: '60 dakika' },
           { label: 'Task', value: '2' },
-          { label: 'Değerlendirme', value: 'Uzman geri bildirim' }
+          { label: 'Değerlendirme', value: 'Gri ile değerlendir' }
         ]
       }
     };
@@ -633,15 +633,23 @@
       document.getElementById('step1').style.display = 'block';
       document.getElementById('breadcrumbCurrent').textContent = 'Bölüm Bazlı Çalışma';
 
-      const { count } = await sb
-        .from('ielts_tests')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_published', true);
-
-      const total = count || 0;
-      document.getElementById('count-listening').innerHTML = `<strong>${total}</strong> sınav mevcut`;
-      document.getElementById('count-reading').innerHTML = `<strong>${total}</strong> sınav mevcut`;
-      document.getElementById('count-writing').innerHTML = `<strong>${total}</strong> sınav mevcut`;
+      // Bölüm başına sayım: yalnızca o section'a sahip (yayınlı) testleri say
+      const per = { listening: 0, reading: 0, writing: 0 };
+      const { data: pubTests } = await sb.from('ielts_tests').select('id').eq('is_published', true);
+      const pubIds = (pubTests || []).map(t => t.id);
+      if (pubIds.length) {
+        const { data: secs } = await sb.from('ielts_sections')
+          .select('test_id, section').in('test_id', pubIds);
+        const sets = { listening: new Set(), reading: new Set(), writing: new Set() };
+        (secs || []).forEach(s => { if (sets[s.section]) sets[s.section].add(s.test_id); });
+        per.listening = sets.listening.size;
+        per.reading = sets.reading.size;
+        per.writing = sets.writing.size;
+      }
+      const fmt = n => n === 1 ? '1 sınav mevcut' : `${n} sınav mevcut`;
+      document.getElementById('count-listening').innerHTML = fmt(per.listening).replace(/^(\S+)/, '<strong>$1</strong>');
+      document.getElementById('count-reading').innerHTML = fmt(per.reading).replace(/^(\S+)/, '<strong>$1</strong>');
+      document.getElementById('count-writing').innerHTML = fmt(per.writing).replace(/^(\S+)/, '<strong>$1</strong>');
     }
 
     // ====================================================================

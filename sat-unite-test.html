@@ -1,0 +1,291 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAT R&W Ünite Testi | Gri English</title>
+<link rel="stylesheet" href="assets/main.css">
+<script>try{var t=localStorage.getItem('gri-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<style>
+  :root{--st-accent:#2E6E6A;--st-gold:#B78A2E;--st-line:#e3d8c3;--st-ink:#241E17;--st-muted:#6E6353;--st-bg:#F4F2EC;--st-card:#fff;--st-good:#1FA971;--st-bad:#c0392b;}
+  html[data-theme="dark"]{--st-line:#332c22;--st-ink:#f1e9d9;--st-muted:#b7ab96;--st-bg:#15130f;--st-card:#201c17;}
+  body{background:var(--st-bg);color:var(--st-ink);}
+  .st-wrap{max-width:820px;margin:0 auto;padding:1.5rem 1.1rem 5rem;}
+  .st-eyebrow{font:600 11px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--st-muted);}
+  .st-h1{font-family:Georgia,serif;font-size:1.9rem;margin:.3rem 0 .2rem;}
+  .st-sub{color:var(--st-muted);font-size:.95rem;margin-bottom:1.2rem;}
+  .st-rulecard{background:var(--st-card);border:1px solid var(--st-line);border-left:4px solid var(--st-gold);border-radius:10px;padding:1rem 1.1rem;margin-bottom:1.3rem;font-size:.92rem;line-height:1.55;}
+  .st-rulecard strong{color:var(--st-accent);}
+  .st-bar{position:sticky;top:0;z-index:20;background:var(--st-bg);border-bottom:1px solid var(--st-line);display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;margin-bottom:1rem;font:600 13px Inter,system-ui,sans-serif;}
+  .st-timer{color:var(--st-accent);font-variant-numeric:tabular-nums;}
+  .st-q{background:var(--st-card);border:1px solid var(--st-line);border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1rem;}
+  .st-q-num{display:inline-block;background:var(--st-accent);color:#fff;border-radius:6px;font:600 12px Inter,system-ui,sans-serif;padding:.15rem .5rem;margin-bottom:.6rem;}
+  .st-passage{font-size:.92rem;line-height:1.6;color:var(--st-ink);border-left:2px solid var(--st-line);padding-left:.8rem;margin:.4rem 0 .8rem;}
+  .st-stem{font-weight:600;margin:.5rem 0 .7rem;line-height:1.5;}
+  .st-opt{display:block;border:1px solid var(--st-line);border-radius:9px;padding:.6rem .8rem;margin:.4rem 0;cursor:pointer;transition:border-color .12s,background .12s;font-size:.92rem;}
+  .st-opt:hover{border-color:var(--st-accent);}
+  .st-opt input{margin-right:.5rem;}
+  .st-opt.sel{border-color:var(--st-accent);background:rgba(46,110,106,.06);}
+  .st-opt.correct{border-color:var(--st-good);background:rgba(31,169,113,.1);}
+  .st-opt.wrong{border-color:var(--st-bad);background:rgba(192,57,43,.08);}
+  .st-oletter{font-weight:700;color:var(--st-accent);margin-right:.35rem;}
+  .st-expl{margin-top:.7rem;border-top:1px dashed var(--st-line);padding-top:.7rem;font-size:.88rem;line-height:1.55;display:none;}
+  .st-expl.show{display:block;}
+  .st-expl h5{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--st-gold);margin:.6rem 0 .2rem;}
+  .st-btn{background:var(--st-accent);color:#fff;border:none;border-radius:9px;padding:.75rem 1.6rem;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;}
+  .st-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .st-result{background:var(--st-card);border:1px solid var(--st-line);border-radius:14px;padding:1.6rem;text-align:center;margin-bottom:1.3rem;}
+  .st-score{font-family:Georgia,serif;font-size:2.6rem;color:var(--st-accent);}
+  .st-pill{display:inline-block;border-radius:999px;padding:.25rem .9rem;font:600 13px Inter,system-ui,sans-serif;margin:.4rem 0;}
+  .st-pill.pass{background:rgba(31,169,113,.15);color:var(--st-good);}
+  .st-pill.fail{background:rgba(192,57,43,.12);color:var(--st-bad);}
+  .st-note{color:var(--st-muted);font-size:.85rem;}
+  .st-loading{text-align:center;color:var(--st-muted);padding:3rem 0;font-style:italic;}
+  table.st-conv{width:100%;border-collapse:collapse;font-size:.82rem;margin:.6rem 0;}
+  table.st-conv th,table.st-conv td{border:1px solid var(--st-line);padding:.3rem .5rem;text-align:center;}
+  table.st-conv th{background:var(--st-bg);}
+</style>
+
+<div id="nav-root"></div>
+<script src="assets/nav.js"></script>
+
+<div class="st-wrap">
+  <div id="st-app"><div class="st-loading">Yükleniyor...</div></div>
+</div>
+
+<script>
+  window.SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  window.SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+</script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+const sb = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+
+// ---- Ünite haritası (domain -> Supabase category + başlık + beceriler) ----
+const UNITS = {
+  info:        { cat:'information_and_ideas',        title:'Information and Ideas',        tr:'Bilgi ve Fikirler',
+                 skills:['central_ideas_and_details','command_of_evidence','inferences'] },
+  craft:       { cat:'craft_and_structure',          title:'Craft and Structure',          tr:'Kurgu ve Yapı',
+                 skills:['words_in_context','text_structure_and_purpose','cross_text_connections'] },
+  expression:  { cat:'expression_of_ideas',          title:'Expression of Ideas',          tr:'Fikirlerin İfadesi',
+                 skills:['rhetorical_synthesis','transitions'] },
+  conventions: { cat:'standard_english_conventions', title:'Standard English Conventions', tr:'Standart İngilizce Kuralları',
+                 skills:['boundaries','form_structure_and_sense'] },
+};
+
+// ---- Yaklaşık ham->ölçekli puan dönüşümü (TAHMİN — resmi değil) ----
+// Digital SAT R&W bölümü 54 soru, 200-800 ölçek. Upper yol tavana ulaşır, Lower yol kapaklıdır.
+function scaledScore(raw, path){
+  const r = Math.max(0, Math.min(54, raw));
+  if (path === 'lower'){
+    // Alt yol yaklaşık 200-610 ile kapaklı (gerçek testte alt modül tavanı düşüktür)
+    return Math.round(200 + (410) * Math.pow(r/54, 0.92));
+  }
+  // Upper yol 300-800
+  return Math.round(300 + (500) * Math.pow(r/54, 0.98));
+}
+
+function param(k){ return new URLSearchParams(location.search).get(k); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(((i*2654435761)%(i+1))); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+const app = document.getElementById('st-app');
+const unitKey = param('unite') || 'info';
+const mode = param('mode') || 'checkpoint';   // checkpoint | final
+const form = (param('form') || 'A').toUpperCase();
+const U = UNITS[unitKey] || UNITS.info;
+
+// Deterministik ama forma göre farklı seçim için basit tohum
+function seedPick(arr, n, offset){
+  const out = []; const used = new Set();
+  for (let k=0; out.length<n && used.size<arr.length; k++){
+    const idx = (k*7 + offset*13) % arr.length;
+    if (!used.has(idx)){ used.add(idx); out.push(arr[idx]); }
+  }
+  return out;
+}
+
+// Cevap dağılımı + zorluk dengesi gözeterek seçim
+function buildSet(pool, n, offset){
+  // zorluk kotaları (gerçekçi): ~%35 easy, %40 medium, %25 hard
+  const by = { easy:[], medium:[], hard:[] };
+  pool.forEach(q => { (by[q.difficulty]||by.medium).push(q); });
+  Object.values(by).forEach(a=>shuffle(a));
+  const want = { easy:Math.round(n*0.35), medium:Math.round(n*0.40), hard:n-Math.round(n*0.35)-Math.round(n*0.40) };
+  let chosen = [];
+  for (const d of ['easy','medium','hard']){ chosen = chosen.concat(by[d].slice(offset*want[d], offset*want[d]+want[d])); }
+  // eksik kalırsa doldur
+  const rest = shuffle(pool.filter(q=>!chosen.includes(q)));
+  while (chosen.length < n && rest.length) chosen.push(rest.pop());
+  chosen = chosen.slice(0, n);
+  // doğru şık en uzun olmasın diye eleme: mümkünse böyle soruları at
+  return chosen;
+}
+
+async function fetchPool(cat, difficulties){
+  let q = sb.from('questions').select('id,subcategory,difficulty,question_text,options,correct_answer,explanations,passage_id')
+    .eq('active',true).eq('exam_type','sat').eq('section','rw').eq('category',cat);
+  if (difficulties) q = q.in('difficulty', difficulties);
+  const { data, error } = await q.range(0, 4999);
+  if (error) throw error;
+  return data || [];
+}
+
+async function fetchPassages(ids){
+  const uniq = [...new Set(ids.filter(Boolean))];
+  if (!uniq.length) return {};
+  const { data } = await sb.from('passages').select('id,texts').in('id', uniq);
+  const m = {}; (data||[]).forEach(p=>{ m[p.id]=p.texts; }); return m;
+}
+function passageHtml(texts){
+  if (!Array.isArray(texts)) return '';
+  return texts.map(t=>{
+    const lbl = (t && t.label && texts.length>1) ? '<strong>'+esc(t.label)+'</strong><br>' : '';
+    return '<div class="st-passage">'+lbl+esc(t && t.content)+'</div>';
+  }).join('');
+}
+
+let STATE = { questions:[], answers:{}, submitted:false, module:1, m1raw:0, path:null };
+
+function renderModuleHeader(){
+  let rule='';
+  if (mode==='checkpoint'){
+    rule = '<div class="st-rulecard">Bu bir <strong>konu geçiş testidir</strong> (Form '+form+'). 27 sorudan <strong>19 veya üzeri</strong> (yüzde 70) doğru yaparsan bir sonraki bölüme geçebilirsin. 19 altında kalırsan öğretim bölümüne dön, tam tekrar et, sonra Form '+(form==='A'?'B':'A')+' testini çöz.</div>';
+  } else {
+    if (STATE.module===1) rule = '<div class="st-rulecard"><strong>Final — Modül 1 (27 soru).</strong> Sonuçta: <strong>18 veya üzeri</strong> doğru yaparsan zor Modül 2 (Upper) yoluna, altında kalırsan kolay Modül 2 (Lower) yoluna yönlendirilirsin. Toplam 54 soru sonunda tahmini 200-800 puanın hesaplanır.</div>';
+    else rule = '<div class="st-rulecard"><strong>Final — Modül 2 ('+(STATE.path==='upper'?'Upper / zor':'Lower / kolay')+').</strong> Modül 1 sonucuna göre yönlendirildin. Bu modül bittiğinde toplam ham puanın 200-800 ölçeğine çevrilir (tahmin).</div>';
+  }
+  return rule;
+}
+
+function renderQuestions(passages){
+  let h = renderModuleHeader();
+  h += '<div class="st-bar"><span>'+esc(U.tr)+' · '+(mode==='checkpoint'?('Geçiş Testi '+form):('Final Modül '+STATE.module))+'</span><span class="st-timer" id="st-timer"></span></div>';
+  STATE.questions.forEach((q,i)=>{
+    const opts = Array.isArray(q.options)?q.options:[];
+    const pass = q.passage_id && passages[q.passage_id] ? passageHtml(passages[q.passage_id]) : '';
+    h += '<div class="st-q" data-qi="'+i+'"><span class="st-q-num">'+(i+1)+'</span>'+pass+
+      '<div class="st-stem">'+esc(q.question_text)+'</div>';
+    opts.forEach(o=>{
+      h += '<label class="st-opt" data-letter="'+esc(o.letter)+'"><input type="radio" name="q'+i+'" value="'+esc(o.letter)+'"><span class="st-oletter">'+esc(o.letter)+'</span>'+esc(o.text)+'</label>';
+    });
+    h += '<div class="st-expl" id="expl'+i+'"></div></div>';
+  });
+  h += '<button class="st-btn" id="st-submit">Bitir ve Değerlendir</button>';
+  app.innerHTML = h;
+  app.querySelectorAll('.st-opt').forEach(l=>{
+    l.addEventListener('click',()=>{
+      if (STATE.submitted) return;
+      const qi = l.closest('.st-q').dataset.qi;
+      l.closest('.st-q').querySelectorAll('.st-opt').forEach(x=>x.classList.remove('sel'));
+      l.classList.add('sel'); l.querySelector('input').checked=true;
+      STATE.answers[qi]=l.dataset.letter;
+    });
+  });
+  document.getElementById('st-submit').addEventListener('click', submitModule);
+}
+
+function explHtml(q){
+  const e = q.explanations || {};
+  const ca = q.correct_answer;
+  let h = '';
+  // 8-alanlı standart: mevcut alanlar + per-şık; eksikse başlıkla göster
+  h += '<h5>Doğru cevap</h5>'+esc(ca)+(e[ca]?' — '+esc(e[ca]):'');
+  const wrongs = (Array.isArray(q.options)?q.options:[]).map(o=>o.letter).filter(l=>l!==ca);
+  if (wrongs.some(w=>e[w])){
+    h += '<h5>Yanlış şıklar neden yanlış</h5>';
+    wrongs.forEach(w=>{ if(e[w]) h += '<div><strong>'+esc(w)+'.</strong> '+esc(e[w])+'</div>'; });
+  }
+  if (e.type) h = '<h5>Soru tipi</h5>'+esc(e.type)+h;
+  if (e.trick) h += '<h5>Tuzak / ipucu</h5>'+esc(e.trick);
+  if (e.vocab) h += '<h5>Kelimeler (TR)</h5>'+esc(e.vocab);
+  return h;
+}
+
+function submitModule(){
+  if (STATE.submitted && !(mode==='final' && STATE.module===1)) return;
+  let correct = 0;
+  STATE.questions.forEach((q,i)=>{
+    const ans = STATE.answers[i];
+    const qEl = app.querySelector('.st-q[data-qi="'+i+'"]');
+    qEl.querySelectorAll('.st-opt').forEach(l=>{
+      const let_ = l.dataset.letter;
+      if (let_===q.correct_answer) l.classList.add('correct');
+      else if (let_===ans) l.classList.add('wrong');
+    });
+    if (ans===q.correct_answer) correct++;
+    const ex = document.getElementById('expl'+i); ex.innerHTML = explHtml(q); ex.classList.add('show');
+  });
+  STATE.submitted = true;
+  document.getElementById('st-submit').style.display='none';
+  showResult(correct);
+}
+
+function convTable(path){
+  let rows='';
+  for (let r=0;r<=54;r+=6){ rows += '<tr><td>'+r+'</td><td>'+scaledScore(r,path)+'</td></tr>'; }
+  return '<table class="st-conv"><tr><th>Ham</th><th>Tahmini Puan</th></tr>'+rows+'</table>';
+}
+
+function showResult(correct){
+  const total = STATE.questions.length;
+  if (mode==='checkpoint'){
+    const pass = correct>=19;
+    const box='<div class="st-result"><div class="st-eyebrow">Geçiş Testi · Form '+form+'</div>'+
+      '<div class="st-score">'+correct+' / 27</div>'+
+      '<div class="st-pill '+(pass?'pass':'fail')+'">'+(pass?'GEÇTİN (yüzde 70+)':'GEÇEMEDİN (19 gerekli)')+'</div>'+
+      '<p class="st-note">'+(pass?'Bir sonraki bölüme geçebilirsin.':'Öğretim bölümüne dön, tam tekrar et, sonra Form '+(form==='A'?'B':'A')+' testini çöz.')+'</p></div>';
+    app.insertAdjacentHTML('afterbegin', box);
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  // FINAL
+  if (STATE.module===1){
+    STATE.m1raw = correct;
+    STATE.path = correct>=18 ? 'upper' : 'lower';
+    const box='<div class="st-result"><div class="st-eyebrow">Final · Modül 1</div>'+
+      '<div class="st-score">'+correct+' / 27</div>'+
+      '<div class="st-pill '+(STATE.path==='upper'?'pass':'fail')+'">Yönlendirme: Modül 2 '+(STATE.path==='upper'?'Upper (zor)':'Lower (kolay)')+'</div>'+
+      '<p class="st-note">'+(STATE.path==='upper'?'18+ yaptın, zor yola gidiyorsun (tavana ulaşır).':'18 altında kaldın, kolay yola gidiyorsun (puan kapaklı).')+'</p>'+
+      '<button class="st-btn" id="st-next">Modül 2\'ye Geç</button></div>';
+    app.insertAdjacentHTML('afterbegin', box);
+    window.scrollTo({top:0,behavior:'smooth'});
+    document.getElementById('st-next').addEventListener('click', loadModule2);
+    return;
+  }
+  // Modül 2 bitti -> toplam + puan
+  const raw = STATE.m1raw + correct;
+  const scaled = scaledScore(raw, STATE.path);
+  const box='<div class="st-result"><div class="st-eyebrow">Final Sonucu · '+(STATE.path==='upper'?'Upper yol':'Lower yol')+'</div>'+
+    '<div class="st-score">~'+scaled+'</div>'+
+    '<div class="st-pill pass">Ham: '+raw+' / 54 (M1 '+STATE.m1raw+' + M2 '+correct+')</div>'+
+    '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir. Gerçek Digital SAT her forma göre eşitlenir.</p>'+
+    convTable(STATE.path)+'</div>';
+  app.insertAdjacentHTML('afterbegin', box);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function loadModule2(){
+  STATE.module=2; STATE.submitted=false; STATE.answers={}; document.querySelector('.st-result').remove();
+  const diffs = STATE.path==='upper' ? ['medium','hard','hard'] : ['easy','easy','medium'];
+  const pool = await fetchPool(U.cat, [...new Set(diffs)]);
+  const set = buildSet(pool, 27, form==='A'?2:3);
+  const passages = await fetchPassages(set.map(q=>q.passage_id));
+  STATE.questions=set;
+  renderQuestions(passages);
+}
+
+async function init(){
+  try{
+    const pool = await fetchPool(U.cat);
+    if (!pool.length){ app.innerHTML='<div class="st-loading">Bu ünite için soru bulunamadı.</div>'; return; }
+    const n = 27;
+    const offset = mode==='checkpoint' ? (form==='A'?0:1) : 0;
+    const set = buildSet(pool, n, offset);
+    const passages = await fetchPassages(set.map(q=>q.passage_id));
+    STATE.questions = set;
+    document.title = U.tr+' · '+(mode==='checkpoint'?'Geçiş Testi':'Final')+' | Gri English';
+    renderQuestions(passages);
+  }catch(e){
+    app.innerHTML='<div class="st-loading">Hata: '+esc(e.message||e)+'</div>';
+  }
+}
+init();
+</script>

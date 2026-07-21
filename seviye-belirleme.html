@@ -714,7 +714,8 @@ function evalWriting(){
   var token=window.__SB_TOKEN||SBKEY;
   function one(it){
     if(!it.ok) return Promise.resolve({part:it.w.no,type:it.w.type,skipped:true});
-    var task={type:it.w.type,prompt:it.w.lead,text:it.text,min:it.w.min,max:it.w.max};
+    var fullPrompt=(it.w.prompt||'')+' "'+it.w.lead+'"'+((it.w.hints&&it.w.hints.length)?(' Requirements: '+it.w.hints.join('; ')+'.'):'');
+    var task={type:it.w.type,prompt:fullPrompt,text:it.text,min:it.w.min,max:it.w.max};
     return fetch(SBURL+'/functions/v1/evaluate-placement-writing',{method:'POST',headers:{'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+token},body:JSON.stringify({tasks:[task]})})
       .then(function(r){return r.json();})
       .then(function(j){var e=(j&&j.evaluations&&j.evaluations[0]); if(e){e.part=it.w.no; e.type=e.type||it.w.type; return e;} return {part:it.w.no,type:it.w.type,error:(j&&j.error)||'alınamadı'};})

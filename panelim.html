@@ -2985,11 +2985,42 @@
 
     <div id="gri-quota-area" class="" style="padding: 0 0 3rem; display: none;">
 
+      <style>
+        .token-status-card{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:var(--card,#fff);border:1px solid var(--line,#e5ddcd);border-radius:16px;padding:1.1rem 1.4rem}
+        .tsc-stats{display:flex;align-items:center;gap:1.4rem}
+        .tsc-stat{display:flex;flex-direction:column;gap:.15rem}
+        .tsc-num{font-family:var(--font-display,Georgia),serif;font-size:1.9rem;line-height:1;color:var(--teal,#2C5856);font-weight:600}
+        .tsc-lbl{font-size:.72rem;color:var(--text-soft,#6b6862);max-width:9.5rem;line-height:1.25}
+        .tsc-div{width:1px;align-self:stretch;background:var(--line,#e5ddcd)}
+        .tsc-toggle{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;font-weight:600;color:var(--teal,#2C5856);background:transparent;border:1px solid var(--teal,#2C5856);border-radius:999px;padding:.5rem 1.1rem;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+        .tsc-toggle:hover{background:var(--teal,#2C5856);color:#fff}
+        .tsc-caret{transition:transform .2s ease;font-size:.7rem}
+        .tsc-toggle.open .tsc-caret{transform:rotate(180deg)}
+        #gri-paket-collapse{margin-top:1.4rem}
+      </style>
+
       <div class="zone-head">
         <span class="zone-eyebrow">AI Mentor</span>
         <span class="zone-line"></span>
-        <h2>Gri Token Paketleri</h2>
+        <h2>Gri AI Token'ların</h2>
       </div>
+
+      <div class="token-status-card">
+        <div class="tsc-stats">
+          <div class="tsc-stat">
+            <span class="tsc-num" id="gri-daily-remaining">–</span>
+            <span class="tsc-lbl">bugün kalan günlük token</span>
+          </div>
+          <div class="tsc-div"></div>
+          <div class="tsc-stat">
+            <span class="tsc-num" id="gri-bonus-remaining">–</span>
+            <span class="tsc-lbl">bonus token (süresiz)</span>
+          </div>
+        </div>
+        <button type="button" class="tsc-toggle" id="gri-paket-toggle">Token paketleri al <span class="tsc-caret">▾</span></button>
+      </div>
+
+      <div id="gri-paket-collapse" style="display:none;">
 
       <div class="paket-intro">
         <h3>Günlük 10 token bittiğinde paket al</h3>
@@ -3027,6 +3058,20 @@
           </div>
         </a>
       </div>
+
+      </div><!-- /gri-paket-collapse -->
+
+      <script>
+        (function(){
+          var btn=document.getElementById('gri-paket-toggle');
+          var col=document.getElementById('gri-paket-collapse');
+          if(btn&&col){btn.addEventListener('click',function(){
+            var open=col.style.display!=='none';
+            col.style.display=open?'none':'block';
+            btn.classList.toggle('open',!open);
+          });}
+        })();
+      </script>
 
     </div>
 

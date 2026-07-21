@@ -347,7 +347,7 @@ function blockHTML(b,i){
     h+=`<div class="wc">Kelime: <b class="cnt">0</b> / ${b.target||150}</div>`;
     if(b.check)h+=`<div class="check">`+b.check.map(c=>`<div class="ci"><span class="box">✓</span><span class="ct">${esc(c)}</span></div>`).join('')+`</div>`;
     if(b.model)h+=`<div class="reveal"><button class="btn ghost rvb">Model cevabı göster</button><div class="body"><div class="given"><span class="gl">${esc(b.model.title||'Model cevap')}</span>${esc(b.model.x)}</div></div></div>`;
-    if(b.ai!==false)h+=`<div class="griwz"><button class="btn griask" type="button">Gri'ye sor . yazını değerlendir</button><span class="griq">günde 2 hak</span><div class="grifb"></div></div>`;
+    if(b.ai!==false)h+=`<div class="griwz"><button class="btn griask" type="button">Gri'ye sor . yazını değerlendir</button><span class="griq">5 token</span><div class="grifb"></div></div>`;
     h+=`</div>`;return h;
   }
   if(b.t==='drill'){let h='';if(b.instr)h+=`<p style="font-family:Inter,sans-serif;font-size:13.5px;color:var(--muted)">${esc(b.instr)}</p>`;
@@ -448,7 +448,7 @@ async function griEval(btn){
   if(wc<50){fb.className='grifb on err';fb.textContent='En az 50 kelime yaz, sonra Gri değerlendirsin. Şu an: '+wc+' kelime.';return;}
   const today=new Date().toISOString().slice(0,10);let q={};try{q=JSON.parse(localStorage.getItem('gri_wz_ai')||'{}');}catch(e){}
   if(q.date!==today)q={date:today,n:0};
-  if(q.n>=2){fb.className='grifb on err';fb.textContent='Bugünlük Gri değerlendirme hakkın doldu (2/2). Yarın tekrar dene.';return;}
+  
   const old=btn.textContent;btn.disabled=true;btn.textContent='Gri değerlendiriyor...';fb.className='grifb on';fb.textContent='Gri yazını okuyor, birkaç saniye sürebilir.';
   try{
     const types=await loadWTypes();const tt=pickWType(types, wz.dataset.wt);

@@ -1609,6 +1609,9 @@
         </div>
       </div>
 
+      <!-- Sınıf Analitiği panosu -->
+      <div id="ks-analytics" style="margin:0 0 1.6rem"></div>
+
       <!-- Tabs -->
       <div class="ks-tabs">
         <button class="ks-tab active" data-tab="students" type="button">
@@ -1981,6 +1984,33 @@
 
       var classInfo = classRes.data || {};
       var students = rosterRes.data || [];
+
+      function renderClassAnalytics(rows, info) {
+        var box = document.getElementById('ks-analytics');
+        if (!box) return;
+        if (!rows || !rows.length) { box.innerHTML = ''; return; }
+        var now = Date.now(), active7 = 0, totalA = 0, totalC = 0, totalV = 0;
+        rows.forEach(function (s) {
+          var t = parseInt(s.total_answers) || 0, c = parseInt(s.correct_answers) || 0, v = parseInt(s.vocab_count) || 0;
+          totalA += t; totalC += c; totalV += v;
+          if (s.last_active && (now - new Date(s.last_active).getTime()) < 6048e5) active7++;
+        });
+        var classAcc = totalA > 0 ? Math.round(100 * totalC / totalA) : 0;
+        function tile(v, l) { return '<div style="flex:1;min-width:110px;text-align:center;padding:12px 6px;border-left:1px solid var(--line)"><div style="font-family:var(--font-display,Georgia),serif;font-size:1.7rem;color:var(--teal,#2C5856);line-height:1">' + v + '</div><div style="font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);margin-top:5px">' + l + '</div></div>'; }
+        var tiles = '<div style="display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;background:var(--bg-card,#fefcf7);margin-bottom:14px;overflow:hidden">' + tile(rows.length, 'Öğrenci') + tile(active7, 'Aktif · 7 gün') + tile(totalA, 'Çözülen Soru') + tile('%' + classAcc, 'Sınıf Doğruluğu') + tile(totalV, 'Kelime') + '</div>';
+        var ranked = rows.filter(function (s) { return (parseInt(s.total_answers) || 0) > 0; }).sort(function (a, b) { return (parseFloat(b.accuracy_pct) || 0) - (parseFloat(a.accuracy_pct) || 0); });
+        var bars;
+        if (ranked.length) {
+          bars = '<div style="font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);margin:2px 0 8px">Öğrenci doğruluk sıralaması</div>' + ranked.map(function (s) {
+            var acc = Math.round(parseFloat(s.accuracy_pct) || 0), col = acc >= 75 ? '#4a8a52' : acc >= 50 ? '#c08a2c' : '#b94a4a', name = (s.student_email || '(?)').split('@')[0];
+            return '<div style="margin:7px 0"><div style="display:flex;justify-content:space-between;font-size:.85rem"><span>' + esc(name) + '</span><span style="font-weight:700;color:' + col + '">' + acc + '% · ' + (parseInt(s.total_answers) || 0) + ' soru</span></div><div style="height:8px;background:var(--bg-soft,#ece4d2);border-radius:5px;overflow:hidden;margin-top:3px"><div style="height:100%;width:' + acc + '%;background:' + col + '"></div></div></div>';
+          }).join('');
+        } else {
+          bars = '<p style="font-size:.88rem;color:var(--text-muted);font-style:italic">Öğrenciler henüz soru çözmedi; çözdükçe doğruluk sıralaması burada belirir.</p>';
+        }
+        box.innerHTML = '<div class="ks-section-head" style="margin-bottom:6px"><h2>Sınıf Analitiği</h2><span class="ks-section-hint">Genel durum ve öğrenci doğruluk dağılımı.</span></div>' + tiles + bars;
+      }
+      renderClassAnalytics(students, classInfo);
 
       document.title = (classInfo.name || 'Sınıf') + ' | Gri English';
       document.getElementById('ks-class-name').textContent = classInfo.name || 'Sınıf';

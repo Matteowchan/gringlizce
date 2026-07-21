@@ -3020,6 +3020,16 @@
 
         <label for="msp-target">Hedef Tarih (Opsiyonel)</label>
         <input type="date" id="msp-target">
+        <style>
+          #msp-date-presets .msp-preset{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.75rem;font-weight:600;color:var(--text-soft,#6b6862);background:var(--bg,#F4EFE3);border:1px solid var(--line,#d9d2c4);border-radius:999px;padding:.3rem .8rem;cursor:pointer;transition:all .15s ease}
+          #msp-date-presets .msp-preset:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+        </style>
+        <div id="msp-date-presets" style="display:flex;gap:.4rem;flex-wrap:wrap;margin:.45rem 0 0">
+          <button type="button" class="msp-preset" data-days="7">1 hafta sonra</button>
+          <button type="button" class="msp-preset" data-days="14">2 hafta sonra</button>
+          <button type="button" class="msp-preset" data-days="30">1 ay sonra</button>
+        </div>
+        <div id="msp-date-readout" style="font-size:.8rem;color:var(--text-muted,#8a9099);margin-top:.4rem"></div>
 
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="msp-cancel">Vazgeç</button>
@@ -3030,6 +3040,34 @@
       </form>
     </div>
   </div>
+
+  <script>
+    // Çalışma planı modalı — tarih presetleri + Türkçe tarih okuması
+    (function () {
+      var inp = document.getElementById('msp-target');
+      var readout = document.getElementById('msp-date-readout');
+      var presets = document.getElementById('msp-date-presets');
+      if (!inp || !readout || !presets) return;
+      function trDate(iso) {
+        if (!iso) return '';
+        var d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return '';
+        var p = function (n) { return (n < 10 ? '0' : '') + n; };
+        return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear();
+      }
+      function sync() { readout.textContent = inp.value ? ('Seçilen: ' + trDate(inp.value)) : ''; }
+      inp.addEventListener('input', sync);
+      inp.addEventListener('change', sync);
+      presets.querySelectorAll('.msp-preset').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var d = new Date();
+          d.setDate(d.getDate() + (parseInt(b.dataset.days) || 0));
+          inp.value = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          sync();
+        });
+      });
+    })();
+  </script>
 
   <!-- Şifre değiştir modal -->
   <div class="modal-backdrop" id="modal-pw">

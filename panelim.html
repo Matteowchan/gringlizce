@@ -2895,6 +2895,36 @@
       <h2>Hedeflerim ve Planlarım</h2>
     </div>
 
+    <!-- Hedeflerim ve Yol Haritam (tüm sınavlar) -->
+    <style>
+      #gr-tabs .gr-tab{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.8rem;font-weight:600;color:var(--text-soft,#6b6862);background:var(--bg,#F4EFE3);border:1px solid var(--line,#d9d2c4);border-radius:999px;padding:.4rem .95rem;cursor:pointer;transition:all .15s ease}
+      #gr-tabs .gr-tab:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      #gr-tabs .gr-tab.active{background:var(--teal,#2C5856);border-color:var(--teal,#2C5856);color:#fff}
+      #gr-tabs .gr-tab .gr-dot{color:var(--gold,#C89A3C);margin-left:.3rem}
+      #gr-tabs .gr-tab.active .gr-dot{color:#fff}
+      .gr-plan{list-style:none;padding:0;margin:.6rem 0 0}
+      .gr-plan li{position:relative;padding:.4rem 0 .4rem 1.4rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.9rem;line-height:1.45;border-bottom:1px solid var(--line,#e8e0cc)}
+      .gr-plan li:last-child{border-bottom:none}
+      .gr-plan li::before{content:'';position:absolute;left:.2rem;top:.95rem;width:6px;height:6px;border-radius:50%;background:var(--gold,#C89A3C)}
+      .gr-links{display:flex;gap:.5rem;flex-wrap:wrap;margin:.9rem 0 0}
+      .gr-links a{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.78rem;font-weight:600;color:var(--teal,#2C5856);text-decoration:none;border:1px solid var(--teal,#2C5856);border-radius:8px;padding:.35rem .75rem;transition:all .15s ease}
+      .gr-links a:hover{background:var(--teal,#2C5856);color:#fff}
+    </style>
+    <div id="goals-roadmap-area" class="collapse-card always-open" style="margin-bottom:1.1rem">
+      <div class="cc-header">
+        <div class="cc-mark tone-gold"></div>
+        <div class="cc-titles">
+          <div class="cc-eyebrow">Hedef &amp; Yol Haritası</div>
+          <div class="cc-title">Hedeflerim ve Yol Haritam</div>
+        </div>
+      </div>
+      <div class="cc-body"><div class="cc-body-inner">
+        <p class="tb-intro">Bir sınav seç, hedefini belirle — sana <b>ne yapman gerektiğini</b> ve hangi kaynaklarla çalışacağını gösterelim.</p>
+        <div id="gr-tabs"></div>
+        <div id="gr-body" style="margin-top:1rem"></div>
+      </div></div>
+    </div>
+
     <div class="dual-grid">
       <!-- Target Band -->
       <div id="target-band-area" class="collapse-card" data-collapse>
@@ -5431,6 +5461,90 @@
     })();
   </script>
 
+
+  <script>
+    // Hedeflerim ve Yol Haritam — tüm sınavlar için hedef + yol haritası
+    (function () {
+      var tabsEl = document.getElementById('gr-tabs');
+      var bodyEl = document.getElementById('gr-body');
+      if (!tabsEl || !bodyEl || !window.supabase || !window.supabase.createClient) return;
+      var sb = window.supabase.createClient('https://vazbvbqgvtlaqkytfsbi.supabase.co', 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g', { auth: { persistSession: true, autoRefreshToken: true } });
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+      var GOALS = [
+        { key: 'sat', label: 'SAT', unit: 'puan', opts: ['1200', '1300', '1400', '1500', '1550+'],
+          plan: ['Reading & Writing: gramer (Boundaries, Form & Sense) + Words in Context kelime — konu konu, açıklamalı sorularla.', 'Math: 4 domain (Algebra, Advanced, Data, Geometry) — formülleri ezberle, Desmos pratiği yap.', 'Haftada en az 1 tam adaptif deneme + her yanlışın nedenini not et.', 'Zayıf konularını Öğrenme Haritası ve soru bankasından kapat.'],
+          links: [{ t: 'SAT nasıl çalışılır', h: 'blog-sat-nasil-calisilir.html' }, { t: 'SAT Öğren', h: 'sat-ogren.html' }, { t: 'SAT Math', h: 'sat-math.html' }, { t: 'Soru Bankası', h: 'sat-soru-bankasi.html' }, { t: 'Deneme', h: 'sat-mock-1.html' }] },
+        { key: 'ielts', label: 'IELTS', unit: 'band', opts: ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0'],
+          plan: ['Dört beceriyi dengele: her gün okuma/dinleme + haftada 2 writing + sesli speaking pratiği.', 'Writing Task 2: dört kriteri (görev, tutarlılık, kelime, gramer) hedefle; Gri AI ile geri bildirim al.', 'Reading: paraphrase ve Not Given mantığı; Listening: dikte + aksan alışması.', 'Akademik kelime ve kolokasyon defteri tut.'],
+          links: [{ t: 'IELTS nasıl çalışılır', h: 'blog-ielts-nasil-calisilir.html' }, { t: 'Band puanlama', h: 'blog-ielts-band.html' }, { t: 'Yazı Pratiği (Gri AI)', h: 'ielts-writing-task2.html' }, { t: 'Denemeler', h: 'ielts-deneme.html' }] },
+        { key: 'toefl', label: 'TOEFL', unit: 'puan', opts: ['60', '80', '90', '100', '110+'],
+          plan: ['iBT 4 bölüm: Reading/Listening akademik + Speaking/Writing entegre görevler.', 'Integrated görevlerde not alma sistemi kur (oku-dinle-üret).', 'Speaking kayıt al, kendini dinle; Writing’de Academic Discussion pratiği yap.', 'Akademik kelime + günlük dinleme alışkanlığı.'],
+          links: [{ t: 'TOEFL nasıl çalışılır', h: 'blog-toefl-nasil-calisilir.html' }, { t: 'TOEFL puanlama', h: 'blog-toefl-puanlama.html' }, { t: 'TOEFL Öğren', h: 'toefl-ogren.html' }] },
+        { key: 'yds', label: 'YDS / YÖKDİL', unit: 'puan', opts: ['55', '65', '70', '80', '90+'],
+          plan: ['Akademik kelime + phrasal verb / edat kalıpları — bağlamda öğren.', 'Dilbilgisi: zaman, edat, bağlaç, ilgi ve koşul cümlecikleri.', 'Çıkmış sorularla tüm soru tiplerini çöz (cloze, çeviri, paragraf, restatement).', 'Süre yönetimi: 80 soru / 180 dk deneme.'],
+          links: [{ t: 'YDS nasıl çalışılır', h: 'blog-yds-nasil-calisilir.html' }, { t: 'YDS Öğren', h: 'yds-ogren.html' }, { t: 'Soru Bankası', h: 'yds-soru-bankasi.html' }] },
+        { key: 'ydt', label: 'YDT', unit: 'net', opts: ['40', '50', '60', '70', '80'],
+          plan: ['Kelime + dilbilgisi temelini kur; okuma/paragraf hızını artır.', 'Çeviri (iki yönlü) ve cloze pratiği.', 'Çıkmış YDT sorularıyla soru tiplerini çöz; TYT dengesini koru (DİL puanı).', 'Deneme + süre yönetimi.'],
+          links: [{ t: 'YDT nasıl çalışılır', h: 'blog-ydt-nasil-calisilir.html' }, { t: 'YDT Öğren', h: 'ydt-ogren.html' }, { t: 'Soru Bankası', h: 'ydt-soru-bankasi.html' }] }
+      ];
+      var uid = null, saved = {}, active = GOALS[0].key;
+      function gById(k) { return GOALS.filter(function (x) { return x.key === k; })[0]; }
+      function renderTabs() {
+        tabsEl.style.display = 'flex'; tabsEl.style.flexWrap = 'wrap'; tabsEl.style.gap = '.45rem';
+        tabsEl.innerHTML = GOALS.map(function (g) {
+          return '<button type="button" class="gr-tab' + (g.key === active ? ' active' : '') + '" data-key="' + g.key + '">' + esc(g.label) + (saved[g.key] ? '<span class="gr-dot">●</span>' : '') + '</button>';
+        }).join('');
+        tabsEl.querySelectorAll('.gr-tab').forEach(function (b) { b.addEventListener('click', function () { active = b.dataset.key; renderTabs(); renderBody(); }); });
+      }
+      function renderBody() {
+        var g = gById(active); if (!g) return;
+        var cur = saved[g.key] || '';
+        var optHtml = '<option value="">Hedef seç…</option>' + g.opts.map(function (o) { return '<option value="' + esc(o) + '"' + (o === cur ? ' selected' : '') + '>' + esc(o) + (g.unit ? ' ' + esc(g.unit) : '') + '</option>'; }).join('');
+        bodyEl.innerHTML =
+          '<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">'
+          + '<span style="font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;color:var(--text-muted,#8a9099)">Hedefin:</span>'
+          + '<select id="gr-sel" style="padding:.5rem .7rem;border:1px solid var(--line,#d9d2c4);border-radius:8px;background:var(--bg,#F4EFE3);font-family:var(--font-ui,Inter),system-ui,sans-serif;color:var(--text)">' + optHtml + '</select>'
+          + '<button type="button" id="gr-save" class="tb-save">Kaydet</button>'
+          + '<span id="gr-status" style="font-size:.8rem;color:var(--text-muted,#8a9099)">' + (cur ? ('Kayıtlı hedef: ' + esc(cur) + (g.unit ? ' ' + esc(g.unit) : '')) : '') + '</span>'
+          + '</div>'
+          + '<div style="font-family:var(--font-display,Georgia),serif;font-size:1.1rem;color:var(--text);margin:1.1rem 0 .2rem">' + esc(g.label) + ' hedefin için ne yapmalısın?</div>'
+          + '<ul class="gr-plan">' + g.plan.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'
+          + '<div class="gr-links">' + g.links.map(function (l) { return '<a href="' + esc(l.h) + '">' + esc(l.t) + ' →</a>'; }).join('') + '</div>';
+        var saveBtn = document.getElementById('gr-save'), sel = document.getElementById('gr-sel'), st = document.getElementById('gr-status');
+        saveBtn.addEventListener('click', async function () {
+          var val = sel.value;
+          saveBtn.disabled = true; st.textContent = 'Kaydediliyor…';
+          try {
+            if (!uid) throw new Error('Giriş yapmalısın.');
+            if (val) {
+              var up = await sb.from('user_goals').upsert({ user_id: uid, exam: g.key, target: val, updated_at: new Date().toISOString() }, { onConflict: 'user_id,exam' });
+              if (up.error) throw up.error;
+              saved[g.key] = val;
+              if (g.key === 'ielts') { try { await sb.from('profiles').update({ target_band_ielts: parseFloat(val) }).eq('id', uid); } catch (e) {} }
+              st.textContent = 'Kayıtlı hedef: ' + val + (g.unit ? ' ' + g.unit : '');
+            } else {
+              await sb.from('user_goals').delete().eq('user_id', uid).eq('exam', g.key);
+              delete saved[g.key];
+              st.textContent = 'Hedef kaldırıldı.';
+            }
+            renderTabs();
+          } catch (e) { st.textContent = 'Hata: ' + (e.message || e); } finally { saveBtn.disabled = false; }
+        });
+      }
+      (async function init() {
+        try {
+          var s = await sb.auth.getSession();
+          if (s && s.data && s.data.session) {
+            uid = s.data.session.user.id;
+            var r = await sb.from('user_goals').select('exam,target').eq('user_id', uid);
+            if (r && r.data) r.data.forEach(function (row) { if (row.target) saved[row.exam] = row.target; });
+            if (!saved['ielts']) { try { var pr = await sb.from('profiles').select('target_band_ielts').eq('id', uid).maybeSingle(); if (pr && pr.data && pr.data.target_band_ielts) saved['ielts'] = String(pr.data.target_band_ielts); } catch (e) {} }
+          }
+        } catch (e) {}
+        renderTabs(); renderBody();
+      })();
+    })();
+  </script>
 
   <script>
     // Çalışma Masam — "Bölümler" içindekiler çubuğunu görünür bölümlerden dinamik kur

@@ -2923,14 +2923,38 @@
       .gr-step.done .gr-step-t{color:var(--text-soft,#9a978f);text-decoration:line-through}
       .gr-step-link{display:inline-block;margin-top:.3rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.77rem;font-weight:600;color:var(--teal,#2C5856);text-decoration:none;border:1px solid var(--line,#d9d2c4);border-radius:7px;padding:.25rem .6rem;transition:all .15s ease}
       .gr-step-link:hover{border-color:var(--teal,#2C5856);background:var(--teal,#2C5856);color:#fff}
+      .gr-links-label{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted,#8a9099);margin:1.1rem 0 .35rem}
+      .gr-note{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.86rem;line-height:1.55;color:var(--text-soft,#6b6862);background:var(--bg,#F4EFE3);border:1px solid var(--line,#e5ddcd);border-radius:12px;padding:.9rem 1.05rem;margin-top:1rem}
+      .gr-sec{border:1px solid var(--line,#e5ddcd);border-radius:12px;margin-top:.6rem;overflow:hidden;background:var(--card,#fff)}
+      .gr-sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .gr-sec>summary::-webkit-details-marker{display:none}
+      .gr-sec>summary::after{content:'▾';color:var(--text-muted,#8a9099);font-size:.8rem;transition:transform .2s ease;margin-left:.2rem}
+      .gr-sec[open]>summary::after{transform:rotate(180deg)}
+      .gr-sec-name{font-weight:600;font-size:.92rem;color:var(--text)}
+      .gr-sec-meta{font-size:.76rem;color:var(--text-soft,#6b6862);margin-left:auto;white-space:nowrap}
+      .gr-sec-body{padding:.2rem 1rem 1rem}
+      .gr-cat{padding:.6rem 0;border-top:1px solid var(--line,#eee7d8)}
+      .gr-cat:first-child{border-top:none}
+      .gr-cat-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+      .gr-cat-name{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.85rem;color:var(--text)}
+      .gr-cat.done .gr-cat-name{color:var(--text-soft,#9a978f)}
+      .gr-cat-go{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.74rem;font-weight:600;color:var(--teal,#2C5856);text-decoration:none;border:1px solid var(--line,#d9d2c4);border-radius:7px;padding:.2rem .55rem;white-space:nowrap;transition:all .15s ease}
+      .gr-cat-go:hover{border-color:var(--teal,#2C5856);background:var(--teal,#2C5856);color:#fff}
+      .gr-cat-bar{display:flex;align-items:center;gap:.5rem;margin-top:.35rem}
+      .gr-track{flex:1;height:7px;background:var(--line,#e8e0cc);border-radius:99px;overflow:hidden}
+      .gr-fill{height:100%;background:linear-gradient(90deg,var(--teal,#2C5856),var(--gold,#C89A3C));border-radius:99px;transition:width .3s ease}
+      .gr-cat.done .gr-fill{background:var(--teal,#2C5856)}
+      .gr-cat-num{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.72rem;color:var(--text-soft,#6b6862);white-space:nowrap;min-width:3.4rem;text-align:right}
     </style>
-    <div id="goals-roadmap-area" class="collapse-card always-open" style="margin-bottom:1.1rem">
+    <div id="goals-roadmap-area" class="collapse-card" data-collapse style="margin-bottom:1.1rem">
       <div class="cc-header">
         <div class="cc-mark tone-gold"></div>
         <div class="cc-titles">
-          <div class="cc-eyebrow">Hedef &amp; Yol Haritası</div>
+          <div class="cc-eyebrow">Hedef &amp; Çalışma Programı</div>
           <div class="cc-title">Hedeflerim ve Yol Haritam</div>
         </div>
+        <div class="cc-summary"><span id="gr-head-pill" style="font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.74rem;font-weight:600;color:var(--teal,#2C5856);background:rgba(44,88,86,.08);border-radius:999px;padding:.25rem .7rem">Hedef + soru takibi</span></div>
+        <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="cc-body"><div class="cc-body-inner">
         <p class="tb-intro">Bir sınav seç, hedefini belirle — sana <b>ne yapman gerektiğini</b> ve hangi kaynaklarla çalışacağını gösterelim.</p>
@@ -5530,49 +5554,48 @@
       var sb = window.supabase.createClient('https://vazbvbqgvtlaqkytfsbi.supabase.co', 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g', { auth: { persistSession: true, autoRefreshToken: true } });
       function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
       var GOALS = [
-        { key: 'sat', label: 'SAT', unit: 'puan', opts: ['1200', '1300', '1400', '1500', '1550+'],
-          program: [
-            { id: 's1', t: 'Çalışma stratejini oku — hedefine göre nereden başlayacağını netleştir.', h: 'blog-sat-nasil-calisilir.html', lt: 'SAT nasıl çalışılır' },
-            { id: 's2', t: 'R&W: gramer (Boundaries, Form, Sense) + Words in Context kelimeyi Öğren modülünden konu konu bitir.', h: 'sat-ogren.html', lt: 'SAT Öğren' },
-            { id: 's3', t: 'Math: 4 domaini (Algebra, Advanced, Data, Geometry) tamamla, Desmos pratiği yap.', h: 'sat-math.html', lt: 'SAT Math' },
-            { id: 's4', t: 'Soru bankasından bol soru çöz, her sorunun açıklamasını oku.', h: 'sat-soru-bankasi.html', lt: 'Soru Bankası' },
-            { id: 's5', t: 'En az 1 tam adaptif deneme çöz + her yanlışın nedenini not et.', h: 'sat-mock-1.html', lt: 'Deneme' }
-          ] },
-        { key: 'ielts', label: 'IELTS', unit: 'band', opts: ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0'],
-          program: [
-            { id: 's1', t: 'IELTS çalışma stratejini oku, 4 beceriyi nasıl dengeleyeceğini planla.', h: 'blog-ielts-nasil-calisilir.html', lt: 'Nasıl çalışılır' },
-            { id: 's2', t: 'Band puanlama kriterlerini öğren — hedef bandın için neyin gerektiğini bil.', h: 'blog-ielts-band.html', lt: 'Band puanlama' },
-            { id: 's3', t: 'Writing Task 2 pratiği yap, Gri AIdan kriter bazlı geri bildirim al.', h: 'ielts-writing-task2.html', lt: 'Yazı Pratiği' },
-            { id: 's4', t: 'Reading / Listening / Speaking dengesini kur, tema tema çalış.', h: 'ielts-deneme.html', lt: 'Denemeler' },
-            { id: 's5', t: 'Tam deneme çöz + en zayıf beceriyi tekrar et.', h: 'ielts-deneme.html', lt: 'Denemeler' }
-          ] },
-        { key: 'toefl', label: 'TOEFL', unit: 'puan', opts: ['60', '80', '90', '100', '110+'],
-          program: [
-            { id: 's1', t: 'TOEFL çalışma stratejini oku, iBT 4 bölümü tanı.', h: 'blog-toefl-nasil-calisilir.html', lt: 'Nasıl çalışılır' },
-            { id: 's2', t: 'Puanlama sistemini öğren, hedef puanına göre bölüm hedefleri koy.', h: 'blog-toefl-puanlama.html', lt: 'Puanlama' },
-            { id: 's3', t: 'Reading & Listening akademik bölümlerini Öğren modülünden çalış.', h: 'toefl-ogren.html', lt: 'TOEFL Öğren' },
-            { id: 's4', t: 'Integrated görevlerde oku-dinle-üret not alma sistemini kur.', h: 'toefl-ogren.html', lt: 'TOEFL Öğren' },
-            { id: 's5', t: 'Speaking kaydı al + Academic Discussion writing pratiği yap.', h: 'toefl-ogren.html', lt: 'TOEFL Öğren' }
-          ] },
-        { key: 'yds', label: 'YDS / YÖKDİL', unit: 'puan', opts: ['55', '65', '70', '80', '90+'],
-          program: [
-            { id: 's1', t: 'YDS / YÖKDİL çalışma stratejini oku, soru tiplerini tanı.', h: 'blog-yds-nasil-calisilir.html', lt: 'Nasıl çalışılır' },
-            { id: 's2', t: 'Akademik kelime + phrasal verb / edat kalıplarını bağlamda öğren.', h: 'yds-ogren.html', lt: 'YDS Öğren' },
-            { id: 's3', t: 'Dilbilgisi konularını (zaman, edat, bağlaç, cümlecikler) bitir.', h: 'yds-ogren.html', lt: 'YDS Öğren' },
-            { id: 's4', t: 'Soru bankasından tüm tipleri çöz (cloze, çeviri, paragraf, restatement).', h: 'yds-soru-bankasi.html', lt: 'Soru Bankası' },
-            { id: 's5', t: 'Deneme çöz: 80 soru / 180 dk süre yönetimini oturt.', h: 'yds-soru-bankasi.html', lt: 'Soru Bankası' }
-          ] },
-        { key: 'ydt', label: 'YDT', unit: 'net', opts: ['40', '50', '60', '70', '80'],
-          program: [
-            { id: 's1', t: 'YDT çalışma stratejini oku, DİL puanı dengesini planla.', h: 'blog-ydt-nasil-calisilir.html', lt: 'Nasıl çalışılır' },
-            { id: 's2', t: 'Kelime + dilbilgisi temelini kur, okuma/paragraf hızını artır.', h: 'ydt-ogren.html', lt: 'YDT Öğren' },
-            { id: 's3', t: 'Çeviri (iki yönlü) + cloze pratiği yap.', h: 'ydt-ogren.html', lt: 'YDT Öğren' },
-            { id: 's4', t: 'Soru bankasından soru tiplerini çöz.', h: 'ydt-soru-bankasi.html', lt: 'Soru Bankası' },
-            { id: 's5', t: 'Deneme + süre yönetimi çalış.', h: 'ydt-soru-bankasi.html', lt: 'Soru Bankası' }
-          ] }
+        { key: 'sat', label: 'SAT', unit: 'puan', opts: ['1200', '1300', '1400', '1500', '1550+'], bank: ['sat'],
+          links: [{ t: 'SAT nasıl çalışılır', h: 'blog-sat-nasil-calisilir.html' }, { t: 'SAT Öğren', h: 'sat-ogren.html' }, { t: 'SAT Math', h: 'sat-math.html' }, { t: 'Deneme', h: 'sat-mock-1.html' }] },
+        { key: 'ielts', label: 'IELTS', unit: 'band', opts: ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0'], bank: null,
+          links: [{ t: 'IELTS nasıl çalışılır', h: 'blog-ielts-nasil-calisilir.html' }, { t: 'Band puanlama', h: 'blog-ielts-band.html' }, { t: 'Yazı Pratiği (Gri AI)', h: 'ielts-writing-task2.html' }, { t: 'Denemeler', h: 'ielts-deneme.html' }] },
+        { key: 'toefl', label: 'TOEFL', unit: 'puan', opts: ['60', '80', '90', '100', '110+'], bank: ['toefl'],
+          links: [{ t: 'TOEFL nasıl çalışılır', h: 'blog-toefl-nasil-calisilir.html' }, { t: 'Puanlama', h: 'blog-toefl-puanlama.html' }, { t: 'TOEFL Öğren', h: 'toefl-ogren.html' }] },
+        { key: 'yds', label: 'YDS / YÖKDİL', unit: 'puan', opts: ['55', '65', '70', '80', '90+'], bank: ['yds'],
+          links: [{ t: 'YDS nasıl çalışılır', h: 'blog-yds-nasil-calisilir.html' }, { t: 'YDS Öğren', h: 'yds-ogren.html' }, { t: 'Soru Bankası', h: 'yds-soru-bankasi.html' }] },
+        { key: 'ydt', label: 'YDT', unit: 'net', opts: ['40', '50', '60', '70', '80'], bank: ['ydt'],
+          links: [{ t: 'YDT nasıl çalışılır', h: 'blog-ydt-nasil-calisilir.html' }, { t: 'YDT Öğren', h: 'ydt-ogren.html' }, { t: 'Soru Bankası', h: 'ydt-soru-bankasi.html' }] }
       ];
-      var uid = null, saved = {}, prog = {}, active = GOALS[0].key;
+      var SECMAP = {
+        'rw': { label: 'Reading & Writing', order: 0 }, 'reading-writing': { label: 'Reading & Writing', order: 0 },
+        'math': { label: 'Math', order: 1 }, 'reading': { label: 'Reading', order: 0 },
+        'yds': { label: 'YDS', order: 0 }, 'yokdil-fen': { label: 'YÖKDİL · Fen', order: 1 },
+        'yokdil-sosyal': { label: 'YÖKDİL · Sosyal', order: 2 }, 'yokdil-saglik': { label: 'YÖKDİL · Sağlık', order: 3 },
+        'ydt': { label: 'YDT', order: 0 }, 'mixed': { label: 'Karışık deneme', order: 9 }
+      };
+      var uid = null, saved = {}, covRows = [], active = GOALS[0].key;
       function gById(k) { return GOALS.filter(function (x) { return x.key === k; })[0]; }
+      function humanize(s) {
+        var STOP = { and: 1, or: 1, of: 1, in: 1, on: 1, the: 1, to: 1, for: 1, at: 1, by: 1, with: 1, a: 1, an: 1, vs: 1, as: 1 };
+        return String(s == null ? '' : s).replace(/[-_]+/g, ' ').toLowerCase().split(/\s+/).filter(function (w) { return w.length; })
+          .map(function (w, i) { return (i > 0 && STOP[w]) ? w : (w.charAt(0).toUpperCase() + w.slice(1)); }).join(' ');
+      }
+      function secInfo(sec) { return SECMAP[sec] || { label: humanize(sec || 'Genel'), order: 5 }; }
+      function coverageGroups(g) {
+        if (!g.bank) return [];
+        var groups = {};
+        covRows.forEach(function (row) {
+          if (g.bank.indexOf(row.exam_type) < 0) return;
+          var si = secInfo(row.section), gk = si.label;
+          if (!groups[gk]) groups[gk] = { label: si.label, order: si.order, total: 0, solved: 0, cats: [] };
+          var tt = Number(row.total) || 0, ss = Number(row.solved) || 0;
+          groups[gk].total += tt; groups[gk].solved += ss;
+          groups[gk].cats.push({ sub: row.subcategory, total: tt, solved: ss });
+        });
+        var arr = Object.keys(groups).map(function (k) { return groups[k]; });
+        arr.sort(function (a, b) { return (a.order - b.order) || a.label.localeCompare(b.label); });
+        arr.forEach(function (gr) { gr.cats.sort(function (a, b) { return (b.solved - a.solved) || String(a.sub).localeCompare(String(b.sub)); }); });
+        return arr;
+      }
       function ringSvg(done, total) {
         var pct = total ? Math.round(done / total * 100) : 0;
         var r = 28, C = 2 * Math.PI * r, off = C * (1 - pct / 100);
@@ -5589,16 +5612,44 @@
         }).join('');
         tabsEl.querySelectorAll('.gr-tab').forEach(function (b) { b.addEventListener('click', function () { active = b.dataset.key; renderTabs(); renderBody(); }); });
       }
+      function barHtml(solved, total) {
+        var pct = total ? Math.round(solved / total * 100) : 0;
+        return '<div class="gr-track"><div class="gr-fill" style="width:' + pct + '%"></div></div>';
+      }
+      function coverageHtml(g) {
+        if (!g.bank) {
+          return '<div class="gr-note">IELTS için soru bankası yakında. Şu an en etkili yol: <b>Yazı Pratiği</b>nde Gri AI ile Task 2 çalış ve <b>denemelerle</b> dört beceriyi dengele — yukarıdaki rehberlerden başla.</div>';
+        }
+        var groups = coverageGroups(g);
+        if (!groups.length) return '<div class="gr-note">Bu sınav için soru bankası yakında eklenecek.</div>';
+        var tot = 0, sol = 0;
+        groups.forEach(function (gr) { tot += gr.total; sol += gr.solved; });
+        var sub = tot ? ('Kalan <b>' + (tot - sol) + '</b> soru. Bir kategori seç, çözmeye başla — ilerlemen otomatik işlenir.') : '';
+        var html = '<div class="gr-prog">' + ringSvg(sol, tot)
+          + '<div class="gr-prog-txt"><b>' + sol + ' / ' + tot + ' soru çözüldü</b><span>' + sub + '</span></div></div>'
+          + '<div class="gr-plan-h">Kategori kategori çöz, ilerlemeni takip et</div>';
+        groups.forEach(function (gr) {
+          var gpct = gr.total ? Math.round(gr.solved / gr.total * 100) : 0;
+          html += '<details class="gr-sec"' + (groups.length === 1 ? ' open' : '') + '>'
+            + '<summary><span class="gr-sec-name">' + esc(gr.label) + '</span>'
+            + '<span class="gr-sec-meta">' + gr.solved + ' / ' + gr.total + ' soru · %' + gpct + '</span></summary>'
+            + '<div class="gr-sec-body">';
+          gr.cats.forEach(function (c) {
+            var done = c.total > 0 && c.solved >= c.total;
+            html += '<div class="gr-cat' + (done ? ' done' : '') + '">'
+              + '<div class="gr-cat-top"><span class="gr-cat-name">' + esc(humanize(c.sub)) + (done ? ' ✓' : '') + '</span>'
+              + '<a class="gr-cat-go" href="soru.html?subcategory=' + encodeURIComponent(c.sub) + '">' + (c.solved > 0 ? (done ? 'Tekrar' : 'Devam et') : 'Çöz') + ' →</a></div>'
+              + '<div class="gr-cat-bar">' + barHtml(c.solved, c.total) + '<span class="gr-cat-num">' + c.solved + ' / ' + c.total + '</span></div>'
+              + '</div>';
+          });
+          html += '</div></details>';
+        });
+        return html;
+      }
       function renderBody() {
         var g = gById(active); if (!g) return;
         var cur = saved[g.key] || '';
-        var done = prog[g.key] || [];
-        var total = g.program.length;
-        var doneCount = g.program.filter(function (s) { return done.indexOf(s.id) >= 0; }).length;
         var optHtml = '<option value="">Hedef seç…</option>' + g.opts.map(function (o) { return '<option value="' + esc(o) + '"' + (o === cur ? ' selected' : '') + '>' + esc(o) + (g.unit ? ' ' + esc(g.unit) : '') + '</option>'; }).join('');
-        var progSub = (doneCount === total)
-          ? 'Programı bitirdin — tebrikler! 🎉 Şimdi denemelerle formunu koru.'
-          : (cur ? (esc(g.label) + ' ' + esc(cur) + (g.unit ? ' ' + esc(g.unit) : '') + ' hedefine giden yol haritan.') : 'Hedefini seç ve adımları tamamladıkça işaretle.');
         bodyEl.innerHTML =
           '<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">'
           + '<span style="font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;color:var(--text-muted,#8a9099)">Hedefin:</span>'
@@ -5606,23 +5657,16 @@
           + '<button type="button" id="gr-save" class="tb-save">Kaydet</button>'
           + '<span id="gr-status" style="font-size:.8rem;color:var(--text-muted,#8a9099)">' + (cur ? ('Kayıtlı hedef: ' + esc(cur) + (g.unit ? ' ' + esc(g.unit) : '')) : '') + '</span>'
           + '</div>'
-          + '<div class="gr-prog">' + ringSvg(doneCount, total)
-          + '<div class="gr-prog-txt"><b>' + doneCount + ' / ' + total + ' adım tamamlandı</b><span>' + progSub + '</span></div></div>'
-          + '<div class="gr-plan-h">' + esc(g.label) + ' hedefin için ne yapmalısın?</div>'
-          + '<ul class="gr-steps">' + g.program.map(function (s) {
-              var d = done.indexOf(s.id) >= 0;
-              return '<li class="gr-step' + (d ? ' done' : '') + '">'
-                + '<input type="checkbox" data-step="' + esc(s.id) + '"' + (d ? ' checked' : '') + '>'
-                + '<div class="gr-step-main"><div class="gr-step-t">' + esc(s.t) + '</div>'
-                + '<a class="gr-step-link" href="' + esc(s.h) + '">' + esc(s.lt) + ' →</a></div></li>';
-            }).join('') + '</ul>';
+          + '<div class="gr-links-label">Başlangıç rehberleri</div>'
+          + '<div class="gr-links">' + g.links.map(function (l) { return '<a href="' + esc(l.h) + '">' + esc(l.t) + ' →</a>'; }).join('') + '</div>'
+          + coverageHtml(g);
         var saveBtn = document.getElementById('gr-save'), sel = document.getElementById('gr-sel'), st = document.getElementById('gr-status');
         saveBtn.addEventListener('click', async function () {
           var val = sel.value;
           saveBtn.disabled = true; st.textContent = 'Kaydediliyor…';
           try {
             if (!uid) throw new Error('Giriş yapmalısın.');
-            var up = await sb.from('user_goals').upsert({ user_id: uid, exam: g.key, target: (val || null), progress: (prog[g.key] || []), updated_at: new Date().toISOString() }, { onConflict: 'user_id,exam' });
+            var up = await sb.from('user_goals').upsert({ user_id: uid, exam: g.key, target: (val || null), updated_at: new Date().toISOString() }, { onConflict: 'user_id,exam' });
             if (up.error) throw up.error;
             if (val) {
               saved[g.key] = val;
@@ -5635,26 +5679,16 @@
             renderTabs();
           } catch (e) { st.textContent = 'Hata: ' + (e.message || e); } finally { saveBtn.disabled = false; }
         });
-        bodyEl.querySelectorAll('.gr-step input[type=checkbox]').forEach(function (cb) {
-          cb.addEventListener('change', async function () {
-            var id = cb.getAttribute('data-step');
-            var arr = (prog[g.key] || []).slice();
-            var i = arr.indexOf(id);
-            if (cb.checked && i < 0) arr.push(id); else if (!cb.checked && i >= 0) arr.splice(i, 1);
-            prog[g.key] = arr;
-            renderBody();
-            if (uid) { try { await sb.from('user_goals').upsert({ user_id: uid, exam: g.key, target: (saved[g.key] || null), progress: arr, updated_at: new Date().toISOString() }, { onConflict: 'user_id,exam' }); } catch (e) {} }
-          });
-        });
       }
       (async function init() {
         try {
           var s = await sb.auth.getSession();
           if (s && s.data && s.data.session) {
             uid = s.data.session.user.id;
-            var r = await sb.from('user_goals').select('exam,target,progress').eq('user_id', uid);
-            if (r && r.data) r.data.forEach(function (row) { if (row.target) saved[row.exam] = row.target; if (row.progress && row.progress.length) prog[row.exam] = row.progress; });
+            var r = await sb.from('user_goals').select('exam,target').eq('user_id', uid);
+            if (r && r.data) r.data.forEach(function (row) { if (row.target) saved[row.exam] = row.target; });
             if (!saved['ielts']) { try { var pr = await sb.from('profiles').select('target_band_ielts').eq('id', uid).maybeSingle(); if (pr && pr.data && pr.data.target_band_ielts) saved['ielts'] = String(pr.data.target_band_ielts); } catch (e) {} }
+            try { var cr = await sb.rpc('goal_category_progress'); if (cr && cr.data) covRows = cr.data; } catch (e) {}
           }
         } catch (e) {}
         renderTabs(); renderBody();

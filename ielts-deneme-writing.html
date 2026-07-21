@@ -170,7 +170,8 @@
     [data-theme="dark"] .task-title { color: #f0f0f0; }
     [data-theme="dark"] .task-meta { color: #888; }
     [data-theme="dark"] .task-instructions { color: #aaa; }
-    [data-theme="dark"] .task-prompt-text { color: #d8d8d8; }
+    /* Koyu modda soru içeriği açık "sınav kağıdı" panelinde: diyagram/tablo/grafik tasarlandığı gibi görünür */
+    [data-theme="dark"] .task-prompt-text { color: #2a2a2a; background: #f7f4ec; border: 1px solid #2d3548; border-radius: 10px; padding: 1rem 1.15rem; }
     [data-theme="dark"] .task-image { background: #fff; border-color: #2d3548; }
     [data-theme="dark"] .task-min-words { color: #f0f0f0; }
     [data-theme="dark"] .editor-meta { color: #888; }
@@ -826,15 +827,23 @@
         const promptText = part.task_prompt || part.passage_html || escapeHtml(part.context || '');
         const imgSrc = part.task_image_url || part.passage_image_url || part.image_url;
 
-        let promptHtml = `<h2 class="task-title">Writing Task ${part.part_number}</h2>
-                          <p class="task-instructions">You should spend about ${recommendedMin} minutes on this task.</p>
-                          <div class="task-prompt-text">${promptText}</div>`;
+        // Prompt zaten standart yönergeleri içeriyorsa şablon tekrar eklemesin (çift olmasın)
+        const hasSpend = /spend\s+about/i.test(promptText);
+        const hasMinWords = /at least\s*\d+\s*words/i.test(promptText);
+
+        let promptHtml = `<h2 class="task-title">Writing Task ${part.part_number}</h2>`;
+        if (!hasSpend) {
+          promptHtml += `<p class="task-instructions">You should spend about ${recommendedMin} minutes on this task.</p>`;
+        }
+        promptHtml += `<div class="task-prompt-text">${promptText}</div>`;
 
         if (imgSrc) {
           promptHtml += `<img src="${imgSrc}" alt="Task ${part.part_number} görseli" class="task-image">`;
         }
 
-        promptHtml += `<p class="task-min-words">You should write at least ${minWords} words.</p>`;
+        if (!hasMinWords) {
+          promptHtml += `<p class="task-min-words">You should write at least ${minWords} words.</p>`;
+        }
 
         sec.innerHTML = `
           <div class="mobile-pane-tabs">

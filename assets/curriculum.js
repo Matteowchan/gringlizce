@@ -294,7 +294,10 @@ var EXAMS=[
       { label: "IELTS", href: "blog-ielts.html" },
       { label: "TOEFL", href: "blog-toefl.html" },
       { label: "YDS / YÖKDİL", href: "blog-yds.html" },
-      { label: "YDT", href: "blog-ydt.html" }
+      { label: "YDT", href: "blog-ydt.html" },
+      { label: "IB English B", href: "blog-ib-english.html" },
+      { label: "Deutsch B", href: "blog-deutsch.html" },
+      { label: "TOK", href: "blog-tok.html" }
     ] },
     { label: "Bize Ulaşın", href: "iletisim.html" }
   ];

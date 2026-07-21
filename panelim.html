@@ -2603,12 +2603,20 @@
       .masam-quick b{font-family:var(--font-display,Georgia),serif;font-size:1rem;font-weight:500;display:block}
       .masam-quick small{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.75rem;color:var(--text-muted)}
     </style>
-    <div class="masam-quick" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem;margin:0 0 1.9rem">
+    <div class="masam-quick" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem;margin:0 0 1.3rem">
       <a href="ogrenme-haritasi.html"><span class="qi">📚</span><span><b>Çalışmaya devam et</b><small>Öğrenme haritası</small></span></a>
       <a href="seviye-belirleme.html"><span class="qi">📊</span><span><b>Seviyeni ölç</b><small>Seviye belirleme</small></span></a>
       <a href="yazi-pratigi.html"><span class="qi">✍️</span><span><b>Yazı yaz</b><small>Gri AI geri bildirim</small></span></a>
       <a href="sinifim.html"><span class="qi">👥</span><span><b>Sınıflarım</b><small>Katıl · ödevler</small></span></a>
     </div>
+
+    <!-- Bölümler içindekiler çubuğu (JS ile dinamik doldurulur) -->
+    <style>
+      #masam-toc a{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.02em;color:var(--text-soft,#6b6862);text-decoration:none;padding:.35rem .8rem;border:1px solid var(--line,#d9d2c4);border-radius:999px;background:var(--bg-card,#fefcf7);transition:all .15s ease;white-space:nowrap}
+      #masam-toc a:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      #masam-toc .toc-lbl{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted,#8a9099);font-weight:700;align-self:center;margin-right:.2rem}
+    </style>
+    <nav id="masam-toc" aria-label="Bölümler" style="display:none;gap:.5rem;flex-wrap:wrap;align-items:center;margin:0 0 2rem"></nav>
 
     <div id="user-stats-area" style="padding: 0 0 1.5rem; display: none;">
 
@@ -5386,5 +5394,41 @@
   </script>
 
 
+  <script>
+    // Çalışma Masam — "Bölümler" içindekiler çubuğunu görünür bölümlerden dinamik kur
+    (function () {
+      function buildToc() {
+        var toc = document.getElementById('masam-toc');
+        if (!toc) return;
+        var heads = document.querySelectorAll('.zone-head');
+        var chips = [];
+        heads.forEach(function (sec) {
+          if (sec.offsetParent === null) return; // gizli bölümü atla
+          var h = sec.querySelector('h2');
+          var t = h ? (h.textContent || '').trim() : '';
+          if (!t) return;
+          if (!sec.id) sec.id = 'masam-sec-' + chips.length;
+          var a = document.createElement('a');
+          a.href = '#' + sec.id;
+          a.textContent = t;
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            var el = document.getElementById(sec.id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          chips.push(a);
+        });
+        if (chips.length >= 3) {
+          toc.innerHTML = '<span class="toc-lbl">Bölümler</span>';
+          chips.forEach(function (c) { toc.appendChild(c); });
+          toc.style.display = 'flex';
+        } else {
+          toc.style.display = 'none';
+        }
+      }
+      if (document.readyState === 'complete') { setTimeout(buildToc, 900); }
+      else { window.addEventListener('load', function () { setTimeout(buildToc, 900); }); }
+    })();
+  </script>
 </body>
 </html>

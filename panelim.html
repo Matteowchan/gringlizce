@@ -3204,7 +3204,13 @@
         auth = window.GriAuth.verify() || auth;
       }
 
-      document.getElementById('uname').textContent = auth.username;
+      (function(){
+        var un = (auth.username || '').toString();
+        if (un.indexOf('@') > -1) un = un.split('@')[0];        // e-posta ise ön-eki al
+        un = un.replace(/[._-]+/g, ' ').trim();                  // ayraçları boşluğa
+        un = un.replace(/\b\w/g, function(m){ return m.toUpperCase(); }); // baş harfleri büyüt
+        document.getElementById('uname').textContent = un || 'öğrenci';
+      })();
 
       var params = new URLSearchParams(window.location.search);
       var err = params.get('error');

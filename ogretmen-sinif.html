@@ -2624,12 +2624,17 @@
           return rowHtml + overrideHtml;
         }).join('');
 
+        var assignBtn = '';
+        if (kind === 'wrong' && studentId && grp.exam_type && grp.category) {
+          assignBtn = '<button type="button" class="sd-assign-from-weak" data-exam="' + esc(grp.exam_type) + '" data-cat="' + esc(grp.category) + '" data-sub="' + esc(grp.subcategory || '') + '" title="Bu konudan ödev ver" style="flex-shrink:0;margin-right:8px;padding:4px 10px;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--teal,#2C5856);background:transparent;border:1px solid var(--teal,#2C5856);border-radius:6px;cursor:pointer;">🎯 Ödev ver</button>';
+        }
         return '<div class="sd-passage-group">'
           + '<div class="sd-passage-header">'
             + '<div style="flex:1; min-width:0;">'
               + '<div class="sd-passage-title">' + esc(titleText) + '</div>'
               + '<div class="sd-passage-meta">' + esc(subjectLine) + '</div>'
             + '</div>'
+            + assignBtn
             + '<span class="sd-passage-count">' + count + '</span>'
             + '<span class="sd-passage-caret">›</span>'
           + '</div>'
@@ -2643,6 +2648,16 @@
             h.closest('.sd-passage-group').classList.toggle('open');
           });
         });
+      }
+
+      // Öğrencinin zayıf olduğu konudan (yanlış grubu) tek tıkla hedefli ödev
+      function assignFromWeakness(exam, cat, sub) {
+        try { closeStudentDrawer(); } catch (e) {}
+        openCaModal();
+        var ex = document.getElementById('ca-q-exam'); if (ex && exam) ex.value = exam;
+        var ct = document.getElementById('ca-q-cat'); if (ct) ct.value = cat || sub || '';
+        var ttl = document.getElementById('ca-title');
+        if (ttl && !ttl.value) ttl.value = (humanizeShort(cat || sub || '') + ' tekrarı').trim();
       }
 
       async function loadStudentBookmarks(studentId) {
@@ -2687,6 +2702,12 @@
           }
           panel.innerHTML = groups.map(function (g) { return renderPassageGroup(g, 'wrong', studentId); }).join('');
           attachPassageAccordion(panel);
+          panel.querySelectorAll('.sd-assign-from-weak').forEach(function (b) {
+            b.addEventListener('click', function (e) {
+              e.stopPropagation(); e.preventDefault();
+              assignFromWeakness(b.dataset.exam, b.dataset.cat, b.dataset.sub);
+            });
+          });
         } catch (e) {
           console.error('[student wrong]', e);
           panel.innerHTML = '<p class="sd-tab-empty">Yanlış cevaplar yüklenemedi: ' + esc(e.message || String(e)) + '</p>';

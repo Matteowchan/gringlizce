@@ -1611,6 +1611,8 @@
 
       <!-- Sınıf Analitiği panosu -->
       <div id="ks-analytics" style="margin:0 0 1.6rem"></div>
+      <!-- Seviye Belirleme (CEFR) panosu -->
+      <div id="ks-placement" style="margin:0 0 1.6rem"></div>
 
       <!-- Tabs -->
       <div class="ks-tabs">
@@ -2011,6 +2013,37 @@
         box.innerHTML = '<div class="ks-section-head" style="margin-bottom:6px"><h2>Sınıf Analitiği</h2><span class="ks-section-hint">Genel durum ve öğrenci doğruluk dağılımı.</span></div>' + tiles + bars;
       }
       renderClassAnalytics(students, classInfo);
+
+      async function loadPlacement() {
+        var box = document.getElementById('ks-placement');
+        if (!box) return;
+        try {
+          var r = await sb.rpc('class_placement_results', { p_class_id: classId });
+          if (r.error) throw r.error;
+          var rows = r.data || [];
+          if (!rows.length) { box.innerHTML = ''; return; }
+          var CEFR_COL = { 'C1': '#2C5856', 'B2': '#3a7d5c', 'B1+': '#6a9a3c', 'B1': '#c89a3c', 'A2': '#c08a2c', 'A1': '#b94a4a' };
+          var ORDER = ['C1', 'B2', 'B1+', 'B1', 'A2', 'A1'];
+          var taken = rows.filter(function (x) { return x.cefr; });
+          var dist = {};
+          taken.forEach(function (x) { dist[x.cefr] = (dist[x.cefr] || 0) + 1; });
+          var distHtml = ORDER.filter(function (b) { return dist[b]; }).map(function (b) {
+            var n = dist[b], col = CEFR_COL[b] || '#888', w = taken.length ? Math.round(100 * n / taken.length) : 0;
+            return '<div style="margin:5px 0"><div style="display:flex;justify-content:space-between;font-size:.82rem"><span style="font-weight:700;color:' + col + '">' + b + '</span><span style="color:var(--text-muted)">' + n + ' öğrenci</span></div><div style="height:8px;background:var(--bg-soft,#ece4d2);border-radius:5px;overflow:hidden;margin-top:2px"><div style="height:100%;width:' + w + '%;background:' + col + '"></div></div></div>';
+          }).join('');
+          var listHtml = rows.map(function (x) {
+            var name = esc((x.student_email || '(?)').split('@')[0]);
+            if (!x.cefr) return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><span style="font-size:.88rem">' + name + '</span><span style="font-size:.8rem;color:var(--text-muted);font-style:italic">almadı</span></div>';
+            var col = CEFR_COL[x.cefr] || '#2C5856';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><span style="font-size:.88rem">' + name + '</span><span><span style="display:inline-block;background:' + col + ';color:#fff;font-weight:700;font-size:.72rem;padding:2px 9px;border-radius:11px">' + esc(x.cefr) + '</span> <span style="font-size:.8rem;color:var(--text-muted)">%' + (x.pct != null ? x.pct : '?') + '</span></span></div>';
+          }).join('');
+          box.innerHTML = '<div class="ks-section-head" style="margin-bottom:6px"><h2>Seviye Belirleme (CEFR)</h2><span class="ks-section-hint">' + taken.length + ' / ' + rows.length + ' öğrenci sınavı aldı.</span></div>'
+            + (distHtml ? '<div style="border:1px solid var(--line);border-radius:12px;background:var(--bg-card,#fefcf7);padding:12px 14px;margin-bottom:12px">' + distHtml + '</div>' : '')
+            + '<div>' + listHtml + '</div>'
+            + (taken.length < rows.length ? '<p style="font-size:.82rem;color:var(--text-muted);font-style:italic;margin-top:8px">Almayanlara <a href="seviye-belirleme.html" style="color:var(--teal,#2C5856)">Seviye Belirleme</a> sınavını öner.</p>' : '');
+        } catch (e) { box.innerHTML = ''; }
+      }
+      loadPlacement();
 
       document.title = (classInfo.name || 'Sınıf') + ' | Gri English';
       document.getElementById('ks-class-name').textContent = classInfo.name || 'Sınıf';

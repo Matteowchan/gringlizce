@@ -483,8 +483,8 @@ UPDATE public.ai_quota SET total_quota = total_quota + ${totalAiAdded} WHERE use
   </div>
   <p>Giriş yaptıktan sonra <b>Panelim</b> sayfasında tüm materyalleriniz görünecektir.</p>
   <p>İlk girişten sonra şifrenizi değiştirmenizi öneririz.</p>
-  <p>Sorularınız için <a href="mailto:atasal@gringlizce.com">atasal@gringlizce.com</a> adresinden bana ulaşabilirsiniz.</p>
-  <p style="margin-top:30px;color:#666">Mert Atasal<br>Gri English</p>
+  <p>Sorularınız için <a href="mailto:atasal@gringlizce.com">atasal@gringlizce.com</a> adresinden bize ulaşabilirsiniz.</p>
+  <p style="margin-top:30px;color:#666">Gri English</p>
 </div>`;
   } else {
     const headerText = materialInserted.length > 0 && aiPackInserted.length > 0
@@ -499,7 +499,7 @@ UPDATE public.ai_quota SET total_quota = total_quota + ${totalAiAdded} WHERE use
   ${aiSection}
   <p style="margin:25px 0"><a href="https://gringlizce.com/panelim.html" style="background:#1a5fb4;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block">Panele git</a></p>
   <p>Mevcut şifreniz geçerlidir. Unuttuysanız giriş sayfasından "Şifremi unuttum" ile sıfırlayabilirsiniz.</p>
-  <p style="margin-top:30px;color:#666">Mert Atasal<br>Gri English</p>
+  <p style="margin-top:30px;color:#666">Gri English</p>
 </div>`;
   }
 

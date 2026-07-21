@@ -138,6 +138,14 @@ var EXAMS=[
       {name:"Science & Technology",s:"todo",href:"toefl-ogren.html#spell4"},
       {name:"Academic Adjectives & Adverbs",s:"todo",href:"toefl-ogren.html#spell5"},
       {name:"Advanced Academic & TOEFL",s:"todo",href:"toefl-ogren.html#spell6"}]}
+  ]},
+  {label:"Alistir . Pratik",units:[
+    {name:"Spelling ve Kelime Yazımı",desc:"Akademik kelime yazımı, word form, Complete the Words - 40 puanlı madde",state:"live",lessons:[
+      {name:"Dört yazım drilli, 40 madde",s:"todo",href:"toefl-spelling.html"}]},
+    {name:"Gramer Drill",desc:"Altı konu, 30 çoktan seçmeli, Türkçe açıklamalı",state:"live",lessons:[
+      {name:"Altı konu, 30 soru",s:"todo",href:"toefl-grammar-drill.html"}]},
+    {name:"Writing (Gri AI)",desc:"Email ve Academic Discussion, anlık ETS holistik (0-5) değerlendirme",state:"live",lessons:[
+      {name:"3 Email + 3 Academic Discussion",s:"todo",href:"toefl-writing.html"}]}
   ]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin türü + Gri AI",pct:0,
   tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin türü (makale, blog, günlük, röportaj, haber, inceleme, rapor, öneri, yönerge, deneme...). Her biri sözleşme + model + Gri AI'li yazma sihirbazı.",href:"ib-ogren.html"}],

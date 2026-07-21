@@ -2930,7 +2930,7 @@
       .gr-sec>summary::-webkit-details-marker{display:none}
       .gr-sec>summary::after{content:'▾';color:var(--text-muted,#8a9099);font-size:.8rem;transition:transform .2s ease;margin-left:.2rem}
       .gr-sec[open]>summary::after{transform:rotate(180deg)}
-      .gr-sec-name{font-weight:600;font-size:.92rem;color:var(--text)}
+      .gr-sec-name{font-weight:600;font-size:.92rem;color:var(--text);flex:1;min-width:0}
       .gr-sec-meta{font-size:.76rem;color:var(--text-soft,#6b6862);margin-left:auto;white-space:nowrap}
       .gr-sec-body{padding:.2rem 1rem 1rem}
       .gr-cat{padding:.6rem 0;border-top:1px solid var(--line,#eee7d8)}
@@ -3025,7 +3025,7 @@
 
       <style>
         .token-status-card{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:var(--card,#fff);border:1px solid var(--line,#e5ddcd);border-radius:16px;padding:1.1rem 1.4rem}
-        .tsc-stats{display:flex;align-items:center;gap:1.4rem}
+        .tsc-stats{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap}
         .tsc-stat{display:flex;flex-direction:column;gap:.15rem}
         .tsc-num{font-family:var(--font-display,Georgia),serif;font-size:1.9rem;line-height:1;color:var(--teal,#2C5856);font-weight:600}
         .tsc-lbl{font-size:.72rem;color:var(--text-soft,#6b6862);max-width:9.5rem;line-height:1.25}
@@ -5668,7 +5668,7 @@
           html += '<details class="gr-sec" style="margin-top:.9rem"><summary><span class="gr-sec-name">Deneme geçmişin</span><span class="gr-sec-meta">' + rows.length + ' sonuç</span></summary><div class="gr-sec-body">';
           rows.slice(0, 25).forEach(function (r) {
             var b = Number(r.band);
-            var scoreStr = (r.raw_score != null && r.total_questions != null) ? (' · ' + r.raw_score + '/' + r.total_questions + ' doğru') : '';
+            var scoreStr = (r.raw_score != null && r.total_questions != null) ? (' · ' + Number(r.raw_score) + '/' + Number(r.total_questions) + ' doğru') : '';
             var dateStr = '';
             try { if (r.done_at) dateStr = new Date(r.done_at).toLocaleDateString('tr-TR'); } catch (e) {}
             html += '<div class="gr-cat"><div class="gr-cat-top"><span class="gr-cat-name">' + esc(r.test_name) + ' · ' + esc(SECLBL[r.section] || r.section) + '</span>'
@@ -5739,6 +5739,7 @@
               st.textContent = 'Hedef kaldırıldı.';
             }
             renderTabs();
+            if (g.mode === 'ielts') renderBody();
           } catch (e) { st.textContent = 'Hata: ' + (e.message || e); } finally { saveBtn.disabled = false; }
         });
       }
@@ -5749,7 +5750,7 @@
             uid = s.data.session.user.id;
             var r = await sb.from('user_goals').select('exam,target').eq('user_id', uid);
             if (r && r.data) r.data.forEach(function (row) { if (row.target) saved[row.exam] = row.target; });
-            if (!saved['ielts']) { try { var pr = await sb.from('profiles').select('target_band_ielts').eq('id', uid).maybeSingle(); if (pr && pr.data && pr.data.target_band_ielts) saved['ielts'] = String(pr.data.target_band_ielts); } catch (e) {} }
+            if (!saved['ielts']) { try { var pr = await sb.from('profiles').select('target_band_ielts').eq('id', uid).maybeSingle(); if (pr && pr.data && pr.data.target_band_ielts != null) { var _nb = Number(pr.data.target_band_ielts); saved['ielts'] = isFinite(_nb) ? _nb.toFixed(1) : String(pr.data.target_band_ielts); } } catch (e) {} }
             try { var cr = await sb.rpc('goal_category_progress'); if (cr && cr.data) covRows = cr.data; } catch (e) {}
             try { var ir = await sb.rpc('ielts_goal_results'); if (ir && ir.data) ieltsRows = ir.data; } catch (e) {}
           }

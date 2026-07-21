@@ -708,19 +708,22 @@ function sendReport(){
 /* ============ WRITING'İ GRİ AI İLE DEĞERLENDİR ============ */
 function evalWriting(){
   var box=document.getElementById('ai-writing-eval'); if(!box)return;
-  var tasks=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {type:w.type,prompt:w.lead,text:t,min:w.min,max:w.max};}).filter(function(x){return x.text && wordCount(x.text)>=5;});
-  if(!tasks.length){ box.innerHTML='<p class="instr">Yazma görevleri boş ya da çok kısa; AI değerlendirmesi yapılmadı.</p>'; return; }
-  box.innerHTML='<p class="instr">✍️ Gri AI yazılarını değerlendiriyor…</p>';
+  var items=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {w:w,text:t,ok:!!(t && wordCount(t)>=5)};});
+  if(!items.some(function(x){return x.ok;})){ box.innerHTML='<p class="instr">Yazma görevleri boş ya da çok kısa; AI değerlendirmesi yapılmadı.</p>'; return; }
+  box.innerHTML='<p class="instr">✍️ Gri AI, Part 1 ve Part 2\'yi ayrı ayrı değerlendiriyor…</p>';
   var token=window.__SB_TOKEN||SBKEY;
-  fetch(SBURL+'/functions/v1/evaluate-placement-writing',{method:'POST',headers:{'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+token},body:JSON.stringify({tasks:tasks})})
-   .then(function(r){return r.json();})
-   .then(function(j){
-     var evals=(j&&j.evaluations)||[];
-     if(!evals.length){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi alınamadı'+(j&&j.error?': '+esc(j.error):'')+'. Sonuçların yine de geçerli.</p>'; return; }
-     if(window.LAST_RESULT) window.LAST_RESULT.writingEval=evals;
-     box.innerHTML=evals.map(writingEvalHtml).join('');
-   })
-   .catch(function(err){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi hatası: '+esc(err.message)+'</p>'; });
+  function one(it){
+    if(!it.ok) return Promise.resolve({part:it.w.no,type:it.w.type,skipped:true});
+    var task={type:it.w.type,prompt:it.w.lead,text:it.text,min:it.w.min,max:it.w.max};
+    return fetch(SBURL+'/functions/v1/evaluate-placement-writing',{method:'POST',headers:{'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+token},body:JSON.stringify({tasks:[task]})})
+      .then(function(r){return r.json();})
+      .then(function(j){var e=(j&&j.evaluations&&j.evaluations[0]); if(e){e.part=it.w.no; e.type=e.type||it.w.type; return e;} return {part:it.w.no,type:it.w.type,error:(j&&j.error)||'alınamadı'};})
+      .catch(function(err){return {part:it.w.no,type:it.w.type,error:err.message};});
+  }
+  Promise.all(items.map(one)).then(function(evals){
+    if(window.LAST_RESULT) window.LAST_RESULT.writingEval=evals.filter(function(e){return e && !e.skipped && !e.error;});
+    box.innerHTML=evals.map(writingEvalHtml).join('');
+  }).catch(function(err){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi hatası: '+esc(err.message)+'</p>'; });
 }
 function printReport(){
   var box=document.getElementById('ai-writing-eval');
@@ -735,6 +738,9 @@ function printReport(){
 }
 function writingEvalHtml(e){
   var sc=e.scores||{};
+  var head=(e.part?('Part '+e.part+' — '):'')+esc(e.type||'Yazı');
+  if(e.skipped) return '<div class="detail"><h4>'+head+'</h4><p class="instr" style="color:var(--muted)">Bu görev boş bırakıldı ya da çok kısa; ayrı değerlendirme yapılmadı.</p></div>';
+  if(e.error) return '<div class="detail"><h4>'+head+'</h4><p class="instr" style="color:var(--bad)">Değerlendirilemedi: '+esc(e.error)+'</p></div>';
   var LBL={content:'Content (içerik)',communication:'Communication (üslup)',organisation:'Organisation (düzen)',language:'Language (dil)'};
   function b(label,v){v=+v||0;var p=Math.round(v/5*100),col=p>=70?'var(--good)':p>=45?'var(--warn)':'var(--bad)';return '<div style="margin:5px 0"><div style="display:flex;justify-content:space-between;font-size:.85rem"><span>'+label+'</span><span style="font-weight:700;color:'+col+'">'+v+'/5</span></div><div class="track"><div class="fill" style="width:'+p+'%;background:'+col+'"></div></div></div>';}
   // Kriter kriter kanıtlı geri bildirim

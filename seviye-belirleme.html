@@ -388,13 +388,70 @@ var TOPICS={
 
 /* CEFR bantları (54 üzerinden) */
 var BANDS = [
- {min:0.90,cefr:"C1",name:"İleri — bu sınavın üstünde",color:"#2C5856"},
- {min:0.75,cefr:"B2",name:"Üst-orta — güçlü",color:"#3a7d5c"},
- {min:0.61,cefr:"B1+",name:"Orta — sınav seviyende",color:"#6a9a3c"},
- {min:0.46,cefr:"B1",name:"Orta-alt — gelişmekte",color:"#c89a3c"},
- {min:0.30,cefr:"A2",name:"Temel-üstü",color:"#c08a2c"},
- {min:0.00,cefr:"A1",name:"Başlangıç",color:"#b94a4a"}
+ {min:0.90,cefr:"C1",name:"İleri — bu sınavın üstünde",color:"#2C5856",desc:"İleri seviye. Karmaşık metinleri ve soyut konuları rahatça anlıyor, akıcı ve doğru bir dil kullanıyorsun. Bu sınav seviyeni tam ölçemeyebilir; bir üst düzey materyallere geçebilirsin."},
+ {min:0.75,cefr:"B2",name:"Üst-orta — güçlü",color:"#3a7d5c",desc:"Üst-orta seviye. Çoğu durumda akıcısın ve soyut konuları büyük ölçüde takip edebiliyorsun. Sınav İngilizcesinde güçlü bir konumdasın; hedefin C1 olabilir."},
+ {min:0.61,cefr:"B1+",name:"Orta — sınav seviyende",color:"#6a9a3c",desc:"Orta seviyenin üstü. Tanıdık ve bazı akademik konularda kendini iyi ifade ediyorsun; sağlam bir temelin var. Yapı ve kelimeyi derinleştirmek seni B2'ye taşır."},
+ {min:0.46,cefr:"B1",name:"Orta-alt — gelişmekte",color:"#c89a3c",desc:"Orta seviye. Tanıdık konularda iletişim kurabiliyorsun; dilbilgisi yapıların ve kelime dağarcığını genişletmek bir sonraki basamağın anahtarı."},
+ {min:0.30,cefr:"A2",name:"Temel-üstü",color:"#c08a2c",desc:"Temel-üstü seviye. Basit, günlük ifadeleri anlıyor ve kullanıyorsun; düzenli ve planlı çalışmayla hızla ilerleyebilirsin."},
+ {min:0.00,cefr:"A1",name:"Başlangıç",color:"#b94a4a",desc:"Başlangıç seviyesi. Temel kelime ve kalıpları tanıyorsun; sistemli bir programla sağlam bir temel kurabilirsin. Herkes buradan başlar."}
 ];
+/* Soru bazlı "neden" açıklamaları (merge-why ile doldurulur) */
+var WHY={
+"1":"Doğru cevap B. Ayşe hiç pişirmemiş ve yalnızca Cumartesi sabahı müsait; B kursu 'deneyim gerekmez' ve Cumartesi sabahı olduğu için tam uyuyor. Tuzak G (Advanced French Cooking): o kurs mutfakta yeni biri değil, temelleri bilen usta aşçılar içindir.",
+"2":"Doğru cevap A. Mehmet fotoğraflarını bilgisayarda geliştirmek istiyor ve sadece akşamları müsait; A kursu akşam yapılan fotoğraf düzenleme kursudur. Tuzak, fotoğraf 'çekmek' ile fotoğraf 'düzenlemek'i karıştırmak; Mehmet'in istediği çekim değil, dijital düzenlemedir.",
+"3":"Doğru cevap E. Elif açık havada hafif bir aktivite ve bölgesindeki bitkileri tanımak istiyor; E kursu rahat doğa yürüyüşü + yerel bitkileri tanıma sunar. Tuzak D (Mountain Cycling): o da açık hava ama tüm gün süren, yalnızca deneyimliler için ağır bir aktivitedir; 'hafif' değildir.",
+"4":"Doğru cevap F. Can küçük bir işletme kuruyor ve sosyal medyayla online tanıtım öğrenmesi gerek; F kursu tam olarak yeni işi online ve sosyal medyada tanıtmayı öğretir. Tuzak, kursun adının 'beginners' olması değil, içeriğinin sosyal medya pazarlaması olmasıdır; sadece 'yeni başlayan' kelimesine bakmak yanıltır.",
+"5":"Doğru cevap C. Zeynep kısa hikâye yazıyor ve profesyonel bir yazardan detaylı geri bildirim istiyor; C kursunda kendi hikâyeni getirip yayımlanmış bir yazardan ayrıntılı yorum alırsın. Tuzak, 'yazma' ile ilgili başka bir seçenek aramaktır; asıl belirleyici, profesyonel yazardan detaylı geri bildirim ihtiyacıdır.",
+"6":"Doğru cevap E. Boşluktan önce koşmayı sıkıcı/acı verici bulduğu, sonra 'Her şey değişti' denmesi, aradaki cümlenin geçmişteki olumsuz bir deneyim olmasını gerektirir; E 'okulda birkaç kez denedim ama hep çabuk pes ederdim' bu geçmiş başarısızlığı anlatır. Tuzak, olumlu ya da şimdiki zamanlı bir cümle koymaktır; akış geçmiş olumsuz deneyim ister.",
+"7":"Doğru cevap A. Boşluktan önce 'birkaç dakika koşup durmak zorunda kalıyordum' zorluğu anlatılır, sonra 'However (yine de) diğer üyeler destekleyiciydi' gelir; A 'gruptaki en yavaş kişi bendim' bu geri kalma/zorluk fikrini tamamlar. Tuzak, 'However' zıtlığını görmemek; boşluk olumsuz/zorlu bir durum olmalı ki sonrasındaki destek zıtlık oluştursun.",
+"8":"Doğru cevap F. Boşluktan önce 'yavaş yavaş, hafta hafta gelişmeye başladım', sonra 'iki ay sonra yarım saat koşabiliyordum' denir; F 'her koşu bir öncekinden biraz daha kolaydı' bu kademeli gelişimi anlatır. Tuzak, gelişmeyi ani/büyük bir sıçrama sanmaktır; metin adım adım kolaylaşmayı vurgular.",
+"9":"Doğru cevap B. Boşluktan önce 'en büyük sürpriz koşunun ruh halime etkisiydi', sonra 'stresliyken rahatlamama yardım etti' denir; B 'beni daha sakin ve olumlu hissettirdi' bu ruh hali etkisini özetler. Tuzak, fiziksel gelişimle ilgili bir cümle seçmektir; burada konu bedensel değil, duygusal/ruhsal etkidir.",
+"10":"Doğru cevap C. Boşluktan önce 'artık koşu hayatımın önemli bir parçası', sonra 'ilk 10 km yarışıma hazırlanıyorum' denir; C 'hava nasıl olursa olsun haftada en az üç kez çıkıyorum' bu düzenli alışkanlığı gösterir. Tuzak, geçmişe dönük bir cümle koymaktır; bağlam şu anki düzenli koşu rutinini ister.",
+"11":"Doğru cevap A. Pasaj, tek bir arının beyninin çok küçük olmasına rağmen koloninin dikkat çekici derecede zekice davrandığını söyler; A bunu doğru özetler. Tuzak B ve C pasajda hiç geçmez; sadece kulağa doğru gelen ama metinde kanıtı olmayan seçeneklere kanma.",
+"12":"Doğru cevap B. Pasaja göre arılar 'waggle dance'i diğer arılara yiyeceğin nerede bulunacağını göstermek için yapar. Tuzak, dansı genel bir iletişim veya eğlence sanmaktır; asıl amacı yiyecek kaynağının yerini bildirmektir.",
+"13":"Doğru cevap C. Pasaj dansın uzunluğunun yiyeceğin ne kadar uzakta olduğunu anlattığını söyler: dans ne kadar uzunsa, yiyecek o kadar uzaktadır. Tuzak, dansın uzunluğunu yiyeceğin miktarı veya yönüyle karıştırmaktır; uzunluk özellikle mesafeyi belirtir.",
+"14":"Doğru cevap B. Pasaja göre Karl von Frisch arıları yıllarca inceledi ve insanlar ona inanmadan önce uzun süre çalıştı. Tuzak, onun bulgusunun hemen kabul gördüğünü sanmaktır; metin tam tersine uzun süre inanılmadığını vurgular.",
+"15":"Doğru cevap B. Pasaj, bilim insanlarının bugün endişeli olmasının nedeninin arıların sayısının azalması olduğunu belirtir. Tuzak, endişeyi başka bir sebebe (ör. arıların davranış değiştirmesi) bağlamaktır; metindeki asıl kaygı arı nüfusundaki düşüştür.",
+"16":"Doğru cevap 'true'. 'This is not true' (bu doğru değil) yerleşik bir kalıptır; bir bilgiyi yalanlarken 'not true' denir. 'real/honest/sure' anlamı bozar çünkü bir ifadenin 'gerçek/dürüst' değil, 'doğru' olup olmadığını söyleriz.",
+"17":"Doğru cevap 'any'. 'at any age' (herhangi bir yaşta) kalıbı, yaş sınırı olmadığını anlatır. Olumlu genel ifadelerde bu kalıp 'any' ile kurulur; 'some/every/no' burada anlamı ve yapıyı bozar.",
+"18":"Doğru cevap 'willing'. 'be willing to + fiil' (bir şeyi yapmaya istekli olmak) sabit bir yapıdır. Cümlede 'ne kadar emek koymaya istekli olduğun' denildiği için 'willing to put in' gerekir; 'ready/able' anlamı tam karşılamaz.",
+"19":"Doğru cevap 'give'. 'give up' bir phrasal verb olup 'pes etmek, vazgeçmek' demektir; 'easy to give up' (pes etmesi kolay) doğru eşdizimdir. 'take/put/get up' burada bu anlamı vermez.",
+"20":"Doğru cevap 'soon'. 'you will soon notice' (yakında fark edeceksin) gelecekteki olumlu bir gelişmeyi anlatır. Tuzak: 'hardly' (neredeyse hiç) ve 'yet/already' bu olumlu gelecek anlamına ve cümle yapısına uymaz.",
+"21":"Doğru cevap 'lead'. 'lead to' (bir şeye yol açmak) sabit eşdizimdir; küçük adımların gerçek ilerlemeye 'yol açması' anlatılır. 'cause/bring' de benzer görünse de 'to' ile kurulan doğru fiil 'lead'dir.",
+"22":"Doğru cevap 'say'. 'say that...' nesnesiz kullanılıp 'that'li aktarma cümlesi alır (Experts say that...). Tuzak: 'tell' mutlaka bir kişi ister (tell someone that), 'talk/speak' ise 'that' cümlesi almaz.",
+"23":"Doğru cevap 'instead'. 'instead of + ...ing' (bir şeyin yerine) kalıbıdır; 'çok yaşlı olduğunu düşünmek yerine' anlamını verir. 'because of/apart from' anlamı değiştirir.",
+"24":"Doğru cevap 'enjoyable'. Boşluk 'activities' isminden önce bir sıfat ister; 'enjoy' fiiline '-able' eki gelerek 'enjoyable' (keyifli) sıfatı oluşur. Tuzak: kök fiili 'enjoy' olduğu gibi bırakmak yanlıştır.",
+"25":"Doğru cevap 'useful'. 'very' zarfından sonra ve anlamca bir sıfat gerekir; 'use' ismine '-ful' eki gelerek 'useful' (yararlı) olur. Tuzak: 'use' fiil/isim halinde bırakılırsa cümle yapısı bozulur.",
+"26":"Doğru cevap 'concentration'. 'better' sıfatından sonra bir isim gerekir; 'concentrate' fiili '-tion' ekiyle 'concentration' (dikkat, konsantrasyon) ismine dönüşür. Tuzak: fiil biçimini korumak yanlıştır.",
+"27":"Doğru cevap 'stressful'. Boşluk 'day' isminden önce bir sıfat ister; 'stress' ismine '-ful' eki gelerek 'stressful' (stresli, yorucu) olur. Tuzak: 'stressed' kişinin halini anlatır, gün için 'stressful' kullanılır.",
+"28":"Doğru cevap 'wonderful'. 'story' isminden önce bir sıfat gerekir; 'wonder' köküne '-ful' eki gelerek 'wonderful' (harika) sıfatı oluşur. Tuzak: 'wonder' fiil/isim halinde bırakmak yanlıştır.",
+"29":"Doğru cevap 'knowledge'. 'your ... of the world' yapısında bir isim gerekir; 'know' fiili düzensiz biçimde 'knowledge' (bilgi) ismine dönüşür. Tuzak: '-tion/-ment' gibi düzenli ek beklemek yanlıştır, bu kelime düzensizdir.",
+"30":"Doğru cevap 'interesting'. 'an ... way' yapısında bir sıfat gerekir; 'interest' köküne '-ing' eki gelerek 'interesting' (ilginç) olur. Tuzak: 'interested' kişinin duygusunu anlatır; bir şeyi nitelemek için 'interesting' kullanılır.",
+"31":"Doğru cevap 'have been learning English for'. Beş yıl önce başlayıp hâlâ süren eylem Present Perfect Continuous ister ve süre 'for' ile verilir: 'for five years' (beş yıldır). Tuzak: başlangıç noktası için 'since', süre için 'for' kullanılır.",
+"32":"Doğru cevap \"don't have to bring\". 'It isn't necessary to' (gerekli değil) anlamı 'don't have to' (yapmak zorunda değil) ile karşılanır. Tuzak: 'mustn't' aynı değildir; o 'yasak, yapmamalısın' demektir.",
+"33":"Doğru cevap 'such a boring film'. 'so + sıfat + that' yapısı, isimle birlikte kullanılınca 'such a + sıfat + isim + that' olur. Tuzak: isim olduğu için 'so' değil 'such' ve tekil sayılabilir isimde 'a' gerekir.",
+"34":"Doğru cevap 'might be'. 'Maybe she is' (belki evdedir) olasılığı, olasılık modalı 'might be' ile ifade edilir. Tuzak: 'might' modalından sonra fiilin yalın hali gelir, o yüzden 'is' değil 'be' kullanılır.",
+"35":"Doğru cevap 'is said to be'. 'People say that...' (insanlar ... diyor) edilgen aktarımda 'is said to be' (olduğu söyleniyor) kalıbına dönüşür. Tuzak: özne restoran olduğu için tekil 'is' ve ardından 'to be' gelir.",
+"36":"Doğru cevap 'first time I have seen'. 'I have never seen this before' anlamı 'This is the first time I have + V3' kalıbıyla verilir: ilk kez görüyorum. Tuzak: bu kalıpta Present Perfect (have seen) kullanılır, geçmiş zaman 'saw' değil.",
+"37":"Bu boşluk, Rita'nın ilgisinin nerede başladığını soran bir yer/mekân bilgisi ister. Doğru cevap 'forest'tır: konuşmacı çocukluğunda bir orman yakınında geçirdiği tatilden bahseder. Tuzak, 'tatil' kelimesine takılıp deniz/otel gibi bir yer yazmaktır; kilit sözcük tatilin geçtiği doğal ortamdır.",
+"38":"Soru, Rita'nın hayvanat bahçesinden hemen önceki işini test eder. Doğru cevap 'pets'tir; konuşmacı zoo'ya gelmeden önce evcil hayvanlarla ilgili bir işte çalıştığını söyler. Tuzak, farklı hayvan türlerinden söz edilmesi ve 'wild animals' gibi kelimelerin yazılmasıdır; oysa önceki iş özellikle evcil hayvanlarladır.",
+"39":"Bu boşluk hayvanat bahçesindeki toplam tür sayısını ister; sayıyı tam duymak gerekir. Doğru cevap 450'dir. Dinlemede tipik tuzak, 415, 45 ya da 550 gibi sese benzeyen sayılarla karıştırmak veya farklı bir istatistikle (hayvan sayısı) karışmasıdır; konuşmacının verdiği 'tür' rakamına odaklanmak gerekir.",
+"40":"Soru, şu anda inşa edilmekte olan yeni tesisi test eder. Doğru cevap 'lab' (laboratory)'dır; konuşmacı yeni bir laboratuvarın yapıldığını söyler. Tuzak, hayvanat bahçesinde geçen başka yapılardan (kafes, klinik, bakım evi) söz edilmesi ve öğrencinin bunları yazmasıdır; anahtar, 'inşa ediliyor' ifadesiyle eşleşen yapıdır.",
+"41":"Bu boşluk, Rita'nın bir önceki gün çoğunlukla hangi hayvanı tedavi ettiğini ister. Doğru cevap 'camel'dır; konuşmacı yaralı bir deveyle ilgilendiğini anlatır. Tuzak, konuşmada birden çok hayvan adı geçmesidir; 'çoğunlukla/mostly' vurgusuyla asıl uğraştığı hayvanı ayırt etmek gerekir.",
+"42":"Soru, antilopu kısa süre uyutma nedenini test eder. Doğru cevap 'breathing'dir; konuşmacı hayvanın nefes alışını/solunumunu kontrol etmek için onu uyutacaklarını söyler. Tuzak, kalp atışı veya yara gibi başka muayenelerden söz edilmesidir; kilit, uyutmanın gerekçesi olarak belirtilen işlevdir.",
+"43":"Bu boşluk, Rita'nın hangi durumda uzmana başvurduğunu ister. Doğru cevap 'eyesight' (eyes)'tır; konuşmacı yalnızca göz/görme sorunlarında bir uzmana danıştığını belirtir. Tuzak, çeşitli sağlık sorunlarının sıralanmasıdır; 'yalnızca/only' sınırlaması, uzman gerektiren tek alanı işaret eder.",
+"44":"Soru, Rita'nın araştırma amacıyla sık gittiği yeri test eder. Doğru cevap 'Africa'dır; konuşmacı araştırma için sık sık Afrika'ya seyahat ettiğini söyler. Tuzak, tatil veya kurs için gidilen başka yerlerin de anılmasıdır; 'araştırma' amacıyla eşleşen kıtaya odaklanmak gerekir.",
+"45":"Bu boşluk, Rita'nın yakında katılacağı kursun konusunu ister. Doğru cevap 'body language'dır; konuşmacı başka bir hayvanat bahçesinde fillerin beden dili üzerine bir kursa gideceğini söyler. Tuzak, filler hakkında beslenme veya bakım gibi başka konuların geçmesidir; kursun asıl teması 'beden dili'dir.",
+"46":"Soru, Rita'nın mesleğiyle ilgili yeni fark ettiği önemli kişilik özelliğini test eder. Doğru cevap 'confident'tir; konuşmacı bir zoo vet olarak ne kadar kendine güvenli olmanın önemli olduğunu yeni anladığını söyler. Tuzak, sabır veya cesaret gibi başka olumlu niteliklerin de anılmasıdır; 'yeni fark etti' vurgusu asıl özelliği belirler.",
+"47":"Bu çoktan seçmeli soru, öğretmenin coğrafya ödevi için ne önerdiğini test eder. Doğru cevap B: öğretmen dağıtılan notlara (handouts) başvurmayı tavsiye eder. Tuzak, yerel yerleri gezmek veya bir web sitesine bakmak gibi seçeneklerin de anılmasıdır; öğretmen bunları ana öneri olarak değil, geçerken değinerek geçiştirir.",
+"48":"Soru, kızın sevdiği grubun yeni şarkısı hakkındaki gerçek görüşünü test eder. Doğru cevap B: şarkıyı beklediğinden daha az etkileyici bulur. Tuzak, grubu genelde sevmesidir; öğrenci olumlu tondan yola çıkıp yanlış seçeneği işaretleyebilir. Kilit, bu şarkıya özel hayal kırıklığı ifadesidir.",
+"49":"Bu soru, yeni eve taşınmanın aile için ana avantajını test eder. Doğru cevap B: faturalardan tasarruf edilmesidir. Tuzak, daha çok alan veya şehir merkezine yakınlık gibi çeldiricilerdir; bunlar konuşmada anılsa da konuşmacı 'asıl/en önemli' avantaj olarak masraf tasarrufunu vurgular.",
+"50":"Soru, öğretmenin sanat sergisi hakkında ne yaptığını test eder. Doğru cevap C: sergilenen eserlerin çok çeşitli olduğunu vurgular. Tuzak, sergiye gitmeyi önermek veya belli bir sanatçıyı övmek gibi yorumlardır; konuşmacının asıl vurgusu eserlerin çeşitliliğidir.",
+"51":"Bu soru, kızın düzenlediği hayır etkinliği hakkındaki duygusunu test eder. Doğru cevap C: her şeyi hazırlamanın ne kadar zor olduğuna şaşırmıştır. Tuzak, etkinliğin başarılı geçmesi veya eğlenceli olmasıdır; ama sorulan duygu, hazırlığın beklenmedik zorluğu karşısındaki şaşkınlıktır.",
+"52":"Soru, iki arkadaşın TV yemek programındaki şef hakkındaki ortak görüşünü test eder. Doğru cevap C: şefin genelde takip etmesi kolay olmayan tarifler kullandığını düşünürler. Tuzak, şefin sempatik olması veya yemeklerin lezzetli görünmesidir; asıl ortak yargı, tariflerin uygulanmasının zor oluşudur.",
+"53":"Bu soru, politikacının konuşmasının belirtilen bölümünün işlevini test eder. Doğru cevap A: bu kısımda bir örnek verir. Tuzak, konuşmanın genelinde bir eleştiri veya çözüm önerisi bulunması ve öğrencinin bunları işaretlemesidir; sorulan belirli bölüm ise somut bir örnek sunmaktır.",
+"54":"Soru, öğrencilerin İngilizce öğretmeninde en çok takdir ettikleri yönü test eder. Doğru cevap B: konuları sınıfta açıklama biçimidir. Tuzak, öğretmenin esprili olması veya ödevleri adil değerlendirmesi gibi başka övgülerdir; 'en çok' vurgusu, asıl takdir edilen anlatım biçimini öne çıkarır."
+};
 
 /* ============ RENDER ============ */
 var app=document.getElementById('exam'), intro=document.getElementById('intro'),
@@ -539,7 +596,7 @@ function finish(){
     total++; var ok=isCorrect(item);
     if(ok)correct++;
     var s=item.skill; bySkill[s]=bySkill[s]||{c:0,t:0}; bySkill[s].t++; if(ok)bySkill[s].c++;
-    if(!ok){var q=item.q; wrong.push({n:q.dispNum,skill:s,ans:(q.t==='text'?q.a[0]:q.a),given:STATE.answers[item.gid]||'(boş)'});}
+    if(!ok){var q=item.q; wrong.push({n:q.dispNum,skill:s,ans:(q.t==='text'?q.a[0]:q.a),given:STATE.answers[item.gid]||'(boş)',why:WHY[q.dispNum]||'',topic:TOPICS[q.dispNum]||''});}
   });
   var ratio=correct/total, band=BANDS.find(function(b){return ratio>=b.min;});
   renderResults(correct,total,ratio,band,bySkill,wrong);
@@ -560,8 +617,25 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
   h+='<div class="scale">'+scaleSegs+'</div>';
   h+='<p class="instr" style="text-align:center">Bu, objektif (Reading, Use of English, Listening) bölümlere dayalı bir <b>tahmindir</b>. Writing ve Speaking bir öğretmen tarafından ayrıca değerlendirilmelidir.</p></div>';
 
+  // CEFR: ne anlama geliyor + sonraki adım
+  var bi=BANDS.indexOf(band), nextB=(bi>0)?BANDS[bi-1]:null;
+  h+='<div class="sb-card"><h2>Seviyen ne anlama geliyor?</h2>';
+  h+='<p style="font-size:1.02rem;line-height:1.6;margin:.2rem 0 0">'+esc(band.desc||'')+'</p>';
+  if(nextB){ var need=Math.ceil(nextB.min*total), gap=Math.max(1,need-correct);
+    h+='<div style="margin-top:12px;padding:12px 14px;background:#f2f7f2;border-left:3px solid '+nextB.color+';border-radius:8px;font-size:.98rem;line-height:1.55">🎯 <b>Bir sonraki seviye: '+nextB.cefr+'</b> — bunun için yaklaşık <b>'+need+'/'+total+'</b> doğru gerekiyordu. Aşağı yukarı <b>'+gap+' doğru</b> daha ile '+nextB.cefr+' bandına ulaşabilirsin. En zayıf becerinden başla (aşağıda).</div>';
+  } else {
+    h+='<div style="margin-top:12px;padding:12px 14px;background:#f2f7f2;border-left:3px solid '+band.color+';border-radius:8px;font-size:.98rem">🎉 En üst banttasın. Daha zorlu (C1+) materyallerle ilerleyebilirsin.</div>';
+  }
+  h+='</div>';
+
   // beceri kırılımı
   h+='<div class="sb-card"><h2>Beceri kırılımı</h2><p class="instr">Her becerideki performansın. Bir sonraki adımların aşağıda detaylı.</p>';
+  // bölüm (paper) dağılımı
+  var RUOE=['reading_scan','reading_cohesion','reading_detail','vocab','word_formation','grammar'], LISK=['listen_detail','listen_gist'];
+  function grp(keys){var c=0,t=0;keys.forEach(function(k){if(bySkill[k]){c+=bySkill[k].c;t+=bySkill[k].t;}});return {c:c,t:t,p:t?Math.round(100*c/t):0};}
+  var gR=grp(RUOE), gL=grp(LISK);
+  function pbar(lbl,o){var col=skColor(o.p);return '<div class="skillrow"><div class="top"><b>'+lbl+'</b><span class="pct" style="color:'+col+'">'+o.c+'/'+o.t+' · %'+o.p+'</span></div><div class="track"><div class="fill" style="width:'+o.p+'%;background:'+col+'"></div></div></div>';}
+  h+='<div style="margin:2px 0 14px;padding:10px 12px;background:#faf7ee;border-radius:8px"><div style="font-size:.85rem;color:var(--muted);margin-bottom:4px">Bölüm dağılımı</div>'+(gR.t?pbar('Reading &amp; Use of English',gR):'')+(gL.t?pbar('Listening',gL):'')+'</div>';
   Object.keys(SKILLS).forEach(function(sk){
     if(!bySkill[sk])return; var o=bySkill[sk], p=skillPct(o);
     var col=p>=75?'var(--good)':p>=50?'var(--warn)':'var(--bad)';
@@ -587,9 +661,14 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
 
   // yanlışların gözden geçirilmesi
   if(wrong.length){
-    h+='<div class="sb-card"><h2>Yanlış / boş bıraktıkların ('+wrong.length+')</h2><div class="review">';
+    h+='<div class="sb-card"><h2>Yanlış / boş bıraktıkların ('+wrong.length+')</h2><p class="instr">Her soru için doğru cevap ve <b>neden</b> doğru olduğu — önce bunları çalışırsan en hızlı ilerlemeyi sağlarsın.</p><div class="review">';
     wrong.forEach(function(w){
-      h+='<div class="ri"><span class="qn">'+w.n+'.</span><span>Senin: <span class="rx">'+esc(w.given)+'</span> &nbsp;·&nbsp; Doğru: <span class="rc">'+esc(w.ans)+'</span></span></div>';
+      var given=(w.given==null||w.given==='')?'(boş)':w.given;
+      h+='<div style="padding:11px 0;border-bottom:1px solid var(--line,#e3d8c3)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b>'+w.n+'. '+esc(SHORT[w.skill]||'')+'</b>'+(w.topic?'<span style="font-size:.82rem;color:var(--muted);text-align:right">'+esc(w.topic)+'</span>':'')+'</div>'
+        +'<div style="font-size:.93rem;margin:4px 0"><span style="color:var(--bad)">Senin cevabın: '+esc(given)+'</span> &nbsp;→&nbsp; <span style="color:var(--good);font-weight:600">Doğru: '+esc(w.ans)+'</span></div>'
+        +(w.why?'<div style="font-size:.9rem;line-height:1.5;background:#faf7ee;border-radius:6px;padding:8px 11px;margin-top:2px"><b>Neden:</b> '+esc(w.why)+'</div>':'')
+        +'</div>';
     });
     h+='</div></div>';
   } else {
@@ -603,7 +682,8 @@ function renderResults(correct,total,ratio,band,bySkill,wrong){
     return {name:M.name,short:SHORT[s]||M.name,level:(p>=75?'g':p>=50?'w':'b'),pct:p,c:o.c,t:o.t,what:M.what,comment:(p>=75?M.g:M.w),study:(p<75?M.study:'')};
   }).sort(function(a,b){return a.pct-b.pct;});
   var writingData=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {type:w.type,text:t,words:wordCount(t)};});
-  window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length,writing:writingData};
+  var wrongDetail=wrong.map(function(w){return {n:w.n,skill:(SHORT[w.skill]||w.skill),given:((w.given==null||w.given==='')?'(boş)':w.given),ans:w.ans,why:w.why||'',topic:w.topic||''};});
+  window.LAST_RESULT={cefr:band.cefr,cefrName:band.name,score:correct,total:total,pct:Math.round(ratio*100),skills:analysis,missedTopics:missedTopics,wrongCount:wrong.length,wrongDetail:wrongDetail,writing:writingData};
 
   // ---- Writing (yazdıkların) kartı ----
   h+='<div class="sb-card"><h2>Writing — yazdıkların</h2><p class="instr">Bu bölüm objektif puana katılmaz; CEFR tahmini Reading / Use of English / Listening üzerinden hesaplanır. Yazıların rapora eklendi; bir öğretmen veya Gri AI ayrıca değerlendirebilir.</p>';

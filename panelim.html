@@ -2618,6 +2618,22 @@
     </style>
     <nav id="masam-toc" aria-label="Bölümler" style="display:none;gap:.5rem;flex-wrap:wrap;align-items:center;margin:0 0 2rem"></nav>
 
+    <style>
+      .ah-goal{max-width:360px;margin:1.1rem auto 0;padding-top:1.05rem;border-top:1px solid var(--line,#e5ddcd);text-align:left}
+      .ah-goal-head{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.5rem}
+      .ah-goal-label{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted,#8a9099)}
+      .ah-goal-count{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.9rem;color:var(--text)}
+      .ah-goal-count strong{font-size:1.05rem;color:var(--teal,#2C5856)}
+      .ah-goal.done .ah-goal-count strong{color:var(--gold,#C89A3C)}
+      .ah-goal-edit{margin-left:auto;background:transparent;border:1px solid var(--line,#d9d2c4);border-radius:999px;padding:.2rem .7rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.7rem;font-weight:600;color:var(--text-soft,#6b6862);cursor:pointer;transition:all .15s ease}
+      .ah-goal-edit:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      .ah-goal-select{border:1px solid var(--line,#d9d2c4);border-radius:8px;padding:.25rem .4rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.8rem;background:var(--bg,#F4EFE3);color:var(--text)}
+      .ah-goal-track{height:9px;background:var(--line,#e8e0cc);border-radius:99px;overflow:hidden}
+      .ah-goal-fill{height:100%;width:0;background:linear-gradient(90deg,var(--teal,#2C5856),var(--gold,#C89A3C));border-radius:99px;transition:width .5s ease}
+      .ah-goal.done .ah-goal-fill{background:var(--gold,#C89A3C)}
+      .ah-goal-msg{margin-top:.45rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.8rem;line-height:1.4;color:var(--text-soft,#6b6862)}
+      .ah-goal.done .ah-goal-msg{color:var(--gold,#C89A3C);font-weight:600}
+    </style>
     <div id="user-stats-area" style="padding: 0 0 1.5rem; display: none;">
 
       <!-- Aktivite hero v2 -->
@@ -2631,6 +2647,23 @@
           <span class="ah-value-unit">gün</span>
         </div>
         <div class="ah-sub">üst üste çalıştın</div>
+        <div class="ah-goal" id="ah-goal">
+          <div class="ah-goal-head">
+            <span class="ah-goal-label">Günlük hedef</span>
+            <span class="ah-goal-count"><strong id="ah-goal-count">0</strong> / <span id="ah-goal-target">10</span> soru</span>
+            <button type="button" class="ah-goal-edit" id="ah-goal-edit">Değiştir</button>
+            <select class="ah-goal-select" id="ah-goal-select" style="display:none">
+              <option value="5">5 soru</option>
+              <option value="10">10 soru</option>
+              <option value="15">15 soru</option>
+              <option value="20">20 soru</option>
+              <option value="30">30 soru</option>
+              <option value="50">50 soru</option>
+            </select>
+          </div>
+          <div class="ah-goal-track"><div class="ah-goal-fill" id="ah-goal-fill"></div></div>
+          <div class="ah-goal-msg" id="ah-goal-msg"></div>
+        </div>
         <div class="ah-calendar">
           <div class="cal-dots" id="cal-dots"></div>
           <div class="cal-label">Son 14 gün</div>
@@ -3888,6 +3921,46 @@
             dot.title = (day.date || '') + ' · ' + count + ' aktivite';
             container.appendChild(dot);
           });
+        })();
+
+        // Günlük hedef (localStorage) — bugünkü ilerleme + seri koruması
+        (function () {
+          var gEl = document.getElementById('ah-goal');
+          if (!gEl) return;
+          var daily = Array.isArray(s.daily_14d) ? s.daily_14d : [];
+          var today = daily.length ? daily[daily.length - 1] : null;
+          var todayCount = today ? ((Number(today.answers) || 0) + (Number(today.writings) || 0)) : 0;
+          var cEl = document.getElementById('ah-goal-count'), tEl = document.getElementById('ah-goal-target'),
+              fEl = document.getElementById('ah-goal-fill'), mEl = document.getElementById('ah-goal-msg'),
+              editBtn = document.getElementById('ah-goal-edit'), sel = document.getElementById('ah-goal-select');
+          function getGoal() { var g = parseInt(localStorage.getItem('gr_daily_goal'), 10); return (!g || g < 1) ? 10 : g; }
+          function paint() {
+            var goal = getGoal();
+            var pct = Math.max(0, Math.min(100, Math.round(todayCount / goal * 100)));
+            var met = todayCount >= goal;
+            if (cEl) cEl.textContent = todayCount;
+            if (tEl) tEl.textContent = goal;
+            if (fEl) fEl.style.width = pct + '%';
+            gEl.classList.toggle('done', met);
+            if (mEl) {
+              if (met) mEl.textContent = 'Bugünkü hedefin tamam — serin güvende.';
+              else if (todayCount > 0) mEl.textContent = 'Az kaldı — bugün ' + (goal - todayCount) + ' soru daha çöz.';
+              else mEl.textContent = 'Bugün henüz başlamadın. ' + goal + ' soru çözerek serini uzat.';
+            }
+            if (sel) sel.value = String(goal);
+          }
+          paint();
+          if (editBtn && sel) {
+            editBtn.addEventListener('click', function () {
+              sel.style.display = (sel.style.display === 'none' || !sel.style.display) ? 'inline-block' : 'none';
+            });
+            sel.addEventListener('change', function () {
+              var v = parseInt(sel.value, 10) || 10;
+              try { localStorage.setItem('gr_daily_goal', String(v)); } catch (e) {}
+              sel.style.display = 'none';
+              paint();
+            });
+          }
         })();
 
         // Sparklines from daily_14d

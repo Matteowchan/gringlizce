@@ -2682,7 +2682,10 @@
             + '</div>';
           }
 
-          panel.innerHTML = rowsHtml + paginationHtml;
+          var studyBar = '<div class="sd-vocab-actions" style="margin:0 0 10px"><button type="button" class="btn-action" id="sd-vocab-flash">🎴 Flashcard çalış (' + total + ')</button></div>';
+          panel.innerHTML = studyBar + rowsHtml + paginationHtml;
+          var flashBtn = document.getElementById('sd-vocab-flash');
+          if (flashBtn) flashBtn.addEventListener('click', function () { openVocabFlashcards(studentId, total); });
 
           var prev = document.getElementById('sd-vp-prev');
           var next = document.getElementById('sd-vp-next');
@@ -2694,6 +2697,69 @@
         }
       }
 
+
+      // ===== Kelime Flashcard çalışma görüntüleyici =====
+      function closeVfc() {
+        var ov = document.getElementById('vfc-overlay');
+        if (!ov) return;
+        ov.classList.remove('show');
+        document.body.style.overflow = '';
+        if (ov._key) { document.removeEventListener('keydown', ov._key); ov._key = null; }
+      }
+      async function openVocabFlashcards(studentId, total) {
+        var ov = document.getElementById('vfc-overlay');
+        var stage = document.getElementById('vfc-stage');
+        if (!ov || !stage) return;
+        ov.classList.add('show'); document.body.style.overflow = 'hidden';
+        stage.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic">Kelimeler yükleniyor…</p>';
+        var deck = [];
+        try {
+          var r = await sb.rpc('student_vocab', { p_class_id: classId, p_student_id: studentId, p_limit: Math.min(500, (parseInt(total) || 500)), p_offset: 0 });
+          if (r.error) throw r.error;
+          var rows = (r.data && r.data.rows) || [];
+          deck = rows.map(function (x) {
+            var def = x.definition_json || {}; var m = '';
+            if (Array.isArray(def.meanings) && def.meanings.length) m = def.meanings.join(', ');
+            else if (def.turkish) m = def.turkish;
+            return { w: x.word_display || '', m: m || '(anlam kayıtlı değil)' };
+          }).filter(function (c) { return c.w; });
+        } catch (e) {
+          stage.innerHTML = '<p style="text-align:center;color:#b33a3a">Yüklenemedi: ' + esc(e.message || String(e)) + '</p>';
+          return;
+        }
+        if (!deck.length) { stage.innerHTML = '<p style="text-align:center">Çalışılacak kelime bulunamadı.</p>'; return; }
+        var idx = 0, flipped = false;
+        function render() {
+          var c = deck[idx];
+          stage.innerHTML =
+            '<div class="vfc-progress">' + (idx + 1) + ' / ' + deck.length + '</div>'
+            + '<div class="vfc-card' + (flipped ? ' flipped' : '') + '" id="vfc-card">'
+              + '<div class="vfc-face vfc-front">' + esc(c.w) + '</div>'
+              + '<div class="vfc-face vfc-back">' + esc(c.m) + '</div>'
+            + '</div>'
+            + '<div class="vfc-hint">' + (flipped ? 'Anlam' : 'Kelime') + ' · karta tıkla veya <b>boşluk</b> = çevir</div>'
+            + '<div class="vfc-nav"><button type="button" id="vfc-prev" class="btn-action"' + (idx === 0 ? ' disabled' : '') + '>‹ Önceki</button><button type="button" id="vfc-shuffle" class="btn-action">🔀 Karıştır</button><button type="button" id="vfc-next" class="btn-primary">' + (idx === deck.length - 1 ? 'Bitir ✓' : 'Sonraki ›') + '</button></div>';
+          document.getElementById('vfc-card').addEventListener('click', function () { flipped = !flipped; render(); });
+          document.getElementById('vfc-prev').addEventListener('click', function () { if (idx > 0) { idx--; flipped = false; render(); } });
+          document.getElementById('vfc-shuffle').addEventListener('click', function () { for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = deck[i]; deck[i] = deck[j]; deck[j] = t; } idx = 0; flipped = false; render(); });
+          document.getElementById('vfc-next').addEventListener('click', function () {
+            if (idx < deck.length - 1) { idx++; flipped = false; render(); }
+            else {
+              stage.innerHTML = '<div class="vfc-done">🎉 Deste bitti — ' + deck.length + ' kelime.</div><div class="vfc-nav"><button type="button" id="vfc-restart" class="btn-primary">Baştan çalış</button></div>';
+              document.getElementById('vfc-restart').addEventListener('click', function () { idx = 0; flipped = false; render(); });
+            }
+          });
+        }
+        render();
+        ov._key = function (e) {
+          if (!ov.classList.contains('show')) return;
+          if (e.key === ' ') { e.preventDefault(); flipped = !flipped; render(); }
+          else if (e.key === 'ArrowRight') { var n = document.getElementById('vfc-next'); if (n) n.click(); }
+          else if (e.key === 'ArrowLeft') { var p = document.getElementById('vfc-prev'); if (p) p.click(); }
+          else if (e.key === 'Escape') { closeVfc(); }
+        };
+        document.addEventListener('keydown', ov._key);
+      }
 
       // ===== Tabs =====
       var tabBtns = document.querySelectorAll('.ks-tab');
@@ -3747,6 +3813,41 @@
       });
     })();
   </script>
+<!-- Kelime Flashcard overlay -->
+<style>
+  .vfc-overlay { position: fixed; inset: 0; background: rgba(15,25,40,.6); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 1.2rem; }
+  .vfc-overlay.show { display: flex; }
+  .vfc-modal { background: var(--bg-card, #fefcf7); border: 1px solid var(--line, #d4c9ae); border-radius: 14px; max-width: 520px; width: 100%; padding: 1.4rem 1.4rem 1.6rem; position: relative; }
+  .vfc-x { position: absolute; top: .7rem; right: .7rem; width: 30px; height: 30px; border: 1px solid var(--line); background: transparent; cursor: pointer; color: var(--text-muted); font-size: 1.2rem; line-height: 1; border-radius: 6px; }
+  .vfc-x:hover { color: var(--text); border-color: var(--text); }
+  .vfc-title { font-family: var(--font-display, Georgia), serif; font-size: 1.2rem; color: var(--text); margin: 0 0 .9rem; }
+  .vfc-progress { text-align: center; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: .78rem; letter-spacing: .12em; color: var(--text-muted); margin-bottom: .6rem; }
+  .vfc-card { position: relative; width: 100%; height: 220px; cursor: pointer; border: 1px solid var(--line, #d4c9ae); border-radius: 14px; background: var(--bg, #F4EFE3); box-shadow: 0 8px 26px rgba(26,34,48,.10); overflow: hidden; }
+  .vfc-face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1.4rem; text-align: center; font-family: var(--font-display, Georgia), serif; }
+  .vfc-front { font-size: 2rem; color: var(--text); }
+  .vfc-back { font-size: 1.4rem; color: var(--teal, #2C5856); display: none; line-height: 1.4; }
+  .vfc-card.flipped .vfc-front { display: none; }
+  .vfc-card.flipped .vfc-back { display: flex; }
+  .vfc-hint { text-align: center; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: .78rem; color: var(--text-muted); margin: .7rem 0 1rem; }
+  .vfc-nav { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+  .vfc-done { text-align: center; font-family: var(--font-display, Georgia), serif; font-size: 1.3rem; color: var(--teal, #2C5856); padding: 3rem 1rem 1.6rem; }
+</style>
+<div class="vfc-overlay" id="vfc-overlay">
+  <div class="vfc-modal">
+    <button class="vfc-x" id="vfc-close" type="button" aria-label="Kapat">×</button>
+    <div class="vfc-title">🎴 Kelime Kartları</div>
+    <div id="vfc-stage"></div>
+  </div>
+</div>
+<script>
+  (function () {
+    var ov = document.getElementById('vfc-overlay');
+    var cl = document.getElementById('vfc-close');
+    function close() { ov.classList.remove('show'); document.body.style.overflow = ''; if (ov._key) { document.removeEventListener('keydown', ov._key); ov._key = null; } }
+    if (cl) cl.addEventListener('click', close);
+    if (ov) ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+  })();
+</script>
 <script src="assets/breadcrumb.js" defer></script>
 </body>
 </html>

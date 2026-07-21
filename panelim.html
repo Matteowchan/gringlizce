@@ -5556,8 +5556,8 @@
       var GOALS = [
         { key: 'sat', label: 'SAT', unit: 'puan', opts: ['1200', '1300', '1400', '1500', '1550+'], bank: ['sat'],
           links: [{ t: 'SAT nasıl çalışılır', h: 'blog-sat-nasil-calisilir.html' }, { t: 'SAT Öğren', h: 'sat-ogren.html' }, { t: 'SAT Math', h: 'sat-math.html' }, { t: 'Deneme', h: 'sat-mock-1.html' }] },
-        { key: 'ielts', label: 'IELTS', unit: 'band', opts: ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0'], bank: null,
-          links: [{ t: 'IELTS nasıl çalışılır', h: 'blog-ielts-nasil-calisilir.html' }, { t: 'Band puanlama', h: 'blog-ielts-band.html' }, { t: 'Yazı Pratiği (Gri AI)', h: 'ielts-writing-task2.html' }, { t: 'Denemeler', h: 'ielts-deneme.html' }] },
+        { key: 'ielts', label: 'IELTS', unit: 'band', opts: ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0'], bank: null, mode: 'ielts',
+          links: [{ t: 'IELTS nasıl çalışılır', h: 'blog-ielts-nasil-calisilir.html' }, { t: 'Band puanlama', h: 'blog-ielts-band.html' }, { t: 'Yazı Pratiği (Gri AI)', h: 'ielts-writing-task2.html' }, { t: 'Tüm denemeler', h: 'ielts-deneme.html' }] },
         { key: 'toefl', label: 'TOEFL', unit: 'puan', opts: ['60', '80', '90', '100', '110+'], bank: ['toefl'],
           links: [{ t: 'TOEFL nasıl çalışılır', h: 'blog-toefl-nasil-calisilir.html' }, { t: 'Puanlama', h: 'blog-toefl-puanlama.html' }, { t: 'TOEFL Öğren', h: 'toefl-ogren.html' }] },
         { key: 'yds', label: 'YDS / YÖKDİL', unit: 'puan', opts: ['55', '65', '70', '80', '90+'], bank: ['yds'],
@@ -5572,7 +5572,13 @@
         'yokdil-sosyal': { label: 'YÖKDİL · Sosyal', order: 2 }, 'yokdil-saglik': { label: 'YÖKDİL · Sağlık', order: 3 },
         'ydt': { label: 'YDT', order: 0 }, 'mixed': { label: 'Karışık deneme', order: 9 }
       };
-      var uid = null, saved = {}, covRows = [], active = GOALS[0].key;
+      var uid = null, saved = {}, covRows = [], ieltsRows = [], active = GOALS[0].key;
+      var IELTS_SEC = [
+        { key: 'listening', label: 'Listening', h: 'ielts-deneme-listening.html' },
+        { key: 'reading', label: 'Reading', h: 'ielts-deneme-reading.html' },
+        { key: 'writing', label: 'Writing', h: 'ielts-deneme-writing.html' },
+        { key: 'speaking', label: 'Speaking', h: 'ielts-deneme.html' }
+      ];
       function gById(k) { return GOALS.filter(function (x) { return x.key === k; })[0]; }
       function humanize(s) {
         var STOP = { and: 1, or: 1, of: 1, in: 1, on: 1, the: 1, to: 1, for: 1, at: 1, by: 1, with: 1, a: 1, an: 1, vs: 1, as: 1 };
@@ -5616,10 +5622,66 @@
         var pct = total ? Math.round(solved / total * 100) : 0;
         return '<div class="gr-track"><div class="gr-fill" style="width:' + pct + '%"></div></div>';
       }
-      function coverageHtml(g) {
-        if (!g.bank) {
-          return '<div class="gr-note">IELTS için soru bankası yakında. Şu an en etkili yol: <b>Yazı Pratiği</b>nde Gri AI ile Task 2 çalış ve <b>denemelerle</b> dört beceriyi dengele — yukarıdaki rehberlerden başla.</div>';
+      function ringBand(band) {
+        var frac = band ? Math.max(0, Math.min(1, band / 9)) : 0;
+        var r = 28, C = 2 * Math.PI * r, off = C * (1 - frac);
+        return '<svg width="72" height="72" viewBox="0 0 72 72" style="flex:0 0 auto">'
+          + '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="var(--line,#e5ddcd)" stroke-width="7"/>'
+          + '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="var(--teal,#2C5856)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" transform="rotate(-90 36 36)"/>'
+          + '<text x="36" y="41" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="var(--teal,#2C5856)" font-weight="600">' + (band != null ? Number(band).toFixed(1) : '—') + '</text>'
+          + '</svg>';
+      }
+      function ieltsHtml(g) {
+        var rows = ieltsRows || [];
+        var best = {}, counts = {};
+        rows.forEach(function (r) {
+          var b = Number(r.band); if (!isFinite(b)) return;
+          if (best[r.section] == null || b > best[r.section]) best[r.section] = b;
+          counts[r.section] = (counts[r.section] || 0) + 1;
+        });
+        var avail = IELTS_SEC.filter(function (s) { return best[s.key] != null; });
+        var overall = null;
+        if (avail.length) { var sum = 0; avail.forEach(function (s) { sum += best[s.key]; }); overall = Math.round((sum / avail.length) * 2) / 2; }
+        var target = saved['ielts'] ? parseFloat(saved['ielts']) : null;
+        var sub;
+        if (!rows.length) sub = 'Henüz deneme çözmedin. Bir bölüm seç, çöz — bandın otomatik burada birikir.';
+        else if (target) sub = (overall != null ? ('Şu an ~' + overall.toFixed(1) + ' band. ') : '') + 'Hedefin ' + target.toFixed(1) + ' band' + (overall != null && overall < target ? (' — ' + (target - overall).toFixed(1) + ' band yükselmen lazım.') : '.');
+        else sub = (overall != null ? ('Tahmini genel band ~' + overall.toFixed(1) + '. ') : '') + 'Deneme çözdükçe bandın güncellenir.';
+        var html = '<div class="gr-prog">' + ringBand(overall)
+          + '<div class="gr-prog-txt"><b>' + (overall != null ? ('~' + overall.toFixed(1) + ' genel band') : 'Genel band —') + '</b><span>' + sub + '</span></div></div>'
+          + '<div class="gr-plan-h">Bölüm bölüm deneme çöz, bandını takip et</div>';
+        IELTS_SEC.forEach(function (s) {
+          var b = best[s.key], n = counts[s.key] || 0;
+          var pct = b ? Math.round(Math.max(0, Math.min(1, b / 9)) * 100) : 0;
+          var meta = (b != null) ? ('En iyi band ' + b.toFixed(1) + ' · ' + n + ' deneme') : (s.key === 'speaking' ? 'Konuşma denemesi yakında' : 'Henüz çözülmedi');
+          var reached = (b != null && target && b >= target);
+          html += '<div class="gr-cat' + (reached ? ' done' : '') + '">'
+            + '<div class="gr-cat-top"><span class="gr-cat-name">' + esc(s.label) + (reached ? ' ✓' : '') + '</span>'
+            + (s.key === 'speaking' ? '<span class="gr-cat-num" style="min-width:auto">Yakında</span>' : '<a class="gr-cat-go" href="' + esc(s.h) + '">' + (b != null ? 'Tekrar çöz' : 'Çöz') + ' →</a>')
+            + '</div>'
+            + '<div class="gr-cat-bar"><div class="gr-track"><div class="gr-fill" style="width:' + pct + '%"></div></div><span class="gr-cat-num">' + (b != null ? ('band ' + b.toFixed(1)) : '—') + '</span></div>'
+            + '<div style="font-size:.73rem;color:var(--text-soft,#6b6862);margin-top:.25rem">' + esc(meta) + '</div>'
+            + '</div>';
+        });
+        if (rows.length) {
+          var SECLBL = { listening: 'Listening', reading: 'Reading', writing: 'Writing', speaking: 'Speaking' };
+          html += '<details class="gr-sec" style="margin-top:.9rem"><summary><span class="gr-sec-name">Deneme geçmişin</span><span class="gr-sec-meta">' + rows.length + ' sonuç</span></summary><div class="gr-sec-body">';
+          rows.slice(0, 25).forEach(function (r) {
+            var b = Number(r.band);
+            var scoreStr = (r.raw_score != null && r.total_questions != null) ? (' · ' + r.raw_score + '/' + r.total_questions + ' doğru') : '';
+            var dateStr = '';
+            try { if (r.done_at) dateStr = new Date(r.done_at).toLocaleDateString('tr-TR'); } catch (e) {}
+            html += '<div class="gr-cat"><div class="gr-cat-top"><span class="gr-cat-name">' + esc(r.test_name) + ' · ' + esc(SECLBL[r.section] || r.section) + '</span>'
+              + '<span class="gr-cat-num" style="min-width:auto;font-weight:700;color:var(--teal,#2C5856)">Band ' + (isFinite(b) ? b.toFixed(1) : '—') + '</span></div>'
+              + '<div style="font-size:.73rem;color:var(--text-soft,#6b6862);margin-top:.2rem">' + esc(dateStr) + scoreStr + '</div></div>';
+          });
+          html += '</div></details>';
         }
+        return html;
+      }
+      function coverageHtml(g) {
+        if (g.mode === 'ielts') return ieltsHtml(g);
+        if (!g.bank) return '<div class="gr-note">Bu sınav için soru bankası yakında eklenecek.</div>';
         var groups = coverageGroups(g);
         if (!groups.length) return '<div class="gr-note">Bu sınav için soru bankası yakında eklenecek.</div>';
         var tot = 0, sol = 0;
@@ -5689,6 +5751,7 @@
             if (r && r.data) r.data.forEach(function (row) { if (row.target) saved[row.exam] = row.target; });
             if (!saved['ielts']) { try { var pr = await sb.from('profiles').select('target_band_ielts').eq('id', uid).maybeSingle(); if (pr && pr.data && pr.data.target_band_ielts) saved['ielts'] = String(pr.data.target_band_ielts); } catch (e) {} }
             try { var cr = await sb.rpc('goal_category_progress'); if (cr && cr.data) covRows = cr.data; } catch (e) {}
+            try { var ir = await sb.rpc('ielts_goal_results'); if (ir && ir.data) ieltsRows = ir.data; } catch (e) {}
           }
         } catch (e) {}
         renderTabs(); renderBody();

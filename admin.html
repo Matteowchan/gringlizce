@@ -2334,6 +2334,12 @@
         <div class="um-msg" id="um-ielts-msg"></div>
       </div>
 
+      <div class="user-modal-section" id="um-sec-level">
+        <h4>Seviye &amp; Zayıf Konular</h4>
+        <div id="um-level" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-level-msg"></div>
+      </div>
+
       <div class="user-modal-section" id="um-sec-answers">
         <h4>Çözdüğü Sorular</h4>
         <div class="um-action-row" style="margin-bottom: 0.5rem;">
@@ -2357,6 +2363,24 @@
         <h4>Çalışma İzleri</h4>
         <div id="um-study" style="font-size: 0.86rem;"></div>
         <div class="um-msg" id="um-study-msg"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-collected">
+        <h4>Biriktirdikleri</h4>
+        <div id="um-collected" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-collected-msg"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-usage">
+        <h4>Kullanım &amp; AI</h4>
+        <div id="um-usage" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-usage-msg"></div>
+      </div>
+
+      <div class="user-modal-section" id="um-sec-class">
+        <h4>Sınıf &amp; Plan</h4>
+        <div id="um-class" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-class-msg"></div>
       </div>
 
       <div class="user-modal-section">
@@ -3562,6 +3586,95 @@
       }
     }
 
+    function umPctBar(correct, attempted) {
+      var p = attempted ? Math.round(correct / attempted * 100) : 0;
+      var col = p >= 70 ? '#2E6E6A' : (p >= 40 ? '#B0892C' : '#A8382F');
+      return '<span style="display:inline-block;width:56px;height:7px;background:var(--line);border-radius:99px;overflow:hidden;vertical-align:middle;"><span style="display:block;width:' + p + '%;height:100%;background:' + col + ';"></span></span> %' + p;
+    }
+    function umHum(s) { return String(s == null ? '' : s).replace(/[-_]+/g, ' '); }
+
+    async function loadUserLevel(userId) {
+      var box = $('um-level'), msg = $('um-level-msg'); if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var pr = await sb.rpc('admin_user_placement', { p_user_id: userId });
+        var ca = await sb.rpc('admin_user_category_accuracy', { p_user_id: userId });
+        if (pr.error) { throw pr.error; } if (ca.error) { throw ca.error; }
+        var pls = pr.data || [], cats = ca.data || [], html = '';
+        if (pls.length) {
+          html += '<div class="um-w-group">Seviye Belirleme</div>';
+          pls.forEach(function (p) { html += '<div style="margin-bottom:0.25rem;"><b style="color:var(--teal);">' + escHtmlAdmin(p.cefr || '—') + '</b> · ' + (p.score != null ? p.score + '/' + p.total : '') + ' · %' + (p.pct || 0) + ' <span style="color:var(--text-muted);">· ' + (p.created_at ? fmtDate(p.created_at) : '') + '</span></div>'; });
+        }
+        if (cats.length) {
+          html += '<div class="um-w-group" style="margin-top:0.6rem;">Kategori Doğruluğu (zayıftan güçlüye)</div><table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+          cats.slice(0, 40).forEach(function (c) {
+            var lbl = (c.exam_type || '').toUpperCase() + ' · ' + umHum(c.subcategory);
+            html += '<tr style="border-top:1px solid var(--line);"><td style="padding:3px 6px;">' + escHtmlAdmin(lbl) + '</td><td style="white-space:nowrap;">' + umPctBar(Number(c.correct), Number(c.attempted)) + '</td><td style="color:var(--text-muted);white-space:nowrap;">' + c.correct + '/' + c.attempted + '</td></tr>';
+          });
+          html += '</table>';
+        }
+        box.innerHTML = html || '<div style="color:var(--text-muted); font-style:italic;">Seviye/kategori verisi yok.</div>';
+        if (msg) { msg.textContent = ''; }
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+
+    async function loadUserCollected(userId) {
+      var box = $('um-collected'), msg = $('um-collected-msg'); if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var vr = await sb.rpc('admin_user_vocab', { p_user_id: userId });
+        var br = await sb.rpc('admin_user_bookmarks', { p_user_id: userId });
+        var hr = await sb.rpc('admin_user_highlights', { p_user_id: userId });
+        var gr = await sb.rpc('admin_user_goals', { p_user_id: userId });
+        [vr, br, hr, gr].forEach(function (r) { if (r.error) { throw r.error; } });
+        var v = vr.data || [], b = br.data || [], h = hr.data || [], g = gr.data || [], html = '';
+        if (g.length) { html += '<div class="um-w-group">Hedefler</div>' + g.map(function (x) { return '<div>' + escHtmlAdmin((x.exam || '').toUpperCase()) + ': <b>' + escHtmlAdmin(x.target || '') + '</b></div>'; }).join(''); }
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">Kelimeler (' + v.length + ')</div>';
+        html += v.length ? '<div>' + v.slice(0, 60).map(function (x) { return escHtmlAdmin(x.word || ''); }).join(', ') + (v.length > 60 ? ' …' : '') + '</div>' : '<div style="color:var(--text-muted);">yok</div>';
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">Yer İmleri (' + b.length + ')</div>';
+        html += b.length ? b.slice(0, 30).map(function (x) { return '<div>' + escHtmlAdmin((x.exam_type || '').toUpperCase() + ' · ' + umHum(x.subcategory)) + ' <span style="color:var(--text-muted);">' + escHtmlAdmin(x.question_slug || '') + '</span></div>'; }).join('') : '<div style="color:var(--text-muted);">yok</div>';
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">Highlight (' + h.length + ')</div>';
+        html += h.length ? h.slice(0, 20).map(function (x) { return '<div style="border-left:3px solid ' + escHtmlAdmin(x.color || '#c89a3c') + ';padding-left:6px;margin:2px 0;">' + escHtmlAdmin((x.selected_text || '').slice(0, 140)) + '</div>'; }).join('') : '<div style="color:var(--text-muted);">yok</div>';
+        box.innerHTML = html; if (msg) { msg.textContent = ''; }
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+
+    async function loadUserUsage(userId) {
+      var box = $('um-usage'), msg = $('um-usage-msg'); if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var qr = await sb.rpc('admin_user_ai_quota', { p_user_id: userId });
+        var cr = await sb.rpc('admin_user_ai_calls', { p_user_id: userId });
+        if (qr.error) { throw qr.error; } if (cr.error) { throw cr.error; }
+        var q = (qr.data && qr.data[0]) || null, calls = cr.data || [], html = '';
+        if (q) { html += '<div class="um-w-group">Token Durumu</div><div>Günlük: <b>' + (q.daily_used || 0) + ' / ' + (q.daily_limit || 10) + '</b> · Bonus kalan: <b>' + ((q.bonus_quota || 0) - (q.bonus_used || 0)) + '</b> · Bugün yazıya harcanan: ' + (q.writing_daily_used || 0) + ' token</div>'; }
+        else { html += '<div style="color:var(--text-muted);">Kota kaydı yok (hiç AI kullanmamış).</div>'; }
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">AI Kullanımı</div>';
+        if (calls.length) {
+          html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;"><tr style="color:var(--text-muted);text-align:left;"><th style="padding:3px 6px;">Özellik</th><th>Adet</th><th>Maliyet</th><th>Son</th></tr>';
+          calls.forEach(function (c) { html += '<tr style="border-top:1px solid var(--line);"><td style="padding:3px 6px;">' + escHtmlAdmin(c.feature || '') + '</td><td>' + c.calls + '</td><td>$' + Number(c.total_cost || 0).toFixed(3) + '</td><td style="color:var(--text-muted);">' + (c.last_ts ? fmtDate(c.last_ts) : '') + '</td></tr>'; });
+          html += '</table>';
+        } else { html += '<div style="color:var(--text-muted);">AI kullanımı yok.</div>'; }
+        box.innerHTML = html; if (msg) { msg.textContent = ''; }
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+
+    async function loadUserClass(userId) {
+      var box = $('um-class'), msg = $('um-class-msg'); if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var cr = await sb.rpc('admin_user_classes', { p_user_id: userId });
+        var sr = await sb.rpc('admin_user_study_plans', { p_user_id: userId });
+        if (cr.error) { throw cr.error; } if (sr.error) { throw sr.error; }
+        var cls = cr.data || [], plans = sr.data || [], html = '';
+        html += '<div class="um-w-group">Sınıflar</div>';
+        html += cls.length ? cls.map(function (c) { return '<div>' + escHtmlAdmin(c.class_name || '') + (c.archived ? ' <span style="color:var(--text-muted);">(arşiv)</span>' : '') + ' <span style="color:var(--text-muted);">· ' + (c.joined_at ? fmtDate(c.joined_at) : '') + '</span></div>'; }).join('') : '<div style="color:var(--text-muted);">Sınıf yok.</div>';
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">Çalışma Planları</div>';
+        html += plans.length ? plans.map(function (p) { return '<div>' + escHtmlAdmin(p.name || '') + ' <span style="color:var(--text-muted);">· ' + escHtmlAdmin(p.status || '') + (p.target_date ? ' · hedef ' + fmtDate(p.target_date) : '') + '</span></div>'; }).join('') : '<div style="color:var(--text-muted);">Plan yok.</div>';
+        box.innerHTML = html; if (msg) { msg.textContent = ''; }
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+
     async function loadUserWritings(userId) {
       var box = $('um-writings'); var msg = $('um-writings-msg');
       if (!box) { return; }
@@ -3595,7 +3708,7 @@
       var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
       var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
       // um-sec-events acik kalir (aktivite timeline'i user acilisinda eager yuklenir)
-      ['um-sec-ielts', 'um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
+      ['um-sec-ielts', 'um-sec-level', 'um-sec-answers', 'um-sec-writings', 'um-sec-study', 'um-sec-collected', 'um-sec-usage', 'um-sec-class'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
       });
@@ -3611,9 +3724,13 @@
             var uid = currentUserDetail && currentUserDetail.user_id;
             if (sec.id === 'um-sec-events' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserEvents(uid); }
             if (sec.id === 'um-sec-ielts' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserIeltsAttempts(uid); }
+            if (sec.id === 'um-sec-level' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserLevel(uid); }
             if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
             if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
             if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }
+            if (sec.id === 'um-sec-collected' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserCollected(uid); }
+            if (sec.id === 'um-sec-usage' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserUsage(uid); }
+            if (sec.id === 'um-sec-class' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserClass(uid); }
           }
         });
       }

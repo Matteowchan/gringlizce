@@ -2328,6 +2328,12 @@
         <div class="um-msg" id="um-events-msg"></div>
       </div>
 
+      <div class="user-modal-section" id="um-sec-ielts">
+        <h4>IELTS Deneme Sonuçları</h4>
+        <div id="um-ielts" style="font-size: 0.86rem;"></div>
+        <div class="um-msg" id="um-ielts-msg"></div>
+      </div>
+
       <div class="user-modal-section" id="um-sec-answers">
         <h4>Çözdüğü Sorular</h4>
         <div class="um-action-row" style="margin-bottom: 0.5rem;">
@@ -3519,6 +3525,43 @@
       '</div>';
     }
 
+    async function loadUserIeltsAttempts(userId) {
+      var box = $('um-ielts'); var msg = $('um-ielts-msg');
+      if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      try {
+        var r = await sb.rpc('admin_user_ielts_attempts', { p_user_id: userId });
+        if (r.error) { throw r.error; }
+        var rows = r.data || [];
+        if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">IELTS deneme (Listening/Reading) sonucu yok.</div>'; if (msg) { msg.textContent = ''; } return; }
+        var secLbl = { listening: 'Listening', reading: 'Reading', writing: 'Writing' };
+        var groups = {};
+        rows.forEach(function (a) { var k = a.test_name || 'IELTS Deneme'; (groups[k] = groups[k] || []).push(a); });
+        var html = '';
+        Object.keys(groups).forEach(function (k) {
+          var gs = groups[k];
+          var bands = gs.map(function (a) { return parseFloat(a.band); }).filter(function (x) { return !isNaN(x); });
+          var overall = bands.length ? (Math.round((bands.reduce(function (s, x) { return s + x; }, 0) / bands.length) * 2) / 2).toFixed(1) : '—';
+          html += '<div class="um-w-group">' + escHtmlAdmin(k) + ' · Genel ~' + overall + ' band</div>';
+          html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-bottom:0.7rem;">';
+          html += '<tr style="color:var(--text-muted); text-align:left;"><th style="padding:3px 6px;">Bölüm</th><th>Band</th><th>Doğru</th><th>Tarih</th></tr>';
+          gs.forEach(function (a) {
+            var d = a.completed_at ? fmtDate(a.completed_at) : '';
+            var corr = (a.raw_score != null && a.total_questions != null) ? (a.raw_score + ' / ' + a.total_questions) : '—';
+            html += '<tr style="border-top:1px solid var(--line);"><td style="padding:3px 6px;">' + escHtmlAdmin(secLbl[a.section] || a.section || '') + '</td>' +
+              '<td><b style="color:var(--teal);">' + escHtmlAdmin(a.band || '—') + '</b></td>' +
+              '<td>' + corr + '</td><td style="color:var(--text-muted);">' + escHtmlAdmin(d) + '</td></tr>';
+          });
+          html += '</table>';
+        });
+        box.innerHTML = html;
+        if (msg) { msg.textContent = ''; }
+      } catch (e) {
+        box.innerHTML = '';
+        if (msg) { msg.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
     async function loadUserWritings(userId) {
       var box = $('um-writings'); var msg = $('um-writings-msg');
       if (!box) { return; }
@@ -3552,7 +3595,7 @@
       var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
       var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
       // um-sec-events acik kalir (aktivite timeline'i user acilisinda eager yuklenir)
-      ['um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
+      ['um-sec-ielts', 'um-sec-answers', 'um-sec-writings', 'um-sec-study'].forEach(function (id) {
         var sec = document.getElementById(id);
         if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
       });
@@ -3567,6 +3610,7 @@
           if (nowOpen) {
             var uid = currentUserDetail && currentUserDetail.user_id;
             if (sec.id === 'um-sec-events' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserEvents(uid); }
+            if (sec.id === 'um-sec-ielts' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserIeltsAttempts(uid); }
             if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
             if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
             if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }

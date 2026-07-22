@@ -1677,5 +1677,49 @@ table.ge-tbl th,table.ge-tbl td{white-space:normal}
   :root[data-theme="dark"] table.ge-tbl[data-mstack] td[data-label]::before{color:var(--teal)}
 }
 </style>
+
+<!-- ge-auth-gate: giris zorunlu -->
+<div id="geGate" style="position:fixed;inset:0;z-index:99999;background:var(--bg,#faf9f6);display:flex;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="max-width:430px;width:100%;text-align:center;background:var(--bg-card,#fff);border:1px solid var(--line,#e2ded6);border-radius:14px;padding:2.4rem 1.9rem;box-shadow:0 10px 34px rgba(0,0,0,.09);">
+    <div style="font-family:var(--font-display,Georgia,serif);font-size:1.7rem;color:#2E6E6A;font-weight:700;margin-bottom:.3rem;">Gri <span style="font-style:italic;">English</span></div>
+    <h2 style="margin:.3rem 0 .6rem;font-size:1.2rem;color:var(--text,#222);">Bu ünite için giriş gerekli</h2>
+    <p id="geGateMsg" style="color:var(--text-muted,#666);font-size:.94rem;line-height:1.6;margin:0 0 1.3rem;">Oturum kontrol ediliyor...</p>
+    <div id="geGateActions" style="display:none;flex-direction:column;gap:.6rem;">
+      <a href="giris.html?return=/genel-a1-unite-6.html" style="display:block;background:#2E6E6A;color:#fff;text-decoration:none;font-weight:600;padding:.75rem 1rem;border-radius:9px;font-size:.98rem;">Giriş Yap</a>
+      <a href="giris.html#signup" style="display:block;background:transparent;color:#2E6E6A;text-decoration:none;font-weight:600;padding:.7rem 1rem;border-radius:9px;border:1px solid #2E6E6A;font-size:.98rem;">Ücretsiz Hesap Aç</a>
+      <a href="genel-ingilizce.html" style="display:block;color:var(--text-muted,#777);text-decoration:none;font-size:.85rem;margin-top:.3rem;">&lsaquo; Genel İngilizce sayfasına dön</a>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var gate=document.getElementById('geGate');
+try{document.documentElement.style.overflow='hidden';}catch(e){}
+function unlock(){if(gate&&gate.parentNode)gate.parentNode.removeChild(gate);try{document.documentElement.style.overflow='';}catch(e){}}
+function showLogin(){
+  var m=document.getElementById('geGateMsg'),a=document.getElementById('geGateActions');
+  if(m)m.textContent='Genel İngilizce ünitelerine erişmek için ücretsiz hesabınla giriş yapmalısın. İlerlemen ve yazma görevlerin hesabına kaydedilir.';
+  if(a)a.style.display='flex';
+}
+var done=false;
+function wait(t){
+  t=t||0;
+  if(window.supabase&&window.supabase.createClient){
+    var c=window.griTrackSB||window.supabase.createClient((window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co'),(window.SUPABASE_KEY||'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g'));
+    window.griTrackSB=c;
+    c.auth.getSession().then(function(r){
+      done=true;
+      if(r&&r.data&&r.data.session)unlock();else showLogin();
+    },function(){done=true;showLogin();});
+    return;
+  }
+  if(t>50){done=true;showLogin();return;}
+  setTimeout(function(){wait(t+1);},100);
+}
+wait();
+setTimeout(function(){if(!done)showLogin();},7000);
+})();
+</script>
 </body>
 </html>

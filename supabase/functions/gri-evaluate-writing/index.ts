@@ -54,8 +54,10 @@ function err(message: string, status = 400, code?: string) {
 }
 
 function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10);
+  // İstanbul günü (reset TR gece yarısı, UTC+3 sabit)
+  return new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
+const WRITING_COST = 5; // Gri Token / yazı değerlendirmesi (ortak günlük havuz)
 
 // ===== AI Call Logging =====
 // OpenAI pricing per 1M tokens (USD). Yeni model eklersen buraya da ekle.
@@ -129,22 +131,21 @@ interface QuotaState {
 }
 
 function computeWritingQuota(row: any): QuotaState {
-  // Yazı havuzu: günde 10 Gri Token, her yazı = 10 Gri Token (yani günde 1 yazı)
-  // Bonus: ortak havuz, writing 10 Gri Token/eval tüketir
+  // ORTAK günlük havuz: günde 10 Gri Token; her yazı = 5 Gri Token (soru sorma 1)
+  const dailyLimit = row?.daily_limit ?? 10;
   if (!row) {
-    return { daily_remaining: 1, bonus_remaining: 0, total_remaining: 1 };
+    const w = Math.floor(dailyLimit / WRITING_COST);
+    return { daily_remaining: w, bonus_remaining: 0, total_remaining: w };
   }
   const today = todayUTC();
-  const last = row.writing_last_used_date;
-  const dailyLimit = row.writing_daily_limit ?? 10;
-  const dailyUsed = (last === today) ? (row.writing_daily_used_count ?? 0) : 0;
-  // 10 Gri Token = 1 yazı; geriye kalan kaç yazı?
-  const dailyWritingsAvailable = Math.floor((dailyLimit - dailyUsed) / 10);
+  const last = row.last_used_date;
+  const dailyUsed = (last === today) ? (row.daily_used_count ?? 0) : 0;
+  const dailyWritingsAvailable = Math.floor(Math.max(0, dailyLimit - dailyUsed) / WRITING_COST);
 
   const bonusQuota = row.bonus_quota ?? 0;
   const bonusUsed = row.bonus_used ?? 0;
   const bonusRemaining = Math.max(0, bonusQuota - bonusUsed);
-  const bonusWritingsAvailable = Math.floor(bonusRemaining / 10);
+  const bonusWritingsAvailable = Math.floor(bonusRemaining / WRITING_COST);
 
   return {
     daily_remaining: dailyWritingsAvailable,
@@ -242,7 +243,7 @@ serve(async (req) => {
     }
 
     const useDailyFree = quota.daily_remaining > 0;
-    const costQuota = isAdmin ? 0 : (useDailyFree ? 1 : 10);
+    const costQuota = isAdmin ? 0 : WRITING_COST;
     const costSource = isAdmin ? "admin" : (useDailyFree ? "daily" : "bonus");
 
     // ===== 5) OpenAI çağrısı (logged) =====
@@ -288,29 +289,10 @@ serve(async (req) => {
       throw e;
     }
 
-    // ===== 6) Quota düşür — yazı için 10 Gri Token. Admin'de atla =====
+    // ===== 6) Quota düşür — yazı için 5 Gri Token, ORTAK günlük havuzdan (RPC atomik). Admin'de atla =====
     if (!isAdmin) {
-      const today = todayUTC();
-      if (useDailyFree) {
-        const newUsed = (quotaRow?.writing_last_used_date === today)
-          ? (quotaRow?.writing_daily_used_count ?? 0) + 10
-          : 10;
-        await supabase
-          .from("ai_quota")
-          .upsert({
-            user_id: userId,
-            writing_daily_used_count: newUsed,
-            writing_last_used_date: today,
-          }, { onConflict: "user_id" });
-      } else {
-        const newBonusUsed = (quotaRow?.bonus_used ?? 0) + 10;
-        await supabase
-          .from("ai_quota")
-          .upsert({
-            user_id: userId,
-            bonus_used: newBonusUsed,
-          }, { onConflict: "user_id" });
-      }
+      const { error: consumeErr } = await supabase.rpc("consume_ai_quota_n", { p_user_id: userId, p_amount: WRITING_COST });
+      if (consumeErr) console.error("consume_ai_quota_n failed:", consumeErr);
     }
 
     // ===== 7) Submission kaydet =====

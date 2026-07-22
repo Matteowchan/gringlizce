@@ -1629,5 +1629,48 @@ updateDots();
 showSec(1);
 })();
 </script>
+<script>
+(function(){
+  function apply(){
+    var tables=document.querySelectorAll('table.ge-tbl');
+    for(var t=0;t<tables.length;t++){
+      var tbl=tables[t];
+      if(tbl.getAttribute('data-mstack'))continue;
+      var rows=tbl.rows;
+      if(!rows.length)continue;
+      var head=rows[0];
+      if(!head.cells.length||head.cells[0].tagName!=='TH')continue;
+      var realCols=0;
+      for(var c=0;c<head.cells.length;c++){realCols+=(head.cells[c].colSpan||1);}
+      if(realCols<3)continue;
+      var labels=[];
+      for(var c2=0;c2<head.cells.length;c2++){labels.push(head.cells[c2].textContent.replace(/^\s+|\s+$/g,''));}
+      head.className+=' ge-mhead';
+      for(var r=1;r<rows.length;r++){
+        var cells=rows[r].cells;
+        for(var c3=0;c3<cells.length;c3++){
+          var lb=labels[c3]||'';
+          if(lb&&cells[c3].textContent.replace(/\s+/g,'')!=='')cells[c3].setAttribute('data-label',lb);
+        }
+      }
+      tbl.setAttribute('data-mstack','1');
+    }
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',apply);}else{apply();}
+})();
+</script>
+<style>
+table.ge-tbl{display:table;white-space:normal}
+table.ge-tbl th,table.ge-tbl td{white-space:normal}
+@media(max-width:640px){
+  table.ge-tbl[data-mstack]{display:block;border:none;border-radius:0;background:none}
+  table.ge-tbl[data-mstack] tbody{display:block}
+  table.ge-tbl[data-mstack] tr{display:block;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:.65rem .85rem;margin:0 0 .55rem}
+  table.ge-tbl[data-mstack] tr.ge-mhead{display:none}
+  table.ge-tbl[data-mstack] td,table.ge-tbl[data-mstack] th{display:block;border:none;padding:.14rem 0;font-size:.92rem}
+  table.ge-tbl[data-mstack] td[data-label]::before{content:attr(data-label);display:block;font-family:var(--font-ui);font-size:.64rem;letter-spacing:.08em;color:#2E6E6A;font-weight:700;margin-bottom:.06rem}
+  :root[data-theme="dark"] table.ge-tbl[data-mstack] td[data-label]::before{color:var(--teal)}
+}
+</style>
 </body>
 </html>

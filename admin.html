@@ -1735,7 +1735,6 @@
       <div class="admin-tabs" role="tablist">
         <button class="admin-tab" data-tab="overview" role="tab"><span class="tab-ico">📊</span>Genel Bakış</button>
         <button class="admin-tab" data-tab="users" role="tab"><span class="tab-ico">👥</span>Kullanıcılar</button>
-        <button class="admin-tab" data-tab="content" role="tab"><span class="tab-ico">📚</span>İçerik</button>
         <button class="admin-tab" data-tab="writing" role="tab"><span class="tab-ico">✍️</span><span lang="en">Writing</span></button>
         <span class="tab-sep" aria-hidden="true"></span>
         <button class="admin-tab" data-tab="ai-health" role="tab"><span class="tab-ico">🩺</span>AI Sağlık</button>
@@ -2046,47 +2045,6 @@
       </div>
 
       <!-- ============ CONTENT TAB ============ -->
-      <div class="admin-tab-content" data-tab-content="content">
-        <section class="admin-section">
-          <span class="sec-eyebrow">Katalog</span>
-          <h2>İçerik Yönetimi</h2>
-          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem; line-height: 1.5;">
-            Soru bankası dağılımı, eksik kategoriler ve kalite kontrol için en problemli sorular.
-          </p>
-
-          <div class="kpi-strip" id="content-kpis">
-            <div class="kpi-card"><div class="kpi-label">Toplam Soru</div><div class="kpi-value" id="cnt-total">—</div><div class="kpi-sub">aktif kullanılmış</div></div>
-            <div class="kpi-card tone-red"><div class="kpi-label">Eksik Kategori</div><div class="kpi-value" id="cnt-gap">—</div><div class="kpi-sub">soru sayısı 20 altında</div></div>
-            <div class="kpi-card tone-orange"><div class="kpi-label">Düşük Kategori</div><div class="kpi-value" id="cnt-low">—</div><div class="kpi-sub">soru sayısı 20-40 arası</div></div>
-            <div class="kpi-card tone-gold"><div class="kpi-label">Problemli Soru</div><div class="kpi-value" id="cnt-prob">—</div><div class="kpi-sub">%30 altı doğruluk</div></div>
-          </div>
-
-          <div class="section-row">
-            <span class="section-eyebrow">Sınav x Kategori</span>
-            <span class="section-line"></span>
-            <h2>Soru Dağılımı</h2>
-          </div>
-          <div class="content-grid" id="content-grid">
-            <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">Yükleniyor...</div>
-          </div>
-
-          <div class="section-row">
-            <span class="section-eyebrow">Kalite Kontrol</span>
-            <span class="section-line"></span>
-            <h2>Problemli Sorular</h2>
-          </div>
-          <div class="info-banner">En çok yanlış cevaplanan sorular kalite sorunu işareti olabilir. Cevap anahtarı yanlış, soru muğlak, ya da çok zor olabilir. <strong>İncele ve gerekirse düzelt.</strong></div>
-          <div class="table-wrap"><table class="users-table" id="problem-q-table" style="display: table;">
-            <thead>
-              <tr><th><span lang="en">Slug</span></th><th>Çözüldü</th><th>Doğruluk</th><th></th></tr>
-            </thead>
-            <tbody id="problem-q-tbody">
-              <tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-style: italic;">Yükleniyor...</td></tr>
-            </tbody>
-          </table></div>
-        </section>
-      </div>
-
       <!-- ============ AI HEALTH TAB ============ -->
       <div class="admin-tab-content" data-tab-content="ai-health">
         <section class="admin-section">
@@ -4284,7 +4242,6 @@
     function triggerTabLoader(t) {
       if (!Object.prototype.hasOwnProperty.call(NEW_TAB_LOADED, t) || NEW_TAB_LOADED[t]) return;
       NEW_TAB_LOADED[t] = true;
-      if (t === 'content')      loadContentTab();
       if (t === 'ai-health')    loadAiHealthTab();
       if (t === 'gamification') loadGamificationTab();
       if (t === 'comms')        loadCommsTab();
@@ -4883,7 +4840,7 @@
               ? '<button class="row-act-btn" title="İptal et" data-action="cancel" data-id="' + c.id + '" data-name="' + escHtml(c.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></button>'
               : '';
             var deleteBtn = '<button class="row-act-btn danger" title="Sil" data-action="delete" data-id="' + c.id + '" data-name="' + escHtml(c.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
-            return '<tr>' +
+            return '<tr class="camp-row" data-camp-id="' + c.id + '" style="cursor: pointer;">' +
               '<td style="color: var(--text-muted); font-style: italic;">' + whenStr + '</td>' +
               '<td>' + escHtml(c.name) + '</td>' +
               '<td>' + c.recipient_count + '</td>' +
@@ -4905,6 +4862,14 @@
               if (action === 'reschedule') return openRescheduleModal(id, name, btn.getAttribute('data-when'));
             });
           });
+
+          // Satıra tıkla: mail içeriği + alıcılar pop-up (aksiyon butonları hariç)
+          tbody.querySelectorAll('tr.camp-row').forEach(function (row) {
+            row.addEventListener('click', function (e) {
+              if (e.target.closest('.row-actions')) { return; }
+              openCampaignDetail(row.getAttribute('data-camp-id'));
+            });
+          });
         }
       } catch (e) {
         console.error('[comms]', e);
@@ -4913,6 +4878,67 @@
         if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 19 numaralı SQL (email schema) Supabase\'de çalıştırılmamış olabilir.</div>';
       }
     }
+    async function openCampaignDetail(id) {
+      if (!id) { return; }
+      var existing = document.getElementById('camp-detail-overlay');
+      if (existing) { existing.remove(); }
+      var ov = document.createElement('div');
+      ov.id = 'camp-detail-overlay';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,18,14,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:3vh 1rem;overflow:auto;';
+      ov.innerHTML = '<div style="background:var(--bg,#f5f1e8);color:var(--text);max-width:760px;width:100%;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.3);overflow:hidden;">' +
+        '<div style="display:flex;align-items:center;gap:0.8rem;padding:1rem 1.2rem;border-bottom:1px solid var(--line);">' +
+          '<div style="flex:1;min-width:0;"><div id="cdt-title" style="font-weight:700;font-size:1.05rem;">Kampanya</div><div id="cdt-sub" style="color:var(--text-muted);font-size:0.8rem;margin-top:2px;"></div></div>' +
+          '<button id="cdt-close" aria-label="Kapat" style="background:none;border:none;font-size:1.7rem;line-height:1;cursor:pointer;color:var(--text-muted);">&times;</button>' +
+        '</div>' +
+        '<div style="padding:1rem 1.2rem;"><div id="cdt-body" style="color:var(--text-muted);font-style:italic;">Yükleniyor...</div></div>' +
+      '</div>';
+      document.body.appendChild(ov);
+      function close() { ov.remove(); document.removeEventListener('keydown', onKey); }
+      function onKey(e) { if (e.key === 'Escape') { close(); } }
+      document.addEventListener('keydown', onKey);
+      ov.addEventListener('click', function (e) { if (e.target === ov) { close(); } });
+      ov.querySelector('#cdt-close').addEventListener('click', close);
+      try {
+        var res = await sb.rpc('admin_campaign_detail', { p_campaign_id: id });
+        if (res.error) { throw res.error; }
+        var d = res.data;
+        var body = ov.querySelector('#cdt-body');
+        if (!d) { body.textContent = 'Kampanya bulunamadı.'; return; }
+        var dfmt = function (x) { return x ? new Date(x).toLocaleString('tr-TR') : '—'; };
+        ov.querySelector('#cdt-title').textContent = d.name || 'Kampanya';
+        ov.querySelector('#cdt-sub').textContent = (d.status || '') +
+          (d.sent_at ? ' · Gönderildi ' + dfmt(d.sent_at) : (d.scheduled_at ? ' · Zamanlandı ' + dfmt(d.scheduled_at) : '')) +
+          ' · ' + (d.recipient_count || 0) + ' alıcı · ' + (d.opened_count || 0) + ' açılma · ' + (d.clicked_count || 0) + ' tıklama';
+        var recips = d.recipients || [];
+        var recipRows = recips.length ? recips.map(function (r) {
+          var flags = (r.opened_at ? 'açıldı' : '') + (r.clicked_at ? (r.opened_at ? ' · ' : '') + 'tıklandı' : '');
+          return '<tr style="border-top:1px solid var(--line);"><td style="padding:4px 8px;">' + escHtml(r.email || '') + '</td><td>' + escHtml(r.status || '') + '</td><td style="color:var(--text-muted);">' + flags + '</td></tr>';
+        }).join('') : '<tr><td colspan="3" style="padding:8px;color:var(--text-muted);font-style:italic;">Alıcı kaydı yok.</td></tr>';
+        body.style.fontStyle = 'normal';
+        body.style.color = 'var(--text)';
+        body.innerHTML =
+          '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Konu</div>' +
+          '<div style="font-weight:600;margin-bottom:0.4rem;">' + escHtml(d.subject || (d.template_name || '(şablon yok)')) + '</div>' +
+          '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:0.7rem 0 4px;">Mail İçeriği</div>' +
+          '<div id="cdt-iframe-wrap"></div>' +
+          '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:0.9rem 0 4px;">Alıcılar (' + recips.length + ')</div>' +
+          '<div style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:8px;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;"><tbody>' + recipRows + '</tbody></table></div>';
+        var wrap = body.querySelector('#cdt-iframe-wrap');
+        if (d.body_html) {
+          var ifr = document.createElement('iframe');
+          ifr.setAttribute('sandbox', '');
+          ifr.style.cssText = 'width:100%;height:320px;border:1px solid var(--line);border-radius:8px;background:#fff;';
+          ifr.srcdoc = d.body_html;
+          wrap.appendChild(ifr);
+        } else {
+          wrap.innerHTML = '<div style="color:var(--text-muted);font-style:italic;">Bu kampanyanın şablon içeriği yok.</div>';
+        }
+      } catch (e) {
+        var b = ov.querySelector('#cdt-body');
+        if (b) { b.style.fontStyle = 'normal'; b.textContent = 'Hata: ' + (e.message || e); }
+      }
+    }
+
     async function refreshAudiencePreview() {
       try {
         var res = await sb.rpc('admin_audience_preview', { p_filter: COMMS_AUDIENCE });

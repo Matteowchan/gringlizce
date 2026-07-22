@@ -148,7 +148,8 @@ var EXAMS=[
       {name:"3 Email + 3 Academic Discussion",s:"todo",href:"toefl-writing.html"}]}
   ]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin türü + Gri AI",pct:0,
-  tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin türü (makale, blog, günlük, röportaj, haber, inceleme, rapor, öneri, yönerge, deneme...). Her biri sözleşme + model + Gri AI'li yazma sihirbazı.",href:"ib-ogren.html"}],
+  tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin türü (makale, blog, günlük, röportaj, haber, inceleme, rapor, öneri, yönerge, deneme...). Her biri sözleşme + model + Gri AI'li yazma sihirbazı.",href:"ib-ogren.html"},
+    {ic:"deneme",label:"Paper 1 & Paper 2",desc:"HL ve SL için bölüm bazlı sınav pratiği: Paper 1 yazılı üretim (Gri AI), Paper 2 okuma anlama (otomatik puanlama).",href:"ib-english-b-hl.html"}],
   sections:[{label:"Ogren . Paper 1",units:[
     {name:"Giriş ve Kriterler",desc:"Paper 1, A/B/C kriterleri, tur secimi",state:"live",lessons:[
       {name:"Paper 1 ve Kriterler",s:"todo",href:"ib-ogren.html#basla"},
@@ -290,7 +291,10 @@ var EXAMS=[
         { label: "YDS", href: "yds-soru-bankasi-yds.html" },
         { label: "YÖKDİL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
         { label: "YÖKDİL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
-        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
+        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] },
+      { label: "IB English B", href: "ib-english-b-hl.html", children: [
+        { label: "English B HL", href: "ib-english-b-hl.html" },
+        { label: "English B SL", href: "ib-english-b-sl.html" } ] }
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },

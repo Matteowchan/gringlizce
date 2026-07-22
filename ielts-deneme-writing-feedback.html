@@ -438,11 +438,11 @@
       }
       state.user = session.user;
 
-      const { data: sub, error } = await sb.from('ielts_writing_submissions')
-        .select('*')
-        .eq('id', SUBMISSION_ID)
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+      // Admin (mertatasal@gmail.com) her gönderimi görebilir; RLS admin politikası izin verir.
+      const isAdmin = (session.user.email === 'mertatasal@gmail.com');
+      let subQuery = sb.from('ielts_writing_submissions').select('*').eq('id', SUBMISSION_ID);
+      if (!isAdmin) { subQuery = subQuery.eq('user_id', session.user.id); }
+      const { data: sub, error } = await subQuery.maybeSingle();
       if (error || !sub) {
         showError('Submission bulunamadı', 'Erişim izniniz yok veya gönderim silinmiş olabilir.');
         return;

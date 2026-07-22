@@ -4098,6 +4098,17 @@
       ].join('');
     }
 
+    function resolveModuleUrl(slug) {
+      if (!slug) return null;
+      if (/^gri-mod-toefl/.test(slug)) return { href: 'toefl-ogren.html', badge: 'TOEFL' };
+      if (/^gri-mod-ielts-listening/.test(slug)) return { href: 'ielts-ogren-listening.html', badge: 'IELTS' };
+      if (/^gri-mod-ielts-speaking/.test(slug)) return { href: 'ielts-ogren-speaking.html', badge: 'IELTS' };
+      if (/^gri-mod-ielts/.test(slug)) return { href: 'ielts-ogren-reading.html', badge: 'IELTS' };
+      var gm = /^gri-mod-(sat|yds|ydt|udsp|ib|tok|deutsch)/.exec(slug);
+      if (gm) return { href: gm[1] + '-ogren.html', badge: gm[1].toUpperCase() };
+      return null;
+    }
+
     function renderMissingCard(slug, date, type) {
       // Kamp slug'ı ise kamp kartı dön
       if (parseKampSlug(slug)) return renderKampCard(slug, date, type);
@@ -4105,6 +4116,26 @@
       if (parseMockSlug(slug)) return renderMockCard(slug, date, type);
       // UDSP deneme slug'ı ise UDSP deneme kartı dön
       if (parseUdspDenemeSlug(slug)) return renderUdspDenemeCard(slug, date, type);
+      // Modül drill slug'ı: sahibi öğrenme sayfasına tıklanabilir kart
+      var mod = resolveModuleUrl(slug);
+      if (mod) {
+        return [
+          '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
+          '  <a href="' + mod.href + '" class="qb-list-card">',
+          '    <div class="qb-main">',
+          '      <div class="qb-head-line">',
+          '        <span class="qb-badge">' + escHtmlPanel(mod.badge) + '</span>',
+          '        <span class="qb-cat">Modül alıştırması</span>',
+          '      </div>',
+          '      <p class="qb-prompt">' + escHtmlPanel(slug) + '</p>',
+          '    </div>',
+          '    <span class="qb-date">' + escHtmlPanel(formatRelativeDate(date)) + '</span>',
+          '    <span class="qb-cta">Modüle Git &rsaquo;</span>',
+          '  </a>',
+          '  <button type="button" class="qb-card-remove" aria-label="Listeden çıkar" title="Listeden çıkar">&times;</button>',
+          '</div>'
+        ].join('');
+      }
       return [
         '<div class="qb-list-card-wrap qb-missing-wrap" data-slug="' + escHtmlPanel(slug) + '" data-type="' + escHtmlPanel(type) + '">',
         '  <div class="qb-list-card qb-missing">',

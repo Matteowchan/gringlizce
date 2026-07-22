@@ -3429,8 +3429,23 @@
     }
 
     function denemeOrBankLink(slug) {
+      if (!slug) { return { href: 'soru.html', label: '' }; }
+      // SAT mock deneme: soruya do\u011frudan review jump
+      var sm = /^sat-mock-(\d+)-(rw|math)-(m1|m2e|m2h)-q(\d+)$/.exec(slug);
+      if (sm) { return { href: 'sat-mock-' + sm[1] + '.html?review=1&section=' + sm[2] + '&mod=' + sm[3] + '&q=' + sm[4], label: 'SAT Deneme ' + sm[1] + ' \u00b7 ' + sm[2].toUpperCase() + ' ' + sm[3].toUpperCase() + ' \u00b7 Soru ' + sm[4] }; }
+      // UDSP deneme
       var m = /^udsp-deneme-(\d+)-q(\d+)$/.exec(slug);
-      if (m) { return { href: 'udsp-deneme-' + m[1] + '.html?review=1', label: 'Deneme ' + m[1] + ' \u00b7 Soru ' + m[2] }; }
+      if (m) { return { href: 'udsp-deneme-' + m[1] + '.html?review=1', label: 'UDSP Deneme ' + m[1] + ' \u00b7 Soru ' + m[2] }; }
+      // SAT R&W kamp g\u00fcn sayfalar\u0131 (g\u00fcn\u2192sayfa e\u015flemesi belirsiz, kamp hub'\u0131na g\u00f6t\u00fcr)
+      if (/^sat-rw-kamp-/.test(slug)) { return { href: 'sat.html', label: 'SAT R&W Kamp \u00b7 ' + slug }; }
+      // Mod\u00fcl drill'leri: sahibi \u00f6\u011frenme sayfas\u0131na g\u00f6t\u00fcr (sayfa-i\u00e7i soru deep-link'i yok)
+      if (/^gri-mod-toefl/.test(slug))   { return { href: 'toefl-ogren.html', label: 'TOEFL Mod\u00fcl \u00b7 ' + slug }; }
+      if (/^gri-mod-ielts-listening/.test(slug)) { return { href: 'ielts-ogren-listening.html', label: 'IELTS Listening Mod\u00fcl \u00b7 ' + slug }; }
+      if (/^gri-mod-ielts-speaking/.test(slug))  { return { href: 'ielts-ogren-speaking.html', label: 'IELTS Speaking Mod\u00fcl \u00b7 ' + slug }; }
+      if (/^gri-mod-ielts/.test(slug))   { return { href: 'ielts-ogren-reading.html', label: 'IELTS Mod\u00fcl \u00b7 ' + slug }; }
+      var gm = /^gri-mod-(sat|yds|ydt|udsp|ib|tok|deutsch)/.exec(slug);
+      if (gm) { return { href: gm[1] + '-ogren.html', label: gm[1].toUpperCase() + ' Mod\u00fcl \u00b7 ' + slug }; }
+      // Varsay\u0131lan: soru bankas\u0131
       return { href: 'soru.html?q=' + encodeURIComponent(slug), label: slug };
     }
 

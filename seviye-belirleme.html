@@ -616,6 +616,16 @@ function skillPct(o){return Math.round(100*o.c/o.t);}
 function renderResults(correct,total,ratio,band,bySkill,wrong){
   app.classList.add('hidden'); barMount.innerHTML=''; resDiv.classList.remove('hidden');
   var h='';
+  // öğrenci bilgi başlığı (rapora ve PDF'e yazdırılır)
+  (function(){
+    var pu=placementUser();
+    var d=new Date().toLocaleDateString('tr-TR');
+    h+='<div class="sb-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:baseline">'
+      +'<div><div style="font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700">Seviye Belirleme Raporu</div>'
+      +'<div style="font-family:Georgia,serif;font-size:1.3rem;margin-top:3px">'+esc(pu.name)+'</div>'
+      +(pu.email?'<div style="color:var(--muted);font-size:.92rem">'+esc(pu.email)+'</div>':'')
+      +'</div><div style="text-align:right;color:var(--muted);font-size:.85rem">'+esc(d)+'</div></div></div>';
+  })();
   // özet
   var scaleSegs=BANDS.slice().reverse().map(function(b){return '<div class="seg'+(b.cefr===band.cefr?' on':'')+'" style="'+(b.cefr===band.cefr?'background:'+b.color:'')+'">'+b.cefr+'</div>';}).join('');
   var radarEntries=Object.keys(SKILLS).filter(function(s){return bySkill[s];}).map(function(s){var p=skillPct(bySkill[s]);return {label:SHORT[s]||s,pct:p,color:skColor(p)};});
@@ -817,15 +827,34 @@ function evalWriting(){
     box.innerHTML=evals.map(writingEvalHtml).join('');
   }).catch(function(err){ box.innerHTML='<p class="instr" style="color:var(--bad)">AI değerlendirmesi hatası: '+esc(err.message)+'</p>'; });
 }
+function placementUser(){
+  var u=window.USER||{}; var meta=u.user_metadata||{};
+  var name=String(meta.full_name||meta.name||'').trim();
+  var email=String(u.email||'').trim();
+  if(!name && email) name=email.split('@')[0];
+  return {name:name||'Öğrenci', email:email};
+}
+function placementFilename(){
+  var pu=placementUser();
+  var safe=function(s){return String(s||'').replace(/[\/\\:*?"<>|]+/g,'').replace(/\s+/g,'-');};
+  var parts=['Gri-Seviye-Raporu', safe(pu.name)]; if(pu.email) parts.push(safe(pu.email));
+  return parts.join('-');
+}
+function doPrint(){
+  var prev=document.title;
+  document.title=placementFilename();   // tarayıcı PDF dosya adını başlıktan alır
+  window.print();
+  setTimeout(function(){ document.title=prev; }, 900);
+}
 function printReport(){
   var box=document.getElementById('ai-writing-eval');
   var loading=box && (/değerlendiriyor|Hazırlanıyor/.test(box.textContent));
-  if(!loading){ window.print(); return; }
+  if(!loading){ doPrint(); return; }
   var btn=document.getElementById('pdf-btn'); if(btn){btn.disabled=true;btn.textContent='AI değerlendirmesi bekleniyor…';}
   var tries=0, iv=setInterval(function(){
     tries++; var b=document.getElementById('ai-writing-eval');
     var done=b && (b.querySelector('.detail') || /alınamadı|yapılmadı|hatası/.test(b.textContent));
-    if(done||tries>18){ clearInterval(iv); if(btn){btn.disabled=false;btn.textContent='📄 PDF olarak indir';} window.print(); }
+    if(done||tries>18){ clearInterval(iv); if(btn){btn.disabled=false;btn.textContent='📄 PDF olarak indir';} doPrint(); }
   },700);
 }
 function writingEvalHtml(e){

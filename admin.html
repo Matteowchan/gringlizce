@@ -3632,7 +3632,7 @@
         html += '<div class="um-w-group" style="margin-top:0.6rem;">Kelimeler (' + v.length + ')</div>';
         html += v.length ? '<div>' + v.slice(0, 60).map(function (x) { return escHtmlAdmin(x.word || ''); }).join(', ') + (v.length > 60 ? ' …' : '') + '</div>' : '<div style="color:var(--text-muted);">yok</div>';
         html += '<div class="um-w-group" style="margin-top:0.6rem;">Yer İmleri (' + b.length + ')</div>';
-        html += b.length ? b.slice(0, 30).map(function (x) { return '<div>' + escHtmlAdmin((x.exam_type || '').toUpperCase() + ' · ' + umHum(x.subcategory)) + ' <span style="color:var(--text-muted);">' + escHtmlAdmin(x.question_slug || '') + '</span></div>'; }).join('') : '<div style="color:var(--text-muted);">yok</div>';
+        html += b.length ? b.slice(0, 30).map(function (x) { var bi = denemeOrBankLink(x.question_slug || ''); return '<div style="padding:2px 0;"><a href="' + bi.href + '" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:none;">' + escHtmlAdmin((x.exam_type ? x.exam_type.toUpperCase() + ' · ' : '') + umHum(x.subcategory) + (x.subcategory ? ' · ' : '') + (x.question_slug || '')) + ' &rsaquo;</a></div>'; }).join('') : '<div style="color:var(--text-muted);">yok</div>';
         html += '<div class="um-w-group" style="margin-top:0.6rem;">Highlight (' + h.length + ')</div>';
         html += h.length ? h.slice(0, 20).map(function (x) { return '<div style="border-left:3px solid ' + escHtmlAdmin(x.color || '#c89a3c') + ';padding-left:6px;margin:2px 0;">' + escHtmlAdmin((x.selected_text || '').slice(0, 140)) + '</div>'; }).join('') : '<div style="color:var(--text-muted);">yok</div>';
         box.innerHTML = html; if (msg) { msg.textContent = ''; }

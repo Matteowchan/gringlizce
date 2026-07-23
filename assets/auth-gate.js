@@ -75,6 +75,8 @@
     '.q-btn-remix',                        // remix
     '.q-nav-pill',                         // jump between questions
     '.nav-sq',                             // jump grid
+    '#nextBtn', '#prevBtn',                // question navigation
+    '.q-btn-next', '.q-btn-prev',          // question navigation (class hooks)
     '.q-comp-btn',                         // completion screen actions
     '.q-completion-review',                // review wrongs
     '[data-ask-gri]',                      // AI ask

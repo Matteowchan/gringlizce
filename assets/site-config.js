@@ -207,6 +207,17 @@
   var ACTIVITY_INTERVAL_MS = 5 * 60 * 1000;
   var activityUserId = null;
 
+  // Gerçek etkileşim takibi: boşta duran/unutulmuş sekmeler "aktif" sayılmasın.
+  // Heartbeat yalnızca sekme görünürken VE son 5 dk içinde etkileşim varken atılır.
+  var lastInteractionAt = Date.now();
+  ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (ev) {
+    window.addEventListener(ev, function () { lastInteractionAt = Date.now(); }, { passive: true });
+  });
+  function isReallyActive() {
+    return document.visibilityState === 'visible' &&
+      (Date.now() - lastInteractionAt) < ACTIVITY_INTERVAL_MS;
+  }
+
   async function trackActivity() {
     try {
       if (!activityUserId) {
@@ -507,8 +518,8 @@
   }
 
  function startTracking() {
-    trackActivity();
-    setInterval(trackActivity, ACTIVITY_INTERVAL_MS);
+    if (document.visibilityState === 'visible') trackActivity();
+    setInterval(function () { if (isReallyActive()) trackActivity(); }, ACTIVITY_INTERVAL_MS);
     joinPresence();
     updateAuthNav();
     try {

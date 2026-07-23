@@ -4892,13 +4892,12 @@ async function initSupabase() {
   }
 }
 
-// Sınav sonunda tüm cevaplanmış soruları gez, yanlışları user_answers'a
-// status='incorrect' ile yaz, doğruları varsa sil. İdempotent.
+// Sınav sonunda tüm cevaplanmış soruları gez, hepsini user_answers'a
+// doğru/yanlış durumuyla yaz. İdempotent (upsert).
 async function recordWrongAnswers() {
   if (!sbClient || !GRI_USER_ID) return;
   try {
     const rowsToUpsert = [];
-    const slugsToDelete = [];
     ['rw', 'math'].forEach(section => {
       const path = state.modulePath[section];
       path.forEach((moduleKey, idx) => {
@@ -4910,17 +4909,13 @@ async function recordWrongAnswers() {
           if (ans === null || ans === undefined) return;
           const slug = computeSlugFor(section, moduleKey, qIdx);
           const isCorrect = ans === questions[qIdx].a;
-          if (isCorrect) {
-            slugsToDelete.push(slug);
-          } else {
-            rowsToUpsert.push({
-              user_id: GRI_USER_ID,
-              question_slug: slug,
-              status: 'incorrect',
-              chosen: ans,
-              answered_at: new Date().toISOString()
-            });
-          }
+          rowsToUpsert.push({
+            user_id: GRI_USER_ID,
+            question_slug: slug,
+            status: isCorrect ? 'correct' : 'incorrect',
+            chosen: ans,
+            answered_at: new Date().toISOString()
+          });
         });
       });
     });
@@ -4928,14 +4923,7 @@ async function recordWrongAnswers() {
     if (rowsToUpsert.length > 0) {
       const upsertRes = await sbClient.from('user_answers')
         .upsert(rowsToUpsert, { onConflict: 'user_id,question_slug' });
-      if (upsertRes.error) console.warn('[Mock] wrong-answer upsert fail:', upsertRes.error.message);
-    }
-    if (slugsToDelete.length > 0) {
-      const delRes = await sbClient.from('user_answers')
-        .delete()
-        .eq('user_id', GRI_USER_ID)
-        .in('question_slug', slugsToDelete);
-      if (delRes.error) console.warn('[Mock] correct-answer cleanup fail:', delRes.error.message);
+      if (upsertRes.error) console.warn('[Mock] answer upsert fail:', upsertRes.error.message);
     }
   } catch (e) {
     console.warn('[Mock] recordWrongAnswers fail:', e);

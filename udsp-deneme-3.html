@@ -254,17 +254,15 @@
   }
   async function recordWrongAnswers(){
     if(!sbClient || !GRI_USER_ID) return;
-    const up = [], del = [];
+    const up = [];
     QUESTIONS.forEach((q,i)=>{
       const a = state.answers[i];
       const slug = DENEME_SLUG + "-q" + q.n;
       if(a === undefined || a === null) return;
-      if(a === q.correct) del.push(slug);
-      else up.push({ user_id: GRI_USER_ID, question_slug: slug, status: "incorrect", chosen: "ABCDE".indexOf(a), answered_at: new Date().toISOString() });
+      up.push({ user_id: GRI_USER_ID, question_slug: slug, status: a === q.correct ? "correct" : "incorrect", chosen: "ABCDE".indexOf(a), answered_at: new Date().toISOString() });
     });
     try {
       if(up.length) await sbClient.from("user_answers").upsert(up, { onConflict: "user_id,question_slug" });
-      if(del.length) await sbClient.from("user_answers").delete().eq("user_id", GRI_USER_ID).eq("status","incorrect").in("question_slug", del);
     } catch(e){ console.warn("[deneme] record fail:", e); }
   }
 
@@ -532,16 +530,15 @@
   }
   function nextRetry(){ if(retry.pos < retry.items.length-1){ retry.pos++; renderRetry(); } else finishRetry(); }
   async function finishRetry(){
-    let corrected=0, still=0; const del=[], up=[];
+    let corrected=0, still=0; const up=[];
     retry.items.forEach((q,i)=>{
       const sel = retry.answers[i]; const slug = denemeSlugFor(q.n);
-      if(sel===q.correct){ corrected++; del.push(slug); }
+      if(sel===q.correct){ corrected++; up.push({ user_id:GRI_USER_ID, question_slug:slug, status:"correct", chosen:"ABCDE".indexOf(sel), answered_at:new Date().toISOString() }); }
       else { still++; up.push({ user_id:GRI_USER_ID, question_slug:slug, status:"incorrect", chosen: sel?"ABCDE".indexOf(sel):null, answered_at:new Date().toISOString() }); }
     });
     if(sbClient && GRI_USER_ID){
       try {
         if(up.length) await sbClient.from("user_answers").upsert(up, { onConflict:"user_id,question_slug" });
-        if(del.length) await sbClient.from("user_answers").delete().eq("user_id",GRI_USER_ID).eq("status","incorrect").in("question_slug", del);
       } catch(e){ console.warn("[deneme] retry save:", e); }
     }
     $("dnRetryProgress").textContent = "Tekrar çözüm sonucu";

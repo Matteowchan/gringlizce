@@ -295,7 +295,7 @@
           <table class="ge-tbl">
             <tr><th>Bölüm</th><th>Önerilen süre</th><th>İçerik</th><th>Soru</th></tr>
             <tr><td><b>Grammar</b></td><td class="tr">25 dk</td><td class="tr">24 çoktan seçmeli + 10 boşluk doldurma + 6 doğru cümleyi bulma</td><td><b>40</b></td></tr>
-            <tr><td><b>Listening</b></td><td class="tr">15 dk</td><td class="tr">5 çoktan seçmeli + 5 tek kelimelik boşluk (en fazla 2 dinleme)</td><td><b>10</b></td></tr>
+            <tr><td><b>Listening</b></td><td class="tr">15 dk</td><td class="tr">5 çoktan seçmeli + 5 tek kelimelik boşluk (kayıt otomatik 2 kez çalınır)</td><td><b>10</b></td></tr>
             <tr><td><b>Reading</b></td><td class="tr">25 dk</td><td class="tr">2 metin: 5 True/False + 10 çoktan seçmeli + 5 boşluk</td><td><b>20</b></td></tr>
             <tr><td><b>Writing</b></td><td class="tr">35 dk</td><td class="tr">2 görev: e-posta (60-80 kelime) + paragraf (120-150 kelime)</td><td class="tr">Öğretmen değerlendirir</td></tr>
             <tr><td class="tr"><b>Toplam</b></td><td class="tr"><b>100 dk</b></td><td class="tr">70 otomatik puanlı soru + 2 yazma görevi</td><td><b>Puan: 100 üzerinden</b></td></tr>
@@ -312,7 +312,7 @@
               <li>Sayaç <b>100:00</b>'dan geriye sayar ve sağdaki panelde her zaman görünür. Süre bitince tüm cevapların otomatik toplanır, sınav puanlanır ve girişler kilitlenir.</li>
               <li>Sınav başlamadan diğer bölümlere geçemezsin. Başladıktan sonra bölümler arasında <b>serbestçe</b> gezebilirsin.</li>
               <li>Çoktan seçmeli sorularda anında geri bildirim <b>yoktur</b>; seçimini "Sınavı Bitir" diyene kadar değiştirebilirsin.</li>
-              <li>Listening kaydını <b>en fazla 2 kez</b> dinleyebilirsin.</li>
+              <li>Dinleme kaydı başlatıldıktan sonra <b>durdurulamaz ve sarılamaz</b>; kayıt otomatik olarak iki kez çalınır, iki dinleme arasında 2 dakika süre verilir.</li>
               <li>Writing görevleri puana dahil değildir; öğretmenine gönderilir ve ayrıca değerlendirilir. Süre bitiminde yazdıkların otomatik gönderilir.</li>
               <li>Sınav sırasında <b>başka sekmeye veya pencereye geçmek yasaktır</b>. Her ayrılışta uyarı alırsın; <b>3. uyarıda sınav sıfırlanır</b>, cevapların silinir ve öğretmenine bildirim gönderilir.</li>
               <li>Sayfayı yenilersen sınav baştan başlar — sınav sırasında sayfadan ayrılma.</li>
@@ -440,9 +440,10 @@
         </div>
 
         <div class="ge-card">
-          <p class="ge-inst" style="margin-bottom:.8rem">You will hear a talk about work-life balance. You can listen a MAXIMUM of TWO times. Read the questions BEFORE you listen. The questions follow the order of the talk. (İş-yaşam dengesi üzerine bir konuşma dinleyeceksin. Kaydı EN FAZLA 2 kez dinleyebilirsin. Dinlemeden önce soruları oku. Sorular konuşmanın sırasını izler.)</p>
-          <audio class="ge-audio" id="geAudio" controls preload="none" src="audio/ge-a1-midterm-listening.mp3"></audio>
-          <p class="ge-audionote" id="lisCount" style="margin-top:.4rem">Kalan dinleme hakkı: 2</p>
+          <p class="ge-inst" style="margin-bottom:.8rem">You will hear a talk about work-life balance. The recording plays twice automatically; you cannot pause or rewind it, and there is a two-minute break between the two listenings. Read the questions before you listen. The questions follow the order of the talk. (İş-yaşam dengesi üzerine bir konuşma dinleyeceksin. Kayıt otomatik olarak iki kez çalınır; durduramaz ve saramazsın, iki dinleme arasında 2 dakika süre verilir. Dinlemeden önce soruları oku. Sorular konuşmanın sırasını izler.)</p>
+          <audio class="ge-audio" id="geAudio" preload="none" src="audio/ge-a1-midterm-listening.mp3"></audio>
+          <button class="ge-btn gold" id="lisStartBtn" style="margin:.2rem 0 0">Dinlemeyi Başlat</button>
+          <p class="ge-audionote" id="lisStatus" style="margin-top:.5rem">Kayıt henüz başlatılmadı. Başlattıktan sonra durduramaz ve saramazsın; kayıt otomatik olarak iki kez çalınır, iki dinleme arasında 2 dakika süre verilir.</p>
           <div class="ge-note" style="margin-top:.6rem">
             <span class="nt">İPUCU</span>
             <ul>
@@ -1004,22 +1005,67 @@ buildMcq('readTf1',RTF,'r',false);
 buildMcq('readMcq1',RM1,'r',false);
 buildMcq('readMcq2',RM2,'r',false);
 
-/* ---------- Audio: max 2 plays ---------- */
+/* ---------- Audio: kilitli oynatma (2 otomatik tur + 2 dk ara) ---------- */
 (function(){
   var au=document.getElementById('geAudio');
-  var note=document.getElementById('lisCount');
-  if(!au)return;
-  var left=2;
-  au.addEventListener('ended',function(){
-    left--;
-    if(left<=0){
-      left=0;
-      au.pause();
-      au.removeAttribute('controls');
-      if(note)note.textContent='Dinleme hakkın bitti. (No listens left.)';
-    }else{
-      if(note)note.textContent='Kalan dinleme hakkı: '+left;
+  var note=document.getElementById('lisStatus');
+  var btn=document.getElementById('lisStartBtn');
+  if(!au||!btn)return;
+  var state='idle'; /* idle -> r1 -> break -> r2 -> done */
+  var lastTime=0,breakTimer=null;
+  function setNote(t){if(note)note.textContent=t;}
+  function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+  au.addEventListener('timeupdate',function(){
+    if(state==='r1'||state==='r2')lastTime=au.currentTime;
+  });
+  au.addEventListener('seeking',function(){
+    if((state==='r1'||state==='r2')&&Math.abs(au.currentTime-lastTime)>1.5){
+      try{au.currentTime=lastTime;}catch(e){}
     }
+  });
+  au.addEventListener('pause',function(){
+    if((state==='r1'||state==='r2')&&!au.ended){
+      try{au.play();}catch(e){}
+    }
+  });
+  au.addEventListener('ended',function(){
+    if(state==='r1')startBreak();
+    else if(state==='r2')finish();
+  });
+  function startBreak(){
+    state='break';
+    var left=120;
+    setNote('Birinci dinleme bitti. İkinci dinleme '+fmt(left)+' sonra başlayacak...');
+    breakTimer=setInterval(function(){
+      left--;
+      if(left<=0){clearInterval(breakTimer);breakTimer=null;startRound2();}
+      else setNote('Birinci dinleme bitti. İkinci dinleme '+fmt(left)+' sonra başlayacak...');
+    },1000);
+  }
+  function startRound2(){
+    state='r2';lastTime=0;
+    try{au.currentTime=0;}catch(e){}
+    setNote('Oynuyor: 2. dinleme. Kayıt durdurulamaz ve sarılamaz.');
+    var p=au.play();
+    if(p&&p.catch)p.catch(function(){});
+  }
+  function finish(){
+    state='done';
+    setNote('Dinleme tamamlandı. Kayıt tekrar oynatılamaz.');
+  }
+  btn.addEventListener('click',function(){
+    if(state!=='idle')return;
+    if(typeof examStarted!=='undefined'&&!examStarted)return;
+    state='r1';lastTime=0;
+    btn.disabled=true;
+    btn.textContent='Dinleme başlatıldı';
+    setNote('Oynuyor: 1. dinleme. Kayıt durdurulamaz ve sarılamaz.');
+    try{au.currentTime=0;}catch(e){}
+    var p=au.play();
+    if(p&&p.catch)p.catch(function(){
+      state='idle';btn.disabled=false;btn.textContent='Dinlemeyi Başlat';
+      setNote('Kayıt başlatılamadı. Tekrar dene.');
+    });
   });
 })();
 

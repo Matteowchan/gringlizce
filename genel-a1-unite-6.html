@@ -1819,5 +1819,53 @@ wait();
 setTimeout(function(){if(!done)showLogin();},7000);
 })();
 </script>
+
+<!-- ge-class-lock: sinifli ogrencide ogretmen kontrolu (seviye atamasi + unite ilerlemesi) -->
+<script>
+(function(){
+'use strict';
+var PAGE_LEVEL='A1', PAGE_UNIT=6;
+var ORD={A1:1,A2:2,B1:3,B2:4,C1:5,C2:6};
+function showLock(title,msg){
+  var ov=document.createElement('div');
+  ov.id='geClassLock';
+  ov.style.cssText='position:fixed;inset:0;z-index:99998;background:var(--bg,#faf9f6);display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+  ov.innerHTML='<div style="max-width:430px;width:100%;text-align:center;background:var(--bg-card,#fff);border:1px solid var(--line,#e2ded6);border-radius:14px;padding:2.2rem 1.8rem;box-shadow:0 10px 34px rgba(0,0,0,.09);">'
+    +'<div style="font-family:var(--font-display,Georgia,serif);font-size:1.6rem;color:#2E6E6A;font-weight:700;margin-bottom:.5rem;">Gri <span style="font-style:italic;">English</span></div>'
+    +'<h2 style="margin:.2rem 0 .6rem;font-size:1.15rem;color:var(--text,#222);">'+title+'</h2>'
+    +'<p style="color:var(--text-muted,#666);font-size:.94rem;line-height:1.6;margin:0 0 1.3rem;">'+msg+'</p>'
+    +'<a href="genel-ingilizce.html" style="display:inline-block;background:#2E6E6A;color:#fff;text-decoration:none;font-weight:600;padding:.7rem 1.3rem;border-radius:9px;font-size:.95rem;">Genel İngilizce&apos;ye Dön</a></div>';
+  document.body.appendChild(ov);
+  try{document.documentElement.style.overflow='hidden';}catch(e){}
+}
+function wait(t){
+  t=t||0;
+  var c=window.griTrackSB||window.GRI_SB;
+  if(c&&c.auth){
+    c.auth.getSession().then(function(r){
+      if(!(r&&r.data&&r.data.session))return;
+      c.rpc('ge_student_class_state').then(function(res){
+        var st=res&&res.data; if(!st||!st.in_class)return;
+        var asg=st.assigned_level||'A1';
+        if(ORD[PAGE_LEVEL]>ORD[asg]){
+          showLock('Bu seviye henüz açık değil','Bir sınıfa kayıtlısın ve öğretmenin seni henüz '+PAGE_LEVEL+' seviyesine atamadı. Atanmış seviyen: '+asg+'.');
+          return;
+        }
+        if(PAGE_LEVEL===asg){
+          var mx=(st.unit_unlocks&&st.unit_unlocks[PAGE_LEVEL]!=null)?st.unit_unlocks[PAGE_LEVEL]:1;
+          if(PAGE_UNIT>mx){
+            showLock('Bu ünite henüz açık değil','Öğretmenin sınıf ilerlemesini Ünite '+mx+' olarak belirledi. Bu üniteye sırası gelince erişebileceksin.');
+          }
+        }
+      },function(){});
+    },function(){});
+    return;
+  }
+  if(t>60)return;
+  setTimeout(function(){wait(t+1);},150);
+}
+wait();
+})();
+</script>
 </body>
 </html>

@@ -602,7 +602,7 @@
       }
 
       var ret = new URLSearchParams(window.location.search).get('return');
-      window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
+      window.location.href = (ret && ret.charAt(0) === '/' && ret.charAt(1) !== '/') ? ret : '/panelim.html';
     })();
 
     // Yönlendirmeyle gelen hata mesajı varsa göster
@@ -639,7 +639,7 @@
           return;
         }
         var ret = new URLSearchParams(window.location.search).get('return');
-        window.location.href = (ret && ret.startsWith('/')) ? ret : '/panelim.html';
+        window.location.href = (ret && ret.charAt(0) === '/' && ret.charAt(1) !== '/') ? ret : '/panelim.html';
       } catch (ex) {
         console.error(ex);
         errBox.textContent = 'Beklenmeyen bir hata oluştu, tekrar deneyin.';
@@ -799,11 +799,12 @@
             });
           } catch (e) { console.warn('[gtm signup event]', e); }
 
-          // Otomatik giriş, panele yönlendir
+          // Otomatik giriş — return varsa oraya, yoksa panele yönlendir
           okBox.textContent = 'Hesabın açıldı, yönlendiriliyor...';
           okBox.classList.add('show');
           setTimeout(function () {
-            window.location.href = '/panelim.html';
+            var ret = new URLSearchParams(window.location.search).get('return');
+            window.location.href = (ret && ret.charAt(0) === '/' && ret.charAt(1) !== '/') ? ret : '/panelim.html';
           }, 1000);
         } else {
           // Google Ads conversion event (email doğrulama gerekiyor)

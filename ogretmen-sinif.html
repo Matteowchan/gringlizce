@@ -3260,10 +3260,13 @@
             var subRes = await sb.from('ge_submissions')
               .select('id, user_id, assignment_id, content, status, teacher_feedback, teacher_grade, created_at')
               .eq('task_type', 'assignment')
-              .in('assignment_id', ids);
+              .in('assignment_id', ids)
+              .order('created_at', { ascending: false });
             if (subRes.error) console.warn('[ge submissions]', subRes.error);
+            // En yeni gönderim ilk gelir; her anahtar için yalnız ilki (en son deneme) tutulur
             ((subRes && subRes.data) || []).forEach(function (s2) {
-              geSubsByKey[s2.assignment_id + '|' + s2.user_id] = s2;
+              var k = s2.assignment_id + '|' + s2.user_id;
+              if (!geSubsByKey[k]) geSubsByKey[k] = s2;
             });
           }
 

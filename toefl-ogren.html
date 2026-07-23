@@ -519,4 +519,80 @@ function setupRecorder(btn){
     if(ok){var hh=(location.hash||'').replace(/^#/,'');var st=D.lessons.find(function(x){return x.id===hh;})?hh:D.lessons[0].id;show(st);}else{showGate();}});
 })();
 </script>
+
+<style>
+/* soru yer imi */
+.mcq[data-slug],.qz[data-slug],[data-bm-slug]{position:relative}
+.gribm{position:absolute;top:12px;right:2px;width:32px;height:32px;border:none;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;z-index:2}
+.gribm:hover{background:rgba(46,110,106,.12)}
+.gribm:disabled{opacity:.5;cursor:default}
+.gribm svg{width:17px;height:17px;fill:none;stroke:#8a8f9c;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s,fill .15s}
+.gribm.on svg{fill:#2E6E6A;stroke:#2E6E6A}
+.mcq[data-slug] .mstem,.qz[data-slug] .qzq{padding-right:40px}
+.q[data-bm-slug] .ql{padding-right:40px}
+.st-q[data-bm-slug] .gribm{top:.7rem;right:.7rem}
+</style>
+<script>
+(function(){
+  var ICON='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  var st={},seen={};
+  function sb(){return window.GRI_SB||null;}
+  function uid(){return window.GRI_UID||null;}
+  function slugOf(el){return el.getAttribute('data-bm-slug')||el.getAttribute('data-slug')||'';}
+  function paint(slug){
+    var bs=document.querySelectorAll('.gribm'),i,b;
+    for(i=0;i<bs.length;i++){b=bs[i];if(b.getAttribute('data-bm-for')!==slug)continue;
+      if(st[slug]){b.className='gribm on';b.setAttribute('aria-label','Yer imini kaldır');b.title='Yer imini kaldır';}
+      else{b.className='gribm';b.setAttribute('aria-label','Yer imine ekle');b.title='Yer imine ekle';}}
+  }
+  function badge(){if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}
+  function toggle(btn,slug){
+    if(!sb()||!uid()){try{alert('Yer imi için giriş yapmalısın.');}catch(e){}return;}
+    if(btn.disabled)return;btn.disabled=true;
+    var done=function(){btn.disabled=false;};
+    try{
+      if(st[slug]){
+        sb().from('user_bookmarks')['delete']().eq('user_id',uid()).eq('question_slug',slug).then(function(r){done();if(!r||!r.error){st[slug]=false;paint(slug);badge();}},done);
+      }else{
+        sb().from('user_bookmarks').insert({user_id:uid(),question_slug:slug}).then(function(r){done();if(!r||!r.error||(r.error&&r.error.code==='23505')){st[slug]=true;paint(slug);badge();}},done);
+      }
+    }catch(e){done();}
+  }
+  function fetchState(slugs){
+    if(!slugs.length||!sb()||!uid())return;
+    try{
+      sb().from('user_bookmarks').select('question_slug').eq('user_id',uid())['in']('question_slug',slugs).then(function(r){
+        var i;if(r&&r.data){for(i=0;i<r.data.length;i++){st[r.data[i].question_slug]=true;paint(r.data[i].question_slug);}}
+      },function(){});
+    }catch(e){}
+  }
+  function scan(){
+    var els=document.querySelectorAll('.mcq[data-slug],.qz[data-slug],[data-bm-slug]');
+    var fresh=[],i,el,slug,b;
+    for(i=0;i<els.length;i++){
+      el=els[i];slug=slugOf(el);
+      if(!slug||el.querySelector('.gribm'))continue;
+      b=document.createElement('button');
+      b.type='button';b.className=st[slug]?'gribm on':'gribm';
+      b.setAttribute('data-bm-for',slug);
+      b.setAttribute('aria-label',st[slug]?'Yer imini kaldır':'Yer imine ekle');
+      b.title=st[slug]?'Yer imini kaldır':'Yer imine ekle';
+      b.innerHTML=ICON;
+      (function(bb,ss){bb.onclick=function(ev){if(ev){ev.preventDefault();ev.stopPropagation();}toggle(bb,ss);};})(b,slug);
+      el.appendChild(b);
+      if(!seen[slug]){seen[slug]=true;fresh.push(slug);}
+    }
+    if(fresh.length)fetchState(fresh);
+  }
+  var tmr=null;
+  function later(){if(tmr)clearTimeout(tmr);tmr=setTimeout(scan,120);}
+  function boot(){
+    scan();
+    var root=document.getElementById('app')||document.getElementById('st-app')||document.body;
+    if(window.MutationObserver){try{new MutationObserver(later).observe(root,{childList:true,subtree:true});}catch(e){}}
+    else setInterval(scan,1500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
 </body></html>

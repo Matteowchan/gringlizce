@@ -175,7 +175,11 @@ function passageHtml(texts){
   return texts.map(t=>{
     const lbl = (t && t.label && texts.length>1) ? '<strong>'+esc(t.label)+'</strong><br>' : '';
     const tbl = (t && t.table_html) ? '<div class="st-table">'+t.table_html+'</div>' : '';
-    return '<div class="st-passage">'+lbl+tbl+esc(t && t.content)+'</div>';
+    var cnt = String((t && t.content) || '')
+      .replace(/<\s*\/?\s*(ul|ol)\s*>/gi, '')
+      .replace(/<\s*li\s*>/gi, '\n• ')
+      .replace(/<\s*\/\s*li\s*>/gi, '');
+    return '<div class="st-passage" style="white-space:pre-line">'+lbl+tbl+esc(cnt)+'</div>';
   }).join('');
 }
 

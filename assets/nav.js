@@ -35,22 +35,7 @@
     ".gri-burger{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--gri-line);background:var(--gri-surface);cursor:pointer;align-items:center;justify-content:center}",
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
-    /* yatay tasma katmani: ok + fade (sadece .is-scroll aktifken gorunur) */
-    ".gri-nav-scrollwrap{position:relative;display:flex;align-items:stretch;min-width:0;flex:0 1 auto;margin-left:10px}",
-    ".gri-nav-scrollwrap .links{min-width:0;margin-left:0}",
-    ".gri-nav-scrollwrap.is-scroll .links{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}",
-    ".gri-nav-scrollwrap.is-scroll .links::-webkit-scrollbar{display:none}",
-    ".gri-nav-scrollwrap::before,.gri-nav-scrollwrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;pointer-events:none;z-index:2;opacity:0}",
-    ".gri-nav-scrollwrap::before{left:0;background:linear-gradient(90deg,var(--gri-surface) 25%,color-mix(in srgb,var(--gri-surface) 0%,transparent))}",
-    ".gri-nav-scrollwrap::after{right:0;background:linear-gradient(270deg,var(--gri-surface) 25%,color-mix(in srgb,var(--gri-surface) 0%,transparent))}",
-    ".gri-nav-scrollwrap.can-l::before{opacity:1}.gri-nav-scrollwrap.can-r::after{opacity:1}",
-    ".gri-nav-arr{display:none;position:absolute;top:50%;width:24px;height:24px;margin-top:-12px;padding:0;border-radius:50%;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-accent);cursor:pointer;align-items:center;justify-content:center;z-index:3;box-shadow:0 1px 4px rgba(20,15,10,.14)}",
-    ".gri-nav-arr svg{width:11px;height:11px;display:block}",
-    ".gri-nav-arr:hover{border-color:var(--gri-accent);color:var(--gri-accent-deep)}",
-    ".gri-nav-arr.l{left:0}.gri-nav-arr.r{right:0}",
-    ".gri-nav-scrollwrap.is-scroll.can-l .gri-nav-arr.l{display:flex}",
-    ".gri-nav-scrollwrap.is-scroll.can-r .gri-nav-arr.r{display:flex}",
-    "@media(max-width:1080px){.gri-nav-scrollwrap,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
+    "@media(max-width:1080px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
     ".gri-mmenu.open{display:block;border-top:1px solid var(--gri-line);background:var(--gri-nav-bg);max-height:70vh;overflow:auto}",
     ".gri-mmenu .in{max-width:1200px;margin:0 auto;padding:10px 22px 20px}",
     ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",
@@ -137,11 +122,7 @@
     frag.insertAdjacentHTML("beforeend",
       '<header class="gri-nav"><div class="in">' +
       '<a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a>' +
-      '<div class="gri-nav-scrollwrap" id="gri-navscroll">' +
-      '<button type="button" class="gri-nav-arr l" data-navarr="-1" aria-label="Menüde geri kaydır"><svg viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
       '<nav class="links">' + links + "</nav>" +
-      '<button type="button" class="gri-nav-arr r" data-navarr="1" aria-label="Menüde ileri kaydır"><svg viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-      "</div>" +
       '<div class="right">' +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
@@ -187,34 +168,6 @@
     });
     var burger = document.getElementById("gri-burger");
     if (burger) burger.addEventListener("click", function () { document.getElementById("gri-mmenu").classList.toggle("open"); });
-
-    // --- Yatay tasma ok/fade katmani (bagimsiz) ---
-    var wrap = document.getElementById("gri-navscroll");
-    var scroller = wrap && wrap.querySelector(".links");
-    if (wrap && scroller) {
-      var raf = 0;
-      function updateNavScroll() {
-        raf = 0;
-        var overflow = scroller.scrollWidth - scroller.clientWidth;
-        var isScroll = overflow > 2;
-        wrap.classList.toggle("is-scroll", isScroll);
-        if (!isScroll) { wrap.classList.remove("can-l", "can-r"); return; }
-        var sl = scroller.scrollLeft;
-        wrap.classList.toggle("can-l", sl > 2);
-        wrap.classList.toggle("can-r", sl < overflow - 2);
-      }
-      function schedule() { if (!raf) raf = requestAnimationFrame(updateNavScroll); }
-      scroller.addEventListener("scroll", schedule, { passive: true });
-      window.addEventListener("resize", schedule);
-      wrap.querySelectorAll("[data-navarr]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var dir = parseFloat(btn.getAttribute("data-navarr")) || 1;
-          scroller.scrollBy({ left: dir * scroller.clientWidth * 0.6, behavior: "smooth" });
-        });
-      });
-      if (window.ResizeObserver) { try { new ResizeObserver(schedule).observe(scroller); } catch (e) {} }
-      updateNavScroll();
-    }
   }
 
   if (document.readyState !== "loading") build();

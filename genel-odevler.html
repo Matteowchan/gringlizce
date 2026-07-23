@@ -11,7 +11,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Genel İngilizce Ödevleri | Gri English</title>
-  <meta name="description" content="Genel İngilizce ödev sistemi: öğretmeninin atadığı 4 günlük ödevler ve serbest çalışma için ödev havuzu. Günlük görevler, anında geri bildirim ve öğretmen değerlendirmesi.">
+  <meta name="description" content="Genel İngilizce ödev sistemi: dinleme, okuma, yazma ve kelime ödevleri. Anında geri bildirim ve öğretmen değerlendirmesi.">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -83,7 +83,12 @@
   :root[data-theme="dark"] .od-note b{color:var(--teal)}
 
   /* Filter chips */
-  .od-filter{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.1rem 0 0}
+  .od-filterrow{display:flex;align-items:center;gap:.7rem;margin:1.1rem 0 0}
+  .od-filterrow+.od-filterrow{margin-top:.6rem}
+  .od-flabel{font-family:var(--font-ui);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--text-soft);flex:none;min-width:3.6rem}
+  .od-filter{display:flex;flex-wrap:wrap;gap:.5rem}
+  /* Level chips: larger / more prominent */
+  #odFilterLvl .od-chip{font-size:.9rem;padding:.42rem 1.2rem}
   .od-chip{font-family:var(--font-ui);font-size:.8rem;font-weight:600;color:var(--text-soft);background:var(--bg-card);border:1px solid var(--line);border-radius:20px;padding:.35rem 1rem;cursor:pointer;transition:border-color .12s,color .12s,background .12s}
   .od-chip:hover{border-color:#2E6E6A;color:#2E6E6A}
   .od-chip.cur{background:#2E6E6A;border-color:#2E6E6A;color:#fff}
@@ -98,6 +103,23 @@
   .od-toprow{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
   .od-lvl{font-family:var(--font-ui);font-size:.7rem;font-weight:700;letter-spacing:.06em;color:#2E6E6A;background:var(--teal-soft);border-radius:6px;padding:.22rem .55rem;white-space:nowrap}
   :root[data-theme="dark"] .od-lvl{color:var(--teal)}
+  .od-badges{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+  /* Skill badges — 4 soft colors */
+  .od-sk{font-family:var(--font-ui);font-size:.68rem;font-weight:700;letter-spacing:.05em;border-radius:6px;padding:.22rem .55rem;white-space:nowrap}
+  .od-sk.sk-grammar{color:#A8482F;background:rgba(178,72,47,.13)}
+  .od-sk.sk-listening{color:#2C5A82;background:rgba(58,110,168,.13)}
+  .od-sk.sk-reading{color:#2E6E4E;background:rgba(46,140,90,.13)}
+  .od-sk.sk-writing{color:#8A5A22;background:rgba(183,138,46,.15)}
+  .od-sk.sk-vocab{color:#6A4A8A;background:rgba(122,80,168,.13)}
+  :root[data-theme="dark"] .od-sk.sk-grammar{color:#e69a86}
+  :root[data-theme="dark"] .od-sk.sk-listening{color:#8ab8e0}
+  :root[data-theme="dark"] .od-sk.sk-reading{color:#7fcea6}
+  :root[data-theme="dark"] .od-sk.sk-writing{color:#ddb46a}
+  :root[data-theme="dark"] .od-sk.sk-vocab{color:#c0a0e0}
+  /* Skill group sub-titles */
+  .od-skttl{font-family:var(--font-display);font-size:1.05rem;color:var(--text);margin:1.3rem 0 .7rem;display:flex;align-items:center;gap:.6rem}
+  .od-skttl:first-child{margin-top:.2rem}
+  .od-skttl::after{content:"";flex:1;height:1px;background:var(--line)}
   .od-st{font-family:var(--font-ui);font-size:.66rem;font-weight:700;letter-spacing:.05em;border-radius:20px;padding:.22rem .7rem;white-space:nowrap}
   .od-st.new{color:#2E6E6A;background:var(--teal-soft)}
   :root[data-theme="dark"] .od-st.new{color:var(--teal)}
@@ -141,21 +163,22 @@
     <div class="od-head">
       <div class="od-eyebrow">Genel İngilizce · Ödev Sistemi</div>
       <h1>Homework Assignments <span style="font-style:italic">(Ödevlerim)</span></h1>
-      <p class="od-sub">Her ödev 4 günlük küçük görevlerden oluşur: gramer soruları, boşluk doldurma ve kısa yazma. Kendi hızında çalış, bitirince gönder.</p>
-      <div class="od-filter" id="odFilter" style="display:none"></div>
+      <p class="od-sub">Ödevler önce seviyeye (A1 / A2), sonra beceriye ayrılır: gramer, dinleme, okuma, yazma ve kelime. Kendi hızında çalış, bitirince gönder.</p>
+      <div class="od-filterrow" id="odFilterLvlRow" style="display:none"><span class="od-flabel">Seviye</span><div class="od-filter" id="odFilterLvl"></div></div>
+      <div class="od-filterrow" id="odFilterSkillRow" style="display:none"><span class="od-flabel">Beceri</span><div class="od-filter" id="odFilterSkill"></div></div>
     </div>
 
     <div class="od-loading" id="odLoading">Ödevler yükleniyor...</div>
 
     <div id="odAssignedWrap" style="display:none">
-      <div class="od-secttl">Öğretmenin Atadıkları</div>
+      <div class="od-secttl" id="odAssignedTtl">Öğretmenin Atadıkları</div>
       <div class="od-grid" id="odAssigned"></div>
     </div>
 
     <div id="odPoolWrap" style="display:none">
-      <div class="od-secttl">Ödev Havuzu</div>
+      <div class="od-secttl" id="odPoolTtl">Ödev Havuzu</div>
       <div class="od-note" id="odPoolNote"></div>
-      <div class="od-grid" id="odPool"></div>
+      <div id="odPool"></div>
     </div>
 
     <div class="od-empty" id="odEmpty" style="display:none">Şu an yayında ödev yok. Yakında burada seviyene uygun ödevler göreceksin.</div>
@@ -232,7 +255,14 @@ function boot(){
   });
 }
 
-var STATE=null, ASGS=[], SUBS={}, FILTER='ALL';
+var STATE=null, ASGS=[], SUBS={}, LVL_F='ALL', SK_F='ALL';
+var SKILL_ORD=['grammar','listening','reading','writing','vocab'];
+var SKILL_TR={grammar:'Gramer',listening:'Dinleme',reading:'Okuma',writing:'Yazma',vocab:'Kelime'};
+var SKILL_GRP={grammar:'Gramer Ödevleri',listening:'Dinleme Ödevleri',reading:'Okuma Ödevleri',writing:'Yazma Ödevleri',vocab:'Kelime Ödevleri'};
+function skillOf(a){
+  var s=a.skill||(a.content&&a.content.skill)||'';
+  return SKILL_TR[s]?s:null;
+}
 
 function loadAll(){
   var sb=window.GRI_SB;
@@ -242,7 +272,7 @@ function loadAll(){
     if(r&&r.data)STATE=r.data;
     step();
   },function(){step();});
-  sb.from('ge_assignments').select('id,level,unit,title,description,content').eq('active',true).order('level').order('unit').then(function(r){
+  sb.from('ge_assignments').select('id,level,unit,title,description,skill,content').eq('active',true).order('level').order('unit').then(function(r){
     if(r&&r.data)ASGS=r.data;
     step();
   },function(){step();});
@@ -299,15 +329,18 @@ function dueInfo(due){
 }
 
 function cardHtml(a,st,due,locked){
-  var days=(a.content&&a.content.days&&a.content.days.length)?a.content.days.length:4;
+  var sk=skillOf(a);
+  var nTasks=(a.content&&a.content.tasks&&a.content.tasks.length)?a.content.tasks.length:0;
   var h='';
-  h+='<div class="od-toprow"><span class="od-lvl">'+esc(a.level)+' · Ünite '+esc(a.unit)+'</span>';
+  h+='<div class="od-toprow"><span class="od-badges">';
+  if(sk)h+='<span class="od-sk sk-'+sk+'">'+SKILL_TR[sk]+'</span>';
+  h+='<span class="od-lvl">'+esc(a.level)+' · Ünite '+esc(a.unit)+'</span></span>';
   if(locked)h+='<span class="od-st lock">Öğretmen atayınca açılır</span>';
   else h+='<span class="od-st '+st.cls+'">'+esc(st.txt)+'</span>';
   h+='</div>';
   h+='<p class="od-title">'+esc(a.title)+'</p>';
   if(a.description)h+='<p class="od-desc">'+esc(a.description)+'</p>';
-  h+='<div class="od-foot"><span>'+days+' günlük görev</span>';
+  h+='<div class="od-foot"><span>'+(nTasks?nTasks+' görev':'Ödev')+'</span>';
   if(st.grade)h+='<span class="od-grade">Not: '+esc(st.grade)+'</span>';
   else if(due)h+='<span class="due'+(due.warn?' warn':'')+'">'+esc(due.txt)+'</span>';
   h+='</div>';
@@ -326,10 +359,17 @@ function makeCard(a,assignedMap,locked){
     el.className='od-card';
     el.href='odev.html?id='+encodeURIComponent(a.id);
   }
-  el.setAttribute('data-level',a.level);
   el.innerHTML=cardHtml(a,st,due,locked);
   return el;
 }
+
+function matchesFilter(a){
+  if(LVL_F!=='ALL'&&a.level!==LVL_F)return false;
+  if(SK_F!=='ALL'&&skillOf(a)!==SK_F)return false;
+  return true;
+}
+
+var IN_CLASS=false, ASSIGNED_MAP={};
 
 function render(){
   var loading=document.getElementById('odLoading');
@@ -340,72 +380,129 @@ function render(){
     return;
   }
 
-  var inClass=!!(STATE&&STATE.in_class);
-  var assignedMap={};
-  if(inClass&&STATE.assignments){
+  IN_CLASS=!!(STATE&&STATE.in_class);
+  ASSIGNED_MAP={};
+  if(IN_CLASS&&STATE.assignments){
     for(var i=0;i<STATE.assignments.length;i++){
       var as=STATE.assignments[i];
-      assignedMap[as.assignment_id]=as.due_date||true;
+      ASSIGNED_MAP[as.assignment_id]=as.due_date||true;
     }
   }
 
-  /* Level filter chips */
+  /* ---- SEVİYE birincil: mevcut seviyeler ---- */
   var lvls={},list=[];
   for(var j=0;j<ASGS.length;j++){if(!lvls[ASGS[j].level]){lvls[ASGS[j].level]=true;list.push(ASGS[j].level);}}
   list.sort(function(x,y){return LVL_ORD.indexOf(x)-LVL_ORD.indexOf(y);});
-  var fWrap=document.getElementById('odFilter');
-  if(list.length>1){
-    fWrap.style.display='flex';
-    var fh='<button type="button" class="od-chip cur" data-lvl="ALL">Tümü</button>';
-    for(var k=0;k<list.length;k++)fh+='<button type="button" class="od-chip" data-lvl="'+esc(list[k])+'">'+esc(list[k])+'</button>';
+
+  /* varsayılan seviye: sınıflıysa öğretmenin atadığı seviye, yoksa ilk seviye */
+  var defLvl=list[0];
+  if(IN_CLASS&&STATE.assigned_level){for(var d=0;d<list.length;d++){if(list[d]===STATE.assigned_level){defLvl=STATE.assigned_level;break;}}}
+  LVL_F=defLvl;
+
+  var fWrap=document.getElementById('odFilterLvl');
+  var fRow=document.getElementById('odFilterLvlRow');
+  if(list.length){
+    fRow.style.display='flex';
+    var fh='';
+    for(var k=0;k<list.length;k++)fh+='<button type="button" class="od-chip'+(list[k]===LVL_F?' cur':'')+'" data-lvl="'+esc(list[k])+'">'+esc(list[k])+'</button>';
     fWrap.innerHTML=fh;
     fWrap.addEventListener('click',function(ev){
       var b=ev.target;
       if(!(b&&b.className&&b.className.indexOf('od-chip')>-1))return;
-      FILTER=b.getAttribute('data-lvl');
+      LVL_F=b.getAttribute('data-lvl');
       var chips=fWrap.querySelectorAll('.od-chip');
       for(var c=0;c<chips.length;c++)chips[c].className='od-chip'+(chips[c]===b?' cur':'');
-      applyFilter();
+      renderLists();
     });
   }
 
+  /* ---- BECERİ ikincil: Tümü + mevcut beceriler ---- */
+  var skSeen={},skList=[];
+  for(var s=0;s<ASGS.length;s++){var sk=skillOf(ASGS[s]);if(sk&&!skSeen[sk]){skSeen[sk]=true;skList.push(sk);}}
+  skList.sort(function(x,y){return SKILL_ORD.indexOf(x)-SKILL_ORD.indexOf(y);});
+  var skWrap=document.getElementById('odFilterSkill');
+  var skRow=document.getElementById('odFilterSkillRow');
+  if(skList.length){
+    skRow.style.display='flex';
+    var shh='<button type="button" class="od-chip cur" data-sk="ALL">Tümü</button>';
+    for(var t=0;t<skList.length;t++)shh+='<button type="button" class="od-chip" data-sk="'+skList[t]+'">'+SKILL_TR[skList[t]]+'</button>';
+    skWrap.innerHTML=shh;
+    skWrap.addEventListener('click',function(ev){
+      var b=ev.target;
+      if(!(b&&b.className&&b.className.indexOf('od-chip')>-1))return;
+      SK_F=b.getAttribute('data-sk');
+      var chips=skWrap.querySelectorAll('.od-chip');
+      for(var c=0;c<chips.length;c++)chips[c].className='od-chip'+(chips[c]===b?' cur':'');
+      renderLists();
+    });
+  }
+
+  renderLists();
+}
+
+function renderLists(){
   var assignedHost=document.getElementById('odAssigned');
   var poolHost=document.getElementById('odPool');
   var poolNote=document.getElementById('odPoolNote');
-  assignedHost.innerHTML='';poolHost.innerHTML='';
+  assignedHost.innerHTML='';
   var nAssigned=0;
 
-  if(inClass){
-    for(var m=0;m<ASGS.length;m++){
-      var a=ASGS[m];
-      if(assignedMap[a.id]){assignedHost.appendChild(makeCard(a,assignedMap,false));nAssigned++;}
-      else poolHost.appendChild(makeCard(a,null,true));
-    }
-    if(nAssigned)document.getElementById('odAssignedWrap').style.display='block';
-    poolNote.innerHTML='Bu havuzdaki ödevler <b>öğretmenin atadığında</b> açılır. Atanan ödevler yukarıdaki bölümde görünür.';
-  }else{
-    for(var n=0;n<ASGS.length;n++)poolHost.appendChild(makeCard(ASGS[n],null,false));
-    poolNote.innerHTML='<b>Serbest çalışma</b> — bir sınıfa kayıtlı değilsin. İstediğin ödevi aç, cevap anahtarıyla kendini kontrol edebilirsin.';
-  }
-  if(poolHost.children.length)document.getElementById('odPoolWrap').style.display='block';
-  applyFilter();
-}
+  /* seçili seviyeyi bölüm başlıklarına yansıt */
+  var lvlTag=(LVL_F&&LVL_F!=='ALL')?esc(LVL_F)+' · ':'';
+  var aTtl=document.getElementById('odAssignedTtl');
+  if(aTtl)aTtl.textContent=lvlTag+'Öğretmenin Atadıkları';
+  var pTtl=document.getElementById('odPoolTtl');
+  if(pTtl)pTtl.textContent=lvlTag+'Ödev Havuzu';
 
-function applyFilter(){
-  var cards=document.querySelectorAll('.od-card');
-  for(var i=0;i<cards.length;i++){
-    var lv=cards[i].getAttribute('data-level');
-    cards[i].style.display=(FILTER==='ALL'||FILTER===lv)?'flex':'none';
+  /* Atananlar: düz grid */
+  var pool=[];
+  for(var m=0;m<ASGS.length;m++){
+    var a=ASGS[m];
+    if(!matchesFilter(a))continue;
+    if(IN_CLASS&&ASSIGNED_MAP[a.id]){assignedHost.appendChild(makeCard(a,ASSIGNED_MAP,false));nAssigned++;}
+    else pool.push(a);
   }
-  function anyVisible(hostId){
-    var host=document.getElementById(hostId);
-    for(var n=0;n<host.children.length;n++){if(host.children[n].style.display!=='none')return true;}
-    return false;
+  document.getElementById('odAssignedWrap').style.display=nAssigned?'block':'none';
+
+  /* Havuz: beceri gruplarina bolunmus */
+  while(poolHost.firstChild)poolHost.removeChild(poolHost.firstChild);
+  var nPool=0;
+  for(var g=0;g<SKILL_ORD.length;g++){
+    var sk=SKILL_ORD[g];
+    if(SK_F!=='ALL'&&SK_F!==sk)continue;
+    var items=[];
+    for(var p=0;p<pool.length;p++){if(skillOf(pool[p])===sk)items.push(pool[p]);}
+    if(!items.length)continue;
+    var ttl=document.createElement('div');
+    ttl.className='od-skttl';
+    ttl.innerHTML='<span class="od-sk sk-'+sk+'">'+SKILL_TR[sk]+'</span> '+SKILL_GRP[sk];
+    poolHost.appendChild(ttl);
+    var grid=document.createElement('div');
+    grid.className='od-grid';
+    for(var q=0;q<items.length;q++){grid.appendChild(makeCard(items[q],null,IN_CLASS));nPool++;}
+    poolHost.appendChild(grid);
   }
-  if(document.getElementById('odAssigned').children.length)
-    document.getElementById('odAssignedWrap').style.display=anyVisible('odAssigned')?'block':'none';
-  if(document.getElementById('odPool').children.length)
-    document.getElementById('odPoolWrap').style.display=anyVisible('odPool')?'block':'none';
+  /* becerisi tanimsiz kayit kalirsa (beklenmez) sonda duz listele */
+  if(SK_F==='ALL'){
+    var rest=[];
+    for(var r=0;r<pool.length;r++){if(!skillOf(pool[r]))rest.push(pool[r]);}
+    if(rest.length){
+      var grid2=document.createElement('div');
+      grid2.className='od-grid';
+      for(var u=0;u<rest.length;u++){grid2.appendChild(makeCard(rest[u],null,IN_CLASS));nPool++;}
+      poolHost.appendChild(grid2);
+    }
+  }
+
+  if(IN_CLASS)poolNote.innerHTML='Bu havuzdaki ödevler <b>öğretmenin atadığında</b> açılır. Atanan ödevler yukarıdaki bölümde görünür.';
+  else poolNote.innerHTML='<b>Serbest çalışma</b> — bir sınıfa kayıtlı değilsin. İstediğin ödevi aç, cevap anahtarıyla kendini kontrol edebilirsin.';
+  document.getElementById('odPoolWrap').style.display=nPool?'block':'none';
+  var emptyEl=document.getElementById('odEmpty');
+  if(nAssigned||nPool){emptyEl.style.display='none';}
+  else{
+    emptyEl.textContent=(SK_F!=='ALL')?(esc(LVL_F)+' seviyesinde bu beceride ödev yok. Başka bir beceri ya da seviye seçebilirsin.'):(esc(LVL_F)+' seviyesinde henüz ödev yok. Başka bir seviye seçebilir ya da yeni ödevleri bekleyebilirsin.');
+    emptyEl.style.display='block';
+  }
 }
 
 /* start */

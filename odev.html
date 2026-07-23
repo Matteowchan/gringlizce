@@ -11,7 +11,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ödev | Gri English</title>
-  <meta name="description" content="Genel İngilizce ödevi: 4 günlük görevler, anında geri bildirim ve öğretmen değerlendirmesi.">
+  <meta name="description" content="Genel İngilizce ödevi: beceri odaklı görevler, anında geri bildirim ve öğretmen değerlendirmesi.">
   <meta name="robots" content="noindex">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -88,6 +88,14 @@
   :root[data-theme="dark"] .ge-card h2 .en{color:var(--gold)}
   .ge-inst{font-family:var(--font-ui);font-size:.88rem;color:var(--text-soft);margin:0 0 1rem;line-height:1.6}
   .ge-inst b{color:var(--text)}
+
+  /* Audio player card (listening) */
+  .ge-audio{width:100%;margin:.3rem 0 .2rem;display:block}
+  .ge-audiohint{font-family:var(--font-ui);font-size:.78rem;color:var(--text-soft);margin:.55rem 0 0;line-height:1.5}
+
+  /* Reading passage */
+  .ge-passage{font-family:var(--font-serif,Georgia,serif);font-size:1rem;line-height:1.8;color:var(--text);white-space:pre-wrap;margin:0}
+  .ge-passage p{margin:0 0 .9rem}
 
   /* Quiz */
   .ge-q{border:1px solid var(--line);border-radius:10px;background:var(--bg-card);padding:1rem 1.2rem;margin:0 0 .8rem}
@@ -364,7 +372,16 @@ function loadAll(){
 }
 
 function ready(){
-  if(!ASG||!ASG.content||!ASG.content.days||!ASG.content.days.length){
+  if(!ASG||!ASG.content){
+    showErr('Bu ödev bulunamadı ya da artık yayında değil.<br><a href="genel-odevler.html">&lsaquo; Ödev listesine dön</a>');
+    return;
+  }
+  /* Backward-compat: eski "4 günlük days" formatı artık desteklenmiyor */
+  if(ASG.content.days&&!ASG.content.tasks){
+    showErr('Bu ödev eski formatta ve artık yayında değil.<br><a href="genel-odevler.html">&lsaquo; Ödev listesine dön</a>');
+    return;
+  }
+  if(!ASG.content.tasks||!ASG.content.tasks.length){
     showErr('Bu ödev bulunamadı ya da artık yayında değil.<br><a href="genel-odevler.html">&lsaquo; Ödev listesine dön</a>');
     return;
   }
@@ -386,26 +403,32 @@ function ready(){
 }
 
 /* ---------- build ---------- */
-var DAYS=[];
-function taskKey(di,ti){return 'd'+di+'t'+ti;}
+var TASKS=[];        /* content.tasks */
+var SKILL='';        /* listening|reading|writing|vocab */
+var SECS=[];         /* [{id,label,type}] section metadata */
+var SKILL_TR={grammar:'Gramer',listening:'Dinleme',reading:'Okuma',writing:'Yazma',vocab:'Kelime'};
+function taskKey(ti){return 't'+ti;}
 
 function buildPage(){
-  DAYS=ASG.content.days;
+  var content=ASG.content;
+  TASKS=content.tasks||[];
+  SKILL=ASG.skill||content.skill||'';
   document.title=ASG.title+' | Gri English';
   document.getElementById('bcTitle').textContent=ASG.title;
   document.getElementById('railTitle').textContent=ASG.level+' · Ünite '+ASG.unit+' — '+ASG.title;
 
   /* info bar */
   var info=document.getElementById('odInfo');
-  var ih='<span class="lvl">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+'</span>';
+  var ih='';
+  if(SKILL_TR[SKILL])ih+='<span class="lvl">'+SKILL_TR[SKILL]+'</span>';
+  ih+='<span class="lvl">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+'</span>';
   if(ASG.description)ih+='<span>'+esc(ASG.description)+'</span>';
   if(IN_CLASS){
     if(DUE){
       var d=new Date(DUE);
-      var warn=false;
       if(!isNaN(d.getTime())){
         var dd=new Date(DUE);dd.setHours(23,59,59,999);
-        warn=(dd.getTime()-Date.now())<=2*24*60*60*1000;
+        var warn=(dd.getTime()-Date.now())<=2*24*60*60*1000;
         ih+='<span class="due'+(warn?' warn':'')+'">Son tarih: '+((d.getDate()<10?'0':'')+d.getDate())+'.'+((d.getMonth()+1<10?'0':'')+(d.getMonth()+1))+'.'+d.getFullYear()+'</span>';
       }
     }
@@ -418,50 +441,59 @@ function buildPage(){
   /* submitted status card */
   renderSubStatus();
 
-  /* sections */
+  /* ---- section plan ---- */
+  SECS=[];
+  SECS.push({id:'intro',label:'Yönerge'});
+  if(SKILL==='listening'&&content.audio)SECS.push({id:'media',label:'Dinleme'});
+  else if(SKILL==='reading'&&content.passage)SECS.push({id:'media',label:'Metin'});
+  SECS.push({id:'tasks',label:'Görevler'});
+  if(!SUBMITTED)SECS.push({id:'submit',label:'Gönder'});
+
   var host=document.getElementById('odSecs');
   var html='';
-  for(var i=0;i<DAYS.length;i++){
-    var day=DAYS[i];
-    html+='<section class="ge-section" id="ge-sec-'+(i+1)+'">';
+  for(var i=0;i<SECS.length;i++){
+    var sec=SECS[i],n=i+1;
+    html+='<section class="ge-section" id="ge-sec-'+n+'">';
     html+='<div class="ge-sec-head">';
-    html+='<div class="ge-eyebrow">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+' · Gün '+(i+1)+'/'+DAYS.length+'</div>';
-    html+='<h1>'+esc(day.title||('Day '+(i+1)))+'</h1>';
-    if(day.intro)html+='<p class="ge-sub">'+esc(day.intro)+'</p>';
+    html+='<div class="ge-eyebrow">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+(SKILL_TR[SKILL]?' · '+SKILL_TR[SKILL]:'')+'</div>';
+    html+='<h1>'+esc(sec.label)+'</h1>';
     html+='</div>';
-    html+=renderTasks(i,day.tasks||[]);
+
+    if(sec.id==='intro'){
+      html+='<div class="ge-card"><h2>'+esc(ASG.title)+'</h2>';
+      html+='<p class="ge-inst">'+esc(content.intro||'')+'</p></div>';
+    }else if(sec.id==='media'&&SKILL==='listening'){
+      html+='<div class="ge-card"><h2>Listening <span class="en">(Dinleme)</span></h2>';
+      html+='<audio class="ge-audio" controls preload="none" src="'+esc(content.audio)+'"></audio>';
+      html+='<p class="ge-audiohint">Kaydı istediğin kadar dinleyebilir, durdurup geri sarabilirsin. Hazır olduğunda görevlere geç.</p></div>';
+    }else if(sec.id==='media'&&SKILL==='reading'){
+      html+='<div class="ge-card"><h2>Reading <span class="en">(Metin)</span></h2>';
+      html+='<div class="ge-passage">'+passageHtml(content.passage)+'</div></div>';
+    }else if(sec.id==='tasks'){
+      html+=renderTasks(TASKS);
+    }else if(sec.id==='submit'){
+      html+='<div class="ge-card" id="odSubmitCard"><h2>Ödevi Gönder <span class="en">(Submit)</span></h2>'
+        +'<p class="ge-inst" id="odSubmitInfo"></p>'
+        +'<button class="ge-btn" id="odSubmitBtn" disabled onclick="odSubmit()">Ödevi Gönder</button>'
+        +'<div class="ge-msg" id="odSubmitMsg"></div></div>';
+    }
+
     /* nav row */
     html+='<div class="ge-navrow">';
-    if(i>0)html+='<button class="ge-navbtn" onclick="odShowSec('+i+')">&lsaquo; Önceki: Gün '+i+'</button>';
+    if(i>0)html+='<button class="ge-navbtn" onclick="odShowSec('+i+')">&lsaquo; '+esc(SECS[i-1].label)+'</button>';
     else html+='<span class="ge-spacer"></span>';
-    if(i<DAYS.length-1)html+='<button class="ge-navbtn nxt" onclick="odShowSec('+(i+2)+')">Sonraki: Gün '+(i+2)+' &rsaquo;</button>';
+    if(i<SECS.length-1)html+='<button class="ge-navbtn nxt" onclick="odShowSec('+(n+1)+')">'+esc(SECS[i+1].label)+' &rsaquo;</button>';
     else html+='<span class="ge-spacer"></span>';
     html+='</div>';
     html+='</section>';
   }
   host.innerHTML=html;
 
-  /* submit card into last section, before navrow */
-  var lastSec=document.getElementById('ge-sec-'+DAYS.length);
-  if(lastSec&&!SUBMITTED){
-    var sc=document.createElement('div');
-    sc.className='ge-card';
-    sc.id='odSubmitCard';
-    sc.innerHTML='<h2>Ödevi Gönder <span class="en">(Submit)</span></h2>'
-      +'<p class="ge-inst" id="odSubmitInfo"></p>'
-      +'<button class="ge-btn" id="odSubmitBtn" disabled onclick="odSubmit()">Ödevi Gönder</button>'
-      +'<div class="ge-msg" id="odSubmitMsg"></div>';
-    var navrow=lastSec.querySelector('.ge-navrow');
-    lastSec.insertBefore(sc,navrow);
-  }
-
-  /* rail day links */
+  /* rail section links */
   var rail=document.getElementById('railDays');
   var rh='';
-  for(var j=0;j<DAYS.length;j++){
-    var lbl=String(DAYS[j].title||('Day '+(j+1)));
-    lbl=lbl.replace(/^Day\s*\d+\s*[·:.\-]\s*/i,'')||('Gün '+(j+1));
-    rh+='<a data-sec="'+(j+1)+'"><span class="ge-dot"></span><span class="sn">'+(j+1)+'</span> '+esc(lbl)+'</a>';
+  for(var j=0;j<SECS.length;j++){
+    rh+='<a data-sec="'+(j+1)+'"><span class="ge-dot"></span><span class="sn">'+(j+1)+'</span> '+esc(SECS[j].label)+'</a>';
   }
   rail.innerHTML=rh;
   var links=rail.querySelectorAll('a');
@@ -477,11 +509,22 @@ function buildPage(){
   odShowSec(1);
 }
 
-function renderTasks(di,tasks){
+function passageHtml(txt){
+  txt=String(txt||'');
+  var paras=txt.split(/\n\s*\n/);
+  var out='';
+  for(var i=0;i<paras.length;i++){
+    var p=paras[i].replace(/^\s+|\s+$/g,'');
+    if(p)out+='<p>'+esc(p)+'</p>';
+  }
+  return out||('<p>'+esc(txt)+'</p>');
+}
+
+function renderTasks(tasks){
   var html='';
   var qn=0;
   for(var t=0;t<tasks.length;t++){
-    var task=tasks[t],key=taskKey(di,t);
+    var task=tasks[t],key=taskKey(t);
     if(task.type==='mcq'){
       qn++;
       html+='<div class="ge-q" id="q-'+key+'" data-key="'+key+'"><div class="ge-qstem"><span class="qn">'+qn+'</span>'+esc(task.q)+'</div><div class="ge-opts">';
@@ -517,13 +560,10 @@ function renderTasks(di,tasks){
 
 /* ---------- interactions ---------- */
 function taskOf(key){
-  var m=key.match(/^d(\d+)t(\d+)$/);
+  var m=key.match(/^t(\d+)$/);
   if(!m)return null;
-  var d=DAYS[parseInt(m[1],10)];
-  if(!d||!d.tasks)return null;
-  return d.tasks[parseInt(m[2],10)]||null;
+  return TASKS[parseInt(m[1],10)]||null;
 }
-function dayOfKey(key){var m=key.match(/^d(\d+)t/);return m?parseInt(m[1],10):-1;}
 
 function applyMcq(key,oi,animateSave){
   var task=taskOf(key);if(!task)return;
@@ -637,45 +677,41 @@ function restoreState(){
       if(ta){ta.value=a.text||'';writingInput(key,false);}
     }
   }
-  recomputeDays();
 }
 
 /* ---------- completion ---------- */
-function taskDone(di,ti){
-  var task=DAYS[di].tasks[ti];
-  var a=ST.a[taskKey(di,ti)];
+function taskDone(ti){
+  var task=TASKS[ti];
+  var a=ST.a[taskKey(ti)];
   if(!a)return false;
   if(task.type==='mcq')return true;
   if(task.type==='gap')return !!a.ck;
   if(task.type==='writing')return (a.n||0)>=(task.min||40);
   return false;
 }
-function dayDone(di){
-  var tasks=DAYS[di].tasks||[];
-  if(!tasks.length)return false;
-  for(var t=0;t<tasks.length;t++){if(!taskDone(di,t))return false;}
-  return true;
-}
-function recomputeDays(){
-  for(var i=0;i<DAYS.length;i++){ST.d[i]=dayDone(i);}
-  saveSt(ST);
+function doneCount(){
+  var c=0;
+  for(var t=0;t<TASKS.length;t++){if(taskDone(t))c++;}
+  return c;
 }
 function afterAnswer(key){
-  var di=dayOfKey(key);
-  if(di>-1){ST.d[di]=dayDone(di);saveSt(ST);}
   updateDots();
   updateSubmitState();
 }
 function updateDots(){
+  /* Görevler bölümü tümü bitince yeşil; diğer bölümler bilgilendirme */
+  var allTasks=allDone();
   var links=document.querySelectorAll('#railDays a');
   for(var i=0;i<links.length;i++){
     var sec=parseInt(links[i].getAttribute('data-sec'),10);
-    var done=!!ST.d[sec-1];
+    var meta=SECS[sec-1];
+    var done=meta&&meta.id==='tasks'?allTasks:false;
     links[i].className=links[i].className.replace(/\s*\bdone\b/g,'')+(done?' done':'');
   }
 }
 function allDone(){
-  for(var i=0;i<DAYS.length;i++){if(!ST.d[i])return false;}
+  if(!TASKS.length)return false;
+  for(var t=0;t<TASKS.length;t++){if(!taskDone(t))return false;}
   return true;
 }
 function updateSubmitState(){
@@ -684,12 +720,10 @@ function updateSubmitState(){
   if(!btn||!info)return;
   if(allDone()){
     btn.disabled=false;
-    info.innerHTML='Tüm günleri tamamladın. <b>Ödevi Gönder</b> ile cevaplarını kaydet'+(IN_CLASS?' — öğretmenin değerlendirecek.':'.');
+    info.innerHTML='Tüm görevleri tamamladın. <b>Ödevi Gönder</b> ile cevaplarını kaydet'+(IN_CLASS?' — öğretmenin değerlendirecek.':'.');
   }else{
     btn.disabled=true;
-    var left=[];
-    for(var i=0;i<DAYS.length;i++){if(!ST.d[i])left.push('Gün '+(i+1));}
-    info.innerHTML='Göndermeden önce tüm günlerdeki görevleri bitirmelisin. Eksik: <b>'+left.join(', ')+'</b>. Yazma görevinde en az kelime sayısına ulaşman gerekir.';
+    info.innerHTML='Göndermeden önce tüm görevleri bitirmelisin. Tamamlanan: <b>'+doneCount()+'/'+TASKS.length+'</b>. Yazma görevinde en az kelime sayısına ulaşman gerekir.';
   }
 }
 
@@ -755,19 +789,16 @@ window.odSubmit=function(){
 
   /* auto score + writing */
   var correct=0,total=0,writing=[],wcTotal=0;
-  for(var i=0;i<DAYS.length;i++){
-    var tasks=DAYS[i].tasks||[];
-    for(var t=0;t<tasks.length;t++){
-      var task=tasks[t],a=ST.a[taskKey(i,t)];
-      if(task.type==='mcq'){total++;if(a&&a.ok)correct++;}
-      else if(task.type==='gap'){total++;if(a&&a.ok)correct++;}
-      else if(task.type==='writing'&&a){
-        writing.push({day:i+1,prompt:task.prompt||'',text:a.text||'',words:a.n||0});
-        wcTotal+=(a.n||0);
-      }
+  for(var t=0;t<TASKS.length;t++){
+    var task=TASKS[t],a=ST.a[taskKey(t)];
+    if(task.type==='mcq'){total++;if(a&&a.ok)correct++;}
+    else if(task.type==='gap'){total++;if(a&&a.ok)correct++;}
+    else if(task.type==='writing'&&a){
+      writing.push({prompt:task.prompt||'',text:a.text||'',words:a.n||0});
+      wcTotal+=(a.n||0);
     }
   }
-  var content=JSON.stringify({answers:ST.a,auto_score:{correct:correct,total:total},writing:writing});
+  var content=JSON.stringify({skill:SKILL,answers:ST.a,auto_score:{correct:correct,total:total},writing:writing});
 
   window.GRI_SB.from('ge_submissions').insert({
     user_id:window.GRI_UID,

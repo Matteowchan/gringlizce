@@ -1576,6 +1576,17 @@
       flex-wrap: wrap;
     }
     .ge-pool-main { flex: 1; min-width: 220px; }
+    .ge-pool-pills { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .ge-skill-pill {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+      border-radius: 6px; padding: 0.18rem 0.5rem; white-space: nowrap;
+    }
+    .ge-sk-grammar { color: #A8482F; background: rgba(178,72,47,.13); }
+    .ge-sk-listening { color: #2C5A82; background: rgba(58,110,168,.13); }
+    .ge-sk-reading { color: #2E6E4E; background: rgba(46,140,90,.13); }
+    .ge-sk-writing { color: #8A5A22; background: rgba(183,138,46,.15); }
+    .ge-sk-vocab { color: #6A4A8A; background: rgba(122,80,168,.13); }
     .ge-pool-title {
       font-family: var(--font-display, Georgia), serif;
       font-size: 1.08rem;
@@ -1844,6 +1855,14 @@
           </select>
           <select id="ge-filter-unit" title="Ünite filtresi">
             <option value="">Tüm üniteler</option>
+          </select>
+          <select id="ge-filter-skill" title="Beceri filtresi">
+            <option value="">Tüm beceriler</option>
+            <option value="grammar">Gramer</option>
+            <option value="listening">Dinleme</option>
+            <option value="reading">Okuma</option>
+            <option value="writing">Yazma</option>
+            <option value="vocab">Kelime</option>
           </select>
         </div>
         <div id="ge-pool-list"><p class="ge-muted">Yükleniyor...</p></div>
@@ -3202,6 +3221,11 @@
       function geParseContent(sub) {
         try { return JSON.parse(sub.content || '{}') || {}; } catch (e) { return {}; }
       }
+      var GE_SKILL_TR = { grammar: 'Gramer', listening: 'Dinleme', reading: 'Okuma', writing: 'Yazma', vocab: 'Kelime' };
+      function geSkillBadge(sk) {
+        if (!GE_SKILL_TR[sk]) return '';
+        return '<span class="ge-skill-pill ge-sk-' + sk + '">' + GE_SKILL_TR[sk] + '</span>';
+      }
 
       async function loadGeTab() {
         var poolList = document.getElementById('ge-pool-list');
@@ -3211,7 +3235,7 @@
         try {
           var [poolRes, assignedRes, unlockRes] = await Promise.all([
             sb.from('ge_assignments')
-              .select('id, level, unit, title, description, active')
+              .select('id, level, unit, title, description, skill, active')
               .order('level', { ascending: true })
               .order('unit', { ascending: true }),
             sb.from('class_assignments')
@@ -3322,6 +3346,8 @@
         var list = document.getElementById('ge-pool-list');
         var lv = document.getElementById('ge-filter-level').value;
         var un = document.getElementById('ge-filter-unit').value;
+        var skSel = document.getElementById('ge-filter-skill');
+        var sk = skSel ? skSel.value : '';
         var assignedMap = {};
         geAssigned.forEach(function (a) { assignedMap[a.assignment_id] = a; });
 
@@ -3329,6 +3355,7 @@
           if (a.active === false) return false;
           if (lv && a.level !== lv) return false;
           if (un && String(a.unit) !== un) return false;
+          if (sk && a.skill !== sk) return false;
           return true;
         });
         if (rows.length === 0) {
@@ -3347,7 +3374,7 @@
           }
           return '<div class="ge-pool-row">'
             + '<div class="ge-pool-main">'
-              + '<span class="sd-exam-pill">' + esc(a.level) + ' · Ünite ' + a.unit + '</span>'
+              + '<div class="ge-pool-pills">' + geSkillBadge(a.skill) + '<span class="sd-exam-pill">' + esc(a.level) + ' · Ünite ' + a.unit + '</span></div>'
               + '<div class="ge-pool-title">' + esc(a.title) + '</div>'
               + (a.description ? '<p class="ge-pool-desc">' + esc(a.description) + '</p>' : '')
             + '</div>'
@@ -3527,6 +3554,7 @@
 
       document.getElementById('ge-filter-level').addEventListener('change', renderGePool);
       document.getElementById('ge-filter-unit').addEventListener('change', renderGePool);
+      document.getElementById('ge-filter-skill').addEventListener('change', renderGePool);
 
       async function loadAssignments() {
         var list = document.getElementById('ks-assign-list');

@@ -290,6 +290,13 @@ function showResult(correct){
   const total = STATE.questions.length;
   if (mode==='checkpoint'){
     const pass = correct>=19;
+    // Sonucu events'e yaz (ogrenme haritasi halkasi + admin zaman cizelgesi bunu okur)
+    try{
+      if (window.GRI_UID && sb){
+        const unitNo = ({info:1,craft:2,expression:3,conventions:4})[unitKey] || 0;
+        sb.from('events').insert({user_id:window.GRI_UID,event_type:'unit_test_done',event_data:{unit:unitNo,score:correct,total:total,mode:'checkpoint',form:form},page:'/sat-unite-test.html?unite='+unitKey}).then(function(){},function(){});
+      }
+    }catch(e){}
     const moduleFile = {info:'sat-unite-1.html',craft:'sat-unite-2.html',expression:'sat-unite-3.html',conventions:'sat-unite-4.html'}[unitKey] || 'ogrenme-haritasi.html';
     let actions='';
     if (pass){

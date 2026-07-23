@@ -406,6 +406,34 @@ document.addEventListener('click',e=>{
         var res=await sb.from('user_answers').select('question_slug',{count:'exact',head:true}).eq('user_id',uid).gte('answered_at',mon.toISOString());
         setPN(1,(res&&typeof res.count==='number')?res.count:0);
       }catch(e){}
+      // Sinav kartlarindaki ilerleme halkalari — unit_test_done eventlerinden.
+      // Bir unite testi score/total >= %70 ile bitirildiyse o unite "gecildi" sayilir;
+      // halka = gecilen unite testi / muvredattaki toplam unite testi (ck satirlari).
+      try{
+        var ue=await sb.from('events').select('event_data,page').eq('user_id',uid).eq('event_type','unit_test_done').limit(1000);
+        var evRows=(ue&&ue.data)||[];
+        var passedByExam={};
+        evRows.forEach(function(r){
+          var d=r.event_data||{};var pg=r.page||'';
+          if(!(d.total>0&&(d.score/d.total)>=0.7))return;
+          var un=parseInt(d.unit,10);
+          if(!un)return; // yalniz numarali unite testleri sayilir (final haric)
+          EXAMS.forEach(function(e){
+            if(pg.indexOf('/'+e.id)===0){
+              (passedByExam[e.id]=passedByExam[e.id]||{})['u'+un]=1;
+            }
+          });
+        });
+        function ckCount(e){var n=0;(e.sections||[]).forEach(function(s){(s.units||[]).forEach(function(u){(u.lessons||[]).forEach(function(l){if(l.ck)n++;});});});return n;}
+        EXAMS.forEach(function(e){
+          var tot=ckCount(e);if(!tot)return;
+          var got=Object.keys(passedByExam[e.id]||{}).length;
+          var pct=Math.min(100,Math.round(got/tot*100));
+          if(!pct)return;
+          var el=document.querySelector('.exam[data-exam="'+e.id+'"] .exa-ring');
+          if(el&&typeof ring==='function')el.innerHTML=ring(pct,46);
+        });
+      }catch(e){}
       // Rozet sayisi + gorseller
       try{
         var eb=await sb.rpc('get_user_badges');var earned=(eb&&eb.data)||[];setPN(2,earned.length);

@@ -291,10 +291,7 @@ var EXAMS=[
         { label: "YDS", href: "yds-soru-bankasi-yds.html" },
         { label: "YÖKDİL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
         { label: "YÖKDİL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
-        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] },
-      { label: "IB English B", href: "ib-english-b-hl.html", children: [
-        { label: "English B HL", href: "ib-english-b-hl.html" },
-        { label: "English B SL", href: "ib-english-b-sl.html" } ] }
+        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },

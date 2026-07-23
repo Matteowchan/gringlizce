@@ -35,7 +35,7 @@
     ".gri-burger{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--gri-line);background:var(--gri-surface);cursor:pointer;align-items:center;justify-content:center}",
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
-    "@media(max-width:1080px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
+    "@media(max-width:1200px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
     ".gri-mmenu.open{display:block;border-top:1px solid var(--gri-line);background:var(--gri-nav-bg);max-height:70vh;overflow:auto}",
     ".gri-mmenu .in{max-width:1200px;margin:0 auto;padding:10px 22px 20px}",
     ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",

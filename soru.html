@@ -2105,18 +2105,10 @@
         // Implicit set — no SET_KEY persistence
       }
 
-      // === Fetch difficulty info for all set members (for grid colors) ===
-      const { data: diffData } = await supabase
-        .from('questions')
-        .select('slug, difficulty')
-        .in('slug', setSlugs);
-      const diffMap = new Map();
-      (diffData || []).forEach(r => diffMap.set(r.slug, r.difficulty));
-
-      SUBCATEGORY_LIST = setSlugs.map(s => ({
-        slug: s,
-        difficulty: diffMap.get(s) || 'medium'
-      }));
+      // Grid önce 'medium' ile kurulur; difficulty sorgusu render'ı BLOKLAMAZ.
+      // (Büyük setlerde tek .in(400+ slug) sorgusu GET URL limitini aşıp asılı
+      //  kalabiliyordu → "yükleniyor" sonsuza takılıyordu. Artık arka planda, parçalı.)
+      SUBCATEGORY_LIST = setSlugs.map(s => ({ slug: s, difficulty: 'medium' }));
       CURRENT_INDEX = Math.max(0, setSlugs.indexOf(currentQuestion.slug));
 
       // === If fresh entry, replace URL to include ?q= so refresh keeps the position ===
@@ -2129,6 +2121,25 @@
       renderNavigator();
       showContent();
       attachInteractivity();
+
+      // === Difficulty renklerini arka planda, 150'şerli parçalarla çek ===
+      (async function loadDifficulties() {
+        try {
+          const diffMap = new Map();
+          for (let i = 0; i < setSlugs.length; i += 150) {
+            const chunk = setSlugs.slice(i, i + 150);
+            const { data } = await supabase
+              .from('questions')
+              .select('slug, difficulty')
+              .in('slug', chunk);
+            (data || []).forEach(r => diffMap.set(r.slug, r.difficulty));
+          }
+          if (diffMap.size) {
+            SUBCATEGORY_LIST = setSlugs.map(s => ({ slug: s, difficulty: diffMap.get(s) || 'medium' }));
+            renderNavigator();
+          }
+        } catch (e) { console.warn('[difficulty] load failed:', e); }
+      })();
     }
 
     function gotoSlug(slug) {

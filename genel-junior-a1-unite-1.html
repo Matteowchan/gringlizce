@@ -247,6 +247,25 @@
   .ge-cando{display:flex;align-items:flex-start;gap:.65rem;padding:.6rem .8rem;border:2px solid var(--line);border-radius:14px;margin:.5rem 0;cursor:pointer;font-size:1.02rem;line-height:1.5}
   .ge-cando input{margin-top:.3rem;width:1.15rem;height:1.15rem;accent-color:var(--jr-grass-deep);cursor:pointer}
   .ge-cando.on{border-color:var(--jr-grass);background:var(--jr-ok-soft)}
+  /* ---- Junior mini-game: doğru kelimeyi sürükle ---- */
+  .jr-game h2 .en{color:var(--jr-accent)}
+  .jrg-score{font-family:var(--font-ui);font-weight:800;color:var(--jr-primary);background:var(--jr-primary-soft);border-radius:999px;display:inline-block;padding:.35rem .95rem;margin:.1rem 0 1rem}
+  .jrg-board{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.1rem}
+  .jrg-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;background:#fff;border:2px solid rgba(46,58,89,.10);border-radius:16px;padding:.7rem .95rem;font-size:1.18rem;font-family:var(--font-body);color:var(--jr-ink)}
+  .jrg-row .jrg-tr{flex-basis:100%;font-size:.82rem;color:#8a93a6;font-family:var(--font-ui);margin-top:.15rem}
+  .jrg-slot{display:inline-flex;align-items:center;justify-content:center;min-width:66px;height:40px;border:2px dashed var(--jr-accent);border-radius:11px;background:var(--jr-accent-soft);color:var(--jr-accent);font-weight:800;transition:transform .12s}
+  .jrg-slot.over{border-style:solid;transform:scale(1.06)}
+  .jrg-slot.done{border:2px solid var(--jr-ok);background:var(--jr-ok-soft);color:var(--jr-grass-deep)}
+  .jrg-slot.bad{animation:jrgShake .42s;border-color:var(--jr-no);background:var(--jr-no-soft);color:var(--jr-berry-deep)}
+  @keyframes jrgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .jrg-tray{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;padding:.85rem;background:var(--jr-sun-soft);border:2px dashed var(--jr-sun);border-radius:16px}
+  .jrg-chip{touch-action:none;cursor:grab;user-select:none;font-family:var(--font-ui);font-weight:800;font-size:1.12rem;color:#fff;background:var(--jr-primary);border:none;border-radius:12px;padding:.55rem 1.25rem;box-shadow:0 3px 0 var(--jr-orange-deep)}
+  .jrg-chip.sel{outline:3px solid var(--jr-accent);outline-offset:2px}
+  .jrg-chip.jrg-ghost{position:fixed;z-index:99998;pointer-events:none;opacity:.92}
+  .jrg-win{display:flex;align-items:center;gap:1rem;background:var(--jr-ok-soft);border:2px solid var(--jr-ok);border-radius:18px;padding:1rem 1.15rem;margin-top:1.1rem}
+  .jrg-win img{width:74px;height:74px;border-radius:50%;border:3px solid #fff;flex:none}
+  .jrg-win b{color:var(--jr-grass-deep)}
+  .jrg-reset{margin-top:1rem;font-family:var(--font-ui);font-weight:700;background:#fff;border:2px solid var(--jr-primary);color:var(--jr-primary);border-radius:12px;padding:.5rem 1.15rem;cursor:pointer}
 
   /* Prev/Next */
   .ge-navrow{display:flex;justify-content:space-between;gap:.8rem;margin-top:1.6rem;flex-wrap:wrap}
@@ -891,17 +910,17 @@
           <div id="unitQuiz"></div>
         </div>
 
-        <div class="ge-card">
-          <h2>I Can... <span class="en">(Artık Yapabilirim)</span></h2>
-          <p class="ge-inst">Tick what you can do now. (Şu an yapabildiklerini işaretle.) Dürüst ol — öğretmenine yardımcı olur.</p>
-          <div id="canDo">
-            <label class="ge-cando"><input type="checkbox" data-cd="1"> I can say my name and age. (İsmimi ve yaşımı söyleyebilirim.)</label>
-            <label class="ge-cando"><input type="checkbox" data-cd="2"> I can use am, is, and are correctly. (am / is / are'i doğru kullanabilirim.)</label>
-            <label class="ge-cando"><input type="checkbox" data-cd="3"> I can talk about my family and my pet. (Ailemi ve evcil hayvanımı anlatabilirim.)</label>
-            <label class="ge-cando"><input type="checkbox" data-cd="4"> I can ask and answer simple questions (Are you...? Yes, I am.). (Basit soru sorup cevaplayabilirim.)</label>
-            <label class="ge-cando"><input type="checkbox" data-cd="5"> I can write 3-5 sentences about myself. (Kendim hakkında 3-5 cümle yazabilirim.)</label>
+        <div class="ge-card jr-game" id="jrGame">
+          <h2>Oyun: Doğru Kelime <span class="en">(am / is / are)</span></h2>
+          <p class="ge-inst">Doğru kelimeyi boşluğa <b>sürükle</b> — ya da önce kelimeye, sonra boşluğa <b>dokun</b>! (Drag the right word into the gap, or tap the word then the gap.)</p>
+          <div class="jrg-score">Gri'nin cümleleri: <b id="jrgDone">0</b> / <b id="jrgTotal">6</b> tamam</div>
+          <div class="jrg-board" id="jrgBoard"></div>
+          <div class="jrg-tray" id="jrgTray"></div>
+          <div class="jrg-win" id="jrgWin" hidden>
+            <img src="assets/gri-cat-happy.png" alt="Mutlu Gri" width="74" height="74">
+            <div><b>Harika! Hepsini doğru yaptın.</b><br>Gri seninle gurur duyuyor. Artık <b>am / is / are</b> senin işin!</div>
           </div>
-          <p class="ge-audionote" style="margin-top:.8rem">İşaretlemediğin madde varsa soldaki menüden o bölüme geri dön ve tekrar çalış.</p>
+          <button type="button" class="jrg-reset" id="jrgReset" hidden>Tekrar oyna</button>
         </div>
 
         <div class="ge-navrow">
@@ -1555,6 +1574,95 @@ function wait(t){
   setTimeout(function(){wait(t+1);},150);
 }
 wait();
+})();
+</script>
+<script>
+/* Junior mini-game: doğru kelimeyi sürükle/dokun (am/is/are) — veri-odaklı, her ünitede yeniden kullanılabilir */
+(function(){
+  var DATA={
+    options:['am','is','are'],
+    items:[
+      {s:'I',       a:'a student.',      tr:'Ben bir öğrenciyim.', ans:'am'},
+      {s:'She',     a:'my friend.',      tr:'O benim arkadaşım.',  ans:'is'},
+      {s:'We',      a:'happy.',          tr:'Biz mutluyuz.',       ans:'are'},
+      {s:'The cat', a:'black.',          tr:'Kedi siyah.',         ans:'is'},
+      {s:'You',     a:'tall.',           tr:'Sen uzunsun.',        ans:'are'},
+      {s:'I',       a:'nine years old.', tr:'Dokuz yaşındayım.',   ans:'am'}
+    ]
+  };
+  var board=document.getElementById('jrgBoard'), tray=document.getElementById('jrgTray');
+  if(!board||!tray) return;
+  var doneEl=document.getElementById('jrgDone'), totalEl=document.getElementById('jrgTotal');
+  var winEl=document.getElementById('jrgWin'), resetBtn=document.getElementById('jrgReset');
+  var total=DATA.items.length, done=0, sel=null, drag=null;
+  totalEl.textContent=total;
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function build(){
+    done=0; sel=null; drag=null; winEl.hidden=true; resetBtn.hidden=true; doneEl.textContent='0';
+    board.innerHTML=DATA.items.map(function(it,i){
+      return '<div class="jrg-row"><span>'+esc(it.s)+'</span> <span class="jrg-slot" data-ans="'+esc(it.ans)+'">?</span> <span>'+esc(it.a)+'</span><span class="jrg-tr">'+esc(it.tr)+'</span></div>';
+    }).join('');
+    tray.innerHTML=DATA.options.map(function(w){
+      return '<button type="button" class="jrg-chip" data-w="'+esc(w)+'">'+esc(w)+'</button>';
+    }).join('');
+    wire();
+  }
+  function clearSel(){ if(sel){ sel.classList.remove('sel'); sel=null; } }
+  function place(slot, word){
+    if(!slot||slot.classList.contains('done')) return;
+    if(slot.getAttribute('data-ans')===word){
+      slot.textContent=word; slot.classList.add('done'); slot.classList.remove('over','bad');
+      done++; doneEl.textContent=done; clearSel();
+      if(done>=total){ winEl.hidden=false; resetBtn.hidden=false; }
+    } else {
+      slot.classList.add('bad'); setTimeout(function(){ slot.classList.remove('bad'); }, 450); clearSel();
+    }
+  }
+  function slotAt(x,y){ var el=document.elementFromPoint(x,y); return (el&&el.closest)?el.closest('.jrg-slot'):null; }
+  function onMove(e){
+    if(!drag) return;
+    if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>6){ drag.moved=true; drag.chip._dragged=true; }
+    if(drag.ghost){ drag.ghost.style.left=(e.clientX-30)+'px'; drag.ghost.style.top=(e.clientY-20)+'px'; }
+    var s=slotAt(e.clientX,e.clientY);
+    var cur=board.querySelector('.jrg-slot.over'); if(cur&&cur!==s) cur.classList.remove('over');
+    if(s&&!s.classList.contains('done')) s.classList.add('over');
+  }
+  function onUp(e){
+    if(!drag) return;
+    var chip=drag.chip;
+    chip.removeEventListener('pointermove', onMove);
+    chip.removeEventListener('pointerup', onUp);
+    chip.removeEventListener('pointercancel', onUp);
+    if(drag.ghost&&drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
+    var over=board.querySelector('.jrg-slot.over'); if(over) over.classList.remove('over');
+    if(drag.moved){ var s=slotAt(e.clientX,e.clientY); if(s) place(s, chip.getAttribute('data-w')); }
+    drag=null;
+  }
+  function wire(){
+    Array.prototype.forEach.call(tray.querySelectorAll('.jrg-chip'), function(chip){
+      chip.addEventListener('click', function(){
+        if(chip._dragged){ chip._dragged=false; return; }
+        if(sel===chip){ clearSel(); return; }
+        clearSel(); sel=chip; chip.classList.add('sel');
+      });
+      chip.addEventListener('pointerdown', function(e){
+        e.preventDefault();
+        var ghost=chip.cloneNode(true); ghost.className='jrg-chip jrg-ghost';
+        ghost.style.left=(e.clientX-30)+'px'; ghost.style.top=(e.clientY-20)+'px';
+        document.body.appendChild(ghost);
+        drag={chip:chip, ghost:ghost, sx:e.clientX, sy:e.clientY, moved:false};
+        try{ chip.setPointerCapture(e.pointerId); }catch(_){}
+        chip.addEventListener('pointermove', onMove);
+        chip.addEventListener('pointerup', onUp);
+        chip.addEventListener('pointercancel', onUp);
+      });
+    });
+    Array.prototype.forEach.call(board.querySelectorAll('.jrg-slot'), function(slot){
+      slot.addEventListener('click', function(){ if(sel) place(slot, sel.getAttribute('data-w')); });
+    });
+  }
+  if(resetBtn) resetBtn.addEventListener('click', build);
+  build();
 })();
 </script>
 </body>

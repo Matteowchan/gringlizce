@@ -54,6 +54,61 @@
     if (_ready) flush();
   };
 
+  // ---- Seviye belirleme track kilidi ----
+  // Kullanici seviye belirleme sinavinda bir track (junior/teen/adult) + seviye secip
+  // ge_track_placement'a yazilir. Farkli track'in ya da ust seviyenin dersine girerse kilitlenir.
+  // FAIL-OPEN: kayit yoksa / hata olursa / sinifli ogrenciyse hicbir sey yapmaz.
+  var LVLORD = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+  function trackName(t) { return t === "junior" ? "Junior" : t === "teen" ? "Teen" : "Adult"; }
+  function pageIdentity() {
+    var p = (location.pathname.split("/").pop() || "").toLowerCase();
+    var m = p.match(/^genel-(junior|teen)-(a1|a2|b1|b2|c1|c2)-unite-\d+\.html$/);
+    if (m) return { track: m[1], level: m[2].toUpperCase() };
+    var m2 = p.match(/^genel-(a1|a2|b1|b2|c1|c2)-unite-\d+\.html$/);
+    if (m2) return { track: "adult", level: m2[1].toUpperCase() };
+    return null;
+  }
+  function showTrackLock(rec, pageTrack, pageLevel, reason) {
+    if (document.getElementById("geTrackLock")) return;
+    var msg = reason === "track"
+      ? ("Seviye belirleme sinavinda <b>" + trackName(rec.track) + "</b> kategorisini sectin. Bu ders <b>" + trackName(pageTrack) + "</b> kategorisine ait, o yuzden sana kapali.")
+      : ("Seviye belirleme sinavinda <b>" + rec.level + "</b> seviyesine yerlestin. <b>" + pageLevel + "</b> seviyesi henuz acik degil.");
+    var ov = document.createElement("div");
+    ov.id = "geTrackLock";
+    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:#FFF9EF;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:system-ui,-apple-system,sans-serif;";
+    var box = '<div style="max-width:440px;width:100%;text-align:center;background:#fff;border:2px solid #EE6E2E;border-radius:22px;padding:2.2rem 1.8rem;box-shadow:0 10px 34px rgba(238,110,46,.12)">';
+    box += '<div style="font-family:Georgia,serif;font-size:1.5rem;color:#EE6E2E;font-weight:700;margin-bottom:.5rem">Gri <span style="font-style:italic">English</span></div>';
+    box += '<h2 style="margin:.2rem 0 .6rem;font-size:1.15rem;color:#2E3A59">Bu ders senin icin acik degil</h2>';
+    box += '<p style="color:#666;font-size:.94rem;line-height:1.6;margin:0 0 1.3rem">' + msg + '</p>';
+    box += '<a href="genel-ingilizce.html" style="display:inline-block;background:#EE6E2E;color:#fff;text-decoration:none;font-weight:700;padding:.7rem 1.3rem;border-radius:999px;font-size:.95rem">Genel Ingilizce&#39;ye Don</a>';
+    box += '<div style="margin-top:.9rem"><a href="seviye-belirleme.html" style="color:#EE6E2E;font-size:.85rem">Sinavi tekrar coz</a></div></div>';
+    ov.innerHTML = box;
+    document.body.appendChild(ov);
+    try { document.documentElement.style.overflow = "hidden"; } catch (e) {}
+  }
+  function checkPlacement(sb, uid, id) {
+    try {
+      sb.from("ge_track_placement").select("track,level").eq("user_id", uid).maybeSingle().then(function (pr) {
+        var rec = pr && pr.data;
+        if (!rec || !rec.track) return;            // kayit yok -> acik (fail-open)
+        if (rec.track !== id.track) { showTrackLock(rec, id.track, id.level, "track"); return; }
+        if (LVLORD[id.level] > (LVLORD[rec.level] || 1)) { showTrackLock(rec, id.track, id.level, "level"); }
+      }, function () {});
+    } catch (e) {}
+  }
+  function applyTrackGate(sb, uid) {
+    if (!uid || !sb) return;
+    var id = pageIdentity();
+    if (!id) return;                                // ders sayfasi degil
+    try {
+      sb.rpc("ge_student_class_state").then(function (res) {
+        var st = res && res.data;
+        if (st && st.in_class) return;             // sinifli ogrenci -> ogretmen kilidi gecerli
+        checkPlacement(sb, uid, id);
+      }, function () { checkPlacement(sb, uid, id); });
+    } catch (e) { checkPlacement(sb, uid, id); }
+  }
+
   function init() {
     var sb = client();
     if (!sb) { _ready = true; return; }
@@ -69,6 +124,7 @@
           }
         } catch (e) {}
         window.logEvent("page_view", {});
+        try { applyTrackGate(sb, _userId); } catch (e) {}
       }
       flush();
     }, function () { _ready = true; });

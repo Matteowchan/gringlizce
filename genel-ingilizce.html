@@ -272,6 +272,35 @@
     btns.forEach(function(b){ b.addEventListener('click', function(){ show(b.getAttribute('data-track')); }); });
     var h = (location.hash||'').replace('#','');
     if (h==='teen' || h==='junior') show(h);
+
+    // ---- Seviye belirleme: kullanicinin sectigi track'e kilitle (fail-open) ----
+    function lockTo(track){
+      show(track);
+      btns.forEach(function(b){
+        if(b.getAttribute('data-track')!==track){ b.disabled=true; b.style.opacity='.45'; b.style.cursor='not-allowed'; b.title='Seviye belirleme sınavında bu kategoriyi seçmedin'; }
+      });
+      var sw=document.querySelector('.ge-trackswitch');
+      if(sw && !document.getElementById('trkLockNote')){
+        var n=document.createElement('div'); n.id='trkLockNote';
+        n.style.cssText='margin:.7rem auto 0;max-width:640px;font-size:.85rem;color:#8a6d3b;background:#fcf3e3;border:1px solid #f0d9a8;border-radius:10px;padding:.55rem .9rem;text-align:center;line-height:1.5';
+        var nm=track==='junior'?'Junior':track==='teen'?'Teen':'Adult';
+        n.innerHTML='Seviye belirleme sınavında <b>'+nm+'</b> kategorisini seçtin; dersler bu kategoride açık. Değiştirmek için <a href="seviye-belirleme.html" style="color:#EE6E2E;font-weight:700">sınavı tekrar çöz</a>.';
+        sw.parentNode.insertBefore(n, sw.nextSibling);
+      }
+    }
+    function tryGate(){
+      var sb=window.griTrackSB||(window.supabase&&window.supabase.createClient?window.supabase.createClient('https://vazbvbqgvtlaqkytfsbi.supabase.co','sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g'):null);
+      if(!sb) return;
+      try{ if(!window.griTrackSB) window.griTrackSB=sb; }catch(e){}
+      sb.auth.getUser().then(function(r){
+        var uid=r&&r.data&&r.data.user?r.data.user.id:null; if(!uid) return;
+        sb.from('ge_track_placement').select('track').eq('user_id',uid).maybeSingle().then(function(pr){
+          var rec=pr&&pr.data; if(rec&&rec.track) lockTo(rec.track);
+        },function(){});
+      },function(){});
+    }
+    if(window.supabase&&window.supabase.createClient) tryGate();
+    else { var _t=0,_iv=setInterval(function(){_t++; if(window.supabase&&window.supabase.createClient){clearInterval(_iv);tryGate();} else if(_t>50)clearInterval(_iv);},100); }
   })();
   </script>
 

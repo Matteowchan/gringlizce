@@ -159,6 +159,15 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
         <div class="sb-fact"><b>CEFR</b><span>A1 → C1 seviye tahmini</span></div>
       </div>
       <div class="sb-note">Once the exam starts, a <b>60-minute timer</b> runs; when time is up, your answers are assessed automatically. Suggested timing: <b>Reading &amp; Use of English ~25 min · Listening ~15 min · Writing ~20 min</b>. In Listening you may play the audio as many times as you like. We recommend a quiet place and headphones.</div>
+      <div class="sb-note" id="track-pick" style="border-left:3px solid #EE6E2E">
+        <b>Bu sınavı kimin için çözüyorsun?</b> Sonuç, yalnızca seçtiğin kategoride ders açar.
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button type="button" class="btn ghost trk-btn" data-trk="adult">Adult (Yetişkin)</button>
+          <button type="button" class="btn ghost trk-btn" data-trk="teen">Teen (Genç)</button>
+          <button type="button" class="btn ghost trk-btn" data-trk="junior" disabled style="opacity:.5;cursor:not-allowed">Junior (Çocuk) — yakında</button>
+        </div>
+        <p id="track-hint" style="margin:.6rem 0 0;font-size:.85rem;color:var(--muted,#8a8270)">Başlamak için bir kategori seç.</p>
+      </div>
       <button class="btn gold" id="start-btn">Sınavı Başlat &rsaquo;</button>
     </div>
   </div>
@@ -584,10 +593,27 @@ function tick(){
   if(STATE.remaining<=0){clearInterval(STATE.timer); alert('Süre doldu. Cevapların değerlendiriliyor.'); finish();}
 }
 function start(){
+  if(!window.PLACEMENT_TRACK){
+    var hint=document.getElementById('track-hint');
+    if(hint){hint.style.color='#b94a4a';hint.textContent='Lütfen önce bir kategori seç (Adult veya Teen).';}
+    var tp=document.getElementById('track-pick'); if(tp){try{tp.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}
+    return;
+  }
   intro.classList.add('hidden'); app.classList.remove('hidden');
   STATE.started=true; examActive=true; renderBar(); renderExam();
   STATE.timer=setInterval(tick,1000);
   window.scrollTo(0,0);
+}
+function savePlacement(band){
+  try{
+    if(!window.PLACEMENT_TRACK||!window.USER) return;
+    var sb=window.griTrackSB||(window.supabase&&window.supabase.createClient?window.supabase.createClient(SBURL,SBKEY):null);
+    if(!sb) return;
+    var cefr=(band&&band.cefr)||'A1';
+    var lvl=String(cefr).replace('+','').toUpperCase();
+    if(['A1','A2','B1','B2','C1','C2'].indexOf(lvl)<0) lvl='A1';
+    sb.from('ge_track_placement').upsert({user_id:window.USER.id,track:window.PLACEMENT_TRACK,level:lvl,cefr:cefr,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(){},function(){});
+  }catch(e){}
 }
 
 /* ============ DEĞERLENDİRME ============ */
@@ -610,6 +636,7 @@ function finish(){
     if(!ok){var q=item.q; wrong.push({n:q.dispNum,skill:s,ans:(q.t==='text'?q.a[0]:q.a),given:STATE.answers[item.gid]||'(boş)',why:WHY[q.dispNum]||'',topic:TOPICS[q.dispNum]||''});}
   });
   var ratio=correct/total, band=BANDS.find(function(b){return ratio>=b.min;});
+  savePlacement(band);
   renderResults(correct,total,ratio,band,bySkill,wrong);
 }
 function skillPct(o){return Math.round(100*o.c/o.t);}
@@ -765,6 +792,20 @@ function resetExam(){
 }
 
 document.getElementById('start-btn').addEventListener('click',start);
+/* ---- Track (kategori) seçimi: sınav başlamadan önce zorunlu ---- */
+(function(){
+  var btns=document.querySelectorAll('.trk-btn'); if(!btns.length) return;
+  for(var i=0;i<btns.length;i++){ (function(b){
+    if(b.disabled) return;
+    b.addEventListener('click',function(){
+      window.PLACEMENT_TRACK=b.getAttribute('data-trk');
+      for(var j=0;j<btns.length;j++){ btns[j].classList.remove('gold'); if(!btns[j].disabled)btns[j].classList.add('ghost'); }
+      b.classList.remove('ghost'); b.classList.add('gold');
+      var hint=document.getElementById('track-hint');
+      if(hint){hint.style.color='';hint.innerHTML='Seçildi: <b>'+(b.getAttribute('data-trk')==='teen'?'Teen':'Adult')+'</b>. Şimdi sınavı başlatabilirsin.';}
+    });
+  })(btns[i]); }
+})();
 
 /* ============ GİRİŞ ZORUNLU (auth gate) ============ */
 var SBURL='https://vazbvbqgvtlaqkytfsbi.supabase.co', SBKEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';

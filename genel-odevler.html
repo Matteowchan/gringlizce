@@ -91,13 +91,14 @@
   .od-audience button.active .em{color:rgba(255,255,255,.85)}
   .od-soon{display:none;text-align:center;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:2.2rem 1.6rem;margin-top:1.4rem;color:var(--text-muted);line-height:1.7}
   .od-soon h3{margin:0 0 .5rem;color:var(--text);font-size:1.15rem}
-  .od-shell.aud-junior #odLoading,
-  .od-shell.aud-junior #odAssignedWrap,
-  .od-shell.aud-junior #odPoolWrap,
-  .od-shell.aud-junior #odEmpty,
-  .od-shell.aud-junior #odFilterLvlRow,
-  .od-shell.aud-junior #odFilterSkillRow{display:none !important}
-  .od-shell.aud-junior #odSoon{display:block}
+  .od-shell.aud-teen #odLoading, .od-shell.aud-junior #odLoading,
+  .od-shell.aud-teen #odAssignedWrap, .od-shell.aud-junior #odAssignedWrap,
+  .od-shell.aud-teen #odPoolWrap, .od-shell.aud-junior #odPoolWrap,
+  .od-shell.aud-teen #odEmpty, .od-shell.aud-junior #odEmpty,
+  .od-shell.aud-teen #odFilterLvlRow, .od-shell.aud-junior #odFilterLvlRow,
+  .od-shell.aud-teen #odFilterSkillRow, .od-shell.aud-junior #odFilterSkillRow{display:none !important}
+  .od-shell.aud-teen #odSoonTeen{display:block}
+  .od-shell.aud-junior #odSoonJunior{display:block}
   /* Filter chips */
   .od-filterrow{display:flex;align-items:center;gap:.7rem;margin:1.1rem 0 0}
   .od-filterrow+.od-filterrow{margin-top:.6rem}
@@ -180,8 +181,9 @@
       <div class="od-eyebrow">Genel İngilizce · Ödev Sistemi</div>
       <h1>Homework Assignments <span style="font-style:italic">(Ödevlerim)</span></h1>
       <div class="od-audience" id="odAudience">
-        <button type="button" class="aud-btn active" data-aud="teenadult">Genç &amp; Yetişkin<span class="em">12+ · CEFR A1–C2</span></button>
-        <button type="button" class="aud-btn" data-aud="junior">Çocuk<span class="em">7–12 · Junior</span></button>
+        <button type="button" class="aud-btn active" data-aud="adult">Adult<span class="em">18+ · CEFR A1–C2</span></button>
+        <button type="button" class="aud-btn" data-aud="teen">Teen<span class="em">12–17</span></button>
+        <button type="button" class="aud-btn" data-aud="junior">Junior<span class="em">7–12</span></button>
       </div>
       <p class="od-sub">Ödevler önce seviyeye, sonra beceriye ayrılır: gramer, dinleme, okuma, yazma ve kelime. Kendi hızında çalış, bitirince gönder.</p>
       <div class="od-filterrow" id="odFilterLvlRow" style="display:none"><span class="od-flabel">Seviye</span><div class="od-filter" id="odFilterLvl"></div></div>
@@ -203,8 +205,12 @@
 
     <div class="od-empty" id="odEmpty" style="display:none">Şu an yayında ödev yok. Yakında burada seviyene uygun ödevler göreceksin.</div>
 
-    <div class="od-soon" id="odSoon">
-      <h3>Çocuk (Junior) ödevleri yakında</h3>
+    <div class="od-soon" id="odSoonTeen">
+      <h3>Teen ödevleri yakında</h3>
+      <p>12–17 yaş Teen programının ödev paketleri hazırlanıyor. Aynı CEFR ilerlemesi; okul, teknoloji ve sınav odaklı ergen bağlamlarıyla görevler. Çok yakında burada olacak.</p>
+    </div>
+    <div class="od-soon" id="odSoonJunior">
+      <h3>Junior ödevleri yakında</h3>
       <p>7–12 yaş Junior programının ödev paketleri hazırlanıyor. Aynı CEFR ilerlemesi; oyun, hikâye ve somut bağlamlarla yaşa uygun görevler. Çok yakında burada olacak.</p>
     </div>
   </div>
@@ -586,7 +592,9 @@ setTimeout(function(){if(!done)showLogin();},7000);
   btns.forEach(function(b){ b.addEventListener('click',function(){
     var a=b.getAttribute('data-aud');
     btns.forEach(function(x){ x.classList.toggle('active', x===b); });
-    shell.classList.toggle('aud-junior', a==='junior');
+    shell.classList.remove('aud-teen','aud-junior');
+    if(a==='teen') shell.classList.add('aud-teen');
+    else if(a==='junior') shell.classList.add('aud-junior');
   });});
 })();
 </script>

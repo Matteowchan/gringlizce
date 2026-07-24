@@ -545,6 +545,24 @@ function renderLists(){
   }
 }
 
+/* audience switch (Adult/Teen/Junior) — ana IIFE içinde: AUD_F/render/ASGS erişilebilir */
+(function(){
+  var btns=document.querySelectorAll('.od-audience .aud-btn');
+  for(var i=0;i<btns.length;i++){(function(b){
+    b.addEventListener('click',function(){
+      var a=b.getAttribute('data-aud');
+      for(var j=0;j<btns.length;j++)btns[j].classList.toggle('active',btns[j]===b);
+      AUD_F=a; LVL_F='ALL'; SK_F='ALL';
+      if(ASGS.length){ render(); }
+      else {
+        var st=document.getElementById('odSoonTeen'), sj=document.getElementById('odSoonJunior');
+        if(st)st.style.display=(a==='teen')?'block':'none';
+        if(sj)sj.style.display=(a==='junior')?'block':'none';
+      }
+    });
+  })(btns[i]);}
+})();
+
 /* start */
 boot();
 })();
@@ -594,22 +612,7 @@ setTimeout(function(){if(!done)showLogin();},7000);
 })();
 </script>
 <script>
-(function(){
-  var shell=document.querySelector('.od-shell');
-  var btns=document.querySelectorAll('.od-audience .aud-btn');
-  if(!shell||!btns.length)return;
-  btns.forEach(function(b){ b.addEventListener('click',function(){
-    var a=b.getAttribute('data-aud');
-    btns.forEach(function(x){ x.classList.toggle('active', x===b); });
-    if(typeof AUD_F!=='undefined'){ AUD_F=a; LVL_F='ALL'; SK_F='ALL'; }
-    if(typeof render==='function' && typeof ASGS!=='undefined' && ASGS.length){ render(); }
-    else {
-      var st=document.getElementById('odSoonTeen'), sj=document.getElementById('odSoonJunior');
-      if(st)st.style.display=(a==='teen')?'block':'none';
-      if(sj)sj.style.display=(a==='junior')?'block':'none';
-    }
-  });});
-})();
+/* audience switch ana IIFE içine taşındı (scope düzeltmesi) */
 </script>
 </body>
 </html>

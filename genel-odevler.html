@@ -91,14 +91,7 @@
   .od-audience button.active .em{color:rgba(255,255,255,.85)}
   .od-soon{display:none;text-align:center;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:2.2rem 1.6rem;margin-top:1.4rem;color:var(--text-muted);line-height:1.7}
   .od-soon h3{margin:0 0 .5rem;color:var(--text);font-size:1.15rem}
-  .od-shell.aud-teen #odLoading, .od-shell.aud-junior #odLoading,
-  .od-shell.aud-teen #odAssignedWrap, .od-shell.aud-junior #odAssignedWrap,
-  .od-shell.aud-teen #odPoolWrap, .od-shell.aud-junior #odPoolWrap,
-  .od-shell.aud-teen #odEmpty, .od-shell.aud-junior #odEmpty,
-  .od-shell.aud-teen #odFilterLvlRow, .od-shell.aud-junior #odFilterLvlRow,
-  .od-shell.aud-teen #odFilterSkillRow, .od-shell.aud-junior #odFilterSkillRow{display:none !important}
-  .od-shell.aud-teen #odSoonTeen{display:block}
-  .od-shell.aud-junior #odSoonJunior{display:block}
+  /* audience görünürlüğü JS render() içinde yönetilir (VIEW = ge_assignments.audience filtresi) */
   /* Filter chips */
   .od-filterrow{display:flex;align-items:center;gap:.7rem;margin:1.1rem 0 0}
   .od-filterrow+.od-filterrow{margin-top:.6rem}
@@ -286,7 +279,7 @@ function boot(){
   });
 }
 
-var STATE=null, ASGS=[], SUBS={}, LVL_F='ALL', SK_F='ALL';
+var STATE=null, ASGS=[], SUBS={}, LVL_F='ALL', SK_F='ALL', AUD_F='adult';
 var SKILL_ORD=['grammar','listening','reading','writing','vocab'];
 var SKILL_TR={grammar:'Gramer',listening:'Dinleme',reading:'Okuma',writing:'Yazma',vocab:'Kelime'};
 var SKILL_GRP={grammar:'Gramer Alıştırmaları',listening:'Dinleme Alıştırmaları',reading:'Okuma Alıştırmaları',writing:'Yazma Alıştırmaları',vocab:'Kelime Alıştırmaları'};
@@ -303,7 +296,7 @@ function loadAll(){
     if(r&&r.data)STATE=r.data;
     step();
   },function(){step();});
-  sb.from('ge_assignments').select('id,level,unit,title,description,skill,content').eq('active',true).order('level').order('unit').then(function(r){
+  sb.from('ge_assignments').select('id,level,unit,title,description,skill,content,audience').eq('active',true).order('level').order('unit').then(function(r){
     if(r&&r.data)ASGS=r.data;
     step();
   },function(){step();});
@@ -395,6 +388,7 @@ function makeCard(a,assignedMap,locked){
 }
 
 function matchesFilter(a){
+  if((a.audience||'adult')!==AUD_F)return false;
   if(LVL_F!=='ALL'&&a.level!==LVL_F)return false;
   if(SK_F!=='ALL'&&skillOf(a)!==SK_F)return false;
   return true;
@@ -406,10 +400,25 @@ function render(){
   var loading=document.getElementById('odLoading');
   if(loading)loading.style.display='none';
 
-  if(!ASGS.length){
-    document.getElementById('odEmpty').style.display='block';
+  var soonTeen=document.getElementById('odSoonTeen'), soonJr=document.getElementById('odSoonJunior');
+  if(soonTeen)soonTeen.style.display='none';
+  if(soonJr)soonJr.style.display='none';
+
+  var VIEW=[];
+  for(var vi=0;vi<ASGS.length;vi++){ if((ASGS[vi].audience||'adult')===AUD_F) VIEW.push(ASGS[vi]); }
+
+  if(!VIEW.length){
+    var pw=document.getElementById('odPoolWrap'), aw=document.getElementById('odAssignedWrap');
+    if(pw)pw.style.display='none'; if(aw)aw.style.display='none';
+    var lr=document.getElementById('odFilterLvlRow'), sr=document.getElementById('odFilterSkillRow');
+    if(lr)lr.style.display='none'; if(sr)sr.style.display='none';
+    document.getElementById('odEmpty').style.display='none';
+    if(AUD_F==='teen'&&soonTeen)soonTeen.style.display='block';
+    else if(AUD_F==='junior'&&soonJr)soonJr.style.display='block';
+    else document.getElementById('odEmpty').style.display='block';
     return;
   }
+  document.getElementById('odEmpty').style.display='none';
 
   IN_CLASS=!!(STATE&&STATE.in_class);
   ASSIGNED_MAP={};
@@ -422,7 +431,7 @@ function render(){
 
   /* ---- SEVİYE birincil: mevcut seviyeler ---- */
   var lvls={},list=[];
-  for(var j=0;j<ASGS.length;j++){if(!lvls[ASGS[j].level]){lvls[ASGS[j].level]=true;list.push(ASGS[j].level);}}
+  for(var j=0;j<VIEW.length;j++){if(!lvls[VIEW[j].level]){lvls[VIEW[j].level]=true;list.push(VIEW[j].level);}}
   list.sort(function(x,y){return LVL_ORD.indexOf(x)-LVL_ORD.indexOf(y);});
 
   /* varsayılan seviye: sınıflıysa öğretmenin atadığı seviye, yoksa ilk seviye */
@@ -449,7 +458,7 @@ function render(){
 
   /* ---- BECERİ ikincil: Tümü + mevcut beceriler ---- */
   var skSeen={},skList=[];
-  for(var s=0;s<ASGS.length;s++){var sk=skillOf(ASGS[s]);if(sk&&!skSeen[sk]){skSeen[sk]=true;skList.push(sk);}}
+  for(var s=0;s<VIEW.length;s++){var sk=skillOf(VIEW[s]);if(sk&&!skSeen[sk]){skSeen[sk]=true;skList.push(sk);}}
   skList.sort(function(x,y){return SKILL_ORD.indexOf(x)-SKILL_ORD.indexOf(y);});
   var skWrap=document.getElementById('odFilterSkill');
   var skRow=document.getElementById('odFilterSkillRow');
@@ -592,9 +601,13 @@ setTimeout(function(){if(!done)showLogin();},7000);
   btns.forEach(function(b){ b.addEventListener('click',function(){
     var a=b.getAttribute('data-aud');
     btns.forEach(function(x){ x.classList.toggle('active', x===b); });
-    shell.classList.remove('aud-teen','aud-junior');
-    if(a==='teen') shell.classList.add('aud-teen');
-    else if(a==='junior') shell.classList.add('aud-junior');
+    if(typeof AUD_F!=='undefined'){ AUD_F=a; LVL_F='ALL'; SK_F='ALL'; }
+    if(typeof render==='function' && typeof ASGS!=='undefined' && ASGS.length){ render(); }
+    else {
+      var st=document.getElementById('odSoonTeen'), sj=document.getElementById('odSoonJunior');
+      if(st)st.style.display=(a==='teen')?'block':'none';
+      if(sj)sj.style.display=(a==='junior')?'block':'none';
+    }
   });});
 })();
 </script>

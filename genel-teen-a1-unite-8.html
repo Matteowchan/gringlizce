@@ -1560,6 +1560,9 @@ wait();
   }
 
   function lineHit(x,y){ var el=document.elementFromPoint(x,y); return (el&&el.closest)?el.closest('.jrg-line'):null; }
+  function jrgRemoveGhosts(){ var g=document.querySelectorAll('.jrg-ghost'); for(var i=0;i<g.length;i++){ if(g[i].parentNode) g[i].parentNode.removeChild(g[i]); } }
+  function jrgEndDrag(){ if(drag){ try{ drag.chip.releasePointerCapture(drag.pid); }catch(_){} } document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onUp); jrgRemoveGhosts(); drag=null; }
+  window.addEventListener('blur', jrgEndDrag);
   function onMove(e){
     if(!drag) return;
     if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>6){ drag.moved=true; drag.chip._dragged=true; }
@@ -1570,10 +1573,11 @@ wait();
   function onUp(e){
     if(!drag) return;
     var chip=drag.chip;
-    chip.removeEventListener('pointermove', onMove);
-    chip.removeEventListener('pointerup', onUp);
-    chip.removeEventListener('pointercancel', onUp);
-    if(drag.ghost&&drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    try{ chip.releasePointerCapture(drag.pid); }catch(_){}
+    jrgRemoveGhosts();
     line.classList.remove('over');
     if(drag.moved){ var s=lineHit(e.clientX,e.clientY); if(s) addChip(chip); }
     drag=null;
@@ -1587,15 +1591,17 @@ wait();
       });
       chip.addEventListener('pointerdown', function(e){
         if(chip.classList.contains('used')) return;
+        if(e.button&&e.button!==0) return;
+        jrgEndDrag();
         e.preventDefault();
         var ghost=chip.cloneNode(true); ghost.className='jrg-chip jrg-ghost';
         ghost.style.left=(e.clientX-30)+'px'; ghost.style.top=(e.clientY-20)+'px';
         document.body.appendChild(ghost);
-        drag={chip:chip, ghost:ghost, sx:e.clientX, sy:e.clientY, moved:false};
+        drag={chip:chip, ghost:ghost, sx:e.clientX, sy:e.clientY, moved:false, pid:e.pointerId};
         try{ chip.setPointerCapture(e.pointerId); }catch(_){}
-        chip.addEventListener('pointermove', onMove);
-        chip.addEventListener('pointerup', onUp);
-        chip.addEventListener('pointercancel', onUp);
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+        document.addEventListener('pointercancel', onUp);
       });
     });
   }

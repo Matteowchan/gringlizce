@@ -41,6 +41,11 @@
     ".gri-mcards{display:block;margin-top:4px}",
     ".gri-mcard{display:block;padding:14px 2px;border-bottom:1px solid var(--gri-line-soft);text-decoration:none;color:var(--gri-ink-soft);font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;line-height:1.3}",
     ".gri-mcard:active,.gri-mcard:hover{color:var(--gri-accent)}",
+    ".gri-mmenu #navUserMountSlot{margin:2px 0 14px}",
+    ".gri-mmenu #navUserMountSlot .btn-nav-cta,.gri-mmenu #navUserMountSlot .gri-giris{display:block;text-align:center;padding:12px;border-radius:12px;font-size:15px}",
+    ".gri-mmenu #navUserMountSlot .nav-user{display:block;position:static}",
+    ".gri-mmenu #navUserMountSlot .nav-user-btn{display:none}",
+    ".gri-mmenu #navUserMountSlot .nav-user-menu{position:static;display:block;box-shadow:none;border:none;min-width:0;padding:0;margin:0}",
     ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",
     ".gri-mrow a{color:inherit;text-decoration:none;flex:1}.gri-mrow .cv{width:12px;height:12px;transition:.2s}.gri-msec.open .gri-mrow .cv{transform:rotate(180deg)}",
     ".gri-msub{display:none;padding:2px 0 8px 12px}.gri-msec.open .gri-msub{display:block}",
@@ -129,7 +134,7 @@
       '<div id="navUserMount" class="gri-user-mount"></div>' +
       "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
-      '<div class="gri-mmenu" id="gri-mmenu"><div class="in"><div class="gri-mcards">' + mcards +
+      '<div class="gri-mmenu" id="gri-mmenu"><div class="in"><div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
       '<div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
 
@@ -168,6 +173,22 @@
     });
     var burger = document.getElementById("gri-burger");
     if (burger) burger.addEventListener("click", function () { document.getElementById("gri-mmenu").classList.toggle("open"); });
+
+    // Hesap widget'ını (navUserMount) mobilde menüye, masaüstünde bar'a yerleştir
+    (function () {
+      var mnt = document.getElementById("navUserMount");
+      var slot = document.getElementById("navUserMountSlot");
+      var right = document.querySelector(".gri-nav .right");
+      var brg = document.getElementById("gri-burger");
+      if (!mnt || !slot || !right) return;
+      var mq = window.matchMedia("(max-width:1200px)");
+      function place() {
+        if (mq.matches) { if (mnt.parentNode !== slot) slot.appendChild(mnt); }
+        else { if (mnt.parentNode !== right) right.insertBefore(mnt, brg); }
+      }
+      place();
+      try { mq.addEventListener("change", place); } catch (e) { try { mq.addListener(place); } catch (e2) {} }
+    })();
   }
 
   if (document.readyState !== "loading") build();

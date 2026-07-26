@@ -71,8 +71,8 @@
   @media(max-width:920px){.ge-shell{flex-direction:column;gap:18px;padding:1rem 1rem 3rem;align-items:stretch}.ge-main{width:100%}.ge-rail{width:100%;position:static;order:-1;max-height:none;overflow-y:visible}}
   @media(max-width:640px){.ge-sec-head h1{font-size:1.45rem}}
 
-  .ge-section{display:none}
-  .ge-section.active{display:block;animation:geFade .28s ease}
+  .ge-section{display:block;margin-bottom:1.5rem}
+  .ge-section.active{display:block}
   @keyframes geFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
   .ge-sec-head{margin:0 0 1.2rem}
@@ -478,13 +478,6 @@ function buildPage(){
         +'<div class="ge-msg" id="odSubmitMsg"></div></div>';
     }
 
-    /* nav row */
-    html+='<div class="ge-navrow">';
-    if(i>0)html+='<button class="ge-navbtn" onclick="odShowSec('+i+')">&lsaquo; '+esc(SECS[i-1].label)+'</button>';
-    else html+='<span class="ge-spacer"></span>';
-    if(i<SECS.length-1)html+='<button class="ge-navbtn nxt" onclick="odShowSec('+(n+1)+')">'+esc(SECS[i+1].label)+' &rsaquo;</button>';
-    else html+='<span class="ge-spacer"></span>';
-    html+='</div>';
     html+='</section>';
   }
   host.innerHTML=html;
@@ -506,7 +499,7 @@ function buildPage(){
   restoreState();
   updateDots();
   updateSubmitState();
-  odShowSec(1);
+  odShowSec(1,true);
 }
 
 function passageHtml(txt){
@@ -728,17 +721,14 @@ function updateSubmitState(){
 }
 
 /* ---------- section switching ---------- */
-window.odShowSec=function(n){
-  var secs=document.querySelectorAll('.ge-section');
-  for(var i=0;i<secs.length;i++){secs[i].className=secs[i].className.replace(/\s*\bactive\b/g,'');}
+window.odShowSec=function(n,noScroll){
   var el=document.getElementById('ge-sec-'+n);
-  if(el)el.className+=' active';
+  if(el&&!noScroll)el.scrollIntoView({behavior:'smooth',block:'start'});
   var links=document.querySelectorAll('#railDays a');
   for(var j=0;j<links.length;j++){
     links[j].className=links[j].className.replace(/\s*\bcur\b/g,'');
     if(parseInt(links[j].getAttribute('data-sec'),10)===n)links[j].className+=' cur';
   }
-  window.scrollTo(0,0);
 };
 
 /* ---------- submitted status ---------- */

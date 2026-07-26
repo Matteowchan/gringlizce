@@ -1338,6 +1338,8 @@ table.ge-tbl th,table.ge-tbl td{white-space:normal}
 var gate=document.getElementById('geGate');
 try{document.documentElement.style.overflow='hidden';}catch(e){}
 function unlock(){if(gate&&gate.parentNode)gate.parentNode.removeChild(gate);try{document.documentElement.style.overflow='';}catch(e){}}
+var EXAM_LEVEL='A1',EXAM_KIND='midterm';
+function showExamLock(){var m=document.getElementById('geGateMsg'),a=document.getElementById('geGateActions');if(m)m.textContent='Bir sınıfa kayıtlısın. Öğretmenin bu sınavı henüz başlatmana izin vermedi. Öğretmenin açtığında bu sayfada çözebileceksin.';if(a)a.style.display='none';}
 function showLogin(){
   var m=document.getElementById('geGateMsg'),a=document.getElementById('geGateActions');
   if(m)m.textContent='Midterm sınavına girmek için ücretsiz hesabınla giriş yapmalısın. Sonuçların ve yazma görevlerin hesabına kaydedilir.';
@@ -1351,7 +1353,7 @@ function wait(t){
     window.griTrackSB=c;
     c.auth.getSession().then(function(r){
       done=true;
-      if(r&&r.data&&r.data.session)unlock();else showLogin();
+      if(!(r&&r.data&&r.data.session)){showLogin();return;}c.rpc('ge_student_class_state').then(function(rr){var st=rr&&rr.data;if(!st||!st.in_class){unlock();return;}var eu=(st.exam_unlocks||[]);if(eu.indexOf(EXAM_LEVEL+':'+EXAM_KIND)>=0){unlock();}else{showExamLock();}},function(){unlock();});
     },function(){done=true;showLogin();});
     return;
   }

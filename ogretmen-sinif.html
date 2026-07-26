@@ -3217,6 +3217,7 @@
       var geAssigned = [];    // class_assignments satırları
       var geSubsByKey = {};   // assignment_id + '|' + user_id -> ge_submissions satırı
       var geUnlockMap = {};   // level -> max_unit
+      var geExamMap = {};     // "level:exam" -> true (hoca sınav izni)
 
       function geParseContent(sub) {
         try { return JSON.parse(sub.content || '{}') || {}; } catch (e) { return {}; }
@@ -3271,6 +3272,8 @@
           }
 
           document.getElementById('tab-count-ge').textContent = geAssigned.length;
+          geExamMap = {};
+          try { var exRes = await sb.from('class_exam_unlocks').select('level,exam').eq('class_id', classId); ((exRes && exRes.data) || []).forEach(function (e) { geExamMap[e.level + ':' + e.exam] = true; }); } catch (e) {}
           renderGeUnlocks();
           renderGePool();
           renderGeAssigned();
@@ -3295,6 +3298,10 @@
             + '<span class="ge-unlock-label">Açık ünite sınırı (1–' + max + ')</span>'
             + '<select class="ge-unlock-select" data-level="' + lv + '">' + opts + '</select>'
             + '<span class="ge-unlock-status" data-status="' + lv + '"></span>'
+            + '<span class="ge-exam-perm" style="display:inline-flex;align-items:center;gap:10px;margin-left:14px;font-size:.85rem"><b>Sınav izni:</b>'
+              + '<label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" class="ge-exam-chk" data-level="' + lv + '" data-exam="midterm"' + (geExamMap[lv + ':midterm'] ? ' checked' : '') + '> Ara Sınav</label>'
+              + '<label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" class="ge-exam-chk" data-level="' + lv + '" data-exam="final"' + (geExamMap[lv + ':final'] ? ' checked' : '') + '> Final</label>'
+              + '<span class="ge-exam-status" data-exstatus="' + lv + '" style="color:#2E6E6A"></span></span>'
           + '</div>';
         }).join('');
 
@@ -3323,6 +3330,27 @@
             } finally {
               sel.disabled = false;
             }
+          });
+        });
+
+        box.querySelectorAll('.ge-exam-chk').forEach(function (chk) {
+          chk.addEventListener('change', async function () {
+            var lv = chk.dataset.level, ex = chk.dataset.exam;
+            var st = box.querySelector('[data-exstatus="' + lv + '"]');
+            chk.disabled = true; if (st) st.textContent = 'Kaydediliyor...';
+            try {
+              if (chk.checked) {
+                var r = await sb.from('class_exam_unlocks').upsert({ class_id: classId, level: lv, exam: ex }, { onConflict: 'class_id,level,exam' });
+                if (r.error) throw r.error; geExamMap[lv + ':' + ex] = true;
+              } else {
+                var r2 = await sb.from('class_exam_unlocks').delete().eq('class_id', classId).eq('level', lv).eq('exam', ex);
+                if (r2.error) throw r2.error; delete geExamMap[lv + ':' + ex];
+              }
+              if (st) { st.textContent = 'Kaydedildi'; setTimeout(function () { st.textContent = ''; }, 1500); }
+            } catch (err) {
+              chk.checked = !chk.checked; if (st) st.textContent = '';
+              alert('Kaydedilemedi: ' + (err.message || err));
+            } finally { chk.disabled = false; }
           });
         });
       }

@@ -38,6 +38,9 @@
     "@media(max-width:1200px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
     ".gri-mmenu.open{display:block;border-top:1px solid var(--gri-line);background:var(--gri-nav-bg);max-height:70vh;overflow:auto}",
     ".gri-mmenu .in{max-width:1200px;margin:0 auto;padding:10px 22px 20px}",
+    ".gri-mcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}",
+    ".gri-mcard{display:flex;align-items:center;justify-content:center;text-align:center;padding:16px 10px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:14px;text-decoration:none;color:var(--gri-ink-soft);font-family:'Crimson Pro',Georgia,serif;font-size:15px;font-weight:600;min-height:64px;line-height:1.25}",
+    ".gri-mcard:active,.gri-mcard:hover{background:var(--gri-surface-2);color:var(--gri-ink);border-color:var(--gri-ink-faint)}",
     ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",
     ".gri-mrow a{color:inherit;text-decoration:none;flex:1}.gri-mrow .cv{width:12px;height:12px;transition:.2s}.gri-msec.open .gri-mrow .cv{transform:rotate(180deg)}",
     ".gri-msub{display:none;padding:2px 0 8px 12px}.gri-msec.open .gri-msub{display:block}",
@@ -103,14 +106,10 @@
       return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd>' + twoline(it.label, true) + '</button><div class="gri-dd-menu">' + groups + "</div></div>";
     }).join("");
 
-    var mrows = MENU.map(function (it) {
-      if (!it.children) return '<div class="gri-mrow"><a href="' + href(it.href) + '">' + esc(it.label) + "</a></div>";
-      var subs = it.children.map(function (ch) {
-        var head = '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
-        var gk = ch.children ? ch.children.map(function (g) { return '<a href="' + href(g.href) + '">' + esc(g.label) + "</a>"; }).join("") : "";
-        return head + gk;
-      }).join("");
-      return '<div class="gri-msec"><div class="gri-mrow" data-msec><span>' + esc(it.label) + "</span>" + CVDOWN + '</div><div class="gri-msub">' + subs + "</div></div>";
+    function firstHref(it){ if(it.href) return it.href; if(it.children){ for(var i=0;i<it.children.length;i++){ var h=firstHref(it.children[i]); if(h) return h; } } return ""; }
+    var mcards = MENU.map(function (it) {
+      var dest = firstHref(it) || (BASE + "index.html");
+      return '<a class="gri-mcard" href="' + href(dest) + '">' + esc(it.label) + "</a>";
     }).join("");
 
     var tOpts = themeOptsHtml();
@@ -130,8 +129,9 @@
       '<div id="navUserMount" class="gri-user-mount"></div>' +
       "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
-      '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' + mrows +
-      '<a class="gri-mrow" href="' + BASE + 'panelim.html">Çalışma Masam</a><div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
+      '<div class="gri-mmenu" id="gri-mmenu"><div class="in"><div class="gri-mcards">' + mcards +
+      '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
+      '<div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
     var _ref = (_lb && _lb.parentNode === document.body) ? _lb.nextSibling : document.body.firstChild;

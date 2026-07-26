@@ -36,8 +36,11 @@
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
     "@media(max-width:1200px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
-    ".gri-mmenu.open{display:block;border-top:1px solid var(--gri-line);background:var(--gri-nav-bg);max-height:70vh;overflow:auto}",
-    ".gri-mmenu .in{max-width:1200px;margin:0 auto;padding:10px 22px 20px}",
+    ".gri-mmenu.open{display:block;position:fixed;left:0;right:0;top:0;bottom:0;z-index:200;background:var(--gri-nav-bg);overflow-y:auto;-webkit-overflow-scrolling:touch}",
+    ".gri-mmenu .in{max-width:640px;margin:0 auto;padding:0 22px 44px;display:block;height:auto}",
+    ".gri-mclose{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--gri-nav-bg);padding:16px 0 12px;border-bottom:1px solid var(--gri-line);margin-bottom:10px;z-index:2}",
+    ".gri-mclose .brand{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gri-ink);text-decoration:none;white-space:nowrap}.gri-mclose .brand .it{font-style:italic;color:var(--gri-accent);margin-left:.3em}",
+    ".gri-mclose-x{width:40px;height:40px;border-radius:10px;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink);font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}",
     ".gri-mcards{display:block;margin-top:4px}",
     ".gri-mcard{display:block;padding:14px 2px;border-bottom:1px solid var(--gri-line-soft);text-decoration:none;color:var(--gri-ink-soft);font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;line-height:1.3}",
     ".gri-mcard:active,.gri-mcard:hover{color:var(--gri-accent)}",
@@ -134,7 +137,9 @@
       '<div id="navUserMount" class="gri-user-mount"></div>' +
       "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
-      '<div class="gri-mmenu" id="gri-mmenu"><div class="in"><div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
+      '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +
+      '<div class="gri-mclose"><a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
+      '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
       '<div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
 
@@ -172,7 +177,11 @@
       try { localStorage.setItem("gri-fs", SIZES[i]); } catch (e) {}
     });
     var burger = document.getElementById("gri-burger");
-    if (burger) burger.addEventListener("click", function () { document.getElementById("gri-mmenu").classList.toggle("open"); });
+    var mmenuEl = document.getElementById("gri-mmenu");
+    function setMenu(open) { if (!mmenuEl) return; mmenuEl.classList.toggle("open", open); try { document.documentElement.style.overflow = open ? "hidden" : ""; } catch (e) {} }
+    if (burger) burger.addEventListener("click", function () { setMenu(!mmenuEl.classList.contains("open")); });
+    var mclose = document.getElementById("gri-mclose-x");
+    if (mclose) mclose.addEventListener("click", function () { setMenu(false); });
 
     // Hesap widget'ını (navUserMount) mobilde menüye, masaüstünde bar'a yerleştir
     (function () {

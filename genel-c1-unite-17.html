@@ -59,7 +59,7 @@
   }
   </script>
   <script src="assets/curriculum.js"></script>
-  <script src="assets/nav.js?v=4"></script>
+  <script src="assets/nav.js?v=5"></script>
   <script src="assets/track.js" defer></script>
   <style>
   /* ===== Genel İngilizce C1 · Ünite 17 ===== */
@@ -1078,8 +1078,8 @@ sbWait(function(){
 /* recAns — user_answers upsert */
 function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
 
-/* ---------- Progress (localStorage ge_c1_u15_progress) ---------- */
-var PROG_KEY='ge_c1_u15_progress';
+/* ---------- Progress (localStorage ge_c1_u17_progress) ---------- */
+var PROG_KEY='ge_c1_u17_progress';
 function getProg(){try{return JSON.parse(localStorage.getItem(PROG_KEY)||'{}');}catch(e){return {};}}
 function setDone(key){
   var p=getProg();
@@ -1390,7 +1390,7 @@ function checkMaybeDone(){
   var host=document.getElementById('canDo');
   if(!host)return;
   var saved={};
-  try{saved=JSON.parse(localStorage.getItem('ge_c1_u15_cando')||'{}');}catch(e){}
+  try{saved=JSON.parse(localStorage.getItem('ge_c1_u17_cando')||'{}');}catch(e){}
   var boxes=host.querySelectorAll('input[type=checkbox]');
   for(var i=0;i<boxes.length;i++){
     var n=boxes[i].getAttribute('data-cd');
@@ -1402,7 +1402,7 @@ function checkMaybeDone(){
       else{this.parentNode.className=this.parentNode.className.replace(/\s*\bon\b/g,'');}
       var s={};
       for(var j=1;j<=5;j++){if(cdChecked[j])s[j]=true;}
-      try{localStorage.setItem('ge_c1_u15_cando',JSON.stringify(s));}catch(e){}
+      try{localStorage.setItem('ge_c1_u17_cando',JSON.stringify(s));}catch(e){}
       checkMaybeDone();
     });
   }
@@ -1523,7 +1523,7 @@ window.submitGE=function(slot){
   window.GRI_SB.from('ge_submissions').insert({
     user_id:window.GRI_UID,
     level:'C1',
-    unit:15,
+    unit:17,
     task_type:cfg.type,
     content:val,
     word_count:wordsOf(val)

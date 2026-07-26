@@ -49,6 +49,10 @@
     ".gri-mmenu #navUserMountSlot .nav-user{display:block;position:static}",
     ".gri-mmenu #navUserMountSlot .nav-user-btn{display:none}",
     ".gri-mmenu #navUserMountSlot .nav-user-menu{position:static;display:block;box-shadow:none;border:none;min-width:0;padding:0;margin:0}",
+    ".gri-mtheme{border-top:1px solid var(--gri-line-soft);margin-top:6px}",
+    ".gri-mtheme-h{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:14px 2px;font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;color:var(--gri-ink-soft)}",
+    ".gri-mtheme-h .cv{width:12px;height:12px;opacity:.6;transition:.2s}.gri-mtheme.open .gri-mtheme-h .cv{transform:rotate(180deg)}",
+    ".gri-mtheme-body{display:none;padding-bottom:8px}.gri-mtheme.open .gri-mtheme-body{display:block}",
     ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",
     ".gri-mrow a{color:inherit;text-decoration:none;flex:1}.gri-mrow .cv{width:12px;height:12px;transition:.2s}.gri-msec.open .gri-mrow .cv{transform:rotate(180deg)}",
     ".gri-msub{display:none;padding:2px 0 8px 12px}.gri-msec.open .gri-msub{display:block}",
@@ -141,7 +145,7 @@
       '<div class="gri-mclose"><a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
       '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
-      '<div class="gri-th-lbl">Tema</div>' + tOpts + "</div></div></header>");
+      '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h">Tema' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
     var _ref = (_lb && _lb.parentNode === document.body) ? _lb.nextSibling : document.body.firstChild;
@@ -182,6 +186,8 @@
     if (burger) burger.addEventListener("click", function () { setMenu(!mmenuEl.classList.contains("open")); });
     var mclose = document.getElementById("gri-mclose-x");
     if (mclose) mclose.addEventListener("click", function () { setMenu(false); });
+    var mth = document.getElementById("gri-mtheme-h");
+    if (mth) mth.addEventListener("click", function () { mth.parentNode.classList.toggle("open"); });
 
     // Hesap widget'ını (navUserMount) mobilde menüye, masaüstünde bar'a yerleştir
     (function () {

@@ -361,6 +361,7 @@ function bindTools(){
   $('#btn-quiz-add').addEventListener('click',addQuizToQueue);
   $('#btn-quiz').addEventListener('click',sendQuiz);
   $('#btn-breakout').addEventListener('click',makeBreakout);
+  var bm=$('#btn-breakout-manual'); if(bm) bm.addEventListener('click',renderManualBreakout);
   // quiz popup (student)
   $('#quiz-close').addEventListener('click',function(){ $('#quiz-modal').classList.add('hidden'); if(STATE.quizRun) $('#quiz-pill').classList.add('show'); });
   $('#quiz-pill').addEventListener('click',function(){ $('#quiz-modal').classList.remove('hidden'); $('#quiz-pill').classList.remove('show'); });
@@ -435,6 +436,27 @@ function makeBreakout(){
   $('#bo-result').innerHTML=Object.keys(byG).sort().map(function(g){ return '<div style="margin-bottom:5px"><b>Grup '+g+':</b> '+byG[g].map(esc).join(', ')+'</div>'; }).join('')+'<button class="dock-btn" id="bo-recall" style="margin-top:8px">Herkesi Geri Çağır</button>';
   var rc=$('#bo-recall'); if(rc)rc.addEventListener('click',function(){ sendData({t:'breakout-end'}); clearBreakout(); });
   toast(n+' grup, '+mins+' dk. Her grup yalnızca kendini duyar.');
+}
+function renderManualBreakout(){
+  if(!STATE.lkRoom){ toast('Canlı bağlantı gerekli.'); return; }
+  var students=[]; STATE.lkRoom.remoteParticipants.forEach(function(p){ if(!isHostMeta(p)) students.push({id:p.identity,name:p.name||'Öğrenci'}); });
+  if(!students.length){ $('#bo-result').textContent='Öğrenci yok.'; return; }
+  var n=Math.max(2,Math.min(5,parseInt($('#bo-count').value,10)||2));
+  var html='<div style="font-size:12px;color:var(--gm-ink-soft);margin-bottom:6px">Her öğrenciye grup seç:</div>';
+  html+=students.map(function(s){ var opts=''; for(var g=1;g<=n;g++)opts+='<option value="'+g+'">Grup '+g+'</option>'; return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis">'+esc(s.name)+'</span><select data-bo-id="'+esc(s.id)+'" class="tool-inp" style="width:auto;margin:0;padding:5px 8px">'+opts+'</select></div>'; }).join('');
+  html+='<button class="dock-btn" id="bo-manual-start" style="margin-top:6px">Grupları Başlat</button>';
+  $('#bo-result').innerHTML=html;
+  var st=$('#bo-manual-start'); if(st) st.addEventListener('click',startManualBreakout);
+}
+function startManualBreakout(){
+  var map={}; $$('#bo-result select[data-bo-id]').forEach(function(sel){ map[sel.getAttribute('data-bo-id')]=parseInt(sel.value,10)||1; });
+  if(!Object.keys(map).length)return;
+  var mins=Math.max(1,Math.min(30,parseInt(($('#bo-mins')&&$('#bo-mins').value)||'5',10)||5));
+  sendData({t:'breakout',map:map,mins:mins}); applyBreakout(map,mins);
+  var byG={}; STATE.lkRoom.remoteParticipants.forEach(function(p){ if(map[p.identity]){ (byG[map[p.identity]]=byG[map[p.identity]]||[]).push(p.name||'Öğrenci'); } });
+  $('#bo-result').innerHTML=Object.keys(byG).sort().map(function(g){ return '<div style="margin-bottom:5px"><b>Grup '+g+':</b> '+byG[g].map(esc).join(', ')+'</div>'; }).join('')+'<button class="dock-btn" id="bo-recall" style="margin-top:8px">Herkesi Geri Çağır</button>';
+  var rc=$('#bo-recall'); if(rc)rc.addEventListener('click',function(){ sendData({t:'breakout-end'}); clearBreakout(); });
+  toast('Gruplar (manuel) başlatıldı.');
 }
 function applyBreakout(map,mins){
   STATE.breakout=map;

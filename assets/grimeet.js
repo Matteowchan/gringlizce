@@ -227,7 +227,15 @@ function bindControls(){
     else if(b.dataset.act==='kick'){ if(confirm('Bu katılımcı çıkarılsın mı?')){ sendData({t:'kick',target:id}); toast('Çıkarma isteği gönderildi.'); } } });
   $$('[data-close-modal]').forEach(function(x){ x.addEventListener('click',function(){ x.closest('.gmr-modal').classList.add('hidden'); }); });
   $$('.gmr-modal').forEach(function(m){ if(m.id==='quiz-modal')return; m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
-  bindSplit();
+  $('#dock-close').addEventListener('click',function(){ $('#gmr-dock').classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); });
+  bindSplit(); bindDockResize();
+}
+function bindDockResize(){
+  var h=$('#dock-resize'), dock=$('#gmr-dock'), dragging=false;
+  if(!h)return;
+  h.addEventListener('pointerdown',function(e){ dragging=true; h.setPointerCapture(e.pointerId); e.preventDefault(); });
+  h.addEventListener('pointermove',function(e){ if(!dragging)return; var w=window.innerWidth-e.clientX; w=Math.max(260,Math.min(640,w)); dock.style.width=w+'px'; });
+  h.addEventListener('pointerup',function(e){ dragging=false; try{h.releasePointerCapture(e.pointerId);}catch(_){} });
 }
 function toggleDock(which){
   var dock=$('#gmr-dock'), open=!dock.classList.contains('hidden'), cur=dock.getAttribute('data-active');
@@ -243,7 +251,7 @@ function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-
 
 async function shareScreen(){
   if(!STATE.lkRoom){ toast('Ekran paylaşımı için canlı bağlantı gerekli.'); return; }
-  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on); $('#ctrl-share').classList.toggle('active',!on); if(!on) setMode('screen'); else { clearScreen(); setMode('grid'); } }
+  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); } else { clearScreen(); setMode('grid'); } }
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
 function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; hardLeave(); }
@@ -410,8 +418,10 @@ function bindMaterials(){
   $('#gmr-mat-close').addEventListener('click',function(){ setMode('grid'); });
   $$('.mat-tab').forEach(function(t){ t.addEventListener('click',function(){ $$('.mat-tab').forEach(function(x){x.classList.remove('active');}); t.classList.add('active'); $$('.mat-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==t.dataset.mat); }); }); });
   $('#mat-yt-load').addEventListener('click',function(){ var u=$('#mat-yt-url').value.trim(); if(!u)return; loadMaterial({kind:'yt',value:u},false); });
-  buildUnitSelectors();
+  buildUnitSelectors(); buildPresets();
   $('#mat-unit-load').addEventListener('click',function(){ var f=$('#mat-unit').value; if(!f)return; loadMaterial({kind:'unit',value:f},false); });
+  $('#mat-page-load').addEventListener('click',function(){ var u=($('#mat-page-url').value||'').trim(); if(!u)return; loadMaterial({kind:'unit',value:normalizePath(u)},false); });
+  $('#mat-page-url').addEventListener('keydown',function(e){ if(e.key==='Enter')$('#mat-page-load').click(); });
   var sh=$('#mat-share'); if(sh) sh.addEventListener('click',function(){
     if(!STATE.currentMaterial){ toast('Önce bir materyal aç.'); return; }
     if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
@@ -426,16 +436,22 @@ function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value};
   ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } $('#mat-yt-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>'; matTab('youtube'); }
-  else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
-    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Ünite"></iframe>'; applyZoom();
-      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Materyal yüklenemedi.</div>'; });
-    } else { frame.innerHTML='<iframe src="'+esc(m.value)+'" title="Ünite"></iframe>'; }
+  else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame'); frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; applyZoom();
+    fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
   }
   applyZoom();
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
 }
 function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var v=$('#mat-zoom-val'); if(v)v.textContent=Math.round(STATE.matZoom*100)+'%'; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
+function normalizePath(u){ return String(u).replace(/^https?:\/\/[^\/]+\//i,'').replace(/^\/+/,''); }
+function buildPresets(){ var el=$('#mat-presets'); if(!el)return; var P=[
+  {l:'IELTS Listening',p:'ielts-bolum-calisma.html?bolum=listening'},{l:'IELTS Reading',p:'ielts-bolum-calisma.html?bolum=reading'},
+  {l:'IELTS Writing',p:'ielts-bolum-calisma.html?bolum=writing'},{l:'IELTS Deneme',p:'ielts-deneme.html'},
+  {l:'TOEFL',p:'toefl-ogren.html'},{l:'YDS',p:'yds-ogren.html'},{l:'YDT',p:'ydt-ogren.html'},
+  {l:'SAT Öğren',p:'sat-ogren.html'},{l:'Seviye Testi',p:'seviye-belirleme.html'}
+];
+  P.forEach(function(x){ var b=document.createElement('button'); b.textContent=x.l; b.addEventListener('click',function(){ var u=$('#mat-page-url'); if(u)u.value=x.p; loadMaterial({kind:'unit',value:x.p},false); }); el.appendChild(b); }); }
 function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); }
 function buildUnitSelectors(){
   var tracks=[{v:'',t:'Adult'},{v:'teen-',t:'Teen'},{v:'junior-',t:'Junior'}], levels=['a1','a2','b1','b2','c1','c2'];

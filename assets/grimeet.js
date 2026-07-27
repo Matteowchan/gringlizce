@@ -155,6 +155,7 @@ async function connectLiveKit(){
 }
 async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
+  if(STATE.micOn) setTimeout(applyNoiseFilter,700);
   try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
   try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
   var camPub=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
@@ -190,7 +191,9 @@ function blockJoin(msg){
 function isScreen(pub){ return pub&&(pub.source===LK.Track.Source.ScreenShare); }
 
 function onParticipant(p){ ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)}); recordAttend(p.identity,p.name||'Öğrenci'); refreshPeople(); updateGridCount(); p.trackPublications.forEach(function(pub){ if(pub.isSubscribed&&pub.track) attachTrack(pub.track,pub,p); }); }
-function isHostMeta(p){ try{ return (p.metadata&&JSON.parse(p.metadata).host)===true; }catch(e){ return false; } }
+var promotedHosts=new Set();
+function isHostMeta(p){ try{ if(p&&p.identity&&promotedHosts.has(p.identity))return true; return (p.metadata&&JSON.parse(p.metadata).host)===true; }catch(e){ return false; } }
+function becomeHost(){ if(STATE.isHost)return; STATE.isHost=true; var app=$('#gm-app'); if(app){ app.classList.remove('is-student'); app.classList.add('is-host'); } var rn=$('#gmr-room-name'); if(rn)rn.textContent='Ders Odası (Öğretmen)'; toast('Öğretmen sana ders yönetimi yetkisi verdi.'); refreshPeople(); }
 
 function attachTrack(track,pub,p){
   if(isScreen(pub)){ attachScreen(track,false); return; }
@@ -268,7 +271,7 @@ function togglePin(id){ if(!id)return; STATE.pinned=(STATE.pinned===id?null:id);
 function toggleFullscreen(){ try{ if(!document.fullscreenElement){ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el); $('#gmr-fs').classList.add('on'); } else { (document.exitFullscreen||document.webkitExitFullscreen).call(document); $('#gmr-fs').classList.remove('on'); } }catch(e){} }
 
 function bindControls(){
-  $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} refreshPeople(); });
+  $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
     if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
       if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if(STATE.bg!=='none') applyBackground(STATE.bg); } }
@@ -321,7 +324,14 @@ function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-
 
 async function shareScreen(){
   if(!STATE.lkRoom){ toast('Ekran paylaşımı için canlı bağlantı gerekli.'); return; }
-  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); } else { clearScreen(); setMode('grid'); } }
+  var on=STATE.lkRoom.localParticipant.isScreenShareEnabled;
+  if(on){ doShareScreen(); return; } // kapatma her zaman serbest
+  if(!STATE.isHost && !STATE._shareOK){ sendData({t:'share-req',name:STATE.name}); toast('Ekran paylaşımı için öğretmen onayı bekleniyor…'); return; }
+  doShareScreen();
+}
+async function doShareScreen(){
+  if(!STATE.lkRoom)return;
+  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); STATE._shareOK=false; } else { clearScreen(); setMode('grid'); } }
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
 function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; hardLeave(); }
@@ -342,6 +352,16 @@ function bindHostActions(){
   var hq=$('#hand-queue'); if(hq)hq.addEventListener('click',function(e){ var b=e.target.closest('[data-lower]'); if(!b)return; var id=b.getAttribute('data-lower'); sendData({t:'lower-one',target:id}); handQueueRemove(id); var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(h)h.remove(); } });
   var tc=$('#btn-toggle-chat'); if(tc)tc.addEventListener('click',function(){ STATE.chatLocked=!STATE.chatLocked; this.textContent=STATE.chatLocked?'Sohbeti Aç':'Sohbeti Kapat'; sendData({t:'chat-lock',on:STATE.chatLocked}); toast(STATE.chatLocked?'Öğrenci sohbeti kapatıldı.':'Sohbet açıldı.'); });
   var ep=$('#btn-endpkg'); if(ep)ep.addEventListener('click',endLessonPackage);
+  var pl=$('#people-list'); if(pl)pl.addEventListener('click',function(e){
+    if(!STATE.isHost)return;
+    var pb=e.target.closest('[data-promote]'); var kb=e.target.closest('[data-kick]');
+    if(pb){ var pid=pb.getAttribute('data-promote'); if(confirm('Bu katılımcıya öğretmen (ders yönetimi) yetkisi verilsin mi?')){ promotedHosts.add(pid); sendData({t:'promote',target:pid}); toast('Öğretmen yetkisi verildi.'); refreshPeople(); } }
+    else if(kb){ var kid=kb.getAttribute('data-kick'); if(confirm('Bu katılımcı odadan çıkarılsın mı?')){ sendData({t:'kick',target:kid}); toast('Katılımcı çıkarıldı.'); } }
+  });
+}
+function showShareReq(id,who){
+  if(confirm(who+' ekranını paylaşmak istiyor. İzin verilsin mi?')){ sendData({t:'share-grant',target:id}); toast(who+' için ekran paylaşımına izin verildi.'); }
+  else sendData({t:'share-deny',target:id});
 }
 
 /* ================= DATA ================= */
@@ -360,7 +380,7 @@ function onData(payload,p){
   else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
-  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); sysChat('Öğretmen bir materyal paylaştı.'); } }
+  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
@@ -374,6 +394,10 @@ function onData(payload,p){
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
   else if(msg.t==='breakout-end'){ if(!STATE.isHost&&fromHost) clearBreakout(); }
+  else if(msg.t==='share-req'){ if(STATE.isHost&&id) showShareReq(id,msg.name||from); }
+  else if(msg.t==='share-grant'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE._shareOK=true; toast('Öğretmen izin verdi. Ekranını seç.'); doShareScreen(); } }
+  else if(msg.t==='share-deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen ekran paylaşımına izin vermedi.'); } }
+  else if(msg.t==='promote'){ if(fromHost&&msg.target){ promotedHosts.add(msg.target); if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity) becomeHost(); refreshPeople(); } }
   else if(msg.t==='wb'){ WB.applyRemote(msg); }
   else if(msg.t==='anno'){ ANNO.applyRemote(msg.strokes); }
 }
@@ -390,9 +414,11 @@ function applyChatLock(){ var i=$('#chat-text'),b=$('#chat-send'); var locked=ST
 function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return; var i=$('#chat-text'); var t=(i.value||'').trim(); if(!t)return; addChat(STATE.name+' (Sen)',t); sendData({t:'chat',text:t}); i.value=''; } $('#chat-send').addEventListener('click',send); $('#chat-text').addEventListener('keydown',function(e){ if(e.key==='Enter')send(); }); }
 function refreshPeople(){
   var ul=$('#people-list'); if(!ul)return; ul.innerHTML='';
-  var list=[{name:STATE.name+' (Sen)',host:STATE.isHost,mic:STATE.micOn}];
-  if(STATE.lkRoom) STATE.lkRoom.remoteParticipants.forEach(function(p){ list.push({name:p.name||'Öğrenci',host:isHostMeta(p),mic:p.isMicrophoneEnabled}); });
-  list.forEach(function(m){ var li=document.createElement('li'); li.innerHTML='<span class="pav">'+initials(m.name)+'</span><span class="pnm">'+esc(m.name)+'</span>'+(m.host?'<span class="ptag">Öğretmen</span>':'')+'<span class="pmic'+(m.mic?'':' off')+'">'+(m.mic?'🎤':'🔇')+'</span>'; ul.appendChild(li); });
+  var list=[{name:STATE.name+' (Sen)',host:STATE.isHost,mic:STATE.micOn,id:null}];
+  if(STATE.lkRoom) STATE.lkRoom.remoteParticipants.forEach(function(p){ list.push({name:p.name||'Öğrenci',host:isHostMeta(p),mic:p.isMicrophoneEnabled,id:p.identity}); });
+  list.forEach(function(m){ var li=document.createElement('li');
+    var act=(STATE.isHost&&m.id&&!m.host)?('<span class="pacts"><button class="pact" data-promote="'+esc(m.id)+'" title="Öğretmen yap">★</button><button class="pact danger" data-kick="'+esc(m.id)+'" title="Odadan çıkar">✕</button></span>'):'';
+    li.innerHTML='<span class="pav">'+initials(m.name)+'</span><span class="pnm">'+esc(m.name)+'</span>'+(m.host?'<span class="ptag">Öğretmen</span>':'')+'<span class="pmic'+(m.mic?'':' off')+'">'+(m.mic?'🎤':'🔇')+'</span>'+act; ul.appendChild(li); });
 }
 
 /* ================= TOOLS ================= */
@@ -507,8 +533,10 @@ function applyBreakout(map,mins){
   var myId=STATE.lkRoom?STATE.lkRoom.localParticipant.identity:null;
   STATE.myGroup=STATE.isHost?0:(map[myId]||null);
   refreshBreakoutAV(); showBreakoutBanner(mins);
+  var app=$('#gm-app'); if(app)app.classList.add('in-breakout');
+  if(!STATE.isHost){ if(STATE.myGroup){ setMode('grid',{remote:true}); toast('Breakout Odası '+STATE.myGroup+"'e taşındın — artık yalnızca grubunla görüşüyorsun."); sysChat('Breakout Odası '+STATE.myGroup+"'desin. Grup arkadaşlarınla çalış."); } else { toast('Öğretmen breakout başlattı.'); } }
 }
-function clearBreakout(){ STATE.breakout=null; STATE.myGroup=null; refreshBreakoutAV(); hideBreakoutBanner(); var bo=$('#bo-result'); if(bo)bo.innerHTML=''; }
+function clearBreakout(){ var was=STATE.breakout,wasG=STATE.myGroup; STATE.breakout=null; STATE.myGroup=null; refreshBreakoutAV(); hideBreakoutBanner(); var bo=$('#bo-result'); if(bo)bo.innerHTML=''; var app=$('#gm-app'); if(app)app.classList.remove('in-breakout'); if(was&&!STATE.isHost){ toast('Ana odaya döndün.'); sysChat('Ana ders odasına döndün.'); } }
 function refreshBreakoutAV(){
   if(!STATE.lkRoom)return;
   STATE.lkRoom.remoteParticipants.forEach(function(p){
@@ -534,6 +562,9 @@ function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classL
 /* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
+var _krisp=null,_krispTried=false,_krispOn=false;
+async function loadKrisp(){ if(_krisp||_krispTried)return _krisp; _krispTried=true; try{ _krisp=await import('https://esm.sh/@livekit/krisp-noise-filter'); }catch(e){ try{ _krisp=await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter/+esm'); }catch(e2){ _krisp=null; } } return _krisp; }
+async function applyNoiseFilter(){ if(_krispOn)return; try{ if(!STATE.lkRoom)return; var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); var at=mp&&mp.audioTrack; if(!at||!at.setProcessor)return; var k=await loadKrisp(); if(!k)return; var KNF=k.KrispNoiseFilter||k.default; if(!KNF)return; await at.setProcessor(KNF()); _krispOn=true; }catch(e){} }
 function buildBgGrid(){
   var g=$('#bg-grid'); g.innerHTML='';
   BGS.forEach(function(b){ var d=document.createElement('button'); d.className='bg-opt '+(b.id==='none'?'none':b.id==='blur'?'blur':'')+(STATE.bg===b.id?' on':''); d.dataset.bg=b.id; if(b.id!=='none'&&b.id!=='blur') d.style.backgroundImage='url("'+bgFile(b.id)+'")'; d.innerHTML='<span>'+b.label+'</span>'; d.addEventListener('click',function(){ $$('.bg-opt').forEach(function(x){x.classList.remove('on');}); d.classList.add('on'); applyBackground(b.id); }); g.appendChild(d); });
@@ -588,6 +619,8 @@ function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
 function attachMatScrollBroadcast(){ var itf=document.getElementById('mat-uni-if'); if(!itf)return;
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;
+    // Sayfa-içi gezinme takibi: öğretmen materyal içinde başka sayfaya giderse öğrencileri de taşı
+    try{ var loc=w.location; var rel=(loc.pathname.replace(/^\/+/,'')+loc.search); if(rel&&/\.html/i.test(rel)&&STATE.matShared){ if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){ STATE.currentMaterial={kind:'unit',value:rel}; sendData({t:'mat',kind:'unit',value:rel,nav:true}); } } }catch(e){}
     var bc=throttle(function(){ if(!STATE.matShared)return; try{ var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; var y=(w.scrollY||w.pageYOffset||0); sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,y/max))}); }catch(e){} },160);
     w.addEventListener('scroll',bc,{passive:true});
   }catch(e){} });

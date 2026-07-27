@@ -33,13 +33,21 @@ var BGS=[
 function bgFile(id){ return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 
 var ROOM_THEMES=[
-  {t:'krem',n:'Krem',a:'#2E6E6A',d:'#123C39',g:'#B78A2E'},{t:'erik',n:'Erik',a:'#8A4A63',d:'#5C3042',g:'#B78A2E'},
-  {t:'orman',n:'Orman',a:'#3E6B4A',d:'#20402B',g:'#B78A2E'},{t:'kum',n:'Kum',a:'#A9772E',d:'#6E4B18',g:'#C89A3C'},
-  {t:'okyanus',n:'Okyanus',a:'#2E5E8A',d:'#1E3E5C',g:'#B78A2E'},{t:'gul',n:'Gül',a:'#B0567A',d:'#7E3A56',g:'#C89A3C'},
-  {t:'bordo',n:'Bordo',a:'#8E3B4C',d:'#5E2632',g:'#C89A3C'},{t:'lavanta',n:'Lavanta',a:'#6E5AA0',d:'#493A6E',g:'#C89A3C'},
-  {t:'dark',n:'Gece',a:'#6FB6AF',d:'#2E6E6A',g:'#D8B25A'}
+  {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#2E6E6A',d:'#1E4E4B',g:'#B78A2E'},
+  {t:'erik',n:'Erik',bg:'#F1E7EC',stage:'#E7DAE0',s1:'#FAF3F6',s2:'#F3E7EC',line:'#E7D6DE',ink:'#2A1E24',isoft:'#6E5A63',ifaint:'#9A8A91',a:'#8A4A63',d:'#5C3042',g:'#B0764A'},
+  {t:'orman',n:'Orman',bg:'#E8EEE5',stage:'#DAE3D6',s1:'#F2F6F0',s2:'#E6EDE4',line:'#D6E0D2',ink:'#1E2A20',isoft:'#586355',ifaint:'#889183',a:'#3E6B4A',d:'#20402B',g:'#8A7A2E'},
+  {t:'kum',n:'Kum',bg:'#F3EAD6',stage:'#E7DBC0',s1:'#FAF3E4',s2:'#F3EAD4',line:'#E3D6BC',ink:'#2A2213',isoft:'#6E6048',ifaint:'#9A8E70',a:'#A9772E',d:'#6E4B18',g:'#8A6A1E'},
+  {t:'okyanus',n:'Okyanus',bg:'#E7EDF3',stage:'#D8E2EC',s1:'#F2F6FA',s2:'#E4EDF4',line:'#D6E0EC',ink:'#1E2A34',isoft:'#556170',ifaint:'#8894A2',a:'#2E5E8A',d:'#1E3E5C',g:'#4A6A8A'},
+  {t:'gul',n:'Gül',bg:'#F3E9EE',stage:'#E7D9E1',s1:'#FAF3F6',s2:'#F3E7EE',line:'#E7D6DF',ink:'#2A1E24',isoft:'#6E5A63',ifaint:'#9A8A91',a:'#B0567A',d:'#7E3A56',g:'#A05A6A'},
+  {t:'bordo',n:'Bordo',bg:'#F1E8EA',stage:'#E5D6DA',s1:'#FAF2F4',s2:'#F2E6E9',line:'#E5D6DA',ink:'#2A1E21',isoft:'#6E5A5E',ifaint:'#9A8A8E',a:'#8E3B4C',d:'#5E2632',g:'#8A4A3B'},
+  {t:'lavanta',n:'Lavanta',bg:'#ECE9F3',stage:'#DED9EC',s1:'#F5F3FA',s2:'#E9E5F2',line:'#DED9EC',ink:'#221E2A',isoft:'#5A566E',ifaint:'#8A86A2',a:'#6E5AA0',d:'#493A6E',g:'#8A6A9A'},
+  {t:'dark',n:'Gece',bg:'#161311',stage:'#0e0c0a',s1:'#211d18',s2:'#2a251f',line:'#352f27',ink:'#F1E9D9',isoft:'#B7AB96',ifaint:'#8A7E6C',a:'#6FB6AF',d:'#2E6E6A',g:'#D8B25A'}
 ];
-function applyRoomTheme(t){ var x=null; for(var i=0;i<ROOM_THEMES.length;i++){ if(ROOM_THEMES[i].t===t){x=ROOM_THEMES[i];break;} } if(!x)x=ROOM_THEMES[0]; var r=document.documentElement.style; r.setProperty('--gm-teal',x.a); r.setProperty('--gm-teal-deep',x.d); r.setProperty('--gm-gold',x.g); try{localStorage.setItem('gri-theme',x.t);}catch(e){} var sel=document.getElementById('gmr-theme'); if(sel)sel.value=x.t; }
+function applyRoomTheme(t){ var x=null; for(var i=0;i<ROOM_THEMES.length;i++){ if(ROOM_THEMES[i].t===t){x=ROOM_THEMES[i];break;} } if(!x)x=ROOM_THEMES[0]; var r=document.documentElement.style;
+  r.setProperty('--gm-bg',x.bg); r.setProperty('--gm-stage',x.stage); r.setProperty('--gm-surface',x.s1); r.setProperty('--gm-surface-2',x.s2); r.setProperty('--gm-line',x.line);
+  r.setProperty('--gm-ink',x.ink); r.setProperty('--gm-ink-soft',x.isoft); r.setProperty('--gm-ink-faint',x.ifaint);
+  r.setProperty('--gm-teal',x.a); r.setProperty('--gm-teal-deep',x.d); r.setProperty('--gm-gold',x.g);
+  try{localStorage.setItem('gri-theme',x.t);}catch(e){} var sel=document.getElementById('gmr-theme'); if(sel)sel.value=x.t; }
 function buildThemeSel(){ var sel=document.getElementById('gmr-theme'); if(!sel)return; ROOM_THEMES.forEach(function(x){ var o=document.createElement('option'); o.value=x.t; o.textContent='Tema: '+x.n; sel.appendChild(o); }); var saved='krem'; try{ saved=localStorage.getItem('gri-theme')||'krem'; }catch(e){} sel.addEventListener('change',function(){ applyRoomTheme(sel.value); }); applyRoomTheme(saved); }
 
 var toastT;
@@ -470,7 +478,7 @@ function buildBgGrid(){
   BGS.forEach(function(b){ var d=document.createElement('button'); d.className='bg-opt '+(b.id==='none'?'none':b.id==='blur'?'blur':'')+(STATE.bg===b.id?' on':''); d.dataset.bg=b.id; if(b.id!=='none'&&b.id!=='blur') d.style.backgroundImage='url("'+bgFile(b.id)+'")'; d.innerHTML='<span>'+b.label+'</span>'; d.addEventListener('click',function(){ $$('.bg-opt').forEach(function(x){x.classList.remove('on');}); d.classList.add('on'); applyBackground(b.id); }); g.appendChild(d); });
 }
 async function applyBackground(bg){
-  STATE.bg=bg; var track=STATE.camTrack;
+  STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} var track=STATE.camTrack;
   if(!track){ toast(STATE.demo?'Arka plan için canlı bağlantı gerekli.':'Kamera açık değil.'); return; }
   var note=$('#bg-note'); if(note)note.textContent='Uygulanıyor…';
   try{
@@ -506,8 +514,10 @@ function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value};
   ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } $('#mat-yt-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>'; matTab('youtube'); }
-  else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame'); frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; applyZoom();
-    fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
+  else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
+    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; applyZoom();
+      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
+    } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); }
   }
   applyZoom();
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
@@ -665,6 +675,7 @@ var ANNO=(function(){
 /* ================= BOOT ================= */
 function boot(){
   if(!STATE.room) STATE.room='DEMO'+Math.floor(Math.random()*90+10);
+  try{ STATE.bg=localStorage.getItem('gm-bg')||'none'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording();
   buildBgGrid(); buildThemeSel(); WB.init(); ANNO.init(); setupGate();

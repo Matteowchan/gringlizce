@@ -19,7 +19,8 @@ var STATE={
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
   bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1,
   camId:'', micId:'', spotlight:null, chatLocked:false,
-  quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null
+  quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null,
+  breakout:null, myGroup:null, boTimer:null
 };
 
 var BGS=[
@@ -113,7 +114,8 @@ async function connectLiveKit(){
     var headers={'Content-Type':'application/json'};
     if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
     var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
-    if(res.ok){ var j=await res.json(); token=j.token; if(j.url)LIVEKIT_URL=j.url; }
+    if(res.status===403){ var e403=await res.json().catch(function(){return{};}); blockJoin(e403.error||'Oda bulunamadı.'); return; }
+    if(res.ok){ var jr=await res.json(); token=jr.token; if(jr.url)LIVEKIT_URL=jr.url; }
   }catch(e){}
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
@@ -149,6 +151,15 @@ function enterDemo(reason){
   refreshPeople(); updateGridCount();
 }
 function setStatus(cls,txt){ $('#gmr-status').className='gmr-status '+cls; $('#gmr-status-txt').textContent=txt; }
+function blockJoin(msg){
+  setStatus('err','Oda yok');
+  var ex=document.getElementById('gmr-block'); if(ex)ex.remove();
+  var b=document.createElement('div'); b.className='gmr-gate'; b.id='gmr-block';
+  b.innerHTML='<div class="gmr-gate-card"><div class="gmr-brand big">Gri<span>Meet</span></div><p style="color:#d66;font-size:15px;margin:16px 0;line-height:1.5">'+esc(msg)+'</p><button class="gmr-btn" id="blk-retry">Tekrar Dene</button><button class="gmr-btn" id="blk-exit" style="background:transparent;border:1px solid var(--gm-line);color:var(--gm-ink-soft);margin-top:8px">Çıkış</button></div>';
+  document.body.appendChild(b);
+  b.querySelector('#blk-retry').addEventListener('click',function(){ b.remove(); connectLiveKit(); });
+  b.querySelector('#blk-exit').addEventListener('click',function(){ location.href='grimeet.html'; });
+}
 function isScreen(pub){ return pub&&(pub.source===LK.Track.Source.ScreenShare); }
 
 function onParticipant(p){ ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)}); refreshPeople(); updateGridCount(); p.trackPublications.forEach(function(pub){ if(pub.isSubscribed&&pub.track) attachTrack(pub.track,pub,p); }); }
@@ -158,7 +169,7 @@ function attachTrack(track,pub,p){
   if(isScreen(pub)){ attachScreen(track,false); return; }
   var t=ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)});
   if(track.kind==='video'){ var v=t.querySelector('video.cam')||document.createElement('video'); v.className='cam'; v.autoplay=true;v.playsInline=true; track.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); if(STATE.spotlight===p.identity) applySpotlightVideo(); }
-  else if(track.kind==='audio'){ var a=document.createElement('audio'); a.autoplay=true; track.attach(a); t.appendChild(a); }
+  else if(track.kind==='audio'){ var a=document.createElement('audio'); a.autoplay=true; track.attach(a); t.appendChild(a); if(STATE.breakout) refreshBreakoutAV(); }
 }
 function attachSelf(){
   var t=ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost});
@@ -308,6 +319,8 @@ function onData(payload,p){
   else if(msg.t==='quiz-reveal'){ if(!STATE.isHost&&fromHost) revealStudentQuiz(msg.correct); }
   else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
+  else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
+  else if(msg.t==='breakout-end'){ if(!STATE.isHost&&fromHost) clearBreakout(); }
   else if(msg.t==='wb'){ WB.applyRemote(msg); }
   else if(msg.t==='anno'){ ANNO.applyRemote(msg.strokes); }
 }
@@ -405,7 +418,49 @@ function revealStudentQuiz(correct){ if(!STATE.quizView)return; STATE.quizView.a
   $('#quiz-score').textContent='Puanın: '+STATE.quizScore;
 }
 
-function makeBreakout(){ var names=studentNames(); if(!names.length){ $('#bo-result').textContent='Öğrenci yok.'; return; } var n=Math.max(2,Math.min(5,parseInt($('#bo-count').value,10)||2)); for(var i=names.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=names[i];names[i]=names[j];names[j]=t; } var groups=[]; for(var g=0;g<n;g++)groups.push([]); names.forEach(function(nm,idx){ groups[idx%n].push(nm); }); $('#bo-result').innerHTML=groups.map(function(gr,idx){ return '<div style="margin-bottom:6px"><b>Grup '+(idx+1)+':</b> '+gr.map(esc).join(', ')+'</div>'; }).join('')+'<div class="mat-resize-note">Ayrı ses odaları bir sonraki sürümde; şimdilik grup listesi.</div>'; }
+function makeBreakout(){
+  if(!STATE.lkRoom){ toast('Breakout için canlı bağlantı gerekli.'); return; }
+  var students=[]; STATE.lkRoom.remoteParticipants.forEach(function(p){ if(!isHostMeta(p)) students.push({id:p.identity,name:p.name||'Öğrenci'}); });
+  if(!students.length){ $('#bo-result').textContent='Öğrenci yok.'; return; }
+  var n=Math.max(2,Math.min(5,parseInt($('#bo-count').value,10)||2));
+  var mins=Math.max(1,Math.min(30,parseInt(($('#bo-mins')&&$('#bo-mins').value)||'5',10)||5));
+  for(var i=students.length-1;i>0;i--){ var jx=Math.floor(Math.random()*(i+1)); var t=students[i];students[i]=students[jx];students[jx]=t; }
+  var map={}; students.forEach(function(s,idx){ map[s.id]=(idx%n)+1; });
+  sendData({t:'breakout',map:map,mins:mins});
+  applyBreakout(map,mins);
+  var byG={}; students.forEach(function(s){ (byG[map[s.id]]=byG[map[s.id]]||[]).push(s.name); });
+  $('#bo-result').innerHTML=Object.keys(byG).sort().map(function(g){ return '<div style="margin-bottom:5px"><b>Grup '+g+':</b> '+byG[g].map(esc).join(', ')+'</div>'; }).join('')+'<button class="dock-btn" id="bo-recall" style="margin-top:8px">Herkesi Geri Çağır</button>';
+  var rc=$('#bo-recall'); if(rc)rc.addEventListener('click',function(){ sendData({t:'breakout-end'}); clearBreakout(); });
+  toast(n+' grup, '+mins+' dk. Her grup yalnızca kendini duyar.');
+}
+function applyBreakout(map,mins){
+  STATE.breakout=map;
+  var myId=STATE.lkRoom?STATE.lkRoom.localParticipant.identity:null;
+  STATE.myGroup=STATE.isHost?0:(map[myId]||null);
+  refreshBreakoutAV(); showBreakoutBanner(mins);
+}
+function clearBreakout(){ STATE.breakout=null; STATE.myGroup=null; refreshBreakoutAV(); hideBreakoutBanner(); var bo=$('#bo-result'); if(bo)bo.innerHTML=''; }
+function refreshBreakoutAV(){
+  if(!STATE.lkRoom)return;
+  STATE.lkRoom.remoteParticipants.forEach(function(p){
+    var t=tileEl(p.identity); if(!t)return;
+    var sameG=STATE.breakout&&(STATE.breakout[p.identity]===STATE.myGroup);
+    var hear=STATE.isHost||isHostMeta(p)||(!STATE.breakout)||sameG;
+    var show=STATE.isHost||(!STATE.breakout)||sameG||isHostMeta(p);
+    var au=t.querySelectorAll('audio'); for(var i=0;i<au.length;i++)au[i].muted=!hear;
+    t.style.display=show?'':'none';
+  });
+  updateGridCount();
+}
+function showBreakoutBanner(mins){
+  var bar=$('#gmr-breakout-bar'); if(!bar)return; bar.classList.remove('hidden');
+  var left=mins*60;
+  function render(){ var lbl=STATE.isHost?'Breakout aktif':('Grubun: '+STATE.myGroup); bar.innerHTML='<span>'+lbl+' · '+fmt(left)+'</span>'+(STATE.isHost?'<button id="bk-recall2">Geri Çağır</button>':''); var r=$('#bk-recall2'); if(r)r.addEventListener('click',function(){ sendData({t:'breakout-end'}); clearBreakout(); }); }
+  render();
+  clearInterval(STATE.boTimer);
+  STATE.boTimer=setInterval(function(){ left--; if(left<=0){ clearInterval(STATE.boTimer); if(STATE.isHost) sendData({t:'breakout-end'}); clearBreakout(); return; } render(); },1000);
+}
+function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classList.add('hidden'); clearInterval(STATE.boTimer); }
 
 /* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;

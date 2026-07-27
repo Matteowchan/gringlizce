@@ -17,9 +17,9 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
-  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false,
+  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1,
   camId:'', micId:'', spotlight:null, chatLocked:false,
-  quiz:null, quizView:null, quizScore:0
+  quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null
 };
 
 var BGS=[
@@ -286,6 +286,7 @@ function onData(payload,p){
   else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='wb'){ WB.applyRemote(msg); }
+  else if(msg.t==='anno'){ ANNO.applyRemote(msg.strokes); }
 }
 function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked}); }
 function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
@@ -312,6 +313,7 @@ function bindTools(){
   $('#timer-stop').addEventListener('click',function(){ clearInterval(timerInt); timerInt=null; $('#timer-display').textContent='00:00'; });
   $('#btn-pick').addEventListener('click',pickStudent);
   $$('#quiz-opts .cor').forEach(function(b){ b.addEventListener('click',function(){ var on=b.classList.contains('on'); $$('#quiz-opts .cor').forEach(function(x){x.classList.remove('on');}); if(!on)b.classList.add('on'); }); });
+  $('#btn-quiz-add').addEventListener('click',addQuizToQueue);
   $('#btn-quiz').addEventListener('click',sendQuiz);
   $('#btn-quiz-reveal').addEventListener('click',revealQuizHost);
   $('#btn-breakout').addEventListener('click',makeBreakout);
@@ -325,19 +327,31 @@ function studentNames(){ var names=[]; if(STATE.lkRoom)STATE.lkRoom.remotePartic
 function pickStudent(){ var names=studentNames(); if(!names.length){ $('#pick-result').textContent='Öğrenci yok.'; return; } var i=0,n=0,max=14+Math.floor(Math.random()*8),el=$('#pick-result'); var iv=setInterval(function(){ el.textContent=names[i%names.length]; i++; n++; if(n>=max){ clearInterval(iv); el.textContent='🎯 '+names[Math.floor(Math.random()*names.length)]; } },80); }
 
 /* ---- Quiz (host) ---- */
+function readQuizForm(){ var q=($('#quiz-q').value||'').trim(); var opts={}; $$('#quiz-opts input[data-opt]').forEach(function(i){ var v=(i.value||'').trim(); if(v)opts[i.dataset.opt]=v; }); var c=$('#quiz-opts .cor.on'); return {q:q,opts:opts,correct:c?c.dataset.cor:null}; }
+function clearQuizForm(){ $('#quiz-q').value=''; $$('#quiz-opts input[data-opt]').forEach(function(i){i.value='';}); $$('#quiz-opts .cor').forEach(function(x){x.classList.remove('on');}); }
+function quizFilled(f){ return !!(f.q||Object.keys(f.opts).length||f.correct); }
+function updateQueueLabel(){ var el=$('#quiz-queue'); if(el)el.textContent=STATE.quizQueue.length?(STATE.quizQueue.length+' soru kuyrukta'):''; }
+function addQuizToQueue(){ var f=readQuizForm(); if(!quizFilled(f)){ toast('Önce soru/şık doldur.'); return; } STATE.quizQueue.push(f); clearQuizForm(); updateQueueLabel(); toast('Kuyruğa eklendi ('+STATE.quizQueue.length+').'); }
 function sendQuiz(){
-  var q=($('#quiz-q').value||'').trim();
-  var opts={}; $$('#quiz-opts input[data-opt]').forEach(function(i){ var v=(i.value||'').trim(); if(v)opts[i.dataset.opt]=v; });
-  var corBtn=$('#quiz-opts .cor.on'); var correct=corBtn?corBtn.dataset.cor:null;
-  STATE.quiz={q:q,opts:opts,correct:correct,votes:{},active:true};
-  sendData({t:'quiz',q:q,opts:opts,dur:30});
+  var cur=readQuizForm(); var list=STATE.quizQueue.slice(); if(quizFilled(cur)) list.push(cur);
+  if(!list.length) list.push({q:'Doğru cevap hangisi?',opts:{},correct:null});
+  STATE.quizSet={list:list,pos:0}; STATE.quizQueue=[]; clearQuizForm(); updateQueueLabel();
+  sendSetQuestion();
+}
+function sendSetQuestion(){
+  var s=STATE.quizSet; var item=s.list[s.pos];
+  STATE.quiz={q:item.q,opts:item.opts,correct:item.correct,votes:{},active:true};
+  sendData({t:'quiz',q:item.q,opts:item.opts,dur:30,idx:s.pos+1,total:s.list.length});
   renderQuizTallyHost();
-  $('#btn-quiz-reveal').style.display=correct?'block':'none';
-  toast('Quiz gönderildi.');
+  var rb=$('#btn-quiz-reveal'); rb.style.display='block'; rb.textContent=item.correct?'Doğru cevabı göster':'Sonucu göster';
+  toast('Soru '+(s.pos+1)+'/'+s.list.length+' gönderildi.');
 }
 function renderQuizTallyHost(){ var el=$('#quiz-tally'); if(!el||!STATE.quiz)return; var v=STATE.quiz.votes; var tot=(v.A||0)+(v.B||0)+(v.C||0)+(v.D||0)||1;
   el.innerHTML='<div style="margin-bottom:6px">Cevaplar: '+((v.A||0)+(v.B||0)+(v.C||0)+(v.D||0))+'</div>'+['A','B','C','D'].map(function(k){ return '<div class="qrow'+(STATE.quiz.correct===k?' correct':'')+'"><b>'+k+'</b><div class="qbar" style="width:'+((v[k]||0)/tot*150)+'px"></div><span>'+(v[k]||0)+'</span></div>'; }).join(''); }
-function revealQuizHost(){ if(!STATE.quiz)return; STATE.quiz.active=false; sendData({t:'quiz-reveal',correct:STATE.quiz.correct}); renderQuizTallyHost(); toast('Doğru cevap gösterildi.'); }
+function revealQuizHost(){ if(!STATE.quiz)return; var s=STATE.quizSet;
+  if(STATE.quiz.active){ STATE.quiz.active=false; sendData({t:'quiz-reveal',correct:STATE.quiz.correct}); renderQuizTallyHost();
+    if(s&&s.pos<s.list.length-1){ $('#btn-quiz-reveal').textContent='Sonraki Soru ›'; } else { $('#btn-quiz-reveal').style.display='none'; if(s){ toast('Set bitti.'); STATE.quizSet=null; } }
+  } else if(s&&s.pos<s.list.length-1){ s.pos++; sendSetQuestion(); } }
 
 /* ---- Quiz (student popup) ---- */
 function openStudentQuiz(msg){
@@ -348,9 +362,10 @@ function openStudentQuiz(msg){
   $('#quiz-score').textContent=STATE.quizScore?('Puanın: '+STATE.quizScore):'';
   var ans=$('#quiz-answers'); ans.innerHTML='';
   ['A','B','C','D'].forEach(function(k){ var b=document.createElement('button'); b.dataset.k=k; b.innerHTML='<span class="k">'+k+'</span> '+esc((msg.opts&&msg.opts[k])||''); b.addEventListener('click',function(){ studentAnswer(k); }); ans.appendChild(b); });
-  var dur=msg.dur||30; $('#quiz-count').textContent='('+dur+')';
+  var pfx=msg.idx?(msg.idx+'/'+msg.total+' · '):'';
+  var dur=msg.dur||30; $('#quiz-count').textContent=pfx+'('+dur+')';
   clearInterval(STATE._qiv); var left=dur;
-  STATE._qiv=setInterval(function(){ left--; $('#quiz-count').textContent='('+left+')'; if(left<=0){ clearInterval(STATE._qiv); $('#quiz-count').textContent=''; if(!STATE.quizView.answered){ lockAnswers(); $('#quiz-feedback').textContent='Süre doldu.'; } } },1000);
+  STATE._qiv=setInterval(function(){ left--; $('#quiz-count').textContent=pfx+'('+left+')'; if(left<=0){ clearInterval(STATE._qiv); $('#quiz-count').textContent=(msg.idx?msg.idx+'/'+msg.total:''); if(!STATE.quizView.answered){ lockAnswers(); $('#quiz-feedback').textContent='Süre doldu.'; } } },1000);
 }
 function studentAnswer(k){ if(!STATE.quizView||STATE.quizView.answered)return; STATE.quizView.answered=true; STATE.quizView.picked=k; lockAnswers();
   var b=$('#quiz-answers button[data-k="'+k+'"]'); if(b)b.classList.add('picked');
@@ -402,14 +417,24 @@ function bindMaterials(){
     if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
     else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
+  $('#mat-zoom-in').addEventListener('click',function(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); });
+  $('#mat-zoom-out').addEventListener('click',function(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); });
+  var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); });
 }
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value};
+  ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } $('#mat-yt-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>'; matTab('youtube'); }
-  else if(m.kind==='unit'){ var src=remote?materialProxy(m.value):m.value; $('#mat-unit-frame').innerHTML='<iframe src="'+esc(src)+'" title="Ünite"></iframe>'; matTab('unite'); }
+  else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
+    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Ünite"></iframe>'; applyZoom();
+      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Materyal yüklenemedi.</div>'; });
+    } else { frame.innerHTML='<iframe src="'+esc(m.value)+'" title="Ünite"></iframe>'; }
+  }
+  applyZoom();
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
 }
+function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var v=$('#mat-zoom-val'); if(v)v.textContent=Math.round(STATE.matZoom*100)+'%'; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
 function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); }
 function buildUnitSelectors(){
@@ -475,6 +500,7 @@ var WB=(function(){
     cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
     window.addEventListener('resize',resize);
     document.addEventListener('keydown',function(e){ if(STATE.mode!=='board')return; var m=(e.ctrlKey||e.metaKey); if(m&&e.key==='c')$('#wb-copy').click(); else if(m&&e.key==='x')$('#wb-cut').click(); else if(m&&e.key==='v')$('#wb-paste').click(); else if(m&&e.key==='z')$('#wb-undo').click(); else if(e.key==='Delete'&&sel!=null){ items.splice(sel,1);sel=null;redraw();broadcast(); } });
+    if(window.ResizeObserver){ try{ new ResizeObserver(function(){ resize(); }).observe(wrap); }catch(e){} }
     resize();
   }
   function strip(it){ var c=Object.assign({},it); delete c._img; return c; }
@@ -483,7 +509,7 @@ var WB=(function(){
   function shift(it,dx,dy){ if(it.points)it.points.forEach(function(p){p.x+=dx;p.y+=dy;}); else{ it.x+=dx; it.y+=dy; } }
   function bbox(it){ if(it.points){ var xs=it.points.map(function(p){return p.x;}),ys=it.points.map(function(p){return p.y;}); return {x:Math.min.apply(0,xs),y:Math.min.apply(0,ys),w:Math.max.apply(0,xs)-Math.min.apply(0,xs),h:Math.max.apply(0,ys)-Math.min.apply(0,ys)}; } if(it.type==='text'){ var lines=it.lines||[it.text||'']; var mw=0; lines.forEach(function(l){ mw=Math.max(mw,(l||'').length); }); return {x:it.x,y:it.y-it.size,w:mw*it.size*0.56,h:lines.length*it.size*1.25}; } return {x:Math.min(it.x,it.x+it.w),y:Math.min(it.y,it.y+it.h),w:Math.abs(it.w),h:Math.abs(it.h)}; }
   function hit(pt){ for(var i=items.length-1;i>=0;i--){ var b=bbox(items[i]); if(pt.x>=b.x-6&&pt.x<=b.x+b.w+6&&pt.y>=b.y-6&&pt.y<=b.y+b.h+6)return i; } return -1; }
-  function down(e){ e.preventDefault(); var p=pos(e);
+  function down(e){ e.preventDefault(); if(!W||!H){ resize(); if(!W||!H)return; } var p=pos(e);
     if(tool==='select'){ sel=hit(p); if(sel>=0)dragOff={x:p.x,y:p.y,orig:JSON.parse(JSON.stringify(strip(items[sel])))}; redraw(); return; }
     if(tool==='text'||tool==='bullet'){ placeText(p.x,p.y,tool==='bullet'); return; }
     drawing=true; startPt=p;
@@ -524,12 +550,38 @@ var WB=(function(){
   return {init:init,resize:resize,applyRemote:applyRemote,getCanvas:function(){return cv;},items:function(){return items.map(strip);}};
 })();
 
+/* ================= ANNOTATION OVERLAY (materyal üstü çizim) ================= */
+var ANNO=(function(){
+  var cv,ctx,W=0,H=0,dpr=1,tool='pen',color='#d64545',strokes=[],cur=null,drawing=false;
+  var COLORS=['#d64545','#2E6E6A','#2E5E8A','#B78A2E','#1b1b1b','#ffffff'];
+  function init(){ cv=$('#anno-canvas'); if(!cv)return; ctx=cv.getContext('2d');
+    var cc=$('#anno-colors'); COLORS.forEach(function(c,i){ var b=document.createElement('button'); b.style.background=c; if(i===0)b.classList.add('on'); b.dataset.color=c; cc.appendChild(b); });
+    cc.addEventListener('click',function(e){ var b=e.target.closest('[data-color]'); if(!b)return; color=b.dataset.color; $$('#anno-colors button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); });
+    $$('.anno-tool[data-atool]').forEach(function(b){ b.addEventListener('click',function(){ tool=b.dataset.atool; $$('.anno-tool[data-atool]').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); }); });
+    $('#anno-clear').addEventListener('click',function(){ strokes=[]; redraw(); broadcast(); });
+    cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+    if(window.ResizeObserver){ try{ new ResizeObserver(function(){ resize(); }).observe(cv); }catch(e){} }
+    window.addEventListener('resize',resize); resize();
+  }
+  function resize(){ if(!cv)return; var r=cv.getBoundingClientRect(); if(!r.width)return; dpr=window.devicePixelRatio||1; cv.width=r.width*dpr; cv.height=r.height*dpr; W=r.width;H=r.height; ctx.setTransform(dpr,0,0,dpr,0,0); redraw(); }
+  function pos(e){ var r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width, y:(e.clientY-r.top)/r.height}; }
+  function down(e){ e.preventDefault(); if(!W||!H){ resize(); if(!W||!H)return; } drawing=true; var p=pos(e); cur={tool:tool,color:tool==='eraser'?null:color,size:(tool==='highlighter'?11:tool==='eraser'?26:3)/1000,alpha:tool==='highlighter'?0.35:1,pts:[p]}; strokes.push(cur); redraw(); }
+  function move(e){ if(!drawing||!cur)return; cur.pts.push(pos(e)); redraw(); }
+  function up(){ if(drawing){ drawing=false; cur=null; broadcast(); } }
+  function drawStroke(s){ ctx.save(); if(s.tool==='eraser'){ ctx.globalCompositeOperation='destination-out'; ctx.strokeStyle='rgba(0,0,0,1)'; } else { ctx.globalAlpha=s.alpha||1; ctx.strokeStyle=s.color; } ctx.lineWidth=Math.max(1,(s.size||0.003)*W); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath(); s.pts.forEach(function(p,i){ var x=p.x*W,y=p.y*H; i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); ctx.restore(); }
+  function redraw(){ if(!ctx)return; ctx.clearRect(0,0,W,H); strokes.forEach(drawStroke); }
+  function broadcast(){ sendData({t:'anno',strokes:strokes}); }
+  function applyRemote(s){ if(!s)return; strokes=s; resize(); }
+  function reset(bc){ strokes=[]; redraw(); if(bc)broadcast(); }
+  return {init:init,resize:resize,applyRemote:applyRemote,reset:reset};
+})();
+
 /* ================= BOOT ================= */
 function boot(){
   if(!STATE.room) STATE.room='DEMO'+Math.floor(Math.random()*90+10);
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording();
-  buildBgGrid(); WB.init(); setupGate();
+  buildBgGrid(); WB.init(); ANNO.init(); setupGate();
   window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);

@@ -21,7 +21,8 @@ var STATE={
   camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
-  waitingRoom:false, admitted:false, pending:[], _admitTimer:null
+  waitingRoom:false, admitted:false, pending:[], _admitTimer:null,
+  attendance:{}, points:{}, pnames:{}, startedAt:null
 };
 
 var BGS=[
@@ -106,7 +107,7 @@ function setupGate(){
 
 /* ================= ENTER ROOM ================= */
 async function enterRoom(){
-  startTs=Date.now(); setInterval(tickClock,1000);
+  startTs=Date.now(); STATE.startedAt=Date.now(); recordAttend('self',STATE.name+(STATE.isHost?' (Öğretmen)':' (Sen)')); setInterval(tickClock,1000);
   $('#gmr-room-name').textContent=STATE.isHost?'Ders Odası (Öğretmen)':'Ders Odası';
   $('#gmr-code').textContent=STATE.room||'·····';
   if(STATE.isHost) $('#gm-app').classList.add('is-host'); else $('#gm-app').classList.add('is-student');
@@ -130,7 +131,7 @@ async function connectLiveKit(){
   try{
     var room=new LK.Room({adaptiveStream:true,dynacast:true}); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,onParticipant);
-    room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
+    room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
     room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı'); });
     room.on(LK.RoomEvent.TrackSubscribed,function(track,pub,p){ attachTrack(track,pub,p); });
@@ -188,7 +189,7 @@ function blockJoin(msg){
 }
 function isScreen(pub){ return pub&&(pub.source===LK.Track.Source.ScreenShare); }
 
-function onParticipant(p){ ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)}); refreshPeople(); updateGridCount(); p.trackPublications.forEach(function(pub){ if(pub.isSubscribed&&pub.track) attachTrack(pub.track,pub,p); }); }
+function onParticipant(p){ ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)}); recordAttend(p.identity,p.name||'Öğrenci'); refreshPeople(); updateGridCount(); p.trackPublications.forEach(function(pub){ if(pub.isSubscribed&&pub.track) attachTrack(pub.track,pub,p); }); }
 function isHostMeta(p){ try{ return (p.metadata&&JSON.parse(p.metadata).host)===true; }catch(e){ return false; } }
 
 function attachTrack(track,pub,p){
@@ -340,6 +341,7 @@ function bindHostActions(){
   var lh=$('#btn-lower-hands'); if(lh)lh.addEventListener('click',function(){ sendData({t:'lower-hands'}); Object.keys(STATE.tiles).forEach(function(id){ var h=STATE.tiles[id].querySelector('.hand'); if(h)h.remove(); }); STATE.hands=[]; renderHandQueue(); toast('Tüm eller indirildi.'); });
   var hq=$('#hand-queue'); if(hq)hq.addEventListener('click',function(e){ var b=e.target.closest('[data-lower]'); if(!b)return; var id=b.getAttribute('data-lower'); sendData({t:'lower-one',target:id}); handQueueRemove(id); var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(h)h.remove(); } });
   var tc=$('#btn-toggle-chat'); if(tc)tc.addEventListener('click',function(){ STATE.chatLocked=!STATE.chatLocked; this.textContent=STATE.chatLocked?'Sohbeti Aç':'Sohbeti Kapat'; sendData({t:'chat-lock',on:STATE.chatLocked}); toast(STATE.chatLocked?'Öğrenci sohbeti kapatıldı.':'Sohbet açıldı.'); });
+  var ep=$('#btn-endpkg'); if(ep)ep.addEventListener('click',endLessonPackage);
 }
 
 /* ================= DATA ================= */
@@ -348,9 +350,9 @@ function sendData(obj){ if(!STATE.lkRoom||!STATE.connected)return; try{ STATE.lk
 function onData(payload,p){
   var msg; try{ msg=JSON.parse(decd.decode(payload)); }catch(e){ return; }
   var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;
-  if(msg.t==='chat') addChat(from,msg.text);
-  else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); } else handQueueRemove(id); } }
-  else if(msg.t==='react'){ floatReact(msg.e); }
+  if(msg.t==='chat'){ addChat(from,msg.text); if(STATE.isHost&&id)addPoint(id,from,1); }
+  else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); if(STATE.isHost)addPoint(id,from,1); } else handQueueRemove(id); } }
+  else if(msg.t==='react'){ floatReact(msg.e); if(STATE.isHost&&id)addPoint(id,from,1); }
   else if(msg.t==='lower-one'){ if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); sendData({t:'hand',up:false}); } }
   else if(msg.t==='room-closed'){ if(!STATE.isHost&&fromHost){ toast('Öğretmen odayı kapattı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='knock'){ if(STATE.isHost&&id){ if(STATE.waitingRoom) addPending(id,from); else sendData({t:'admit',target:id}); } }
@@ -366,7 +368,7 @@ function onData(payload,p){
   else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
   else if(msg.t==='chat-lock'){ if(!STATE.isHost&&fromHost){ STATE.chatLocked=msg.on; applyChatLock(); } }
   else if(msg.t==='quizset'){ if(!STATE.isHost&&fromHost) openQuizSet(msg.list,msg.dur); }
-  else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizSet){ var vi=msg.idx||0; var vv=STATE.quizSet.votes[vi]=STATE.quizSet.votes[vi]||{}; vv[msg.a]=(vv[msg.a]||0)+1; renderQuizSetTally(); } }
+  else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizSet){ var vi=msg.idx||0; var vv=STATE.quizSet.votes[vi]=STATE.quizSet.votes[vi]||{}; vv[msg.a]=(vv[msg.a]||0)+1; renderQuizSetTally(); addPoint(id,msg.name||from,2); } }
   else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); }
   else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
@@ -611,7 +613,8 @@ function buildPresets(){ var el=$('#mat-presets'); if(!el)return; var P=[
   {l:'IELTS Listening',p:'ielts-bolum-calisma.html?bolum=listening'},{l:'IELTS Reading',p:'ielts-bolum-calisma.html?bolum=reading'},
   {l:'IELTS Writing',p:'ielts-bolum-calisma.html?bolum=writing'},{l:'IELTS Deneme',p:'ielts-deneme.html'},
   {l:'TOEFL',p:'toefl-ogren.html'},{l:'YDS',p:'yds-ogren.html'},{l:'YDT',p:'ydt-ogren.html'},
-  {l:'SAT Öğren',p:'sat-ogren.html'},{l:'Seviye Testi',p:'seviye-belirleme.html'}
+  {l:'SAT Öğren',p:'sat-ogren.html'},{l:'Seviye Testi',p:'seviye-belirleme.html'},
+  {l:'Soru Bankası',p:'soru-bankasi.html'},{l:'Kelime Bankası',p:'kelime-bankasi.html'}
 ];
   P.forEach(function(x){ var b=document.createElement('button'); b.textContent=x.l; b.addEventListener('click',function(){ var u=$('#mat-page-url'); if(u)u.value=x.p; loadMaterial({kind:'unit',value:x.p},false); }); el.appendChild(b); }); }
 function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); var lk=$('#mat-lock'); if(lk) lk.classList.toggle('on',which==='unite'); }
@@ -676,6 +679,7 @@ var WB=(function(){
     $('#wb-undo').addEventListener('click',function(){ items.pop(); sel=null; redraw(); broadcast(); });
     $('#wb-clear').addEventListener('click',function(){ if(confirm('Tahta temizlensin mi?')){ items=[]; sel=null; redraw(); broadcast(); } });
     cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+    cv.addEventListener('dblclick',function(e){ var p=pos(e); var i=hit(p); if(i>=0&&items[i]&&items[i].type==='text') editText(i); });
     window.addEventListener('resize',resize);
     document.addEventListener('keydown',function(e){ if(STATE.mode!=='board')return; var m=(e.ctrlKey||e.metaKey); if(m&&e.key==='c')$('#wb-copy').click(); else if(m&&e.key==='x')$('#wb-cut').click(); else if(m&&e.key==='v')$('#wb-paste').click(); else if(m&&e.key==='z')$('#wb-undo').click(); else if(e.key==='Delete'&&sel!=null){ items.splice(sel,1);sel=null;redraw();broadcast(); } });
     if(window.ResizeObserver){ try{ new ResizeObserver(function(){ resize(); }).observe(wrap); }catch(e){} }
@@ -709,6 +713,20 @@ var WB=(function(){
     ta.addEventListener('blur',commit);
     ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
     ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.value=''; ta.blur(); } else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ ta.blur(); } });
+  }
+  function editText(idx){
+    var it=items[idx]; if(!it||it.type!=='text')return;
+    var ex=$('#gmr-wb-textarea'); if(ex)ex.remove();
+    var fs=it.size||24, ta=document.createElement('textarea'); ta.id='gmr-wb-textarea';
+    ta.style.left=it.x+'px'; ta.style.top=(it.y-fs*0.9)+'px'; ta.style.color=it.color; ta.style.fontSize=fs+'px';
+    var lines=it.lines||[it.text||''];
+    var isBullet=lines.some(function(l){return /^•\s/.test(l);});
+    ta.value=lines.map(function(l){return l.replace(/^•\s+/,'');}).join('\n');
+    wrap.appendChild(ta); ta.focus(); ta.select(); ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px';
+    function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ var ls=v.split('\n'); if(isBullet)ls=ls.map(function(l){return l.trim()?'•  '+l:l;}); items[idx].lines=ls; delete items[idx].text; } else { items.splice(idx,1); sel=null; } redraw(); broadcast(); ta.remove(); }
+    ta.addEventListener('blur',commit);
+    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
+    ta.addEventListener('keydown',function(e){ if(e.key==='Escape')ta.blur(); else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))ta.blur(); });
   }
   function onImage(e){ var f=e.target.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){ var mw=Math.min(340,img.width),ratio=img.height/img.width; items.push({type:'img',x:W/2-mw/2,y:H/2-mw*ratio/2,w:mw,h:mw*ratio,src:rd.result,_img:img}); redraw(); broadcast(); }; img.src=rd.result; }; rd.readAsDataURL(f); e.target.value=''; }
   function drawItem(it){
@@ -780,6 +798,23 @@ function bindCloseRoom(){ var b=$('#btn-close-room'); if(!b)return; b.addEventLi
   sendData({t:'room-closed'}); toast('Oda kapatıldı.'); clearInterval(STATE._hb); setTimeout(hardLeave,900);
 }); }
 function startHeartbeat(){ if(!STATE.isHost)return; clearInterval(STATE._hb); STATE._hb=setInterval(async function(){ try{ var h={'Content-Type':'application/json'}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ h['Authorization']='Bearer '+s.data.session.access_token; h['apikey']=SUPABASE_ANON_KEY; } } fetch(TOKEN_ENDPOINT,{method:'POST',headers:h,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:true,heartbeat:true})}); }catch(e){} },5*60*1000); }
+
+/* ================= YOKLAMA + KATILIM PUANI + DERS SONU ================= */
+function recordAttend(id,name){ if(!id)return; if(!STATE.attendance[id]) STATE.attendance[id]={name:name||'Öğrenci',joined:Date.now(),left:null}; if(name)STATE.pnames[id]=name; }
+function attendLeave(id){ if(STATE.attendance[id]&&!STATE.attendance[id].left) STATE.attendance[id].left=Date.now(); }
+function addPoint(id,name,n){ if(!STATE.isHost||!id)return; STATE.points[id]=(STATE.points[id]||0)+n; if(name)STATE.pnames[id]=name; renderPoints(); }
+function renderPoints(){ var el=$('#points-list'); if(!el)return; var arr=Object.keys(STATE.points).map(function(id){ return {name:STATE.pnames[id]||'Öğrenci',p:STATE.points[id]}; }).sort(function(a,b){return b.p-a.p;}); if(!arr.length)return; el.innerHTML=arr.map(function(x,i){ return '<div class="pt-row"><span class="pt-rank">'+(i+1)+'</span><span class="pt-nm">'+esc(x.name)+'</span><span class="pt-val">'+x.p+'</span></div>'; }).join(''); }
+function dstamp(){ var d=new Date(); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes()); }
+function endLessonPackage(){
+  try{ var cv=WB.getCanvas(); if(cv&&cv.width){ var url=cv.toDataURL('image/png'); var a=document.createElement('a'); a.href=url; a.download='gri-meet-tahta-'+dstamp()+'.png'; document.body.appendChild(a); a.click(); a.remove(); } }catch(e){}
+  var dur=STATE.startedAt?fmt((Date.now()-STATE.startedAt)/1000):'—';
+  var att=Object.keys(STATE.attendance).map(function(id){ var a=STATE.attendance[id]; var mins=Math.max(1,Math.round(((a.left||Date.now())-a.joined)/60000)); return '<tr><td>'+esc(a.name)+'</td><td>'+mins+' dk</td></tr>'; }).join('')||'<tr><td colspan=2>—</td></tr>';
+  var pts=Object.keys(STATE.points).map(function(id){ return {n:STATE.pnames[id]||'Öğrenci',p:STATE.points[id]}; }).sort(function(a,b){return b.p-a.p;}).map(function(x,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(x.n)+'</td><td>'+x.p+'</td></tr>'; }).join('')||'<tr><td colspan=3>—</td></tr>';
+  var notes=esc(($('#notes-ta')&&$('#notes-ta').value)||'');
+  var html='<!doctype html><meta charset="utf-8"><title>Gri Meet Ders Özeti</title><body style="font-family:Arial,sans-serif;max-width:760px;margin:24px auto;color:#241E17"><h1 style="color:#2C5856">Gri Meet — Ders Özeti</h1><p><b>Oda:</b> '+esc(STATE.room)+' &nbsp; <b>Tarih:</b> '+new Date().toLocaleString('tr-TR')+' &nbsp; <b>Süre:</b> '+dur+'</p><h2>Yoklama</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>Katılımcı</th><th>Süre</th></tr>'+att+'</table><h2>Katılım Puanı</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>#</th><th>Öğrenci</th><th>Puan</th></tr>'+pts+'</table>'+(notes?'<h2>Notlar</h2><pre style="white-space:pre-wrap;background:#f5f0e3;padding:12px;border-radius:8px">'+notes+'</pre>':'')+'</body>';
+  var b=new Blob([html],{type:'text/html'}),u=URL.createObjectURL(b),a2=document.createElement('a'); a2.href=u; a2.download='gri-meet-ders-ozeti-'+dstamp()+'.html'; document.body.appendChild(a2); a2.click(); setTimeout(function(){URL.revokeObjectURL(u);a2.remove();},800);
+  toast('Ders paketi indirildi (tahta PNG + özet).');
+}
 
 /* ================= BOOT ================= */
 function boot(){

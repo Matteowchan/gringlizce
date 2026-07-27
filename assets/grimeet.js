@@ -26,7 +26,7 @@ var BGS=[
   {id:'bg-01',label:'Dağlar'},{id:'bg-02',label:'Orman & Deniz'},{id:'bg-03',label:'Yeşil Orman'},
   {id:'bg-04',label:'Şelale'},{id:'bg-05',label:'Altın Tarla'},{id:'bg-06',label:'Puslu Çayır'},
   {id:'bg-07',label:'Kayalık Sahil'},{id:'bg-08',label:'Çiçekler'},{id:'bg-09',label:'Çöl Gecesi'},
-  {id:'bg-10',label:'Kır Çiçekleri'}
+  {id:'bg-10',label:'Kır Çiçekleri'},{id:'bg-11',label:'Sınıf'}
 ];
 function bgFile(id){ return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 

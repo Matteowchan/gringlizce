@@ -300,6 +300,7 @@ var EXAMS=[
       { label: "Seviyeler", href: "genel-ingilizce.html" },
       { label: "Exercises", href: "genel-odevler.html" } ] },
     { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
+    { label: "Gri Meet", href: "grimeet.html" },
     { label: "AI Detector", href: "ai-araclari.html" },
     { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
     { label: "Blog", href: "blog.html", children: [

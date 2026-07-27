@@ -31,6 +31,16 @@ var BGS=[
 ];
 function bgFile(id){ return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 
+var ROOM_THEMES=[
+  {t:'krem',n:'Krem',a:'#2E6E6A',d:'#123C39',g:'#B78A2E'},{t:'erik',n:'Erik',a:'#8A4A63',d:'#5C3042',g:'#B78A2E'},
+  {t:'orman',n:'Orman',a:'#3E6B4A',d:'#20402B',g:'#B78A2E'},{t:'kum',n:'Kum',a:'#A9772E',d:'#6E4B18',g:'#C89A3C'},
+  {t:'okyanus',n:'Okyanus',a:'#2E5E8A',d:'#1E3E5C',g:'#B78A2E'},{t:'gul',n:'Gül',a:'#B0567A',d:'#7E3A56',g:'#C89A3C'},
+  {t:'bordo',n:'Bordo',a:'#8E3B4C',d:'#5E2632',g:'#C89A3C'},{t:'lavanta',n:'Lavanta',a:'#6E5AA0',d:'#493A6E',g:'#C89A3C'},
+  {t:'dark',n:'Gece',a:'#6FB6AF',d:'#2E6E6A',g:'#D8B25A'}
+];
+function applyRoomTheme(t){ var x=null; for(var i=0;i<ROOM_THEMES.length;i++){ if(ROOM_THEMES[i].t===t){x=ROOM_THEMES[i];break;} } if(!x)x=ROOM_THEMES[0]; var r=document.documentElement.style; r.setProperty('--gm-teal',x.a); r.setProperty('--gm-teal-deep',x.d); r.setProperty('--gm-gold',x.g); try{localStorage.setItem('gri-theme',x.t);}catch(e){} var sel=document.getElementById('gmr-theme'); if(sel)sel.value=x.t; }
+function buildThemeSel(){ var sel=document.getElementById('gmr-theme'); if(!sel)return; ROOM_THEMES.forEach(function(x){ var o=document.createElement('option'); o.value=x.t; o.textContent='Tema: '+x.n; sel.appendChild(o); }); var saved='krem'; try{ saved=localStorage.getItem('gri-theme')||'krem'; }catch(e){} sel.addEventListener('change',function(){ applyRoomTheme(sel.value); }); applyRoomTheme(saved); }
+
 var toastT;
 function toast(m){var t=$('#gmr-toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 function initials(n){n=(n||'?').trim();var p=n.split(/\s+/);return ((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase();}
@@ -210,7 +220,11 @@ function applySpotlightVideo(){
 
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} refreshPeople(); });
-  $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0'); if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){} if(!STATE.camOn) renderPlaceholder('self'); } });
+  $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
+    if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
+      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if(STATE.bg!=='none') applyBackground(STATE.bg); } }
+      else { STATE.camTrack=null; renderPlaceholder('self'); } } });
+  $('#ctrl-tools').addEventListener('click',function(){ toggleDock('tools'); });
   $('#ctrl-share').addEventListener('click',shareScreen);
   $('#ctrl-board').addEventListener('click',function(){ setMode(STATE.mode==='board'?'grid':'board'); });
   $('#ctrl-materials').addEventListener('click',function(){ setMode(STATE.mode==='materials'?'grid':'materials'); });
@@ -227,7 +241,7 @@ function bindControls(){
     else if(b.dataset.act==='kick'){ if(confirm('Bu katılımcı çıkarılsın mı?')){ sendData({t:'kick',target:id}); toast('Çıkarma isteği gönderildi.'); } } });
   $$('[data-close-modal]').forEach(function(x){ x.addEventListener('click',function(){ x.closest('.gmr-modal').classList.add('hidden'); }); });
   $$('.gmr-modal').forEach(function(m){ if(m.id==='quiz-modal')return; m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
-  $('#dock-close').addEventListener('click',function(){ $('#gmr-dock').classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); });
+  $('#dock-close').addEventListener('click',function(){ $('#gmr-dock').classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); var ct=$('#ctrl-tools'); if(ct)ct.classList.remove('active'); });
   bindSplit(); bindDockResize();
 }
 function bindDockResize(){
@@ -239,11 +253,12 @@ function bindDockResize(){
 }
 function toggleDock(which){
   var dock=$('#gmr-dock'), open=!dock.classList.contains('hidden'), cur=dock.getAttribute('data-active');
-  if(open&&cur===which){ dock.classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); return; }
+  function syncCtrls(w){ $('#ctrl-people').classList.toggle('active',w==='people'); $('#ctrl-chat').classList.toggle('active',w==='chat'); var ct=$('#ctrl-tools'); if(ct)ct.classList.toggle('active',w==='tools'); }
+  if(open&&cur===which){ dock.classList.add('hidden'); syncCtrls(null); return; }
   dock.classList.remove('hidden'); dock.setAttribute('data-active',which);
   $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); });
   $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); });
-  $('#ctrl-people').classList.toggle('active',which==='people'); $('#ctrl-chat').classList.toggle('active',which==='chat');
+  syncCtrls(which);
   if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); }
 }
 function bindDockTabs(){ $$('.dock-tab').forEach(function(t){ t.addEventListener('click',function(){ toggleDockTab(t.dataset.dock); }); }); }
@@ -597,7 +612,7 @@ function boot(){
   if(!STATE.room) STATE.room='DEMO'+Math.floor(Math.random()*90+10);
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording();
-  buildBgGrid(); WB.init(); ANNO.init(); setupGate();
+  buildBgGrid(); buildThemeSel(); WB.init(); ANNO.init(); setupGate();
   window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);

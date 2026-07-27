@@ -18,7 +18,7 @@ var STATE={
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
   bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1,
-  camId:'', micId:'', spotlight:null, chatLocked:false,
+  camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null
 };
@@ -209,8 +209,8 @@ function ensureTile(id,info){
 function renderPlaceholder(id){ var t=tileEl(id); if(!t)return; var v=t.querySelector('video.cam'); if(v)v.remove(); if(!t.querySelector('.avatar')){ var d=document.createElement('div'); d.className='avatar'; d.innerHTML='<span>'+initials(t.querySelector('.nm').textContent)+'</span>'; t.insertBefore(d,t.firstChild); } }
 function removeTile(id){ var t=tileEl(id); if(t){t.remove(); delete STATE.tiles[id]; updateGridCount();} }
 function updateMic(id,on){ var t=tileEl(id); if(!t)return; var nm=t.querySelector('.name'); var m=nm.querySelector('.mic-off'); if(!on&&!m){ var s=document.createElement('span'); s.className='mic-off'; s.textContent='🔇'; nm.appendChild(s);} else if(on&&m)m.remove(); }
-function onSpeakers(sp){ var ids={}; sp.forEach(function(p){ ids[(STATE.lkRoom&&p.identity===STATE.lkRoom.localParticipant.identity)?'self':p.identity]=1; }); Object.keys(STATE.tiles).forEach(function(id){ STATE.tiles[id].classList.toggle('speaking',!!ids[id]); }); }
-function updateGridCount(){ var n=Object.keys(STATE.tiles).length; $('#gmr-videos').setAttribute('data-n',n); $('#gmr-count-n').textContent=n; }
+function onSpeakers(sp){ var ids={},first=null; sp.forEach(function(p){ var tid=(STATE.lkRoom&&p.identity===STATE.lkRoom.localParticipant.identity)?'self':p.identity; ids[tid]=1; if(!first)first=tid; }); Object.keys(STATE.tiles).forEach(function(id){ STATE.tiles[id].classList.toggle('speaking',!!ids[id]); }); if(first)STATE.activeSpeaker=first; if(STATE.layout==='speaker'&&!STATE.pinned) updateFeatured(); }
+function updateGridCount(){ var n=Object.keys(STATE.tiles).length; $('#gmr-videos').setAttribute('data-n',n); $('#gmr-count-n').textContent=n; if(STATE.layout==='speaker') updateFeatured(); }
 
 /* ================= MODE / VIEW ================= */
 var MODE_LBL={grid:'Kameralar',board:'Tahta',materials:'Materyal',screen:'Ekran',spotlight:'Odak'};
@@ -239,6 +239,18 @@ function applySpotlightVideo(){
   if(track) track.attach(v);
 }
 
+/* ===== Layout: Galeri / Konuşmacı + Pin + Tam ekran ===== */
+function setLayout(l){ STATE.layout=l; $('#gm-app').setAttribute('data-layout',l); var b=$('#gmr-layout'); if(b)b.classList.toggle('on',l==='speaker'); updateFeatured(); toast(l==='speaker'?'Konuşmacı görünümü':'Galeri görünümü'); }
+function updateFeatured(){
+  Object.keys(STATE.tiles).forEach(function(id){ STATE.tiles[id].classList.remove('featured'); STATE.tiles[id].classList.toggle('pinned',STATE.pinned===id); });
+  if(STATE.layout!=='speaker')return;
+  var id=STATE.pinned; if(!id||!tileEl(id)) id=STATE.activeSpeaker;
+  if(!id||!tileEl(id)){ id=null; Object.keys(STATE.tiles).forEach(function(k){ if(!id&&STATE.tiles[k].classList.contains('host'))id=k; }); if(!id) id=(tileEl('self')?'self':Object.keys(STATE.tiles)[0]); }
+  var t=tileEl(id); if(t)t.classList.add('featured');
+}
+function togglePin(id){ if(!id)return; STATE.pinned=(STATE.pinned===id?null:id); if(STATE.pinned&&STATE.layout!=='speaker'){ setLayout('speaker'); } else updateFeatured(); toast(STATE.pinned?'Katılımcı sabitlendi':'Sabitleme kaldırıldı'); }
+function toggleFullscreen(){ try{ if(!document.fullscreenElement){ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el); $('#gmr-fs').classList.add('on'); } else { (document.exitFullscreen||document.webkitExitFullscreen).call(document); $('#gmr-fs').classList.remove('on'); } }catch(e){} }
+
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
@@ -263,6 +275,10 @@ function bindControls(){
   $$('[data-close-modal]').forEach(function(x){ x.addEventListener('click',function(){ x.closest('.gmr-modal').classList.add('hidden'); }); });
   $$('.gmr-modal').forEach(function(m){ if(m.id==='quiz-modal')return; m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
   $('#dock-close').addEventListener('click',function(){ $('#gmr-dock').classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); var ct=$('#ctrl-tools'); if(ct)ct.classList.remove('active'); });
+  $('#gmr-layout').addEventListener('click',function(){ setLayout(STATE.layout==='gallery'?'speaker':'gallery'); });
+  $('#gmr-fs').addEventListener('click',toggleFullscreen);
+  $('#gmr-videos').addEventListener('dblclick',function(e){ var t=e.target.closest('.vtile'); if(t) togglePin(t.dataset.id); });
+  document.addEventListener('fullscreenchange',function(){ var b=$('#gmr-fs'); if(b)b.classList.toggle('on',!!document.fullscreenElement); });
   bindSplit(); bindDockResize();
 }
 function bindDockResize(){

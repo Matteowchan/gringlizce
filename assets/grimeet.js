@@ -1,4 +1,4 @@
-/* ===== Gri Meet — ders odası motoru v2 ===== */
+/* ===== Gri Meet — ders odası motoru v4 ===== */
 (function(){
 "use strict";
 
@@ -17,8 +17,9 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
-  bg:'none', supabase:null, tiles:{}, quizVotes:{A:0,B:0,C:0,D:0}, quizOn:false,
-  currentMaterial:null, matShared:false
+  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false,
+  camId:'', micId:'', spotlight:null, chatLocked:false,
+  quiz:null, quizView:null, quizScore:0
 };
 
 var BGS=[
@@ -35,10 +36,9 @@ function toast(m){var t=$('#gmr-toast');t.textContent=m;t.classList.add('show');
 function initials(n){n=(n||'?').trim();var p=n.split(/\s+/);return ((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase();}
 function pad(n){return (n<10?'0':'')+n;}
 function fmt(s){s=Math.max(0,Math.floor(s));return pad(Math.floor(s/60))+':'+pad(s%60);}
-function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
 function initSupabase(){ try{ if(window.supabase&&window.supabase.createClient) STATE.supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); }catch(e){} }
-
 var startTs=null;
 function tickClock(){ if(startTs) $('#gmr-clock').textContent=fmt((Date.now()-startTs)/1000); }
 
@@ -47,8 +47,24 @@ var gateStream=null;
 function setupGate(){
   $('#gate-room-code').textContent=STATE.room||'—';
   var camOn=true,micOn=true,gv=$('#gate-video'),gp=$('.gate-preview');
-  async function preview(){ try{ if(gateStream)gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=await navigator.mediaDevices.getUserMedia({video:camOn,audio:false}); gv.srcObject=gateStream; gp.classList.remove('camoff'); }catch(e){ camOn=false; $('#gate-cam').classList.remove('on'); $('#gate-cam').textContent='Kamera kapalı'; gp.classList.add('camoff'); } }
-  if(camOn) preview(); else gp.classList.add('camoff');
+  var camSel=$('#gate-cam-sel'),micSel=$('#gate-mic-sel');
+  async function fillDevices(){
+    try{ var devs=await navigator.mediaDevices.enumerateDevices();
+      camSel.innerHTML=''; micSel.innerHTML='';
+      devs.filter(function(d){return d.kind==='videoinput';}).forEach(function(d,i){ var o=document.createElement('option'); o.value=d.deviceId; o.textContent=d.label||('Kamera '+(i+1)); camSel.appendChild(o); });
+      devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d,i){ var o=document.createElement('option'); o.value=d.deviceId; o.textContent=d.label||('Mikrofon '+(i+1)); micSel.appendChild(o); });
+      if(camSel.value) STATE.camId=camSel.value; if(micSel.value) STATE.micId=micSel.value;
+    }catch(e){}
+  }
+  async function preview(){
+    try{ if(gateStream)gateStream.getTracks().forEach(function(t){t.stop();});
+      gateStream=await navigator.mediaDevices.getUserMedia({video:camOn?(STATE.camId?{deviceId:{exact:STATE.camId}}:true):false,audio:false});
+      gv.srcObject=gateStream; gp.classList.remove('camoff'); fillDevices();
+    }catch(e){ camOn=false; $('#gate-cam').classList.remove('on'); $('#gate-cam').textContent='Kamera kapalı'; gp.classList.add('camoff'); fillDevices(); }
+  }
+  if(camOn) preview(); else { gp.classList.add('camoff'); fillDevices(); }
+  camSel.addEventListener('change',function(){ STATE.camId=camSel.value; if(camOn)preview(); });
+  micSel.addEventListener('change',function(){ STATE.micId=micSel.value; });
   $('#gate-cam').addEventListener('click',function(){ camOn=!camOn; this.classList.toggle('on',camOn); this.textContent=camOn?'Kamera açık':'Kamera kapalı'; if(camOn)preview(); else{ gp.classList.add('camoff'); if(gateStream)gateStream.getTracks().forEach(function(t){t.stop();}); } });
   $('#gate-mic').addEventListener('click',function(){ micOn=!micOn; this.classList.toggle('on',micOn); this.textContent=micOn?'Mikrofon açık':'Mikrofon kapalı'; });
   (async function(){
@@ -73,11 +89,10 @@ async function enterRoom(){
   startTs=Date.now(); setInterval(tickClock,1000);
   $('#gmr-room-name').textContent=STATE.isHost?'Ders Odası (Öğretmen)':'Ders Odası';
   $('#gmr-code').textContent=STATE.room||'·····';
-  if(STATE.isHost) $('#gm-app').classList.add('is-host');
-  ensureSelfTile();
+  if(STATE.isHost) $('#gm-app').classList.add('is-host'); else $('#gm-app').classList.add('is-student');
+  ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost}); updateGridCount();
   connectLiveKit();
 }
-function ensureSelfTile(){ ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost}); updateGridCount(); }
 
 /* ================= LIVEKIT ================= */
 async function connectLiveKit(){
@@ -88,7 +103,7 @@ async function connectLiveKit(){
     var headers={'Content-Type':'application/json'};
     if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
     var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
-    if(res.ok){ var j=await res.json(); token=j.token; if(j.url)LIVEKIT_URL=j.url; if(j.host===false)STATE.isHost=STATE.isHost&&false; }
+    if(res.ok){ var j=await res.json(); token=j.token; if(j.url)LIVEKIT_URL=j.url; }
   }catch(e){}
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
@@ -109,10 +124,12 @@ async function connectLiveKit(){
     STATE.connected=true; setStatus('live','Canlı');
     try{ await room.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
     try{ await room.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
+    try{ if(STATE.camId) await room.switchActiveDevice('videoinput',STATE.camId); if(STATE.micId) await room.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
     var camPub=room.localParticipant.getTrackPublication(LK.Track.Source.Camera);
     if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); }
     room.remoteParticipants.forEach(onParticipant);
     refreshPeople(); updateGridCount();
+    if(!STATE.isHost) setTimeout(function(){ sendData({t:'req-state'}); },900);
   }catch(e){ enterDemo('Bağlanılamadı'); }
 }
 function enterDemo(reason){
@@ -130,23 +147,17 @@ function isHostMeta(p){ try{ return (p.metadata&&JSON.parse(p.metadata).host)===
 function attachTrack(track,pub,p){
   if(isScreen(pub)){ attachScreen(track,false); return; }
   var t=ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)});
-  if(track.kind==='video'){ var v=t.querySelector('video.cam')||document.createElement('video'); v.className='cam'; v.autoplay=true;v.playsInline=true; track.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
+  if(track.kind==='video'){ var v=t.querySelector('video.cam')||document.createElement('video'); v.className='cam'; v.autoplay=true;v.playsInline=true; track.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); if(STATE.spotlight===p.identity) applySpotlightVideo(); }
   else if(track.kind==='audio'){ var a=document.createElement('audio'); a.autoplay=true; track.attach(a); t.appendChild(a); }
 }
 function attachSelf(){
   var t=ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost});
   var v=t.querySelector('video.cam');
   if(STATE.camTrack){ if(!v){ v=document.createElement('video'); v.className='cam mirror'; v.autoplay=true;v.muted=true;v.playsInline=true; } STATE.camTrack.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
-  else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className='cam mirror'; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av=t.querySelector('.avatar'); if(av)av.remove(); t.insertBefore(v,t.firstChild); } }
+  else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className='cam mirror'; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } }
 }
 
-/* --- Screen share --- */
-function attachScreen(track,local){
-  var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); }
-  track.attach(v);
-  $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran';
-  setMode('screen');
-}
+function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); } track.attach(v); $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); }
 function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); }
 
 /* ================= TILES ================= */
@@ -154,10 +165,14 @@ function tileEl(id){ return STATE.tiles[id]; }
 function ensureTile(id,info){
   if(STATE.tiles[id]) return STATE.tiles[id];
   var t=document.createElement('div'); t.className='vtile'+(info&&info.host?' host':''); t.dataset.id=id;
+  var ctrl='';
+  if(STATE.isHost){
+    ctrl='<div class="hostctrl"><button data-act="spot" title="Odağa al"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/></svg></button>'+
+      (id!=='self'?'<button data-act="mute" title="Sustur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9v3a3 3 0 0 0 5 2M9 5a3 3 0 0 1 6 0v3M4 4l16 16"/></svg></button><button data-act="kick" class="danger" title="Çıkar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>':'')+'</div>';
+  }
   t.innerHTML='<div class="avatar"><span>'+initials(info?info.name:'?')+'</span></div>'+
-    '<div class="name"><span class="nm">'+escapeHtml(info?info.name:'Öğrenci')+'</span></div>'+
-    (info&&info.host?'<div class="badge">Öğretmen</div>':'')+
-    (STATE.isHost&&id!=='self'?'<div class="hostctrl"><button data-act="mute" title="Sustur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9v3a3 3 0 0 0 5 2M9 5a3 3 0 0 1 6 0v3M4 4l16 16"/></svg></button><button data-act="kick" title="Çıkar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>':'');
+    '<div class="name"><span class="nm">'+esc(info?info.name:'Öğrenci')+'</span></div>'+
+    (info&&info.host?'<div class="badge">Öğretmen</div>':'')+ctrl;
   STATE.tiles[id]=t; $('#gmr-videos').appendChild(t); updateGridCount(); return t;
 }
 function renderPlaceholder(id){ var t=tileEl(id); if(!t)return; var v=t.querySelector('video.cam'); if(v)v.remove(); if(!t.querySelector('.avatar')){ var d=document.createElement('div'); d.className='avatar'; d.innerHTML='<span>'+initials(t.querySelector('.nm').textContent)+'</span>'; t.insertBefore(d,t.firstChild); } }
@@ -167,7 +182,7 @@ function onSpeakers(sp){ var ids={}; sp.forEach(function(p){ ids[(STATE.lkRoom&&
 function updateGridCount(){ var n=Object.keys(STATE.tiles).length; $('#gmr-videos').setAttribute('data-n',n); $('#gmr-count-n').textContent=n; }
 
 /* ================= MODE / VIEW ================= */
-var MODE_LBL={grid:'Kameralar',board:'Tahta',materials:'Materyal',screen:'Ekran'};
+var MODE_LBL={grid:'Kameralar',board:'Tahta',materials:'Materyal',screen:'Ekran',spotlight:'Odak'};
 function setMode(mode,opts){
   opts=opts||{}; STATE.mode=mode; $('#gm-app').setAttribute('data-mode',mode);
   $('#ctrl-board').classList.toggle('active',mode==='board');
@@ -176,6 +191,23 @@ function setMode(mode,opts){
   if(mode==='board') setTimeout(WB.resize,40);
   if(STATE.isHost&&!opts.remote) sendData({t:'view',mode:mode});
 }
+
+/* ================= SPOTLIGHT ================= */
+function setSpotlight(id,opts){
+  opts=opts||{}; STATE.spotlight=id;
+  if(!id){ if(STATE.mode==='spotlight') setMode('grid',opts); if(STATE.isHost&&!opts.remote) sendData({t:'spotlight',target:null}); return; }
+  applySpotlightVideo(); setMode('spotlight',opts);
+  var t=tileEl(id); $('#spot-label').textContent=(t?t.querySelector('.nm').textContent:'Odak');
+  if(STATE.isHost&&!opts.remote) sendData({t:'spotlight',target:id});
+}
+function applySpotlightVideo(){
+  var id=STATE.spotlight; if(!id)return; var box=$('#gmr-spotlight'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; box.insertBefore(v,box.firstChild); }
+  var track=null;
+  if(id==='self'){ track=STATE.camTrack; v.muted=true; }
+  else if(STATE.lkRoom){ STATE.lkRoom.remoteParticipants.forEach(function(p){ if(p.identity===id){ var pub=p.getTrackPublication(LK.Track.Source.Camera); if(pub&&pub.videoTrack)track=pub.videoTrack; } }); }
+  if(track) track.attach(v);
+}
+
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0'); if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){} if(!STATE.camOn) renderPlaceholder('self'); } });
@@ -189,9 +221,12 @@ function bindControls(){
   $('#ctrl-chat').addEventListener('click',function(){ toggleDock('chat'); });
   $('#ctrl-leave').addEventListener('click',leaveRoom);
   $('#gmr-code').addEventListener('click',function(){ try{navigator.clipboard.writeText(STATE.room);toast('Oda kodu kopyalandı: '+STATE.room);}catch(e){} });
-  $('#gmr-videos').addEventListener('click',function(e){ var b=e.target.closest('[data-act]'); if(!b||!STATE.isHost)return; var id=b.closest('.vtile').dataset.id; if(b.dataset.act==='mute'){ sendData({t:'force-mute',target:id}); toast('Susturma isteği gönderildi.'); } if(b.dataset.act==='kick'){ if(confirm('Bu katılımcı çıkarılsın mı?')){ sendData({t:'kick',target:id}); toast('Çıkarma isteği gönderildi.'); } } });
+  $('#gmr-videos').addEventListener('click',function(e){ var b=e.target.closest('[data-act]'); if(!b||!STATE.isHost)return; var id=b.closest('.vtile').dataset.id;
+    if(b.dataset.act==='spot'){ setSpotlight(STATE.spotlight===id?null:id); }
+    else if(b.dataset.act==='mute'){ sendData({t:'force-mute',target:id}); toast('Susturma isteği gönderildi.'); }
+    else if(b.dataset.act==='kick'){ if(confirm('Bu katılımcı çıkarılsın mı?')){ sendData({t:'kick',target:id}); toast('Çıkarma isteği gönderildi.'); } } });
   $$('[data-close-modal]').forEach(function(x){ x.addEventListener('click',function(){ x.closest('.gmr-modal').classList.add('hidden'); }); });
-  $$('.gmr-modal').forEach(function(m){ m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
+  $$('.gmr-modal').forEach(function(m){ if(m.id==='quiz-modal')return; m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
   bindSplit();
 }
 function toggleDock(which){
@@ -201,56 +236,74 @@ function toggleDock(which){
   $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); });
   $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); });
   $('#ctrl-people').classList.toggle('active',which==='people'); $('#ctrl-chat').classList.toggle('active',which==='chat');
+  if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); }
 }
 function bindDockTabs(){ $$('.dock-tab').forEach(function(t){ t.addEventListener('click',function(){ toggleDockTab(t.dataset.dock); }); }); }
-function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-active',which); $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); }); $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); }); }
+function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-active',which); $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); }); $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); }); if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); } }
 
 async function shareScreen(){
   if(!STATE.lkRoom){ toast('Ekran paylaşımı için canlı bağlantı gerekli.'); return; }
   try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on); $('#ctrl-share').classList.toggle('active',!on); if(!on) setMode('screen'); else { clearScreen(); setMode('grid'); } }
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
-function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} try{if(STATE.localStream)STATE.localStream.getTracks().forEach(function(t){t.stop();});}catch(e){} location.href='grimeet.html'; }
-function leaveForce(){ try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} location.href='grimeet.html'; }
+function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; hardLeave(); }
+function hardLeave(){ try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} try{if(STATE.localStream)STATE.localStream.getTracks().forEach(function(t){t.stop();});}catch(e){} location.href='grimeet.html'; }
 function setSelfHand(up){ var t=tileEl('self'); if(!t)return; var h=t.querySelector('.hand'); if(up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';t.appendChild(d);} else if(!up&&h)h.remove(); }
 
-/* --- Split resize --- */
 function bindSplit(){
-  var split=$('#gmr-split'), dragging=false;
+  var split=$('#gmr-split'),dragging=false;
   split.addEventListener('pointerdown',function(e){ dragging=true; split.setPointerCapture(e.pointerId); e.preventDefault(); });
-  split.addEventListener('pointermove',function(e){ if(!dragging)return; var dock=$('#gmr-dock'); var right=dock.classList.contains('hidden')?window.innerWidth:dock.getBoundingClientRect().left; var w=right-e.clientX; w=Math.max(120,Math.min(560,w)); document.documentElement.style.setProperty('--strip',w+'px'); });
+  split.addEventListener('pointermove',function(e){ if(!dragging)return; var dock=$('#gmr-dock'); var right=dock.classList.contains('hidden')?window.innerWidth:dock.getBoundingClientRect().left; var w=right-e.clientX; w=Math.max(120,Math.min(620,w)); document.documentElement.style.setProperty('--strip',w+'px'); });
   split.addEventListener('pointerup',function(e){ dragging=false; try{split.releasePointerCapture(e.pointerId);}catch(_){} });
 }
 
-/* ================= DATA ================= */
-var enc=new TextEncoder(),dec=new TextDecoder();
-function sendData(obj){ if(!STATE.lkRoom||!STATE.connected)return; try{ STATE.lkRoom.localParticipant.publishData(enc.encode(JSON.stringify(obj)),{reliable:true}); }catch(e){} }
-function onData(payload,p){
-  var msg; try{ msg=JSON.parse(dec.decode(payload)); }catch(e){ return; }
-  var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null;
-  if(msg.t==='chat') addChat(from,msg.text);
-  else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } } if(msg.up)sysChat(from+' el kaldırdı ✋'); }
-  else if(msg.t==='view'){ if(!STATE.isHost) setMode(msg.mode,{remote:true}); }
-  else if(msg.t==='mat'){ if(!STATE.isHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); sysChat('Öğretmen bir materyal paylaştı.'); } }
-  else if(msg.t==='mat-stop'){ if(!STATE.isHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
-  else if(msg.t==='force-mute'){ if(msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity)){ if(!STATE.isHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } } }
-  else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost){ toast('Öğretmen seni çıkardı.'); setTimeout(leaveForce,1500); } }
-  else if(msg.t==='quiz') showStudentQuiz(msg.q);
-  else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizOn){ STATE.quizVotes[msg.a]=(STATE.quizVotes[msg.a]||0)+1; renderQuizTally(); } }
-  else if(msg.t==='wb') WB.applyRemote(msg);
+/* ================= HOST ACTIONS ================= */
+function bindHostActions(){
+  var ma=$('#btn-mute-all'); if(ma)ma.addEventListener('click',function(){ sendData({t:'force-mute',target:'*'}); toast('Herkese susturma isteği gönderildi.'); });
+  var lh=$('#btn-lower-hands'); if(lh)lh.addEventListener('click',function(){ sendData({t:'lower-hands'}); Object.keys(STATE.tiles).forEach(function(id){ var h=STATE.tiles[id].querySelector('.hand'); if(h)h.remove(); }); toast('Tüm eller indirildi.'); });
+  var tc=$('#btn-toggle-chat'); if(tc)tc.addEventListener('click',function(){ STATE.chatLocked=!STATE.chatLocked; this.textContent=STATE.chatLocked?'Sohbeti Aç':'Sohbeti Kapat'; sendData({t:'chat-lock',on:STATE.chatLocked}); toast(STATE.chatLocked?'Öğrenci sohbeti kapatıldı.':'Sohbet açıldı.'); });
 }
 
+/* ================= DATA ================= */
+var encd=new TextEncoder(),decd=new TextDecoder();
+function sendData(obj){ if(!STATE.lkRoom||!STATE.connected)return; try{ STATE.lkRoom.localParticipant.publishData(encd.encode(JSON.stringify(obj)),{reliable:true}); }catch(e){} }
+function onData(payload,p){
+  var msg; try{ msg=JSON.parse(decd.decode(payload)); }catch(e){ return; }
+  var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;
+  if(msg.t==='chat') addChat(from,msg.text);
+  else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } } if(msg.up)sysChat(from+' el kaldırdı ✋'); }
+  else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
+  else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
+  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); sysChat('Öğretmen bir materyal paylaştı.'); } }
+  else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
+  else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
+  else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
+  else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
+  else if(msg.t==='chat-lock'){ if(!STATE.isHost&&fromHost){ STATE.chatLocked=msg.on; applyChatLock(); } }
+  else if(msg.t==='quiz'){ if(!STATE.isHost&&fromHost) openStudentQuiz(msg); }
+  else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quiz&&STATE.quiz.active){ STATE.quiz.votes[msg.a]=(STATE.quiz.votes[msg.a]||0)+1; renderQuizTallyHost(); } }
+  else if(msg.t==='quiz-reveal'){ if(!STATE.isHost&&fromHost) revealStudentQuiz(msg.correct); }
+  else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
+  else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
+  else if(msg.t==='wb'){ WB.applyRemote(msg); }
+}
+function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked}); }
+function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
+
 /* ================= CHAT / PEOPLE ================= */
-function addChat(who,text){ var log=$('#chat-log'); var d=document.createElement('div'); d.className='chat-msg'; d.innerHTML='<span class="who">'+escapeHtml(who)+':</span>'+escapeHtml(text); log.appendChild(d); log.scrollTop=log.scrollHeight; }
-function sysChat(text){ var log=$('#chat-log'); var d=document.createElement('div'); d.className='chat-msg sys'; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
-function bindChat(){ function send(){ var i=$('#chat-text'); var t=(i.value||'').trim(); if(!t)return; addChat(STATE.name+' (Sen)',t); sendData({t:'chat',text:t}); i.value=''; } $('#chat-send').addEventListener('click',send); $('#chat-text').addEventListener('keydown',function(e){ if(e.key==='Enter')send(); }); }
+var chatUnread=0;
+function chatEmpty(){ var log=$('#chat-log'); var e=log.querySelector('.dock-empty'); if(e)e.remove(); }
+function addChat(who,text){ chatEmpty(); var log=$('#chat-log'); var d=document.createElement('div'); d.className='chat-msg'; d.innerHTML='<span class="who">'+esc(who)+':</span>'+esc(text); log.appendChild(d); log.scrollTop=log.scrollHeight;
+  var dock=$('#gmr-dock'); if(dock.classList.contains('hidden')||dock.getAttribute('data-active')!=='chat'){ chatUnread++; var b=$('#chat-badge'); b.textContent=chatUnread>9?'9+':chatUnread; b.classList.add('show'); } }
+function sysChat(text){ chatEmpty(); var log=$('#chat-log'); var d=document.createElement('div'); d.className='chat-msg sys'; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function applyChatLock(){ var i=$('#chat-text'),b=$('#chat-send'); var locked=STATE.chatLocked&&!STATE.isHost; i.disabled=locked; b.disabled=locked; i.placeholder=locked?'Sohbet öğretmen tarafından kapatıldı':'Mesaj yaz…'; }
+function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return; var i=$('#chat-text'); var t=(i.value||'').trim(); if(!t)return; addChat(STATE.name+' (Sen)',t); sendData({t:'chat',text:t}); i.value=''; } $('#chat-send').addEventListener('click',send); $('#chat-text').addEventListener('keydown',function(e){ if(e.key==='Enter')send(); }); }
 function refreshPeople(){
   var ul=$('#people-list'); if(!ul)return; ul.innerHTML='';
   var list=[{name:STATE.name+' (Sen)',host:STATE.isHost,mic:STATE.micOn}];
   if(STATE.lkRoom) STATE.lkRoom.remoteParticipants.forEach(function(p){ list.push({name:p.name||'Öğrenci',host:isHostMeta(p),mic:p.isMicrophoneEnabled}); });
-  list.forEach(function(m){ var li=document.createElement('li'); li.innerHTML='<span class="pav">'+initials(m.name)+'</span><span class="pnm">'+escapeHtml(m.name)+'</span>'+(m.host?'<span class="ptag">Öğretmen</span>':'')+'<span class="pmic'+(m.mic?'':' off')+'">'+(m.mic?'🎤':'🔇')+'</span>'; ul.appendChild(li); });
+  list.forEach(function(m){ var li=document.createElement('li'); li.innerHTML='<span class="pav">'+initials(m.name)+'</span><span class="pnm">'+esc(m.name)+'</span>'+(m.host?'<span class="ptag">Öğretmen</span>':'')+'<span class="pmic'+(m.mic?'':' off')+'">'+(m.mic?'🎤':'🔇')+'</span>'; ul.appendChild(li); });
 }
-function bindPeople(){ var b=$('#btn-mute-all'); if(b)b.addEventListener('click',function(){ sendData({t:'force-mute',target:'*'}); toast('Herkese susturma isteği gönderildi.'); }); }
 
 /* ================= TOOLS ================= */
 var timerInt=null,timerLeft=0;
@@ -258,19 +311,65 @@ function bindTools(){
   $$('.timer-btns [data-tmin]').forEach(function(b){ b.addEventListener('click',function(){ startTimer(parseInt(b.dataset.tmin,10)*60); }); });
   $('#timer-stop').addEventListener('click',function(){ clearInterval(timerInt); timerInt=null; $('#timer-display').textContent='00:00'; });
   $('#btn-pick').addEventListener('click',pickStudent);
-  var q=$('#btn-quiz'); if(q)q.addEventListener('click',sendQuiz);
-  var bo=$('#btn-breakout'); if(bo)bo.addEventListener('click',makeBreakout);
+  $$('#quiz-opts .cor').forEach(function(b){ b.addEventListener('click',function(){ var on=b.classList.contains('on'); $$('#quiz-opts .cor').forEach(function(x){x.classList.remove('on');}); if(!on)b.classList.add('on'); }); });
+  $('#btn-quiz').addEventListener('click',sendQuiz);
+  $('#btn-quiz-reveal').addEventListener('click',revealQuizHost);
+  $('#btn-breakout').addEventListener('click',makeBreakout);
+  // quiz popup (student)
+  $('#quiz-close').addEventListener('click',function(){ $('#quiz-modal').classList.add('hidden'); if(STATE.quizView&&STATE.quizView.active) $('#quiz-pill').classList.add('show'); });
+  $('#quiz-pill').addEventListener('click',function(){ $('#quiz-modal').classList.remove('hidden'); $('#quiz-pill').classList.remove('show'); });
 }
 function startTimer(sec){ clearInterval(timerInt); timerLeft=sec; $('#timer-display').textContent=fmt(timerLeft); timerInt=setInterval(function(){ timerLeft--; $('#timer-display').textContent=fmt(timerLeft); if(timerLeft<=0){ clearInterval(timerInt); timerInt=null; toast('Süre doldu!'); try{beep();}catch(e){} } },1000); }
 function beep(){ var a=new (window.AudioContext||window.webkitAudioContext)(); var o=a.createOscillator(); o.connect(a.destination); o.frequency.value=880; o.start(); setTimeout(function(){o.stop();a.close();},350); }
 function studentNames(){ var names=[]; if(STATE.lkRoom)STATE.lkRoom.remoteParticipants.forEach(function(p){ if(!isHostMeta(p))names.push(p.name||'Öğrenci'); }); if(!STATE.isHost)names.push(STATE.name); return names; }
 function pickStudent(){ var names=studentNames(); if(!names.length){ $('#pick-result').textContent='Öğrenci yok.'; return; } var i=0,n=0,max=14+Math.floor(Math.random()*8),el=$('#pick-result'); var iv=setInterval(function(){ el.textContent=names[i%names.length]; i++; n++; if(n>=max){ clearInterval(iv); el.textContent='🎯 '+names[Math.floor(Math.random()*names.length)]; } },80); }
-function sendQuiz(){ var q=($('#quiz-q').value||'').trim()||'Doğru cevap hangisi?'; STATE.quizOn=true; STATE.quizVotes={A:0,B:0,C:0,D:0}; sendData({t:'quiz',q:q}); renderQuizTally(); toast('Quiz gönderildi.'); }
-function renderQuizTally(){ var el=$('#quiz-tally'); if(!el)return; var tot=(STATE.quizVotes.A+STATE.quizVotes.B+STATE.quizVotes.C+STATE.quizVotes.D)||1; el.innerHTML=['A','B','C','D'].map(function(k){ return '<div class="qrow"><b>'+k+'</b><div class="qbar" style="width:'+(STATE.quizVotes[k]/tot*150)+'px"></div><span>'+STATE.quizVotes[k]+'</span></div>'; }).join(''); }
-function showStudentQuiz(q){ toggleDock('tools'); toggleDockTab('tools'); var body=$('.dock-pane[data-dock-pane="tools"]'); if(!body)return; var box=document.createElement('div'); box.className='tool-box'; box.style.borderColor='var(--gm-gold)'; box.innerHTML='<div class="tool-box-h">Quiz: '+escapeHtml(q)+'</div><div class="mat-row" style="margin:0">'+['A','B','C','D'].map(function(k){return '<button class="dock-btn" data-vote="'+k+'" style="flex:1;margin:0">'+k+'</button>';}).join('')+'</div>'; body.insertBefore(box,body.firstChild); box.addEventListener('click',function(e){ var b=e.target.closest('[data-vote]'); if(!b)return; sendData({t:'quiz-vote',a:b.dataset.vote}); box.innerHTML='<div class="tool-box-h">Cevabın: '+b.dataset.vote+' ✓</div>'; }); }
-function makeBreakout(){ var names=studentNames().filter(function(n){return n!==STATE.name||!STATE.isHost;}); names=studentNames(); if(!names.length){ $('#bo-result').textContent='Öğrenci yok.'; return; } var n=Math.max(2,Math.min(5,parseInt($('#bo-count').value,10)||2)); for(var i=names.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=names[i];names[i]=names[j];names[j]=t; } var groups=[]; for(var g=0;g<n;g++)groups.push([]); names.forEach(function(nm,idx){ groups[idx%n].push(nm); }); $('#bo-result').innerHTML=groups.map(function(gr,idx){ return '<div style="margin-bottom:6px"><b>Grup '+(idx+1)+':</b> '+gr.map(escapeHtml).join(', ')+'</div>'; }).join('')+'<div class="mat-resize-note">Ayrı ses odaları yakında; şimdilik grup listesi.</div>'; }
 
-/* ================= BACKGROUND (segmentation) ================= */
+/* ---- Quiz (host) ---- */
+function sendQuiz(){
+  var q=($('#quiz-q').value||'').trim();
+  var opts={}; $$('#quiz-opts input[data-opt]').forEach(function(i){ var v=(i.value||'').trim(); if(v)opts[i.dataset.opt]=v; });
+  var corBtn=$('#quiz-opts .cor.on'); var correct=corBtn?corBtn.dataset.cor:null;
+  STATE.quiz={q:q,opts:opts,correct:correct,votes:{},active:true};
+  sendData({t:'quiz',q:q,opts:opts,dur:30});
+  renderQuizTallyHost();
+  $('#btn-quiz-reveal').style.display=correct?'block':'none';
+  toast('Quiz gönderildi.');
+}
+function renderQuizTallyHost(){ var el=$('#quiz-tally'); if(!el||!STATE.quiz)return; var v=STATE.quiz.votes; var tot=(v.A||0)+(v.B||0)+(v.C||0)+(v.D||0)||1;
+  el.innerHTML='<div style="margin-bottom:6px">Cevaplar: '+((v.A||0)+(v.B||0)+(v.C||0)+(v.D||0))+'</div>'+['A','B','C','D'].map(function(k){ return '<div class="qrow'+(STATE.quiz.correct===k?' correct':'')+'"><b>'+k+'</b><div class="qbar" style="width:'+((v[k]||0)/tot*150)+'px"></div><span>'+(v[k]||0)+'</span></div>'; }).join(''); }
+function revealQuizHost(){ if(!STATE.quiz)return; STATE.quiz.active=false; sendData({t:'quiz-reveal',correct:STATE.quiz.correct}); renderQuizTallyHost(); toast('Doğru cevap gösterildi.'); }
+
+/* ---- Quiz (student popup) ---- */
+function openStudentQuiz(msg){
+  STATE.quizView={q:msg.q,opts:msg.opts||{},correct:null,answered:false,picked:null,active:true};
+  var m=$('#quiz-modal'); m.classList.remove('hidden'); $('#quiz-pill').classList.remove('show');
+  $('#quiz-q-text').textContent=msg.q||'Doğru cevap hangisi?';
+  $('#quiz-feedback').textContent=''; $('#quiz-feedback').className='quiz-feedback';
+  $('#quiz-score').textContent=STATE.quizScore?('Puanın: '+STATE.quizScore):'';
+  var ans=$('#quiz-answers'); ans.innerHTML='';
+  ['A','B','C','D'].forEach(function(k){ var b=document.createElement('button'); b.dataset.k=k; b.innerHTML='<span class="k">'+k+'</span> '+esc((msg.opts&&msg.opts[k])||''); b.addEventListener('click',function(){ studentAnswer(k); }); ans.appendChild(b); });
+  var dur=msg.dur||30; $('#quiz-count').textContent='('+dur+')';
+  clearInterval(STATE._qiv); var left=dur;
+  STATE._qiv=setInterval(function(){ left--; $('#quiz-count').textContent='('+left+')'; if(left<=0){ clearInterval(STATE._qiv); $('#quiz-count').textContent=''; if(!STATE.quizView.answered){ lockAnswers(); $('#quiz-feedback').textContent='Süre doldu.'; } } },1000);
+}
+function studentAnswer(k){ if(!STATE.quizView||STATE.quizView.answered)return; STATE.quizView.answered=true; STATE.quizView.picked=k; lockAnswers();
+  var b=$('#quiz-answers button[data-k="'+k+'"]'); if(b)b.classList.add('picked');
+  $('#quiz-feedback').textContent='Cevabın kaydedildi: '+k;
+  sendData({t:'quiz-vote',a:k,name:STATE.name});
+}
+function lockAnswers(){ $$('#quiz-answers button').forEach(function(b){ b.disabled=true; }); clearInterval(STATE._qiv); }
+function revealStudentQuiz(correct){ if(!STATE.quizView)return; STATE.quizView.active=false; STATE.quizView.correct=correct; lockAnswers(); $('#quiz-pill').classList.remove('show');
+  if(!$('#quiz-modal').classList.contains('hidden')||true){ /* ensure visible for result */ }
+  if(correct){ var cb=$('#quiz-answers button[data-k="'+correct+'"]'); if(cb)cb.classList.add('correct'); }
+  var fb=$('#quiz-feedback');
+  if(STATE.quizView.picked){ if(correct&&STATE.quizView.picked===correct){ STATE.quizScore++; fb.textContent='Doğru! 🎉'; fb.className='quiz-feedback ok'; } else if(correct){ var pb=$('#quiz-answers button[data-k="'+STATE.quizView.picked+'"]'); if(pb)pb.classList.add('wrong'); fb.textContent='Yanlış. Doğru cevap: '+correct; fb.className='quiz-feedback no'; } }
+  else fb.textContent=correct?('Doğru cevap: '+correct):'Quiz bitti.';
+  $('#quiz-score').textContent='Puanın: '+STATE.quizScore;
+}
+
+function makeBreakout(){ var names=studentNames(); if(!names.length){ $('#bo-result').textContent='Öğrenci yok.'; return; } var n=Math.max(2,Math.min(5,parseInt($('#bo-count').value,10)||2)); for(var i=names.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=names[i];names[i]=names[j];names[j]=t; } var groups=[]; for(var g=0;g<n;g++)groups.push([]); names.forEach(function(nm,idx){ groups[idx%n].push(nm); }); $('#bo-result').innerHTML=groups.map(function(gr,idx){ return '<div style="margin-bottom:6px"><b>Grup '+(idx+1)+':</b> '+gr.map(esc).join(', ')+'</div>'; }).join('')+'<div class="mat-resize-note">Ayrı ses odaları bir sonraki sürümde; şimdilik grup listesi.</div>'; }
+
+/* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
 function buildBgGrid(){
@@ -286,7 +385,7 @@ async function applyBackground(bg){
     else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
       if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(14));
       else await track.setProcessor(tp.VirtualBackground(bgFile(bg))); }
-    if(note)note.textContent='Kişiyi arka plandan ayırma ilk seçimde birkaç saniye sürebilir.';
+    if(note)note.textContent='Hazır. İlk seçimde birkaç saniye sürebilir.';
     setTimeout(function(){ $('#bg-modal').classList.add('hidden'); },300);
   }catch(e){ toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; }
 }
@@ -307,10 +406,12 @@ function bindMaterials(){
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value};
-  if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } $('#mat-yt-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>'; $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat==='youtube');}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!=='youtube');}); }
-  else if(m.kind==='unit'){ $('#mat-unit-frame').innerHTML='<iframe src="'+escapeHtml(m.value)+'" title="Ünite"></iframe>'; $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat==='unite');}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!=='unite');}); }
+  if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } $('#mat-yt-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>'; matTab('youtube'); }
+  else if(m.kind==='unit'){ var src=remote?materialProxy(m.value):m.value; $('#mat-unit-frame').innerHTML='<iframe src="'+esc(src)+'" title="Ünite"></iframe>'; matTab('unite'); }
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
 }
+function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
+function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); }
 function buildUnitSelectors(){
   var tracks=[{v:'',t:'Adult'},{v:'teen-',t:'Teen'},{v:'junior-',t:'Junior'}], levels=['a1','a2','b1','b2','c1','c2'];
   var tSel=$('#mat-track'),lSel=$('#mat-level'),uSel=$('#mat-unit');
@@ -320,11 +421,44 @@ function buildUnitSelectors(){
   tSel.addEventListener('change',fill); lSel.addEventListener('change',fill); fill();
 }
 
+/* ================= RECORDING ================= */
+var REC={mr:null,chunks:[],int:null,secs:0,ac:null,raf:null};
+function bindRecording(){ $('#rec-start').addEventListener('click',startRecording); $('#rec-stop').addEventListener('click',stopRecording); }
+function collectAudio(){ try{ REC.ac=new (window.AudioContext||window.webkitAudioContext)(); var dest=REC.ac.createMediaStreamDestination(),added=0;
+  function add(tr){ try{ REC.ac.createMediaStreamSource(new MediaStream([tr])).connect(dest); added++; }catch(e){} }
+  if(STATE.lkRoom){ var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); if(mp&&mp.track&&mp.track.mediaStreamTrack)add(mp.track.mediaStreamTrack); STATE.lkRoom.remoteParticipants.forEach(function(p){ p.trackPublications.forEach(function(pub){ if(pub.track&&pub.track.kind==='audio'&&pub.track.mediaStreamTrack)add(pub.track.mediaStreamTrack); }); }); }
+  else if(STATE.localStream){ STATE.localStream.getAudioTracks().forEach(add); }
+  return added?dest.stream:null; }catch(e){ return null; } }
+function startRecording(){
+  $('#rec-modal').classList.add('hidden');
+  var rc=document.createElement('canvas'); rc.width=1280; rc.height=720; var rctx=rc.getContext('2d');
+  function frame(){ rctx.fillStyle='#0e0c0a'; rctx.fillRect(0,0,1280,720);
+    if(STATE.mode==='board'&&WB.getCanvas()){ try{ rctx.drawImage(WB.getCanvas(),0,0,1280,720); }catch(e){} }
+    else if(STATE.mode==='screen'){ var sv=$('#gmr-screen video'); if(sv){ try{ rctx.drawImage(sv,0,0,1280,720); }catch(e){} } }
+    else if(STATE.mode==='spotlight'){ var pv=$('#gmr-spotlight video'); if(pv){ try{ rctx.drawImage(pv,0,0,1280,720); }catch(e){} } }
+    else { var vids=$$('#gmr-videos video.cam'); var n=vids.length||1,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),cw=1280/cols,ch=720/rows; vids.forEach(function(v,i){ var cx=(i%cols)*cw,cy=Math.floor(i/cols)*ch; try{ rctx.drawImage(v,cx+4,cy+4,cw-8,ch-8); }catch(e){} }); if(!vids.length){ rctx.fillStyle='#B7AB96'; rctx.font='28px Inter'; rctx.textAlign='center'; rctx.fillText('Gri Meet — Ders Kaydı',640,360); } }
+    REC.raf=requestAnimationFrame(frame);
+  }
+  frame();
+  var vStream=rc.captureStream(25),mixed=new MediaStream(); vStream.getVideoTracks().forEach(function(t){mixed.addTrack(t);});
+  if($('#rec-audio').checked){ var a=collectAudio(); if(a)a.getAudioTracks().forEach(function(t){mixed.addTrack(t);}); }
+  var mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+  try{ REC.mr=new MediaRecorder(mixed,{mimeType:mime}); }catch(e){ toast('Tarayıcı kaydı desteklemiyor.'); cancelAnimationFrame(REC.raf); return; }
+  REC.chunks=[]; REC.mr.ondataavailable=function(e){ if(e.data.size)REC.chunks.push(e.data); };
+  REC.mr.onstop=function(){ cancelAnimationFrame(REC.raf); if(REC.ac){try{REC.ac.close();}catch(e){}} downloadBlob(new Blob(REC.chunks,{type:'video/webm'})); };
+  REC.mr.start(1000); REC.secs=0; $('#ctrl-record').classList.add('rec-on'); $('#rec-bar').classList.remove('hidden');
+  REC.int=setInterval(function(){ REC.secs++; $('#rec-time').textContent=fmt(REC.secs); },1000);
+  toast('Kayıt başladı.');
+}
+function stopRecording(){ if(REC.mr&&REC.mr.state!=='inactive')REC.mr.stop(); clearInterval(REC.int); $('#ctrl-record').classList.remove('rec-on'); $('#rec-bar').classList.add('hidden'); }
+function downloadBlob(blob){ var url=URL.createObjectURL(blob),a=document.createElement('a'),d=new Date(); a.href=url; a.download='gri-meet-ders-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.webm'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1000); toast('Kayıt indirildi.'); }
+
 /* ================= WHITEBOARD ================= */
 var WB=(function(){
   var cv,ctx,wrap,W=0,H=0,dpr=1,tool='pen',color='#1b1b1b',size=4;
   var items=[],drawing=false,cur=null,startPt=null,sel=null,dragOff=null,clip=null;
   var COLORS=['#1b1b1b','#d64545','#2E6E6A','#2E5E8A','#B78A2E','#7E3A56','#3E6B4A','#ffffff'];
+  function canEdit(){ return true; }
   function init(){
     cv=$('#gmr-canvas'); if(!cv)return; ctx=cv.getContext('2d'); wrap=$('#gmr-board-canvaswrap');
     var cw=$('#wb-colors'); COLORS.forEach(function(c,i){ var b=document.createElement('button'); b.style.background=c; if(i===0)b.classList.add('on'); b.dataset.color=c; cw.appendChild(b); });
@@ -334,7 +468,7 @@ var WB=(function(){
     $('#wb-image').addEventListener('click',function(){ $('#wb-file').click(); });
     $('#wb-file').addEventListener('change',onImage);
     $('#wb-copy').addEventListener('click',function(){ if(sel!=null){ clip=JSON.parse(JSON.stringify(strip(items[sel]))); toast('Kopyalandı.'); } });
-    $('#wb-cut').addEventListener('click',function(){ if(sel!=null){ clip=JSON.parse(JSON.stringify(strip(items[sel]))); items.splice(sel,1); sel=null; redraw(); broadcast(); toast('Kesildi.'); } });
+    $('#wb-cut').addEventListener('click',function(){ if(sel!=null){ clip=JSON.parse(JSON.stringify(strip(items[sel]))); items.splice(sel,1); sel=null; redraw(); broadcast(); } });
     $('#wb-paste').addEventListener('click',function(){ if(clip){ var it=JSON.parse(JSON.stringify(clip)); shift(it,26,26); items.push(it); sel=items.length-1; redraw(); broadcast(); } });
     $('#wb-undo').addEventListener('click',function(){ items.pop(); sel=null; redraw(); broadcast(); });
     $('#wb-clear').addEventListener('click',function(){ if(confirm('Tahta temizlensin mi?')){ items=[]; sel=null; redraw(); broadcast(); } });
@@ -387,46 +521,15 @@ var WB=(function(){
   function redraw(){ if(!ctx)return; ctx.clearRect(0,0,W,H); ctx.fillStyle='#fbfaf6'; ctx.fillRect(0,0,W,H); items.forEach(drawItem); if(sel!=null&&sel>=0&&items[sel]){ var b=bbox(items[sel]); ctx.save(); ctx.strokeStyle='#2E6E6A'; ctx.setLineDash([6,4]); ctx.lineWidth=1.5; ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12); ctx.restore(); } }
   function broadcast(){ sendData({t:'wb',items:items.map(strip)}); }
   function applyRemote(msg){ if(!msg.items)return; items=msg.items; items.forEach(function(it){ if(it.type==='img'&&it.src&&!it._img){ var im=new Image(); im.onload=redraw; im.src=it.src; it._img=im; } }); redraw(); }
-  return {init:init,resize:resize,applyRemote:applyRemote,getCanvas:function(){return cv;}};
+  return {init:init,resize:resize,applyRemote:applyRemote,getCanvas:function(){return cv;},items:function(){return items.map(strip);}};
 })();
-
-/* ================= RECORDING ================= */
-var REC={mr:null,chunks:[],int:null,secs:0,ac:null,raf:null};
-function bindRecording(){ $('#rec-start').addEventListener('click',startRecording); $('#rec-stop').addEventListener('click',stopRecording); }
-function collectAudio(){ try{ REC.ac=new (window.AudioContext||window.webkitAudioContext)(); var dest=REC.ac.createMediaStreamDestination(),added=0;
-  function add(tr){ try{ REC.ac.createMediaStreamSource(new MediaStream([tr])).connect(dest); added++; }catch(e){} }
-  if(STATE.lkRoom){ var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); if(mp&&mp.track&&mp.track.mediaStreamTrack)add(mp.track.mediaStreamTrack); STATE.lkRoom.remoteParticipants.forEach(function(p){ p.trackPublications.forEach(function(pub){ if(pub.track&&pub.track.kind==='audio'&&pub.track.mediaStreamTrack)add(pub.track.mediaStreamTrack); }); }); }
-  else if(STATE.localStream){ STATE.localStream.getAudioTracks().forEach(add); }
-  return added?dest.stream:null; }catch(e){ return null; } }
-function startRecording(){
-  $('#rec-modal').classList.add('hidden');
-  var rc=document.createElement('canvas'); rc.width=1280; rc.height=720; var rctx=rc.getContext('2d');
-  function frame(){ rctx.fillStyle='#0e0c0a'; rctx.fillRect(0,0,1280,720);
-    if(STATE.mode==='board'&&WB.getCanvas()){ try{ rctx.drawImage(WB.getCanvas(),0,0,1280,720); }catch(e){} }
-    else if(STATE.mode==='screen'){ var sv=$('#gmr-screen video'); if(sv){ try{ rctx.drawImage(sv,0,0,1280,720); }catch(e){} } }
-    else { var vids=$$('#gmr-videos video.cam'); var n=vids.length||1,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),cw=1280/cols,ch=720/rows; vids.forEach(function(v,i){ var cx=(i%cols)*cw,cy=Math.floor(i/cols)*ch; try{ rctx.drawImage(v,cx+4,cy+4,cw-8,ch-8); }catch(e){} }); if(!vids.length){ rctx.fillStyle='#B7AB96'; rctx.font='28px Inter'; rctx.textAlign='center'; rctx.fillText('Gri Meet — Ders Kaydı',640,360); } }
-    REC.raf=requestAnimationFrame(frame);
-  }
-  frame();
-  var vStream=rc.captureStream(25),mixed=new MediaStream(); vStream.getVideoTracks().forEach(function(t){mixed.addTrack(t);});
-  if($('#rec-audio').checked){ var a=collectAudio(); if(a)a.getAudioTracks().forEach(function(t){mixed.addTrack(t);}); }
-  var mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
-  try{ REC.mr=new MediaRecorder(mixed,{mimeType:mime}); }catch(e){ toast('Tarayıcı kaydı desteklemiyor.'); cancelAnimationFrame(REC.raf); return; }
-  REC.chunks=[]; REC.mr.ondataavailable=function(e){ if(e.data.size)REC.chunks.push(e.data); };
-  REC.mr.onstop=function(){ cancelAnimationFrame(REC.raf); if(REC.ac){try{REC.ac.close();}catch(e){}} downloadBlob(new Blob(REC.chunks,{type:'video/webm'})); };
-  REC.mr.start(1000); REC.secs=0; $('#ctrl-record').classList.add('rec-on'); $('#rec-bar').classList.remove('hidden');
-  REC.int=setInterval(function(){ REC.secs++; $('#rec-time').textContent=fmt(REC.secs); },1000);
-  toast('Kayıt başladı.');
-}
-function stopRecording(){ if(REC.mr&&REC.mr.state!=='inactive')REC.mr.stop(); clearInterval(REC.int); $('#ctrl-record').classList.remove('rec-on'); $('#rec-bar').classList.add('hidden'); }
-function downloadBlob(blob){ var url=URL.createObjectURL(blob),a=document.createElement('a'),d=new Date(); a.href=url; a.download='gri-meet-ders-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.webm'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1000); toast('Kayıt indirildi.'); }
 
 /* ================= BOOT ================= */
 function boot(){
   if(!STATE.room) STATE.room='DEMO'+Math.floor(Math.random()*90+10);
   initSupabase();
-  bindControls(); bindDockTabs(); bindChat(); bindPeople(); bindTools(); bindMaterials(); bindRecording();
-  buildBgGrid(); WB.init(); setupGate(); refreshPeople();
+  bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording();
+  buildBgGrid(); WB.init(); setupGate();
   window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);

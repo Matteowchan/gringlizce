@@ -6,12 +6,12 @@
 <title>Gri Meet — Ders Odası</title>
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/grimeet.css">
+<link rel="stylesheet" href="assets/grimeet.css?v=3">
 </head>
 <body>
 <div id="gm-app" class="gm-room" data-mode="grid">
 
-  <!-- ===== Top bar ===== -->
+  <!-- Top bar -->
   <header class="gmr-top">
     <div class="gmr-brand">Gri<span>Meet</span></div>
     <div class="gmr-room">
@@ -26,16 +26,12 @@
     </div>
   </header>
 
-  <!-- ===== Stage ===== -->
+  <!-- Stage -->
   <main class="gmr-stage">
-
-    <!-- Content area (board / materials / screen) -->
     <section class="gmr-content" id="gmr-content">
-
-      <!-- Screen share -->
       <div class="gmr-screen" id="gmr-screen"><div class="scr-label" id="scr-label">Paylaşılan ekran</div></div>
+      <div class="gmr-spotlight" id="gmr-spotlight"><div class="scr-label" id="spot-label">Odak</div></div>
 
-      <!-- Whiteboard -->
       <div class="gmr-board" id="gmr-board">
         <div class="gmr-board-tools" id="gmr-board-tools">
           <button class="wb-tool active" data-tool="pen" title="Kalem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21l3.5-1 11-11-2.5-2.5-11 11z"/><path d="M14 6.5L17.5 10"/></svg></button>
@@ -60,12 +56,9 @@
           <button class="wb-act" id="wb-clear" title="Temizle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
           <input type="file" id="wb-file" accept="image/*" hidden>
         </div>
-        <div class="gmr-board-canvaswrap" id="gmr-board-canvaswrap">
-          <canvas id="gmr-canvas"></canvas>
-        </div>
+        <div class="gmr-board-canvaswrap" id="gmr-board-canvaswrap"><canvas id="gmr-canvas"></canvas></div>
       </div>
 
-      <!-- Materials -->
       <div class="gmr-materials" id="gmr-materials">
         <div class="gmr-mat-head">
           <div class="gmr-mat-tabs">
@@ -73,35 +66,29 @@
             <button class="mat-tab" data-mat="unite">Ünite İçeriği</button>
           </div>
           <div class="gmr-mat-actions">
-            <button class="mat-share host-only" id="mat-share">Öğrencilerle Paylaş</button>
+            <button class="mat-share" id="mat-share">Öğrencilerle Paylaş</button>
             <button class="gmr-mat-close" id="gmr-mat-close" title="Kapat">&times;</button>
           </div>
         </div>
         <div class="gmr-mat-body">
           <div class="mat-pane" data-mat-pane="youtube">
-            <div class="mat-row"><input id="mat-yt-url" placeholder="YouTube bağlantısı yapıştır…"><button id="mat-yt-load">Aç</button></div>
-            <div class="mat-framewrap"><div class="mat-frame" id="mat-yt-frame"><div class="mat-empty">Bir YouTube bağlantısı yapıştır, "Aç"a bas. Sonra "Öğrencilerle Paylaş" ile herkese aç.</div></div></div>
-            <div class="mat-resize-note">Çerçevenin sağ-alt köşesinden tutup boyutlandırabilirsin.</div>
+            <div class="mat-row gmr-mat-controls"><input id="mat-yt-url" placeholder="YouTube bağlantısı yapıştır…"><button id="mat-yt-load">Aç</button></div>
+            <div class="mat-framewrap"><div class="mat-frame" id="mat-yt-frame"><div class="mat-empty">Öğretmen bir YouTube videosu paylaştığında burada açılır.</div></div></div>
+            <div class="mat-resize-note gmr-mat-controls">Çerçevenin sağ-alt köşesinden boyutlandırabilirsin.</div>
           </div>
           <div class="mat-pane hidden" data-mat-pane="unite">
-            <div class="mat-row">
-              <select id="mat-track"></select>
-              <select id="mat-level"></select>
-              <select id="mat-unit"></select>
+            <div class="mat-row gmr-mat-controls">
+              <select id="mat-track"></select><select id="mat-level"></select><select id="mat-unit"></select>
               <button id="mat-unit-load">Aç</button>
             </div>
-            <div class="mat-framewrap"><div class="mat-frame" id="mat-unit-frame"><div class="mat-empty">Seviye ve ünite seç, "Aç"a bas. Sonra "Öğrencilerle Paylaş".</div></div></div>
-            <div class="mat-resize-note">Çerçevenin sağ-alt köşesinden tutup boyutlandırabilirsin.</div>
+            <div class="mat-framewrap"><div class="mat-frame" id="mat-unit-frame"><div class="mat-empty">Öğretmen bir ünite içeriği paylaştığında burada açılır.</div></div></div>
+            <div class="mat-resize-note gmr-mat-controls">Çerçevenin sağ-alt köşesinden boyutlandırabilirsin.</div>
           </div>
         </div>
       </div>
-
     </section>
 
-    <!-- Resize handle -->
     <div class="gmr-split" id="gmr-split" title="Kamera şeridini boyutlandır"></div>
-
-    <!-- Video tiles (grid OR right filmstrip) -->
     <aside class="gmr-videos" id="gmr-videos"></aside>
 
     <!-- Right dock -->
@@ -109,17 +96,26 @@
       <div class="gmr-dock-tabs">
         <button class="dock-tab active" data-dock="people">Katılımcılar</button>
         <button class="dock-tab" data-dock="chat">Sohbet</button>
-        <button class="dock-tab" data-dock="tools">Araçlar</button>
+        <button class="dock-tab host-only" data-dock="tools">Araçlar</button>
       </div>
       <div class="gmr-dock-body">
+        <!-- People -->
         <div class="dock-pane" data-dock-pane="people">
-          <div class="host-only" id="host-people-actions"><button class="dock-btn" id="btn-mute-all">Herkesi Sustur</button></div>
+          <div class="host-actions host-only">
+            <button class="dock-btn" id="btn-mute-all">Herkesi Sustur</button>
+            <div class="row2">
+              <button class="dock-btn ghost" id="btn-lower-hands">Elleri İndir</button>
+              <button class="dock-btn ghost" id="btn-toggle-chat">Sohbeti Kapat</button>
+            </div>
+          </div>
           <ul class="people-list" id="people-list"></ul>
         </div>
+        <!-- Chat -->
         <div class="dock-pane hidden" data-dock-pane="chat">
-          <div class="chat-log" id="chat-log"></div>
+          <div class="chat-log" id="chat-log"><div class="dock-empty">Henüz mesaj yok.</div></div>
           <div class="chat-input"><input id="chat-text" placeholder="Mesaj yaz…" autocomplete="off"><button id="chat-send" title="Gönder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l16-7-7 16-2-7z"/></svg></button></div>
         </div>
+        <!-- Tools (host only) -->
         <div class="dock-pane hidden" data-dock-pane="tools">
           <div class="tool-box">
             <div class="tool-box-h">Zamanlayıcı</div>
@@ -131,15 +127,22 @@
             <button class="dock-btn" id="btn-pick">Bir öğrenci seç</button>
             <div class="pick-result" id="pick-result"></div>
           </div>
-          <div class="tool-box host-only">
+          <div class="tool-box">
             <div class="tool-box-h">Canlı Quiz</div>
-            <input class="tool-inp" id="quiz-q" placeholder="Soru…">
-            <button class="dock-btn" id="btn-quiz">Quiz Gönder (A/B/C/D)</button>
+            <input class="tool-inp" id="quiz-q" placeholder="Soru (opsiyonel)…">
+            <div class="quiz-opts" id="quiz-opts">
+              <div class="quiz-opt-row"><span class="kk">A</span><input type="text" data-opt="A" placeholder="A şıkkı (opsiyonel)"><button class="cor" data-cor="A" title="Doğru cevap">✓</button></div>
+              <div class="quiz-opt-row"><span class="kk">B</span><input type="text" data-opt="B" placeholder="B şıkkı"><button class="cor" data-cor="B" title="Doğru cevap">✓</button></div>
+              <div class="quiz-opt-row"><span class="kk">C</span><input type="text" data-opt="C" placeholder="C şıkkı"><button class="cor" data-cor="C" title="Doğru cevap">✓</button></div>
+              <div class="quiz-opt-row"><span class="kk">D</span><input type="text" data-opt="D" placeholder="D şıkkı"><button class="cor" data-cor="D" title="Doğru cevap">✓</button></div>
+            </div>
+            <button class="dock-btn" id="btn-quiz">Quiz Gönder</button>
+            <button class="dock-btn ghost" id="btn-quiz-reveal" style="margin-top:6px;display:none">Doğru cevabı göster &amp; bitir</button>
             <div class="quiz-tally" id="quiz-tally"></div>
           </div>
-          <div class="tool-box host-only">
+          <div class="tool-box">
             <div class="tool-box-h">Gruplara Ayır (Breakout)</div>
-            <div class="mat-row"><input class="tool-inp" id="bo-count" type="number" min="2" max="5" value="2" style="max-width:70px;margin:0"><button class="dock-btn" id="btn-breakout" style="flex:1;margin:0">Oluştur</button></div>
+            <div class="mat-row" style="margin:0"><input class="tool-inp" id="bo-count" type="number" min="2" max="5" value="2" style="max-width:70px;margin:0"><button class="dock-btn" id="btn-breakout" style="flex:1">Oluştur</button></div>
             <div class="bo-result" id="bo-result"></div>
           </div>
         </div>
@@ -147,7 +150,7 @@
     </aside>
   </main>
 
-  <!-- ===== Control bar ===== -->
+  <!-- Control bar -->
   <footer class="gmr-controls">
     <div class="gmr-ctrl-group">
       <button class="gmr-ctrl" id="ctrl-mic" data-on="1"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M8 21h8"/></svg></span><span class="cl">Mikrofon</span></button>
@@ -163,7 +166,7 @@
     <div class="gmr-ctrl-group">
       <button class="gmr-ctrl" id="ctrl-hand"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 11V5a1.5 1.5 0 0 1 3 0v5m0-1V4a1.5 1.5 0 0 1 3 0v6m0-2a1.5 1.5 0 0 1 3 0v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-3l-2.5-4a1.5 1.5 0 0 1 2.4-1.8L8 12"/></svg></span><span class="cl">El Kaldır</span></button>
       <button class="gmr-ctrl" id="ctrl-people"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17 19a5.5 5.5 0 0 0-3-4.9"/></svg></span><span class="cl">Kişiler</span></button>
-      <button class="gmr-ctrl" id="ctrl-chat"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 5h14v10H9l-4 4z"/></svg></span><span class="cl">Sohbet</span></button>
+      <button class="gmr-ctrl" id="ctrl-chat"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 5h14v10H9l-4 4z"/></svg></span><span class="badge-dot" id="chat-badge">0</span><span class="cl">Sohbet</span></button>
       <button class="gmr-ctrl leave" id="ctrl-leave"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M9 8l-5 4 5 4M4 12h11"/></svg></span><span class="cl">Ayrıl</span></button>
     </div>
   </footer>
@@ -181,14 +184,23 @@
   <div class="gmr-modal hidden" id="rec-modal">
     <div class="gmr-modal-card">
       <div class="gmr-modal-head"><h3>Ders Kaydı</h3><button class="gmr-modal-x" data-close-modal>&times;</button></div>
-      <div class="rec-warn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 16H3z"/><path d="M12 9v5M12 17v.5"/></svg>
-        <div><b>Bu kayıt sunucuda saklanmaz.</b><p>Kayıt bu bilgisayarda tutulur ve durdurunca indirilir. <b>Şimdi indirmezsen kaybolur</b> — sekmeyi kapatınca kalıcı kopya kalmaz.</p></div>
-      </div>
+      <div class="rec-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 16H3z"/><path d="M12 9v5M12 17v.5"/></svg><div><b>Bu kayıt sunucuda saklanmaz.</b><p>Kayıt bu bilgisayarda tutulur ve durdurunca indirilir. <b>Şimdi indirmezsen kaybolur.</b></p></div></div>
       <label class="rec-opt"><input type="checkbox" id="rec-audio" checked> Sesi de kaydet</label>
       <button class="gmr-btn danger" id="rec-start">Kaydı Başlat</button>
     </div>
   </div>
+
+  <!-- Quiz popup (student) -->
+  <div class="gmr-modal hidden" id="quiz-modal">
+    <div class="gmr-modal-card">
+      <div class="gmr-modal-head"><h3>Quiz <span class="quiz-count" id="quiz-count"></span></h3><button class="gmr-modal-x" id="quiz-close" title="Küçült">&times;</button></div>
+      <div class="quiz-q" id="quiz-q-text"></div>
+      <div class="quiz-answers" id="quiz-answers"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <div class="quiz-score" id="quiz-score"></div>
+    </div>
+  </div>
+  <button id="quiz-pill">Quiz'e dön</button>
 
   <div class="gmr-recbar hidden" id="rec-bar"><i></i> Kaydediliyor <span id="rec-time">00:00</span> <button id="rec-stop">Durdur &amp; İndir</button></div>
   <div class="gmr-toast" id="gmr-toast"></div>
@@ -199,6 +211,10 @@
       <div class="gmr-brand big">Gri<span>Meet</span></div>
       <p class="gate-room">Oda: <b id="gate-room-code">·····</b></p>
       <div class="gate-preview"><video id="gate-video" autoplay muted playsinline></video><div class="gate-off" id="gate-off">Kamera kapalı</div></div>
+      <div class="gate-devs">
+        <select id="gate-cam-sel" title="Kamera"></select>
+        <select id="gate-mic-sel" title="Mikrofon"></select>
+      </div>
       <div class="gate-toggles">
         <button class="gate-tg on" id="gate-mic">Mikrofon açık</button>
         <button class="gate-tg on" id="gate-cam">Kamera açık</button>
@@ -213,6 +229,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js" defer></script>
-<script src="assets/grimeet.js?v=3" defer></script>
+<script src="assets/grimeet.js?v=4" defer></script>
 </body>
 </html>

@@ -16,7 +16,8 @@ var STATE={
   room:(params.get('room')||'').toUpperCase(), isHost:params.get('host')==='1',
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
-  lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
+  lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
+  mirror:true, _bgApplied:false,
   bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
@@ -77,16 +78,55 @@ function setupGate(){
       if(camSel.value) STATE.camId=camSel.value; if(micSel.value) STATE.micId=micSel.value;
     }catch(e){}
   }
+  function applyMirror(){ if(gv) gv.classList.toggle('mirror', STATE.mirror!==false); }
+  function stopPre(){
+    try{ if(STATE.preTrack){ STATE.preTrack.detach(); STATE.preTrack.stop(); STATE.preTrack=null; } }catch(e){}
+    try{ if(gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; } }catch(e){}
+    try{ if(gv) gv.srcObject=null; }catch(e){}
+  }
   async function preview(){
-    try{ if(gateStream)gateStream.getTracks().forEach(function(t){t.stop();});
-      gateStream=await navigator.mediaDevices.getUserMedia({video:camOn?(STATE.camId?{deviceId:{exact:STATE.camId}}:true):false,audio:false});
-      gv.srcObject=gateStream; gp.classList.remove('camoff'); fillDevices();
+    if(!camOn){ gp.classList.add('camoff'); stopPre(); fillDevices(); return; }
+    // Tercih: LiveKit LocalVideoTrack — segmentasyon modeli BURADA yüklenir, arka plan canlı önizlenir,
+    // ve aynı track odaya taşınır (oda açılışı anlık, donma yok). LK yoksa ham getUserMedia'ya düşer.
+    if(LK && LK.createLocalVideoTrack){
+      try{
+        stopPre();
+        STATE.preTrack = await LK.createLocalVideoTrack({ deviceId: STATE.camId||undefined, resolution:{width:960,height:540,frameRate:24} });
+        STATE.preTrack.attach(gv); gp.classList.remove('camoff'); applyMirror(); fillDevices();
+        if(STATE.bg && STATE.bg!=='none') applyGateBg(STATE.bg);
+        return;
+      }catch(e){ stopPre(); }
+    }
+    try{
+      gateStream=await navigator.mediaDevices.getUserMedia({video:STATE.camId?{deviceId:{exact:STATE.camId}}:true,audio:false});
+      gv.srcObject=gateStream; gp.classList.remove('camoff'); applyMirror(); fillDevices();
     }catch(e){ camOn=false; $('#gate-cam').classList.remove('on'); $('#gate-cam').textContent='Kamera kapalı'; gp.classList.add('camoff'); fillDevices(); }
   }
+  async function applyGateBg(bg){
+    STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} highlightGateBg(bg);
+    if(!STATE.preTrack){ if(bg!=='none') toast('Arka plan önizlemesi için kamerayı aç.'); STATE._bgApplied=(bg!=='none'); return; }
+    var lbl=$('#gate-bg-hint'); if(lbl&&bg!=='none') lbl.textContent='(uygulanıyor…)';
+    try{
+      if(bg==='none'){ if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; }
+      else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(lbl)lbl.textContent='(bu tarayıcıda yok)'; return; }
+        if(bg==='blur') await STATE.preTrack.setProcessor(tp.BackgroundBlur(12));
+        else await STATE.preTrack.setProcessor(tp.VirtualBackground(bgFile(bg)));
+        STATE._bgApplied=true; }
+      if(lbl) lbl.textContent='(dersten önce seç, canlı gör)';
+    }catch(e){ toast('Arka plan uygulanamadı.'); if(lbl)lbl.textContent='(uygulanamadı)'; }
+  }
+  function highlightGateBg(bg){ $$('#gate-bg-row .gate-bg-opt').forEach(function(x){ x.classList.toggle('on', x.dataset.bg===bg); }); }
+  function buildGateBg(){
+    var row=$('#gate-bg-row'); if(!row)return; row.innerHTML='';
+    BGS.forEach(function(b){ var d=document.createElement('button'); d.type='button'; d.className='gate-bg-opt '+(b.id==='none'?'none':b.id==='blur'?'blur':'')+(STATE.bg===b.id?' on':''); d.dataset.bg=b.id; if(b.id!=='none'&&b.id!=='blur') d.style.backgroundImage='url("'+bgFile(b.id)+'")'; d.innerHTML='<span>'+b.label+'</span>'; d.addEventListener('click',function(){ applyGateBg(b.id); }); row.appendChild(d); });
+    if(STATE.customBg){ var c=document.createElement('button'); c.type='button'; c.className='gate-bg-opt'+(STATE.bg==='custom'?' on':''); c.dataset.bg='custom'; c.style.backgroundImage='url("'+STATE.customBg+'")'; c.innerHTML='<span>Benim</span>'; c.addEventListener('click',function(){ applyGateBg('custom'); }); row.appendChild(c); }
+  }
+  buildGateBg();
+  var mir=$('#gate-mirror'); if(mir){ mir.checked=STATE.mirror!==false; mir.addEventListener('change',function(){ STATE.mirror=mir.checked; try{localStorage.setItem('gm-mirror',mir.checked?'1':'0');}catch(e){} applyMirror(); }); }
   if(camOn) preview(); else { gp.classList.add('camoff'); fillDevices(); }
   camSel.addEventListener('change',function(){ STATE.camId=camSel.value; if(camOn)preview(); });
   micSel.addEventListener('change',function(){ STATE.micId=micSel.value; });
-  $('#gate-cam').addEventListener('click',function(){ camOn=!camOn; this.classList.toggle('on',camOn); this.textContent=camOn?'Kamera açık':'Kamera kapalı'; if(camOn)preview(); else{ gp.classList.add('camoff'); if(gateStream)gateStream.getTracks().forEach(function(t){t.stop();}); } });
+  $('#gate-cam').addEventListener('click',function(){ camOn=!camOn; this.classList.toggle('on',camOn); this.textContent=camOn?'Kamera açık':'Kamera kapalı'; if(camOn)preview(); else{ gp.classList.add('camoff'); stopPre(); } });
   $('#gate-mic').addEventListener('click',function(){ micOn=!micOn; this.classList.toggle('on',micOn); this.textContent=micOn?'Mikrofon açık':'Mikrofon kapalı'; });
   (async function(){
     if(!STATE.supabase)return;
@@ -100,14 +140,13 @@ function setupGate(){
   $('#gate-join').addEventListener('click',function(){
     var nm=($('#gate-name').value||'').trim(); if(!nm){ toast('Lütfen adını yaz.'); $('#gate-name').focus(); return; }
     STATE.name=nm; STATE.micOn=micOn; STATE.camOn=camOn;
-    // Token'ı hemen çekmeye başla — kamera serbest bırakma + oda hazırlığıyla paralel
+    // Token'ı hemen çekmeye başla — oda hazırlığıyla paralel
     STATE._tokenPromise = fetchLKToken().catch(function(){ return {}; });
-    // Gate önizleme kamerasını tam serbest bırak — LiveKit tekrar açarken çakışma/donma olmasın
-    if(gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; }
-    try{ if(gv) gv.srcObject=null; }catch(e){}
+    // preTrack varsa odaya taşınmak üzere KORUNUR (kamera yeniden açılmaz, model+arka plan hazır → giriş anlık).
+    // Yalnız ham gate akışı (fallback) serbest bırakılır.
+    if(!STATE.preTrack && gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; try{ if(gv) gv.srcObject=null; }catch(e){} }
     $('#gmr-gate').classList.add('hidden');
-    // OS'un kamerayı serbest bırakması için kısa gecikme
-    setTimeout(enterRoom, 200);
+    setTimeout(enterRoom, STATE.preTrack?60:200);
   });
 }
 
@@ -170,10 +209,24 @@ async function connectLiveKit(){
 async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
   if(STATE.micOn) setTimeout(applyNoiseFilter,700);
-  try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
-  try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
-  var camPub=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
-  if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); scheduleAutoBg(); }
+  // Gate'te hazırlanan track'i (kamera + seçili arka plan) doğrudan yayına taşı — kamera yeniden açılmaz.
+  if(STATE.camOn && STATE.preTrack){
+    try{
+      await STATE.lkRoom.localParticipant.publishTrack(STATE.preTrack,{source:LK.Track.Source.Camera});
+      STATE.camTrack=STATE.preTrack; STATE.preTrack=null; attachSelf();
+    }catch(e){
+      STATE.preTrack=null;
+      try{ await STATE.lkRoom.localParticipant.setCameraEnabled(true); }catch(e2){}
+      var cp0=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
+      if(cp0&&cp0.videoTrack){ STATE.camTrack=cp0.videoTrack; attachSelf(); scheduleAutoBg(); }
+    }
+  } else {
+    try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
+    if(STATE.camOn){ try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); }catch(e){}
+      var camPub=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
+      if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); scheduleAutoBg(); } }
+  }
+  try{ if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
 }
 function showWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.remove('hidden'); }
 function hideWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.add('hidden'); }
@@ -188,6 +241,7 @@ function bindWaiting(){
 }
 function enterDemo(reason){
   STATE.demo=true; setStatus('demo','Demo modu');
+  try{ if(STATE.preTrack){ STATE.preTrack.detach(); STATE.preTrack.stop(); STATE.preTrack=null; } }catch(e){}
   sysChat('Demo modu: '+reason+'. Gerçek video/arka plan için canlı bağlantı gerekir; tahta, materyal ve araçlar çalışır.');
   navigator.mediaDevices.getUserMedia({video:STATE.camOn,audio:false}).then(function(st){ STATE.localStream=st; attachSelf(); }).catch(function(){});
   refreshPeople(); updateGridCount();
@@ -218,8 +272,9 @@ function attachTrack(track,pub,p){
 function attachSelf(){
   var t=ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost});
   var v=t.querySelector('video.cam');
-  if(STATE.camTrack){ if(!v){ v=document.createElement('video'); v.className='cam mirror'; v.autoplay=true;v.muted=true;v.playsInline=true; } STATE.camTrack.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
-  else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className='cam mirror'; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } }
+  var mirCls='cam'+((STATE.mirror!==false)?' mirror':'');
+  if(STATE.camTrack){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; } else { v.className=mirCls; } STATE.camTrack.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
+  else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } else { v.className=mirCls; } }
 }
 
 function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); } track.attach(v); $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); }
@@ -288,7 +343,7 @@ function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
     if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
-      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); scheduleAutoBg(); } }
+      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if(STATE._bgApplied&&STATE.bg&&STATE.bg!=='none'){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
       else { STATE.camTrack=null; renderPlaceholder('self'); } } });
   $('#ctrl-tools').addEventListener('click',function(){ toggleDock('tools'); });
   $('#ctrl-share').addEventListener('click',shareScreen);
@@ -653,6 +708,7 @@ function bindBgUpload(){ var i=$('#bg-file-input'); if(!i)return; i.addEventList
 // korunur; kullanıcı odaya girince "Arka Plan"dan tek tıkla açar.
 var _bgHintShown=false;
 function scheduleAutoBg(){
+  if(STATE._bgApplied) return; // arka plan gate'te zaten uygulandı — ipucu gösterme
   if(STATE.bg && STATE.bg!=='none' && !_bgHintShown){
     _bgHintShown=true;
     setTimeout(function(){ try{ toast('Arka planın hazır — açmak için “Arka Plan”a dokun.'); }catch(e){} }, 3000);
@@ -1001,6 +1057,7 @@ function boot(){
   try{ STATE.bg=localStorage.getItem('gm-bg')||'none'; }catch(e){}
   try{ STATE.customBg=localStorage.getItem('gm-bg-custom')||''; }catch(e){}
   if(STATE.bg==='custom'&&!STATE.customBg) STATE.bg='none';
+  try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();

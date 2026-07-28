@@ -2592,6 +2592,22 @@
     }
     .cl-leave-btn:hover{ color:#b3402f!important; border-color:#e3b6ae!important; }
     .cl-teacher-banner{ border-radius:16px!important; }
+    /* Öğrenci hero — Sıcak & Samimi */
+    .sf-hero{
+      display:flex; align-items:center; gap:16px;
+      background:linear-gradient(150deg,#fffdf8,#f4ead6);
+      border:1px solid #ecdfc7; border-radius:24px;
+      padding:22px 26px; margin:0 0 1.8rem;
+      position:relative; overflow:hidden;
+      box-shadow:0 6px 22px rgba(60,45,25,.06);
+    }
+    .sf-hero::after{ content:"🐾"; position:absolute; right:14px; bottom:-20px; font-size:96px; opacity:.06; pointer-events:none; }
+    .sf-hero-badge{ width:62px; height:62px; border-radius:50%; background:#fff; border:2px solid var(--gold,#c89a3c); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 4px 14px rgba(200,154,60,.22); position:relative; z-index:1; }
+    .sf-hero-body{ position:relative; z-index:1; }
+    .sf-hero-eyebrow{ font-family:var(--font-ui,Inter),system-ui,sans-serif; font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold,#c89a3c); font-weight:700; }
+    .sf-hero h1{ font-family:var(--font-display,Georgia),serif; font-size:1.9rem; font-weight:600; color:#23303a; margin:.15rem 0 .3rem; letter-spacing:-.01em; }
+    .sf-hero p{ font-size:.95rem; color:#8a7f68; margin:0; line-height:1.4; }
+    @media(max-width:560px){ .sf-hero{ padding:18px; border-radius:18px; } .sf-hero h1{ font-size:1.5rem; } .sf-hero-badge{ width:52px; height:52px; font-size:26px; } }
   </style>
 </head>
 <body>
@@ -2609,17 +2625,19 @@
     </div>
 
     <div id="sf-content">
+    <div class="sf-hero">
+      <div class="sf-hero-badge">🐱</div>
+      <div class="sf-hero-body">
+        <div class="sf-hero-eyebrow">Sınıflarım</div>
+        <h1>Hoş geldin<span id="sf-hero-name"></span></h1>
+        <p>Sınıfların, canlı derslerin ve ödevlerin — hepsi tek yerde.</p>
+      </div>
+    </div>
     <div id="sf-schedule-wrap" style="display:none;margin:0 0 1.75rem;">
       <div class="zone-head"><span class="zone-eyebrow">Canlı</span><span class="zone-line"></span><h2>Yaklaşan Canlı Dersler</h2></div>
       <div id="sf-schedule"></div>
     </div>
     <!-- ============ SINIFLARIM (Teacher Dashboard - Student side) ============ -->
-    <div class="zone-head">
-      <span class="zone-eyebrow">Sınıf</span>
-      <span class="zone-line"></span>
-      <h2>Sınıflarım</h2>
-    </div>
-
     <!-- Teacher CTA banner (içerik role'e göre JS ile doldurulur) -->
     <div class="cl-teacher-banner" id="cl-teacher-banner"></div>
 
@@ -2741,8 +2759,12 @@
         try{ if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display = n>0 ? 'block':'none'; } }); } }catch(e){}
 
         // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
-        var roleRes = await sbCli.from('profiles').select('role').eq('id', userId).maybeSingle();
+        var roleRes = await sbCli.from('profiles').select('role,full_name').eq('id', userId).maybeSingle();
         var userRole = (roleRes && roleRes.data && roleRes.data.role) || 'customer';
+        try {
+          var _nm = roleRes && roleRes.data && roleRes.data.full_name;
+          if (_nm) { var _fn = String(_nm).trim().split(/\s+/)[0]; var _h = document.getElementById('sf-hero-name'); if (_h && _fn) _h.textContent = ', ' + _fn; }
+        } catch (e) {}
         var banner = document.getElementById('cl-teacher-banner');
 
         function renderBannerForTeacher() {

@@ -28,12 +28,24 @@
     }
 
     .score-card {
-      background: #1a2a28;
+      background: linear-gradient(135deg, #2C5856 0%, #1f3f3e 70%, #123c39 100%);
       color: #fff;
       padding: 3rem 2rem;
-      border-radius: 4px;
+      border-radius: 22px;
       text-align: center;
       margin-bottom: 2rem;
+      box-shadow: 0 20px 50px rgba(26,34,48,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .score-card::after {
+      content: '';
+      position: absolute;
+      top: -70px; right: -50px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(200,154,60,0.12);
+      pointer-events: none;
     }
     .score-card .section-label {
       font-size: 0.85rem;
@@ -88,14 +100,18 @@
       min-width: 200px;
       background: #fff;
       border: 1px solid #d8d2c4;
+      border-radius: 14px;
       padding: 1rem 1.5rem;
       text-decoration: none;
       color: #1a2a28;
-      transition: border-color 0.15s, background 0.15s;
+      box-shadow: 0 2px 10px rgba(26,34,48,0.04);
+      transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
     }
     .actions-bar a:hover {
       border-color: var(--accent, #c89a3c);
       background: #fafaf7;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(26,34,48,0.09);
     }
     .actions-bar a .label {
       font-size: 0.8rem;
@@ -113,7 +129,8 @@
       background: #fff;
       border: 1px solid #d8d2c4;
       padding: 2rem;
-      border-radius: 4px;
+      border-radius: 16px;
+      box-shadow: 0 3px 12px rgba(26,34,48,0.045);
     }
     .feedback-section h2 {
       font-family: Georgia, serif;
@@ -240,7 +257,14 @@
   
 
   <main class="result-container">
-    <div id="loading" class="loading">Sonuçlar hesaplanıyor…</div>
+    <div id="loading" class="loading">
+      <div class="gri-skeleton gri-skel-card" style="height:180px;border-radius:22px;margin-bottom:1.5rem"></div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+        <div class="gri-skeleton gri-skel-card" style="flex:1;min-width:200px;height:80px;border-radius:14px;margin:0"></div>
+        <div class="gri-skeleton gri-skel-card" style="flex:1;min-width:200px;height:80px;border-radius:14px;margin:0"></div>
+      </div>
+      <div class="gri-skeleton gri-skel-card" style="height:220px;border-radius:16px;margin:0"></div>
+    </div>
     <div id="resultBody" style="display:none;">
       <div class="score-card">
         <div class="section-label" id="sectionLabel">—</div>
@@ -360,7 +384,7 @@
 
     async function loadResult() {
       if (!ATTEMPT_ID) {
-        document.getElementById('loading').textContent = 'Sonuç bulunamadı.';
+        document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Sonuç bulunamadı</h4><p>Bu deneme sonucu görüntülenemedi. Denemeyi tekrar çözebilir ya da başka bir denemeye geçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme.html">Denemelere Dön →</a></div>';
         return;
       }
 
@@ -378,7 +402,7 @@
         .single();
 
       if (error || !attempt) {
-        document.getElementById('loading').textContent = 'Sonuç bulunamadı.';
+        document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Sonuç bulunamadı</h4><p>Bu deneme sonucu görüntülenemedi. Denemeyi tekrar çözebilir ya da başka bir denemeye geçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme.html">Denemelere Dön →</a></div>';
         return;
       }
 

@@ -129,7 +129,7 @@ async function connectLiveKit(){
   }catch(e){}
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
-    var room=new LK.Room({adaptiveStream:true,dynacast:true,audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
+    var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:{width:960,height:540,frameRate:24}},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,onParticipant);
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
@@ -141,7 +141,7 @@ async function connectLiveKit(){
     room.on(LK.RoomEvent.Disconnected,function(){ setStatus('err','Bağlantı koptu'); });
     room.on(LK.RoomEvent.TrackMuted,function(pub,p){ if(pub.kind==='audio')updateMic(p.identity,false); refreshPeople(); });
     room.on(LK.RoomEvent.TrackUnmuted,function(pub,p){ if(pub.kind==='audio')updateMic(p.identity,true); refreshPeople(); });
-    room.on(LK.RoomEvent.LocalTrackPublished,function(pub){ if(pub.source===LK.Track.Source.Camera){ STATE.camTrack=pub.videoTrack; attachSelf(); if(STATE.bg!=='none') applyBackground(STATE.bg); } else if(pub.source===LK.Track.Source.ScreenShare){ attachScreen(pub.track,true); } });
+    room.on(LK.RoomEvent.LocalTrackPublished,function(pub){ if(pub.source===LK.Track.Source.Camera){ STATE.camTrack=pub.videoTrack; attachSelf(); scheduleAutoBg(); } else if(pub.source===LK.Track.Source.ScreenShare){ attachScreen(pub.track,true); } });
     room.on(LK.RoomEvent.LocalTrackUnpublished,function(pub){ if(pub.source===LK.Track.Source.ScreenShare){ clearScreen(); setMode('grid'); } });
     room.on(LK.RoomEvent.ConnectionQualityChanged,function(q,p){ var pid=(p===room.localParticipant)?'self':p.identity; var t=tileEl(pid); if(!t)return; var d=t.querySelector('.qdot'); if(d)d.className='qdot '+(q==='excellent'?'q-excellent':(q==='poor'||q==='lost')?'q-poor':'q-good'); });
 
@@ -159,7 +159,7 @@ async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
   try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
   var camPub=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
-  if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); if(STATE.bg!=='none') applyBackground(STATE.bg); }
+  if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); scheduleAutoBg(); }
 }
 function showWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.remove('hidden'); }
 function hideWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.add('hidden'); }
@@ -274,7 +274,7 @@ function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
     if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
-      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if(STATE.bg!=='none') applyBackground(STATE.bg); } }
+      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); scheduleAutoBg(); } }
       else { STATE.camTrack=null; renderPlaceholder('self'); } } });
   $('#ctrl-tools').addEventListener('click',function(){ toggleDock('tools'); });
   $('#ctrl-share').addEventListener('click',shareScreen);
@@ -634,6 +634,13 @@ function bindBgUpload(){ var i=$('#bg-file-input'); if(!i)return; i.addEventList
     try{ localStorage.setItem('gm-bg-custom',data); }catch(e){ toast('Görsel çok büyük, tekrar kaydedilemedi (daha küçük bir resim dene).'); }
     buildBgGrid(); applyBackground('custom');
   }catch(e){ toast('Görsel işlenemedi.'); } }; img.onerror=function(){ toast('Görsel açılamadı.'); }; img.src=rd.result; }; rd.readAsDataURL(f); }); }
+// Kayıtlı arka planı ilk render'ı bloklamadan, ertelenmiş ve tek seferlik uygula
+var _lastAutoBg=0;
+function scheduleAutoBg(){
+  if(!STATE.bg || STATE.bg==='none') return;
+  var now=Date.now(); if(now-_lastAutoBg<3000) return; _lastAutoBg=now;
+  setTimeout(function(){ if(STATE.camTrack && STATE.bg!=='none'){ try{ applyBackground(STATE.bg); }catch(e){} } }, 1600);
+}
 async function applyBackground(bg){
   STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} var track=STATE.camTrack;
   if(!track){ toast(STATE.demo?'Arka plan için canlı bağlantı gerekli.':'Kamera açık değil.'); return; }
@@ -641,7 +648,7 @@ async function applyBackground(bg){
   try{
     if(bg==='none'){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
     else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
-      if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(22));
+      if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(12));
       else await track.setProcessor(tp.VirtualBackground(bgFile(bg))); }
     if(note)note.textContent='Hazır. İlk seçimde birkaç saniye sürebilir.';
     setTimeout(function(){ $('#bg-modal').classList.add('hidden'); },300);

@@ -205,7 +205,7 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,3).map(function(r){ return '<span class="ev"><b>'+hhmm(r._d)+'</b> '+esc(r.title)+'</span>'; }).join('');
+        var evHTML=evs.slice(0,3).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>3) evHTML+='<span class="ev ev-more">+'+(evs.length-3)+' ders</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }

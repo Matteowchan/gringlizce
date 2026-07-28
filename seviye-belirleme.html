@@ -851,8 +851,8 @@ function sendReport(){
 function evalWriting(){
   var box=document.getElementById('ai-writing-eval'); if(!box)return;
   var items=WRITING.map(function(w){var t=(STATE.writing&&STATE.writing[w.no])||'';return {w:w,text:t,ok:!!(t && wordCount(t)>=5)};});
-  if(!items.some(function(x){return x.ok;})){ box.innerHTML='<p class="instr">Yazma görevleri boş ya da çok kısa; AI değerlendirmesi yapılmadı.</p>'; return; }
-  box.innerHTML='<p class="instr">✍️ Gri AI, Part 1 ve Part 2\'yi ayrı ayrı değerlendiriyor…</p>';
+  if(!items.some(function(x){return x.ok;})){ box.innerHTML='<div class="gri-empty"><div class="gri-empty-ic">✍️</div><h4>Değerlendirme yapılmadı</h4><p>Yazma görevleri boş ya da çok kısa olduğu için AI değerlendirmesi yapılmadı.</p></div>'; return; }
+  box.innerHTML='<p class="instr">✍️ Gri AI, Part 1 ve Part 2\'yi ayrı ayrı değerlendiriyor…</p><div class="gri-skeleton gri-skel-line" style="margin-top:12px"></div><div class="gri-skeleton gri-skel-line w80"></div><div class="gri-skeleton gri-skel-line w60"></div><div class="gri-skeleton gri-skel-card" style="height:90px;margin-top:14px"></div>';
   var token=window.__SB_TOKEN||SBKEY;
   function one(it){
     if(!it.ok) return Promise.resolve({part:it.w.no,type:it.w.type,skipped:true});

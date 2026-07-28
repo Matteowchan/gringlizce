@@ -1778,6 +1778,11 @@
     #modal-create-assign .ca-modal-foot{ display:flex; align-items:center; gap:.7rem; padding:1rem 1.7rem; border-top:1px solid #eee3cf; background:#faf6ec; margin:0; }
     #modal-create-assign .ca-tpl-save-row{ margin:0 auto 0 0; }
     #modal-create-assign input,#modal-create-assign textarea,#modal-create-assign select{ border-radius:10px!important; }
+    #modal-create-assign .ca-due-ctl{ display:flex; gap:.5rem; align-items:center; margin-bottom:1.1rem; flex-wrap:wrap; }
+    #modal-create-assign .ca-due-ctl #ca-due-date{ flex:1; min-width:130px; margin-bottom:0!important; }
+    #modal-create-assign .ca-due-time{ display:flex; align-items:center; gap:.3rem; }
+    #modal-create-assign .ca-due-time select{ width:auto!important; margin-bottom:0!important; padding:.72rem .6rem!important; }
+    #modal-create-assign .ca-due-time span{ color:var(--text-muted); font-weight:700; }
     @media(max-width:720px){
       #modal-create-assign .ca-layout{ grid-template-columns:1fr; }
       #modal-create-assign .ca-rail{ border-right:none; border-bottom:1px solid #eee3cf; max-height:none; }
@@ -2041,8 +2046,11 @@
         <label for="ca-desc">Açıklama (Opsiyonel)</label>
         <textarea id="ca-desc" rows="2" maxlength="500" placeholder="Bu hafta sonuna kadar bitir..."></textarea>
 
-        <label for="ca-due">Son Tarih (Opsiyonel)</label>
-        <input type="datetime-local" id="ca-due" lang="tr-TR" step="60">
+        <label for="ca-due-date">Son Tarih (Opsiyonel)</label>
+        <div class="ca-due-ctl">
+          <input type="date" id="ca-due-date" lang="tr-TR">
+          <div class="ca-due-time"><select id="ca-due-h" aria-label="Saat"></select><span>:</span><select id="ca-due-m" aria-label="Dakika"></select></div>
+        </div>
 
         <!-- Questions config -->
         <div class="t-config-block show" data-config="questions">
@@ -4348,6 +4356,20 @@
         });
       })();
 
+      (function () {
+        var hSel = document.getElementById('ca-due-h'), mSel = document.getElementById('ca-due-m');
+        if (hSel && !hSel.options.length) {
+          var ho = '<option value="">--</option>';
+          for (var h = 0; h < 24; h++) { var hh = ('0' + h).slice(-2); ho += '<option value="' + hh + '">' + hh + '</option>'; }
+          hSel.innerHTML = ho;
+        }
+        if (mSel && !mSel.options.length) {
+          var mo = '<option value="">--</option>';
+          for (var m = 0; m < 60; m += 5) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '">' + mm + '</option>'; }
+          mSel.innerHTML = mo;
+        }
+      })();
+
       document.getElementById('ca-w-exam').addEventListener('change', function () {
         populateTextTypeSelect();
         toggleImageUploadSection();
@@ -4532,7 +4554,10 @@
         caErr.textContent = '';
         var title = document.getElementById('ca-title').value.trim();
         var desc = document.getElementById('ca-desc').value.trim();
-        var dueRaw = document.getElementById('ca-due').value;
+        var _dd = document.getElementById('ca-due-date').value;
+        var _dh = document.getElementById('ca-due-h').value || '23';
+        var _dm = document.getElementById('ca-due-m').value || '59';
+        var dueRaw = _dd ? (_dd + 'T' + _dh + ':' + _dm) : '';
         if (!title) { caErr.textContent = 'Başlık boş olamaz.'; return; }
 
         var config = {};

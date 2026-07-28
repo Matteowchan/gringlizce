@@ -18,6 +18,10 @@
     + '.gsch-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}'
     + '.gsch-form label{font-size:12px;color:#6a6250;display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;}'
     + '.gsch-form input,.gsch-form select{font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;}'
+    + '.gsch-form .f-when-ctl{display:flex;gap:6px;align-items:center;}'
+    + '.gsch-form .f-when-ctl .f-date{flex:1;min-width:120px;}'
+    + '.gsch-form .f-when-ctl select{padding:8px 6px;}'
+    + '.gsch-form .f-colon{color:#6a6250;font-weight:700;}'
     + '.gsch-form .acts{display:flex;gap:8px;}'
     + '.gsch-btn{background:#2C5856;color:#fff;border:none;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;}'
     + '.gsch-btn.ghost{background:transparent;color:#6a6250;border:1px solid #d8d2c4;}'
@@ -73,6 +77,9 @@
     if(!sb||!cont) return null;
     var state={ view:'list', month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null };
 
+    var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
+    var _mopt='<option value="">--</option>'; for(var _m=0;_m<60;_m+=5){ var _mm=('0'+_m).slice(-2); _mopt+='<option value="'+_mm+'">'+_mm+'</option>'; }
+
     cont.innerHTML =
       '<div class="gsch">'
       + '<div class="gsch-head">'
@@ -82,7 +89,7 @@
       + (role==='teacher' ?
           '<div class="gsch-form">'
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
-          + '<label>Tarih & saat<input type="datetime-local" class="f-when" lang="tr-TR" step="60"></label>'
+          + '<label>Tarih & saat<span class="f-when-ctl"><input type="date" class="f-date" lang="tr-TR"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
           + '<div class="row"><label style="flex:2">Not (opsiyonel)<input type="text" class="f-note" placeholder="Öğrencilere kısa not" maxlength="140"></label></div>'
           + '<div class="acts"><button class="gsch-btn f-save">Planla</button><button class="gsch-btn ghost f-cancel">Vazgeç</button></div>'
@@ -103,11 +110,14 @@
 
     async function save(){
       var title=(cont.querySelector('.f-title').value||'').trim();
-      var when=cont.querySelector('.f-when').value;
+      var _fd=(cont.querySelector('.f-date').value||'');
+      var _fh=cont.querySelector('.f-h').value, _fm=cont.querySelector('.f-m').value;
+      var when=_fd ? (_fd+'T'+(_fh||'00')+':'+(_fm||'00')) : '';
       var dur=parseInt(cont.querySelector('.f-dur').value,10)||60;
       var note=(cont.querySelector('.f-note').value||'').trim();
       if(!title){ alert('Başlık gir.'); return; }
-      if(!when){ alert('Tarih ve saat seç.'); return; }
+      if(!_fd){ alert('Tarih seç.'); return; }
+      if(!_fh){ alert('Saat seç.'); return; }
       var startsAt=new Date(when);
       if(isNaN(startsAt.getTime())){ alert('Geçerli bir tarih seç.'); return; }
       var room=(opts.roomForClass?opts.roomForClass(opts.classId):('C'+String(opts.classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());

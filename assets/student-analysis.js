@@ -11,7 +11,9 @@
 (function () {
   if (window.GriAnalysis) return;
 
-  var EXAM_META = { sat: { label: 'SAT' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' } };
+  var EXAM_META = { sat: { label: 'SAT' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' }, ielts: { label: 'IELTS (Deneme)' }, vocab: { label: 'Kelime Bilgisi' } };
+  var SECTION_LABEL = { reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking', genel: 'Genel' };
+  function num1(x) { var n = parseFloat(x); return isNaN(n) ? null : n; }
   var SAT_MATH_CATS = { advanced_math: 1, algebra: 1, geometry_and_trigonometry: 1, problem_solving_and_data_analysis: 1 };
   var CAT_LABELS = {
     information_and_ideas: 'Information & Ideas', craft_and_structure: 'Craft & Structure',
@@ -149,6 +151,56 @@
     return html;
   }
 
+  function bandColor(b) { return b >= 6.5 ? '#1FA971' : (b >= 5 ? '#B78A2E' : '#c0392b'); }
+  function buildIelts(d) {
+    var att = d.attempts || 0;
+    if (!att) return '<div class="ga-empty">IELTS deneme verisi yok.</div>';
+    var overall = num1(d.overall);
+    var secs = (d.sections || []).slice();
+    var html = '<div class="ga-cards">';
+    html += card('Genel Band', overall != null ? overall.toFixed(1) : '—', '/9', att, true);
+    secs.forEach(function (s) { var av = num1(s.avg); html += card(SECTION_LABEL[s.section] || s.section, av != null ? av.toFixed(1) : '—', '/9', s.attempts); });
+    html += '</div>';
+    html += '<div class="ga-note">Gerçek IELTS deneme band ortalaması · ' + att + ' deneme · ' + secs.length + ' bölüm.</div>';
+    var goal = num1(d.goal);
+    if (goal != null && overall != null) {
+      var gap = Math.round((goal - overall) * 10) / 10;
+      var gColor = gap <= 0 ? '#1FA971' : (gap <= 0.5 ? '#B78A2E' : '#c0392b');
+      var gTxt = gap <= 0 ? 'hedefin üzerinde ▲' : ('hedefe ' + gap + ' band var');
+      html += '<div class="ga-goal">🎯 Hedef band: <b>' + esc(String(d.goal)) + '</b> · Ortalama: <b>' + overall.toFixed(1) + '</b> · <b style="color:' + gColor + '">' + gTxt + '</b></div>';
+    } else if (d.goal) { html += '<div class="ga-goal">🎯 Hedef band: <b>' + esc(String(d.goal)) + '</b></div>'; }
+    html += '<div class="ga-grp">Bölüm Detayı (en iyi · son)</div>';
+    html += secs.map(function (s) {
+      var av = num1(s.avg) || 0, p = Math.round(av / 9 * 100);
+      var best = num1(s.best), last = num1(s.last);
+      return '<div class="ga-row"><span class="n">' + esc(SECTION_LABEL[s.section] || s.section) + '</span>' + bar(p, bandColor(av)) + '<span class="p">' + av.toFixed(1) + ' <span style="opacity:.65">(' + (best != null ? best.toFixed(1) : '—') + ' · ' + (last != null ? last.toFixed(1) : '—') + ')</span></span></div>';
+    }).join('');
+    var sorted = secs.filter(function (s) { return num1(s.avg) != null; }).sort(function (a, b) { return num1(b.avg) - num1(a.avg); });
+    var v = '<b>IELTS</b>: Ortalama band <b>' + (overall != null ? overall.toFixed(1) : '—') + '</b>. ';
+    if (sorted.length) { v += 'En güçlü: ' + esc(SECTION_LABEL[sorted[0].section] || sorted[0].section) + ' (' + num1(sorted[0].avg).toFixed(1) + '). '; if (sorted.length > 1) { var w = sorted[sorted.length - 1]; v += 'En zayıf: <b>' + esc(SECTION_LABEL[w.section] || w.section) + '</b> (' + num1(w.avg).toFixed(1) + ') — bu bölüme ağırlık verilmeli.'; } }
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+  function buildVocab(d) {
+    var saved = d.saved || 0, mastered = d.mastered || 0, reviews = d.reviews || 0;
+    var qa = d.quiz_attempts || 0, qs = d.quiz_score || 0, qt = d.quiz_total || 0;
+    if (!saved && !qa) return '<div class="ga-empty">Kelime verisi yok.</div>';
+    var quizPct = qt > 0 ? Math.round(100 * qs / qt) : null;
+    var lvl = mastered >= 1500 ? 'C1+' : (mastered >= 800 ? 'B2' : (mastered >= 350 ? 'B1' : (mastered >= 120 ? 'A2' : 'A1')));
+    var html = '<div class="ga-cards">';
+    html += card('Tahmini Seviye', lvl, '', mastered + ' öğrenilmiş', true);
+    html += card('Kaydedilen', saved, 'kelime', saved);
+    html += card('Öğrenilmiş', mastered, '≥3 tekrar', mastered);
+    if (quizPct != null) html += card('Quiz Doğruluğu', quizPct, '%', qa);
+    html += '</div>';
+    html += '<div class="ga-note">Seviye, öğrenilmiş (≥3 tekrar) kelime sayısından kaba bir tahmindir · toplam tekrar: ' + reviews + '.</div>';
+    var v = '<b>Kelime Bilgisi</b>: ' + saved + ' kelime kaydedilmiş, ' + mastered + ' tanesi öğrenilmiş (≥3 tekrar). Tahmini seviye <b>' + lvl + '</b>. ';
+    if (quizPct != null) v += 'Kelime quizlerinde %' + quizPct + ' doğruluk. ';
+    if (saved > 0 && mastered < saved * 0.5) v += 'Öneri: kaydedilen kelimelerin tekrarı artırılmalı.'; else v += 'Tekrar disiplini iyi.';
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+
   function mount(opts) {
     var sb = opts.sb, cont = opts.container, userId = opts.userId, onAssign = opts.onAssign;
     if (!sb || !cont || !userId) return;
@@ -158,11 +210,20 @@
 
     function render(exam) {
       body.className = 'ga-body ga-empty'; body.textContent = 'Analiz ediliyor…';
-      sb.rpc('admin_user_exam_analysis', { p_user_id: userId, p_exam: exam }).then(function (r) {
+      var rpc, arg;
+      if (exam === 'ielts') { rpc = 'admin_user_ielts_analysis'; arg = { p_user_id: userId }; }
+      else if (exam === 'vocab') { rpc = 'admin_user_vocab_analysis'; arg = { p_user_id: userId }; }
+      else { rpc = 'admin_user_exam_analysis'; arg = { p_user_id: userId, p_exam: exam }; }
+      sb.rpc(rpc, arg).then(function (r) {
         if (r.error) throw r.error;
         body.className = 'ga-body';
-        body.innerHTML = build(exam, r.data || {}, !!onAssign, opts.assignLabel);
-        if (onAssign) { body.querySelectorAll('[data-assign-cat]').forEach(function (b) { b.addEventListener('click', function () { onAssign(exam, b.dataset.assignCat, b.dataset.assignLabel); }); }); }
+        var d = r.data || {};
+        if (exam === 'ielts') { body.innerHTML = buildIelts(d); }
+        else if (exam === 'vocab') { body.innerHTML = buildVocab(d); }
+        else {
+          body.innerHTML = build(exam, d, !!onAssign, opts.assignLabel);
+          if (onAssign) { body.querySelectorAll('[data-assign-cat]').forEach(function (b) { b.addEventListener('click', function () { onAssign(exam, b.dataset.assignCat, b.dataset.assignLabel); }); }); }
+        }
       }).catch(function () { body.className = 'ga-body ga-empty'; body.textContent = 'Analiz yüklenemedi.'; });
     }
 

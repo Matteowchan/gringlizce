@@ -80,7 +80,8 @@
     if(!sb||!cont) return null;
     var aggregate=!!opts.aggregate;               // öğretmenin TÜM sınıfları tek takvimde
     var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
-    var state={ view:'list', month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null };
+    var _savedView='list'; try{ var _v=localStorage.getItem('gsch-view'); if(_v==='cal'||_v==='list') _savedView=_v; }catch(e){}
+    var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null };
 
     var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
     var _mopt='<option value="">--</option>'; for(var _m=0;_m<60;_m+=5){ var _mm=('0'+_m).slice(-2); _mopt+='<option value="'+_mm+'">'+_mm+'</option>'; }
@@ -88,7 +89,7 @@
     cont.innerHTML =
       '<div class="gsch">'
       + '<div class="gsch-head">'
-      +   '<div class="gsch-toggle"><button data-v="list" class="on">Liste</button><button data-v="cal">Takvim</button></div>'
+      +   '<div class="gsch-toggle"><button data-v="list"'+(state.view==='list'?' class="on"':'')+'>Liste</button><button data-v="cal"'+(state.view==='cal'?' class="on"':'')+'>Takvim</button></div>'
       +   (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + (role==='teacher' ?
@@ -105,7 +106,7 @@
       + '</div>';
 
     var body=cont.querySelector('.gsch-body');
-    cont.querySelectorAll('.gsch-toggle button').forEach(function(b){ b.addEventListener('click',function(){ state.view=b.dataset.v; cont.querySelectorAll('.gsch-toggle button').forEach(function(x){x.classList.toggle('on',x===b);}); render(); }); });
+    cont.querySelectorAll('.gsch-toggle button').forEach(function(b){ b.addEventListener('click',function(){ state.view=b.dataset.v; try{localStorage.setItem('gsch-view',state.view);}catch(e){} cont.querySelectorAll('.gsch-toggle button').forEach(function(x){x.classList.toggle('on',x===b);}); render(); }); });
 
     if(role==='teacher'){
       var form=cont.querySelector('.gsch-form');

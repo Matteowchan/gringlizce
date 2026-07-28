@@ -635,9 +635,14 @@ function bindFileUpload(){
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
+  STATE.matScrollEl=null;
   ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } matTab('youtube'); ensureYtPlayer(id); }
-  else if(m.kind==='file'){ matTab('file'); var ff=$('#mat-file-frame'); if(ff){ var ex=(m.ext||'').toLowerCase(); var src=(ex==='pdf')?(m.value+'#toolbar=1&view=FitH'):('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value)); ff.innerHTML='<iframe id="mat-file-if" src="'+esc(src)+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); var st=$('#mat-file-status'); if(st&&m.name)st.textContent=m.name; } }
+  else if(m.kind==='file'){ matTab('file'); var ff=$('#mat-file-frame'); if(ff){ var ex=(m.ext||'').toLowerCase(); var st=$('#mat-file-status'); if(st&&m.name)st.textContent=m.name;
+    if(ex==='pdf'){ ff.innerHTML='<div id="mat-file-scroll" class="pdf-scroll"><div class="mat-empty">PDF hazırlanıyor…</div></div>'; var sc=$('#mat-file-scroll'); applyZoom();
+      renderPdf(m.value,sc).then(function(ok){ if(ok){ attachFileScrollSync(sc); applyZoom(); if(remote&&typeof STATE._pendFileScroll==='number'){ applyMatScroll(STATE._pendFileScroll); STATE._pendFileScroll=null; } } else { ff.innerHTML='<iframe id="mat-file-if" src="'+esc(m.value+'#toolbar=1&view=FitH')+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); } });
+    } else { ff.innerHTML='<iframe id="mat-file-if" src="'+esc('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value))+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); }
+  } }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
     if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
       fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
@@ -646,8 +651,22 @@ function loadMaterial(m,remote){
   applyZoom();
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value,ext:m.ext}); }
 }
-function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
+function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var fs=document.getElementById('mat-file-scroll'); if(fs){ try{ fs.style.zoom=STATE.matZoom; }catch(e){} } var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
+var _pdfjs=null,_pdfjsTried=false,_pdfVer='4.7.76';
+async function loadPdfjs(){ if(_pdfjs||_pdfjsTried)return _pdfjs; _pdfjsTried=true; try{ var m=await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@'+_pdfVer+'/build/pdf.min.mjs'); m.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@'+_pdfVer+'/build/pdf.worker.min.mjs'; _pdfjs=m; }catch(e){ _pdfjs=null; } return _pdfjs; }
+async function renderPdf(url,container){
+  var pdfjs=await loadPdfjs(); if(!pdfjs||!container)return false;
+  try{
+    var pdf=await pdfjs.getDocument({url:url,withCredentials:false}).promise;
+    container.innerHTML=''; var scale=Math.min(2,(container.clientWidth-24)/612)||1.3; if(!(scale>0.3))scale=1.3;
+    for(var i=1;i<=pdf.numPages;i++){ var page=await pdf.getPage(i); var vp=page.getViewport({scale:scale});
+      var cv=document.createElement('canvas'); cv.className='pdf-page'; cv.width=vp.width; cv.height=vp.height; container.appendChild(cv);
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise; }
+    return true;
+  }catch(e){ return false; }
+}
+function attachFileScrollSync(el){ if(!el)return; STATE.matScrollEl=el; var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; var max=(el.scrollHeight-el.clientHeight)||1; sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,el.scrollTop/max))}); },140); el.addEventListener('scroll',bc,{passive:true}); }
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
 function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared)||(!STATE.isHost&&STATE.matControl); }
 function attachMatScrollSync(itf){ if(!itf)return;
@@ -658,7 +677,9 @@ function attachMatScrollSync(itf){ if(!itf)return;
     w.addEventListener('scroll',bc,{passive:true});
   }catch(e){} });
 }
-function applyMatScroll(frac){ try{ var itf=document.getElementById('mat-uni-if'); if(!itf||!itf.contentWindow)return; var w=itf.contentWindow; var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; STATE._matScrollLock=true; w.scrollTo(0,frac*max); clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); }catch(e){} }
+function applyMatScroll(frac){ try{
+  if(STATE.currentMaterial&&STATE.currentMaterial.kind==='file'){ var el=STATE.matScrollEl; if(!el||!el.isConnected){ STATE._pendFileScroll=frac; return; } var mx=(el.scrollHeight-el.clientHeight)||1; STATE._matScrollLock=true; el.scrollTop=frac*mx; clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); return; }
+  var itf=document.getElementById('mat-uni-if'); if(!itf||!itf.contentWindow)return; var w=itf.contentWindow; var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; STATE._matScrollLock=true; w.scrollTo(0,frac*max); clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); }catch(e){} }
 var _ytApiP=null;
 function loadYtApi(){ if(window.YT&&window.YT.Player) return Promise.resolve(); if(_ytApiP) return _ytApiP; _ytApiP=new Promise(function(res){ var prev=window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady=function(){ if(prev)try{prev();}catch(e){} res(); }; var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); }); return _ytApiP; }
 function ensureYtPlayer(id){

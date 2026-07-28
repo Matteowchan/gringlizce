@@ -614,7 +614,7 @@ function bindFileUpload(){
   inp.addEventListener('change',async function(){
     var f=inp.files&&inp.files[0]; if(!f)return;
     var ext=(f.name.split('.').pop()||'').toLowerCase(); inp.value='';
-    if(['pdf','docx','pptx','doc','ppt'].indexOf(ext)<0){ toast('Sadece PDF, Word (.docx) veya Sunum (.pptx) yükleyebilirsin.'); return; }
+    if(ext!=='pdf'){ toast('Sadece PDF yükleyebilirsin. Word/PowerPoint için PDF olarak kaydet ya da Ekran ile paylaş.'); return; }
     if(f.size>26214400){ toast('Dosya 25 MB sınırını aşıyor.'); return; }
     if(!STATE.supabase){ toast('Yükleme için giriş yapmış olmalısın.'); return; }
     st.textContent='Yükleniyor…';

@@ -35,7 +35,7 @@ var BGS=[
 ];
 function bgFile(id){ if(id==='custom') return STATE.customBg||''; return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 
-var RES_MAP={ '360':{width:640,height:360,frameRate:24}, '540':{width:960,height:540,frameRate:24}, '720':{width:1280,height:720,frameRate:24} };
+var RES_MAP={ '360':{width:640,height:360,frameRate:24}, '540':{width:960,height:540,frameRate:24}, '720':{width:1280,height:720,frameRate:24}, '1080':{width:1920,height:1080,frameRate:24} };
 function resObj(){ return RES_MAP[STATE.camRes]||RES_MAP['540']; }
 
 var ROOM_THEMES=[
@@ -532,7 +532,7 @@ function sendQuiz(){
 }
 function renderQuizSetTally(){ var el=$('#quiz-tally'); if(!el||!STATE.quizSet)return; var L=STATE.quizSet.list,V=STATE.quizSet.votes;
   el.innerHTML=L.map(function(item,qi){ var v=V[qi]||{}; var ks=(item.opts&&Object.keys(item.opts).length)?Object.keys(item.opts).sort():['A','B','C','D']; var tot=ks.reduce(function(s,k){return s+(v[k]||0);},0)||1;
-    return '<div style="margin:8px 0 4px;font-weight:700;font-size:12px">Soru '+(qi+1)+(item.q?': '+esc(item.q).slice(0,36):'')+'</div>'+ks.map(function(k){ return '<div class="qrow'+(item.correct===k?' correct':'')+'"><b>'+k+'</b><div class="qbar" style="width:'+((v[k]||0)/tot*120)+'px"></div><span>'+(v[k]||0)+'</span></div>'; }).join(''); }).join('');
+    return '<div class="qtally-q">Soru '+(qi+1)+(item.q?': '+esc(item.q):'')+'</div>'+ks.map(function(k){ var otext=(item.opts&&item.opts[k])?esc(item.opts[k]):''; return '<div class="qrow'+(item.correct===k?' correct':'')+'"><b>'+k+'</b><span class="qopt">'+otext+'</span><div class="qbar" style="width:'+((v[k]||0)/tot*90)+'px"></div><span class="qn">'+(v[k]||0)+'</span></div>'; }).join(''); }).join('');
 }
 /* ---- Quiz (öğrenci — otomatik ilerler) ---- */
 function openQuizSet(list,dur){ STATE.quizRun={list:list,i:0,score:0,dur:dur||30}; showQuizQ(); }

@@ -98,6 +98,17 @@
     .passage-content { font-size: 1rem; line-height: 1.7; color: #2a2a2a; }
     .passage-content p { margin: 0.85rem 0; }
     .passage-content strong { color: #1a2a28; }
+    /* Metin işaretleme (highlight) */
+    .hl-group { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; }
+    .hl-group .hl-lbl { font-size: 0.72rem; color: #6a6250; margin-right: 1px; }
+    .hl-btn { width: 24px; height: 24px; border-radius: 6px; border: 2px solid rgba(0,0,0,.18); cursor: pointer; padding: 0; font-size: 0.72rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: #444; }
+    .hl-btn[data-hl="y"] { background: #ffe14d; } .hl-btn[data-hl="g"] { background: #a9eea3; }
+    .hl-btn[data-hl="p"] { background: #ffbcd6; } .hl-btn[data-hl="b"] { background: #b6d8ff; }
+    .hl-btn.on { border-color: #1a1a1a; box-shadow: 0 0 0 2px rgba(0,0,0,.22); }
+    .hl-btn.erase, .hl-btn.clear { background: #ece7dc; width: auto; padding: 0 9px; }
+    .hl-btn.erase.on { background: #f2c9c9; border-color: #b33; color: #7a1f1f; }
+    span.ihl { border-radius: 3px; padding: 0 1px; box-decoration-break: clone; -webkit-box-decoration-break: clone; cursor: pointer; }
+    body.hl-armed .passage-content, body.hl-erase .passage-content { cursor: crosshair; }
 
     /* ===== Koyu tema: chrome koyu, sınav panelleri açık "kağıt" (içerik birebir render) ===== */
     [data-theme="dark"] body { background: #0f1419; color: #d8d8d8; }
@@ -418,6 +429,15 @@
         <button type="button" class="font-zoom-btn active" data-fz="m" aria-label="Normal">A</button>
         <button type="button" class="font-zoom-btn" data-fz="l"  aria-label="Büyük">A</button>
         <button type="button" class="font-zoom-btn" data-fz="xl" aria-label="Çok büyük">A</button>
+      </div>
+      <div class="hl-group" role="group" aria-label="Metni işaretle" title="Bir renge tıkla, sonra metni seç">
+        <span class="hl-lbl">İşaretle:</span>
+        <button type="button" class="hl-btn" data-hl="y" title="Sarı"></button>
+        <button type="button" class="hl-btn" data-hl="g" title="Yeşil"></button>
+        <button type="button" class="hl-btn" data-hl="p" title="Pembe"></button>
+        <button type="button" class="hl-btn" data-hl="b" title="Mavi"></button>
+        <button type="button" class="hl-btn erase" data-hl="erase" title="Silgi: işaretin üstüne tıkla/seç">Sil</button>
+        <button type="button" class="hl-btn clear" data-hl="clear" title="Bu passage'daki tüm işaretleri temizle">Temizle</button>
       </div>
       <button class="submit-btn" id="submitBtn">Bitir</button>
     </div>
@@ -1035,5 +1055,94 @@
 <script src="assets/breadcrumb.js" defer></script>
 <link rel="stylesheet" href="assets/ielts-exam-enhance.css">
 <script src="assets/ielts-exam-enhance.js" defer></script>
+<script>
+/* IELTS Reading — çok renkli metin işaretleme (highlight) */
+(function(){
+  var COLORS = { y:'#ffe14d', g:'#a9eea3', p:'#ffbcd6', b:'#b6d8ff' };
+  var active = null; // 'y'|'g'|'p'|'b'|'erase'|null
+
+  function closestPassage(node){ if(!node) return null; if(node.nodeType===3) node=node.parentNode; return node && node.closest ? node.closest('.passage-content') : null; }
+
+  function setActive(k){
+    active = (active===k) ? null : k;
+    document.querySelectorAll('.hl-btn').forEach(function(b){ b.classList.toggle('on', b.dataset.hl===active); });
+    document.body.classList.toggle('hl-armed', !!active && active!=='erase');
+    document.body.classList.toggle('hl-erase', active==='erase');
+  }
+
+  function textNodesIn(range){
+    var root = range.commonAncestorContainer; if(root.nodeType===3) root = root.parentNode;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var out = [], n;
+    while((n = walker.nextNode())){
+      if(!range.intersectsNode(n)) continue;
+      if(n.parentNode && n.parentNode.closest && !n.parentNode.closest('.passage-content')) continue;
+      var s = 0, e = n.nodeValue.length;
+      if(n===range.startContainer) s = range.startOffset;
+      if(n===range.endContainer) e = range.endOffset;
+      if(e>s && n.nodeValue.slice(s,e).trim()!=='') out.push({node:n,s:s,e:e});
+    }
+    return out;
+  }
+
+  function applyColor(range, color){
+    textNodesIn(range).forEach(function(f){
+      var t = f.node.nodeValue;
+      var sp = document.createElement('span'); sp.className='ihl'; sp.setAttribute('data-ihl','1'); sp.style.background=color; sp.textContent=t.slice(f.s,f.e);
+      var frag = document.createDocumentFragment();
+      if(f.s) frag.appendChild(document.createTextNode(t.slice(0,f.s)));
+      frag.appendChild(sp);
+      if(f.e<t.length) frag.appendChild(document.createTextNode(t.slice(f.e)));
+      if(f.node.parentNode) f.node.parentNode.replaceChild(frag, f.node);
+    });
+  }
+
+  function unwrap(span){ var p=span.parentNode; if(!p) return; while(span.firstChild) p.insertBefore(span.firstChild, span); p.removeChild(span); p.normalize(); }
+
+  function eraseInRange(range){
+    var pc = closestPassage(range.commonAncestorContainer); if(!pc) return;
+    Array.prototype.slice.call(pc.querySelectorAll('span.ihl')).forEach(function(sp){ if(range.intersectsNode(sp)) unwrap(sp); });
+  }
+
+  function clearActive(){
+    var sec = document.querySelector('.passage-section.active') || document;
+    Array.prototype.slice.call(sec.querySelectorAll('span.ihl')).forEach(unwrap);
+  }
+
+  document.addEventListener('mouseup', function(e){
+    if(!active) return;
+    var sel = window.getSelection(); if(!sel || !sel.rangeCount) return;
+    var range = sel.getRangeAt(0);
+    if(!closestPassage(range.startContainer) || !closestPassage(range.endContainer)) return;
+    if(range.collapsed){
+      if(active==='erase'){ var el = e.target.closest ? e.target.closest('span.ihl') : null; if(el) unwrap(el); }
+      return;
+    }
+    try{
+      if(active==='erase') eraseInRange(range);
+      else applyColor(range, COLORS[active] || COLORS.y);
+    }catch(err){}
+    sel.removeAllRanges();
+  });
+
+  // Silgi modunda tek işarete tıklayınca da silinsin
+  document.addEventListener('click', function(e){
+    if(active!=='erase') return;
+    var el = e.target.closest ? e.target.closest('span.ihl') : null;
+    if(el){ unwrap(el); }
+  });
+
+  function bind(){
+    document.querySelectorAll('.hl-btn').forEach(function(b){
+      b.addEventListener('click', function(){
+        var k = b.dataset.hl;
+        if(k==='clear'){ clearActive(); return; }
+        setActive(k);
+      });
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+</script>
 </body>
 </html>

@@ -431,6 +431,7 @@ function bindTools(){
   $$('#quiz-opts .cor').forEach(function(b){ b.addEventListener('click',function(){ var on=b.classList.contains('on'); $$('#quiz-opts .cor').forEach(function(x){x.classList.remove('on');}); if(!on)b.classList.add('on'); }); });
   $('#btn-quiz-add').addEventListener('click',addQuizToQueue);
   $('#btn-quiz').addEventListener('click',sendQuiz);
+  bindQuizBank();
   $('#btn-breakout').addEventListener('click',makeBreakout);
   var bm=$('#btn-breakout-manual'); if(bm) bm.addEventListener('click',renderManualBreakout);
   // quiz popup (student)
@@ -457,8 +458,8 @@ function sendQuiz(){
   toast(list.length+' soruluk quiz gönderildi. Öğrenciler otomatik ilerler.');
 }
 function renderQuizSetTally(){ var el=$('#quiz-tally'); if(!el||!STATE.quizSet)return; var L=STATE.quizSet.list,V=STATE.quizSet.votes;
-  el.innerHTML=L.map(function(item,qi){ var v=V[qi]||{}; var tot=(v.A||0)+(v.B||0)+(v.C||0)+(v.D||0)||1;
-    return '<div style="margin:8px 0 4px;font-weight:700;font-size:12px">Soru '+(qi+1)+(item.q?': '+esc(item.q).slice(0,36):'')+'</div>'+['A','B','C','D'].map(function(k){ return '<div class="qrow'+(item.correct===k?' correct':'')+'"><b>'+k+'</b><div class="qbar" style="width:'+((v[k]||0)/tot*120)+'px"></div><span>'+(v[k]||0)+'</span></div>'; }).join(''); }).join('');
+  el.innerHTML=L.map(function(item,qi){ var v=V[qi]||{}; var ks=(item.opts&&Object.keys(item.opts).length)?Object.keys(item.opts).sort():['A','B','C','D']; var tot=ks.reduce(function(s,k){return s+(v[k]||0);},0)||1;
+    return '<div style="margin:8px 0 4px;font-weight:700;font-size:12px">Soru '+(qi+1)+(item.q?': '+esc(item.q).slice(0,36):'')+'</div>'+ks.map(function(k){ return '<div class="qrow'+(item.correct===k?' correct':'')+'"><b>'+k+'</b><div class="qbar" style="width:'+((v[k]||0)/tot*120)+'px"></div><span>'+(v[k]||0)+'</span></div>'; }).join(''); }).join('');
 }
 /* ---- Quiz (öğrenci — otomatik ilerler) ---- */
 function openQuizSet(list,dur){ STATE.quizRun={list:list,i:0,score:0,dur:dur||30}; showQuizQ(); }
@@ -472,7 +473,8 @@ function showQuizQ(){
   $('#quiz-feedback').textContent=''; $('#quiz-feedback').className='quiz-feedback';
   $('#quiz-score').textContent='Puan: '+run.score;
   var ans=$('#quiz-answers'); ans.innerHTML='';
-  ['A','B','C','D'].forEach(function(k){ var b=document.createElement('button'); b.dataset.k=k; b.innerHTML='<span class="k">'+k+'</span> '+esc((item.opts&&item.opts[k])||''); b.addEventListener('click',function(){ qAnswer(k); }); ans.appendChild(b); });
+  var _keys=(item.opts&&Object.keys(item.opts).length)?Object.keys(item.opts).sort():['A','B','C','D'];
+  _keys.forEach(function(k){ var b=document.createElement('button'); b.dataset.k=k; b.innerHTML='<span class="k">'+k+'</span> '+esc((item.opts&&item.opts[k])||''); b.addEventListener('click',function(){ qAnswer(k); }); ans.appendChild(b); });
   var left=run.dur; $('#quiz-count').textContent=idx+'/'+total+' · ('+left+')';
   clearInterval(STATE._qiv);
   STATE._qiv=setInterval(function(){ left--; $('#quiz-count').textContent=idx+'/'+total+' · ('+left+')'; if(left<=0){ clearInterval(STATE._qiv); if(!STATE.quizView.answered) qAnswer(null,true); } },1000);
@@ -492,6 +494,50 @@ function qAnswer(k,timeout){
   setTimeout(function(){ if(!STATE.quizRun)return; STATE.quizRun.i++; showQuizQ(); },1600);
 }
 function finishQuizSet(){ clearInterval(STATE._qiv); var run=STATE.quizRun; $('#quiz-count').textContent=''; $('#quiz-q-text').textContent='Quiz bitti!'; $('#quiz-answers').innerHTML=''; $('#quiz-feedback').textContent=''; $('#quiz-feedback').className='quiz-feedback ok'; $('#quiz-score').textContent='Toplam puanın: '+(run?run.score:0)+' / '+(run?run.list.length:0); $('#quiz-pill').classList.remove('show'); STATE.quizRun=null; }
+
+/* ---- Quiz: Soru / Kelime bankasından çekme ---- */
+function prettyCat(c){ return String(c||'').replace(/^yds-/,'').replace(/[-_]/g,' '); }
+function qbStrip(h){ var d=document.createElement('div'); d.innerHTML=h||''; return (d.textContent||'').replace(/\s+/g,' ').trim(); }
+function qbShuffleTake(arr,n){ for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i];arr[i]=arr[j];arr[j]=t; } return arr.slice(0,n); }
+async function qbLoadCategories(){
+  var sel=$('#qb-cat'); if(!sel)return; var exam=$('#qb-exam').value; sel.innerHTML='<option>Yükleniyor…</option>';
+  if(!STATE.supabase){ sel.innerHTML='<option value="">Giriş gerekli</option>'; return; }
+  try{
+    var q = (exam==='vocab')
+      ? STATE.supabase.from('kelimeler').select('category').eq('active',true).limit(4000)
+      : STATE.supabase.from('questions').select('category').eq('active',true).is('passage_id',null).eq('exam_type',exam).limit(2000);
+    var r=await q; var cats={}; (r.data||[]).forEach(function(x){ if(x.category)cats[x.category]=(cats[x.category]||0)+1; });
+    var keys=Object.keys(cats).sort();
+    sel.innerHTML = keys.length ? keys.map(function(c){ return '<option value="'+esc(c)+'">'+esc(prettyCat(c))+' ('+cats[c]+')</option>'; }).join('') : '<option value="">Kategori yok</option>';
+  }catch(e){ sel.innerHTML='<option value="">Hata</option>'; }
+}
+async function qbAdd(){
+  if(!STATE.supabase){ toast('Soru bankası için giriş yapmış olmalısın.'); return; }
+  var exam=$('#qb-exam').value, cat=$('#qb-cat').value, n=Math.max(1,Math.min(15,parseInt($('#qb-count').value,10)||5));
+  if(!cat){ toast('Önce kategori seç.'); return; }
+  var btn=$('#qb-add'), old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Çekiliyor…'; }
+  try{
+    var items=[];
+    if(exam==='vocab'){
+      var r=await STATE.supabase.from('kelimeler').select('word,pos,options,correct').eq('active',true).eq('category',cat).limit(400);
+      qbShuffleTake((r.data||[]).filter(function(w){return Array.isArray(w.options)&&w.correct;}),n).forEach(function(w){
+        var opts={},L=['A','B','C','D','E']; (w.options||[]).forEach(function(t,i){ if(L[i])opts[L[i]]=qbStrip(String(t)); });
+        items.push({ q:'“'+w.word+'”'+(w.pos?' ('+w.pos+')':'')+' — anlamı?', opts:opts, correct:String(w.correct).trim().toUpperCase() });
+      });
+    } else {
+      var r2=await STATE.supabase.from('questions').select('question_text,options,correct_answer').eq('active',true).is('passage_id',null).eq('exam_type',exam).eq('category',cat).limit(300);
+      qbShuffleTake((r2.data||[]).filter(function(q){return Array.isArray(q.options)&&q.correct_answer;}),n).forEach(function(q){
+        var opts={}; (q.options||[]).forEach(function(o){ if(o&&o.letter)opts[String(o.letter).toUpperCase()]=qbStrip(o.text||''); });
+        items.push({ q:qbStrip(q.question_text), opts:opts, correct:String(q.correct_answer).trim().toUpperCase() });
+      });
+    }
+    if(!items.length){ toast('Bu kategoride uygun soru bulunamadı.'); return; }
+    STATE.quizQueue=STATE.quizQueue.concat(items); updateQueueLabel();
+    toast(items.length+' soru kuyruğa eklendi (toplam '+STATE.quizQueue.length+'). "Tümünü Gönder" ile yolla.');
+  }catch(e){ toast('Soru çekilemedi.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+}
+function bindQuizBank(){ var e=$('#qb-exam'); if(!e)return; e.addEventListener('change',qbLoadCategories); var a=$('#qb-add'); if(a)a.addEventListener('click',qbAdd); qbLoadCategories(); }
 
 function makeBreakout(){
   if(!STATE.lkRoom){ toast('Breakout için canlı bağlantı gerekli.'); return; }

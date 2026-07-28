@@ -655,21 +655,24 @@
       inset: 0;
       background: rgba(20, 20, 25, 0.6);
       z-index: 9000;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 3rem 1rem;
+      padding: 1.5rem 1rem;
       overflow-y: auto;
     }
     .user-modal-overlay.open { display: flex; }
     .user-modal {
       background: var(--bg);
-      max-width: 760px;
+      max-width: 900px;
       width: 100%;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
       border: 1px solid var(--line);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-      padding: 1.8rem 2rem 2rem;
       position: relative;
-      border-radius: 3px;
+      border-radius: 12px;
+      overflow: hidden;
     }
     .user-modal-close {
       position: absolute;
@@ -2256,168 +2259,205 @@
 
   <!-- ============ USER DETAIL MODAL ============ -->
   <style>
-    .user-modal-section.collapsible > h4 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
-    .user-modal-section.collapsible > h4::after { content: '+'; font-weight: 400; color: var(--text-muted); margin-left: 0.5rem; }
-    .user-modal-section.collapsible.open > h4::after { content: '\2212'; }
-    .user-modal-section.collapsible:not(.open) > *:not(h4) { display: none !important; }
     .um-w-group { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0.6rem 0 0.4rem; }
+    /* Sabit başlık + KPI + sekme çubuğu */
+    .um-head { padding: 1.5rem 1.9rem 0; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .um-head h3 { margin: 0 0 0.2rem; }
+    .um-head .user-modal-meta { margin-bottom: 0.4rem; }
+    .um-head #um-login-hist { margin-bottom: 0.6rem; }
+    .um-head .um-stats { margin: 0.7rem 0 0.9rem; }
+    .um-tabs { display: flex; gap: 0.1rem; overflow-x: auto; margin: 0 -1.9rem; padding: 0 1.9rem; scrollbar-width: thin; }
+    .um-tabs::-webkit-scrollbar { height: 4px; }
+    .um-tab { flex: 0 0 auto; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font: inherit; font-size: 0.82rem; font-weight: 600; padding: 0.65rem 0.75rem; cursor: pointer; white-space: nowrap; transition: color .12s, border-color .12s; }
+    .um-tab:hover { color: var(--text); }
+    .um-tab.active { color: var(--teal, #2C5856); border-bottom-color: var(--teal, #2C5856); }
+    /* Kaydırılabilir gövde + sekme panelleri */
+    .um-body { flex: 1 1 auto; overflow-y: auto; padding: 0.2rem 1.9rem 1.8rem; }
+    .um-pane { display: none; }
+    .um-pane.active { display: block; animation: umFade .18s ease; }
+    @keyframes umFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .um-pane .user-modal-section:first-child { border-top: none; padding-top: 0.6rem; }
+    .um-pane .user-modal-section:last-of-type { border-bottom: none; }
   </style>
   <div class="user-modal-overlay" id="user-modal-overlay">
     <div class="user-modal" role="dialog" aria-modal="true">
       <button class="user-modal-close" id="user-modal-close" aria-label="Kapat">&times;</button>
-      <h3 id="um-email">—</h3>
-      <div class="user-modal-meta" id="um-meta">—</div>
-      <div id="um-login-hist" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"></div>
-
-      <div class="user-modal-section">
-        <h4>İstatistikler</h4>
+      <div class="um-head">
+        <h3 id="um-email">—</h3>
+        <div class="user-modal-meta" id="um-meta">—</div>
+        <div id="um-login-hist" style="font-size:0.8rem; color:var(--text-muted);"></div>
         <div class="um-stats" id="um-stats"></div>
-      </div>
-
-      <div class="user-modal-section">
-        <h4>Kazandığı Rozetler</h4>
-        <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-events">
-        <h4>Aktivite Zaman Çizelgesi</h4>
-        <div class="um-action-row" style="margin-bottom: 0.5rem;" id="um-events-filters"></div>
-        <div id="um-events" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-events-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-ielts">
-        <h4>IELTS Deneme Sonuçları</h4>
-        <div id="um-ielts" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-ielts-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-level">
-        <h4>Seviye &amp; Zayıf Konular</h4>
-        <div id="um-level" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-level-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-answers">
-        <h4>Çözdüğü Sorular</h4>
-        <div class="um-action-row" style="margin-bottom: 0.5rem;">
-          <button class="btn-admin-action active" id="um-ans-filter-all">Hepsi</button>
-          <button class="btn-admin-action" id="um-ans-filter-wrong">Yanlış</button>
+        <div class="um-tabs" id="um-tabs">
+          <button class="um-tab active" type="button" data-tab="genel">Genel</button>
+          <button class="um-tab" type="button" data-tab="cevaplar">Cevaplar &amp; İlerleme</button>
+          <button class="um-tab" type="button" data-tab="yazilar">Yazıları</button>
+          <button class="um-tab" type="button" data-tab="kayit">Kaydettikleri</button>
+          <button class="um-tab" type="button" data-tab="aktivite">Aktivite</button>
+          <button class="um-tab" type="button" data-tab="yonetim">Yönetim</button>
         </div>
-        <div id="um-answers" style="font-size: 0.86rem;"></div>
-        <div class="um-action-row" style="margin-top: 0.6rem;">
-          <button class="btn-admin-action" id="um-answers-more" style="display:none;">Daha fazla</button>
+      </div>
+
+      <div class="um-body">
+
+        <!-- GENEL -->
+        <div class="um-pane active" data-pane="genel">
+          <div class="user-modal-section">
+            <h4>Kazandığı Rozetler</h4>
+            <div id="um-badges" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; font-size: 0.85rem;"></div>
+          </div>
+          <div class="user-modal-section" id="um-sec-class">
+            <h4>Sınıf &amp; Plan</h4>
+            <div id="um-class" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-class-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-answers-msg"></div>
-      </div>
 
-      <div class="user-modal-section" id="um-sec-writings">
-        <h4>Yazıları</h4>
-        <div id="um-writings" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-writings-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-study">
-        <h4>Çalışma İzleri</h4>
-        <div id="um-study" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-study-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-collected">
-        <h4>Biriktirdikleri</h4>
-        <div id="um-collected" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-collected-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-usage">
-        <h4>Kullanım &amp; AI</h4>
-        <div id="um-usage" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-usage-msg"></div>
-      </div>
-
-      <div class="user-modal-section" id="um-sec-class">
-        <h4>Sınıf &amp; Plan</h4>
-        <div id="um-class" style="font-size: 0.86rem;"></div>
-        <div class="um-msg" id="um-class-msg"></div>
-      </div>
-
-      <div class="user-modal-section">
-        <h4>Materyaller</h4>
-        <div id="um-purchases" style="margin-bottom: 0.7rem;"></div>
-        <div class="um-action-row">
-          <select id="um-product-select">
-            <option value="">Materyal seç...</option>
-          </select>
-          <input type="text" id="um-variant" placeholder="Varyant (opsiyonel)">
-          <button class="btn-admin-action" id="um-grant-btn">Aç</button>
+        <!-- CEVAPLAR & İLERLEME -->
+        <div class="um-pane" data-pane="cevaplar">
+          <div class="user-modal-section" id="um-sec-answers">
+            <h4>Çözdüğü Sorular</h4>
+            <div class="um-action-row" style="margin-bottom: 0.5rem;">
+              <button class="btn-admin-action active" id="um-ans-filter-all">Hepsi</button>
+              <button class="btn-admin-action" id="um-ans-filter-wrong">Yanlış</button>
+            </div>
+            <div id="um-answers" style="font-size: 0.86rem;"></div>
+            <div class="um-action-row" style="margin-top: 0.6rem;">
+              <button class="btn-admin-action" id="um-answers-more" style="display:none;">Daha fazla</button>
+            </div>
+            <div class="um-msg" id="um-answers-msg"></div>
+          </div>
+          <div class="user-modal-section" id="um-sec-ielts">
+            <h4>IELTS Deneme Sonuçları</h4>
+            <div id="um-ielts" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-ielts-msg"></div>
+          </div>
+          <div class="user-modal-section" id="um-sec-level">
+            <h4>Seviye &amp; Zayıf Konular</h4>
+            <div id="um-level" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-level-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-mat-msg"></div>
-      </div>
 
-      <div class="user-modal-section">
-        <h4>IELTS Writing Paketleri (Kredi)</h4>
-        <div id="um-writing-credits" style="margin-bottom: 0.7rem; font-size: 0.9rem;">Yükleniyor...</div>
-        <div class="um-action-row">
-          <select id="um-writing-pkg-select">
-            <option value="">Paket seç...</option>
-            <option value="task1_only">Sadece Task 1 (₺300)</option>
-            <option value="task2_only">Sadece Task 2 (₺300)</option>
-            <option value="both">Task 1 + Task 2 (₺500)</option>
-          </select>
-          <button class="btn-admin-action" id="um-writing-grant-btn">Kredi Ver</button>
+        <!-- YAZILARI -->
+        <div class="um-pane" data-pane="yazilar">
+          <div class="user-modal-section" id="um-sec-writings">
+            <h4>Yazıları</h4>
+            <div id="um-writings" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-writings-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-writing-msg"></div>
-      </div>
 
-      <div class="user-modal-section">
-        <h4>AI Quota</h4>
-        <div id="um-quota" style="margin-bottom: 0.6rem; font-size: 0.9rem;"></div>
-        <div class="um-action-row">
-          <input type="number" id="um-bonus" placeholder="Bonus (+ veya -)" style="max-width: 160px;">
-          <button class="btn-admin-action" id="um-bonus-btn">Ekle</button>
+        <!-- KAYDETTİKLERİ -->
+        <div class="um-pane" data-pane="kayit">
+          <div class="user-modal-section" id="um-sec-study">
+            <h4>Çalışma İzleri (Yer imi · Not · Kelime)</h4>
+            <div id="um-study" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-study-msg"></div>
+          </div>
+          <div class="user-modal-section" id="um-sec-collected">
+            <h4>Biriktirdikleri</h4>
+            <div id="um-collected" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-collected-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-quota-msg"></div>
-      </div>
 
-      <div class="user-modal-section">
-        <h4>Veri Sıfırlama</h4>
-        <div class="um-action-row">
-          <select id="um-reset-what" style="max-width: 200px;">
-            <option value="answers">Cevaplar</option>
-            <option value="bookmarks">Yer İmleri</option>
-            <option value="progress">İlerleme</option>
-            <option value="all">Hepsi (highlights dahil)</option>
-          </select>
-          <button class="btn-admin-action danger" id="um-reset-btn">Sıfırla</button>
+        <!-- AKTİVİTE -->
+        <div class="um-pane" data-pane="aktivite">
+          <div class="user-modal-section" id="um-sec-events">
+            <h4>Aktivite Zaman Çizelgesi</h4>
+            <div class="um-action-row" style="margin-bottom: 0.5rem;" id="um-events-filters"></div>
+            <div id="um-events" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-events-msg"></div>
+          </div>
+          <div class="user-modal-section" id="um-sec-usage">
+            <h4>Kullanım &amp; AI</h4>
+            <div id="um-usage" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-usage-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-reset-msg"></div>
-      </div>
 
-      <div class="user-modal-section">
-        <h4>Hesap</h4>
-        <div class="um-action-row">
-          <button class="btn-admin-action outline" id="um-reset-mail-btn">Şifre Sıfırlama Maili Gönder</button>
-        </div>
-        <div class="um-action-row">
-          <input type="text" id="um-new-pass" placeholder="Yeni şifre (min 6 karakter)">
-          <button class="btn-admin-action" id="um-set-pass-btn">Şifreyi Değiştir</button>
-        </div>
-        <div class="um-action-row">
-          <button class="btn-admin-action danger" id="um-ban-btn">Banla</button>
-          <button class="btn-admin-action outline" id="um-unban-btn">Banı Kaldır</button>
-        </div>
-        <div class="um-msg" id="um-account-msg"></div>
-      </div>
+        <!-- YÖNETİM -->
+        <div class="um-pane" data-pane="yonetim">
+          <div class="user-modal-section">
+            <h4>Materyaller</h4>
+            <div id="um-purchases" style="margin-bottom: 0.7rem;"></div>
+            <div class="um-action-row">
+              <select id="um-product-select">
+                <option value="">Materyal seç...</option>
+              </select>
+              <input type="text" id="um-variant" placeholder="Varyant (opsiyonel)">
+              <button class="btn-admin-action" id="um-grant-btn">Aç</button>
+            </div>
+            <div class="um-msg" id="um-mat-msg"></div>
+          </div>
 
-      <div class="user-modal-section danger-zone">
-        <h4 style="color: #b33a3a;">Tehlikeli Bölge</h4>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.6rem; line-height: 1.5;">
-          Kullanıcıyı kalıcı olarak sil. Tüm verisi (cevaplar, materyal, bookmark, kelime, AI quota) cascade ile silinir. Geri alınamaz.
-        </p>
-        <div class="um-action-row">
-          <button class="btn-admin-action danger" id="um-delete-btn">Kullanıcıyı Kalıcı Sil</button>
+          <div class="user-modal-section">
+            <h4>IELTS Writing Paketleri (Kredi)</h4>
+            <div id="um-writing-credits" style="margin-bottom: 0.7rem; font-size: 0.9rem;">Yükleniyor...</div>
+            <div class="um-action-row">
+              <select id="um-writing-pkg-select">
+                <option value="">Paket seç...</option>
+                <option value="task1_only">Sadece Task 1 (₺300)</option>
+                <option value="task2_only">Sadece Task 2 (₺300)</option>
+                <option value="both">Task 1 + Task 2 (₺500)</option>
+              </select>
+              <button class="btn-admin-action" id="um-writing-grant-btn">Kredi Ver</button>
+            </div>
+            <div class="um-msg" id="um-writing-msg"></div>
+          </div>
+
+          <div class="user-modal-section">
+            <h4>AI Quota</h4>
+            <div id="um-quota" style="margin-bottom: 0.6rem; font-size: 0.9rem;"></div>
+            <div class="um-action-row">
+              <input type="number" id="um-bonus" placeholder="Bonus (+ veya -)" style="max-width: 160px;">
+              <button class="btn-admin-action" id="um-bonus-btn">Ekle</button>
+            </div>
+            <div class="um-msg" id="um-quota-msg"></div>
+          </div>
+
+          <div class="user-modal-section">
+            <h4>Veri Sıfırlama</h4>
+            <div class="um-action-row">
+              <select id="um-reset-what" style="max-width: 200px;">
+                <option value="answers">Cevaplar</option>
+                <option value="bookmarks">Yer İmleri</option>
+                <option value="progress">İlerleme</option>
+                <option value="all">Hepsi (highlights dahil)</option>
+              </select>
+              <button class="btn-admin-action danger" id="um-reset-btn">Sıfırla</button>
+            </div>
+            <div class="um-msg" id="um-reset-msg"></div>
+          </div>
+
+          <div class="user-modal-section">
+            <h4>Hesap</h4>
+            <div class="um-action-row">
+              <button class="btn-admin-action outline" id="um-reset-mail-btn">Şifre Sıfırlama Maili Gönder</button>
+            </div>
+            <div class="um-action-row">
+              <input type="text" id="um-new-pass" placeholder="Yeni şifre (min 6 karakter)">
+              <button class="btn-admin-action" id="um-set-pass-btn">Şifreyi Değiştir</button>
+            </div>
+            <div class="um-action-row">
+              <button class="btn-admin-action danger" id="um-ban-btn">Banla</button>
+              <button class="btn-admin-action outline" id="um-unban-btn">Banı Kaldır</button>
+            </div>
+            <div class="um-msg" id="um-account-msg"></div>
+          </div>
+
+          <div class="user-modal-section danger-zone">
+            <h4 style="color: #b33a3a;">Tehlikeli Bölge</h4>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.6rem; line-height: 1.5;">
+              Kullanıcıyı kalıcı olarak sil. Tüm verisi (cevaplar, materyal, bookmark, kelime, AI quota) cascade ile silinir. Geri alınamaz.
+            </p>
+            <div class="um-action-row">
+              <button class="btn-admin-action danger" id="um-delete-btn">Kullanıcıyı Kalıcı Sil</button>
+            </div>
+            <div class="um-msg" id="um-delete-msg"></div>
+          </div>
         </div>
-        <div class="um-msg" id="um-delete-msg"></div>
+
       </div>
     </div>
   </div>
@@ -3676,42 +3716,56 @@
       }
     }
 
+    var UM_TAB_LOADERS = {
+      'um-sec-events':    function (uid) { loadUserEvents(uid); },
+      'um-sec-ielts':     function (uid) { loadUserIeltsAttempts(uid); },
+      'um-sec-level':     function (uid) { loadUserLevel(uid); },
+      'um-sec-answers':   function (uid) { loadUserAnswers(uid, 0, false); },
+      'um-sec-writings':  function (uid) { loadUserWritings(uid); },
+      'um-sec-study':     function (uid) { loadUserStudy(uid); },
+      'um-sec-collected': function (uid) { loadUserCollected(uid); },
+      'um-sec-usage':     function (uid) { loadUserUsage(uid); },
+      'um-sec-class':     function (uid) { loadUserClass(uid); }
+    };
+    function umLoadPane(pane) {
+      var uid = currentUserDetail && currentUserDetail.user_id;
+      if (!uid || !pane) { return; }
+      pane.querySelectorAll('.user-modal-section[id]').forEach(function (sec) {
+        var ld = UM_TAB_LOADERS[sec.id];
+        if (ld && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; ld(uid); }
+      });
+    }
+    // Sekmeli kullanıcı modalı: her sekmenin bölümleri sekme açılınca lazy yüklenir.
+    // (Fonksiyon adı korundu; çağrı yeri değişmesin diye.)
     function setupModalAccordion(userId) {
       var modal = document.querySelector('#user-modal-overlay .user-modal');
       if (!modal) { return; }
-      modal.querySelectorAll('.user-modal-section').forEach(function (sec) {
-        if (sec.querySelector('h4')) { sec.classList.add('collapsible'); sec.classList.add('open'); }
-      });
       umAnswersOnlyWrong = false;
       var fa = document.getElementById('um-ans-filter-all'); if (fa) { fa.classList.add('active'); }
       var fw = document.getElementById('um-ans-filter-wrong'); if (fw) { fw.classList.remove('active'); }
-      // um-sec-events acik kalir (aktivite timeline'i user acilisinda eager yuklenir)
-      ['um-sec-ielts', 'um-sec-level', 'um-sec-answers', 'um-sec-writings', 'um-sec-study', 'um-sec-collected', 'um-sec-usage', 'um-sec-class'].forEach(function (id) {
-        var sec = document.getElementById(id);
-        if (sec) { sec.classList.remove('open'); sec.dataset.loadedUser = ''; }
+      Object.keys(UM_TAB_LOADERS).forEach(function (id) {
+        var sec = document.getElementById(id); if (sec) { sec.dataset.loadedUser = ''; }
       });
-      if (!modal.dataset.accWired) {
-        modal.dataset.accWired = '1';
-        modal.addEventListener('click', function (ev) {
-          var h4 = ev.target.closest('h4');
-          if (!h4) { return; }
-          var sec = h4.parentElement;
-          if (!sec || !sec.classList.contains('user-modal-section') || !sec.classList.contains('collapsible')) { return; }
-          var nowOpen = sec.classList.toggle('open');
-          if (nowOpen) {
-            var uid = currentUserDetail && currentUserDetail.user_id;
-            if (sec.id === 'um-sec-events' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserEvents(uid); }
-            if (sec.id === 'um-sec-ielts' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserIeltsAttempts(uid); }
-            if (sec.id === 'um-sec-level' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserLevel(uid); }
-            if (sec.id === 'um-sec-answers' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserAnswers(uid, 0, false); }
-            if (sec.id === 'um-sec-writings' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserWritings(uid); }
-            if (sec.id === 'um-sec-study' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserStudy(uid); }
-            if (sec.id === 'um-sec-collected' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserCollected(uid); }
-            if (sec.id === 'um-sec-usage' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserUsage(uid); }
-            if (sec.id === 'um-sec-class' && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; loadUserClass(uid); }
-          }
+      // Not: um-sec-events, açılış akışında (loadUserDetail) eager yüklenir ve header giriş
+      // özetini doldurur; burada yeniden yüklemiyoruz (loadedUser orada userId'ye set edilir).
+      if (!modal.dataset.tabsWired) {
+        modal.dataset.tabsWired = '1';
+        modal.querySelectorAll('.um-tab').forEach(function (t) {
+          t.addEventListener('click', function () {
+            var name = t.dataset.tab;
+            modal.querySelectorAll('.um-tab').forEach(function (x) { x.classList.toggle('active', x === t); });
+            modal.querySelectorAll('.um-pane').forEach(function (p) { p.classList.toggle('active', p.dataset.pane === name); });
+            var pane = modal.querySelector('.um-pane[data-pane="' + name + '"]');
+            if (pane) { umLoadPane(pane); }
+            var body = modal.querySelector('.um-body'); if (body) { body.scrollTop = 0; }
+          });
         });
       }
+      // Her açılışta ilk sekmeye (Genel) dön ve onu yükle
+      modal.querySelectorAll('.um-tab').forEach(function (x, i) { x.classList.toggle('active', i === 0); });
+      modal.querySelectorAll('.um-pane').forEach(function (p, i) { p.classList.toggle('active', i === 0); });
+      var body = modal.querySelector('.um-body'); if (body) { body.scrollTop = 0; }
+      var first = modal.querySelector('.um-pane.active'); if (first) { umLoadPane(first); }
     }
 
     function savedWritingCardHtml(s) {
@@ -3769,28 +3823,48 @@
       return bits.join(' · ');
     }
 
+    function umEvDay(ev) { var dt = ev.at ? new Date(ev.at) : null; return dt ? dt.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', weekday: 'short' }) : ''; }
+    function umEvTime(ev) { var dt = ev.at ? new Date(ev.at) : null; return dt ? dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''; }
+    function umEvRow(m, time, labelHtml) {
+      return '<div style="display:flex; gap:0.55rem; align-items:baseline; padding:0.28rem 0; border-left:2px solid ' + m.color + '22; margin-left:-1.1rem; padding-left:0.9rem;">' +
+        '<span style="font-size:0.9rem; width:1.3rem; text-align:center;">' + m.icon + '</span>' +
+        '<span style="color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:0.78rem; min-width:2.7rem;">' + time + '</span>' +
+        '<span style="flex:1;">' + labelHtml + '</span>' +
+        '</div>';
+    }
     function renderUserEvents() {
       var box = $('um-events'); if (!box) { return; }
       var rows = umEventsFilter ? umEventsAll.filter(function (e) { return e.event_type === umEventsFilter; }) : umEventsAll;
       if (!rows.length) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Bu filtrede aktivite yok.</div>'; return; }
       var html = '<div style="position:relative; padding-left:1.1rem;">';
       var lastDay = '';
-      rows.forEach(function (ev) {
-        var dt = ev.at ? new Date(ev.at) : null;
-        var day = dt ? dt.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', weekday: 'short' }) : '';
-        var time = dt ? dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+      var i = 0;
+      while (i < rows.length) {
+        var ev = rows[i];
+        var day = umEvDay(ev);
         if (day !== lastDay) {
           lastDay = day;
           html += '<div style="font-family:var(--font-display); font-size:0.76rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin:0.7rem 0 0.3rem;">' + escHtmlAdmin(day) + '</div>';
         }
         var m = EV_META[ev.event_type] || { icon: '•', label: ev.event_type, color: '#8A7F6E' };
+        // Aynı gün art arda gelen girişleri tek satırda topla (giriş spam'ini önle)
+        if (ev.event_type === 'login') {
+          var j = i;
+          while (j < rows.length && rows[j].event_type === 'login' && umEvDay(rows[j]) === day) { j++; }
+          var grp = rows.slice(i, j);
+          if (grp.length > 1) {
+            var tLast = umEvTime(grp[0]); var tFirst = umEvTime(grp[grp.length - 1]);
+            html += umEvRow(m, tLast, '<strong style="color:' + m.color + '; font-weight:600;">' + escHtmlAdmin(m.label) + ' ×' + grp.length + '</strong> <span style="color:var(--text-muted); font-size:0.8rem;">' + escHtmlAdmin(tFirst) + ' – ' + escHtmlAdmin(tLast) + '</span>');
+          } else {
+            html += umEvRow(m, umEvTime(grp[0]), '<strong style="color:' + m.color + '; font-weight:600;">' + escHtmlAdmin(m.label) + '</strong>');
+          }
+          i = j;
+          continue;
+        }
         var det = evDetail(ev);
-        html += '<div style="display:flex; gap:0.55rem; align-items:baseline; padding:0.28rem 0; border-left:2px solid ' + m.color + '22; margin-left:-1.1rem; padding-left:0.9rem;">' +
-          '<span style="font-size:0.9rem; width:1.3rem; text-align:center;">' + m.icon + '</span>' +
-          '<span style="color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:0.78rem; min-width:2.7rem;">' + time + '</span>' +
-          '<span style="flex:1;"><strong style="color:' + m.color + '; font-weight:600;">' + escHtmlAdmin(m.label) + '</strong>' + (det ? ' <span style="font-size:0.82rem;">' + det + '</span>' : '') + '</span>' +
-          '</div>';
-      });
+        html += umEvRow(m, umEvTime(ev), '<strong style="color:' + m.color + '; font-weight:600;">' + escHtmlAdmin(m.label) + '</strong>' + (det ? ' <span style="font-size:0.82rem;">' + det + '</span>' : ''));
+        i++;
+      }
       html += '</div>';
       box.innerHTML = html;
     }

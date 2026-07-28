@@ -206,6 +206,35 @@
     })();
   }
 
-  if (document.readyState !== "loading") build();
-  else document.addEventListener("DOMContentLoaded", build);
+  // ===== Mobil alt sekme çubuğu =====
+  function buildTabbar() {
+    try {
+      var p = (location.pathname || "").toLowerCase();
+      if (/deneme|seviye-belirleme|grimeet-oda/.test(p)) return;
+      if (document.documentElement.classList.contains("app-mode")) return;
+      if (document.querySelector(".gri-tabbar")) return;
+      var file = p.split("/").pop() || "index.html";
+      var tabs = [
+        { href: "/index.html", label: "Ana Sayfa", match: ["index.html", ""], icon: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },
+        { href: "/ogrenme-haritasi.html", label: "Harita", match: ["ogrenme-haritasi.html"], icon: '<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>' },
+        { href: "/soru-bankasi.html", label: "Soru", match: ["soru-bankasi.html"], icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
+        { href: "/sinifim.html", label: "Sınıf", match: ["sinifim.html", "ogretmen.html", "ogretmen-sinif.html"], icon: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-3-4.9"/>' },
+        { href: "/panelim.html", label: "Masam", match: ["panelim.html"], icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' }
+      ];
+      var nav = document.createElement("nav");
+      nav.className = "gri-tabbar";
+      nav.setAttribute("aria-label", "Hızlı gezinme");
+      nav.innerHTML = tabs.map(function (t) {
+        var on = t.match.indexOf(file) >= 0;
+        return '<a href="' + t.href + '"' + (on ? ' class="on" aria-current="page"' : "") + '>'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + t.icon + '</svg>'
+          + '<span>' + t.label + '</span></a>';
+      }).join("");
+      document.body.appendChild(nav);
+    } catch (e) {}
+  }
+
+  function boot() { build(); buildTabbar(); }
+  if (document.readyState !== "loading") boot();
+  else document.addEventListener("DOMContentLoaded", boot);
 })();

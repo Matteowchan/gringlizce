@@ -192,6 +192,16 @@
     @media (max-width: 1000px) {
       .q-content { padding: 1.3rem 1.4rem; }
     }
+    /* Soru geçiş animasyonu (her navigasyon = yeni sayfa yükü) */
+    .q-content.q-enter { animation: q-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes q-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .q-content.q-enter { animation: none; } }
+    /* Zorluk kontrol çubuğu (nav panel) */
+    .np-diffbar { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.5rem 0 0.2rem; }
+    .np-diffbar .np-dlbl { font-family: var(--font-ui); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-right: 0.1rem; }
+    .np-diff-chip { font-family: var(--font-ui); font-size: 0.76rem; font-weight: 600; color: var(--text-soft); background: var(--bg-soft); border: 1px solid var(--line); border-radius: 999px; padding: 0.32rem 0.72rem; cursor: pointer; transition: all 0.15s; }
+    .np-diff-chip:hover { border-color: var(--text-muted); color: var(--text); }
+    .np-diff-chip.on { background: var(--teal); border-color: var(--teal); color: #fff; }
 
     .q-header {
       display: flex;
@@ -1691,6 +1701,15 @@
       </div>
     </div>
 
+    <div class="np-diffbar" id="npDiffbar">
+      <span class="np-dlbl">Zorluk</span>
+      <button class="np-diff-chip" data-diff="" type="button">Tümü</button>
+      <button class="np-diff-chip" data-diff="easy" type="button">Kolay</button>
+      <button class="np-diff-chip" data-diff="medium" type="button">Orta</button>
+      <button class="np-diff-chip" data-diff="hard" type="button">Zor</button>
+      <button class="np-diff-chip" data-sort="kolay" type="button" id="npSortChip" title="Kolaydan zora sırala">Kolay → Zor</button>
+    </div>
+
     <div class="np-legend">
       <span class="np-leg-item"><span class="lg-square diff-easy"></span>Kolay</span>
       <span class="np-leg-item"><span class="lg-square diff-medium"></span>Orta</span>
@@ -1924,10 +1943,44 @@
       document.getElementById('qLoader').style.display = 'none';
       document.getElementById('qPageWrap').style.display = 'block';
       document.getElementById('qActionbar').style.display = 'flex';
+      var qc = document.querySelector('.q-content');
+      if (qc) qc.classList.add('q-enter');
+      bindDiffbar();
+    }
+
+    // Zorluk filtre/sıra çubuğu — mevcut URL'yi düzenleyip yeni set olarak yükler
+    function bindDiffbar() {
+      var bar = document.getElementById('npDiffbar');
+      if (!bar || bar.dataset.bound) return;
+      bar.dataset.bound = '1';
+      var p = new URLSearchParams(location.search);
+      var curDiff = p.get('zorluk') || '';
+      var curSort = p.get('sirala') || '';
+      bar.querySelectorAll('[data-diff]').forEach(function (b) {
+        b.classList.toggle('on', (b.getAttribute('data-diff') || '') === curDiff);
+      });
+      var sc = document.getElementById('npSortChip');
+      if (sc) sc.classList.toggle('on', curSort === 'kolay');
+      bar.addEventListener('click', function (e) {
+        var d = e.target.closest('[data-diff]');
+        var s = e.target.closest('[data-sort]');
+        if (!d && !s) return;
+        var u = new URL(location.href);
+        if (d) {
+          var v = d.getAttribute('data-diff');
+          if (v) u.searchParams.set('zorluk', v); else u.searchParams.delete('zorluk');
+        } else {
+          if (curSort === 'kolay') u.searchParams.delete('sirala'); else u.searchParams.set('sirala', 'kolay');
+        }
+        u.searchParams.delete('q');   // filtre değişince taze set
+        if (typeof window.__setInternalNav === 'function') window.__setInternalNav();
+        location.href = u.pathname + u.search;
+      });
     }
 
     // Subcategory navigation state
     let SUBCATEGORY_LIST = [];   // ordered: [{slug, difficulty}]
+    let DIFF_MAP = {};           // slug -> difficulty (set-build sırasında dolar)
     let CURRENT_INDEX = 0;
     let SET_URL_PARAMS = '';     // preserved across navigation, e.g. '&subcategories=a,b&shuffle=1'
     let SET_KEY = null;          // sessionStorage key for this set's order
@@ -2049,9 +2102,15 @@
       }
       if (shuffleParam) SET_URL_PARAMS += '&shuffle=1';
 
+      // Zorluk filtresi + kolaydan-zora sıralama
+      const zorluk = params.get('zorluk');   // easy | medium | hard
+      const sirala = params.get('sirala');    // 'kolay'
+      if (zorluk) SET_URL_PARAMS += '&zorluk=' + encodeURIComponent(zorluk);
+      if (sirala) SET_URL_PARAMS += '&sirala=' + encodeURIComponent(sirala);
+
       // SET_KEY identifies this set in sessionStorage
       SET_KEY = subcatList.length > 0
-        ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '')
+        ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '') + (zorluk ? ':d-' + zorluk : '') + (sirala ? ':s-' + sirala : '')
         : null;
 
       console.log('[soru.html] set params:', { subcatList, shuffleParam, slug });
@@ -2074,7 +2133,7 @@
         if (!setSlugs || setSlugs.length === 0) {
           const { data: list, error } = await supabase
             .from('questions')
-            .select('slug')
+            .select('slug,difficulty')
             .eq('active', true)
             .in('subcategory', subcatList)
             .order('slug');
@@ -2082,8 +2141,19 @@
             showError('Bu kategoride henüz soru yok.');
             return;
           }
-          setSlugs = list.map(r => r.slug);
-          if (shuffleParam) shuffleInPlace(setSlugs);
+          let rows = list;
+          if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
+          if (rows.length === 0) { showError('Bu zorlukta soru yok. Farklı bir zorluk seç.'); return; }
+          rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
+          if (sirala === 'kolay') {
+            const _RANK = { easy: 1, medium: 2, hard: 3 };
+            rows = rows.slice().sort((a, b) => {
+              const ra = _RANK[a.difficulty] || 2, rb = _RANK[b.difficulty] || 2;
+              return ra !== rb ? ra - rb : (a.slug < b.slug ? -1 : 1);
+            });
+          }
+          setSlugs = rows.map(r => r.slug);
+          if (shuffleParam && sirala !== 'kolay') shuffleInPlace(setSlugs);
           if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
 
           // No q in URL → fresh entry, clear stale answers for this set
@@ -2137,18 +2207,26 @@
       if (!setSlugs || setSlugs.length === 0) {
         const { data: list } = await supabase
           .from('questions')
-          .select('slug')
+          .select('slug,difficulty')
           .eq('active', true)
           .eq('subcategory', currentQuestion.subcategory)
           .order('slug');
-        setSlugs = (list || []).map(r => r.slug);
+        let rows = (list || []);
+        if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
+        rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
+        if (sirala === 'kolay') {
+          const _RANK = { easy: 1, medium: 2, hard: 3 };
+          rows = rows.slice().sort((a, b) => {
+            const ra = _RANK[a.difficulty] || 2, rb = _RANK[b.difficulty] || 2;
+            return ra !== rb ? ra - rb : (a.slug < b.slug ? -1 : 1);
+          });
+        }
+        setSlugs = rows.map(r => r.slug);
         // Implicit set — no SET_KEY persistence
       }
 
-      // Grid önce 'medium' ile kurulur; difficulty sorgusu render'ı BLOKLAMAZ.
-      // (Büyük setlerde tek .in(400+ slug) sorgusu GET URL limitini aşıp asılı
-      //  kalabiliyordu → "yükleniyor" sonsuza takılıyordu. Artık arka planda, parçalı.)
-      SUBCATEGORY_LIST = setSlugs.map(s => ({ slug: s, difficulty: 'medium' }));
+      // Nav renkleri: DIFF_MAP doluysa anında; değilse arka planda parçalı çekilir.
+      SUBCATEGORY_LIST = setSlugs.map(s => ({ slug: s, difficulty: DIFF_MAP[s] || 'medium' }));
       CURRENT_INDEX = Math.max(0, setSlugs.indexOf(currentQuestion.slug));
 
       // === If fresh entry, replace URL to include ?q= so refresh keeps the position ===

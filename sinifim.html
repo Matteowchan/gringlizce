@@ -2436,6 +2436,8 @@
     .my-assign-type.type-writing   { background: rgba(200,154,60,0.18); color: #8b6627; }
     .my-assign-type.type-reading   { background: rgba(120,80,40,0.15); color: #6b4422; }
     .my-assign-type.type-ielts_mock{ background: rgba(142,59,76,0.15); color: #8E3B4C; }
+    .my-assign-type.type-material  { background: rgba(44,88,86,0.14); color: #2C5856; }
+    .my-assign-type.type-vocab     { background: rgba(200,154,60,0.16); color: #7d5f24; }
 
     .my-assign-meta {
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
@@ -2946,7 +2948,9 @@
           questions: 'Soru Bankası',
           writing:   'Writing',
           reading:   'Reading',
-          ielts_mock: 'IELTS Deneme'
+          vocab:     'Kelime',
+          ielts_mock: 'Deneme',
+          material:  'Materyal'
         };
 
         function escMA(s) {
@@ -3092,11 +3096,31 @@
                     + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
                 }
               } else if (a.type === 'ielts_mock') {
-                meta.push('Reading · 40 soru');
-                var mockUrl = 'ielts-deneme-reading.html?test=' + encodeURIComponent(cfg.test_slug || '');
+                var mSec = cfg.section || 'full';
+                var SEC_RUN = {
+                  full:      { page: 'ielts-deneme.html',           meta: 'Tam Deneme · L+R+W' },
+                  reading:   { page: 'ielts-deneme-reading.html',   meta: 'Reading · 40 soru' },
+                  listening: { page: 'ielts-deneme-listening.html', meta: 'Listening · 40 soru' },
+                  writing:   { page: 'ielts-deneme-writing.html',   meta: 'Writing · Task 1+2' }
+                };
+                var run = SEC_RUN[mSec] || SEC_RUN.full;
+                meta.push(run.meta);
+                var mockUrl = run.page + '?test=' + encodeURIComponent(cfg.test_slug || '');
                 if (!isCompleted) {
                   actionsHtml = ''
                     + '<a href="' + escMA(mockUrl) + '" target="_blank" rel="noopener" class="my-assign-btn">Denemeyi Başlat →</a>'
+                    + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
+                } else {
+                  actionsHtml = ''
+                    + '<span class="my-assign-completed-pill">Tamamlandı</span>'
+                    + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              } else if (a.type === 'material') {
+                var matUrl = cfg.url || '#';
+                if (cfg.note) meta.push(cfg.note);
+                if (!isCompleted) {
+                  actionsHtml = ''
+                    + '<a href="' + escMA(matUrl) + '" target="_blank" rel="noopener" class="my-assign-btn">Aç →</a>'
                     + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
                 } else {
                   actionsHtml = ''

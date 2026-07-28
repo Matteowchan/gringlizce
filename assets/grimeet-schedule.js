@@ -113,8 +113,9 @@
       var room=(opts.roomForClass?opts.roomForClass(opts.classId):('C'+String(opts.classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
       var btn=cont.querySelector('.f-save'); btn.disabled=true; var old=btn.textContent; btn.textContent='Kaydediliyor…';
       try{
-        var r=await sb.from('grimeet_schedule').insert({ class_id:opts.classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null });
+        var r=await sb.from('grimeet_schedule').insert({ class_id:opts.classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
         if(r.error) throw r.error;
+        if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
         cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value=''; cont.querySelector('.gsch-form').classList.remove('open');
         await load();
       }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }

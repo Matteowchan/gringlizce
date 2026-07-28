@@ -380,7 +380,7 @@ function onData(payload,p){
   else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
-  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
+  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ if(msg.nav&&STATE.currentMaterial&&STATE.currentMaterial.kind===msg.kind&&STATE.currentMaterial.value===msg.value)return; loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
@@ -587,7 +587,7 @@ async function applyBackground(bg){
   try{
     if(bg==='none'){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
     else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
-      if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(14));
+      if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(22));
       else await track.setProcessor(tp.VirtualBackground(bgFile(bg))); }
     if(note)note.textContent='Hazır. İlk seçimde birkaç saniye sürebilir.';
     setTimeout(function(){ $('#bg-modal').classList.add('hidden'); },300);
@@ -654,8 +654,9 @@ function loadMaterial(m,remote){
     } else { ff.innerHTML='<iframe id="mat-file-if" src="'+esc('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value))+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); }
   } }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
-    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
-      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
+    if(remote){ var reqId=(STATE._matReqId=(STATE._matReqId||0)+1);
+      frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe><div class="mat-loading" id="mat-loading">Öğretmenin sayfası yükleniyor…</div>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
+      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ if(reqId!==STATE._matReqId)return; var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } var ld=document.getElementById('mat-loading'); if(ld)ld.remove(); }).catch(function(){ if(reqId!==STATE._matReqId)return; var ld=document.getElementById('mat-loading'); if(ld)ld.textContent='Sayfa yüklenemedi — öğretmenin yeni sayfası bekleniyor.'; });
     } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollSync(document.getElementById('mat-uni-if')); }
   }
   applyZoom();

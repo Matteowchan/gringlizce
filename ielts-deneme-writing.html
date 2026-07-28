@@ -24,12 +24,12 @@
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #ff9090; }
     .timer-bar .timer.paused strong { color: #aaa; }
-    .timer-toggle-btn { border: none; padding: 0.55rem 1.3rem; font-weight: 600; cursor: pointer; border-radius: 2px; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+    .timer-toggle-btn { border: none; padding: 0.55rem 1.3rem; font-weight: 600; cursor: pointer; border-radius: 6px; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
     .timer-toggle-btn.start { background: #2c8a4d; }
     .timer-toggle-btn.start:hover { background: #34a05a; }
     .timer-toggle-btn.stop { background: #b33a3a; }
     .timer-toggle-btn.stop:hover { background: #c34646; }
-    .timer-bar .submit-btn { background: var(--accent, #c89a3c); color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
+    .timer-bar .submit-btn { background: var(--accent, #c89a3c); color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 6px; }
     .timer-bar .submit-btn:hover { background: #d4a649; }
 
     /* Inline font zoom (A− / A / A+ on toolbar) */
@@ -123,7 +123,7 @@
       color: #2a2a2a;
       overflow: hidden;
     }
-    .editor-textarea:focus { outline: 2px solid var(--accent, #c89a3c); border-color: var(--accent, #c89a3c); }
+    .editor-textarea:focus { outline: 2px solid var(--accent, #c89a3c); border-color: var(--accent, #c89a3c); box-shadow: 0 0 0 4px rgba(200,154,60,0.12); }
 
     .editor-saved { color: #888; font-size: 0.8rem; margin-top: 0.5rem; font-style: italic; }
 
@@ -331,7 +331,7 @@
       color: #fff;
       border: none;
       padding: 0.85rem 2rem;
-      border-radius: 3px;
+      border-radius: 100px;
       font-weight: 700;
       cursor: pointer;
       font-size: 0.95rem;
@@ -563,7 +563,12 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
-  <div id="loading" class="loading">Yükleniyor…</div>
+  <div id="loading" class="loading" style="max-width:900px;margin:0 auto;padding:1.5rem 1rem;">
+    <div class="gri-skeleton gri-skel-line w40" style="height:26px;margin-bottom:1.4rem"></div>
+    <div class="gri-skeleton gri-skel-line"></div>
+    <div class="gri-skeleton gri-skel-line w80"></div>
+    <div class="gri-skeleton gri-skel-card" style="height:260px;margin-top:1.4rem"></div>
+  </div>
 
   <div id="startScreen" style="display:none;">
     <div class="start-screen">
@@ -702,7 +707,7 @@
       updateGriPriceLabel();
 
       const { data: test } = await sb.from('ielts_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
-      if (!test) { document.getElementById('loading').textContent = 'Test bulunamadı.'; return; }
+      if (!test) { document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Test bulunamadı</h4><p>Bu deneme yüklenemedi. Denemeler sayfasından başka bir deneme seçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme.html">Denemelere Dön →</a></div>'; return; }
       state.test = test;
 
       const { data: section } = await sb.from('ielts_sections').select('*').eq('test_id', test.id).eq('section', 'writing').single();

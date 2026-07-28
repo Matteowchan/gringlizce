@@ -100,8 +100,12 @@ function setupGate(){
   $('#gate-join').addEventListener('click',function(){
     var nm=($('#gate-name').value||'').trim(); if(!nm){ toast('Lütfen adını yaz.'); $('#gate-name').focus(); return; }
     STATE.name=nm; STATE.micOn=micOn; STATE.camOn=camOn;
-    if(gateStream) gateStream.getTracks().forEach(function(t){t.stop();});
-    $('#gmr-gate').classList.add('hidden'); enterRoom();
+    // Gate önizleme kamerasını tam serbest bırak — LiveKit tekrar açarken çakışma/donma olmasın
+    if(gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; }
+    try{ if(gv) gv.srcObject=null; }catch(e){}
+    $('#gmr-gate').classList.add('hidden');
+    // OS'un kamerayı serbest bırakması için kısa gecikme
+    setTimeout(enterRoom, 250);
   });
 }
 
@@ -634,12 +638,15 @@ function bindBgUpload(){ var i=$('#bg-file-input'); if(!i)return; i.addEventList
     try{ localStorage.setItem('gm-bg-custom',data); }catch(e){ toast('Görsel çok büyük, tekrar kaydedilemedi (daha küçük bir resim dene).'); }
     buildBgGrid(); applyBackground('custom');
   }catch(e){ toast('Görsel işlenemedi.'); } }; img.onerror=function(){ toast('Görsel açılamadı.'); }; img.src=rd.result; }; rd.readAsDataURL(f); }); }
-// Kayıtlı arka planı ilk render'ı bloklamadan, ertelenmiş ve tek seferlik uygula
-var _lastAutoBg=0;
+// Girişte arka planı OTOMATİK uygulamıyoruz: segmentasyon modelinin ilk yüklemesi
+// zayıf makinelerde ana thread'i kilitleyip sayfayı donduruyordu. Kayıtlı tercih
+// korunur; kullanıcı odaya girince "Arka Plan"dan tek tıkla açar.
+var _bgHintShown=false;
 function scheduleAutoBg(){
-  if(!STATE.bg || STATE.bg==='none') return;
-  var now=Date.now(); if(now-_lastAutoBg<3000) return; _lastAutoBg=now;
-  setTimeout(function(){ if(STATE.camTrack && STATE.bg!=='none'){ try{ applyBackground(STATE.bg); }catch(e){} } }, 1600);
+  if(STATE.bg && STATE.bg!=='none' && !_bgHintShown){
+    _bgHintShown=true;
+    setTimeout(function(){ try{ toast('Arka planın hazır — açmak için “Arka Plan”a dokun.'); }catch(e){} }, 3000);
+  }
 }
 async function applyBackground(bg){
   STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} var track=STATE.camTrack;

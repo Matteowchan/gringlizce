@@ -2435,6 +2435,7 @@
     .my-assign-type.type-questions { background: rgba(44,88,86,0.12); color: var(--teal); }
     .my-assign-type.type-writing   { background: rgba(200,154,60,0.18); color: #8b6627; }
     .my-assign-type.type-reading   { background: rgba(120,80,40,0.15); color: #6b4422; }
+    .my-assign-type.type-ielts_mock{ background: rgba(142,59,76,0.15); color: #8E3B4C; }
 
     .my-assign-meta {
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
@@ -2944,7 +2945,8 @@
         var TYPE_LABELS_S = {
           questions: 'Soru Bankası',
           writing:   'Writing',
-          reading:   'Reading'
+          reading:   'Reading',
+          ielts_mock: 'IELTS Deneme'
         };
 
         function escMA(s) {
@@ -3084,6 +3086,18 @@
                   actionsHtml = ''
                     + '<a href="' + escMA(cfg.url || '#') + '" target="_blank" rel="noopener" class="my-assign-btn">Okumaya Git →</a>'
                     + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Okudum</button>';
+                } else {
+                  actionsHtml = ''
+                    + '<span class="my-assign-completed-pill">Tamamlandı</span>'
+                    + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              } else if (a.type === 'ielts_mock') {
+                meta.push('Reading · 40 soru');
+                var mockUrl = 'ielts-deneme-reading.html?test=' + encodeURIComponent(cfg.test_slug || '');
+                if (!isCompleted) {
+                  actionsHtml = ''
+                    + '<a href="' + escMA(mockUrl) + '" target="_blank" rel="noopener" class="my-assign-btn">Denemeyi Başlat →</a>'
+                    + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
                 } else {
                   actionsHtml = ''
                     + '<span class="my-assign-completed-pill">Tamamlandı</span>'

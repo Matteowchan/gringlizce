@@ -1963,6 +1963,9 @@
           <button type="button" class="t-type-btn" data-type="vocab">
             <span class="t-type-name">Kelime</span>
           </button>
+          <button type="button" class="t-type-btn" data-type="ielts_mock">
+            <span class="t-type-name">IELTS Deneme</span>
+          </button>
         </div>
 
         <label for="ca-title">Başlık</label>
@@ -2065,6 +2068,14 @@
           <label for="ca-r-followup">Açıklama / Hedef (Opsiyonel)</label>
           <textarea id="ca-r-followup" rows="2" maxlength="500" placeholder="Okuduktan sonra 5 anahtar kelime not al"></textarea>
           <p class="t-config-note">Öğrenci okuduğunda "Okudum" butonuyla işaretler.</p>
+        </div>
+
+        <!-- IELTS tam deneme config -->
+        <div class="t-config-block" data-config="ielts_mock">
+          <div class="t-config-eyebrow">IELTS Tam Deneme</div>
+          <label for="ca-im-test">Deneme seç</label>
+          <select id="ca-im-test"><option value="">— Yükleniyor… —</option></select>
+          <p class="t-config-note">Öğrenci panelinden "Denemeyi Başlat" ile 3 passage / 40 soruluk denemeyi çözer. Sonuç kendi çalışma geçmişine işlenir.</p>
         </div>
 
         <!-- Vocab config -->
@@ -3166,7 +3177,7 @@
         }
       });
 
-      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime' };
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime', ielts_mock: 'IELTS Deneme' };
 
       var writingsLoaded_flag = false;
       async function loadWritings() {
@@ -4176,10 +4187,40 @@
         if (t === 'writing') {
           loadWritingTextTypes().then(populateTextTypeSelect);
         }
+        if (t === 'ielts_mock') { loadIeltsMocks(); }
       }
       caTypeBtns.forEach(function (b) {
         b.addEventListener('click', function () { setType(b.dataset.type); });
       });
+
+      var _ieltsMocksLoaded = false;
+      async function loadIeltsMocks() {
+        var sel = document.getElementById('ca-im-test');
+        if (!sel || _ieltsMocksLoaded) return;
+        try {
+          var r = await sb.from('ielts_tests')
+            .select('slug,name,ielts_sections!inner(section)')
+            .eq('ielts_sections.section', 'reading')
+            .eq('is_published', true)
+            .order('name', { ascending: true });
+          var rows = (r.data || []);
+          if (!rows.length) { sel.innerHTML = '<option value="">Deneme bulunamadı</option>'; return; }
+          sel.innerHTML = '<option value="">— Deneme seç —</option>' + rows.map(function (t) {
+            return '<option value="' + esc(t.slug) + '" data-name="' + esc(t.name) + '">' + esc(t.name) + ' · Reading (3 passage / 40 soru)</option>';
+          }).join('');
+          _ieltsMocksLoaded = true;
+        } catch (e) { sel.innerHTML = '<option value="">Yüklenemedi</option>'; }
+      }
+      (function () {
+        var imSel = document.getElementById('ca-im-test');
+        if (imSel) imSel.addEventListener('change', function () {
+          var titleEl = document.getElementById('ca-title');
+          var opt = imSel.selectedOptions && imSel.selectedOptions[0];
+          if (titleEl && !titleEl.value.trim() && opt && opt.getAttribute('data-name')) {
+            titleEl.value = opt.getAttribute('data-name');
+          }
+        });
+      })();
 
       document.getElementById('ca-w-exam').addEventListener('change', function () {
         populateTextTypeSelect();
@@ -4463,6 +4504,13 @@
           config.url = url;
           var followup = document.getElementById('ca-r-followup').value.trim();
           if (followup) config.follow_up_note = followup;
+        } else if (caCurrentType === 'ielts_mock') {
+          var imSel = document.getElementById('ca-im-test');
+          var imSlug = imSel ? imSel.value : '';
+          if (!imSlug) { caErr.textContent = 'Bir deneme seç.'; return; }
+          config.test_slug = imSlug;
+          var imOpt = imSel.selectedOptions && imSel.selectedOptions[0];
+          config.test_name = imOpt ? (imOpt.getAttribute('data-name') || '') : '';
         } else if (caCurrentType === 'vocab') {
           var rawWords = document.getElementById('ca-v-words').value.trim();
           if (!rawWords) { caErr.textContent = 'Kelime listesi boş olamaz.'; return; }

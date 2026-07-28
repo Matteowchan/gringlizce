@@ -75,6 +75,8 @@
     injectCSS();
     var sb=opts.sb, role=opts.role, cont=opts.container;
     if(!sb||!cont) return null;
+    var aggregate=!!opts.aggregate;               // öğretmenin TÜM sınıfları tek takvimde
+    var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
     var state={ view:'list', month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null };
 
     var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
@@ -88,6 +90,7 @@
       + '</div>'
       + (role==='teacher' ?
           '<div class="gsch-form">'
+          + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
           + '<label>Tarih & saat<span class="f-when-ctl"><input type="date" class="f-date" lang="tr-TR"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
@@ -120,10 +123,12 @@
       if(!_fh){ alert('Saat seç.'); return; }
       var startsAt=new Date(when);
       if(isNaN(startsAt.getTime())){ alert('Geçerli bir tarih seç.'); return; }
-      var room=(opts.roomForClass?opts.roomForClass(opts.classId):('C'+String(opts.classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
+      var classId = aggregate ? ((cont.querySelector('.f-class')||{}).value||'') : opts.classId;
+      if(aggregate && !classId){ alert('Sınıf seç.'); return; }
+      var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
       var btn=cont.querySelector('.f-save'); btn.disabled=true; var old=btn.textContent; btn.textContent='Kaydediliyor…';
       try{
-        var r=await sb.from('grimeet_schedule').insert({ class_id:opts.classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
+        var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
         if(r.error) throw r.error;
         if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
         cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value=''; cont.querySelector('.gsch-form').classList.remove('open');
@@ -143,7 +148,7 @@
       try{
         var floor=new Date(Date.now()-3*3600*1000).toISOString(); // son 3 saati de göster
         var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,room_code,note,status,class_id,classes(name)').eq('status','scheduled').gte('starts_at',floor).order('starts_at',{ascending:true});
-        if(role==='teacher') q=q.eq('class_id',opts.classId);
+        if(role==='teacher'){ if(aggregate) q=q.eq('teacher_id',opts.userId); else q=q.eq('class_id',opts.classId); }
         var r=await q;
         if(r.error) throw r.error;
         state.rows=(r.data||[]).map(function(x){ x._d=new Date(x.starts_at); return x; });
@@ -168,7 +173,8 @@
       var d=row._d, dur=row.duration_min||60;
       var start=d.getTime(), soon=(start-Date.now())<60*60000 && (start-Date.now())>-((dur+30)*60000);
       var cls=row.classes&&row.classes.name?row.classes.name:'';
-      var sub=WD[(d.getDay()+6)%7]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' · '+hhmm(d)+' · '+dur+' dk'+(role==='student'&&cls?(' · '+esc(cls)):'')+' · '+relLabel(d);
+      var showCls=(role==='student'||aggregate);
+      var sub=WD[(d.getDay()+6)%7]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' · '+hhmm(d)+' · '+dur+' dk'+(showCls&&cls?(' · '+esc(cls)):'')+' · '+relLabel(d);
       return '<div class="gsch-item'+(soon?' soon':'')+'">'
         + '<div class="gsch-date"><div class="d">'+d.getDate()+'</div><div class="m">'+MONTHS[d.getMonth()]+'</div></div>'
         + '<div class="gsch-meta"><div class="t">'+esc(row.title)+'</div><div class="s">'+sub+(row.note?(' — '+esc(row.note)):'')+'</div></div>'

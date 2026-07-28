@@ -25,6 +25,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
+  <script src="assets/grimeet-schedule.js?v=2" defer></script>
   <script src="assets/site-config.js" defer></script>
   <style>
     /* ============ Hero ============ */
@@ -191,6 +192,19 @@
       color: var(--text, #1A2230);
       margin-right: 0.4rem;
       letter-spacing: -0.01em;
+    }
+    .ot-sched-title {
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--text, #1A2230);
+      margin: 0 0 0.25rem;
+    }
+    .ot-sched-sub {
+      font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-muted, #6B6862);
+      margin: 0 0 1rem;
     }
 
     /* ============ Created Banner ============ */
@@ -716,6 +730,12 @@
         <div class="t-summary-item"><strong id="ot-student-count">0</strong>toplam öğrenci</div>
       </div>
 
+      <section id="ot-schedule-wrap" style="display:none;margin:0 0 1.9rem;">
+        <h2 class="ot-sched-title">Programım</h2>
+        <p class="ot-sched-sub">Tüm sınıflarına planladığın canlı derslerin tek takvimde. Buradan yeni ders planla veya başlat.</p>
+        <div id="ot-schedule"></div>
+      </section>
+
       <div id="ot-class-grid" class="t-class-grid"></div>
 
       <div id="ot-empty" class="t-empty" style="display:none;">
@@ -823,6 +843,15 @@
             return sum + (parseInt(c.member_count) || 0);
           }, 0);
           document.getElementById('ot-student-count').textContent = totalStudents;
+
+          try {
+            var schedWrap = document.getElementById('ot-schedule-wrap');
+            if (window.GriSchedule && classes.length) {
+              var clsList = classes.map(function (c) { return { id: c.class_id, name: c.name }; });
+              GriSchedule.mount({ sb: sb, container: document.getElementById('ot-schedule'), role: 'teacher', aggregate: true, userId: userId, classes: clsList });
+              if (schedWrap) schedWrap.style.display = '';
+            } else if (schedWrap) { schedWrap.style.display = 'none'; }
+          } catch (e) {}
 
           if (classes.length === 0) {
             grid.innerHTML = '';

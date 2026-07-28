@@ -2009,6 +2009,9 @@
         }, { onConflict: 'user_id,question_slug' }).then(function (r) {
           if (r.error) console.warn('[answers] persist failed:', r.error.message);
         });
+        // Aralıklı tekrar (SRS): yanlış->kuyruğa, doğru->kutu ilerlet (fire-and-forget)
+        supabase.rpc('srs_record', { p_slug: slug, p_correct: status === 'correct' })
+          .then(function (r) { if (r && r.error) console.warn('[srs] failed:', r.error.message); });
         // Rozet değerlendirmesi (debounced, 30 sn'de en fazla bir kez)
         if (typeof window.triggerBadgeCheck === 'function') {
           window.triggerBadgeCheck();
@@ -2108,19 +2111,38 @@
       if (zorluk) SET_URL_PARAMS += '&zorluk=' + encodeURIComponent(zorluk);
       if (sirala) SET_URL_PARAMS += '&sirala=' + encodeURIComponent(sirala);
 
-      // SET_KEY identifies this set in sessionStorage
-      SET_KEY = subcatList.length > 0
-        ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '') + (zorluk ? ':d-' + zorluk : '') + (sirala ? ':s-' + sirala : '')
-        : null;
+      // Aralıklı tekrar modu (?srs=1): kuyruktaki tekrar zamanı gelmiş sorular
+      const srsMode = params.get('srs') === '1';
+      if (srsMode) SET_URL_PARAMS += '&srs=1';
 
-      console.log('[soru.html] set params:', { subcatList, shuffleParam, slug });
+      // SET_KEY identifies this set in sessionStorage
+      SET_KEY = srsMode
+        ? 'gri.set.srs'
+        : subcatList.length > 0
+          ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '') + (zorluk ? ':d-' + zorluk : '') + (sirala ? ':s-' + sirala : '')
+          : null;
+
+      console.log('[soru.html] set params:', { subcatList, shuffleParam, srsMode, slug });
 
       let currentQuestion = null;
       let setSlugs = null;   // ordered list of slugs in this set
       let isFreshEntry = false;  // user just clicked Başla / Karışık Başla
 
       // === Resolve set order ===
-      if (subcatList.length > 0) {
+      if (srsMode) {
+        if (slug && SET_KEY) {
+          const stored = sessionStorage.getItem(SET_KEY);
+          if (stored) { try { setSlugs = JSON.parse(stored); } catch (e) { setSlugs = null; } }
+        }
+        if (!setSlugs || setSlugs.length === 0) {
+          const { data: due, error } = await supabase.rpc('srs_due_slugs', { p_limit: 50 });
+          if (error) { showError('Tekrar listesi yüklenemedi.'); return; }
+          setSlugs = (due || []).map(r => r.question_slug);
+          if (setSlugs.length === 0) { showError('Tekrar zamanı gelen soru yok — hepsini tazeledin. 🎉'); return; }
+          sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
+          // SRS'te cevaplar temizlenmez; tekrar çözünce kuyruk güncellenir
+        }
+      } else if (subcatList.length > 0) {
         // Try restoring from sessionStorage (mid-set navigation)
         if (slug && SET_KEY) {
           const stored = sessionStorage.getItem(SET_KEY);

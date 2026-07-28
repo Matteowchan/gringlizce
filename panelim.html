@@ -2611,6 +2611,14 @@
       .masam-quick b{font-family:var(--font-display,Georgia),serif;font-size:1rem;font-weight:500;display:block}
       .masam-quick small{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.75rem;color:var(--text-muted)}
     </style>
+    <a id="srs-card" href="soru.html?srs=1" style="display:none;align-items:center;gap:.9rem;background:linear-gradient(135deg,#2C5856,#356b68);color:#fff;text-decoration:none;border-radius:16px;padding:1rem 1.3rem;margin:0 0 1rem;box-shadow:0 8px 22px rgba(44,88,86,.22)">
+      <span style="font-size:1.7rem;line-height:1;flex-shrink:0">🔁</span>
+      <span style="flex:1">
+        <b style="font-family:var(--font-display,Georgia),serif;font-size:1.1rem;font-weight:600;display:block">Tekrar zamanı geldi</b>
+        <small style="font-size:.82rem;opacity:.9"><strong id="srs-count">0</strong> soru bugün tekrara hazır — aralıklı tekrar serini koru.</small>
+      </span>
+      <span style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:.5rem 1.1rem;font-family:var(--font-ui,Inter),sans-serif;font-size:.82rem;font-weight:600;white-space:nowrap">Tekrara Başla →</span>
+    </a>
     <div class="masam-quick" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem;margin:0 0 1.3rem">
       <a href="ogrenme-haritasi.html"><span class="qi">📚</span><span><b>Çalışmaya devam et</b><small>Öğrenme haritası</small></span></a>
       <a href="seviye-belirleme.html"><span class="qi">📊</span><span><b>Seviyeni ölç</b><small>Seviye belirleme</small></span></a>
@@ -3937,6 +3945,18 @@
       grid.innerHTML = html;
     }
 
+    // ===== Aralıklı tekrar (SRS) — tekrar zamanı gelen soru sayısı =====
+    async function loadSrsDue() {
+      try {
+        var r = await sbCli.rpc('srs_due_count');
+        var n = (r && !r.error && typeof r.data === 'number') ? r.data : 0;
+        if (n > 0) {
+          var c = document.getElementById('srs-count'); if (c) c.textContent = n;
+          var el = document.getElementById('srs-card'); if (el) el.style.display = 'flex';
+        }
+      } catch (e) { /* sessiz */ }
+    }
+
     // ===== User Stats Loader =====
     (async function loadUserStats() {
       try {
@@ -3959,8 +3979,8 @@
 
         var fmt = function (n) { return (n == null) ? '—' : Number(n).toLocaleString('tr-TR'); };
 
-        // ---- Rozetler + Aktivite haritası ----
-        try { renderBadges(s); renderHeatmap(); } catch (e) { console.warn('[achv]', e); }
+        // ---- Rozetler + Aktivite haritası + SRS ----
+        try { renderBadges(s); renderHeatmap(); loadSrsDue(); } catch (e) { console.warn('[achv]', e); }
 
         document.getElementById('us-total').textContent = fmt(s.total_answered);
         document.getElementById('us-wrong').textContent = fmt(s.wrong_count);

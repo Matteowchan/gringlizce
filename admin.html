@@ -4932,23 +4932,31 @@
         var recips = d.recipients || [];
         var recipRows = recips.length ? recips.map(function (r) {
           var flags = (r.opened_at ? 'açıldı' : '') + (r.clicked_at ? (r.opened_at ? ' · ' : '') + 'tıklandı' : '');
-          return '<tr style="border-top:1px solid var(--line);"><td style="padding:4px 8px;">' + escHtml(r.email || '') + '</td><td>' + escHtml(r.status || '') + '</td><td style="color:var(--text-muted);">' + flags + '</td></tr>';
+          var who = escHtml(r.email || '') + (r.name ? ' <span style="color:var(--text-muted);">· ' + escHtml(r.name) + '</span>' : '');
+          return '<tr style="border-top:1px solid var(--line);"><td style="padding:4px 8px;">' + who + '</td><td>' + escHtml(r.status || '') + '</td><td style="color:var(--text-muted);">' + flags + '</td></tr>';
         }).join('') : '<tr><td colspan="3" style="padding:8px;color:var(--text-muted);font-style:italic;">Alıcı kaydı yok.</td></tr>';
+        var prevSubject = d.preview_subject || d.subject || (d.template_name || '(şablon yok)');
+        var prevHtml = d.preview_html || d.body_html;
+        var multiNote = (recips.length > 1)
+          ? '<div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:6px;">Önizleme <strong>' + escHtml(d.preview_name || '') + '</strong> için gerçek içerikle gösteriliyor — her alıcıya kendi adıyla gider.'
+              + '</div>'
+          : (d.preview_name ? '<div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:6px;">Alıcıya (<strong>' + escHtml(d.preview_name) + '</strong>) giden gerçek içerik.</div>' : '');
         body.style.fontStyle = 'normal';
         body.style.color = 'var(--text)';
         body.innerHTML =
           '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Konu</div>' +
-          '<div style="font-weight:600;margin-bottom:0.4rem;">' + escHtml(d.subject || (d.template_name || '(şablon yok)')) + '</div>' +
-          '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:0.7rem 0 4px;">Mail İçeriği</div>' +
+          '<div style="font-weight:600;margin-bottom:0.4rem;">' + escHtml(prevSubject) + '</div>' +
+          '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:0.7rem 0 4px;">Mail İçeriği (öğrenciye giden hâli)</div>' +
+          multiNote +
           '<div id="cdt-iframe-wrap"></div>' +
           '<div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:0.9rem 0 4px;">Alıcılar (' + recips.length + ')</div>' +
           '<div style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:8px;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;"><tbody>' + recipRows + '</tbody></table></div>';
         var wrap = body.querySelector('#cdt-iframe-wrap');
-        if (d.body_html) {
+        if (prevHtml) {
           var ifr = document.createElement('iframe');
           ifr.setAttribute('sandbox', '');
           ifr.style.cssText = 'width:100%;height:320px;border:1px solid var(--line);border-radius:8px;background:#fff;';
-          ifr.srcdoc = d.body_html;
+          ifr.srcdoc = prevHtml;
           wrap.appendChild(ifr);
         } else {
           wrap.innerHTML = '<div style="color:var(--text-muted);font-style:italic;">Bu kampanyanın şablon içeriği yok.</div>';

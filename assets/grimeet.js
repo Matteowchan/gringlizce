@@ -17,11 +17,11 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
-  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1,
+  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
-  waitingRoom:false, admitted:false, pending:[], _admitTimer:null,
+  waitingRoom:true, admitted:false, pending:[], _admitTimer:null,
   attendance:{}, points:{}, pnames:{}, startedAt:null
 };
 
@@ -168,7 +168,7 @@ function addPending(id,name){ if(!id||STATE.pending.some(function(p){return p.id
 function removePending(id){ STATE.pending=STATE.pending.filter(function(p){return p.id!==id;}); renderPending(); }
 function renderPending(){ var el=$('#pending-list'); if(!el)return; if(!STATE.pending.length){ el.innerHTML=''; return; } el.innerHTML='<div class="hq-h">Kapıda bekleyenler ('+STATE.pending.length+')</div>'+STATE.pending.map(function(p){ return '<div class="pend-item"><span class="hqn">'+esc(p.name)+'</span><button data-admit="'+esc(p.id)+'">Kabul</button><button class="deny" data-deny="'+esc(p.id)+'">Reddet</button></div>'; }).join(''); }
 function bindWaiting(){
-  var b=$('#btn-waiting'); if(b)b.addEventListener('click',function(){ STATE.waitingRoom=!STATE.waitingRoom; this.textContent='Bekleme Odası: '+(STATE.waitingRoom?'Açık':'Kapalı'); this.classList.toggle('on',STATE.waitingRoom); toast(STATE.waitingRoom?'Bekleme odası açık — girenler onay bekler.':'Bekleme odası kapalı.'); if(!STATE.waitingRoom){ STATE.pending.forEach(function(p){ sendData({t:'admit',target:p.id}); }); STATE.pending=[]; renderPending(); } });
+  var b=$('#btn-waiting'); if(b){ b.textContent='Bekleme Odası: '+(STATE.waitingRoom?'Açık':'Kapalı'); b.classList.toggle('on',STATE.waitingRoom); b.addEventListener('click',function(){ STATE.waitingRoom=!STATE.waitingRoom; this.textContent='Bekleme Odası: '+(STATE.waitingRoom?'Açık':'Kapalı'); this.classList.toggle('on',STATE.waitingRoom); toast(STATE.waitingRoom?'Bekleme odası açık — girenler onay bekler.':'Bekleme odası kapalı.'); if(!STATE.waitingRoom){ STATE.pending.forEach(function(p){ sendData({t:'admit',target:p.id}); }); STATE.pending=[]; renderPending(); } }); }
   var pl=$('#pending-list'); if(pl)pl.addEventListener('click',function(e){ var a=e.target.closest('[data-admit]'),d=e.target.closest('[data-deny]'); if(a){ var id=a.getAttribute('data-admit'); sendData({t:'admit',target:id}); removePending(id); } else if(d){ var id2=d.getAttribute('data-deny'); sendData({t:'deny',target:id2}); removePending(id2); } });
   var wc=$('#wait-cancel'); if(wc)wc.addEventListener('click',hardLeave);
 }
@@ -382,7 +382,8 @@ function onData(payload,p){
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
   else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
-  else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); }
+  else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
+  else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
   else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
@@ -597,9 +598,14 @@ function bindMaterials(){
     if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
     else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
-  $('#mat-zoom-in').addEventListener('click',function(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); });
-  $('#mat-zoom-out').addEventListener('click',function(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); });
+  function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); }
+  function zout(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); }
+  $('#mat-zoom-in').addEventListener('click',zin);
+  $('#mat-zoom-out').addEventListener('click',zout);
+  var zfi=$('#mat-zoom-fab-in'); if(zfi)zfi.addEventListener('click',zin);
+  var zfo=$('#mat-zoom-fab-out'); if(zfo)zfo.addEventListener('click',zout);
   var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); });
+  var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (senkron).':'Sayfa kontrolü sende.'); });
 }
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
 function loadMaterial(m,remote){
@@ -607,25 +613,26 @@ function loadMaterial(m,remote){
   ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } matTab('youtube'); ensureYtPlayer(id); }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
-    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; applyZoom();
+    if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
       fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
-    } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollBroadcast(); }
+    } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollSync(document.getElementById('mat-uni-if')); }
   }
   applyZoom();
   if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
 }
-function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var v=$('#mat-zoom-val'); if(v)v.textContent=Math.round(STATE.matZoom*100)+'%'; }
+function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
-function attachMatScrollBroadcast(){ var itf=document.getElementById('mat-uni-if'); if(!itf)return;
+function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared)||(!STATE.isHost&&STATE.matControl); }
+function attachMatScrollSync(itf){ if(!itf)return;
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;
-    // Sayfa-içi gezinme takibi: öğretmen materyal içinde başka sayfaya giderse öğrencileri de taşı
-    try{ var loc=w.location; var rel=(loc.pathname.replace(/^\/+/,'')+loc.search); if(rel&&/\.html/i.test(rel)&&STATE.matShared){ if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){ STATE.currentMaterial={kind:'unit',value:rel}; sendData({t:'mat',kind:'unit',value:rel,nav:true}); } } }catch(e){}
-    var bc=throttle(function(){ if(!STATE.matShared)return; try{ var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; var y=(w.scrollY||w.pageYOffset||0); sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,y/max))}); }catch(e){} },160);
+    // Sayfa-içi gezinme takibi (sadece öğretmen): materyal içinde başka sayfaya giderse öğrencileri de taşı
+    if(STATE.isHost){ try{ var loc=w.location; var rel=(loc.pathname.replace(/^\/+/,'')+loc.search); if(rel&&/\.html/i.test(rel)&&STATE.matShared){ if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){ STATE.currentMaterial={kind:'unit',value:rel}; sendData({t:'mat',kind:'unit',value:rel,nav:true}); } } }catch(e){} }
+    var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; try{ var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; var y=(w.scrollY||w.pageYOffset||0); sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,y/max))}); }catch(e){} },140);
     w.addEventListener('scroll',bc,{passive:true});
   }catch(e){} });
 }
-function applyMatScroll(frac){ try{ var itf=document.getElementById('mat-uni-if'); if(!itf||!itf.contentWindow)return; var w=itf.contentWindow; var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; w.scrollTo(0,frac*max); }catch(e){} }
+function applyMatScroll(frac){ try{ var itf=document.getElementById('mat-uni-if'); if(!itf||!itf.contentWindow)return; var w=itf.contentWindow; var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; STATE._matScrollLock=true; w.scrollTo(0,frac*max); clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); }catch(e){} }
 var _ytApiP=null;
 function loadYtApi(){ if(window.YT&&window.YT.Player) return Promise.resolve(); if(_ytApiP) return _ytApiP; _ytApiP=new Promise(function(res){ var prev=window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady=function(){ if(prev)try{prev();}catch(e){} res(); }; var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); }); return _ytApiP; }
 function ensureYtPlayer(id){
@@ -647,10 +654,13 @@ function buildPresets(){ var el=$('#mat-presets'); if(!el)return; var P=[
   {l:'IELTS Writing',p:'ielts-bolum-calisma.html?bolum=writing'},{l:'IELTS Deneme',p:'ielts-deneme.html'},
   {l:'TOEFL',p:'toefl-ogren.html'},{l:'YDS',p:'yds-ogren.html'},{l:'YDT',p:'ydt-ogren.html'},
   {l:'SAT Öğren',p:'sat-ogren.html'},{l:'Seviye Testi',p:'seviye-belirleme.html'},
-  {l:'Soru Bankası',p:'soru-bankasi.html'},{l:'Kelime Bankası',p:'kelime-bankasi.html'}
+  {l:'Soru Bankası',p:'soru-bankasi.html'},{l:'Kelime Bankası',p:'kelime-bankasi.html'},
+  {l:'Sınıfım / Ödevler',p:'ogretmen-sinif.html'},{l:'Yazı Değerlendirme',p:'ogretmen-yazi-degerlendirme.html'}
 ];
   P.forEach(function(x){ var b=document.createElement('button'); b.textContent=x.l; b.addEventListener('click',function(){ var u=$('#mat-page-url'); if(u)u.value=x.p; loadMaterial({kind:'unit',value:x.p},false); }); el.appendChild(b); }); }
-function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); var lk=$('#mat-lock'); if(lk) lk.classList.toggle('on',which==='unite'); }
+function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); applyMatLock(); }
+function activeMatTab(){ var a=$('.mat-tab.active'); return a?a.dataset.mat:''; }
+function applyMatLock(){ var lk=$('#mat-lock'); if(!lk)return; lk.classList.toggle('on', activeMatTab()==='unite' && !STATE.matControl); }
 function buildUnitSelectors(){
   var tracks=[{v:'',t:'Adult'},{v:'teen-',t:'Teen'},{v:'junior-',t:'Junior'}], levels=['a1','a2','b1','b2','c1','c2'];
   var tSel=$('#mat-track'),lSel=$('#mat-level'),uSel=$('#mat-unit');
@@ -740,12 +750,12 @@ var WB=(function(){
     var ex=$('#gmr-wb-textarea'); if(ex)ex.remove();
     var ta=document.createElement('textarea'); ta.id='gmr-wb-textarea';
     var fs=Math.max(18,size*4); ta.style.left=x+'px'; ta.style.top=(y-fs*0.9)+'px'; ta.style.color=color; ta.style.fontSize=fs+'px'; ta.rows=1;
-    ta.placeholder=bullet?'Her satır bir madde…':'Metin…';
+    ta.placeholder=bullet?'Madde yaz · Enter bitirir · Shift+Enter alt madde':'Metin · Enter bitirir · Shift+Enter alt satır';
     wrap.appendChild(ta); ta.focus();
     function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ var lines=v.split('\n'); if(bullet)lines=lines.map(function(l){return l.trim()?'•  '+l:l;}); items.push({type:'text',x:x,y:y,lines:lines,color:color,size:fs}); redraw(); broadcast(); } ta.remove(); }
     ta.addEventListener('blur',commit);
     ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
-    ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.value=''; ta.blur(); } else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ ta.blur(); } });
+    ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.value=''; ta.blur(); } else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ta.blur(); } });
   }
   function editText(idx){
     var it=items[idx]; if(!it||it.type!=='text')return;
@@ -759,7 +769,7 @@ var WB=(function(){
     function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ var ls=v.split('\n'); if(isBullet)ls=ls.map(function(l){return l.trim()?'•  '+l:l;}); items[idx].lines=ls; delete items[idx].text; } else { items.splice(idx,1); sel=null; } redraw(); broadcast(); ta.remove(); }
     ta.addEventListener('blur',commit);
     ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
-    ta.addEventListener('keydown',function(e){ if(e.key==='Escape')ta.blur(); else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))ta.blur(); });
+    ta.addEventListener('keydown',function(e){ if(e.key==='Escape')ta.blur(); else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ta.blur(); } });
   }
   function onImage(e){ var f=e.target.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){ var mw=Math.min(340,img.width),ratio=img.height/img.width; items.push({type:'img',x:W/2-mw/2,y:H/2-mw*ratio/2,w:mw,h:mw*ratio,src:rd.result,_img:img}); redraw(); broadcast(); }; img.src=rd.result; }; rd.readAsDataURL(f); e.target.value=''; }
   function drawItem(it){
@@ -828,7 +838,7 @@ function bindCloseRoom(){ var b=$('#btn-close-room'); if(!b)return; b.addEventLi
   if(!confirm('Oda kapatılsın mı? Öğrenciler çıkarılır ve bu kodla tekrar girilemez.'))return;
   try{ var h={'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session)h['Authorization']='Bearer '+s.data.session.access_token; }
     await fetch(SUPABASE_URL+'/functions/v1/grimeet-room-close',{method:'POST',headers:h,body:JSON.stringify({room:STATE.room})}); }catch(e){}
-  sendData({t:'room-closed'}); toast('Oda kapatıldı.'); clearInterval(STATE._hb); setTimeout(hardLeave,900);
+  sendData({t:'room-closed'}); setTimeout(function(){ sendData({t:'room-closed'}); },500); toast('Oda kapatıldı. Katılımcılar çıkarılıyor…'); clearInterval(STATE._hb); setTimeout(hardLeave,2600);
 }); }
 function startHeartbeat(){ if(!STATE.isHost)return; clearInterval(STATE._hb); STATE._hb=setInterval(async function(){ try{ var h={'Content-Type':'application/json'}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ h['Authorization']='Bearer '+s.data.session.access_token; h['apikey']=SUPABASE_ANON_KEY; } } fetch(TOKEN_ENDPOINT,{method:'POST',headers:h,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:true,heartbeat:true})}); }catch(e){} },5*60*1000); }
 

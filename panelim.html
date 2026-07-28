@@ -2680,6 +2680,37 @@
         <div class="ah-meta">Toplam <strong id="us-total-days">—</strong> gün aktivite</div>
       </div>
 
+      <!-- Aktivite haritası + Rozetler -->
+      <style>
+        .achv-card{ margin-top:1rem; background:linear-gradient(150deg,#fffdf8,#f6efe1); border:1px solid #ecdfc7; border-radius:18px; padding:1.3rem 1.4rem; box-shadow:0 6px 22px rgba(60,45,25,.05); }
+        .achv-head{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; margin:0 0 .8rem; flex-wrap:wrap; }
+        .achv-eyebrow{ font-family:var(--font-ui,Inter),system-ui,sans-serif; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-muted,#8a7f68); font-weight:700; }
+        .achv-legend{ display:flex; align-items:center; gap:4px; font-size:10px; color:var(--text-muted,#8a7f68); }
+        .achv-legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+        .hm-scroll{ overflow-x:auto; padding-bottom:2px; }
+        .hm-grid{ display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,1fr); gap:3px; width:max-content; }
+        .hm-cell{ width:12px; height:12px; border-radius:3px; background:#eadfca; }
+        .hm-cell.l1{ background:#cfe3d4; } .hm-cell.l2{ background:#8fc6a0; } .hm-cell.l3{ background:#4f9e6b; } .hm-cell.l4{ background:#2C5856; }
+        .hm-cell.today{ box-shadow:0 0 0 2px var(--gold,#C89A3C); }
+        .hm-months{ display:flex; gap:0; font-size:9px; color:var(--text-muted,#8a7f68); margin-bottom:3px; letter-spacing:.04em; }
+        .badge-row{ display:flex; gap:.6rem; flex-wrap:wrap; }
+        .badge{ display:flex; align-items:center; gap:.5rem; background:#fff; border:1px solid #ecdfc7; border-radius:100px; padding:.4rem .8rem .4rem .5rem; box-shadow:0 2px 8px rgba(60,45,25,.04); }
+        .badge.locked{ opacity:.42; filter:grayscale(.7); }
+        .badge-ic{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; background:linear-gradient(135deg,#f4e3bd,#e9c877); flex-shrink:0; }
+        .badge.locked .badge-ic{ background:#e6ddca; }
+        .badge-tx b{ display:block; font-family:var(--font-ui,Inter),system-ui,sans-serif; font-size:.78rem; font-weight:700; color:#3a352c; line-height:1.1; }
+        .badge-tx small{ font-size:.66rem; color:var(--text-muted,#8a7f68); }
+      </style>
+      <div class="achv-card" id="achv-card" style="display:none">
+        <div class="achv-head">
+          <span class="achv-eyebrow">Aktivite Haritası · Son 14 Hafta</span>
+          <span class="achv-legend">az <i class="hm-cell" style="background:#eadfca"></i><i class="hm-cell l1"></i><i class="hm-cell l2"></i><i class="hm-cell l3"></i><i class="hm-cell l4"></i> çok</span>
+        </div>
+        <div class="hm-scroll"><div class="hm-grid" id="hm-grid"></div></div>
+        <div class="achv-head" style="margin:1.3rem 0 .7rem"><span class="achv-eyebrow">Rozetlerin</span><span class="achv-legend" id="badge-count"></span></div>
+        <div class="badge-row" id="badge-row"></div>
+      </div>
+
       <!-- Push bildirim opt-in -->
       <div id="push-optin" style="display:none;margin-top:1rem;background:var(--bg-card,#fefcf7);border:1px solid var(--line,#d4c9ae);border-radius:12px;padding:.9rem 1.1rem">
         <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
@@ -3847,6 +3878,65 @@
       ].join('');
     }
 
+    // ===== Rozetler =====
+    var BADGE_DEFS = [
+      { ic:'🎯', name:'İlk Adım',        desc:'İlk soru',        ok:function(s){ return (s.total_answered||0) >= 1; } },
+      { ic:'📘', name:'50 Soru',         desc:'50 soru çözüldü', ok:function(s){ return (s.total_answered||0) >= 50; } },
+      { ic:'📚', name:'100 Soru',        desc:'Yüz soru',        ok:function(s){ return (s.total_answered||0) >= 100; } },
+      { ic:'🏛️', name:'500 Soru',        desc:'Beş yüz soru',    ok:function(s){ return (s.total_answered||0) >= 500; } },
+      { ic:'👑', name:'1000 Soru',       desc:'Bin soru',        ok:function(s){ return (s.total_answered||0) >= 1000; } },
+      { ic:'🔥', name:'Ateş',            desc:'3 gün üst üste',  ok:function(s){ return (s.current_streak||0) >= 3; } },
+      { ic:'⚡', name:'7 Gün Seri',      desc:'Bir hafta',       ok:function(s){ return (s.current_streak||0) >= 7; } },
+      { ic:'🌟', name:'30 Gün Seri',     desc:'Bir ay',          ok:function(s){ return (s.current_streak||0) >= 30; } },
+      { ic:'🎖️', name:'Keskin Nişancı',  desc:'%80+ doğruluk',   ok:function(s){ return (s.total_answered||0) >= 50 && (s.correct_count/s.total_answered) >= 0.8; } },
+      { ic:'🗂️', name:'Kelime Avcısı',   desc:'50 kelime',       ok:function(s){ return (s.vocab_count||0) >= 50; } },
+      { ic:'🗓️', name:'Sadık',           desc:'30 aktif gün',    ok:function(s){ return (s.active_days||0) >= 30; } }
+    ];
+    function renderBadges(s) {
+      var row = document.getElementById('badge-row'), card = document.getElementById('achv-card');
+      if (!row) return;
+      if (card) card.style.display = 'block';
+      var earned = [], locked = [];
+      BADGE_DEFS.forEach(function (b) { (b.ok(s) ? earned : locked).push(b); });
+      var cnt = document.getElementById('badge-count');
+      if (cnt) cnt.textContent = earned.length + ' / ' + BADGE_DEFS.length;
+      var chip = function (b, isLocked) {
+        return '<div class="badge' + (isLocked ? ' locked' : '') + '" title="' + b.desc + '">'
+          + '<span class="badge-ic">' + b.ic + '</span>'
+          + '<span class="badge-tx"><b>' + b.name + '</b><small>' + b.desc + '</small></span></div>';
+      };
+      row.innerHTML = earned.map(function (b) { return chip(b, false); }).join('')
+        + locked.slice(0, 3).map(function (b) { return chip(b, true); }).join('');
+    }
+
+    // ===== Aktivite ısı haritası (14 hafta) =====
+    async function renderHeatmap() {
+      var grid = document.getElementById('hm-grid');
+      if (!grid) return;
+      var map = {};
+      try {
+        var r = await sbCli.rpc('my_daily_activity', { p_days: 98 });
+        (r.data || []).forEach(function (x) { map[x.day] = Number(x.cnt) || 0; });
+      } catch (e) { /* boş harita da render edilsin */ }
+      var ymd = function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      var todayKey = ymd(today);
+      var wd = (today.getDay() + 6) % 7;                 // Pzt=0
+      var start = new Date(today); start.setDate(start.getDate() - wd - 13 * 7);
+      var html = '';
+      for (var i = 0; i < 14 * 7; i++) {
+        var d = new Date(start); d.setDate(start.getDate() + i);
+        var key = ymd(d);
+        var future = d > today;
+        var c = map[key] || 0;
+        var lvl = future ? '' : (c >= 15 ? ' l4' : c >= 8 ? ' l3' : c >= 4 ? ' l2' : c >= 1 ? ' l1' : '');
+        var isToday = (key === todayKey) ? ' today' : '';
+        var st = future ? ' style="visibility:hidden"' : '';
+        html += '<span class="hm-cell' + lvl + isToday + '"' + st + ' title="' + key + ': ' + c + ' soru"></span>';
+      }
+      grid.innerHTML = html;
+    }
+
     // ===== User Stats Loader =====
     (async function loadUserStats() {
       try {
@@ -3868,6 +3958,9 @@
         area.style.display = 'block';
 
         var fmt = function (n) { return (n == null) ? '—' : Number(n).toLocaleString('tr-TR'); };
+
+        // ---- Rozetler + Aktivite haritası ----
+        try { renderBadges(s); renderHeatmap(); } catch (e) { console.warn('[achv]', e); }
 
         document.getElementById('us-total').textContent = fmt(s.total_answered);
         document.getElementById('us-wrong').textContent = fmt(s.wrong_count);

@@ -17,7 +17,7 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null,
-  bg:'none', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
+  bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
@@ -32,7 +32,7 @@ var BGS=[
   {id:'bg-07',label:'Kayalık Sahil'},{id:'bg-08',label:'Çiçekler'},{id:'bg-09',label:'Çöl Gecesi'},
   {id:'bg-10',label:'Kır Çiçekleri'},{id:'bg-11',label:'Sınıf'}
 ];
-function bgFile(id){ return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
+function bgFile(id){ if(id==='custom') return STATE.customBg||''; return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 
 var ROOM_THEMES=[
   {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#2E6E6A',d:'#1E4E4B',g:'#B78A2E'},
@@ -446,7 +446,7 @@ function pickStudent(){ var names=studentNames(); if(!names.length){ $('#pick-re
 function readQuizForm(){ var q=($('#quiz-q').value||'').trim(); var opts={}; $$('#quiz-opts input[data-opt]').forEach(function(i){ var v=(i.value||'').trim(); if(v)opts[i.dataset.opt]=v; }); var c=$('#quiz-opts .cor.on'); return {q:q,opts:opts,correct:c?c.dataset.cor:null}; }
 function clearQuizForm(){ $('#quiz-q').value=''; $$('#quiz-opts input[data-opt]').forEach(function(i){i.value='';}); $$('#quiz-opts .cor').forEach(function(x){x.classList.remove('on');}); }
 function quizFilled(f){ return !!(f.q||Object.keys(f.opts).length||f.correct); }
-function updateQueueLabel(){ var el=$('#quiz-queue'); if(el)el.textContent=STATE.quizQueue.length?(STATE.quizQueue.length+' soru kuyrukta'):''; }
+function updateQueueLabel(){ var el=$('#quiz-queue'); if(el)el.textContent=STATE.quizQueue.length?(STATE.quizQueue.length+' soru kuyrukta'):''; var b=$('#btn-quiz'); if(b)b.textContent=STATE.quizQueue.length?('Tümünü Gönder ('+STATE.quizQueue.length+' soru)'):'Quiz Gönder'; }
 function addQuizToQueue(){ var f=readQuizForm(); if(!quizFilled(f)){ toast('Önce soru/şık doldur.'); return; } STATE.quizQueue.push(f); clearQuizForm(); updateQueueLabel(); toast('Kuyruğa eklendi ('+STATE.quizQueue.length+').'); }
 function sendQuiz(){
   var cur=readQuizForm(); var list=STATE.quizQueue.slice(); if(quizFilled(cur)) list.push(cur);
@@ -567,9 +567,19 @@ var _krisp=null,_krispTried=false,_krispOn=false;
 async function loadKrisp(){ if(_krisp||_krispTried)return _krisp; _krispTried=true; try{ _krisp=await import('https://esm.sh/@livekit/krisp-noise-filter'); }catch(e){ try{ _krisp=await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter/+esm'); }catch(e2){ _krisp=null; } } return _krisp; }
 async function applyNoiseFilter(){ if(_krispOn)return; try{ if(!STATE.lkRoom)return; var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); var at=mp&&mp.audioTrack; if(!at||!at.setProcessor)return; var k=await loadKrisp(); if(!k)return; var KNF=k.KrispNoiseFilter||k.default; if(!KNF)return; await at.setProcessor(KNF()); _krispOn=true; }catch(e){} }
 function buildBgGrid(){
-  var g=$('#bg-grid'); g.innerHTML='';
+  var g=$('#bg-grid'); if(!g)return; g.innerHTML='';
   BGS.forEach(function(b){ var d=document.createElement('button'); d.className='bg-opt '+(b.id==='none'?'none':b.id==='blur'?'blur':'')+(STATE.bg===b.id?' on':''); d.dataset.bg=b.id; if(b.id!=='none'&&b.id!=='blur') d.style.backgroundImage='url("'+bgFile(b.id)+'")'; d.innerHTML='<span>'+b.label+'</span>'; d.addEventListener('click',function(){ $$('.bg-opt').forEach(function(x){x.classList.remove('on');}); d.classList.add('on'); applyBackground(b.id); }); g.appendChild(d); });
+  if(STATE.customBg){ var c=document.createElement('button'); c.className='bg-opt'+(STATE.bg==='custom'?' on':''); c.dataset.bg='custom'; c.style.backgroundImage='url("'+STATE.customBg+'")'; c.innerHTML='<span>Benim</span>'; c.addEventListener('click',function(){ $$('.bg-opt').forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); applyBackground('custom'); }); g.appendChild(c); }
+  var up=document.createElement('button'); up.type='button'; up.className='bg-opt bg-upload'; up.innerHTML='<span>+ Kendi arka planın</span>'; up.addEventListener('click',function(){ var i=$('#bg-file-input'); if(i)i.click(); }); g.appendChild(up);
 }
+function bindBgUpload(){ var i=$('#bg-file-input'); if(!i)return; i.addEventListener('change',function(){ var f=i.files&&i.files[0]; i.value=''; if(!f)return; if(!/^image\//.test(f.type)){ toast('Lütfen bir resim dosyası seç.'); return; }
+  var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){ try{
+    var mw=1280, sc=Math.min(1,mw/img.width), w=Math.round(img.width*sc), h=Math.round(img.height*sc);
+    var cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+    var data=cv.toDataURL('image/jpeg',0.82); STATE.customBg=data;
+    try{ localStorage.setItem('gm-bg-custom',data); }catch(e){ toast('Görsel çok büyük, tekrar kaydedilemedi (daha küçük bir resim dene).'); }
+    buildBgGrid(); applyBackground('custom');
+  }catch(e){ toast('Görsel işlenemedi.'); } }; img.onerror=function(){ toast('Görsel açılamadı.'); }; img.src=rd.result; }; rd.readAsDataURL(f); }); }
 async function applyBackground(bg){
   STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} var track=STATE.camTrack;
   if(!track){ toast(STATE.demo?'Arka plan için canlı bağlantı gerekli.':'Kamera açık değil.'); return; }
@@ -910,9 +920,11 @@ function endLessonPackage(){
 function boot(){
   if(!STATE.room) STATE.room='DEMO'+Math.floor(Math.random()*90+10);
   try{ STATE.bg=localStorage.getItem('gm-bg')||'none'; }catch(e){}
+  try{ STATE.customBg=localStorage.getItem('gm-bg-custom')||''; }catch(e){}
+  if(STATE.bg==='custom'&&!STATE.customBg) STATE.bg='none';
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
+  buildBgGrid(); bindBgUpload(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
   window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);

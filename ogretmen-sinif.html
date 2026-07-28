@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/grimeet-schedule.js" defer></script>
+  <script src="assets/student-analysis.js?v=1" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/site-config.js" defer></script>
@@ -2547,6 +2548,19 @@
       sdClose.addEventListener('click', closeStudentDrawer);
       sdBackdrop.addEventListener('click', closeStudentDrawer);
 
+      function teacherAnalysisAssign(exam, category, label) {
+        try { sDrawer.classList.remove('show'); document.body.style.overflow = ''; } catch (e) {}
+        var btn = document.getElementById('ks-new-assign-btn');
+        if (btn) { btn.click(); }
+        var sub = document.querySelector('#modal-create-assign .modal-sub');
+        if (sub) { sub.innerHTML = '<b style="color:var(--teal,#2C5856);">Zayıf konu hedefi:</b> ' + (exam || '').toUpperCase() + ' · ' + esc(label || category) + ' — soru bankası ödevi olarak ekle.'; }
+      }
+      function mountStudentAnalysis(studentId) {
+        var el = document.getElementById('sd-panel-analiz');
+        if (!el) { return; }
+        if (!window.GriAnalysis) { el.innerHTML = '<p class="sd-tab-loading">Analiz modülü yüklenemedi.</p>'; return; }
+        GriAnalysis.mount({ sb: sb, container: el, userId: studentId, assignLabel: '+ Ödev', onAssign: teacherAnalysisAssign });
+      }
       async function openStudentDrawer(studentId, email) {
         sdTitle.textContent = email || 'Öğrenci Detayı';
         sdBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
@@ -2638,6 +2652,7 @@
             + '<button class="sd-tab-btn" data-tab="wrong" type="button">Yanlışlar<span class="sd-tab-count" id="sd-tab-count-wrong">' + (wrongCount || 0) + '</span></button>'
             + '<button class="sd-tab-btn" data-tab="vocab" type="button">Kelimeler<span class="sd-tab-count" id="sd-tab-count-vocab">' + vocabCountInit + '</span></button>'
             + '<button class="sd-tab-btn" data-tab="notes" type="button">Notlarım</button>'
+            + '<button class="sd-tab-btn" data-tab="analiz" type="button">Analiz</button>'
           + '</div>';
 
         var overviewPanel = ''
@@ -2652,6 +2667,7 @@
         var wrongPanel = '<div class="sd-tab-panel" data-panel="wrong" id="sd-panel-wrong"><p class="sd-tab-loading">Yanlış cevaplar yüklenecek...</p></div>';
         var vocabPanel = '<div class="sd-tab-panel" data-panel="vocab" id="sd-panel-vocab"><p class="sd-tab-loading">Kelimeler yüklenecek...</p></div>';
         var notesPanel = '<div class="sd-tab-panel" data-panel="notes" id="sd-panel-notes"><p class="sd-tab-loading">Notlar yüklenecek...</p></div>';
+        var analizPanel = '<div class="sd-tab-panel" data-panel="analiz" id="sd-panel-analiz"><p class="sd-tab-loading">Analiz yüklenecek...</p></div>';
 
         sdBody.innerHTML = ''
           + '<p class="sd-meta">' + meta + '</p>'
@@ -2662,12 +2678,13 @@
           + wrongPanel
           + vocabPanel
           + notesPanel
+          + analizPanel
           + '<div class="sd-actions">'
             + '<button class="sd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
           + '</div>';
 
         // Sekme switching
-        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false };
+        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false, analiz: false };
         sdBody.querySelectorAll('.sd-tab-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var key = btn.dataset.tab;
@@ -2679,6 +2696,7 @@
             else if (key === 'wrong' && !loaded.wrong) { loaded.wrong = true; loadStudentWrong(studentId); }
             else if (key === 'vocab' && !loaded.vocab) { loaded.vocab = true; loadStudentVocab(studentId, 0); }
             else if (key === 'notes' && !loaded.notes) { loaded.notes = true; loadStudentNotes(studentId); }
+            else if (key === 'analiz' && !loaded.analiz) { loaded.analiz = true; mountStudentAnalysis(studentId); }
           });
         });
 

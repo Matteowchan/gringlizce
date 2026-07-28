@@ -2478,6 +2478,7 @@
   <div class="global-status" id="global-status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/student-analysis.js?v=1" defer></script>
   <script>
   (function () {
     var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
@@ -3784,28 +3785,18 @@
       else { s += 'Belirgin zayıf konu yok, dengeli bir profil.'; }
       return s;
     }
-    var _umAnalysisUid = null;
-    async function loadUserAnalysis(userId) {
-      _umAnalysisUid = userId;
-      var sel = $('um-analysis-exam'), box = $('um-analysis'), msg = $('um-analysis-msg');
-      if (!sel || !box) { return; }
-      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
-      if (msg) { msg.textContent = ''; }
-      try {
-        var r = await sb.rpc('admin_user_exams', { p_user_id: userId });
-        if (r.error) { throw r.error; }
-        var exams = r.data || [];
-        if (!exams.length) {
-          sel.style.display = 'none';
-          box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Bu öğrenci soru bankasından henüz soru çözmemiş. (Kelime Bankası ve denemeler ayrı bölümlerde görünür.)</div>';
-          return;
-        }
-        sel.style.display = '';
-        sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; return '<option value="' + escHtmlAdmin(e.exam) + '">' + escHtmlAdmin(m.label) + ' (' + e.answered + ' soru)</option>'; }).join('');
-        if (!sel.dataset.wired) { sel.dataset.wired = '1'; sel.addEventListener('change', function () { renderExamAnalysis(_umAnalysisUid, sel.value); }); }
-        sel.value = exams[0].exam;
-        renderExamAnalysis(userId, exams[0].exam);
-      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    // Analiz artık paylaşılan modülde (assets/student-analysis.js). Admin, zayıf konularda
+    // "+ Bankaya git" ile o sınavın soru bankası hub'ını açar (atama öğretmen panelinde).
+    var UM_EXAM_HUB = { sat: 'sat-soru-bankasi.html', yds: 'soru-bankasi.html', ydt: 'soru-bankasi.html', udsp: 'udsp-soru-bankasi.html', toefl: 'toefl-soru-bankasi.html' };
+    function loadUserAnalysis(userId) {
+      var cont = $('um-analysis'); if (!cont) { return; }
+      var selEl = $('um-analysis-exam'); if (selEl && selEl.parentNode) { selEl.parentNode.style.display = 'none'; }
+      if (!window.GriAnalysis) { cont.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Analiz modülü yüklenemedi.</div>'; return; }
+      GriAnalysis.mount({
+        sb: sb, container: cont, userId: userId,
+        assignLabel: '+ Bankaya git',
+        onAssign: function (exam) { window.open(UM_EXAM_HUB[exam] || 'soru-bankasi.html', '_blank'); }
+      });
     }
     async function renderExamAnalysis(userId, exam) {
       var box = $('um-analysis'), msg = $('um-analysis-msg'); if (!box) { return; }

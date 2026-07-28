@@ -4055,6 +4055,12 @@
             if (tEl) tEl.textContent = goal;
             if (fEl) fEl.style.width = pct + '%';
             gEl.classList.toggle('done', met);
+            if (met && window.GriFX) {
+              try {
+                var ck = 'gr_goal_celebrated_' + new Date().toISOString().slice(0, 10);
+                if (!localStorage.getItem(ck)) { localStorage.setItem(ck, '1'); setTimeout(function () { GriFX.confetti({ y: 0.35 }); }, 350); }
+              } catch (e) {}
+            }
             if (mEl) {
               if (met) mEl.textContent = 'Bugünkü hedefin tamam — serin güvende.';
               else if (todayCount > 0) mEl.textContent = 'Az kaldı — bugün ' + (goal - todayCount) + ' soru daha çöz.';
@@ -6068,5 +6074,6 @@
       });
     })();
   </script>
+<script src="assets/gri-fx.js" defer></script>
 </body>
 </html>

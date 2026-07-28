@@ -310,6 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js" defer></script>
 <script src="assets/grimeet.js?v=26" defer></script>
+<script src="assets/gri-fx.js" defer></script>
 <script>
 /* ===== Gri Meet oda içi Ödevler paneli ===== */
 (function () {
@@ -458,6 +459,7 @@
       var aid = r.data && (r.data.assignment_id || r.data.id);
       if (aid) sb.functions.invoke('notify-class-assignment', { body:{ kind:'assignment', assignment_id: aid } }).catch(function(){});
       msg.style.color = '#7fd39a'; msg.textContent = 'Atandı ve öğrencilere bildirildi.';
+      try { if (window.GriFX) GriFX.confetti({ y: 0.4, count: 60 }); } catch (e) {}
       document.getElementById('gma-title').value = '';
       setTimeout(renderTeacher, 900);
     } catch (e) {
@@ -469,7 +471,7 @@
     var sb = sbc();
     var c = e.target.closest('[data-complete]'); var u = e.target.closest('[data-unmark]'); var rl = e.target.closest('[data-act="reload"]');
     if (rl) { render(); return; }
-    if (c) { c.disabled = true; try { await sb.rpc('mark_assignment_complete', { p_assignment_id: c.getAttribute('data-complete') }); } catch(err){} render(); }
+    if (c) { c.disabled = true; try { await sb.rpc('mark_assignment_complete', { p_assignment_id: c.getAttribute('data-complete') }); var rc=c.getBoundingClientRect(); if(window.GriFX) GriFX.confetti({x:(rc.left+rc.width/2)/window.innerWidth,y:(rc.top+rc.height/2)/window.innerHeight,count:60}); } catch(err){} render(); }
     if (u) { u.disabled = true; try { await sb.rpc('unmark_assignment_complete', { p_assignment_id: u.getAttribute('data-unmark') }); } catch(err){} render(); }
   }
 

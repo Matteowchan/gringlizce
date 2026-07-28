@@ -2693,10 +2693,12 @@
       </div>
 
       <div id="my-assignments-list" class="my-assign-list"></div>
-      <div id="my-assignments-empty" class="cc-empty" style="display: none; margin-bottom: 2rem;">
-        <div class="cc-empty-body">
+      <div id="my-assignments-empty" style="display: none; margin-bottom: 2rem;">
+        <div class="gri-empty">
+          <div class="gri-empty-ic">🐱</div>
           <h4>Aktif ödevin yok</h4>
           <p>Sınıflarına yeni ödev geldiğinde burada görünür. Şimdilik istediğin gibi çalışmaya devam et.</p>
+          <a class="gri-empty-cta" href="ogrenme-haritasi.html">Çalışmaya Devam Et →</a>
         </div>
       </div>
     </div>
@@ -3178,6 +3180,10 @@
                   if (action === 'complete') {
                     var r = await sbCli.rpc('mark_assignment_complete', { p_assignment_id: id });
                     if (r.error) throw r.error;
+                    try {
+                      var rc = btn.getBoundingClientRect();
+                      if (window.GriFX) GriFX.confetti({ x: (rc.left + rc.width / 2) / window.innerWidth, y: (rc.top + rc.height / 2) / window.innerHeight });
+                    } catch (e) {}
                   } else if (action === 'unmark') {
                     var r2 = await sbCli.rpc('unmark_assignment_complete', { p_assignment_id: id });
                     if (r2.error) throw r2.error;
@@ -3202,5 +3208,6 @@
     })();
   </script>
 <script src="assets/breadcrumb.js" defer></script>
+<script src="assets/gri-fx.js" defer></script>
 </body>
 </html>

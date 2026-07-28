@@ -2294,6 +2294,7 @@
           <button class="um-tab" type="button" data-tab="kayit">Kaydettikleri</button>
           <button class="um-tab" type="button" data-tab="aktivite">Aktivite</button>
           <button class="um-tab" type="button" data-tab="yonetim">Yönetim</button>
+          <button class="um-tab" type="button" data-tab="analiz">Analiz</button>
         </div>
       </div>
 
@@ -2455,6 +2456,18 @@
               <button class="btn-admin-action danger" id="um-delete-btn">Kullanıcıyı Kalıcı Sil</button>
             </div>
             <div class="um-msg" id="um-delete-msg"></div>
+          </div>
+        </div>
+
+        <!-- ANALİZ -->
+        <div class="um-pane" data-pane="analiz">
+          <div class="user-modal-section" id="um-sec-analysis">
+            <h4>Sınav Analizi</h4>
+            <div class="um-action-row" style="margin-bottom: 0.7rem;">
+              <select id="um-analysis-exam"><option value="">Sınav seç...</option></select>
+            </div>
+            <div id="um-analysis" style="font-size: 0.86rem;"></div>
+            <div class="um-msg" id="um-analysis-msg"></div>
           </div>
         </div>
 
@@ -3725,7 +3738,8 @@
       'um-sec-study':     function (uid) { loadUserStudy(uid); },
       'um-sec-collected': function (uid) { loadUserCollected(uid); },
       'um-sec-usage':     function (uid) { loadUserUsage(uid); },
-      'um-sec-class':     function (uid) { loadUserClass(uid); }
+      'um-sec-class':     function (uid) { loadUserClass(uid); },
+      'um-sec-analysis':  function (uid) { loadUserAnalysis(uid); }
     };
     function umLoadPane(pane) {
       var uid = currentUserDetail && currentUserDetail.user_id;
@@ -3735,6 +3749,124 @@
         if (ld && sec.dataset.loadedUser !== uid) { sec.dataset.loadedUser = uid; ld(uid); }
       });
     }
+
+    /* ===== Sınav Analizi ===== */
+    var EXAM_META = { sat: { label: 'SAT' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' } };
+    var SAT_MATH_CATS = { advanced_math: 1, algebra: 1, geometry_and_trigonometry: 1, problem_solving_and_data_analysis: 1 };
+    var CAT_LABELS = {
+      information_and_ideas: 'Information & Ideas', craft_and_structure: 'Craft & Structure',
+      standard_english_conventions: 'Standard English Conventions', expression_of_ideas: 'Expression of Ideas',
+      'reading-writing': 'Reading & Writing', advanced_math: 'Advanced Math', algebra: 'Algebra',
+      geometry_and_trigonometry: 'Geometry & Trigonometry', problem_solving_and_data_analysis: 'Problem Solving & Data Analysis'
+    };
+    function catLabel(c) { return CAT_LABELS[c] || String(c == null ? '' : c).replace(/[-_]/g, ' ').replace(/\b\w/g, function (m) { return m.toUpperCase(); }); }
+    function pctOf(n, c) { return n > 0 ? Math.round(100 * c / n) : 0; }
+    function accColor(p) { return p >= 75 ? '#1FA971' : (p >= 50 ? '#B78A2E' : '#c0392b'); }
+    function umBar(pct, color) { return '<div style="flex:1; height:7px; background:var(--line); border-radius:4px; overflow:hidden; min-width:50px;"><div style="width:' + pct + '%; height:100%; background:' + color + ';"></div></div>'; }
+    function satScore(accPctVal) { return Math.round((200 + accPctVal / 100 * 600) / 10) * 10; }
+    function umScoreCard(label, val, unit, n, primary) {
+      var display = (val == null) ? '—' : (unit === '%' ? '%' + val : val);
+      var sub = (val == null) ? 'veri yok' : (n + ' soru');
+      return '<div style="flex:1; min-width:118px; background:' + (primary ? 'var(--teal,#2C5856)' : 'var(--bg-card,#fff)') + '; color:' + (primary ? '#fff' : 'var(--text)') + '; border:1px solid ' + (primary ? 'transparent' : 'var(--line)') + '; border-radius:10px; padding:0.7rem 0.9rem;">' +
+        '<div style="font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; opacity:0.75;">' + escHtmlAdmin(label) + '</div>' +
+        '<div style="font-family:var(--font-display); font-size:1.5rem; font-weight:600; line-height:1.2;">' + display + (val != null && unit !== '%' ? '<span style="font-size:0.8rem; opacity:0.7;"> ' + unit + '</span>' : '') + '</div>' +
+        '<div style="font-size:0.7rem; opacity:0.7;">' + sub + '</div>' +
+        '</div>';
+    }
+    function umCatRow(x) { var p = pctOf(x.answered, x.correct); return '<div style="display:flex; align-items:center; gap:0.55rem; padding:0.22rem 0; font-size:0.82rem;"><span style="flex:0 0 42%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escHtmlAdmin(catLabel(x.category)) + '</span>' + umBar(p, accColor(p)) + '<span style="min-width:5rem; text-align:right; color:var(--text-muted);">%' + p + ' (' + x.correct + '/' + x.answered + ')</span></div>'; }
+    function umVerdict(exam, acc, strong, weak, total, conf) {
+      var meta = EXAM_META[exam] || { label: exam };
+      var s = '<b>' + escHtmlAdmin(meta.label) + '</b>: ';
+      if (conf === 'düşük') { s += 'Henüz az soru çözülmüş (' + total + '), değerlendirme sınırlı. '; }
+      s += 'Genel doğruluk %' + acc + '. ';
+      if (strong.length) { s += 'En güçlü alan: ' + escHtmlAdmin(catLabel(strong[0].category)) + ' (%' + pctOf(strong[0].answered, strong[0].correct) + '). '; }
+      if (weak.length) { var w = weak[0]; s += 'En zayıf alan: <b>' + escHtmlAdmin(catLabel(w.category)) + '</b> (%' + pctOf(w.answered, w.correct) + ') — öneri: bu konuya ağırlık verilmeli.'; }
+      else { s += 'Belirgin zayıf konu yok, dengeli bir profil.'; }
+      return s;
+    }
+    var _umAnalysisUid = null;
+    async function loadUserAnalysis(userId) {
+      _umAnalysisUid = userId;
+      var sel = $('um-analysis-exam'), box = $('um-analysis'), msg = $('um-analysis-msg');
+      if (!sel || !box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Yükleniyor...</div>';
+      if (msg) { msg.textContent = ''; }
+      try {
+        var r = await sb.rpc('admin_user_exams', { p_user_id: userId });
+        if (r.error) { throw r.error; }
+        var exams = r.data || [];
+        if (!exams.length) {
+          sel.style.display = 'none';
+          box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Bu öğrenci soru bankasından henüz soru çözmemiş. (Kelime Bankası ve denemeler ayrı bölümlerde görünür.)</div>';
+          return;
+        }
+        sel.style.display = '';
+        sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; return '<option value="' + escHtmlAdmin(e.exam) + '">' + escHtmlAdmin(m.label) + ' (' + e.answered + ' soru)</option>'; }).join('');
+        if (!sel.dataset.wired) { sel.dataset.wired = '1'; sel.addEventListener('change', function () { renderExamAnalysis(_umAnalysisUid, sel.value); }); }
+        sel.value = exams[0].exam;
+        renderExamAnalysis(userId, exams[0].exam);
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+    async function renderExamAnalysis(userId, exam) {
+      var box = $('um-analysis'), msg = $('um-analysis-msg'); if (!box) { return; }
+      box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Analiz ediliyor...</div>';
+      if (msg) { msg.textContent = ''; }
+      try {
+        var r = await sb.rpc('admin_user_exam_analysis', { p_user_id: userId, p_exam: exam });
+        if (r.error) { throw r.error; }
+        var d = r.data || {};
+        var total = d.total || 0, correct = d.correct || 0, acc = pctOf(total, correct);
+        if (!total) { box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Bu sınavdan veri yok.</div>'; return; }
+        var conf = total < 15 ? 'düşük' : (total < 40 ? 'orta' : 'iyi');
+        var confColor = total < 15 ? '#c0392b' : (total < 40 ? '#B78A2E' : '#1FA971');
+        var cats = d.categories || [];
+        var html = '';
+        html += '<div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.7rem;">';
+        if (exam === 'sat') {
+          var rw = { n: 0, c: 0 }, ma = { n: 0, c: 0 };
+          cats.forEach(function (x) { if (SAT_MATH_CATS[x.category]) { ma.n += x.answered; ma.c += x.correct; } else { rw.n += x.answered; rw.c += x.correct; } });
+          html += umScoreCard('R&W', rw.n ? satScore(pctOf(rw.n, rw.c)) : null, '/800', rw.n);
+          html += umScoreCard('Matematik', ma.n ? satScore(pctOf(ma.n, ma.c)) : null, '/800', ma.n);
+          if (rw.n && ma.n) { html += umScoreCard('Toplam (tahmini)', satScore(pctOf(rw.n, rw.c)) + satScore(pctOf(ma.n, ma.c)), '/1600', rw.n + ma.n, true); }
+        } else if (exam === 'toefl') {
+          html += umScoreCard('Doğruluk', acc, '%', total, true);
+        } else {
+          html += umScoreCard('Öngörülen', acc, '/100', total, true);
+        }
+        html += '</div>';
+        html += '<div style="font-size:0.78rem; color:var(--text-muted); margin:0 0 0.9rem;">Tahmini skor, doğruluk oranından hesaplanır. Güven: <b style="color:' + confColor + '">' + conf + '</b> · ' + total + ' soru · %' + acc + ' doğru · ' + (d.active_days || 0) + ' aktif gün</div>';
+        var sig = cats.filter(function (x) { return x.answered >= 3; });
+        var pool = sig.length ? sig : cats;
+        var byAcc = pool.slice().sort(function (a, b) { return pctOf(b.answered, b.correct) - pctOf(a.answered, a.correct); });
+        var strong = byAcc.slice(0, 3);
+        var weak = byAcc.slice().reverse().slice(0, 3).filter(function (x) { return pctOf(x.answered, x.correct) < 100; });
+        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; margin-bottom:0.6rem;">';
+        html += '<div><div class="um-w-group" style="color:#1FA971;">Güçlü Konular</div>' + (strong.length ? strong.map(umCatRow).join('') : '<div style="color:var(--text-muted); font-size:0.8rem;">—</div>') + '</div>';
+        html += '<div><div class="um-w-group" style="color:#c0392b;">Zayıf Konular</div>' + (weak.length ? weak.map(umCatRow).join('') : '<div style="color:var(--text-muted); font-size:0.8rem;">Belirgin zayıf konu yok.</div>') + '</div>';
+        html += '</div>';
+        html += '<div class="um-w-group" style="margin-top:0.6rem;">Kategori Doğruluğu (' + cats.length + ')</div>';
+        html += cats.map(umCatRow).join('');
+        var diffs = d.difficulties || [];
+        if (diffs.length) {
+          var order = { easy: 0, medium: 1, hard: 2 }, dlabel = { easy: 'Kolay', medium: 'Orta', hard: 'Zor' };
+          diffs.sort(function (a, b) { return (order[a.difficulty] == null ? 9 : order[a.difficulty]) - (order[b.difficulty] == null ? 9 : order[b.difficulty]); });
+          html += '<div class="um-w-group" style="margin-top:0.8rem;">Zorluk Kırılımı</div>';
+          html += diffs.map(function (x) { var p = pctOf(x.answered, x.correct); return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.2rem 0; font-size:0.82rem;"><span style="min-width:3.5rem;">' + (dlabel[x.difficulty] || x.difficulty) + '</span>' + umBar(p, accColor(p)) + '<span style="min-width:5.5rem; text-align:right; color:var(--text-muted);">%' + p + ' (' + x.correct + '/' + x.answered + ')</span></div>'; }).join('');
+        }
+        var h1 = d.half1 || {}, h2 = d.half2 || {};
+        if ((h1.answered || 0) >= 4 && (h2.answered || 0) >= 4) {
+          var a1 = pctOf(h1.answered, h1.correct), a2 = pctOf(h2.answered, h2.correct), delta = a2 - a1;
+          var tLabel = delta >= 8 ? ('Gelişiyor ▲ +' + delta) : (delta <= -8 ? ('Geriliyor ▼ ' + delta) : 'Stabil');
+          var tColor = delta >= 8 ? '#1FA971' : (delta <= -8 ? '#c0392b' : 'var(--text-muted)');
+          html += '<div class="um-w-group" style="margin-top:0.8rem;">Gelişim Trendi</div>';
+          html += '<div style="font-size:0.84rem;">İlk yarı %' + a1 + ' → son yarı %' + a2 + ' · <b style="color:' + tColor + '">' + tLabel + '</b></div>';
+        }
+        var verdict = umVerdict(exam, acc, strong, weak, total, conf);
+        html += '<div style="margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-card,#fff); border:1px solid var(--line); border-left:3px solid var(--teal,#2C5856); border-radius:8px; font-size:0.86rem; line-height:1.55;">' + verdict + '</div>';
+        box.innerHTML = html;
+      } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
+    }
+
     // Sekmeli kullanıcı modalı: her sekmenin bölümleri sekme açılınca lazy yüklenir.
     // (Fonksiyon adı korundu; çağrı yeri değişmesin diye.)
     function setupModalAccordion(userId) {

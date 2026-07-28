@@ -595,7 +595,7 @@ function bindMaterials(){
   $('#mat-page-url').addEventListener('keydown',function(e){ if(e.key==='Enter')$('#mat-page-load').click(); });
   var sh=$('#mat-share'); if(sh) sh.addEventListener('click',function(){
     if(!STATE.currentMaterial){ toast('Önce bir materyal aç.'); return; }
-    if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
+    if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value,ext:STATE.currentMaterial.ext}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
     else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
   function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); }
@@ -606,19 +606,45 @@ function bindMaterials(){
   var zfo=$('#mat-zoom-fab-out'); if(zfo)zfo.addEventListener('click',zout);
   var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); });
   var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (senkron).':'Sayfa kontrolü sende.'); });
+  bindFileUpload();
+}
+function bindFileUpload(){
+  var pick=$('#mat-file-pick'), inp=$('#mat-file-input'), st=$('#mat-file-status'); if(!pick||!inp)return;
+  pick.addEventListener('click',function(){ inp.click(); });
+  inp.addEventListener('change',async function(){
+    var f=inp.files&&inp.files[0]; if(!f)return;
+    var ext=(f.name.split('.').pop()||'').toLowerCase(); inp.value='';
+    if(['pdf','docx','pptx','doc','ppt'].indexOf(ext)<0){ toast('Sadece PDF, Word (.docx) veya Sunum (.pptx) yükleyebilirsin.'); return; }
+    if(f.size>26214400){ toast('Dosya 25 MB sınırını aşıyor.'); return; }
+    if(!STATE.supabase){ toast('Yükleme için giriş yapmış olmalısın.'); return; }
+    st.textContent='Yükleniyor…';
+    try{
+      var safe=f.name.replace(/[^\w.\-]+/g,'_').slice(-56);
+      var path=(STATE.room||'oda')+'/'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)+'-'+safe;
+      var up=await STATE.supabase.storage.from('grimeet-files').upload(path,f,{upsert:false,contentType:f.type||undefined});
+      if(up.error) throw up.error;
+      var pub=STATE.supabase.storage.from('grimeet-files').getPublicUrl(path);
+      var url=pub&&pub.data&&pub.data.publicUrl; if(!url) throw new Error('URL alınamadı');
+      st.textContent=f.name;
+      loadMaterial({kind:'file',value:url,ext:ext,name:f.name},false);
+      setMode('materials');
+      toast('Dosya yüklendi. Öğrencilere göstermek için "Öğrencilerle Paylaş".');
+    }catch(e){ st.textContent=''; toast('Yükleme başarısız: '+((e&&e.message)||'hata')); }
+  });
 }
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
 function loadMaterial(m,remote){
-  STATE.currentMaterial={kind:m.kind,value:m.value};
+  STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   ANNO.reset(!remote);
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } matTab('youtube'); ensureYtPlayer(id); }
+  else if(m.kind==='file'){ matTab('file'); var ff=$('#mat-file-frame'); if(ff){ var ex=(m.ext||'').toLowerCase(); var src=(ex==='pdf')?(m.value+'#toolbar=1&view=FitH'):('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value)); ff.innerHTML='<iframe id="mat-file-if" src="'+esc(src)+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); var st=$('#mat-file-status'); if(st&&m.name)st.textContent=m.name; } }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
     if(remote){ frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
       fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } }).catch(function(){ frame.innerHTML='<div class="mat-empty">Sayfa yüklenemedi.</div>'; });
     } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollSync(document.getElementById('mat-uni-if')); }
   }
   applyZoom();
-  if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value}); }
+  if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value,ext:m.ext}); }
 }
 function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }

@@ -372,7 +372,7 @@ function onData(payload,p){
   var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;
   if(msg.t==='chat'){ addChat(from,msg.text); if(STATE.isHost&&id)addPoint(id,from,1); }
   else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); if(STATE.isHost)addPoint(id,from,1); } else handQueueRemove(id); } }
-  else if(msg.t==='react'){ floatReact(msg.e); if(STATE.isHost&&id)addPoint(id,from,1); }
+  else if(msg.t==='react'){ floatReact(msg.e); if(STATE.isHost&&id){ STATE._rp=STATE._rp||{}; var _now=Date.now(); if(!STATE._rp[id]||_now-STATE._rp[id]>10000){ STATE._rp[id]=_now; addPoint(id,from,1); } } }
   else if(msg.t==='lower-one'){ if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); sendData({t:'hand',up:false}); } }
   else if(msg.t==='room-closed'){ if(!STATE.isHost&&fromHost){ toast('Öğretmen odayı kapattı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='knock'){ if(STATE.isHost&&id){ if(STATE.waitingRoom) addPending(id,from); else sendData({t:'admit',target:id}); } }
@@ -885,7 +885,7 @@ var ANNO=(function(){
 var REACTS=['👍','👏','❤️','😄','🎉','🙌','😮','❓'];
 function bindReactions(){
   var bar=$('#gmr-react-bar'); if(!bar)return;
-  REACTS.forEach(function(e){ var b=document.createElement('button'); b.textContent=e; b.addEventListener('click',function(){ floatReact(e); sendData({t:'react',e:e}); $('#gmr-react').classList.remove('open'); }); bar.appendChild(b); });
+  REACTS.forEach(function(e){ var b=document.createElement('button'); b.textContent=e; b.addEventListener('click',function(ev){ ev.stopPropagation(); floatReact(e); sendData({t:'react',e:e}); }); bar.appendChild(b); });
   $('#gmr-react-btn').addEventListener('click',function(ev){ ev.stopPropagation(); $('#gmr-react').classList.toggle('open'); });
   document.addEventListener('click',function(ev){ if(!ev.target.closest('#gmr-react')) $('#gmr-react').classList.remove('open'); });
 }

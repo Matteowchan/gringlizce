@@ -100,12 +100,14 @@ function setupGate(){
   $('#gate-join').addEventListener('click',function(){
     var nm=($('#gate-name').value||'').trim(); if(!nm){ toast('Lütfen adını yaz.'); $('#gate-name').focus(); return; }
     STATE.name=nm; STATE.micOn=micOn; STATE.camOn=camOn;
+    // Token'ı hemen çekmeye başla — kamera serbest bırakma + oda hazırlığıyla paralel
+    STATE._tokenPromise = fetchLKToken().catch(function(){ return {}; });
     // Gate önizleme kamerasını tam serbest bırak — LiveKit tekrar açarken çakışma/donma olmasın
     if(gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; }
     try{ if(gv) gv.srcObject=null; }catch(e){}
     $('#gmr-gate').classList.add('hidden');
     // OS'un kamerayı serbest bırakması için kısa gecikme
-    setTimeout(enterRoom, 250);
+    setTimeout(enterRoom, 200);
   });
 }
 
@@ -120,17 +122,25 @@ async function enterRoom(){
 }
 
 /* ================= LIVEKIT ================= */
+// Token'ı önden çekilebilir yap: join anında başlatıp kamera/UI hazırlanırken paralel getir
+async function fetchLKToken(){
+  var headers={'Content-Type':'application/json'};
+  if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
+  try{
+    var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
+    if(res.status===403){ var e403=await res.json().catch(function(){return{};}); return {blocked:e403.error||'Oda bulunamadı.'}; }
+    if(res.ok){ var jr=await res.json(); return {token:jr.token, url:jr.url}; }
+  }catch(e){}
+  return {};
+}
 async function connectLiveKit(){
   if(!LK){ enterDemo('LiveKit yüklenemedi'); return; }
   setStatus('connecting','Bağlanıyor…');
-  var token=null;
-  try{
-    var headers={'Content-Type':'application/json'};
-    if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
-    var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
-    if(res.status===403){ var e403=await res.json().catch(function(){return{};}); blockJoin(e403.error||'Oda bulunamadı.'); return; }
-    if(res.ok){ var jr=await res.json(); token=jr.token; if(jr.url)LIVEKIT_URL=jr.url; }
-  }catch(e){}
+  var result = STATE._tokenPromise ? await STATE._tokenPromise : await fetchLKToken();
+  STATE._tokenPromise = null;
+  if(result && result.blocked){ blockJoin(result.blocked); return; }
+  var token = result && result.token;
+  if(result && result.url) LIVEKIT_URL = result.url;
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
     var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:{width:960,height:540,frameRate:24}},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;

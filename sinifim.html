@@ -23,6 +23,7 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/grimeet-schedule.js" defer></script>
   <script src="assets/site-config.js" defer></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2568,6 +2569,10 @@
     </div>
 
     <div id="sf-content">
+    <div id="sf-schedule-wrap" style="display:none;margin:0 0 1.75rem;">
+      <div class="zone-head"><span class="zone-eyebrow">Canlı</span><span class="zone-line"></span><h2>Yaklaşan Canlı Dersler</h2></div>
+      <div id="sf-schedule"></div>
+    </div>
     <!-- ============ SINIFLARIM (Teacher Dashboard - Student side) ============ -->
     <div class="zone-head">
       <span class="zone-eyebrow">Sınıf</span>
@@ -2692,6 +2697,8 @@
         var sess = await sbCli.auth.getSession();
         if (!sess || !sess.data || !sess.data.session) return;
         var userId = sess.data.session.user.id;
+
+        try{ if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display = n>0 ? 'block':'none'; } }); } }catch(e){}
 
         // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
         var roleRes = await sbCli.from('profiles').select('role').eq('id', userId).maybeSingle();

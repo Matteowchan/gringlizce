@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/grimeet-schedule.js" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/site-config.js" defer></script>
@@ -1748,6 +1749,11 @@
       </a>
     </section>
 
+    <section id="ks-schedule-wrap" style="display:none; max-width:960px; margin:1.5rem auto 0; padding:0 1rem;">
+      <h2 style="font-size:1.25rem; margin:0 0 0.75rem;">Ders Programı</h2>
+      <div id="ks-schedule"></div>
+    </section>
+
     <div id="ks-loading" class="loading-state">Yükleniyor...</div>
 
     <div id="ks-error" style="display:none; padding: 2rem; background: var(--bg-card); border: 1px solid #b33a3a; text-align: center; max-width: 540px; margin: 2rem auto;">
@@ -2261,7 +2267,9 @@
 
       document.title = (classInfo.name || 'Sınıf') + ' | Gri English';
       document.getElementById('ks-class-name').textContent = classInfo.name || 'Sınıf';
-      (function(){ var g=document.getElementById('ks-grimeet'); var cid=classInfo.id||new URLSearchParams(location.search).get('id'); if(g&&cid){ var room=('C'+String(cid).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); g.href='grimeet-oda.html?room='+room+'&host=1'; g.style.display='inline-flex'; } })();
+      (function(){ var g=document.getElementById('ks-grimeet'); var cid=classInfo.id||new URLSearchParams(location.search).get('id'); if(g&&cid){ var room=('C'+String(cid).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); g.href='grimeet-oda.html?room='+room+'&host=1'; g.style.display='inline-flex'; }
+        try{ if(window.GriSchedule&&cid){ var uid=sess.data.session.user.id; var w=document.getElementById('ks-schedule-wrap'); if(w)w.style.display='block'; GriSchedule.mount({ sb:sb, container:document.getElementById('ks-schedule'), role:'teacher', classId:cid, userId:uid, roomForClass:function(c){ return ('C'+String(c).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); } }); } }catch(e){}
+      })();
       var descEl = document.getElementById('ks-class-desc');
       if (classInfo.description) {
         descEl.textContent = classInfo.description;

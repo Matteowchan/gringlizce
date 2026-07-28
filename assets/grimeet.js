@@ -17,7 +17,7 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
-  mirror:true, _bgApplied:false,
+  mirror:true, _bgApplied:false, bgFlip:false,
   bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
@@ -37,6 +37,10 @@ function bgFile(id){ if(id==='custom') return STATE.customBg||''; return new URL
 
 var RES_MAP={ '360':{width:640,height:360,frameRate:24}, '540':{width:960,height:540,frameRate:24}, '720':{width:1280,height:720,frameRate:24}, '1080':{width:1920,height:1080,frameRate:24} };
 function resObj(){ return RES_MAP[STATE.camRes]||RES_MAP['540']; }
+// Arka plan görselini yatay çevir (flip): canvas'a aynalı çizip dataURL döndür. Hata olursa orijinali döndür.
+var _flipCache={};
+function flipImageUrl(url){ return new Promise(function(res){ if(_flipCache[url]){res(_flipCache[url]);return;} try{ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height; var c=document.createElement('canvas'); c.width=w; c.height=h; var ctx=c.getContext('2d'); ctx.translate(w,0); ctx.scale(-1,1); ctx.drawImage(img,0,0); var d=c.toDataURL('image/jpeg',0.92); _flipCache[url]=d; res(d); }catch(e){ res(url); } }; img.onerror=function(){ res(url); }; img.src=url; }catch(e){ res(url); } }); }
+async function bgSrc(id){ var u=bgFile(id); if(STATE.bgFlip){ try{ u=await flipImageUrl(u); }catch(e){} } return u; }
 
 var ROOM_THEMES=[
   {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#2E6E6A',d:'#1E4E4B',g:'#B78A2E'},
@@ -113,7 +117,7 @@ function setupGate(){
       if(bg==='none'){ if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; }
       else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(lbl)lbl.textContent='(bu tarayıcıda yok)'; return; }
         if(bg==='blur') await STATE.preTrack.setProcessor(tp.BackgroundBlur(12));
-        else await STATE.preTrack.setProcessor(tp.VirtualBackground(bgFile(bg)));
+        else await STATE.preTrack.setProcessor(tp.VirtualBackground(await bgSrc(bg)));
         STATE._bgApplied=true; }
       if(lbl) lbl.textContent='(dersten önce seç, canlı gör)';
     }catch(e){ toast('Arka plan uygulanamadı.'); if(lbl)lbl.textContent='(uygulanamadı)'; }
@@ -127,6 +131,7 @@ function setupGate(){
   buildGateBg();
   var mir=$('#gate-mirror'); if(mir){ mir.checked=STATE.mirror!==false; mir.addEventListener('change',function(){ STATE.mirror=mir.checked; try{localStorage.setItem('gm-mirror',mir.checked?'1':'0');}catch(e){} applyMirror(); }); }
   var resSel=$('#gate-res'); if(resSel){ resSel.value=STATE.camRes; resSel.addEventListener('change',function(){ STATE.camRes=resSel.value; try{localStorage.setItem('gm-res',resSel.value);}catch(e){} if(camOn){ toast('Kalite değiştiriliyor…'); preview(); } }); }
+  var bgf=$('#gate-bg-flip'); if(bgf){ bgf.checked=!!STATE.bgFlip; bgf.addEventListener('change',function(){ STATE.bgFlip=bgf.checked; try{localStorage.setItem('gm-bgflip',bgf.checked?'1':'0');}catch(e){} var b=$('#bg-flip'); if(b)b.checked=bgf.checked; if(STATE.bg&&STATE.bg!=='none'&&STATE.bg!=='blur') applyGateBg(STATE.bg); }); }
   if(camOn) preview(); else { gp.classList.add('camoff'); fillDevices(); }
   camSel.addEventListener('change',function(){ STATE.camId=camSel.value; if(camOn)preview(); });
   micSel.addEventListener('change',function(){ STATE.micId=micSel.value; });
@@ -710,6 +715,7 @@ function bindBgUpload(){ var i=$('#bg-file-input'); if(!i)return; i.addEventList
 // Girişte arka planı OTOMATİK uygulamıyoruz: segmentasyon modelinin ilk yüklemesi
 // zayıf makinelerde ana thread'i kilitleyip sayfayı donduruyordu. Kayıtlı tercih
 // korunur; kullanıcı odaya girince "Arka Plan"dan tek tıkla açar.
+function bindBgFlip(){ var f=$('#bg-flip'); if(!f)return; f.checked=!!STATE.bgFlip; f.addEventListener('change',function(){ STATE.bgFlip=f.checked; try{localStorage.setItem('gm-bgflip',f.checked?'1':'0');}catch(e){} var g=$('#gate-bg-flip'); if(g)g.checked=f.checked; if(STATE.camTrack&&STATE.bg&&STATE.bg!=='none'&&STATE.bg!=='blur') applyBackground(STATE.bg); }); }
 var _bgHintShown=false;
 function scheduleAutoBg(){
   if(STATE._bgApplied) return; // arka plan gate'te zaten uygulandı — ipucu gösterme
@@ -726,7 +732,7 @@ async function applyBackground(bg){
     if(bg==='none'){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
     else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
       if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(12));
-      else await track.setProcessor(tp.VirtualBackground(bgFile(bg))); }
+      else await track.setProcessor(tp.VirtualBackground(await bgSrc(bg))); }
     if(note)note.textContent='Hazır. İlk seçimde birkaç saniye sürebilir.';
     setTimeout(function(){ $('#bg-modal').classList.add('hidden'); },300);
   }catch(e){ toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; }
@@ -1063,9 +1069,10 @@ function boot(){
   if(STATE.bg==='custom'&&!STATE.customBg) STATE.bg='none';
   try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
   try{ var _r=localStorage.getItem('gm-res'); if(_r&&RES_MAP[_r]) STATE.camRes=_r; }catch(e){}
+  try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); bindBgUpload(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
+  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
   window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);

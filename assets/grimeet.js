@@ -129,7 +129,7 @@ async function connectLiveKit(){
   }catch(e){}
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
-    var room=new LK.Room({adaptiveStream:true,dynacast:true}); STATE.lkRoom=room;
+    var room=new LK.Room({adaptiveStream:true,dynacast:true,audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,onParticipant);
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
@@ -563,9 +563,17 @@ function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classL
 /* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
-var _krisp=null,_krispTried=false,_krispOn=false;
+var _krisp=null,_krispTried=false,_krispOn=false,_nfNoted=false,_nfTries=0;
 async function loadKrisp(){ if(_krisp||_krispTried)return _krisp; _krispTried=true; try{ _krisp=await import('https://esm.sh/@livekit/krisp-noise-filter'); }catch(e){ try{ _krisp=await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter/+esm'); }catch(e2){ _krisp=null; } } return _krisp; }
-async function applyNoiseFilter(){ if(_krispOn)return; try{ if(!STATE.lkRoom)return; var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); var at=mp&&mp.audioTrack; if(!at||!at.setProcessor)return; var k=await loadKrisp(); if(!k)return; var KNF=k.KrispNoiseFilter||k.default; if(!KNF)return; await at.setProcessor(KNF()); _krispOn=true; }catch(e){} }
+async function applyNoiseFilter(){ if(_krispOn)return; try{
+  if(!STATE.lkRoom||!STATE.micOn)return;
+  var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); var at=mp&&mp.audioTrack;
+  if((!at||!at.setProcessor)){ if(_nfTries++<6){ setTimeout(applyNoiseFilter,700); } return; }
+  var k=await loadKrisp(); var KNF=k&&(k.KrispNoiseFilter||k.default);
+  var sup=true; if(k&&typeof k.isKrispNoiseFilterSupported==='function'){ try{ sup=k.isKrispNoiseFilterSupported(); }catch(e){ sup=true; } }
+  if(!KNF||!sup){ if(!_nfNoted){ _nfNoted=true; toast('Tarayıcı gürültü/eko bastırma açık. (Gelişmiş filtre bu bağlantıda kullanılamıyor.)'); } return; }
+  await at.setProcessor(KNF()); _krispOn=true; if(!_nfNoted){ _nfNoted=true; toast('Gelişmiş gürültü filtresi açık — klavye ve tık sesleri bastırılıyor.'); }
+}catch(e){ if(!_nfNoted){ _nfNoted=true; toast('Gürültü filtresi uygulanamadı; tarayıcı gürültü azaltma devrede.'); } } }
 function buildBgGrid(){
   var g=$('#bg-grid'); if(!g)return; g.innerHTML='';
   BGS.forEach(function(b){ var d=document.createElement('button'); d.className='bg-opt '+(b.id==='none'?'none':b.id==='blur'?'blur':'')+(STATE.bg===b.id?' on':''); d.dataset.bg=b.id; if(b.id!=='none'&&b.id!=='blur') d.style.backgroundImage='url("'+bgFile(b.id)+'")'; d.innerHTML='<span>'+b.label+'</span>'; d.addEventListener('click',function(){ $$('.bg-opt').forEach(function(x){x.classList.remove('on');}); d.classList.add('on'); applyBackground(b.id); }); g.appendChild(d); });

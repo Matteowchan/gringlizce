@@ -19,7 +19,7 @@ var STATE={
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
   mirror:true, _bgApplied:false,
   bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
-  camId:'', micId:'', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
+  camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
   waitingRoom:true, admitted:false, pending:[], _admitTimer:null,
@@ -34,6 +34,9 @@ var BGS=[
   {id:'bg-10',label:'Kır Çiçekleri'},{id:'bg-11',label:'Sınıf'}
 ];
 function bgFile(id){ if(id==='custom') return STATE.customBg||''; return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
+
+var RES_MAP={ '360':{width:640,height:360,frameRate:24}, '540':{width:960,height:540,frameRate:24}, '720':{width:1280,height:720,frameRate:24} };
+function resObj(){ return RES_MAP[STATE.camRes]||RES_MAP['540']; }
 
 var ROOM_THEMES=[
   {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#2E6E6A',d:'#1E4E4B',g:'#B78A2E'},
@@ -91,7 +94,7 @@ function setupGate(){
     if(LK && LK.createLocalVideoTrack){
       try{
         stopPre();
-        STATE.preTrack = await LK.createLocalVideoTrack({ deviceId: STATE.camId||undefined, resolution:{width:960,height:540,frameRate:24} });
+        STATE.preTrack = await LK.createLocalVideoTrack({ deviceId: STATE.camId||undefined, resolution:resObj() });
         STATE.preTrack.attach(gv); gp.classList.remove('camoff'); applyMirror(); fillDevices();
         if(STATE.bg && STATE.bg!=='none') applyGateBg(STATE.bg);
         return;
@@ -123,6 +126,7 @@ function setupGate(){
   }
   buildGateBg();
   var mir=$('#gate-mirror'); if(mir){ mir.checked=STATE.mirror!==false; mir.addEventListener('change',function(){ STATE.mirror=mir.checked; try{localStorage.setItem('gm-mirror',mir.checked?'1':'0');}catch(e){} applyMirror(); }); }
+  var resSel=$('#gate-res'); if(resSel){ resSel.value=STATE.camRes; resSel.addEventListener('change',function(){ STATE.camRes=resSel.value; try{localStorage.setItem('gm-res',resSel.value);}catch(e){} if(camOn){ toast('Kalite değiştiriliyor…'); preview(); } }); }
   if(camOn) preview(); else { gp.classList.add('camoff'); fillDevices(); }
   camSel.addEventListener('change',function(){ STATE.camId=camSel.value; if(camOn)preview(); });
   micSel.addEventListener('change',function(){ STATE.micId=micSel.value; });
@@ -182,7 +186,7 @@ async function connectLiveKit(){
   if(result && result.url) LIVEKIT_URL = result.url;
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
-    var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:{width:960,height:540,frameRate:24}},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
+    var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:resObj()},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,onParticipant);
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
@@ -1058,6 +1062,7 @@ function boot(){
   try{ STATE.customBg=localStorage.getItem('gm-bg-custom')||''; }catch(e){}
   if(STATE.bg==='custom'&&!STATE.customBg) STATE.bg='none';
   try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
+  try{ var _r=localStorage.getItem('gm-res'); if(_r&&RES_MAP[_r]) STATE.camRes=_r; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();

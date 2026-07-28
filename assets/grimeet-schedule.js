@@ -82,7 +82,7 @@
       + (role==='teacher' ?
           '<div class="gsch-form">'
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
-          + '<label>Tarih & saat<input type="datetime-local" class="f-when"></label>'
+          + '<label>Tarih & saat<input type="datetime-local" class="f-when" lang="tr-TR" step="60"></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
           + '<div class="row"><label style="flex:2">Not (opsiyonel)<input type="text" class="f-note" placeholder="Öğrencilere kısa not" maxlength="140"></label></div>'
           + '<div class="acts"><button class="gsch-btn f-save">Planla</button><button class="gsch-btn ghost f-cancel">Vazgeç</button></div>'

@@ -123,6 +123,7 @@
         <button class="dock-tab active" data-dock="people">Katılımcılar</button>
         <button class="dock-tab" data-dock="chat">Sohbet</button>
         <button class="dock-tab" data-dock="notes">Notlar</button>
+        <button class="dock-tab" data-dock="assign">Ödevler</button>
         <button class="dock-tab host-only" data-dock="tools">Araçlar</button>
         <button class="dock-close" id="dock-close" title="Paneli kapat">&times;</button>
       </div>
@@ -151,6 +152,10 @@
         <!-- Notes -->
         <div class="dock-pane hidden" data-dock-pane="notes">
           <textarea id="notes-ta" class="notes-ta" placeholder="Derse özel notların (yalnızca sende, bu tarayıcıda saklanır)…"></textarea>
+        </div>
+        <!-- Assignments -->
+        <div class="dock-pane hidden" data-dock-pane="assign">
+          <div id="gm-assign-root"><div class="dock-empty" style="padding:8px 0">Yükleniyor…</div></div>
         </div>
         <!-- Tools (host only) -->
         <div class="dock-pane hidden" data-dock-pane="tools">
@@ -305,5 +310,180 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js" defer></script>
 <script src="assets/grimeet.js?v=26" defer></script>
+<script>
+/* ===== Gri Meet oda içi Ödevler paneli ===== */
+(function () {
+  var CLASS_ID = (new URLSearchParams(location.search)).get('class') || '';
+  var TYPE_LABELS = { questions:'Soru Bankası', writing:'Writing', reading:'Reading', vocab:'Kelime', ielts_mock:'Deneme', material:'Materyal' };
+  var SEC_RUN = {
+    full:{page:'ielts-deneme.html',meta:'Tam Deneme'}, reading:{page:'ielts-deneme-reading.html',meta:'Reading'},
+    listening:{page:'ielts-deneme-listening.html',meta:'Listening'}, writing:{page:'ielts-deneme-writing.html',meta:'Writing'}
+  };
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function sbc(){ return (window.STATE && window.STATE.supabase) || (window.__gmaSb || (window.supabase && (window.__gmaSb = window.supabase.createClient('https://vazbvbqgvtlaqkytfsbi.supabase.co','sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g')))) || null; }
+  function isHost(){ return !!(window.STATE && window.STATE.isHost); }
+
+  var CSS = '#gm-assign-root{font-size:13px}'
+    + '.gma-h{font-weight:700;font-size:12px;letter-spacing:.04em;color:var(--gm-ink,#e9edf5);margin:2px 0 8px;display:flex;justify-content:space-between;align-items:center}'
+    + '.gma-h button{background:none;border:1px solid var(--gm-line,#2b3550);color:var(--gm-ink-soft,#aab3c5);border-radius:7px;font-size:11px;padding:3px 8px;cursor:pointer}'
+    + '.gma-card{background:var(--gm-surface2,#1b2132);border:1px solid var(--gm-line,#2b3550);border-radius:10px;padding:9px 11px;margin-bottom:7px}'
+    + '.gma-card .t{font-weight:600;color:var(--gm-ink,#e9edf5);line-height:1.25;margin-bottom:3px}'
+    + '.gma-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}'
+    + '.gma-pill{font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:20px;background:rgba(44,88,86,.25);color:#7fd8cf}'
+    + '.gma-sub{font-size:11px;color:var(--gm-ink-soft,#9aa3b5)}'
+    + '.gma-row{display:flex;gap:6px;flex-wrap:wrap}'
+    + '.gma-btn{flex:1;min-width:90px;text-align:center;background:#2C5856;color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}'
+    + '.gma-btn.ghost{background:transparent;border:1px solid var(--gm-line,#2b3550);color:var(--gm-ink-soft,#aab3c5)}'
+    + '.gma-btn.gold{background:#C09947}'
+    + '.gma-done{background:rgba(80,160,90,.18);color:#7fd39a;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;flex:1;text-align:center}'
+    + '.gma-form{background:var(--gm-surface2,#1b2132);border:1px solid var(--gm-line,#2b3550);border-radius:10px;padding:10px;margin-bottom:12px}'
+    + '.gma-form label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--gm-ink-soft,#9aa3b5);font-weight:700;margin:0 0 4px}'
+    + '.gma-form input,.gma-form select{width:100%;background:var(--gm-bg,#11151f);border:1px solid var(--gm-line,#2b3550);color:var(--gm-ink,#e9edf5);border-radius:7px;padding:7px 9px;font-size:12px;margin-bottom:8px;box-sizing:border-box}'
+    + '.gma-seg{display:flex;gap:4px;margin-bottom:8px}'
+    + '.gma-seg button{flex:1;background:var(--gm-bg,#11151f);border:1px solid var(--gm-line,#2b3550);color:var(--gm-ink-soft,#9aa3b5);border-radius:7px;font-size:11px;font-weight:600;padding:6px 4px;cursor:pointer}'
+    + '.gma-seg button.on{background:#2C5856;border-color:#2C5856;color:#fff}'
+    + '.gma-note{font-size:11px;color:var(--gm-ink-soft,#9aa3b5);margin:6px 0 0;line-height:1.4}';
+  var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+
+  var root, _bound = false, _formType = 'material';
+
+  function studentOpen(a) {
+    var cfg = a.config || {};
+    if (a.type === 'ielts_mock') { var r = SEC_RUN[cfg.section||'full']||SEC_RUN.full; return r.page + '?test=' + encodeURIComponent(cfg.test_slug||''); }
+    if (a.type === 'material') return cfg.url || '';
+    if (a.type === 'reading') return cfg.url || '';
+    return '';
+  }
+
+  async function toast(m){ try{ if(window.STATE){/* reuse gm toast if present */} }catch(e){} var t=document.getElementById('gmr-toast'); if(t){ t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2600);} }
+
+  async function renderStudent() {
+    var sb = sbc(); if (!sb) { root.innerHTML = '<div class="dock-empty">Bağlantı yok.</div>'; return; }
+    root.innerHTML = '<div class="gma-h">Ödevlerim <button data-act="reload">Yenile</button></div><div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
+    var r = await sb.rpc('list_my_assignments');
+    if (r.error) { root.querySelector('.dock-empty').textContent = 'Yüklenemedi.'; return; }
+    var list = (r.data||[]).filter(function(a){ return !CLASS_ID || a.class_id === CLASS_ID; });
+    var body = '<div class="gma-h">Ödevlerim <button data-act="reload">Yenile</button></div>';
+    if (!list.length) { body += '<div class="dock-empty" style="padding:8px 0">Bu sınıfta ödev yok.</div>'; root.innerHTML = body; return; }
+    list.forEach(function (a) {
+      var cfg = a.config || {}; var done = a.status === 'completed';
+      var open = studentOpen(a);
+      body += '<div class="gma-card"><div class="t">' + esc(a.title) + '</div>'
+        + '<div class="gma-meta"><span class="gma-pill">' + esc(TYPE_LABELS[a.type]||a.type) + '</span>'
+        + (a.type==='questions' ? '<span class="gma-sub">' + a.progress_current + '/' + a.progress_target + '</span>' : '')
+        + (cfg.note ? '<span class="gma-sub">' + esc(cfg.note) + '</span>' : '') + '</div>'
+        + '<div class="gma-row">'
+        + (open ? '<a class="gma-btn" href="' + esc(open) + '" target="_blank" rel="noopener">Aç →</a>' : '')
+        + (done ? '<span class="gma-done">Tamamlandı</span><button class="gma-btn ghost" data-unmark="' + esc(a.assignment_id) + '">Geri Al</button>'
+                : '<button class="gma-btn gold" data-complete="' + esc(a.assignment_id) + '">Tamamladım</button>')
+        + '</div></div>';
+    });
+    root.innerHTML = body;
+  }
+
+  async function renderTeacher() {
+    var sb = sbc(); if (!sb) { root.innerHTML = '<div class="dock-empty">Bağlantı yok.</div>'; return; }
+    if (!CLASS_ID) { root.innerHTML = '<div class="dock-empty" style="padding:8px 0">Bu oda bir sınıfa bağlı değil. Ödev atamak için sınıf panelinden “Canlı Ders Başlat” ile aç.</div>'; return; }
+    root.innerHTML = '<div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
+    var curPage = ''; try { var mp = document.getElementById('mat-page-url'); if (mp && mp.value) curPage = mp.value.trim(); } catch(e){}
+    var head = '<div class="gma-h">Ödev Ata <a class="gma-h" style="border:none;padding:0" href="ogretmen-sinif.html?id=' + encodeURIComponent(CLASS_ID) + '" target="_blank" rel="noopener"><button>Tam editör →</button></a></div>';
+    var form = '<div class="gma-form">'
+      + '<div class="gma-seg" id="gma-seg"><button data-t="material" class="on">Materyal</button><button data-t="ielts_mock">Deneme</button><button data-t="questions">Soru Bankası</button></div>'
+      + '<label>Başlık</label><input id="gma-title" maxlength="120" placeholder="Ödev başlığı">'
+      + '<div id="gma-cfg-material"><label>Bağlantı (sayfa veya URL)</label><input id="gma-m-url" maxlength="400" placeholder="örn. ielts-deneme-reading.html" value="' + esc(curPage) + '">' + (curPage ? '<p class="gma-note">Şu an paylaşılan sayfa dolduruldu.</p>' : '') + '</div>'
+      + '<div id="gma-cfg-ielts_mock" style="display:none"><label>Bölüm</label><div class="gma-seg" id="gma-im-seg"><button data-s="full" class="on">Tam</button><button data-s="reading">R</button><button data-s="listening">L</button><button data-s="writing">W</button></div><label>Deneme</label><select id="gma-im-test"><option value="">— yükleniyor —</option></select></div>'
+      + '<div id="gma-cfg-questions" style="display:none"><label>Sınav</label><select id="gma-q-exam"><option value="ydt">YDT</option><option value="yds">YDS</option><option value="udsp">UDSP</option><option value="ielts">IELTS</option><option value="toefl">TOEFL</option><option value="sat-rw">SAT R&W</option><option value="sat-math">SAT Math</option></select><label>Hedef soru sayısı</label><input id="gma-q-count" type="number" min="1" max="100" value="10"></div>'
+      + '<button class="gma-btn" id="gma-assign-btn">Sınıfa Ata</button>'
+      + '<p class="gma-note" id="gma-assign-msg"></p></div>';
+    var r = await sb.rpc('list_class_assignments', { p_class_id: CLASS_ID });
+    var listHtml = '';
+    if (r.error) listHtml = '<div class="dock-empty">Liste yüklenemedi.</div>';
+    else if (!(r.data||[]).length) listHtml = '<div class="dock-empty" style="padding:6px 0">Henüz ödev yok.</div>';
+    else listHtml = (r.data||[]).map(function (a) {
+      var tot = Number(a.total_students||0), done = Number(a.completed_count||0);
+      return '<div class="gma-card"><div class="t">' + esc(a.title) + '</div>'
+        + '<div class="gma-meta"><span class="gma-pill">' + esc(TYPE_LABELS[a.type]||a.type) + '</span>'
+        + '<span class="gma-sub">' + done + '/' + tot + ' tamamladı</span></div></div>';
+    }).join('');
+    root.innerHTML = head + form + '<div class="gma-h" style="margin-top:4px">Sınıf Ödevleri</div>' + listHtml;
+    wireTeacherForm();
+  }
+
+  var _imTests = null, _imSec = 'full';
+  async function loadImTests() {
+    var sel = document.getElementById('gma-im-test'); if (!sel) return;
+    var sb = sbc();
+    if (!_imTests) {
+      var r = await sb.from('ielts_tests').select('slug,name,ielts_sections(section)').eq('is_published', true).order('name');
+      _imTests = (r.data||[]).map(function(t){ return {slug:t.slug,name:t.name,sections:(t.ielts_sections||[]).map(function(s){return s.section;})}; });
+    }
+    var full = function(t){ var s=t.sections; return s.indexOf('reading')>=0&&s.indexOf('listening')>=0&&s.indexOf('writing')>=0; };
+    var list = _imTests.filter(function(t){ return _imSec==='full' ? full(t) : (t.sections.indexOf(_imSec)>=0 && !full(t)); });
+    sel.innerHTML = list.length ? list.map(function(t){ return '<option value="'+esc(t.slug)+'" data-name="'+esc(t.name)+'">'+esc(t.name)+'</option>'; }).join('') : '<option value="">Deneme yok</option>';
+  }
+
+  function wireTeacherForm() {
+    var seg = document.getElementById('gma-seg');
+    if (seg) seg.addEventListener('click', function(e){ var b=e.target.closest('button[data-t]'); if(!b)return; _formType=b.getAttribute('data-t'); seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);}); ['material','ielts_mock','questions'].forEach(function(k){ var el=document.getElementById('gma-cfg-'+k); if(el)el.style.display=(k===_formType?'block':'none'); }); if(_formType==='ielts_mock') loadImTests(); });
+    var imSeg = document.getElementById('gma-im-seg');
+    if (imSeg) imSeg.addEventListener('click', function(e){ var b=e.target.closest('button[data-s]'); if(!b)return; _imSec=b.getAttribute('data-s'); imSeg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);}); loadImTests(); });
+    var btn = document.getElementById('gma-assign-btn');
+    if (btn) btn.addEventListener('click', doAssign);
+  }
+
+  async function doAssign() {
+    var sb = sbc(); var msg = document.getElementById('gma-assign-msg');
+    var title = (document.getElementById('gma-title').value||'').trim();
+    var type = _formType, config = {};
+    if (type === 'material') {
+      var u = (document.getElementById('gma-m-url').value||'').trim();
+      if (!u) { msg.textContent = 'Bağlantı gir.'; return; }
+      config.url = u;
+      if (!title) title = 'Çalışma materyali';
+    } else if (type === 'ielts_mock') {
+      var sel = document.getElementById('gma-im-test'); var slug = sel ? sel.value : '';
+      if (!slug) { msg.textContent = 'Deneme seç.'; return; }
+      config.test_slug = slug; config.section = _imSec;
+      var opt = sel.selectedOptions && sel.selectedOptions[0]; config.test_name = opt ? opt.getAttribute('data-name') : '';
+      if (!title) title = (config.test_name||'Deneme');
+    } else if (type === 'questions') {
+      config.exam_type = document.getElementById('gma-q-exam').value;
+      config.count = parseInt(document.getElementById('gma-q-count').value,10) || 10;
+      if (!title) title = 'Soru Bankası (' + config.count + ')';
+    }
+    var b = document.getElementById('gma-assign-btn'); b.disabled = true; b.textContent = 'Atanıyor…';
+    try {
+      var r = await sb.rpc('create_assignment', { p_class_id: CLASS_ID, p_type: type, p_title: title, p_description: null, p_config: config, p_due_date: null });
+      if (r.error) throw r.error;
+      var aid = r.data && (r.data.assignment_id || r.data.id);
+      if (aid) sb.functions.invoke('notify-class-assignment', { body:{ kind:'assignment', assignment_id: aid } }).catch(function(){});
+      msg.style.color = '#7fd39a'; msg.textContent = 'Atandı ve öğrencilere bildirildi.';
+      document.getElementById('gma-title').value = '';
+      setTimeout(renderTeacher, 900);
+    } catch (e) {
+      msg.style.color = '#e88'; msg.textContent = 'Olmadı: ' + (e.message || e);
+    } finally { b.disabled = false; b.textContent = 'Sınıfa Ata'; }
+  }
+
+  async function onAction(e) {
+    var sb = sbc();
+    var c = e.target.closest('[data-complete]'); var u = e.target.closest('[data-unmark]'); var rl = e.target.closest('[data-act="reload"]');
+    if (rl) { render(); return; }
+    if (c) { c.disabled = true; try { await sb.rpc('mark_assignment_complete', { p_assignment_id: c.getAttribute('data-complete') }); } catch(err){} render(); }
+    if (u) { u.disabled = true; try { await sb.rpc('unmark_assignment_complete', { p_assignment_id: u.getAttribute('data-unmark') }); } catch(err){} render(); }
+  }
+
+  function render() { if (!root) return; if (isHost()) renderTeacher(); else renderStudent(); }
+
+  function bind() {
+    if (_bound) return; root = document.getElementById('gm-assign-root'); if (!root) return; _bound = true;
+    root.addEventListener('click', onAction);
+    var tab = document.querySelector('.dock-tab[data-dock="assign"]');
+    if (tab) tab.addEventListener('click', function(){ setTimeout(render, 30); });
+  }
+
+  window.addEventListener('load', function(){ setTimeout(bind, 400); });
+})();
+</script>
 </body>
 </html>

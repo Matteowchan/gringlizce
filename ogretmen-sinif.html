@@ -4312,18 +4312,18 @@
           { unit: 3, name: 'Ünite 3 · Expression of Ideas', url: 'sat-unite-3.html', count: 2 },
           { unit: 4, name: 'Ünite 4 · Standard English Conventions', url: 'sat-unite-4.html', count: 2 }
         ]},
-        { exam: 'toefl', label: 'TOEFL · Öğren Modülü', kind: 'visit', units: [
-          { name: 'TOEFL Öğren modülü', url: 'toefl-ogren.html' } ]},
-        { exam: 'yds', label: 'YDS / YÖKDİL · Öğren Modülü', kind: 'visit', units: [
-          { name: 'YDS Öğren modülü', url: 'yds-ogren.html' } ]},
-        { exam: 'ydt', label: 'YDT · Öğren Modülü', kind: 'visit', units: [
-          { name: 'YDT Öğren modülü', url: 'ydt-ogren.html' } ]},
-        { exam: 'udsp', label: 'ÜDS / YÖKDİL · Öğren Modülü', kind: 'visit', units: [
-          { name: 'ÜDS Öğren modülü', url: 'udsp-ogren.html' } ]},
-        { exam: 'ielts', label: 'IELTS · Öğren Modülleri', kind: 'visit', units: [
-          { name: 'IELTS Reading', url: 'ielts-ogren-reading.html' },
-          { name: 'IELTS Listening', url: 'ielts-ogren-listening.html' },
-          { name: 'IELTS Speaking', url: 'ielts-ogren-speaking.html' } ]}
+        { exam: 'toefl', label: 'TOEFL · Öğren Modülü (otomatik takip)', kind: 'ogren_spa', units: [
+          { name: 'TOEFL Öğren modülü (tüm dersler)', url: 'toefl-ogren.html', module: 'toefl-ogren', count: 20 } ]},
+        { exam: 'yds', label: 'YDS / YÖKDİL · Öğren Modülü (otomatik takip)', kind: 'ogren_spa', units: [
+          { name: 'YDS Öğren modülü (tüm dersler)', url: 'yds-ogren.html', module: 'yds-ogren', count: 14 } ]},
+        { exam: 'ydt', label: 'YDT · Öğren Modülü (otomatik takip)', kind: 'ogren_spa', units: [
+          { name: 'YDT Öğren modülü (tüm dersler)', url: 'ydt-ogren.html', module: 'ydt-ogren', count: 15 } ]},
+        { exam: 'udsp', label: 'ÜDS / YÖKDİL · Öğren Modülü (otomatik takip)', kind: 'ogren_spa', units: [
+          { name: 'ÜDS Öğren modülü (tüm dersler)', url: 'udsp-ogren.html', module: 'udsp-ogren', count: 9 } ]},
+        { exam: 'ielts', label: 'IELTS · Öğren Modülleri (otomatik takip)', kind: 'ogren_spa', units: [
+          { name: 'IELTS Reading', url: 'ielts-ogren-reading.html', module: 'ielts-ogren-reading', count: 17 },
+          { name: 'IELTS Listening', url: 'ielts-ogren-listening.html', module: 'ielts-ogren-listening', count: 12 },
+          { name: 'IELTS Speaking', url: 'ielts-ogren-speaking.html', module: 'ielts-ogren-speaking', count: 22 } ]}
       ];
       function moduleGroup(exam) {
         for (var i = 0; i < MODULE_CATALOG.length; i++) if (MODULE_CATALOG[i].exam === exam) return MODULE_CATALOG[i];
@@ -4346,9 +4346,9 @@
           return '<option value="' + i + '">' + esc(u.name) + '</option>';
         }).join('');
         if (note) {
-          note.innerHTML = (g.kind === 'sat_unit')
-            ? 'Öğrenci üniteyi açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; ünitedeki tüm dersleri bitirince ödev tamamlanır.'
-            : 'Öğrenci modülü <strong>Aç</strong> ile açar, bitirince <strong>Tamamladım</strong> ile işaretler. (Bu ders için otomatik ders-takibi yakında eklenecek.)';
+          note.innerHTML = (g.kind === 'sat_unit' || g.kind === 'ogren_spa')
+            ? 'Öğrenci modülü açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; modüldeki dersleri gezip bitirince ödev tamamlanır.'
+            : 'Öğrenci modülü <strong>Aç</strong> ile açar, bitirince <strong>Tamamladım</strong> ile işaretler.';
         }
         fillModuleTitle();
       }
@@ -4875,6 +4875,9 @@
           config.label = mgUnit.name;
           if (mgGroup.kind === 'sat_unit') {
             config.unit = mgUnit.unit;
+            config.count = mgUnit.count || 1;
+          } else if (mgGroup.kind === 'ogren_spa') {
+            config.module = mgUnit.module;
             config.count = mgUnit.count || 1;
           }
         }

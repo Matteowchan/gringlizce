@@ -2438,6 +2438,7 @@
     .my-assign-type.type-ielts_mock{ background: rgba(142,59,76,0.15); color: #8E3B4C; }
     .my-assign-type.type-material  { background: rgba(44,88,86,0.14); color: #2C5856; }
     .my-assign-type.type-vocab     { background: rgba(200,154,60,0.16); color: #7d5f24; }
+    .my-assign-type.type-module    { background: rgba(90,70,150,0.15); color: #5a4696; }
 
     .my-assign-meta {
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
@@ -3005,7 +3006,8 @@
           reading:   'Reading',
           vocab:     'Kelime',
           ielts_mock: 'Deneme',
-          material:  'Materyal'
+          material:  'Materyal',
+          module:    'Modül'
         };
 
         function escMA(s) {
@@ -3181,6 +3183,33 @@
                   actionsHtml = ''
                     + '<span class="my-assign-completed-pill">Tamamlandı</span>'
                     + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              } else if (a.type === 'module') {
+                var modUrl = cfg.url || '#';
+                if (cfg.label) meta.push(humanizeMA(cfg.exam || '') + (cfg.exam ? ' · ' : '') + cfg.label);
+                if (cfg.kind === 'sat_unit') {
+                  // Otomatik takipli: ilerleme çubuğu, self-mark yok
+                  bodyHtml = ''
+                    + '<div class="my-assign-progress">'
+                    + '<div class="my-assign-progress-bar"><div class="my-assign-progress-fill ' + (isCompleted ? 'completed' : '') + '" style="width:' + Math.min(pct, 100) + '%"></div></div>'
+                    + '<div class="my-assign-progress-text">' + a.progress_current + ' / ' + a.progress_target + ' ders</div>'
+                    + '</div>';
+                  if (!isCompleted) {
+                    actionsHtml = '<a href="' + escMA(modUrl) + '" class="my-assign-btn">Üniteyi Aç →</a>';
+                  } else {
+                    actionsHtml = '<span class="my-assign-completed-pill">Tamamlandı</span>';
+                  }
+                } else {
+                  // visit: aç + kendi işaretle
+                  if (!isCompleted) {
+                    actionsHtml = ''
+                      + '<a href="' + escMA(modUrl) + '" class="my-assign-btn">Modülü Aç →</a>'
+                      + '<button class="my-assign-btn secondary" data-action="complete" data-id="' + escMA(a.assignment_id) + '" type="button">Tamamladım</button>';
+                  } else {
+                    actionsHtml = ''
+                      + '<span class="my-assign-completed-pill">Tamamlandı</span>'
+                      + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                  }
                 }
               }
 

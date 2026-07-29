@@ -391,6 +391,7 @@
     .ks-assign-type.type-questions { background: rgba(44, 88, 86, 0.12); color: var(--teal); }
     .ks-assign-type.type-writing { background: rgba(200, 154, 60, 0.18); color: #8b6627; }
     .ks-assign-type.type-reading { background: rgba(120, 80, 40, 0.15); color: #6b4422; }
+    .ks-assign-type.type-module { background: rgba(90, 70, 150, 0.15); color: #5a4696; }
     .ks-assign-title {
       font-family: var(--font-display, Georgia), serif;
       font-size: 1.2rem;
@@ -2027,6 +2028,10 @@
               <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>
               <span><span class="t-type-name">Materyal</span><span class="t-type-hint">Herhangi bir sayfa</span></span>
             </button>
+            <button type="button" class="t-type-btn" data-type="module">
+              <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+              <span><span class="t-type-name">Modül</span><span class="t-type-hint">Öğren ünitesi · otomatik</span></span>
+            </button>
           </div>
           <div class="ca-rail-label" style="margin-top:1.1rem;">Şablon</div>
           <div class="ca-template-bar" id="ca-tpl-bar">
@@ -2187,6 +2192,16 @@
               <span id="ca-v-counter" style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; height:100%;">0 kelime</span>
             </div>
           </div>
+        </div>
+
+        <!-- Module config -->
+        <div class="t-config-block" data-config="module">
+          <div class="t-config-eyebrow">Öğren Modülü Ünitesi</div>
+          <label for="ca-mod-exam">Ders / Modül</label>
+          <select id="ca-mod-exam"></select>
+          <label for="ca-mod-unit" style="margin-top:.7rem;">Ünite</label>
+          <select id="ca-mod-unit"></select>
+          <p class="t-config-note" id="ca-mod-note">Öğrenci üniteyi açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; ünitedeki tüm dersleri bitirince ödev tamamlanır.</p>
         </div>
 
         </div><!-- /.ca-main -->
@@ -3298,7 +3313,7 @@
         }
       });
 
-      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime', ielts_mock: 'Deneme', material: 'Materyal' };
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime', ielts_mock: 'Deneme', material: 'Materyal', module: 'Modül' };
 
       var writingsLoaded_flag = false;
       async function loadWritings() {
@@ -3827,6 +3842,9 @@
             } else if (a.type === 'vocab' && a.config) {
               meta.push((a.config.word_count || 0) + ' kelime');
               meta.push('Flashcard');
+            } else if (a.type === 'module' && a.config) {
+              if (a.config.label) meta.push(a.config.label);
+              meta.push(a.config.kind === 'sat_unit' ? 'Otomatik takip' : 'Aç · işaretle');
             }
 
             var descHtml = a.description
@@ -4285,12 +4303,80 @@
         await populateCaCategories(cat || '');
       }
 
+      // ---- Öğren modülü ödevi kataloğu ----
+      // kind 'sat_unit' = sat_lesson_state ile OTOMATİK takip; 'visit' = öğrenci açar, "Tamamladım" der.
+      var MODULE_CATALOG = [
+        { exam: 'sat', label: 'SAT · Reading & Writing (otomatik takip)', kind: 'sat_unit', units: [
+          { unit: 1, name: 'Ünite 1 · Information and Ideas', url: 'sat-unite-1.html', count: 4 },
+          { unit: 2, name: 'Ünite 2 · Craft and Structure', url: 'sat-unite-2.html', count: 3 },
+          { unit: 3, name: 'Ünite 3 · Expression of Ideas', url: 'sat-unite-3.html', count: 2 },
+          { unit: 4, name: 'Ünite 4 · Standard English Conventions', url: 'sat-unite-4.html', count: 2 }
+        ]},
+        { exam: 'toefl', label: 'TOEFL · Öğren Modülü', kind: 'visit', units: [
+          { name: 'TOEFL Öğren modülü', url: 'toefl-ogren.html' } ]},
+        { exam: 'yds', label: 'YDS / YÖKDİL · Öğren Modülü', kind: 'visit', units: [
+          { name: 'YDS Öğren modülü', url: 'yds-ogren.html' } ]},
+        { exam: 'ydt', label: 'YDT · Öğren Modülü', kind: 'visit', units: [
+          { name: 'YDT Öğren modülü', url: 'ydt-ogren.html' } ]},
+        { exam: 'udsp', label: 'ÜDS / YÖKDİL · Öğren Modülü', kind: 'visit', units: [
+          { name: 'ÜDS Öğren modülü', url: 'udsp-ogren.html' } ]},
+        { exam: 'ielts', label: 'IELTS · Öğren Modülleri', kind: 'visit', units: [
+          { name: 'IELTS Reading', url: 'ielts-ogren-reading.html' },
+          { name: 'IELTS Listening', url: 'ielts-ogren-listening.html' },
+          { name: 'IELTS Speaking', url: 'ielts-ogren-speaking.html' } ]}
+      ];
+      function moduleGroup(exam) {
+        for (var i = 0; i < MODULE_CATALOG.length; i++) if (MODULE_CATALOG[i].exam === exam) return MODULE_CATALOG[i];
+        return MODULE_CATALOG[0];
+      }
+      function populateModuleExam() {
+        var sel = document.getElementById('ca-mod-exam');
+        if (!sel || sel.options.length) return;
+        sel.innerHTML = MODULE_CATALOG.map(function (g) {
+          return '<option value="' + g.exam + '">' + esc(g.label) + '</option>';
+        }).join('');
+      }
+      function populateModuleUnits() {
+        var exSel = document.getElementById('ca-mod-exam');
+        var uSel = document.getElementById('ca-mod-unit');
+        var note = document.getElementById('ca-mod-note');
+        if (!exSel || !uSel) return;
+        var g = moduleGroup(exSel.value);
+        uSel.innerHTML = g.units.map(function (u, i) {
+          return '<option value="' + i + '">' + esc(u.name) + '</option>';
+        }).join('');
+        if (note) {
+          note.innerHTML = (g.kind === 'sat_unit')
+            ? 'Öğrenci üniteyi açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; ünitedeki tüm dersleri bitirince ödev tamamlanır.'
+            : 'Öğrenci modülü <strong>Aç</strong> ile açar, bitirince <strong>Tamamladım</strong> ile işaretler. (Bu ders için otomatik ders-takibi yakında eklenecek.)';
+        }
+        fillModuleTitle();
+      }
+      function fillModuleTitle() {
+        var ttl = document.getElementById('ca-title');
+        var exSel = document.getElementById('ca-mod-exam');
+        var uSel = document.getElementById('ca-mod-unit');
+        if (!ttl || !exSel || !uSel) return;
+        var g = moduleGroup(exSel.value);
+        var u = g.units[parseInt(uSel.value) || 0];
+        if (u && (!ttl.value || ttl.dataset.autofill === '1')) {
+          ttl.value = u.name;
+          ttl.dataset.autofill = '1';
+        }
+      }
+
       function setupPreviewHandler() {
         var btn = document.getElementById('ca-preview-btn');
         var out = document.getElementById('ca-preview-out');
         if (!btn) return;
         var examSel = document.getElementById('ca-q-exam');
         if (examSel) examSel.addEventListener('change', function () { populateCaCategories(''); });
+        var modExam = document.getElementById('ca-mod-exam');
+        if (modExam) modExam.addEventListener('change', populateModuleUnits);
+        var modUnit = document.getElementById('ca-mod-unit');
+        if (modUnit) modUnit.addEventListener('change', fillModuleTitle);
+        var ttlEl = document.getElementById('ca-title');
+        if (ttlEl) ttlEl.addEventListener('input', function () { ttlEl.dataset.autofill = '0'; });
         btn.addEventListener('click', async function () {
           var key = document.getElementById('ca-q-exam').value;
           var exam = BANK_DB_EXAM[key] || key;
@@ -4389,6 +4475,7 @@
           loadWritingTextTypes().then(populateTextTypeSelect);
         }
         if (t === 'questions') { populateCaCategories(document.getElementById('ca-q-cat').value || ''); }
+        if (t === 'module') { populateModuleExam(); populateModuleUnits(); }
         if (t === 'ielts_mock') { loadIeltsMocks(); }
       }
       caTypeBtns.forEach(function (b) {
@@ -4776,6 +4863,20 @@
           if (vocabWords.length === 0) { caErr.textContent = 'Geçerli kelime bulunamadı. Format: en - tr (her satıra bir tane).'; return; }
           if (vocabWords.length > 200) { caErr.textContent = 'En fazla 200 kelime ekleyebilirsin.'; return; }
           config._vocab_words = vocabWords;
+        } else if (caCurrentType === 'module') {
+          var mgExam = document.getElementById('ca-mod-exam').value;
+          var mgGroup = moduleGroup(mgExam);
+          var uIdx = parseInt(document.getElementById('ca-mod-unit').value) || 0;
+          var mgUnit = mgGroup.units[uIdx];
+          if (!mgUnit) { caErr.textContent = 'Bir ünite seç.'; return; }
+          config.exam = mgExam;
+          config.kind = mgGroup.kind;
+          config.url = mgUnit.url;
+          config.label = mgUnit.name;
+          if (mgGroup.kind === 'sat_unit') {
+            config.unit = mgUnit.unit;
+            config.count = mgUnit.count || 1;
+          }
         }
 
         var dueIso = dueRaw ? new Date(dueRaw).toISOString() : null;

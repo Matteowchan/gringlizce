@@ -192,7 +192,7 @@ async function connectLiveKit(){
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
     var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:resObj()},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
-    room.on(LK.RoomEvent.ParticipantConnected,onParticipant);
+    room.on(LK.RoomEvent.ParticipantConnected,function(p){ onParticipant(p); playJoinChime(); sysChat((p.name||'Katılımcı')+' katıldı'); });
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
     room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı'); });
@@ -518,6 +518,16 @@ function bindTools(){
 }
 function startTimer(sec){ clearInterval(timerInt); timerLeft=sec; $('#timer-display').textContent=fmt(timerLeft); timerInt=setInterval(function(){ timerLeft--; $('#timer-display').textContent=fmt(timerLeft); if(timerLeft<=0){ clearInterval(timerInt); timerInt=null; toast('Süre doldu!'); try{beep();}catch(e){} } },1000); }
 function beep(){ var a=new (window.AudioContext||window.webkitAudioContext)(); var o=a.createOscillator(); o.connect(a.destination); o.frequency.value=880; o.start(); setTimeout(function(){o.stop();a.close();},350); }
+// Katılım zili: nazik iki-nota ding (gain zarfıyla, klik olmadan)
+function playJoinChime(){ try{
+  var a=new (window.AudioContext||window.webkitAudioContext)(); var now=a.currentTime;
+  [ [659.25,0], [987.77,0.13] ].forEach(function(p){
+    var o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.value=p[0];
+    var t=now+p[1]; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.34);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.36);
+  });
+  setTimeout(function(){ try{a.close();}catch(e){} }, 700);
+}catch(e){} }
 function studentNames(){ var names=[]; if(STATE.lkRoom)STATE.lkRoom.remoteParticipants.forEach(function(p){ if(!isHostMeta(p))names.push(p.name||'Öğrenci'); }); if(!STATE.isHost)names.push(STATE.name); return names; }
 function pickStudent(){ var names=studentNames(); if(!names.length){ $('#pick-result').textContent='Öğrenci yok.'; return; } var i=0,n=0,max=14+Math.floor(Math.random()*8),el=$('#pick-result'); var iv=setInterval(function(){ el.textContent=names[i%names.length]; i++; n++; if(n>=max){ clearInterval(iv); el.textContent='🎯 '+names[Math.floor(Math.random()*names.length)]; } },80); }
 

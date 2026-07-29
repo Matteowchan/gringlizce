@@ -24,8 +24,10 @@
 
   var CSS = ''
     + '.ga{font-family:inherit;color:var(--text,#1a2230);}'
-    + '.ga-head{margin-bottom:0.7rem;}'
-    + '.ga-exam{width:100%;max-width:340px;font:inherit;padding:8px 11px;border:1px solid var(--line,#e6ddca);border-radius:9px;background:var(--bg-card,#fff);color:var(--text,#1a2230);}'
+    + '.ga-head{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0.7rem;}'
+    + '.ga-exam{flex:1;min-width:180px;max-width:340px;font:inherit;padding:8px 11px;border:1px solid var(--line,#e6ddca);border-radius:9px;background:var(--bg-card,#fff);color:var(--text,#1a2230);}'
+    + '.ga-print{flex:0 0 auto;border:1px solid var(--teal,#2C5856);background:transparent;color:var(--teal,#2C5856);border-radius:9px;padding:8px 13px;font:inherit;font-size:0.82rem;font-weight:600;cursor:pointer;}'
+    + '.ga-print:hover{background:var(--teal,#2C5856);color:#fff;}'
     + '.ga-empty{color:var(--text-muted,#6b6862);font-style:italic;padding:0.6rem 0;}'
     + '.ga-cards{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.7rem;}'
     + '.ga-card{flex:1;min-width:118px;background:var(--bg-card,#fff);color:var(--text,#1a2230);border:1px solid var(--line,#e6ddca);border-radius:10px;padding:0.7rem 0.9rem;}'
@@ -201,12 +203,32 @@
     return html;
   }
 
+  function printAnalysis(sel, body, studentLabel) {
+    var win = window.open('', '_blank', 'width=820,height=940');
+    if (!win) { alert('PDF için açılır pencereye izin ver.'); return; }
+    var examLabel = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].textContent : '';
+    var when = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+    var doc = '<!doctype html><html><head><meta charset="utf-8"><title>Sınav Analizi</title><style>'
+      + 'body{font-family:Inter,-apple-system,system-ui,sans-serif;color:#1a2230;margin:28px;}'
+      + ':root{--teal:#2C5856;--line:#e2dccc;--text:#1a2230;--text-muted:#6b6862;--bg-card:#fff;--font-display:Georgia,serif;}'
+      + 'h1{font-family:Georgia,serif;font-size:20px;margin:0 0 2px;}.ga-sub{color:#6b6862;font-size:12px;margin-bottom:18px;}'
+      + CSS + '.ga-assign{display:none!important;}'
+      + '</style></head><body>'
+      + '<h1>Sınav Analizi — ' + esc(studentLabel || 'Öğrenci') + '</h1>'
+      + '<div class="ga-sub">' + esc(examLabel) + ' · ' + esc(when) + ' · Gri English</div>'
+      + '<div class="ga">' + (body ? body.innerHTML : '') + '</div>'
+      + '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},300);};</scr' + 'ipt>'
+      + '</body></html>';
+    win.document.open(); win.document.write(doc); win.document.close();
+  }
+
   function mount(opts) {
     var sb = opts.sb, cont = opts.container, userId = opts.userId, onAssign = opts.onAssign;
     if (!sb || !cont || !userId) return;
     injectCSS();
-    cont.innerHTML = '<div class="ga"><div class="ga-head"><select class="ga-exam"><option>Yükleniyor…</option></select></div><div class="ga-body ga-empty">Yükleniyor…</div></div>';
-    var sel = cont.querySelector('.ga-exam'), body = cont.querySelector('.ga-body');
+    cont.innerHTML = '<div class="ga"><div class="ga-head"><select class="ga-exam"><option>Yükleniyor…</option></select><button class="ga-print" type="button">PDF / Yazdır</button></div><div class="ga-body ga-empty">Yükleniyor…</div></div>';
+    var sel = cont.querySelector('.ga-exam'), body = cont.querySelector('.ga-body'), printBtn = cont.querySelector('.ga-print');
+    if (printBtn) { printBtn.addEventListener('click', function () { printAnalysis(sel, body, opts.studentLabel); }); }
 
     function render(exam) {
       body.className = 'ga-body ga-empty'; body.textContent = 'Analiz ediliyor…';
@@ -230,7 +252,7 @@
     sb.rpc('admin_user_exams', { p_user_id: userId }).then(function (r) {
       if (r.error) throw r.error;
       var exams = r.data || [];
-      if (!exams.length) { sel.style.display = 'none'; body.className = 'ga-body ga-empty'; body.textContent = 'Bu öğrenci soru bankasından henüz soru çözmemiş. (Kelime Bankası ve denemeler ayrı bölümlerde görünür.)'; return; }
+      if (!exams.length) { sel.style.display = 'none'; if (printBtn) { printBtn.style.display = 'none'; } body.className = 'ga-body ga-empty'; body.textContent = 'Bu öğrenci soru bankası, IELTS denemesi ya da kelime çalışması yapmamış — analiz için henüz veri yok.'; return; }
       sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; return '<option value="' + esc(e.exam) + '">' + esc(m.label) + ' (' + e.answered + ' soru)</option>'; }).join('');
       sel.addEventListener('change', function () { render(sel.value); });
       render(exams[0].exam);

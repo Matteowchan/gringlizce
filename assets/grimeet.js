@@ -197,7 +197,7 @@ async function connectLiveKit(){
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
     room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı'); });
     room.on(LK.RoomEvent.TrackSubscribed,function(track,pub,p){ attachTrack(track,pub,p); });
-    room.on(LK.RoomEvent.TrackUnsubscribed,function(track,pub,p){ if(isScreen(pub)){ clearScreen(); if(STATE.mode==='screen'&&!STATE.isHost) setMode('grid',{remote:true}); } else if(track.kind==='video'){ renderPlaceholder(p.identity); } });
+    room.on(LK.RoomEvent.TrackUnsubscribed,function(track,pub,p){ if(isScreen(pub)){ clearScreen(); if(STATE.mode==='screen') setMode('grid',{remote:true}); } else if(track.kind==='video'){ renderPlaceholder(p.identity); } });
     room.on(LK.RoomEvent.ActiveSpeakersChanged,onSpeakers);
     room.on(LK.RoomEvent.DataReceived,onData);
     room.on(LK.RoomEvent.Disconnected,function(){ setStatus('err','Bağlantı koptu'); });

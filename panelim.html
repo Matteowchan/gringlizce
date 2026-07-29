@@ -2918,6 +2918,31 @@
           </div>
         </div></div>
       </div>
+
+      <div id="notes-area" class="collapse-card" data-collapse style="display: none;">
+        <div class="cc-header">
+          <div class="cc-mark tone-teal"></div>
+          <div class="cc-titles">
+            <div class="cc-eyebrow">Notlarım</div>
+            <div class="cc-title">Sorulara Aldığım Notlar</div>
+          </div>
+          <div class="cc-summary"><span id="notes-count">—</span></div>
+          <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="cc-body"><div class="cc-body-inner">
+          <div id="notes-grid" class="qb-list-grid"></div>
+          <div id="notes-empty" class="cc-empty" style="display: none;">
+            <div class="cc-empty-img">
+              <img src="assets/images/cat-thinking.png" alt="" onerror="this.parentElement.innerHTML='<div class=fallback>?</div>'">
+            </div>
+            <div class="cc-empty-body">
+              <h4>Henüz not almadın</h4>
+              <p>Bir soruyu açıp "Not" butonuyla o soruya özel not al; hepsi burada birikir.</p>
+              <a href="soru-bankasi.html" class="cc-empty-cta">Soru Bankasına git ›</a>
+            </div>
+          </div>
+        </div></div>
+      </div>
     </div>
 
     <div class="zone-head">
@@ -4574,6 +4599,57 @@
         }).join('');
       } catch (e) {
         console.warn('[bookmarks] load failed:', e);
+      }
+    })();
+
+    function renderNoteCard(r, q) {
+      var examLabels = { sat: 'SAT', ielts: 'IELTS', toefl: 'TOEFL', ib: 'IB', ydt: 'YDT', yds: 'YDS', 'yds-yokdil': 'YDS' };
+      var exam = q ? (examLabels[q.exam_type] || (q.exam_type || '').toUpperCase()) : 'Soru';
+      var subcat = q ? humanizeSubcat(q.subcategory) : '';
+      var promptText = q ? (q.prompt || '').replace(/<[^>]*>/g, '').trim() : '';
+      var preview = promptText ? (promptText.slice(0, 80) + (promptText.length > 80 ? '…' : '')) : '';
+      var href = 'soru.html?q=' + encodeURIComponent(r.question_slug);
+      return [
+        '<div class="qb-list-card-wrap" data-slug="' + escHtmlPanel(r.question_slug) + '" data-type="note">',
+        '  <a href="' + href + '" class="qb-list-card">',
+        '    <div class="qb-main">',
+        '      <div class="qb-head-line"><span class="qb-badge">' + escHtmlPanel(exam + (subcat ? ' · ' + subcat : '')) + '</span></div>',
+        preview ? '      <p class="qb-prompt" style="opacity:.65;">' + escHtmlPanel(preview) + '</p>' : '',
+        '      <p style="margin:.45rem 0 0;padding:.55rem .75rem;background:rgba(44,88,86,.07);border-left:3px solid var(--teal,#2C5856);border-radius:8px;font-size:.9rem;line-height:1.5;white-space:pre-wrap;color:var(--text,#241E17);">' + escHtmlPanel(r.note || '') + '</p>',
+        '    </div>',
+        '    <span class="qb-cta">Soruyu Aç &rsaquo;</span>',
+        '  </a>',
+        '</div>'
+      ].join('');
+    }
+
+    (async function loadNotes() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var userId = sess.data.session.user.id;
+        var nRes = await sbCli.from('user_question_notes').select('question_slug, note').eq('user_id', userId);
+        var rows = (nRes && nRes.data) || [];
+        var elArea = document.getElementById('notes-area'), elGrid = document.getElementById('notes-grid'),
+            elCount = document.getElementById('notes-count'), elEmpty = document.getElementById('notes-empty');
+        if (!elArea || !elGrid) return;
+        elArea.style.display = 'block';
+        if (rows.length === 0) { if (elEmpty) elEmpty.style.display = 'flex'; if (elCount) elCount.textContent = '0 not'; elGrid.innerHTML = ''; return; }
+        if (elEmpty) elEmpty.style.display = 'none';
+        if (elCount) elCount.textContent = rows.length + ' not';
+        var slugs = rows.map(function (r) { return r.question_slug; });
+        var qsRes = await sbCli.rpc('get_user_question_details', { p_slugs: slugs });
+        var qMap = new Map();
+        (qsRes.data || []).forEach(function (q) { qMap.set(q.slug, q); });
+        elGrid.innerHTML = rows.map(function (r) { return renderNoteCard(r, qMap.get(r.question_slug)); }).join('');
+      } catch (e) {
+        console.warn('[notes] load failed:', e);
       }
     })();
 

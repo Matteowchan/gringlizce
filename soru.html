@@ -558,6 +558,17 @@
       background: var(--bg-soft);
       color: var(--text);
     }
+    /* Şiir/dize düzeni: "/" satır, "//" kıta → gerçek satır sonları */
+    .q-verse {
+      white-space: pre-line;
+      font-family: var(--font-display, Georgia), serif;
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: var(--text);
+      padding: 0.2rem 0 0.2rem 1rem;
+      border-left: 2px solid var(--line, #E3D8C3);
+      margin: 0.3rem 0 0.2rem;
+    }
     .exp-step h4 {
       font-family: var(--font-display);
       font-size: 1.02rem;
@@ -2557,8 +2568,18 @@
           return out;
         };
         const renderedTexts = splitInlineTexts(q.passage.texts);
+        // Şiir: "/" satır sonu, "//" kıta sonu. 3+ " / " varsa dize düzeni uygula.
+        const renderPassageContent = function (c) {
+          const text = (c || '').toString();
+          const slashCount = (text.match(/\s\/\s/g) || []).length;
+          if (slashCount >= 3) {
+            const v = safeHtml(text).replace(/\s*\/\/\s*/g, '\n\n').replace(/\s*\/\s*/g, '\n');
+            return '<div class="q-verse">' + v + '</div>';
+          }
+          return '<p>' + safeHtml(text) + '</p>';
+        };
         textsEl.innerHTML = renderedTexts.map(t =>
-          `<p class="text-label">${esc(t.label)}</p><p>${safeHtml(t.content)}</p>`
+          `<p class="text-label">${esc(t.label)}</p>${renderPassageContent(t.content)}`
         ).join('') + '<p class="q-hint q-hint-texts">Vurgulamak için metnin bir kısmını seç</p>';
         textsEl.style.display = '';
         if (gridEl) gridEl.classList.remove('no-texts');

@@ -2919,6 +2919,7 @@
                 + '<div class="cl-meta">' + metaParts.join('<span class="cl-meta-sep">·</span>') + '</div>'
                 + descHtml
                 + '</div>'
+                + '<button class="cl-enter-btn" data-id="' + escCl(c.class_id) + '" data-name="' + escCl(c.name) + '" type="button" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2C5856;border:1px solid #2C5856;padding:8px 14px;border-radius:8px;font-weight:600;font-size:.85rem;margin-right:8px;white-space:nowrap;cursor:pointer;">Sınıfa Gir · Ödevler</button>'
                 + '<a class="cl-live-btn" href="grimeet-oda.html?room=' + ('C' + String(c.class_id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)).toUpperCase() + '&class=' + encodeURIComponent(c.class_id) + '" style="display:inline-flex;align-items:center;gap:6px;background:#2C5856;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:.85rem;margin-right:8px;white-space:nowrap;">Canlı Derse Katıl</a>'
                 + '<button class="cl-leave-btn" data-id="' + escCl(c.class_id) + '" type="button">Ayrıl</button>'
                 + '</div>';
@@ -2939,6 +2940,36 @@
                 }
               });
             });
+
+            // "Sınıfa Gir · Ödevler": Ödevlerim bölümünü o sınıfa filtrele + oraya kaydır
+            grid.querySelectorAll('.cl-enter-btn').forEach(function (btn) {
+              btn.addEventListener('click', function () { enterClassAssignments(btn.dataset.id, btn.dataset.name || 'Sınıf'); });
+            });
+            function enterClassAssignments(classId, className) {
+              var section = document.getElementById('my-assignments-section');
+              var list = document.getElementById('my-assignments-list');
+              var empty = document.getElementById('my-assignments-empty');
+              if (!section || !list) return;
+              section.style.display = '';
+              if (empty) empty.style.display = 'none';
+              var banner = document.getElementById('assign-filter-banner');
+              if (!banner) { banner = document.createElement('div'); banner.id = 'assign-filter-banner'; banner.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(44,88,86,.08);border:1px solid rgba(44,88,86,.2);border-radius:12px;padding:.7rem 1rem;margin:0 0 1rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;'; list.parentNode.insertBefore(banner, list); }
+              banner.style.display = 'flex';
+              banner.innerHTML = '<span style="font-weight:600;color:#2C5856;">' + escCl(className) + ' — ödevleri</span><button type="button" id="assign-filter-clear" style="background:none;border:none;color:#2C5856;font-weight:600;cursor:pointer;text-decoration:underline;font:inherit;">Tüm ödevler</button>';
+              var clr = document.getElementById('assign-filter-clear'); if (clr) clr.addEventListener('click', clearAssignFilter);
+              var shown = 0;
+              list.querySelectorAll('.my-assign-card').forEach(function (cd) { var match = cd.getAttribute('data-class') === classId; cd.style.display = match ? '' : 'none'; if (match) shown++; });
+              var note = document.getElementById('assign-filter-empty');
+              if (!note) { note = document.createElement('div'); note.id = 'assign-filter-empty'; note.style.cssText = 'color:#6E6353;font-style:italic;padding:1rem 0;font-family:var(--font-ui,Inter),system-ui,sans-serif;'; list.parentNode.insertBefore(note, list.nextSibling); }
+              note.textContent = shown === 0 ? (className + ' sınıfında şu an aktif ödev yok.') : '';
+              note.style.display = shown === 0 ? 'block' : 'none';
+              section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            function clearAssignFilter() {
+              var list = document.getElementById('my-assignments-list'); if (list) list.querySelectorAll('.my-assign-card').forEach(function (cd) { cd.style.display = ''; });
+              var b = document.getElementById('assign-filter-banner'); if (b) b.style.display = 'none';
+              var n = document.getElementById('assign-filter-empty'); if (n) n.style.display = 'none';
+            }
           } catch (err) {
             console.warn('[my classes] load failed:', err);
             grid.innerHTML = '<p style="color:#b45046; font-style:italic;">Yüklenemedi.</p>';
@@ -3153,7 +3184,7 @@
                 }
               }
 
-              return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '">'
+              return '<div class="my-assign-card' + (isCompleted ? ' completed' : '') + (isOverdue ? ' overdue' : '') + '" data-id="' + escMA(a.assignment_id) + '" data-class="' + escMA(a.class_id) + '">'
                 + '<div class="my-assign-head">'
                 + '<div class="my-assign-titles">'
                 + '<span class="my-assign-type type-' + a.type + '">' + TYPE_LABELS_S[a.type] + '</span>'

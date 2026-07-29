@@ -273,7 +273,7 @@ function isHostMeta(p){ try{ if(p&&p.identity&&promotedHosts.has(p.identity))ret
 function becomeHost(){ if(STATE.isHost)return; STATE.isHost=true; var app=$('#gm-app'); if(app){ app.classList.remove('is-student'); app.classList.add('is-host'); } var rn=$('#gmr-room-name'); if(rn)rn.textContent='Ders Odası (Öğretmen)'; toast('Öğretmen sana ders yönetimi yetkisi verdi.'); refreshPeople(); }
 
 function attachTrack(track,pub,p){
-  if(isScreen(pub)){ attachScreen(track,false); return; }
+  if(isScreen(pub)){ try{ if(pub.setVideoQuality&&LK.VideoQuality) pub.setVideoQuality(LK.VideoQuality.HIGH); }catch(e){} attachScreen(track,false); return; }
   var t=ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)});
   if(track.kind==='video'){ var v=t.querySelector('video.cam')||document.createElement('video'); v.className='cam'; v.autoplay=true;v.playsInline=true; track.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); if(STATE.spotlight===p.identity) applySpotlightVideo(); }
   else if(track.kind==='audio'){ var a=document.createElement('audio'); a.autoplay=true; a.muted=(!STATE.isHost&&!STATE.admitted); track.attach(a); t.appendChild(a); if(STATE.breakout) refreshBreakoutAV(); }

@@ -1727,7 +1727,7 @@
   <link rel="stylesheet" href="/assets/pwa-install.css">
   <script src="/assets/pwa-install.js" defer></script>
   <script src="assets/curriculum.js"></script>
-  <script src="assets/nav.js?v=6"></script>
+  <script src="assets/nav.js?v=7"></script>
   <script src="assets/track.js" defer></script>
   <style>
     /* Öğretmen sınıf detayı — Yön 2: Modern Panel (teal aksan) */
@@ -2072,8 +2072,8 @@
           </select>
           <div class="t-modal-row">
             <div>
-              <label for="ca-q-cat">Kategori (Opsiyonel)</label>
-              <input type="text" id="ca-q-cat" maxlength="80" placeholder="örn. words-in-context">
+              <label for="ca-q-cat">Kategori</label>
+              <select id="ca-q-cat"><option value="">Tüm kategoriler</option></select>
             </div>
             <div>
               <label for="ca-q-count">Hedef Soru Sayısı</label>
@@ -3060,8 +3060,7 @@
       function assignFromWeakness(exam, cat, sub) {
         try { closeStudentDrawer(); } catch (e) {}
         openCaModal();
-        var ex = document.getElementById('ca-q-exam'); if (ex && exam) ex.value = exam;
-        var ct = document.getElementById('ca-q-cat'); if (ct) ct.value = cat || sub || '';
+        setCaExamCat(exam, cat || '', null);
         var ttl = document.getElementById('ca-title');
         if (ttl && !ttl.value) ttl.value = (humanizeShort(cat || sub || '') + ' tekrarı').trim();
       }
@@ -4158,8 +4157,7 @@
         if (tpl.default_description) document.getElementById('ca-desc').value = tpl.default_description;
         var cfg = tpl.config || {};
         if (tpl.assignment_type === 'questions') {
-          if (cfg.exam_type) document.getElementById('ca-q-exam').value = cfg.exam_type;
-          if (cfg.category) document.getElementById('ca-q-cat').value = cfg.category;
+          setCaExamCat(cfg.bank || cfg.exam_type || 'sat-rw', cfg.category || '', cfg.bank || null);
           if (cfg.count) document.getElementById('ca-q-count').value = cfg.count;
         } else if (tpl.assignment_type === 'writing') {
           if (cfg.exam_type) document.getElementById('ca-w-exam').value = cfg.exam_type;
@@ -4209,13 +4207,94 @@
       // ============================================================
       // Sprint 2: Ödev Önizleme
       // ============================================================
+      // ---- Soru bankası: modal sınav anahtarı (landing) ⇄ DB exam_type eşlemesi ----
+      // Modal seçenekleri (sat-rw, yokdil-fen...) landing sayfasına eşlenir; DB'de
+      // exam_type sat/yds/ydt gibi köke sahip. Kategori dropdown'u gerçek DB kategorilerinden dolar.
+      var BANK_DB_EXAM = {
+        'sat-rw': 'sat', 'sat-math': 'sat', 'toefl': 'toefl', 'udsp': 'udsp',
+        'yds': 'yds', 'yokdil-fen': 'yds', 'yokdil-sosyal': 'yds', 'yokdil-saglik': 'yds',
+        'ydt': 'ydt', 'ielts': 'ielts', 'ib': 'ib'
+      };
+      var SAT_MATH_CATS = ['problem_solving_and_data_analysis', 'advanced_math', 'algebra', 'geometry_and_trigonometry'];
+      function bankCatMatch(key, cat) {
+        switch (key) {
+          case 'sat-math': return SAT_MATH_CATS.indexOf(cat) !== -1;
+          case 'sat-rw': return SAT_MATH_CATS.indexOf(cat) === -1; // sat altındaki math dışı her şey
+          case 'yds': return cat.indexOf('yds-yds-') === 0;
+          case 'yokdil-fen': return cat.indexOf('yds-yokdil-fen-') === 0;
+          case 'yokdil-sosyal': return cat.indexOf('yds-yokdil-sosyal-') === 0;
+          case 'yokdil-saglik': return cat.indexOf('yds-yokdil-saglik-') === 0;
+          default: return true; // toefl, udsp, ydt: dbExam altındaki tüm kategoriler
+        }
+      }
+      // dbExam + kategori → modal anahtarı (analiz/şablon "sat" verirken doğru seçeneği bul)
+      function friendlyBankKey(dbExam, cat) {
+        var keys = Object.keys(BANK_DB_EXAM);
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i];
+          if (BANK_DB_EXAM[k] === dbExam && (!cat || bankCatMatch(k, cat))) return k;
+        }
+        return dbExam;
+      }
+      function prettyCat(cat) {
+        var c = String(cat || '').replace(/^yds-yds-/, '').replace(/^yds-yokdil-(fen|sosyal|saglik)-/, '');
+        return humanize(c);
+      }
+      var caCatCache = null; // [{exam_type, category, n}]
+      async function loadCaCatCache() {
+        if (caCatCache) return caCatCache;
+        try {
+          var res = await sb.rpc('question_bank_categories');
+          if (!res.error && res.data) { caCatCache = res.data; return caCatCache; }
+        } catch (e) {}
+        // Fallback: doğrudan tablo taraması (RLS izin veriyorsa)
+        try {
+          var r2 = await sb.from('questions').select('exam_type, category').eq('active', true).limit(5000);
+          var seen = {};
+          (r2.data || []).forEach(function (row) {
+            var k = row.exam_type + '||' + row.category;
+            seen[k] = seen[k] || { exam_type: row.exam_type, category: row.category, n: 0 };
+            seen[k].n++;
+          });
+          caCatCache = Object.keys(seen).map(function (k) { return seen[k]; });
+        } catch (e2) { caCatCache = []; }
+        return caCatCache;
+      }
+      async function populateCaCategories(selectCat) {
+        var sel = document.getElementById('ca-q-cat');
+        if (!sel) return;
+        var key = document.getElementById('ca-q-exam').value;
+        var dbExam = BANK_DB_EXAM[key] || key;
+        await loadCaCatCache();
+        var rows = (caCatCache || [])
+          .filter(function (r) { return r.exam_type === dbExam && bankCatMatch(key, r.category); })
+          .sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
+        var html = '<option value="">Tüm kategoriler' + (rows.length ? ' (hepsi)' : '') + '</option>';
+        rows.forEach(function (r) {
+          html += '<option value="' + esc(r.category) + '">' + esc(prettyCat(r.category)) + (r.n ? ' (' + r.n + ')' : '') + '</option>';
+        });
+        if (!rows.length) html = '<option value="">Bu sınav için hazır kategori yok</option>';
+        sel.innerHTML = html;
+        if (selectCat) sel.value = selectCat;
+      }
+      // Sınav + kategori + (opsiyonel) landing anahtarını modal alanlarına yerleştir
+      async function setCaExamCat(examOrKey, cat, bankKey) {
+        var exSel = document.getElementById('ca-q-exam');
+        var key = bankKey || (BANK_DB_EXAM[examOrKey] ? examOrKey : friendlyBankKey(examOrKey, cat));
+        if (exSel) exSel.value = key;
+        await populateCaCategories(cat || '');
+      }
+
       function setupPreviewHandler() {
         var btn = document.getElementById('ca-preview-btn');
         var out = document.getElementById('ca-preview-out');
         if (!btn) return;
+        var examSel = document.getElementById('ca-q-exam');
+        if (examSel) examSel.addEventListener('change', function () { populateCaCategories(''); });
         btn.addEventListener('click', async function () {
-          var exam = document.getElementById('ca-q-exam').value;
-          var cat = document.getElementById('ca-q-cat').value.trim() || null;
+          var key = document.getElementById('ca-q-exam').value;
+          var exam = BANK_DB_EXAM[key] || key;
+          var cat = document.getElementById('ca-q-cat').value || null;
           btn.disabled = true;
           btn.textContent = 'Yükleniyor...';
           out.innerHTML = '';
@@ -4309,6 +4388,7 @@
         if (t === 'writing') {
           loadWritingTextTypes().then(populateTextTypeSelect);
         }
+        if (t === 'questions') { populateCaCategories(document.getElementById('ca-q-cat').value || ''); }
         if (t === 'ielts_mock') { loadIeltsMocks(); }
       }
       caTypeBtns.forEach(function (b) {
@@ -4583,8 +4663,10 @@
         var firstTitle = title;
         var secondTitle = '';
         if (caCurrentType === 'questions') {
-          config.exam_type = document.getElementById('ca-q-exam').value;
-          var cat = document.getElementById('ca-q-cat').value.trim();
+          var bankKey = document.getElementById('ca-q-exam').value;
+          config.bank = bankKey;                                   // landing sayfası için (sat-rw, yokdil-fen...)
+          config.exam_type = BANK_DB_EXAM[bankKey] || bankKey;     // DB exam_type (sat, yds...) — ilerleme/preview eşleşsin
+          var cat = document.getElementById('ca-q-cat').value;
           if (cat) config.category = cat;
           var cnt = parseInt(document.getElementById('ca-q-count').value);
           if (!cnt || cnt < 1) { caErr.textContent = 'Hedef soru sayısı en az 1 olmalı.'; return; }

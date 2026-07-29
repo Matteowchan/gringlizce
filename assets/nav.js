@@ -207,12 +207,35 @@
   }
 
   // ===== Mobil alt sekme çubuğu =====
+  // Kendi CSS'ini enjekte eder — main.css/site-overrides.css yüklemeyen sayfalarda da
+  // doğru çalışsın (aksi halde stilsiz kalıp ikonlar sayfayı kaplar).
+  function ensureTabbarCss() {
+    if (document.getElementById("gri-tabbar-css")) return;
+    var st = document.createElement("style");
+    st.id = "gri-tabbar-css";
+    st.textContent =
+      ".gri-tabbar{display:none}" +
+      "@media(max-width:640px){" +
+      ".gri-tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:900;" +
+      "background:rgba(250,247,238,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);" +
+      "border-top:1px solid #e6ddca;padding:4px 2px max(4px,env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(60,45,25,.07)}" +
+      ".gri-tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:#8a8172;" +
+      "font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:.02em;padding:6px 2px 3px;border-radius:12px;transition:color .15s,background .15s}" +
+      ".gri-tabbar a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}" +
+      ".gri-tabbar a.on{color:var(--teal,#2C5856)}.gri-tabbar a.on svg{stroke:var(--teal,#2C5856)}" +
+      ".gri-tabbar a:active{background:rgba(44,88,86,.08)}" +
+      "body{padding-bottom:60px}body.app-mode{padding-bottom:70px}}" +
+      ":root[data-theme=\"dark\"] .gri-tabbar,html.dark .gri-tabbar{background:rgba(26,31,37,.96);border-top-color:#2b2f36}" +
+      ":root[data-theme=\"dark\"] .gri-tabbar a,html.dark .gri-tabbar a{color:#9aa3b5}";
+    (document.head || document.documentElement).appendChild(st);
+  }
   function buildTabbar() {
     try {
       var p = (location.pathname || "").toLowerCase();
       if (/deneme|seviye-belirleme|grimeet-oda/.test(p)) return;
       if (document.documentElement.classList.contains("app-mode")) return;
       if (document.querySelector(".gri-tabbar")) return;
+      ensureTabbarCss();
       var file = p.split("/").pop() || "index.html";
       var tabs = [
         { href: "/index.html", label: "Ana Sayfa", match: ["index.html", ""], icon: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },

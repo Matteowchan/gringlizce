@@ -3391,6 +3391,123 @@
   #ucretsiz-moduller .mod-stat span{font-family:var(--font-ui);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
   #ucretsiz-moduller .mod-free{display:inline-flex;align-items:center;gap:6px;margin-top:.4rem;font-family:var(--font-ui);font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--teal);background:var(--teal-soft);padding:.35rem .8rem;border-radius:99px}
 </style>
+<style>
+  /* ===== Gri'yi Keşfet — özellik reel'i ===== */
+  #gri-kesfet{border-top:1px solid var(--line);padding:4.5rem 0;background:linear-gradient(180deg,var(--bg,#f7f1e6),color-mix(in srgb,var(--teal,#2E6E6A) 5%,var(--bg,#f7f1e6)));}
+  #gri-kesfet .wrap{max-width:1120px;margin:0 auto;padding:0 1.4rem;}
+  .grx-head{text-align:center;margin-bottom:2rem;}
+  .grx-head .eyebrow{font-family:var(--font-ui);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold,#B78A2E);font-weight:700;}
+  .grx-head h2{font-family:var(--font-display);font-size:clamp(1.7rem,4vw,2.5rem);margin:.35rem 0 .4rem;color:var(--text,#241c12);}
+  .grx-head p{font-family:var(--font-ui);color:var(--text-muted,#6b6250);font-size:1rem;margin:0;}
+  .grx-reel{position:relative;}
+  .grx-viewport{overflow:hidden;border-radius:22px;border:1px solid var(--line,#e3d8c3);box-shadow:0 18px 50px rgba(40,30,15,.10);background:var(--bg-card,#fff);}
+  .grx-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.15,1);}
+  .grx-slide{flex:0 0 100%;display:grid;grid-template-columns:1.05fr .95fr;min-height:340px;}
+  .grx-stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:2rem;background:linear-gradient(150deg,var(--st1,#2E6E6A),var(--st2,#1E4E4B));}
+  .grx-stage .grx-glow{position:absolute;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.14);filter:blur(30px);top:-60px;right:-60px;}
+  .grx-caption{position:absolute;left:0;right:0;bottom:0;padding:1.4rem 1.4rem 1.1rem;background:linear-gradient(0deg,rgba(15,12,8,.72),rgba(15,12,8,0));color:#fff;font-family:var(--font-ui);font-size:.94rem;line-height:1.45;font-weight:500;letter-spacing:.01em;}
+  .grx-caption b{color:var(--gold-soft,#f0d79b);font-weight:700;}
+  .grx-meta{padding:2.2rem 2.2rem;display:flex;flex-direction:column;justify-content:center;gap:.55rem;}
+  .grx-tag{font-family:var(--font-ui);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--teal,#2E6E6A);}
+  .grx-meta h3{font-family:var(--font-display);font-size:1.55rem;margin:0;color:var(--text,#241c12);}
+  .grx-meta p{font-family:var(--font-ui);color:var(--text-muted,#6b6250);font-size:.95rem;line-height:1.55;margin:.1rem 0 .4rem;}
+  .grx-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:.45rem;font-family:var(--font-ui);font-weight:700;font-size:.9rem;color:#fff;background:var(--teal,#2E6E6A);padding:.6rem 1.2rem;border-radius:99px;text-decoration:none;transition:transform .15s,background .15s;}
+  .grx-cta:hover{transform:translateY(-2px);background:var(--teal-deep,#1E4E4B);}
+  /* mini-mock parçaları */
+  .grx-mock{width:100%;max-width:300px;}
+  .qm{background:#fff;border-radius:14px;padding:1rem 1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.18);}
+  .qm-stem{font-family:var(--font-ui);font-size:.82rem;color:#241c12;margin-bottom:.7rem;line-height:1.35;}
+  .qm-opt{font-family:var(--font-ui);font-size:.82rem;color:#3a3020;border:1px solid #e6ddca;border-radius:9px;padding:.45rem .7rem;margin-bottom:.4rem;background:#faf7f0;}
+  .qm-opt.ok{border-color:#1FA971;background:#e7f6ef;color:#0f7a52;font-weight:700;}
+  .dm{background:#fff;border-radius:14px;padding:1.2rem;box-shadow:0 10px 30px rgba(0,0,0,.18);text-align:center;}
+  .dm-num{font-family:var(--font-display);font-size:2.6rem;font-weight:800;color:var(--teal,#2E6E6A);line-height:1;}
+  .dm-lbl{font-family:var(--font-ui);font-size:.78rem;color:#6b6250;margin-top:.2rem;}
+  .dm-streak{margin-top:.8rem;display:inline-block;font-family:var(--font-ui);font-size:.76rem;font-weight:700;color:#b8620e;background:#fbead2;border-radius:99px;padding:.3rem .8rem;}
+  .lv{display:flex;gap:.5rem;align-items:flex-end;}
+  .lv span{flex:1;text-align:center;font-family:var(--font-ui);font-size:.7rem;color:#fff;opacity:.6;}
+  .lv i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.35);margin-bottom:.4rem;}
+  .lv .on{opacity:1;}.lv .on i{background:var(--gold-soft,#f0d79b);height:26px;}
+  .vg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;width:230px;}
+  .vg div{aspect-ratio:16/11;border-radius:9px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);}
+  .vg .spk{outline:2px solid var(--gold-soft,#f0d79b);}
+  .fc{width:210px;height:130px;border-radius:16px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;}
+  .fc b{font-family:var(--font-display);font-size:1.6rem;color:#241c12;}
+  .fc small{font-family:var(--font-ui);font-size:.72rem;color:#9a8e7b;}
+  .ai{width:270px;font-family:var(--font-ui);}
+  .ai .row{background:rgba(255,255,255,.14);border-radius:9px;padding:.5rem .7rem;font-size:.78rem;color:#fff;margin-bottom:.4rem;}
+  .ai .row.after{background:#fff;color:#241c12;}
+  .ai .row .k{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;opacity:.7;display:block;margin-bottom:.15rem;}
+  .grx-arrow{position:absolute;top:calc(50% - 22px);width:44px;height:44px;border-radius:50%;border:1px solid var(--line,#e3d8c3);background:rgba(255,255,255,.92);color:var(--teal,#2E6E6A);font-size:1.5rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .15s;}
+  .grx-arrow:hover{transform:scale(1.08);}
+  .grx-prev{left:-14px;}.grx-next{right:-14px;}
+  .grx-dots{display:flex;gap:.5rem;justify-content:center;margin-top:1.3rem;}
+  .grx-dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line,#d9cdb4);cursor:pointer;padding:0;transition:width .25s,background .25s;}
+  .grx-dots button.on{width:26px;border-radius:6px;background:var(--gold,#B78A2E);}
+  @media(max-width:760px){
+    .grx-slide{grid-template-columns:1fr;min-height:0;}
+    .grx-stage{min-height:230px;}
+    .grx-meta{padding:1.5rem 1.6rem 1.8rem;}
+    .grx-arrow{display:none;}
+  }
+  @media(prefers-reduced-motion:reduce){.grx-track{transition:none;}}
+</style>
+<section id="gri-kesfet" aria-label="Gri'yi Keşfet">
+  <div class="wrap">
+    <div class="grx-head reveal-scroll">
+      <span class="eyebrow">Rehber</span>
+      <h2>Gri'yi Keşfet</h2>
+      <p>Sitedeki her aracın ne işe yaradığını ve nasıl kullanacağını hızlıca gör.</p>
+    </div>
+    <div class="grx-reel">
+      <div class="grx-viewport"><div class="grx-track" id="grx-track"></div></div>
+      <button class="grx-arrow grx-prev" id="grx-prev" type="button" aria-label="Önceki">‹</button>
+      <button class="grx-arrow grx-next" id="grx-next" type="button" aria-label="Sonraki">›</button>
+      <div class="grx-dots" id="grx-dots" role="tablist" aria-label="Özellikler"></div>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  var track=document.getElementById('grx-track'); if(!track) return;
+  var SL=[
+    { tag:'01 · Çöz', title:'Soru Bankası', desc:'SAT, IELTS, TOEFL, YDS/YDT, IB — binlerce soru. Zorluk seç, çözerken anında Türkçe açıklama al.', cta:'Soru çözmeye başla', href:'soru-bankasi.html', st1:'#2E6E6A', st2:'#1E4E4B', cap:'Zorluk filtresi + <b>anında Türkçe açıklama</b>. Yanlışların otomatik birikir.',
+      mock:'<div class="grx-mock"><div class="qm"><div class="qm-stem">Which choice completes the text?</div><div class="qm-opt">A) despite</div><div class="qm-opt ok">B) because ✓</div><div class="qm-opt">C) although</div></div></div>' },
+    { tag:'02 · Biriktir', title:'Çalışma Masam', desc:'Yanlışların, kelimelerin, yazıların, ödevlerin tek yerde. SRS, tekrar zamanı gelince hatırlatır.', cta:'Masana git', href:'panelim.html', st1:'#B78A2E', st2:'#8A6A1E', cap:'Yanlışların birikir; <b>tekrar zamanı gelince Gri hatırlatır</b> (SRS).',
+      mock:'<div class="grx-mock"><div class="dm"><div class="dm-num">14</div><div class="dm-lbl">soru tekrar bekliyor</div><div class="dm-streak">7 gün seri</div></div></div>' },
+    { tag:'03 · Ölç', title:'Seviye Belirleme', desc:'Nerede olduğunu 20 dakikada öğren; zayıf konularına göre kişisel yol haritası çıkar.', cta:'Seviyeni öğren', href:'seviye-belirleme.html', st1:'#2E5E8A', st2:'#1E3E5C', cap:'Seviyeni ölç, <b>kişisel yol haritanı</b> al.',
+      mock:'<div class="grx-mock"><div class="lv"><span>A1<i></i></span><span>A2<i></i></span><span class="on">B1<i></i></span><span>B2<i></i></span><span>C1<i></i></span></div></div>' },
+    { tag:'04 · Canlı', title:'Gri Meet', desc:'Öğretmeninle canlı görüntülü ders: beyaz tahta, materyal paylaşımı, canlı quiz, breakout odaları.', cta:'Gri Meet\'e bak', href:'grimeet.html', st1:'#6E4A8E', st2:'#493A6E', cap:'Canlı ders: <b>tahta · materyal · quiz · breakout</b>.',
+      mock:'<div class="grx-mock" style="max-width:230px"><div class="vg"><div class="spk"></div><div></div><div></div><div></div></div></div>' },
+    { tag:'05 · Ezberle', title:'Kelime Bankası', desc:'Flashcard\'larla kelime çalış, kendini değerlendir; tekrar ettikçe kelime seviyen yükselir.', cta:'Kelime çalış', href:'kelime-bankasi.html', st1:'#2E6E6A', st2:'#20402B', cap:'Flashcard tekrarı; <b>kelime seviyeni</b> gör.',
+      mock:'<div class="grx-mock" style="max-width:210px"><div class="fc"><b>meticulous</b><small>çevirmek için dokun</small></div></div>' },
+    { tag:'06 · Yaz', title:'Gri AI Araçları', desc:'Yazını rubric\'le değerlendir, humanize et, özetle, paraphrase yap, çevir — hepsi tek panelde.', cta:'Araçları aç', href:'ai-araclari.html', st1:'#8A4A63', st2:'#5C3042', cap:'Değerlendir · <b>humanize</b> · özetle · çevir.',
+      mock:'<div class="grx-mock ai"><div class="row"><span class="k">Önce</span>The utilization of resources was maximized.</div><div class="row after"><span class="k">Sonra · doğal</span>We made the most of what we had.</div></div>' }
+  ];
+  var i=0, timer=null, reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  track.innerHTML=SL.map(function(s){
+    return '<article class="grx-slide"><div class="grx-stage" style="--st1:'+s.st1+';--st2:'+s.st2+'"><div class="grx-glow"></div>'+s.mock+'<div class="grx-caption">'+s.cap+'</div></div>'+
+      '<div class="grx-meta"><div class="grx-tag">'+s.tag+'</div><h3>'+s.title+'</h3><p>'+s.desc+'</p><a class="grx-cta" href="'+s.href+'">'+s.cta+' <span>→</span></a></div></article>';
+  }).join('');
+  var dots=document.getElementById('grx-dots');
+  dots.innerHTML=SL.map(function(_,k){return '<button type="button" role="tab" aria-label="'+(k+1)+'"></button>';}).join('');
+  var dotEls=Array.prototype.slice.call(dots.children);
+  function go(n){ i=(n+SL.length)%SL.length; track.style.transform='translateX(-'+(i*100)+'%)'; dotEls.forEach(function(d,k){d.classList.toggle('on',k===i);}); }
+  function next(){ go(i+1); }
+  function start(){ if(reduce) return; stop(); timer=setInterval(next,4800); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  dotEls.forEach(function(d,k){ d.addEventListener('click',function(){ go(k); start(); }); });
+  document.getElementById('grx-next').addEventListener('click',function(){ go(i+1); start(); });
+  document.getElementById('grx-prev').addEventListener('click',function(){ go(i-1); start(); });
+  var reel=document.querySelector('.grx-reel');
+  reel.addEventListener('mouseenter',stop); reel.addEventListener('mouseleave',start);
+  reel.addEventListener('focusin',stop); reel.addEventListener('focusout',start);
+  // dokunmatik kaydırma
+  var x0=null;
+  track.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; stop(); },{passive:true});
+  track.addEventListener('touchend',function(e){ if(x0===null)return; var dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>40){ go(i+(dx<0?1:-1)); } x0=null; start(); },{passive:true});
+  go(0); start();
+})();
+</script>
 <section id="ucretsiz-moduller" style="border-top:1px solid var(--line);">
   <div class="wrap">
     <div class="section-head reveal-scroll">

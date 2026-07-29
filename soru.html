@@ -2115,9 +2115,15 @@
       const srsMode = params.get('srs') === '1';
       if (srsMode) SET_URL_PARAMS += '&srs=1';
 
+      // Yer imleri modu (?bm=1): set = kullanıcının yer imleri; Sonraki/Önceki bunların arasında gezer
+      const bmMode = params.get('bm') === '1';
+      if (bmMode) SET_URL_PARAMS += '&bm=1';
+
       // SET_KEY identifies this set in sessionStorage
       SET_KEY = srsMode
         ? 'gri.set.srs'
+        : bmMode
+          ? 'gri.set.bookmarks'
         : subcatList.length > 0
           ? 'gri.set.' + subcatList.join(',') + (shuffleParam ? ':shuffle' : '') + (zorluk ? ':d-' + zorluk : '') + (sirala ? ':s-' + sirala : '')
           : null;
@@ -2141,6 +2147,19 @@
           if (setSlugs.length === 0) { showError('Tekrar zamanı gelen soru yok — hepsini tazeledin. 🎉'); return; }
           sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
           // SRS'te cevaplar temizlenmez; tekrar çözünce kuyruk güncellenir
+        }
+      } else if (bmMode) {
+        if (slug && SET_KEY) {
+          const stored = sessionStorage.getItem(SET_KEY);
+          if (stored) { try { setSlugs = JSON.parse(stored); } catch (e) { setSlugs = null; } }
+        }
+        if (!setSlugs || setSlugs.length === 0) {
+          if (!GRI_USER_ID) { showError('Yer imlerini görmek için giriş yapmalısın.'); return; }
+          const { data: bms } = await supabase.from('user_bookmarks').select('question_slug').eq('user_id', GRI_USER_ID);
+          setSlugs = (bms || []).map(function (r) { return r.question_slug; });
+          if (setSlugs.length === 0) { showError('Yer imin yok — bir soruyu açıp yer imine ekle.'); return; }
+          sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
+          // Yer imi modu: çözülenler dışlanmaz (tekrar çözebilirsin).
         }
       } else if (subcatList.length > 0) {
         // Try restoring from sessionStorage (mid-set navigation)

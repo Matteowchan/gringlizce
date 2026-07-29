@@ -2175,13 +2175,16 @@
             });
           }
           setSlugs = rows.map(r => r.slug);
+          // Çözülmüş soruları setten çıkar — öğrenci tekrar aynı soruyu çözmesin.
+          // (Hepsi çözülmüşse tümünü göster ki set boş kalmasın.)
+          const _unsolved = setSlugs.filter(s => !sessionStorage.getItem('gri.answer.' + s));
+          if (_unsolved.length > 0) setSlugs = _unsolved;
           if (shuffleParam && sirala !== 'kolay') shuffleInPlace(setSlugs);
           if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
 
-          // No q in URL → fresh entry, clear stale answers for this set
+          // No q in URL → taze başlangıç; çözülen işaretler KORUNUR (artık silinmiyor).
           if (!slug) {
             isFreshEntry = true;
-            clearAnswersForSet(setSlugs);
           }
         }
       }

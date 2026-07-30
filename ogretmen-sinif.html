@@ -2144,9 +2144,11 @@
         <!-- Reading config -->
         <div class="t-config-block" data-config="reading">
           <div class="t-config-eyebrow">Reading Ayarları</div>
-          <label for="ca-r-url">Okuma Linki (URL)</label>
-          <input type="url" id="ca-r-url" placeholder="https://...">
-          <label for="ca-r-followup">Açıklama / Hedef (Opsiyonel)</label>
+          <label for="ca-r-cat">Kategori</label>
+          <select id="ca-r-cat"></select>
+          <label for="ca-r-page" style="margin-top:.7rem;">Sayfa</label>
+          <select id="ca-r-page"></select>
+          <label for="ca-r-followup" style="margin-top:.7rem;">Açıklama / Hedef (Opsiyonel)</label>
           <textarea id="ca-r-followup" rows="2" maxlength="500" placeholder="Okuduktan sonra 5 anahtar kelime not al"></textarea>
           <p class="t-config-note">Öğrenci okuduğunda "Okudum" butonuyla işaretler.</p>
         </div>
@@ -2169,11 +2171,13 @@
         <!-- Site materyali config -->
         <div class="t-config-block" data-config="material">
           <div class="t-config-eyebrow">Çalışma Materyali</div>
-          <label for="ca-m-url">Bağlantı — site içi sayfa veya URL</label>
-          <input type="text" id="ca-m-url" maxlength="400" placeholder="örn. genel-ingilizce-adult-a2-unite-3.html  ·  https://...">
-          <label for="ca-m-note">Yönerge (Opsiyonel)</label>
+          <label for="ca-m-cat">Kategori</label>
+          <select id="ca-m-cat"></select>
+          <label for="ca-m-page" style="margin-top:.7rem;">Sayfa</label>
+          <select id="ca-m-page"></select>
+          <label for="ca-m-note" style="margin-top:.7rem;">Yönerge (Opsiyonel)</label>
           <textarea id="ca-m-note" rows="2" maxlength="500" placeholder="örn. Bu üniteyi bitir, sonundaki quiz'i çöz"></textarea>
-          <p class="t-config-note">Sitedeki herhangi bir çalışma sayfası, modül, deneme, araç ya da dış bağlantıyı ödev olarak ver. Öğrenci "Aç" ile gider, "Tamamladım" ile işaretler.</p>
+          <p class="t-config-note">Sitedeki bir çalışma sayfasını (ünite, deneme, araç, modül) listeden seç. Öğrenci "Aç" ile gider, "Tamamladım" ile işaretler.</p>
         </div>
 
         <!-- Vocab config -->
@@ -4182,7 +4186,7 @@
           if (cfg.prompt) document.getElementById('ca-w-prompt').value = cfg.prompt;
           if (cfg.min_words) document.getElementById('ca-w-minwords').value = cfg.min_words;
         } else if (tpl.assignment_type === 'reading') {
-          if (cfg.url) document.getElementById('ca-r-url').value = cfg.url;
+          if (cfg.url) selectSitePage(document.getElementById('ca-r-cat'), document.getElementById('ca-r-page'), cfg.url);
           if (cfg.follow_up_note) document.getElementById('ca-r-followup').value = cfg.follow_up_note;
         }
       }
@@ -4343,6 +4347,87 @@
         { exam: 'vocab-flash', label: 'Kelime Bankası · Flashcard (otomatik takip)', kind: 'vocab_flash', units: [
           { name: 'Kelime Bankası (tüm kategoriler)', url: 'kelime-bankasi.html', category: '', count: 20 } ]}
       ];
+      // ---- Site içi sayfa kataloğu (Materyal / Reading seçici — link kutusu yok) ----
+      var GE_UNIT_COUNTS = {
+        '': { A1:19, A2:19, B1:19, B2:19, C1:19, C2:19 },
+        'teen-': { A1:21, A2:19, B1:19, B2:19, C1:19, C2:19 },
+        'junior-': { A1:38, A2:19, B1:19 }
+      };
+      var GE_MOCK_LEVELS = { '': ['A1','A2','B1','B2','C1','C2'], 'teen-': ['A1'], 'junior-': ['A1'] };
+      var GE_AUD_LABEL = { '': 'Yetişkin', 'teen-': 'Teen', 'junior-': 'Junior' };
+      function buildSiteCatalog() {
+        var cats = [];
+        ['', 'teen-', 'junior-'].forEach(function (pfx) {
+          var levels = GE_UNIT_COUNTS[pfx]; if (!levels) return;
+          Object.keys(levels).forEach(function (lv) {
+            var n = levels[lv], pages = [], lvl = lv.toLowerCase();
+            for (var i = 1; i <= n; i++) pages.push({ name: 'Ünite ' + i, url: 'genel-' + pfx + lvl + '-unite-' + i + '.html' });
+            if ((GE_MOCK_LEVELS[pfx] || []).indexOf(lv) !== -1) {
+              pages.push({ name: 'Ara Sınav (Midterm)', url: 'genel-' + pfx + lvl + '-midterm.html' });
+              pages.push({ name: 'Final', url: 'genel-' + pfx + lvl + '-final.html' });
+            }
+            cats.push({ key: 'ge-' + pfx + lv, label: 'Genel İngilizce · ' + GE_AUD_LABEL[pfx] + ' ' + lv, pages: pages });
+          });
+        });
+        cats.push({ key: 'deneme', label: 'Denemeler', pages: [
+          { name: 'IELTS Deneme (genel)', url: 'ielts-deneme.html' },
+          { name: 'IELTS Reading', url: 'ielts-deneme-reading.html' },
+          { name: 'IELTS Listening', url: 'ielts-deneme-listening.html' },
+          { name: 'IELTS Writing', url: 'ielts-deneme-writing.html' },
+          { name: 'SAT Deneme 1', url: 'sat-mock-1.html' }
+        ]});
+        cats.push({ key: 'arac', label: 'Araçlar & Modüller', pages: [
+          { name: 'Soru Bankası', url: 'soru-bankasi.html' },
+          { name: 'Kelime Bankası', url: 'kelime-bankasi.html' },
+          { name: 'Yazı Pratiği', url: 'yazi-pratigi.html' },
+          { name: 'Seviye Belirleme', url: 'seviye-belirleme.html' },
+          { name: 'AI Araçları', url: 'ai-araclari.html' },
+          { name: 'TOEFL Öğren', url: 'toefl-ogren.html' },
+          { name: 'TOEFL Writing', url: 'toefl-writing.html' }
+        ]});
+        return cats;
+      }
+      var SITE_CATALOG = buildSiteCatalog();
+      function siteCat(key) { for (var i = 0; i < SITE_CATALOG.length; i++) if (SITE_CATALOG[i].key === key) return SITE_CATALOG[i]; return SITE_CATALOG[0]; }
+      function autofillSiteTitle(pageSel) {
+        var ttl = document.getElementById('ca-title');
+        var opt = pageSel.selectedOptions && pageSel.selectedOptions[0];
+        if (ttl && opt && (!ttl.value || ttl.dataset.autofill === '1')) {
+          ttl.value = opt.getAttribute('data-name') || '';
+          ttl.dataset.autofill = '1';
+        }
+      }
+      function populateSitePicker(catSel, pageSel, doAutofill) {
+        if (!catSel || !pageSel) return;
+        if (!catSel.options.length) {
+          catSel.innerHTML = SITE_CATALOG.map(function (c) { return '<option value="' + c.key + '">' + esc(c.label) + '</option>'; }).join('');
+        }
+        function fillPages() {
+          var c = siteCat(catSel.value);
+          pageSel.innerHTML = c.pages.map(function (p) { return '<option value="' + esc(p.url) + '" data-name="' + esc(p.name) + '">' + esc(p.name) + '</option>'; }).join('');
+          if (doAutofill) autofillSiteTitle(pageSel);
+        }
+        if (!catSel._wired) {
+          catSel.addEventListener('change', fillPages);
+          if (doAutofill) pageSel.addEventListener('change', function () { autofillSiteTitle(pageSel); });
+          catSel._wired = true;
+        }
+        fillPages();
+      }
+      function selectSitePage(catSel, pageSel, url) {
+        if (!url || !catSel || !pageSel) return;
+        for (var i = 0; i < SITE_CATALOG.length; i++) {
+          for (var j = 0; j < SITE_CATALOG[i].pages.length; j++) {
+            if (SITE_CATALOG[i].pages[j].url === url) {
+              if (!catSel.options.length) populateSitePicker(catSel, pageSel, false);
+              catSel.value = SITE_CATALOG[i].key;
+              populateSitePicker(catSel, pageSel, false);
+              pageSel.value = url;
+              return;
+            }
+          }
+        }
+      }
       function moduleGroup(exam) {
         for (var i = 0; i < MODULE_CATALOG.length; i++) if (MODULE_CATALOG[i].exam === exam) return MODULE_CATALOG[i];
         return MODULE_CATALOG[0];
@@ -4495,6 +4580,8 @@
         if (t === 'questions') { populateCaCategories(document.getElementById('ca-q-cat').value || ''); }
         if (t === 'module') { populateModuleExam(); populateModuleUnits(); }
         if (t === 'ielts_mock') { loadIeltsMocks(); }
+        if (t === 'reading') { populateSitePicker(document.getElementById('ca-r-cat'), document.getElementById('ca-r-page'), true); }
+        if (t === 'material') { populateSitePicker(document.getElementById('ca-m-cat'), document.getElementById('ca-m-page'), true); }
       }
       caTypeBtns.forEach(function (b) {
         b.addEventListener('click', function () { setType(b.dataset.type); });
@@ -4855,9 +4942,12 @@
             secondTitle = title + ' · Task 2';
           }
         } else if (caCurrentType === 'reading') {
-          var url = document.getElementById('ca-r-url').value.trim();
-          if (!url) { caErr.textContent = 'URL boş olamaz.'; return; }
+          var rPageSel = document.getElementById('ca-r-page');
+          var url = rPageSel ? rPageSel.value.trim() : '';
+          if (!url) { caErr.textContent = 'Bir sayfa seç.'; return; }
           config.url = url;
+          var rOpt = rPageSel.selectedOptions && rPageSel.selectedOptions[0];
+          if (rOpt) config.label = rOpt.getAttribute('data-name') || '';
           var followup = document.getElementById('ca-r-followup').value.trim();
           if (followup) config.follow_up_note = followup;
         } else if (caCurrentType === 'ielts_mock') {
@@ -4869,9 +4959,12 @@
           var imOpt = imSel.selectedOptions && imSel.selectedOptions[0];
           config.test_name = imOpt ? (imOpt.getAttribute('data-name') || '') : '';
         } else if (caCurrentType === 'material') {
-          var mUrl = document.getElementById('ca-m-url').value.trim();
-          if (!mUrl) { caErr.textContent = 'Bağlantı boş olamaz.'; return; }
+          var mPageSel = document.getElementById('ca-m-page');
+          var mUrl = mPageSel ? mPageSel.value.trim() : '';
+          if (!mUrl) { caErr.textContent = 'Bir sayfa seç.'; return; }
           config.url = mUrl;
+          var mOpt = mPageSel.selectedOptions && mPageSel.selectedOptions[0];
+          if (mOpt) config.label = mOpt.getAttribute('data-name') || '';
           var mNote = document.getElementById('ca-m-note').value.trim();
           if (mNote) config.note = mNote;
         } else if (caCurrentType === 'vocab') {

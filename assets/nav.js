@@ -36,7 +36,7 @@
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
     "@media(max-width:1200px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
-    ".gri-mmenu.open{display:block;position:fixed;left:0;right:0;top:0;bottom:0;z-index:200;background:var(--gri-nav-bg);overflow-y:auto;-webkit-overflow-scrolling:touch}",
+    ".gri-mmenu.open{display:block;position:fixed;left:0;right:0;top:0;bottom:0;z-index:950;background:var(--gri-nav-bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}",
     ".gri-mmenu .in{max-width:640px;margin:0 auto;padding:0 22px 44px;display:block;height:auto}",
     ".gri-mclose{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--gri-nav-bg);padding:16px 0 12px;border-bottom:1px solid var(--gri-line);margin-bottom:10px;z-index:2}",
     ".gri-mclose .brand{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gri-ink);text-decoration:none;white-space:nowrap}.gri-mclose .brand .it{font-style:italic;color:var(--gri-accent);margin-left:.3em}",

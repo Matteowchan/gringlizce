@@ -4397,7 +4397,15 @@
               pages.push({ name: 'Ara Sınav (Midterm)', url: 'genel-' + pfx + lvl + '-midterm.html' });
               pages.push({ name: 'Final', url: 'genel-' + pfx + lvl + '-final.html' });
             }
-            cats.push({ key: 'ge-' + pfx + lv, label: 'Genel İngilizce · ' + GE_AUD_LABEL[pfx] + ' ' + lv, pages: pages });
+            cats.push({ key: 'ge-' + pfx + lv, label: 'Genel İngilizce Üniteleri · ' + GE_AUD_LABEL[pfx] + ' ' + lv, pages: pages });
+          });
+        });
+        // GE havuz alıştırmaları (lazy — sayfalar seçilince ge_assignments'tan yüklenir, class_assignments'a atanır)
+        ['', 'teen-', 'junior-'].forEach(function (pfx) {
+          var levels = GE_UNIT_COUNTS[pfx]; if (!levels) return;
+          var aud = pfx === '' ? 'adult' : pfx === 'teen-' ? 'teen' : 'junior';
+          Object.keys(levels).forEach(function (lv) {
+            cats.push({ key: 'gepool-' + pfx + lv, label: 'GE Alıştırma (havuz) · ' + GE_AUD_LABEL[pfx] + ' ' + lv, gePool: true, aud: aud, lv: lv, pages: [] });
           });
         });
         cats.push({ key: 'deneme', label: 'Denemeler', pages: [
@@ -4447,6 +4455,17 @@
         }
         function fillPages() {
           var c = siteCat(catSel.value);
+          if (c.gePool) {
+            pageSel.innerHTML = '<option value="">— Yükleniyor… —</option>';
+            loadGePool().then(function () {
+              var items = GE_POOL_ROWS.filter(function (x) { return (x.audience || 'adult') === c.aud && x.level === c.lv; });
+              pageSel.innerHTML = items.length
+                ? items.map(function (x) { return '<option value="gepool:' + esc(x.id) + '" data-name="' + esc(x.title) + '">' + (GE_SKILL_TR[x.skill] || x.skill || '') + ' · Ünite ' + x.unit + ' · ' + esc(x.title) + '</option>'; }).join('')
+                : '<option value="">— Bu seviyede havuz alıştırması yok —</option>';
+              if (doAutofill) autofillSiteTitle(pageSel);
+            });
+            return;
+          }
           pageSel.innerHTML = c.pages.map(function (p) { return '<option value="' + esc(p.url) + '" data-name="' + esc(p.name) + '">' + esc(p.name) + '</option>'; }).join('');
           if (doAutofill) autofillSiteTitle(pageSel);
         }
@@ -5093,14 +5112,18 @@
 
         try {
           var r;
-          if (caCurrentType === 'ge_pool') {
-            var geItemSel = document.getElementById('ca-ge-item');
-            var geId = geItemSel ? geItemSel.value : '';
-            if (!geId) { caErr.textContent = 'Bir alıştırma seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return; }
-            await sb.from('class_assignments').delete().eq('class_id', classId).eq('assignment_id', geId);
-            var geIns = await sb.from('class_assignments').insert({ class_id: classId, assignment_id: geId, due_date: dueIso ? dueIso.slice(0, 10) : null });
+          // GE havuz ödevi: ge_pool tipi VEYA Materyal/Reading'ten 'gepool:<id>' seçimi -> class_assignments
+          var _geId = '';
+          if (caCurrentType === 'ge_pool') { var _gs = document.getElementById('ca-ge-item'); _geId = _gs ? _gs.value : ''; }
+          else if (caCurrentType === 'material') { var _mp = document.getElementById('ca-m-page'); if (_mp && _mp.value.indexOf('gepool:') === 0) _geId = _mp.value.slice(7); }
+          else if (caCurrentType === 'reading') { var _rp = document.getElementById('ca-r-page'); if (_rp && _rp.value.indexOf('gepool:') === 0) _geId = _rp.value.slice(7); }
+          if (_geId) {
+            await sb.from('class_assignments').delete().eq('class_id', classId).eq('assignment_id', _geId);
+            var geIns = await sb.from('class_assignments').insert({ class_id: classId, assignment_id: _geId, due_date: dueIso ? dueIso.slice(0, 10) : null });
             if (geIns.error) throw geIns.error;
             r = { data: null };
+          } else if (caCurrentType === 'ge_pool') {
+            caErr.textContent = 'Bir alıştırma seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return;
           } else if (caCurrentType === 'vocab') {
             r = await sb.rpc('vocab_assignment_create', {
               p_class_id: classId,

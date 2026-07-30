@@ -3844,7 +3844,7 @@
               meta.push('Flashcard');
             } else if (a.type === 'module' && a.config) {
               if (a.config.label) meta.push(a.config.label);
-              meta.push(a.config.kind === 'sat_unit' ? 'Otomatik takip' : 'Aç · işaretle');
+              meta.push(['sat_unit','ogren_spa','drill','vocab_flash'].indexOf(a.config.kind) !== -1 ? 'Otomatik takip' : 'Aç · işaretle');
             }
 
             var descHtml = a.description
@@ -4323,7 +4323,25 @@
         { exam: 'ielts', label: 'IELTS · Öğren Modülleri (otomatik takip)', kind: 'ogren_spa', units: [
           { name: 'IELTS Reading', url: 'ielts-ogren-reading.html', module: 'ielts-ogren-reading', count: 17 },
           { name: 'IELTS Listening', url: 'ielts-ogren-listening.html', module: 'ielts-ogren-listening', count: 12 },
-          { name: 'IELTS Speaking', url: 'ielts-ogren-speaking.html', module: 'ielts-ogren-speaking', count: 22 } ]}
+          { name: 'IELTS Speaking', url: 'ielts-ogren-speaking.html', module: 'ielts-ogren-speaking', count: 22 } ]},
+        // ---- Soru drilleri (user_answers slug-prefix ile otomatik takip) ----
+        { exam: 'drill-satg', label: 'SAT · Dilbilgisi Drill (otomatik takip)', kind: 'drill', units: [
+          { name: 'Dilbilgisi — Standard English Conventions', url: 'sat-grammar-drill.html', slug_prefix: 'gri-mod-satg-', count: 15 } ]},
+        { exam: 'drill-satk', label: 'SAT · Kelime / Words in Context (otomatik takip)', kind: 'drill', units: [
+          { name: 'Kelime — Words in Context', url: 'sat-kelime.html', slug_prefix: 'gri-mod-satk-', count: 15 } ]},
+        { exam: 'drill-satm', label: 'SAT · Math Drill (otomatik takip)', kind: 'drill', units: [
+          { name: 'Math — Konu drilleri', url: 'sat-math.html', slug_prefix: 'gri-mod-satm-', count: 12 } ]},
+        { exam: 'drill-toeflg', label: 'TOEFL · Gramer Drill (otomatik takip)', kind: 'drill', units: [
+          { name: 'TOEFL Gramer', url: 'toefl-grammar-drill.html', slug_prefix: 'gri-mod-toeflg-', count: 10 } ]},
+        { exam: 'drill-yds', label: 'YDS / YÖKDİL · Soru Seti (otomatik takip)', kind: 'drill', units: [
+          { name: 'YDS soru seti (gramer/kelime/bağlaç)', url: 'yds-ogren.html', slug_prefix: 'gri-mod-yds-', count: 15 } ]},
+        { exam: 'drill-ydt', label: 'YDT · Soru Seti (otomatik takip)', kind: 'drill', units: [
+          { name: 'YDT soru seti (gramer/kelime/bağlaç/cloze)', url: 'ydt-ogren.html', slug_prefix: 'gri-mod-ydt-', count: 15 } ]},
+        { exam: 'drill-udsp', label: 'ÜDS / YÖKDİL · Soru Seti (otomatik takip)', kind: 'drill', units: [
+          { name: 'ÜDS soru seti', url: 'udsp-ogren.html', slug_prefix: 'gri-mod-udsp-', count: 15 } ]},
+        // ---- Kelime Bankası flashcard (events vocab_answer ile otomatik takip) ----
+        { exam: 'vocab-flash', label: 'Kelime Bankası · Flashcard (otomatik takip)', kind: 'vocab_flash', units: [
+          { name: 'Kelime Bankası (tüm kategoriler)', url: 'kelime-bankasi.html', category: '', count: 20 } ]}
       ];
       function moduleGroup(exam) {
         for (var i = 0; i < MODULE_CATALOG.length; i++) if (MODULE_CATALOG[i].exam === exam) return MODULE_CATALOG[i];
@@ -4346,8 +4364,8 @@
           return '<option value="' + i + '">' + esc(u.name) + '</option>';
         }).join('');
         if (note) {
-          note.innerHTML = (g.kind === 'sat_unit' || g.kind === 'ogren_spa')
-            ? 'Öğrenci modülü açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; modüldeki dersleri gezip bitirince ödev tamamlanır.'
+          note.innerHTML = (g.kind === 'sat_unit' || g.kind === 'ogren_spa' || g.kind === 'drill' || g.kind === 'vocab_flash')
+            ? 'Öğrenci bu bölümü açıp soruları/kartları çözer. İlerleme <strong>otomatik</strong> takip edilir; hedef sayıya ulaşınca ödev tamamlanmış sayılır.'
             : 'Öğrenci modülü <strong>Aç</strong> ile açar, bitirince <strong>Tamamladım</strong> ile işaretler.';
         }
         fillModuleTitle();
@@ -4878,6 +4896,12 @@
             config.count = mgUnit.count || 1;
           } else if (mgGroup.kind === 'ogren_spa') {
             config.module = mgUnit.module;
+            config.count = mgUnit.count || 1;
+          } else if (mgGroup.kind === 'drill') {
+            config.slug_prefix = mgUnit.slug_prefix;
+            config.count = mgUnit.count || 1;
+          } else if (mgGroup.kind === 'vocab_flash') {
+            config.category = mgUnit.category || '';
             config.count = mgUnit.count || 1;
           }
         }

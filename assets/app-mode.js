@@ -13,8 +13,36 @@
   function init() {
     if (!document.body) return;
     document.body.classList.add('app-mode');
+    injectPurchaseHideCss();
+    hidePurchaseEntries();
     setupCalismaPaketleriModal();
     injectBottomNav();
+  }
+
+  // App (TWA) içinde dijital satın alma girişleri (Shopier token/premium
+  // paketleri) gösterilmez — Google Play ödeme politikasına uyum. Satın
+  // almalar web sürümünde (tarayıcı) yapılır.
+  function injectPurchaseHideCss() {
+    if (document.getElementById('gri-appmode-nopay')) return;
+    var css =
+      'html.app-mode a[href*="shopier.com"]{display:none !important}' +
+      'html.app-mode .gri-pack-grid,html.app-mode .gri-pack-card{display:none !important}';
+    var s = document.createElement('style');
+    s.id = 'gri-appmode-nopay';
+    s.textContent = css;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  // Dinamik yüklenen paywall'lar için: shopier linklerini ve en yakın
+  // kart/bölüm kapsayıcısını gizle (CSS backstop üstüne ek güvence).
+  function hidePurchaseEntries() {
+    try {
+      var links = document.querySelectorAll('a[href*="shopier.com"]');
+      for (var i = 0; i < links.length; i++) {
+        var box = links[i].closest('.gri-pack-card,.gri-pack-grid,.pack-card,.price-card,.urun-card,li') || links[i];
+        box.style.display = 'none';
+      }
+    } catch (e) {}
   }
 
   function setupCalismaPaketleriModal() {

@@ -166,6 +166,8 @@ async function enterRoom(){
   $('#gmr-code').textContent=STATE.room||'·····';
   if(STATE.isHost) $('#gm-app').classList.add('is-host'); else $('#gm-app').classList.add('is-student');
   ensureTile('self',{name:STATE.name+' (Sen)',host:STATE.isHost}); updateGridCount();
+  // Odaya girer girmez kendi kamerani goster (ogrenci admit beklerken de kamera canli kalir).
+  if(STATE.camOn) attachSelf();
   connectLiveKit();
 }
 
@@ -283,6 +285,9 @@ function attachSelf(){
   var v=t.querySelector('video.cam');
   var mirCls='cam'+((STATE.mirror!==false)?' mirror':'');
   if(STATE.camTrack){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; } else { v.className=mirCls; } STATE.camTrack.attach(v); var av=t.querySelector('.avatar'); if(av)av.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
+  // Yayın öncesi (öğrenci bekleme odasında): gate'te açılan preTrack'i self-kutuda göster,
+  // yoksa katılınca kamera "ölmüş" gibi kararır.
+  else if(STATE.preTrack){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; } else { v.className=mirCls; } STATE.preTrack.attach(v); var av3=t.querySelector('.avatar'); if(av3)av3.remove(); if(!v.parentNode)t.insertBefore(v,t.firstChild); }
   else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } else { v.className=mirCls; } }
 }
 

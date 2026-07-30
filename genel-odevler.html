@@ -478,6 +478,7 @@ function render(){
   }
 
   renderLists();
+  if(!window.__teachInit){ window.__teachInit=true; initTeacherAssign(); }
 }
 
 function renderLists(){
@@ -543,6 +544,77 @@ function renderLists(){
     emptyEl.textContent=(SK_F!=='ALL')?(esc(LVL_F)+' seviyesinde bu beceride alıştırma yok. Başka bir beceri ya da seviye seçebilirsin.'):(esc(LVL_F)+' seviyesinde henüz alıştırma yok. Başka bir seviye seçebilir ya da yeni alıştırmaları bekleyebilirsin.');
     emptyEl.style.display='block';
   }
+}
+
+/* ===== Öğretmen: havuzdan doğrudan sınıfa atama (class_assignments köprüsü) ===== */
+var TEACH={on:false,classes:[],sel:null,assigned:{}};
+async function initTeacherAssign(){
+  var sb=window.GRI_SB, uid=window.GRI_UID; if(!sb||!uid)return;
+  try{
+    var pr=await sb.from('profiles').select('role').eq('id',uid).maybeSingle();
+    var role=pr&&pr.data&&pr.data.role;
+    if(role!=='teacher'&&role!=='admin')return;
+    var cr=await sb.rpc('list_my_classes');
+    var classes=(cr&&cr.data)||[];
+    if(!classes.length)return;
+    TEACH.on=true; TEACH.classes=classes; TEACH.sel=classes[0].class_id;
+    renderTeacherBar();
+    await loadClassAssigned();
+    var _origRL=renderLists;
+    renderLists=function(){ _origRL.apply(this,arguments); teacherDecorate(); };
+    teacherDecorate();
+  }catch(e){}
+}
+function renderTeacherBar(){
+  var host=document.getElementById('odPoolWrap'); if(!host||!host.parentNode)return;
+  var bar=document.getElementById('odTeacherBar');
+  if(!bar){ bar=document.createElement('div'); bar.id='odTeacherBar';
+    bar.style.cssText='margin:0 0 16px;padding:12px 14px;border:1px solid var(--line,#E3D8C5);border-radius:12px;background:var(--teal-soft,rgba(44,88,86,.08));display:flex;gap:10px;align-items:center;flex-wrap:wrap';
+    host.parentNode.insertBefore(bar,host);
+  }
+  var opts=TEACH.classes.map(function(c){return '<option value="'+esc(c.class_id)+'">'+esc(c.name)+'</option>';}).join('');
+  bar.innerHTML='<strong style="font-size:14px">Öğretmen · Havuzdan Ata</strong>'+
+    '<span style="font-size:13px;color:var(--text-muted,#6B6862)">Sınıf:</span>'+
+    '<select id="odTeachClass" style="padding:6px 10px;border-radius:8px;border:1px solid var(--line,#D9D2C4);background:var(--bg-card,#fff);color:var(--text,#1A2230)">'+opts+'</select>'+
+    '<span style="font-size:12px;color:var(--text-muted,#6B6862)">Kartlardaki "Sınıfa Ata" ile ekle/kaldır. Atananları öğrenci "Öğretmenin Atadıkları"nda görür.</span>';
+  var sel=document.getElementById('odTeachClass');
+  if(sel)sel.addEventListener('change',function(){ TEACH.sel=this.value; loadClassAssigned().then(teacherDecorate); });
+}
+async function loadClassAssigned(){
+  TEACH.assigned={};
+  try{
+    var r=await window.GRI_SB.from('class_assignments').select('assignment_id').eq('class_id',TEACH.sel);
+    if(r&&r.data)r.data.forEach(function(x){TEACH.assigned[x.assignment_id]=true;});
+  }catch(e){}
+}
+function teacherDecorate(){
+  if(!TEACH.on)return;
+  var cards=document.querySelectorAll('#odPool .od-card, #odAssigned .od-card');
+  for(var i=0;i<cards.length;i++){(function(card){
+    var href=card.getAttribute('href')||''; var m=href.split('id='); var id=m[1]?decodeURIComponent(m[1]):'';
+    if(!id)return;
+    var old=card.querySelector('.od-teach-btn'); if(old)old.remove();
+    var on=!!TEACH.assigned[id];
+    var btn=document.createElement('button'); btn.type='button'; btn.className='od-teach-btn';
+    btn.textContent=on?'✓ Atandı — kaldır':'Sınıfa Ata';
+    btn.style.cssText='position:absolute;top:8px;right:8px;z-index:5;padding:6px 11px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);'+(on?'background:#3c825a;color:#fff':'background:var(--teal,#2C5856);color:#fff');
+    if(getComputedStyle(card).position==='static')card.style.position='relative';
+    btn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); toggleAssign(id,btn); });
+    card.appendChild(btn);
+  })(cards[i]);}
+}
+async function toggleAssign(id,btn){
+  var sb=window.GRI_SB; if(!sb||!TEACH.sel)return; btn.disabled=true;
+  try{
+    if(TEACH.assigned[id]){
+      await sb.from('class_assignments').delete().eq('class_id',TEACH.sel).eq('assignment_id',id);
+      delete TEACH.assigned[id];
+    }else{
+      await sb.from('class_assignments').insert({class_id:TEACH.sel,assignment_id:id});
+      TEACH.assigned[id]=true;
+    }
+  }catch(e){ alert('İşlem başarısız oldu, tekrar dene.'); }
+  btn.disabled=false; teacherDecorate();
 }
 
 /* audience switch (Adult/Teen/Junior) — ana IIFE içinde: AUD_F/render/ASGS erişilebilir */

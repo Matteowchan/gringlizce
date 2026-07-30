@@ -2032,6 +2032,10 @@
               <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
               <span><span class="t-type-name">Modül</span><span class="t-type-hint">Öğren ünitesi · otomatik</span></span>
             </button>
+            <button type="button" class="t-type-btn" data-type="ge_pool">
+              <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+              <span><span class="t-type-name">Genel İngilizce</span><span class="t-type-hint">Havuz alıştırması</span></span>
+            </button>
           </div>
           <div class="ca-rail-label" style="margin-top:1.1rem;">Şablon</div>
           <div class="ca-template-bar" id="ca-tpl-bar">
@@ -2206,6 +2210,18 @@
           <label for="ca-mod-unit" style="margin-top:.7rem;">Ünite</label>
           <select id="ca-mod-unit"></select>
           <p class="t-config-note" id="ca-mod-note">Öğrenci üniteyi açar, ders anlatımlarını okuyup alıştırmalarını yapar. İlerleme <strong>otomatik</strong> takip edilir; ünitedeki tüm dersleri bitirince ödev tamamlanır.</p>
+        </div>
+
+        <!-- Genel İngilizce havuz ödevi config -->
+        <div class="t-config-block" data-config="ge_pool">
+          <div class="t-config-eyebrow">Genel İngilizce · Havuz Alıştırması</div>
+          <label for="ca-ge-level">Seviye</label>
+          <select id="ca-ge-level"></select>
+          <label for="ca-ge-skill" style="margin-top:.7rem;">Beceri</label>
+          <select id="ca-ge-skill"></select>
+          <label for="ca-ge-item" style="margin-top:.7rem;">Alıştırma</label>
+          <select id="ca-ge-item"></select>
+          <p class="t-config-note">Genel İngilizce havuzundan (gramer/okuma/dinleme/yazma/kelime) bir alıştırma seç. Öğrenci çözer, otomatik puanlanır; istersen ayrıca değerlendirirsin.</p>
         </div>
 
         </div><!-- /.ca-main -->
@@ -4594,6 +4610,50 @@
         if (t === 'ielts_mock') { loadIeltsMocks(); }
         if (t === 'reading') { populateSitePicker(document.getElementById('ca-r-cat'), document.getElementById('ca-r-page'), true); }
         if (t === 'material') { populateSitePicker(document.getElementById('ca-m-cat'), document.getElementById('ca-m-page'), true); }
+        if (t === 'ge_pool') { populateGePool(); }
+      }
+      // ---- Genel İngilizce havuz ödevi seçici (ge_assignments -> class_assignments) ----
+      var GE_POOL_ROWS = [];
+      var GE_AUD_TR = { adult: 'Yetişkin', teen: 'Teen', junior: 'Junior' };
+      var GE_SKILL_TR = { grammar: 'Gramer', reading: 'Okuma', listening: 'Dinleme', writing: 'Yazma', vocab: 'Kelime', mixed: 'Karma' };
+      async function loadGePool() {
+        if (GE_POOL_ROWS.length) return GE_POOL_ROWS;
+        try {
+          var r = await sb.from('ge_assignments').select('id,audience,level,unit,title,skill,content').eq('active', true).order('level').order('unit');
+          GE_POOL_ROWS = (r && r.data) || [];
+          GE_POOL_ROWS.forEach(function (x) { if (!x.skill && x.content && x.content.skill) x.skill = x.content.skill; });
+        } catch (e) { GE_POOL_ROWS = []; }
+        return GE_POOL_ROWS;
+      }
+      function autofillGeTitle() {
+        var itSel = document.getElementById('ca-ge-item'), ttl = document.getElementById('ca-title');
+        var opt = itSel && itSel.selectedOptions && itSel.selectedOptions[0];
+        if (ttl && opt && opt.value && (!ttl.value || ttl.dataset.autofill === '1')) { ttl.value = opt.getAttribute('data-name') || ''; ttl.dataset.autofill = '1'; }
+      }
+      async function populateGePool() {
+        await loadGePool();
+        var lvlSel = document.getElementById('ca-ge-level'), skSel = document.getElementById('ca-ge-skill'), itSel = document.getElementById('ca-ge-item');
+        if (!lvlSel || !skSel || !itSel) return;
+        if (!lvlSel.options.length) {
+          var seen = {}, opts = [];
+          GE_POOL_ROWS.forEach(function (x) { var aud = x.audience || 'adult'; var key = aud + '|' + x.level; if (!seen[key]) { seen[key] = 1; opts.push({ key: key, label: (GE_AUD_TR[aud] || aud) + ' ' + x.level, aud: aud, lv: x.level }); } });
+          var audOrd = { adult: 0, teen: 1, junior: 2 }, lvOrd = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+          opts.sort(function (a, b) { return (audOrd[a.aud] - audOrd[b.aud]) || ((lvOrd[a.lv] || 9) - (lvOrd[b.lv] || 9)); });
+          lvlSel.innerHTML = opts.map(function (o) { return '<option value="' + esc(o.key) + '">' + esc(o.label) + '</option>'; }).join('');
+        }
+        if (!skSel.options.length) {
+          skSel.innerHTML = '<option value="">Tümü</option>' + Object.keys(GE_SKILL_TR).map(function (k) { return '<option value="' + k + '">' + GE_SKILL_TR[k] + '</option>'; }).join('');
+        }
+        function fillItems() {
+          var kv = (lvlSel.value || '').split('|'), aud = kv[0], lv = kv[1], sk = skSel.value;
+          var items = GE_POOL_ROWS.filter(function (x) { return (x.audience || 'adult') === aud && x.level === lv && (!sk || x.skill === sk); });
+          itSel.innerHTML = items.length
+            ? items.map(function (x) { return '<option value="' + esc(x.id) + '" data-name="' + esc(x.title) + '">Ünite ' + x.unit + ' · ' + (GE_SKILL_TR[x.skill] || x.skill || '') + ' · ' + esc(x.title) + '</option>'; }).join('')
+            : '<option value="">— Bu filtrede alıştırma yok —</option>';
+          autofillGeTitle();
+        }
+        if (!lvlSel._geWired) { lvlSel.addEventListener('change', fillItems); skSel.addEventListener('change', fillItems); itSel.addEventListener('change', autofillGeTitle); lvlSel._geWired = true; }
+        fillItems();
       }
       caTypeBtns.forEach(function (b) {
         b.addEventListener('click', function () { setType(b.dataset.type); });
@@ -5018,7 +5078,15 @@
 
         try {
           var r;
-          if (caCurrentType === 'vocab') {
+          if (caCurrentType === 'ge_pool') {
+            var geItemSel = document.getElementById('ca-ge-item');
+            var geId = geItemSel ? geItemSel.value : '';
+            if (!geId) { caErr.textContent = 'Bir alıştırma seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return; }
+            await sb.from('class_assignments').delete().eq('class_id', classId).eq('assignment_id', geId);
+            var geIns = await sb.from('class_assignments').insert({ class_id: classId, assignment_id: geId, due_date: dueIso ? dueIso.slice(0, 10) : null });
+            if (geIns.error) throw geIns.error;
+            r = { data: null };
+          } else if (caCurrentType === 'vocab') {
             r = await sb.rpc('vocab_assignment_create', {
               p_class_id: classId,
               p_title: title,

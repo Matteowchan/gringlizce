@@ -220,22 +220,29 @@ async function connectLiveKit(){
 async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
   if(STATE.micOn) setTimeout(applyNoiseFilter,700);
-  // Gate'te hazırlanan track'i (kamera + seçili arka plan) doğrudan yayına taşı — kamera yeniden açılmaz.
-  if(STATE.camOn && STATE.preTrack){
+  var lp=STATE.lkRoom.localParticipant;
+  // ARKA PLANSIZ: gate track'ini doğrudan yayına taşı (kamera yeniden açılmaz, anlık).
+  if(STATE.camOn && STATE.preTrack && !STATE._bgApplied){
     try{
-      await STATE.lkRoom.localParticipant.publishTrack(STATE.preTrack,{source:LK.Track.Source.Camera});
+      await lp.publishTrack(STATE.preTrack,{source:LK.Track.Source.Camera});
       STATE.camTrack=STATE.preTrack; STATE.preTrack=null; attachSelf();
     }catch(e){
+      // Devir başarısızsa eski track'i MUTLAKA durdur — yoksa kamera meşgul kalır ve yeni track siyah gelir.
+      try{ STATE.preTrack.stop(); }catch(_){}
       STATE.preTrack=null;
-      try{ await STATE.lkRoom.localParticipant.setCameraEnabled(true); }catch(e2){}
-      var cp0=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
+      try{ await lp.setCameraEnabled(true); }catch(e2){}
+      var cp0=lp.getTrackPublication(LK.Track.Source.Camera);
       if(cp0&&cp0.videoTrack){ STATE.camTrack=cp0.videoTrack; attachSelf(); scheduleAutoBg(); }
     }
   } else {
-    try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
+    // ARKA PLAN SEÇİLİYSE (veya hazır track yoksa): işlenmiş pre-track'i BIRAK (cihazı serbest bırak),
+    // kamerayı taze aç, sonra arka planı yeni track'e yeniden uygula. İşlenmiş track'i taşımak kırılgan → siyah.
+    if(STATE.preTrack){ try{ STATE.preTrack.stop(); }catch(_){} STATE.preTrack=null; await new Promise(function(r){ setTimeout(r,180); }); }
+    try{ await lp.setCameraEnabled(STATE.camOn); }catch(e){}
     if(STATE.camOn){ try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); }catch(e){}
-      var camPub=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera);
-      if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf(); scheduleAutoBg(); } }
+      var camPub=lp.getTrackPublication(LK.Track.Source.Camera);
+      if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf();
+        if(STATE._bgApplied && STATE.bg && STATE.bg!=='none'){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
   }
   try{ if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
 }

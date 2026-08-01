@@ -127,6 +127,7 @@
   }
 
   async function logout() {
+    intentionalSignOut = true;
     try { await sb.auth.signOut(); } catch (e) {}
     clearCache();
   }
@@ -177,6 +178,113 @@
     return auth;
   }
 
+  /* ============================================================
+     PROAKTİF OTURUM KORUMASI
+     ------------------------------------------------------------
+     Panel sayfalarında token süresi dolunca RPC/SELECT'ler anon
+     rolüyle gidip "permission denied" veriyor ya da sayfa boş
+     kalıyordu. Aşağıdaki blok token'ı süresi dolmadan yeniler,
+     yenilenemezse (refresh token ölü) kullanıcıyı zorla çıkarmadan
+     üst bir bildirim şeridiyle uyarır.
+     ============================================================ */
+
+  window.GRI_SESSION_OK = true;      // sayfalar isterse kontrol edebilsin
+  var intentionalSignOut = false;    // logout() sırasında "süre doldu" uyarısı çıkmasın
+  var hadSession = false;            // bu sayfada hiç geçerli oturum gördük mü
+
+  function hideSessionExpiredBar() {
+    var b = (typeof document !== 'undefined') && document.getElementById('gri-session-bar');
+    if (b && b.parentNode) b.parentNode.removeChild(b);
+  }
+
+  function showSessionExpiredBar() {
+    if (typeof document === 'undefined') return;
+    var build = function () {
+      if (document.getElementById('gri-session-bar')) return;
+      var ret = encodeURIComponent(window.location.pathname + window.location.search);
+      var bar = document.createElement('div');
+      bar.id = 'gri-session-bar';
+      bar.setAttribute('role', 'alert');
+      // Kendi stilini enjekte eder — main.css'e güvenmez (paylaşılan JS kuralı).
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483000;' +
+        'background:#b91c1c;color:#fff;' +
+        'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;' +
+        'font-size:14px;line-height:1.45;padding:10px 44px 10px 14px;text-align:center;' +
+        'box-shadow:0 2px 10px rgba(0,0,0,.28);';
+      bar.innerHTML =
+        '<span style="vertical-align:middle;">Oturumunun süresi doldu — veriler görüntülenemeyebilir. </span>' +
+        '<a href="/giris.html?return=' + ret + '" style="color:#fff;font-weight:700;' +
+        'text-decoration:underline;vertical-align:middle;margin:0 4px;">Tekrar giriş yap</a>' +
+        '<button type="button" id="gri-session-bar-x" aria-label="Kapat" style="position:absolute;' +
+        'top:50%;right:12px;transform:translateY(-50%);background:transparent;border:0;color:#fff;' +
+        'font-size:20px;line-height:1;cursor:pointer;padding:0 4px;">&times;</button>';
+      document.body.appendChild(bar);
+      var x = document.getElementById('gri-session-bar-x');
+      if (x) x.onclick = function () { hideSessionExpiredBar(); };
+    };
+    if (document.body) build();
+    else document.addEventListener('DOMContentLoaded', build);
+  }
+
+  // getSession → süresi yakın/geçmişse refreshSession. Ağ hatasında agresif olma.
+  async function ensureFreshSession() {
+    var resp;
+    try { resp = await sb.auth.getSession(); }
+    catch (e) { return true; } // geçici ağ sorunu; oturumu geçersiz sayma
+
+    var session = resp && resp.data && resp.data.session;
+    if (!session) {
+      // Hiç oturum yoksa: giriş yapmamış (public) kullanıcı olabilir → uyarı gösterme.
+      // Ama daha önce oturum vardıysa (silinmiş) → uyar.
+      if (hadSession) { window.GRI_SESSION_OK = false; showSessionExpiredBar(); }
+      return false;
+    }
+
+    hadSession = true;
+    var now = Math.floor(Date.now() / 1000);
+    var exp = session.expires_at || 0;
+
+    if (exp - now < 120) { // 2 dk kala (ya da geçmişse) proaktif yenile
+      var rr;
+      try { rr = await sb.auth.refreshSession(); }
+      catch (e) { return true; } // ağ sorunu olabilir; bir sonraki tetikte tekrar dene
+      if (rr && rr.error || !(rr && rr.data && rr.data.session)) {
+        // Refresh token ölü → yenilenemez. Zorla logout YOK, sadece uyar.
+        window.GRI_SESSION_OK = false;
+        showSessionExpiredBar();
+        return false;
+      }
+    }
+    window.GRI_SESSION_OK = true;
+    hideSessionExpiredBar();
+    return true;
+  }
+
+  // Oturum durumu değişimlerini dinle
+  try {
+    sb.auth.onAuthStateChange(function (event, session) {
+      if (event === 'TOKEN_REFRESHED') {
+        window.GRI_SESSION_OK = true; hadSession = true; hideSessionExpiredBar();
+      } else if (event === 'SIGNED_IN') {
+        window.GRI_SESSION_OK = true; hadSession = true; hideSessionExpiredBar();
+      } else if (event === 'SIGNED_OUT') {
+        window.GRI_SESSION_OK = false;
+        if (hadSession && !intentionalSignOut) showSessionExpiredBar();
+      }
+    });
+  } catch (e) {}
+
+  // Sekme tekrar öne gelince + periyodik olarak oturumu canlı tut (sessiz)
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') { ensureFreshSession(); }
+    });
+  }
+  try { setInterval(function () { ensureFreshSession(); }, 50 * 60 * 1000); } catch (e) {}
+
+  // Sayfa yüklenince ilk proaktif kontrol
+  ensureFreshSession();
+
   window.GriAuth = {
     verify: verify,
     getOwnedProducts: getOwnedProducts,
@@ -187,6 +295,8 @@
     refreshCache: refreshCache,
     sendPasswordReset: sendPasswordReset,
     updatePassword: updatePassword,
+    ensureFreshSession: ensureFreshSession,
+    showSessionExpiredBar: showSessionExpiredBar,
     supabase: sb
   };
 })();

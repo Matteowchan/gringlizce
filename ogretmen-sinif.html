@@ -2644,6 +2644,18 @@
         var sub = document.querySelector('#modal-create-assign .modal-sub');
         if (sub) { sub.innerHTML = '<b style="color:var(--teal,#2C5856);">Zayıf konu hedefi:</b> ' + (exam || '').toUpperCase() + ' · ' + esc(label || category) + ' — soru bankası ödevi olarak ekle.'; }
       }
+      // sb.rpc bazen (süresi dolmuş oturum / refresh takılması) hiç dönmez -> sonsuz "Yükleniyor".
+      // Zaman aşımı ile net, uygulanabilir mesaj göster.
+      function withTimeout(promise, ms, label) {
+        return Promise.race([
+          promise,
+          new Promise(function (_, reject) {
+            setTimeout(function () {
+              reject(new Error((label || 'İstek') + ' zaman aşımına uğradı. Oturumun takılmış olabilir — sayfayı yenile (Ctrl+Shift+R), düzelmezse çıkış yapıp tekrar giriş yap.'));
+            }, ms);
+          })
+        ]);
+      }
       function mountStudentAnalysis(studentId) {
         var el = document.getElementById('sd-panel-analiz');
         if (!el) { return; }
@@ -2657,9 +2669,9 @@
         document.body.style.overflow = 'hidden';
 
         try {
-          var r = await sb.rpc('student_class_detail', {
+          var r = await withTimeout(sb.rpc('student_class_detail', {
             p_class_id: classId, p_student_id: studentId
-          });
+          }), 12000, 'Öğrenci detayı');
           if (r.error) throw r.error;
           renderStudentDetail(r.data || {}, studentId);
         } catch (err) {
@@ -2986,7 +2998,7 @@
         target.hidden = false; btn.classList.add('open'); btn.textContent = 'Gizle';
         if (target.dataset.loaded === '1') return;
         inner.innerHTML = '<p class="qd-empty">Yükleniyor…</p>';
-        sb.rpc('assignment_student_detail', { p_assignment_id: btn.dataset.aid, p_student_id: btn.dataset.sid })
+        withTimeout(sb.rpc('assignment_student_detail', { p_assignment_id: btn.dataset.aid, p_student_id: btn.dataset.sid }), 12000, 'Öğrenci detayı')
           .then(function (r) {
             if (r.error) throw r.error;
             var d = r.data || {};
@@ -4227,7 +4239,7 @@
         document.body.style.overflow = 'hidden';
 
         try {
-          var r = await sb.rpc('assignment_progress', { p_assignment_id: assignmentId });
+          var r = await withTimeout(sb.rpc('assignment_progress', { p_assignment_id: assignmentId }), 12000, 'Ödev ilerlemesi');
           if (r.error) throw r.error;
           var progress = r.data || [];
 

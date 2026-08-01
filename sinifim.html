@@ -2439,6 +2439,7 @@
     .my-assign-type.type-material  { background: rgba(44,88,86,0.14); color: #2C5856; }
     .my-assign-type.type-vocab     { background: rgba(200,154,60,0.16); color: #7d5f24; }
     .my-assign-type.type-module    { background: rgba(90,70,150,0.15); color: #5a4696; }
+    .my-assign-type.type-ge        { background: rgba(60,110,160,0.14); color: #2f5f86; }
 
     .my-assign-meta {
       font-family: var(--font-ui, Inter), system-ui, sans-serif;
@@ -3009,8 +3010,81 @@
           vocab:     'Kelime',
           ielts_mock: 'Deneme',
           material:  'Materyal',
-          module:    'Modül'
+          module:    'Modül',
+          ge:        'Genel İngilizce'
         };
+
+        var GE_SKILL_TR = { grammar: 'Gramer', listening: 'Dinleme', reading: 'Okuma', writing: 'Yazma', vocab: 'Kelime' };
+
+        function hasGeDraft(id) {
+          try {
+            var raw = localStorage.getItem('ga_' + id + '_state');
+            if (!raw) return false;
+            var s = JSON.parse(raw);
+            if (s && s.a) { for (var k in s.a) { if (s.a.hasOwnProperty(k)) return true; } }
+          } catch (e) {}
+          return false;
+        }
+
+        // GE havuz atamaları (class_assignments → ge_assignments) → birleşik karta normalize et
+        async function loadGeItems(classNameMap) {
+          try {
+            var gs = await sbCli.rpc('ge_student_class_state');
+            var st = gs && gs.data;
+            if (!st || !st.in_class || !st.assignments || !st.assignments.length) return [];
+            var dueById = {}, ids = [];
+            st.assignments.forEach(function (x) {
+              if (x && x.assignment_id) {
+                ids.push(x.assignment_id);
+                dueById[x.assignment_id] = (typeof x.due_date === 'string' && x.due_date) ? x.due_date : null;
+              }
+            });
+            if (!ids.length) return [];
+            var det = await sbCli.from('ge_assignments').select('id,level,unit,title,description,skill,audience').in('id', ids);
+            var rows = (det && det.data) || [];
+            var subMap = {};
+            try {
+              var subs = await sbCli.from('ge_submissions')
+                .select('assignment_id,teacher_feedback,teacher_grade')
+                .eq('task_type', 'assignment').in('assignment_id', ids);
+              (((subs && subs.data)) || []).forEach(function (s) {
+                if (!s.assignment_id) return;
+                var cur = subMap[s.assignment_id];
+                if (!cur || s.teacher_grade || s.teacher_feedback) subMap[s.assignment_id] = s;
+              });
+            } catch (e) {}
+            var cname = (st.class_id && classNameMap[st.class_id]) || 'Genel İngilizce';
+            var now = new Date();
+            return rows.map(function (a) {
+              var due = dueById[a.id] || null;
+              var sub = subMap[a.id];
+              var done = false, label = 'Başlanmadı', cls = 'new', grade = null;
+              if (sub) {
+                if (sub.teacher_grade || sub.teacher_feedback) { done = true; label = 'Değerlendirildi'; cls = 'graded'; grade = sub.teacher_grade || null; }
+                else { done = true; label = 'Gönderildi'; cls = 'sent'; }
+              } else if (hasGeDraft(a.id)) { label = 'Devam ediyor'; cls = 'prog'; }
+              return {
+                assignment_id: a.id,
+                class_id: st.class_id || '',
+                class_name: cname,
+                type: 'ge',
+                title: a.title || 'Ödev',
+                description: a.description || '',
+                config: {},
+                due_date: due,
+                status: done ? 'completed' : (cls === 'prog' ? 'in_progress' : 'pending'),
+                progress_current: done ? 1 : 0,
+                progress_target: 1,
+                is_overdue: !!(due && new Date(due) < now && !done),
+                _geSkill: a.skill || '',
+                _geLevel: a.level || '',
+                _geUnit: a.unit,
+                _geLabel: label,
+                _geGrade: grade
+              };
+            });
+          } catch (e) { return []; }
+        }
 
         function escMA(s) {
           if (s == null) return '';
@@ -3066,13 +3140,21 @@
           try {
             var res = await sbCli.rpc('list_my_assignments');
             if (res.error) throw res.error;
-            var assignments = res.data || [];
+            var baseAssignments = res.data || [];
+
+            // Sınıf adı haritası + kayıtlı sınıf var mı (GE kartlarının sınıf adı için de gerekli)
+            var classRes = await sbCli.rpc('list_my_classes_student');
+            var classes = (classRes && classRes.data) || [];
+            var classNameMap = {};
+            classes.forEach(function (c) { classNameMap[c.class_id] = c.name; });
+
+            // GE havuz atamalarını da çek ve tek listede birleştir
+            var geItems = await loadGeItems(classNameMap);
+            var assignments = baseAssignments.concat(geItems);
 
             if (assignments.length === 0) {
               // Sadece kayıtlı sınıfı varsa "Ödevlerim" zone göster
-              var classRes = await sbCli.rpc('list_my_classes_student');
-              var hasClasses = classRes && classRes.data && classRes.data.length > 0;
-              if (hasClasses) {
+              if (classes.length > 0) {
                 section.style.display = '';
                 list.innerHTML = '';
                 empty.style.display = 'flex';
@@ -3081,6 +3163,20 @@
               }
               return;
             }
+
+            // Sırala: gecikmiş → yaklaşan son-tarihli → süresiz → tamamlananlar sona
+            function grpOf(x) {
+              if (x.status === 'completed') return 3;
+              var due = (typeof x.due_date === 'string' && x.due_date) ? x.due_date : null;
+              if (due) return x.is_overdue ? 0 : 1;
+              return 2;
+            }
+            assignments.sort(function (a, b) {
+              var ga = grpOf(a), gb = grpOf(b);
+              if (ga !== gb) return ga - gb;
+              if (ga === 0 || ga === 1) return new Date(a.due_date) - new Date(b.due_date);
+              return 0;
+            });
 
             section.style.display = '';
             empty.style.display = 'none';
@@ -3093,8 +3189,10 @@
 
               var meta = [];
               meta.push('<span class="class-name">' + escMA(a.class_name) + '</span>');
-              if (a.due_date) {
+              if (typeof a.due_date === 'string' && a.due_date) {
                 meta.push('<span class="' + (isOverdue ? 'overdue-tag' : '') + '">Son: ' + escMA(fmtDueMA(a.due_date)) + '</span>');
+              } else {
+                meta.push('<span style="opacity:.65;">Süresiz</span>');
               }
 
               var descHtml = a.description
@@ -3214,6 +3312,17 @@
                       + '<span class="my-assign-completed-pill">Tamamlandı</span>'
                       + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
                   }
+                }
+              } else if (a.type === 'ge') {
+                if (a._geSkill && GE_SKILL_TR[a._geSkill]) meta.push(GE_SKILL_TR[a._geSkill]);
+                if (a._geLevel) meta.push(escMA(a._geLevel) + (a._geUnit != null ? ' · Ünite ' + escMA(a._geUnit) : ''));
+                var geUrl = 'odev.html?id=' + encodeURIComponent(a.assignment_id);
+                if (isCompleted) {
+                  actionsHtml = ''
+                    + '<span class="my-assign-completed-pill">' + escMA(a._geLabel) + (a._geGrade ? ' · Not: ' + escMA(a._geGrade) : '') + '</span>'
+                    + '<a href="' + escMA(geUrl) + '" class="my-assign-btn outline">Görüntüle →</a>';
+                } else {
+                  actionsHtml = '<a href="' + escMA(geUrl) + '" class="my-assign-btn">' + (a.status === 'in_progress' ? 'Devam Et →' : 'Ödeve Git →') + '</a>';
                 }
               }
 

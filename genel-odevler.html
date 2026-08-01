@@ -342,6 +342,7 @@ function fmtDate(d){
 }
 function dueInfo(due){
   if(!due)return null;
+  if(typeof due!=='string'&&typeof due!=='number')return null; // true/obj gelirse 1970'e düşme
   var dt=new Date(due);
   if(isNaN(dt.getTime()))return null;
   dt.setHours(23,59,59,999);
@@ -373,7 +374,7 @@ function cardHtml(a,st,due,locked){
 
 function makeCard(a,assignedMap,locked){
   var st=statusOf(a);
-  var due=assignedMap&&assignedMap[a.id]?dueInfo(assignedMap[a.id]):null;
+  var due=(assignedMap&&typeof assignedMap[a.id]==='string')?dueInfo(assignedMap[a.id]):null;
   var el;
   if(locked){
     el=document.createElement('div');

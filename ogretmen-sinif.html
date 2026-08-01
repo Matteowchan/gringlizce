@@ -23,6 +23,7 @@
   <script src="assets/student-analysis.js?v=3" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
+  <script src="assets/gri-cat.js"></script>
   <script src="assets/site-config.js" defer></script>
   <style>
     /* ============ Shared with ogretmen.html ============ */
@@ -742,6 +743,10 @@
     .qd-meta .qd-ans-wrong { color: #c0453b; font-weight: 600; }
     .qd-meta .qd-ans-right { color: #2e8b57; font-weight: 600; }
     .qd-empty { color: var(--text-muted); font-style: italic; text-align: center; padding: 0.6rem; }
+    .qd-open { margin-left: auto; font-size: 0.8rem; font-weight: 600; color: var(--teal, #2C5856); text-decoration: none; white-space: nowrap; }
+    .qd-open:hover { text-decoration: underline; }
+    a.qd-item.qd-link { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
+    a.qd-item.qd-link:hover { border-color: var(--teal, #2C5856); background: rgba(44,88,86,0.05); }
     .ad-email {
       color: var(--text);
       min-width: 0;
@@ -1782,7 +1787,8 @@
     #ks-schedule-wrap h2{ font-family:var(--font-display,Georgia),serif; }
     /* Modern Panel hero */
     .ks-hero-panel{ display:flex; align-items:flex-start; gap:1.15rem; background:#fff; border:1px solid #ece4d4; border-radius:22px; box-shadow:0 8px 26px rgba(30,25,20,.07); padding:1.5rem 1.6rem; flex-wrap:wrap; }
-    .ks-hero-badge{ width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,#2C5856,#3a726e); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display,Georgia),serif; font-size:1.55rem; font-weight:600; letter-spacing:.01em; flex-shrink:0; box-shadow:0 6px 16px rgba(44,88,86,.30); }
+    .ks-hero-badge{ width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,#2C5856,#3a726e); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display,Georgia),serif; font-size:1.55rem; font-weight:600; letter-spacing:.01em; flex-shrink:0; box-shadow:0 6px 16px rgba(44,88,86,.30); overflow:hidden; }
+    .ks-hero-badge svg{ width:100%; height:100%; }
     .ks-hero-body{ flex:1 1 220px; min-width:200px; }
     .ks-hero-body h1{ margin:.05rem 0 .4rem!important; }
     .ks-hero-panel #ks-grimeet{ margin-top:0!important; align-self:center; }
@@ -2478,10 +2484,14 @@
       (function(){
         var b = document.getElementById('ks-hero-badge');
         if (b) {
-          var nm = (classInfo.name || 'Sınıf').trim();
-          var parts = nm.split(/\s+/).filter(Boolean);
-          var ini = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : nm.slice(0, 2);
-          b.textContent = ini.toUpperCase();
+          if (window.GriCat) {
+            GriCat.set(b, classId);
+          } else {
+            var nm = (classInfo.name || 'Sınıf').trim();
+            var parts = nm.split(/\s+/).filter(Boolean);
+            var ini = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : nm.slice(0, 2);
+            b.textContent = ini.toUpperCase();
+          }
         }
       })();
       (function(){ var g=document.getElementById('ks-grimeet'); var cid=classInfo.id||new URLSearchParams(location.search).get('id'); if(g&&cid){ var room=('C'+String(cid).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); g.href='grimeet-oda.html?room='+room+'&host=1&class='+encodeURIComponent(cid); g.style.display='inline-flex'; }
@@ -2961,10 +2971,13 @@
         var items = d.items || [];
         var total = d.total || 0, correct = d.correct || 0;
         var acc = total ? Math.round(correct * 100 / total) : 0;
+        var pageUrl = d.url ? String(d.url) : '';
+        var openLink = pageUrl ? '<a href="' + esc(pageUrl) + '" target="_blank" rel="noopener" class="qd-open">Soruların sayfasını aç →</a>' : '';
         var head = '<div class="qd-summary">'
           + '<span><b>' + total + '</b> soru çözdü</span>'
           + '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>'
           + (d.slug_prefix ? '' : '<span style="color:var(--text-muted);font-size:.74rem">son aktivite</span>')
+          + openLink
           + '</div>';
         if (!items.length) {
           return head + '<p class="qd-empty">Bu öğrenci bu kapsamda henüz soru çözmemiş. (Materyal/okuma ödeviyse öğrenci sayfayı açıp çalışır; çözülmüş soru kaydı yoksa burada görünmez.)</p>';
@@ -2980,11 +2993,13 @@
           }
           var when = it.answered_at ? fmtRelative(it.answered_at) : '';
           var metaLine = (meta ? meta + (when ? ' · ' : '') : '') + when;
-          return '<div class="qd-item ' + (ok ? 'ok' : 'no') + '">'
+          var tag = pageUrl ? 'a' : 'div';
+          var href = pageUrl ? ' href="' + esc(pageUrl) + '" target="_blank" rel="noopener"' : '';
+          return '<' + tag + ' class="qd-item ' + (ok ? 'ok' : 'no') + (pageUrl ? ' qd-link' : '') + '"' + href + '>'
             + '<span class="qd-mark">' + (ok ? '✓' : '✗') + '</span>'
             + '<div class="qd-body"><div class="qd-q">' + qtext + '</div>'
             + (metaLine ? '<div class="qd-meta">' + metaLine + '</div>' : '')
-            + '</div></div>';
+            + '</div></' + tag + '>';
         }).join('') + '</div>';
         return head + list;
       }

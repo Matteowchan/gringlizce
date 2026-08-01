@@ -299,8 +299,19 @@ function attachSelf(){
   else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } else { v.className=mirCls; } }
 }
 
-function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); } track.attach(v); $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); applyScreenZoom(); }
-function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); STATE.scrZoom=1; applyScreenZoom(); }
+function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); }
+  STATE._screenTrack=track;
+  try{ track.attach(v); }catch(e){}
+  // Paylaşılan pencere resize/track değişince donma/kararma olmasın: metadata/resize'da zoom'u yeniden uygula,
+  // videoyu oynat; gerekiyorsa aktif track'i yeniden bağla. Dinleyiciler bir kez bağlanır.
+  if(!v._gmScreenBound){ v._gmScreenBound=true;
+    var reflow=function(){ try{ applyScreenZoom(); if(v.paused){ var pr=v.play(); if(pr&&pr.catch)pr.catch(function(){}); } }catch(e){} };
+    v.addEventListener('loadedmetadata',reflow);
+    v.addEventListener('resize',function(){ reflow(); try{ if(STATE._screenTrack) STATE._screenTrack.attach(v); }catch(e){} });
+    v.addEventListener('pause',function(){ try{ var pr=v.play(); if(pr&&pr.catch)pr.catch(function(){}); }catch(e){} });
+  }
+  $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); applyScreenZoom(); }
+function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); STATE._screenTrack=null; STATE.scrZoom=1; applyScreenZoom(); }
 // Ekran paylaşımı zoom — her izleyici kendi görünümünü büyütür (yerel); >1'de kaydırarak gezilir.
 function applyScreenZoom(){
   var box=document.getElementById('gmr-screen'); if(!box)return;
@@ -526,6 +537,8 @@ function showShareReq(id,who){
 /* ================= DATA ================= */
 var encd=new TextEncoder(),decd=new TextDecoder();
 function sendData(obj){ if(!STATE.lkRoom||!STATE.connected)return; try{ STATE.lkRoom.localParticipant.publishData(encd.encode(JSON.stringify(obj)),{reliable:true}); }catch(e){} }
+// Materyal paylaşımını artan seq ile yayınla (öğrencide last-wins: eski nav yok sayılır).
+function broadcastMat(kind,value,ext,nav){ STATE._matSeq=(STATE._matSeq||0)+1; sendData({t:'mat',kind:kind,value:value,ext:ext,nav:nav?1:0,seq:STATE._matSeq}); }
 function onData(payload,p){
   var msg; try{ msg=JSON.parse(decd.decode(payload)); }catch(e){ return; }
   var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;
@@ -539,7 +552,12 @@ function onData(payload,p){
   else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
-  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){ if(msg.nav&&STATE.currentMaterial&&STATE.currentMaterial.kind===msg.kind&&STATE.currentMaterial.value===msg.value)return; loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
+  else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){
+      var _ms=(typeof msg.seq==='number')?msg.seq:0;
+      if(_ms && _ms<(STATE._appliedMatSeq||0)) return; // eski (yavaş gelen) nav — yok say
+      if(_ms) STATE._appliedMatSeq=_ms;
+      if(msg.nav&&STATE.currentMaterial&&STATE.currentMaterial.kind===msg.kind&&STATE.currentMaterial.value===msg.value)return;
+      loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
@@ -844,7 +862,7 @@ function bindMaterials(){
   $('#mat-page-url').addEventListener('keydown',function(e){ if(e.key==='Enter')$('#mat-page-load').click(); });
   var sh=$('#mat-share'); if(sh) sh.addEventListener('click',function(){
     if(!STATE.currentMaterial){ toast('Önce bir materyal aç.'); return; }
-    if(!STATE.matShared){ sendData({t:'mat',kind:STATE.currentMaterial.kind,value:STATE.currentMaterial.value,ext:STATE.currentMaterial.ext}); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
+    if(!STATE.matShared){ broadcastMat(STATE.currentMaterial.kind,STATE.currentMaterial.value,STATE.currentMaterial.ext,false); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
     else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
   function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); }
@@ -893,13 +911,20 @@ function loadMaterial(m,remote){
     } else { ff.innerHTML='<iframe id="mat-file-if" src="'+esc('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value))+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); }
   } }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
-    if(remote){ var reqId=(STATE._matReqId=(STATE._matReqId||0)+1);
+    if(remote){ var reqId=(STATE._matReqId=(STATE._matReqId||0)+1); var done=false;
       frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe><div class="mat-loading" id="mat-loading">Öğretmenin sayfası yükleniyor…</div>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
-      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){return r.text();}).then(function(h){ if(reqId!==STATE._matReqId)return; var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } var ld=document.getElementById('mat-loading'); if(ld)ld.remove(); }).catch(function(){ if(reqId!==STATE._matReqId)return; var ld=document.getElementById('mat-loading'); if(ld)ld.textContent='Sayfa yüklenemedi — öğretmenin yeni sayfası bekleniyor.'; });
+      var stale=function(){ return reqId!==STATE._matReqId; };
+      var clearOv=function(){ if(stale())return; var ld=document.getElementById('mat-loading'); if(ld)ld.remove(); };
+      var failOv=function(){ if(stale())return; var ld=document.getElementById('mat-loading'); if(!ld)return; ld.style.pointerEvents='auto'; ld.innerHTML='Sayfa yüklenemedi. <button type="button" id="mat-reload" style="margin-left:8px;padding:6px 12px;border:1px solid var(--gm-line);border-radius:8px;background:var(--gm-surface);color:var(--gm-ink);cursor:pointer">Tekrar dene</button>'; var rb=document.getElementById('mat-reload'); if(rb)rb.addEventListener('click',function(){ loadMaterial(m,true); }); };
+      // iframe srcdoc render olunca örtüyü mutlaka kaldır (yeni nav gelirse reqId guard iptal eder)
+      if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });
+      // 8sn güvenlik ağı: fetch takılırsa "tekrar dene"
+      var tmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },8000);
+      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); }).then(function(h){ if(stale()){ clearTimeout(tmr); return; } done=true; clearTimeout(tmr); var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } clearOv(); }).catch(function(){ if(stale()){ clearTimeout(tmr); return; } done=true; clearTimeout(tmr); failOv(); });
     } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollSync(document.getElementById('mat-uni-if')); }
   }
   applyZoom();
-  if(!remote&&STATE.matShared){ sendData({t:'mat',kind:m.kind,value:m.value,ext:m.ext}); }
+  if(!remote&&STATE.matShared){ broadcastMat(m.kind,m.value,m.ext,false); }
 }
 function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var fs=document.getElementById('mat-file-scroll'); if(fs){ try{ fs.style.zoom=STATE.matZoom; }catch(e){} } var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
@@ -921,11 +946,27 @@ function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date
 function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared)||(!STATE.isHost&&STATE.matControl); }
 function attachMatScrollSync(itf){ if(!itf)return;
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;
-    // Sayfa-içi gezinme takibi (sadece öğretmen): materyal içinde başka sayfaya giderse öğrencileri de taşı
-    if(STATE.isHost){ try{ var loc=w.location; var rel=(loc.pathname.replace(/^\/+/,'')+loc.search); if(rel&&/\.html/i.test(rel)&&STATE.matShared){ if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){ STATE.currentMaterial={kind:'unit',value:rel}; sendData({t:'mat',kind:'unit',value:rel,nav:true}); } } }catch(e){} }
+    // Sayfa-içi gezinme takibi (sadece öğretmen): materyal içinde başka sayfaya/drill'e giderse öğrencileri de taşı.
+    // Debounce: hızlı geçişte yalnız EN SON URL yayınlanır (last-wins).
+    if(STATE.isHost&&STATE.matShared) scheduleNavBroadcast(itf);
     var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; try{ var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; var y=(w.scrollY||w.pageYOffset||0); sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,y/max))}); }catch(e){} },140);
     w.addEventListener('scroll',bc,{passive:true});
   }catch(e){} });
+}
+// Öğretmen materyal iframe'inde gezinince ~250ms debounce ile gerçek URL'i okuyup tek güncel yayın gönderir.
+function scheduleNavBroadcast(itf){
+  clearTimeout(STATE._navTmr);
+  STATE._navTmr=setTimeout(function(){
+    try{ var w=itf.contentWindow; if(!w)return; var loc=w.location;
+      var rel=(loc.pathname.replace(/^\/+/,'')+(loc.search||''));
+      if(rel&&/\.html/i.test(rel)&&STATE.matShared){
+        if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){
+          STATE.currentMaterial={kind:'unit',value:rel};
+          broadcastMat('unit',rel,undefined,true);
+        }
+      }
+    }catch(e){}
+  },250);
 }
 function applyMatScroll(frac){ try{
   if(STATE.currentMaterial&&STATE.currentMaterial.kind==='file'){ var el=STATE.matScrollEl; if(!el||!el.isConnected){ STATE._pendFileScroll=frac; return; } var mx=(el.scrollHeight-el.clientHeight)||1; STATE._matScrollLock=true; el.scrollTop=frac*mx; clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); return; }

@@ -1,29 +1,8 @@
-/* Gri Cat — sınıf rozetleri için deterministik oturan piksel-kedi (referans: siyah oturan kedi).
-   Her sınıf (seed) farklı koyu renk tonunda bir kedi alır. Dış kaynak yok, saf inline SVG. */
+/* Gri Cat — sınıf rozetleri için sevimli kedi ikonu.
+   Her sınıf (seed) deterministik olarak bir kedi emojisi + renkli tile alır.
+   Emoji = işletim sisteminin profesyonel kedi ikonu; kesin "kedi" görünür. */
 (function () {
-  // 16x18 oturan kedi: sivri kulaklar, pembe kulak içi, sarı gözler, oturan gövde, patiler.
-  // o=gövde(koyu), i=kulak içi(pembe), y=göz(sarı)
-  var MAP = [
-    "   o        o   ",
-    "   oo      oo   ",
-    "   oio    oio   ",
-    "   oiooooooio   ",
-    "  oooooooooooo  ",
-    "  oooooooooooo  ",
-    "  oyyooooooyyo  ",
-    "  oyyooooooyyo  ",
-    "  oooooooooooo  ",
-    "  oooooooooooo  ",
-    "   oooooooooo   ",
-    "   oooooooooo   ",
-    "  oooooooooooo  ",
-    " oooooooooooooo ",
-    " oooooooooooooo ",
-    "oooooooooooooooo",
-    "ooooo oooo ooooo",
-    "                "
-  ];
-  var U = 16, H = MAP.length;
+  var CATS = ['🐱', '😺', '😸', '😻', '😽', '🐈', '😼', '🐈‍⬛'];
 
   function hashSeed(seed) {
     var s = String(seed == null ? '' : seed), h = 0;
@@ -31,31 +10,24 @@
     return h;
   }
 
-  function svg(seed, px) {
+  function pick(seed) {
     var h = hashSeed(seed);
-    var hue = h % 360;
-    var body = 'hsl(' + hue + ',36%,24%)';     // koyu, hue ipuçlu (referans: siyah kedi)
-    var ear = 'hsl(345,60%,68%)';               // pembe kulak içi
-    var eye = '#f4c518';                          // sarı göz
-    var bg = 'hsl(' + hue + ',42%,92%)';         // açık renkli tile
-    var col = { o: body, i: ear, y: eye };
-    var rects = '';
-    for (var r = 0; r < H; r++) {
-      var row = MAP[r];
-      for (var c = 0; c < row.length; c++) {
-        var ch = row.charAt(c);
-        if (ch === ' ') continue;
-        rects += '<rect x="' + c + '" y="' + r + '" width="1.03" height="1.03" fill="' + (col[ch] || body) + '"/>';
-      }
-    }
+    return { cat: CATS[h % CATS.length], hue: h % 360 };
+  }
+
+  function svg(seed, px) {
+    var p = pick(seed);
+    var bg = 'hsl(' + p.hue + ',46%,90%)';
     var dim = px ? ('width="' + px + '" height="' + px + '"') : 'width="100%" height="100%"';
-    return '<svg viewBox="0 0 ' + U + ' ' + H + '" ' + dim + ' preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" style="display:block">'
-      + '<rect x="-1" y="-1" width="' + (U + 2) + '" height="' + (H + 2) + '" fill="' + bg + '"/>'
-      + rects + '</svg>';
+    return '<svg viewBox="0 0 32 32" ' + dim + ' xmlns="http://www.w3.org/2000/svg" style="display:block">'
+      + '<rect width="32" height="32" rx="7" fill="' + bg + '"/>'
+      + '<text x="16" y="16.5" font-size="19" text-anchor="middle" dominant-baseline="central">' + p.cat + '</text>'
+      + '</svg>';
   }
 
   window.GriCat = {
     svg: svg,
+    emoji: function (seed) { return pick(seed).cat; },
     set: function (el, seed, px) {
       if (!el) return;
       el.innerHTML = svg(seed, px);

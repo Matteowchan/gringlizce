@@ -309,6 +309,26 @@ function applyScreenZoom(){
   box.style.overflow = STATE.scrZoom>1 ? 'auto' : 'hidden';
   var val=document.getElementById('scr-zoom-val'); if(val)val.textContent=Math.round(STATE.scrZoom*100)+'%';
 }
+// Tab/pencere değişince kamerayı küçük PiP penceresinde göster (Google Meet gibi).
+// Sekme gizlenince en anlamlı videoyu PiP'e alır; geri dönünce kapatır.
+function setupAutoPiP(){
+  if(!('pictureInPictureEnabled' in document) || !document.pictureInPictureEnabled) return;
+  function pickVideo(){
+    var sel=['#gmr-screen video','#gmr-spotlight video','.vtile.speaking video.cam','#gmr-videos .vtile video.cam','#gmr-videos video'];
+    for(var i=0;i<sel.length;i++){ var v=document.querySelector(sel[i]); if(v && v.readyState>=2 && v.videoWidth>0) return v; }
+    return null;
+  }
+  document.addEventListener('visibilitychange',function(){
+    try{
+      if(document.hidden){
+        if(document.pictureInPictureElement) return;
+        var v=pickVideo(); if(v && v.requestPictureInPicture) v.requestPictureInPicture().catch(function(){});
+      } else {
+        if(document.pictureInPictureElement) document.exitPictureInPicture().catch(function(){});
+      }
+    }catch(e){}
+  });
+}
 function bindScreenZoom(){
   var zi=document.getElementById('scr-zoom-in'), zo=document.getElementById('scr-zoom-out');
   if(zi)zi.addEventListener('click',function(){ STATE.scrZoom=Math.min(3,Math.round((STATE.scrZoom+0.2)*100)/100); applyScreenZoom(); });
@@ -1147,7 +1167,7 @@ function boot(){
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupGate();
+  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); setupGate();
   var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
   window.addEventListener('beforeunload',_teardown);
   window.addEventListener('pagehide',_teardown);

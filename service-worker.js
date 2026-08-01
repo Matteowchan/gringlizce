@@ -6,7 +6,7 @@
 //   - Same-origin statik (css/js/img/font)-> stale-while-revalidate (cache'ten ver, arkada güncelle).
 // Sürüm bump = eski cache temizlenir.
 
-const SW_VERSION = '2.0.0';
+const SW_VERSION = '2.1.0';
 const STATIC_CACHE = 'gri-static-' + SW_VERSION;
 const PAGES_CACHE  = 'gri-pages-' + SW_VERSION;
 const OFFLINE_URL  = '/offline.html';
@@ -52,8 +52,14 @@ function isHtmlRequest(req) {
     (req.headers.get('accept') || '').indexOf('text/html') !== -1;
 }
 
-function isStaticAsset(url) {
-  return /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|otf|mp3|m4a)$/i.test(url.pathname);
+// Uygulama kodu (JS/CSS): DEPLOY sonrası eski kod servis edilmemeli — auth'a bağlı,
+// stale kod "oturum tanınmadı" / yavaş / karışık davranışa yol açar. Bunlar network-first.
+function isAppCode(url) {
+  return /\.(css|js)$/i.test(url.pathname);
+}
+// Gerçekten statik varlıklar (görsel/font/ses): stale-while-revalidate güvenli + hızlı.
+function isMediaAsset(url) {
+  return /\.(png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|otf|mp3|m4a)$/i.test(url.pathname);
 }
 
 self.addEventListener('fetch', (event) => {
@@ -83,8 +89,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Statik varlık: stale-while-revalidate.
-  if (isStaticAsset(url)) {
+  // Uygulama kodu (JS/CSS): network-first -> cache fallback (deploy sonrası hep güncel kod).
+  if (isAppCode(url)) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(STATIC_CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Medya (görsel/font/ses): stale-while-revalidate.
+  if (isMediaAsset(url)) {
     event.respondWith(
       caches.open(STATIC_CACHE).then((cache) =>
         cache.match(req).then((cached) => {

@@ -2975,12 +2975,18 @@
         var m = String(slug).match(/(\d+)\s*$/);
         return m ? ('Soru ' + m[1]) : String(slug);
       }
-      function renderInspectDetail(d) {
+      function buildReviewUrl(url, sid, aid) {
+        if (!url) return '';
+        var hash = ''; var i = url.indexOf('#'); if (i >= 0) { hash = url.slice(i); url = url.slice(0, i); }
+        var sep = url.indexOf('?') >= 0 ? '&' : '?';
+        return url + sep + 'review=' + encodeURIComponent(sid) + '&assignment=' + encodeURIComponent(aid) + hash;
+      }
+      function renderInspectDetail(d, sid, aid) {
         var items = d.items || [];
         var total = d.total || 0, correct = d.correct || 0;
         var acc = total ? Math.round(correct * 100 / total) : 0;
-        var pageUrl = d.url ? String(d.url) : '';
-        var openLink = pageUrl ? '<a href="' + esc(pageUrl) + '" target="_blank" rel="noopener" class="qd-open">Soruların sayfasını aç →</a>' : '';
+        var pageUrl = (d.url && sid && aid) ? buildReviewUrl(String(d.url), sid, aid) : (d.url ? String(d.url) : '');
+        var openLink = pageUrl ? '<a href="' + esc(pageUrl) + '" target="_blank" rel="noopener" class="qd-open">Sayfada doğru/yanlış işaretli aç →</a>' : '';
         var head = '<div class="qd-summary">'
           + '<span><b>' + total + '</b> soru çözdü</span>'
           + '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>'
@@ -3026,7 +3032,7 @@
             if (r.error) throw r.error;
             var d = r.data || {};
             if (d && d.error) { inner.innerHTML = '<p class="qd-empty">Görüntülenemedi (' + esc(d.error) + ').</p>'; return; }
-            inner.innerHTML = renderInspectDetail(d);
+            inner.innerHTML = renderInspectDetail(d, btn.dataset.sid, btn.dataset.aid);
             target.dataset.loaded = '1';
           })
           .catch(function (err) { inner.innerHTML = '<p class="qd-empty">' + rpcErrMsg(err) + '</p>'; });

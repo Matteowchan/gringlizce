@@ -528,14 +528,14 @@ function renderTasks(tasks){
       html+='</div><div class="ge-qfb" id="fb-'+key+'"></div></div>';
     }else if(task.type==='gap'){
       qn++;
-      var parts=String(task.text||'').split('___');
+      var parts=String(task.text||task.q||'').split('___');
       html+='<div class="ge-gapwrap" id="gw-'+key+'">';
       html+='<div class="ge-gap" id="g-'+key+'" data-key="'+key+'"><span class="qn">'+qn+'</span><span>';
       html+=esc(parts[0]||'');
       html+='</span><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-key="'+key+'"><span>';
       html+=esc(parts.slice(1).join('___'));
       html+='</span><span class="mark t">&#10003;</span><span class="mark f">&#10007;</span>';
-      html+='<span class="corr">Doğrusu: <b>'+esc((task.accept&&task.accept[0])||'')+'</b></span>';
+      html+='<span class="corr">Doğrusu: <b>'+esc((task.accept&&task.accept[0])||task.a||'')+'</b></span>';
       html+='</div>';
       html+='<div class="ge-gapbtnrow"><button type="button" class="ge-gapbtn" data-key="'+key+'">Kontrol Et</button></div>';
       html+='<div class="ge-qfb" id="fb-'+key+'"></div>';
@@ -589,7 +589,7 @@ function checkGap(key,save){
   var inp=g.querySelector('input');
   var val=normAns(inp.value);
   var ok=false;
-  var acc=task.accept||[];
+  var acc=task.accept||(task.a?[task.a]:[]);
   for(var j=0;j<acc.length;j++){if(val!==''&&val===normAns(acc[j])){ok=true;break;}}
   g.className=g.className.replace(/\s*\b(ok|no)\b/g,'')+(ok?' ok':' no');
   var fb=document.getElementById('fb-'+key);

@@ -747,6 +747,9 @@
     .qd-open:hover { text-decoration: underline; }
     a.qd-item.qd-link { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
     a.qd-item.qd-link:hover { border-color: var(--teal, #2C5856); background: rgba(44,88,86,0.05); }
+    .qd-item.open .qd-mark { background: var(--text-muted, #8a8a8a); }
+    .gepool-head { display: flex; justify-content: flex-end; margin: 0 0 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line, #e5e0d8); }
+    .gepool-head .qd-open { margin-left: 0; }
     .ad-email {
       color: var(--text);
       min-width: 0;
@@ -2980,41 +2983,53 @@
         adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
         aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
         try {
-          var mRes = await withTimeout(sb.from('class_members').select('student_id').eq('class_id', classId), 12000, 'Öğrenci detayı');
-          if (mRes.error) throw mRes.error;
-          var members = (mRes.data || []).map(function (m) { return m.student_id; });
-          var emailMap = {};
-          if (members.length) {
-            var pRes = await sb.from('profiles').select('id,email').in('id', members);
-            ((pRes && pRes.data) || []).forEach(function (p) { emailMap[p.id] = p.email; });
+          var r = await withTimeout(sb.rpc('ge_assignment_progress', { p_class_id: classId, p_assignment_id: assignmentId }), 12000, 'Öğrenci detayı');
+          if (r.error) throw r.error;
+          var d = r.data || {};
+          if (d.error) {
+            var msg = d.error === 'forbidden'
+              ? 'Bu sınıfı görüntüleme yetkin yok veya oturumun düşmüş görünüyor. Sağ üstten <b>çıkış yapıp tekrar giriş</b> yapıp tekrar dene.'
+              : (d.error === 'class_not_found' ? 'Sınıf bulunamadı.' : rpcErrMsg(d.error));
+            adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + msg + '</p>';
+            return;
           }
-          var sRes = await sb.from('ge_submissions').select('user_id, content, status, teacher_grade, created_at')
-            .eq('task_type', 'assignment').eq('assignment_id', assignmentId).order('created_at', { ascending: false });
-          if (sRes.error) throw sRes.error;
-          var subByUser = {};
-          ((sRes && sRes.data) || []).forEach(function (s) { if (!subByUser[s.user_id]) subByUser[s.user_id] = s; });
-          if (!members.length) { adBody.innerHTML = '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
-          var STAT = { completed: 'Tamamladı', pending: 'Yapmadı' };
-          var html = '<ul class="ad-list">' + members.map(function (sid) {
-            var email = emailMap[sid] || '(e-posta yok)';
-            var sub = subByUser[sid];
-            if (!sub) {
+          var students = d.students || [];
+          // Ödevin gerçek sorularını öğretmenin görebilmesi için üst köprü.
+          var header = '<div class="gepool-head"><a href="odev.html?id=' + escAttr(assignmentId) + '" target="_blank" rel="noopener" class="qd-open">Ödevi gör (sorular) →</a></div>';
+          if (!students.length) {
+            adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>';
+            return;
+          }
+          var html = header + '<ul class="ad-list">' + students.map(function (st) {
+            var email = st.email || '(e-posta yok)';
+            if (!st.submitted) {
               return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div><div class="ad-progress progress-pending">—</div><span class="ad-status-pill status-pending">Yapmadı</span><div class="ad-actions"></div></li>'
                 + '<li class="ad-detail-row" hidden><div class="ad-detail-inner"></div></li>';
             }
-            var ans = (sub.content && sub.content.answers) || {};
-            var keys = Object.keys(ans).filter(function (k) { return ans[k] && typeof ans[k].ok === 'boolean'; });
-            var correct = keys.filter(function (k) { return ans[k].ok; }).length;
-            var tot = keys.length;
+            var ans = st.answers || {};
+            var allKeys = Object.keys(ans).sort(function (a, b) {
+              var na = parseInt(String(a).replace(/\D/g, ''), 10), nb = parseInt(String(b).replace(/\D/g, ''), 10);
+              if (isNaN(na) || isNaN(nb)) return a < b ? -1 : a > b ? 1 : 0;
+              return na - nb;
+            });
+            var gradedKeys = allKeys.filter(function (k) { return ans[k] && typeof ans[k].ok === 'boolean'; });
+            var correct = gradedKeys.filter(function (k) { return ans[k].ok; }).length;
+            var tot = gradedKeys.length;
             var acc = tot ? Math.round(correct * 100 / tot) : 0;
-            var items = keys.map(function (k, i) {
-              var ok = ans[k].ok;
-              return '<div class="qd-item ' + (ok ? 'ok' : 'no') + '"><span class="qd-mark">' + (ok ? '✓' : '✗') + '</span><div class="qd-body"><div class="qd-q">Soru ' + (i + 1) + '</div></div></div>';
+            var items = allKeys.map(function (k, i) {
+              var a = ans[k] || {};
+              var hasOk = typeof a.ok === 'boolean';
+              var cls = hasOk ? (a.ok ? 'ok' : 'no') : 'open';
+              var mark = hasOk ? (a.ok ? '✓' : '✗') : '•';
+              return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
+                + '<div class="qd-body"><div class="qd-q">Soru ' + (i + 1) + '</div>'
+                + (hasOk ? '' : '<div class="qd-meta">açık uçlu · öğretmen değerlendirir</div>')
+                + '</div></div>';
             }).join('');
-            var gradeTxt = (sub.teacher_grade != null && sub.teacher_grade !== '') ? (' · Not: ' + esc(sub.teacher_grade)) : '';
+            var gradeTxt = (st.grade != null && st.grade !== '') ? (' · Not: ' + esc(st.grade)) : '';
             var detail = '<div class="ad-detail-inner"><div class="qd-summary"><span><b>' + tot + '</b> soru</span>'
               + (tot ? '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>' : '<span style="color:var(--text-muted);font-size:.74rem">açık uçlu / puanlanacak</span>')
-              + '<span style="color:var(--text-muted);font-size:.74rem">' + fmtRelative(sub.created_at) + gradeTxt + '</span></div>'
+              + '<span style="color:var(--text-muted);font-size:.74rem">' + (st.submitted_at ? fmtRelative(st.submitted_at) : '') + gradeTxt + '</span></div>'
               + (items ? '<div class="qd-list">' + items + '</div>' : '') + '</div>';
             return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
               + '<div class="ad-progress progress-completed">' + (tot ? correct + ' / ' + tot : '✓') + '</div>'

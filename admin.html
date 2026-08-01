@@ -1984,6 +1984,7 @@
             <button class="filter-chip active" data-users-filter="all">Hepsi</button>
             <button class="filter-chip" data-users-filter="active">Aktif</button>
             <button class="filter-chip" data-users-filter="banned">Banlı</button>
+            <button class="filter-chip" data-users-filter="new_signup">Yeni Kayıt (24s)</button>
             <button class="filter-chip" data-users-filter="recent">Son 7 Gün</button>
             <button class="filter-chip" data-users-filter="with_purchases">Materyali Var</button>
             <button class="filter-chip" data-users-filter="ai_bonus">AI Bonuslu</button>
@@ -3410,6 +3411,7 @@
       var filter = usersActiveFilter;
       var now = Date.now();
       var sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+      var oneDayAgo = now - 24 * 60 * 60 * 1000;
 
       var filtered = allUsersCache.filter(function (u) {
         // text search
@@ -3421,6 +3423,7 @@
         var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
         if (filter === 'active' && isBanned) return false;
         if (filter === 'banned' && !isBanned) return false;
+        if (filter === 'new_signup' && (!u.created_at || new Date(u.created_at).getTime() < oneDayAgo)) return false;
         if (filter === 'recent' && (!u.created_at || new Date(u.created_at).getTime() < sevenDaysAgo)) return false;
         if (filter === 'with_purchases' && (u.purchase_count || 0) === 0) return false;
         if (filter === 'ai_bonus' && (u.ai_bonus_left || 0) === 0) return false;

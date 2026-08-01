@@ -6,7 +6,7 @@
 //   - Same-origin statik (css/js/img/font)-> stale-while-revalidate (cache'ten ver, arkada güncelle).
 // Sürüm bump = eski cache temizlenir.
 
-const SW_VERSION = '2.1.0';
+const SW_VERSION = '2.2.0';
 const STATIC_CACHE = 'gri-static-' + SW_VERSION;
 const PAGES_CACHE  = 'gri-pages-' + SW_VERSION;
 const OFFLINE_URL  = '/offline.html';
@@ -74,9 +74,10 @@ self.addEventListener('fetch', (event) => {
   if (url.hostname.indexOf('supabase') !== -1) return;
 
   // HTML gezinme: network-first -> cache -> offline.
+  // no-store: tarayicinin HTTP cache'ini ATLA (GitHub Pages max-age ~10dk stale HTML sunmasin).
   if (isHtmlRequest(req)) {
     event.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: 'no-store' }).then((res) => {
         if (res && res.ok) {
           const copy = res.clone();
           caches.open(PAGES_CACHE).then((c) => c.put(req, copy)).catch(() => {});
@@ -92,7 +93,7 @@ self.addEventListener('fetch', (event) => {
   // Uygulama kodu (JS/CSS): network-first -> cache fallback (deploy sonrası hep güncel kod).
   if (isAppCode(url)) {
     event.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: 'no-store' }).then((res) => {
         if (res && res.ok) {
           const copy = res.clone();
           caches.open(STATIC_CACHE).then((c) => c.put(req, copy)).catch(() => {});

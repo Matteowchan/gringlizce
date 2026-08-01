@@ -288,12 +288,26 @@ function skillOf(a){
   return SKILL_TR[s]?s:null;
 }
 
+/* AUD_F'yi öğrencinin track'ine göre otomatik seç + butonu güncelle (manuel tıklama sonradan override eder) */
+function applyAudience(a){
+  if(a!=='adult'&&a!=='teen'&&a!=='junior')return;
+  AUD_F=a; LVL_F='ALL'; SK_F='ALL';
+  var btns=document.querySelectorAll('.od-audience .aud-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-aud')===a);
+}
+
 function loadAll(){
   var sb=window.GRI_SB;
-  var pend=3;
+  var pend=4;
   function step(){pend--;if(pend<=0)render();}
   sb.rpc('ge_student_class_state').then(function(r){
     if(r&&r.data)STATE=r.data;
+    step();
+  },function(){step();});
+  /* öğrencinin track'i (adult/teen/junior) -> havuz otomatik seçilir; kayıt/hata yoksa 'adult' kalır */
+  sb.from('ge_track_placement').select('track').eq('user_id',window.GRI_UID).maybeSingle().then(function(r){
+    var t=r&&r.data&&r.data.track;
+    if(t)applyAudience(t);
     step();
   },function(){step();});
   sb.from('ge_assignments').select('id,level,unit,title,description,skill,content,audience').eq('active',true).order('level').order('unit').then(function(r){

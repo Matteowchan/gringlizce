@@ -105,6 +105,7 @@ function setupGate(){
       }catch(e){ stopPre(); }
     }
     try{
+      stopPre();
       gateStream=await navigator.mediaDevices.getUserMedia({video:STATE.camId?{deviceId:{exact:STATE.camId}}:true,audio:false});
       gv.srcObject=gateStream; gp.classList.remove('camoff'); applyMirror(); fillDevices();
     }catch(e){ camOn=false; $('#gate-cam').classList.remove('on'); $('#gate-cam').textContent='Kamera kapalı'; gp.classList.add('camoff'); fillDevices(); }
@@ -425,7 +426,17 @@ async function doShareScreen(){
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
 function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; hardLeave(); }
-function hardLeave(){ try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} try{if(STATE.localStream)STATE.localStream.getTracks().forEach(function(t){t.stop();});}catch(e){} location.href='grimeet.html'; }
+// TÜM kamera/mikrofon kaynaklarını serbest bırak — yayınlanmış VE yayınlanmamış
+// (preTrack, gateStream, camTrack, localStream). Her çıkış yolunda çağrılmalı, yoksa
+// track açık kalır ve OS kamerayı "kullanımda" görür → başka sekme/site de alamaz.
+function releaseAllMedia(){
+  try{ if(STATE.lkRoom&&STATE.lkRoom.localParticipant){ STATE.lkRoom.localParticipant.trackPublications.forEach(function(pub){ try{ if(pub.track&&pub.track.stop) pub.track.stop(); }catch(_){}}); } }catch(e){}
+  try{ if(STATE.preTrack){ try{STATE.preTrack.detach();}catch(_){} try{STATE.preTrack.stop();}catch(_){} STATE.preTrack=null; } }catch(e){}
+  try{ if(STATE.camTrack){ if(STATE.camTrack.stop) STATE.camTrack.stop(); STATE.camTrack=null; } }catch(e){}
+  try{ if(gateStream){ gateStream.getTracks().forEach(function(t){try{t.stop();}catch(_){}}); gateStream=null; } }catch(e){}
+  try{ if(STATE.localStream){ STATE.localStream.getTracks().forEach(function(t){try{t.stop();}catch(_){}}); STATE.localStream=null; } }catch(e){}
+}
+function hardLeave(){ try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} releaseAllMedia(); location.href='grimeet.html'; }
 function setSelfHand(up){ var t=tileEl('self'); if(!t)return; var h=t.querySelector('.hand'); if(up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';t.appendChild(d);} else if(!up&&h)h.remove(); }
 
 function bindSplit(){
@@ -1095,7 +1106,9 @@ function boot(){
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
-  window.addEventListener('beforeunload',function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} });
+  var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
+  window.addEventListener('beforeunload',_teardown);
+  window.addEventListener('pagehide',_teardown);
 }
 if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();

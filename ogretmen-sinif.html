@@ -699,8 +699,8 @@
     .ad-list { list-style: none; padding: 0; margin: 0; }
     .ad-row {
       display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 0.9rem;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 0.7rem;
       padding: 0.85rem 0;
       border-bottom: 1px solid var(--line);
       align-items: center;
@@ -708,6 +708,40 @@
       font-size: 0.9rem;
     }
     .ad-row:last-child { border-bottom: none; }
+    .ad-actions { display: flex; gap: 0.4rem; align-items: center; }
+    .ad-inspect-btn {
+      border: 1px solid var(--teal, #2C5856); background: transparent; color: var(--teal, #2C5856);
+      border-radius: 8px; padding: 0.3rem 0.7rem; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; font-family: var(--font-ui, Inter), system-ui, sans-serif; white-space: nowrap;
+    }
+    .ad-inspect-btn:hover { background: rgba(44,88,86,0.08); }
+    .ad-inspect-btn.open { background: var(--teal, #2C5856); color: #fff; }
+    .ad-detail-row { padding: 0; }
+    .ad-detail-inner {
+      background: rgba(44,88,86,0.04); border: 1px solid var(--line); border-radius: 12px;
+      padding: 0.9rem 1rem; margin: 0 0 0.7rem;
+    }
+    .qd-summary {
+      display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
+      font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 0.85rem;
+      margin-bottom: 0.7rem; color: var(--text);
+    }
+    .qd-summary b { font-family: var(--font-display, Georgia), serif; font-size: 1.05rem; }
+    .qd-acc { color: var(--teal, #2C5856); font-weight: 700; }
+    .qd-list { display: flex; flex-direction: column; gap: 0.35rem; max-height: 340px; overflow-y: auto; }
+    .qd-item {
+      display: flex; align-items: flex-start; gap: 0.55rem; padding: 0.4rem 0.5rem;
+      border-radius: 8px; background: #fff; border: 1px solid var(--line); font-size: 0.84rem; line-height: 1.4;
+    }
+    .qd-mark { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; margin-top: 1px; }
+    .qd-item.ok .qd-mark { background: #2e8b57; }
+    .qd-item.no .qd-mark { background: #c0453b; }
+    .qd-body { min-width: 0; flex: 1; }
+    .qd-q { color: var(--text); }
+    .qd-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .qd-meta .qd-ans-wrong { color: #c0453b; font-weight: 600; }
+    .qd-meta .qd-ans-right { color: #2e8b57; font-weight: 600; }
+    .qd-empty { color: var(--text-muted); font-style: italic; text-align: center; padding: 0.6rem; }
     .ad-email {
       color: var(--text);
       min-width: 0;
@@ -2905,6 +2939,64 @@
         openBonusModal(aid, sid, email, existing);
       });
 
+      // Delegate: İncele — öğrencinin ödev kapsamındaki gerçek aktivitesi (çözdüğü sorular, doğru/yanlış)
+      function slugLabel(slug) {
+        if (!slug) return 'Soru';
+        var m = String(slug).match(/(\d+)\s*$/);
+        return m ? ('Soru ' + m[1]) : String(slug);
+      }
+      function renderStudentDetail(d) {
+        var items = d.items || [];
+        var total = d.total || 0, correct = d.correct || 0;
+        var acc = total ? Math.round(correct * 100 / total) : 0;
+        var head = '<div class="qd-summary">'
+          + '<span><b>' + total + '</b> soru çözdü</span>'
+          + '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>'
+          + (d.slug_prefix ? '' : '<span style="color:var(--text-muted);font-size:.74rem">son aktivite</span>')
+          + '</div>';
+        if (!items.length) {
+          return head + '<p class="qd-empty">Bu öğrenci bu kapsamda henüz soru çözmemiş. (Materyal/okuma ödeviyse öğrenci sayfayı açıp çalışır; çözülmüş soru kaydı yoksa burada görünmez.)</p>';
+        }
+        var list = '<div class="qd-list">' + items.map(function (it) {
+          var ok = !!it.is_correct;
+          var qtext = it.question ? esc(String(it.question).slice(0, 170)) : esc(slugLabel(it.slug));
+          var meta = '';
+          if (it.question && !ok && (it.chosen || it.correct)) {
+            meta = 'Öğrenci: <span class="qd-ans-wrong">' + esc(it.chosen || '—') + '</span> · Doğru: <span class="qd-ans-right">' + esc(it.correct || '—') + '</span>';
+          } else if (it.question && ok && it.correct) {
+            meta = '<span class="qd-ans-right">Doğru: ' + esc(it.correct) + '</span>';
+          }
+          var when = it.answered_at ? fmtRelative(it.answered_at) : '';
+          var metaLine = (meta ? meta + (when ? ' · ' : '') : '') + when;
+          return '<div class="qd-item ' + (ok ? 'ok' : 'no') + '">'
+            + '<span class="qd-mark">' + (ok ? '✓' : '✗') + '</span>'
+            + '<div class="qd-body"><div class="qd-q">' + qtext + '</div>'
+            + (metaLine ? '<div class="qd-meta">' + metaLine + '</div>' : '')
+            + '</div></div>';
+        }).join('') + '</div>';
+        return head + list;
+      }
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.ad-inspect-btn');
+        if (!btn) return;
+        var target = document.getElementById(btn.dataset.target);
+        if (!target) return;
+        var inner = target.querySelector('.ad-detail-inner');
+        if (!target.hidden) { target.hidden = true; btn.classList.remove('open'); btn.textContent = 'İncele'; return; }
+        target.hidden = false; btn.classList.add('open'); btn.textContent = 'Gizle';
+        if (target.dataset.loaded === '1') return;
+        inner.innerHTML = '<p class="qd-empty">Yükleniyor…</p>';
+        sb.rpc('assignment_student_detail', { p_assignment_id: btn.dataset.aid, p_student_id: btn.dataset.sid })
+          .then(function (r) {
+            if (r.error) throw r.error;
+            var d = r.data || {};
+            if (d && d.error) { inner.innerHTML = '<p class="qd-empty">Görüntülenemedi (' + esc(d.error) + ').</p>'; return; }
+            inner.innerHTML = renderStudentDetail(d);
+            target.dataset.loaded = '1';
+          })
+          .catch(function (err) { inner.innerHTML = '<p class="qd-empty">Yüklenemedi: ' + esc(err.message || err) + '</p>'; });
+      });
+
       // ============================================================
       // Sprint 1: Öğretmen Notları
       // ============================================================
@@ -4170,8 +4262,12 @@
               + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + completedAt + bonusTag + '</div>'
               + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + '</div>'
               + '<span class="ad-status-pill status-' + p.status + '">' + STATUS_LABELS[p.status] + '</span>'
-              + '<button type="button" class="ad-bonus-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-email="' + esc(p.student_email || '') + '"' + bonusDataset + '>' + (bonus ? 'Bonus ✎' : '+ Bonus') + '</button>'
-            + '</li>';
+              + '<div class="ad-actions">'
+                + '<button type="button" class="ad-inspect-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-target="adx-' + esc(p.student_id) + '">İncele</button>'
+                + '<button type="button" class="ad-bonus-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-email="' + esc(p.student_email || '') + '"' + bonusDataset + '>' + (bonus ? 'Bonus ✎' : '+ Bonus') + '</button>'
+              + '</div>'
+            + '</li>'
+            + '<li class="ad-detail-row" id="adx-' + esc(p.student_id) + '" hidden><div class="ad-detail-inner"></div></li>';
           }).join('') + '</ul>';
 
           adBody.innerHTML = html;

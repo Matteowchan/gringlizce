@@ -220,7 +220,7 @@ async function connectLiveKit(){
 }
 async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
-  if(STATE.micOn) setTimeout(applyNoiseFilter,700);
+  if(STATE.micOn) scheduleNoiseFilter();
   var lp=STATE.lkRoom.localParticipant;
   // ARKA PLANSIZ: gate track'ini doğrudan yayına taşı (kamera yeniden açılmaz, anlık).
   if(STATE.camOn && STATE.preTrack && !STATE._bgApplied){
@@ -721,6 +721,10 @@ function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classL
 var TP=null,tpTried=false;
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
 var _krisp=null,_krispTried=false,_krispOn=false,_nfNoted=false,_nfTries=0;
+// Krisp WASM yüklemesi/başlatması AĞIR — kamera kurulumuyla AYNI anda çalışırsa ana
+// thread kilitlenir ve kamera o süre boyunca kapanır/donar. Bu yüzden kamera açıksa
+// gürültü filtresini kamera tam yerleşene kadar geciktir (çakışmayı ayır).
+function scheduleNoiseFilter(){ setTimeout(applyNoiseFilter, STATE.camOn ? 3200 : 800); }
 async function loadKrisp(){ if(_krisp||_krispTried)return _krisp; _krispTried=true; try{ _krisp=await import('https://esm.sh/@livekit/krisp-noise-filter'); }catch(e){ try{ _krisp=await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter/+esm'); }catch(e2){ _krisp=null; } } return _krisp; }
 async function applyNoiseFilter(){ if(_krispOn)return; try{
   if(!STATE.lkRoom||!STATE.micOn)return;

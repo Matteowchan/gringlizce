@@ -2974,6 +2974,67 @@
       });
 
       // Delegate: İncele — öğrencinin ödev kapsamındaki gerçek aktivitesi (çözdüğü sorular, doğru/yanlış)
+      // GE havuz ödevi: öğrenci başına tamamlanma + soru soru doğru/yanlış (ge_submissions.content.answers.ok)
+      async function openGePoolDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'Genel İngilizce Ödevi';
+        adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
+        try {
+          var mRes = await withTimeout(sb.from('class_members').select('student_id').eq('class_id', classId), 12000, 'Öğrenci detayı');
+          if (mRes.error) throw mRes.error;
+          var members = (mRes.data || []).map(function (m) { return m.student_id; });
+          var emailMap = {};
+          if (members.length) {
+            var pRes = await sb.from('profiles').select('id,email').in('id', members);
+            ((pRes && pRes.data) || []).forEach(function (p) { emailMap[p.id] = p.email; });
+          }
+          var sRes = await sb.from('ge_submissions').select('user_id, content, status, teacher_grade, created_at')
+            .eq('task_type', 'assignment').eq('assignment_id', assignmentId).order('created_at', { ascending: false });
+          if (sRes.error) throw sRes.error;
+          var subByUser = {};
+          ((sRes && sRes.data) || []).forEach(function (s) { if (!subByUser[s.user_id]) subByUser[s.user_id] = s; });
+          if (!members.length) { adBody.innerHTML = '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
+          var STAT = { completed: 'Tamamladı', pending: 'Yapmadı' };
+          var html = '<ul class="ad-list">' + members.map(function (sid) {
+            var email = emailMap[sid] || '(e-posta yok)';
+            var sub = subByUser[sid];
+            if (!sub) {
+              return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div><div class="ad-progress progress-pending">—</div><span class="ad-status-pill status-pending">Yapmadı</span><div class="ad-actions"></div></li>'
+                + '<li class="ad-detail-row" hidden><div class="ad-detail-inner"></div></li>';
+            }
+            var ans = (sub.content && sub.content.answers) || {};
+            var keys = Object.keys(ans).filter(function (k) { return ans[k] && typeof ans[k].ok === 'boolean'; });
+            var correct = keys.filter(function (k) { return ans[k].ok; }).length;
+            var tot = keys.length;
+            var acc = tot ? Math.round(correct * 100 / tot) : 0;
+            var items = keys.map(function (k, i) {
+              var ok = ans[k].ok;
+              return '<div class="qd-item ' + (ok ? 'ok' : 'no') + '"><span class="qd-mark">' + (ok ? '✓' : '✗') + '</span><div class="qd-body"><div class="qd-q">Soru ' + (i + 1) + '</div></div></div>';
+            }).join('');
+            var gradeTxt = (sub.teacher_grade != null && sub.teacher_grade !== '') ? (' · Not: ' + esc(sub.teacher_grade)) : '';
+            var detail = '<div class="ad-detail-inner"><div class="qd-summary"><span><b>' + tot + '</b> soru</span>'
+              + (tot ? '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>' : '<span style="color:var(--text-muted);font-size:.74rem">açık uçlu / puanlanacak</span>')
+              + '<span style="color:var(--text-muted);font-size:.74rem">' + fmtRelative(sub.created_at) + gradeTxt + '</span></div>'
+              + (items ? '<div class="qd-list">' + items + '</div>' : '') + '</div>';
+            return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
+              + '<div class="ad-progress progress-completed">' + (tot ? correct + ' / ' + tot : '✓') + '</div>'
+              + '<span class="ad-status-pill status-completed">Tamamladı</span>'
+              + '<div class="ad-actions"><button type="button" class="ad-inspect-btn gepool-inspect">İncele</button></div></li>'
+              + '<li class="ad-detail-row" hidden>' + detail + '</li>';
+          }).join('') + '</ul>';
+          adBody.innerHTML = html;
+          adBody.querySelectorAll('.gepool-inspect').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var row = btn.closest('.ad-row').nextElementSibling;
+              if (row && row.classList.contains('ad-detail-row')) {
+                row.hidden = !row.hidden; btn.textContent = row.hidden ? 'İncele' : 'Gizle'; btn.classList.toggle('open', !row.hidden);
+              }
+            });
+          });
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
+        }
+      }
       function slugLabel(slug) {
         if (!slug) return 'Soru';
         var m = String(slug).match(/(\d+)\s*$/);
@@ -3490,7 +3551,7 @@
         }
       });
 
-      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime', ielts_mock: 'Deneme', material: 'Materyal', module: 'Modül' };
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: 'Writing', reading: 'Reading', vocab: 'Kelime', ielts_mock: 'Deneme', material: 'Materyal', module: 'Modül', gepool: 'Genel İngilizce' };
 
       var writingsLoaded_flag = false;
       async function loadWritings() {
@@ -3968,9 +4029,34 @@
             };
           });
 
-          // Birleştir + created_at desc sırala
-          // Birleştir, grupları bir arada ve Task 1 üstte tutarak sırala
-          var allAssignments = mainAssignments.concat(vocabAssignments);
+          // GE havuz ödevleri (class_assignments) de ÖDEVLER'de görünsün — hepsi tek yerde.
+          var gePoolAssignments = [];
+          try {
+            var geClassRes = await sb.from('class_assignments').select('assignment_id, due_date, assigned_at').eq('class_id', classId);
+            var geClass = (geClassRes && geClassRes.data) || [];
+            if (geClass.length) {
+              var geIds2 = geClass.map(function (x) { return x.assignment_id; });
+              var memberCount2 = parseInt((document.getElementById('ks-member-count') || {}).textContent, 10) || 0;
+              var geMetaRes2 = await sb.from('ge_assignments').select('id,title,skill,level,unit').in('id', geIds2);
+              var geMetaMap2 = {}; ((geMetaRes2 && geMetaRes2.data) || []).forEach(function (m) { geMetaMap2[m.id] = m; });
+              var geSubRes2 = await sb.from('ge_submissions').select('assignment_id,user_id').eq('task_type', 'assignment').in('assignment_id', geIds2);
+              var geDone2 = {}; ((geSubRes2 && geSubRes2.data) || []).forEach(function (s) { (geDone2[s.assignment_id] = geDone2[s.assignment_id] || {})[s.user_id] = 1; });
+              gePoolAssignments = geClass.map(function (x) {
+                var m = geMetaMap2[x.assignment_id] || {};
+                return {
+                  assignment_id: x.assignment_id, title: m.title || 'Genel İngilizce Ödevi',
+                  type: 'gepool', config: { skill: m.skill, level: m.level, unit: m.unit },
+                  due_date: x.due_date, created_at: x.assigned_at,
+                  total_students: memberCount2,
+                  completed_count: geDone2[x.assignment_id] ? Object.keys(geDone2[x.assignment_id]).length : 0,
+                  _kind: 'gepool'
+                };
+              });
+            }
+          } catch (e) { console.warn('[ge pool in odevler]', e); }
+
+          // Birleştir + created_at desc sırala; grupları bir arada, Task 1 üstte tutarak sırala
+          var allAssignments = mainAssignments.concat(vocabAssignments).concat(gePoolAssignments);
           var groupAnchor = {};
           allAssignments.forEach(function (a) {
             var g = a.config && a.config.group_id;
@@ -4022,13 +4108,16 @@
             } else if (a.type === 'module' && a.config) {
               if (a.config.label) meta.push(a.config.label);
               meta.push(['sat_unit','ogren_spa','drill','vocab_flash'].indexOf(a.config.kind) !== -1 ? 'Otomatik takip' : 'Aç · işaretle');
+            } else if (a.type === 'gepool' && a.config) {
+              if (a.config.level) meta.push(a.config.level + (a.config.unit ? ' · Ünite ' + a.config.unit : ''));
+              if (a.config.skill) meta.push(GE_SKILL_TR[a.config.skill] || a.config.skill);
             }
 
             var descHtml = a.description
               ? '<p class="ks-assign-desc">' + esc(a.description) + '</p>'
               : '';
 
-            var kind = a._kind === 'vocab' ? 'vocab' : 'main';
+            var kind = a._kind === 'vocab' ? 'vocab' : (a._kind === 'gepool' ? 'gepool' : 'main');
             var grpHeader = '';
             if (a.config && a.config.group_id && !seenGroups[a.config.group_id]) {
               seenGroups[a.config.group_id] = true;
@@ -4058,6 +4147,8 @@
               if (e.target.closest('[data-action="delete-assign"]')) return;
               if (card.dataset.kind === 'vocab') {
                 openVocabAssignDrawer(card.dataset.id, card.dataset.title);
+              } else if (card.dataset.kind === 'gepool') {
+                openGePoolDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'writing') {
                 openWritingAssignDrawer(card.dataset.id, card.dataset.title);
               } else {
@@ -4072,9 +4163,14 @@
               if (!confirm('Bu ödevi silmek istiyor musun? Öğrenci progress kayıtları da silinecek.')) return;
               btn.disabled = true;
               try {
-                var rpcName = btn.dataset.kind === 'vocab' ? 'vocab_assignment_delete' : 'delete_assignment';
-                var r = await sb.rpc(rpcName, { p_assignment_id: btn.dataset.id });
-                if (r.error) throw r.error;
+                if (btn.dataset.kind === 'gepool') {
+                  var rd = await sb.from('class_assignments').delete().eq('class_id', classId).eq('assignment_id', btn.dataset.id);
+                  if (rd.error) throw rd.error;
+                } else {
+                  var rpcName = btn.dataset.kind === 'vocab' ? 'vocab_assignment_delete' : 'delete_assignment';
+                  var r = await sb.rpc(rpcName, { p_assignment_id: btn.dataset.id });
+                  if (r.error) throw r.error;
+                }
                 await loadAssignments();
               } catch (err) {
                 alert('Silme başarısız: ' + (err.message || err));

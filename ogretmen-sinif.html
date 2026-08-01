@@ -750,6 +750,8 @@
     .qd-item.open .qd-mark { background: var(--text-muted, #8a8a8a); }
     .gepool-head { display: flex; justify-content: flex-end; margin: 0 0 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line, #e5e0d8); }
     .gepool-head .qd-open { margin-left: 0; }
+    .geq-scroll { max-height: 58vh; overflow-y: auto; padding-right: 4px; margin-top: .5rem; }
+    .geq-scroll .qd-q { white-space: normal; }
     .ad-email {
       color: var(--text);
       min-width: 0;
@@ -3005,40 +3007,63 @@
             adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>';
             return;
           }
-          var html = header + '<ul class="ad-list">' + students.map(function (st) {
-            var email = st.email || '(e-posta yok)';
-            if (!st.submitted) {
-              return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div><div class="ad-progress progress-pending">—</div><span class="ad-status-pill status-pending">Yapmadı</span><div class="ad-actions"></div></li>'
-                + '<li class="ad-detail-row" hidden><div class="ad-detail-inner"></div></li>';
-            }
-            var ans = st.answers || {};
-            var allKeys = Object.keys(ans).sort(function (a, b) {
-              var na = parseInt(String(a).replace(/\D/g, ''), 10), nb = parseInt(String(b).replace(/\D/g, ''), 10);
-              if (isNaN(na) || isNaN(nb)) return a < b ? -1 : a > b ? 1 : 0;
-              return na - nb;
-            });
-            var gradedKeys = allKeys.filter(function (k) { return ans[k] && typeof ans[k].ok === 'boolean'; });
-            var correct = gradedKeys.filter(function (k) { return ans[k].ok; }).length;
-            var tot = gradedKeys.length;
-            var acc = tot ? Math.round(correct * 100 / tot) : 0;
-            var items = allKeys.map(function (k, i) {
-              var a = ans[k] || {};
-              var hasOk = typeof a.ok === 'boolean';
-              var cls = hasOk ? (a.ok ? 'ok' : 'no') : 'open';
-              var mark = hasOk ? (a.ok ? '✓' : '✗') : '•';
+          var tasks = d.tasks || [];
+          function geOptText(t, idx) {
+            if (idx === null || idx === undefined || idx === '') return '';
+            var n = (typeof idx === 'number') ? idx : parseInt(idx, 10);
+            if (Array.isArray(t.o) && !isNaN(n) && t.o[n] != null) return String(t.o[n]);
+            return String(idx);
+          }
+          function geCorrectText(t) {
+            if (t.c !== null && t.c !== undefined) return geOptText(t, t.c);
+            if (t.a != null && t.a !== '') return String(t.a);
+            return '';
+          }
+          function geBuildQList(ans) {
+            if (!tasks.length) return '<p class="qd-empty">Bu ödevin soruları bulunamadı.</p>';
+            var rows = tasks.map(function (t, i) {
+              var a = ans ? ans['t' + i] : null;
+              var answered = a && (typeof a.ok === 'boolean');
+              var mark = answered ? (a.ok ? '✓' : '✗') : '•';
+              var cls = answered ? (a.ok ? 'ok' : 'no') : 'open';
+              var correct = geCorrectText(t);
+              var chosen = '';
+              if (a) {
+                if (a.sel !== null && a.sel !== undefined) chosen = geOptText(t, a.sel);
+                else if (a.v != null) chosen = String(a.v);
+              }
+              var meta = '';
+              if (correct) meta += '<span class="qd-ans-right">Doğru: ' + esc(correct) + '</span>';
+              if (a && chosen && (!answered || !a.ok)) meta += (meta ? ' · ' : '') + 'Öğrenci: <span class="qd-ans-wrong">' + esc(chosen) + '</span>';
+              var qtext = t.q ? esc(String(t.q)) : ('Soru ' + (i + 1));
               return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
-                + '<div class="qd-body"><div class="qd-q">Soru ' + (i + 1) + '</div>'
-                + (hasOk ? '' : '<div class="qd-meta">açık uçlu · öğretmen değerlendirir</div>')
+                + '<div class="qd-body"><div class="qd-q">' + (i + 1) + '. ' + qtext + '</div>'
+                + (meta ? '<div class="qd-meta">' + meta + '</div>' : '')
                 + '</div></div>';
             }).join('');
+            return '<div class="qd-list geq-scroll">' + rows + '</div>';
+          }
+          var html = header + '<ul class="ad-list">' + students.map(function (st) {
+            var email = st.email || '(e-posta yok)';
+            var ans = st.answers || null;
+            var correctN = 0, tot = 0;
+            tasks.forEach(function (t, i) { var a = ans ? ans['t' + i] : null; if (a && typeof a.ok === 'boolean') { tot++; if (a.ok) correctN++; } });
+            var acc = tot ? Math.round(correctN * 100 / tot) : 0;
             var gradeTxt = (st.grade != null && st.grade !== '') ? (' · Not: ' + esc(st.grade)) : '';
-            var detail = '<div class="ad-detail-inner"><div class="qd-summary"><span><b>' + tot + '</b> soru</span>'
-              + (tot ? '<span class="qd-acc">' + correct + ' doğru · %' + acc + '</span>' : '<span style="color:var(--text-muted);font-size:.74rem">açık uçlu / puanlanacak</span>')
-              + '<span style="color:var(--text-muted);font-size:.74rem">' + (st.submitted_at ? fmtRelative(st.submitted_at) : '') + gradeTxt + '</span></div>'
-              + (items ? '<div class="qd-list">' + items + '</div>' : '') + '</div>';
+            var summary = '<div class="qd-summary">'
+              + (st.submitted
+                ? '<span><b>' + tot + '</b> soru</span>' + (tot ? '<span class="qd-acc">' + correctN + ' doğru · %' + acc + '</span>' : '<span style="color:var(--text-muted);font-size:.74rem">açık uçlu / puanlanacak</span>')
+                : '<span style="color:var(--text-muted);font-size:.78rem">Öğrenci bu ödevi henüz yapmadı — aşağıda soruların doğru cevaplarını görebilirsin.</span>')
+              + '<span style="color:var(--text-muted);font-size:.74rem">' + (st.submitted_at ? fmtRelative(st.submitted_at) : '') + gradeTxt + '</span></div>';
+            var detail = '<div class="ad-detail-inner">' + summary + geBuildQList(ans) + '</div>';
+            var pill = st.submitted
+              ? '<span class="ad-status-pill status-completed">Tamamladı</span>'
+              : '<span class="ad-status-pill status-pending">Yapmadı</span>';
+            var prog = st.submitted ? (tot ? correctN + ' / ' + tot : '✓') : '—';
+            var progCls = st.submitted ? 'progress-completed' : 'progress-pending';
             return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
-              + '<div class="ad-progress progress-completed">' + (tot ? correct + ' / ' + tot : '✓') + '</div>'
-              + '<span class="ad-status-pill status-completed">Tamamladı</span>'
+              + '<div class="ad-progress ' + progCls + '">' + prog + '</div>'
+              + pill
               + '<div class="ad-actions"><button type="button" class="ad-inspect-btn gepool-inspect">İncele</button></div></li>'
               + '<li class="ad-detail-row" hidden>' + detail + '</li>';
           }).join('') + '</ul>';
@@ -3051,6 +3076,7 @@
               }
             });
           });
+          if (students.length === 1) { var b0 = adBody.querySelector('.gepool-inspect'); if (b0) b0.click(); }
         } catch (err) {
           adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
         }

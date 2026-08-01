@@ -1987,6 +1987,11 @@
           <span class="ks-section-hint">Havuzdan ödev seç, son tarih belirle, sınıfa ata.</span>
         </div>
         <div class="ge-filter-bar">
+          <select id="ge-filter-aud" title="Kategori filtresi">
+            <option value="adult">Yetişkin</option>
+            <option value="teen">Teen</option>
+            <option value="junior">Junior</option>
+          </select>
           <select id="ge-filter-level" title="Seviye filtresi">
             <option value="">Tüm seviyeler</option>
             <option value="A1">A1</option>
@@ -3661,7 +3666,7 @@
         try {
           var [poolRes, assignedRes, unlockRes] = await Promise.all([
             sb.from('ge_assignments')
-              .select('id, level, unit, title, description, skill, active')
+              .select('id, level, unit, title, description, skill, active, audience')
               .order('level', { ascending: true })
               .order('unit', { ascending: true }),
             sb.from('class_assignments')
@@ -3783,11 +3788,14 @@
       function gePopulateUnitFilter() {
         var lvSel = document.getElementById('ge-filter-level');
         var unSel = document.getElementById('ge-filter-unit');
+        var audSel = document.getElementById('ge-filter-aud');
+        var aud = audSel ? audSel.value : 'adult';
         var lv = lvSel.value;
         var prev = unSel.value;
         var units = {};
         gePool.forEach(function (a) {
           if (a.active === false) return;
+          if ((a.audience || 'adult') !== aud) return;
           if (!lv || a.level === lv) units[a.unit] = true;
         });
         var keys = Object.keys(units).map(Number).sort(function (a, b) { return a - b; });
@@ -3800,6 +3808,8 @@
       function renderGePool() {
         gePopulateUnitFilter();
         var list = document.getElementById('ge-pool-list');
+        var audSel = document.getElementById('ge-filter-aud');
+        var aud = audSel ? audSel.value : 'adult';
         var lv = document.getElementById('ge-filter-level').value;
         var un = document.getElementById('ge-filter-unit').value;
         var skSel = document.getElementById('ge-filter-skill');
@@ -3814,6 +3824,7 @@
 
         var rows = gePool.filter(function (a) {
           if (a.active === false) return false;
+          if ((a.audience || 'adult') !== aud) return false;
           if (lv && a.level !== lv) return false;
           if (un && String(a.unit) !== un) return false;
           if (sk && a.skill !== sk) return false;
@@ -4013,6 +4024,7 @@
         });
       }
 
+      document.getElementById('ge-filter-aud').addEventListener('change', renderGePool);
       document.getElementById('ge-filter-level').addEventListener('change', renderGePool);
       document.getElementById('ge-filter-unit').addEventListener('change', renderGePool);
       document.getElementById('ge-filter-skill').addEventListener('change', renderGePool);

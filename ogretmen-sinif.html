@@ -2666,6 +2666,14 @@
           })
         ]);
       }
+      // RPC hatasını kullanıcı-dostu mesaja çevir. "permission denied"/JWT = oturum düşmüş.
+      function rpcErrMsg(err) {
+        var m = ((err && (err.message || err.code)) || err || '') + '';
+        if (/permission denied|jwt|not_authenticated|invalid.*token|expired|401/i.test(m)) {
+          return 'Oturumun süresi dolmuş görünüyor. Sağ üstten <b>çıkış yapıp tekrar giriş</b> yap; sonra tekrar dene.';
+        }
+        return 'Yüklenemedi: ' + esc(m);
+      }
       function mountStudentAnalysis(studentId) {
         var el = document.getElementById('sd-panel-analiz');
         if (!el) { return; }
@@ -2685,7 +2693,7 @@
           if (r.error) throw r.error;
           renderStudentDetail(r.data || {}, studentId);
         } catch (err) {
-          sdBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+          sdBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + rpcErrMsg(err) + '</p>';
         }
       }
 
@@ -3021,7 +3029,7 @@
             inner.innerHTML = renderInspectDetail(d);
             target.dataset.loaded = '1';
           })
-          .catch(function (err) { inner.innerHTML = '<p class="qd-empty">Yüklenemedi: ' + esc(err.message || err) + '</p>'; });
+          .catch(function (err) { inner.innerHTML = '<p class="qd-empty">' + rpcErrMsg(err) + '</p>'; });
       });
 
       // ============================================================
@@ -4128,7 +4136,7 @@
 
           adBody.innerHTML = studentsHtml + wordsHtml;
         } catch (err) {
-          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + rpcErrMsg(err) + '</p>';
         }
       }
 
@@ -4243,7 +4251,7 @@
             });
           });
         } catch (err) {
-          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + rpcErrMsg(err) + '</p>';
         }
       }
 
@@ -4299,7 +4307,7 @@
 
           adBody.innerHTML = html;
         } catch (err) {
-          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">Yüklenemedi: ' + esc(err.message || err) + '</p>';
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + rpcErrMsg(err) + '</p>';
         }
       }
 

@@ -1,27 +1,29 @@
-/* Gri Cat — sınıf rozetleri için deterministik, sevimli piksel-kedi ikonu.
-   Her sınıf (seed) farklı renkli bir kedi alır. Dış kaynak yok, saf inline SVG. */
+/* Gri Cat — sınıf rozetleri için deterministik oturan piksel-kedi (referans: siyah oturan kedi).
+   Her sınıf (seed) farklı koyu renk tonunda bir kedi alır. Dış kaynak yok, saf inline SVG. */
 (function () {
-  // 16x16 sevimli kedi yüzü: büyük parlak gözler, pembe kulak/burun, allık, pati.
-  // o=kürk, i=kulak içi(pembe), e=göz, h=göz parıltısı(beyaz), n=burun, b=allık, m=ağız
+  // 16x18 oturan kedi: sivri kulaklar, pembe kulak içi, sarı gözler, oturan gövde, patiler.
+  // o=gövde(koyu), i=kulak içi(pembe), y=göz(sarı)
   var MAP = [
-    "  oo        oo  ",
-    "  oio      oio  ",
-    "  oiio    oiio  ",
+    "   o        o   ",
+    "   oo      oo   ",
+    "   oio    oio   ",
+    "   oiooooooio   ",
     "  oooooooooooo  ",
-    " oooooooooooooo ",
-    " oooooooooooooo ",
-    " ooeehooooeehoo ",
-    " ooeehooooeehoo ",
-    " boooooooooooob ",
-    " oooooonnoooooo ",
-    " ooooommmmooooo ",
-    " oooooooooooooo ",
+    "  oooooooooooo  ",
+    "  oyyooooooyyo  ",
+    "  oyyooooooyyo  ",
+    "  oooooooooooo  ",
     "  oooooooooooo  ",
     "   oooooooooo   ",
-    "   oo  oo  oo   ",
+    "   oooooooooo   ",
+    "  oooooooooooo  ",
+    " oooooooooooooo ",
+    " oooooooooooooo ",
+    "oooooooooooooooo",
+    "ooooo oooo ooooo",
     "                "
   ];
-  var U = 16;
+  var U = 16, H = MAP.length;
 
   function hashSeed(seed) {
     var s = String(seed == null ? '' : seed), h = 0;
@@ -32,27 +34,23 @@
   function svg(seed, px) {
     var h = hashSeed(seed);
     var hue = h % 360;
-    var fur = 'hsl(' + hue + ',55%,53%)';
-    var ear = 'hsl(340,72%,80%)';
-    var eye = '#2b2b33';
-    var hl = '#ffffff';
-    var nose = 'hsl(340,76%,66%)';
-    var blush = 'hsl(350,82%,80%)';
-    var mouth = 'hsl(' + hue + ',42%,34%)';
-    var bg = 'hsl(' + hue + ',44%,94%)';
-    var col = { o: fur, i: ear, e: eye, h: hl, n: nose, b: blush, m: mouth };
+    var body = 'hsl(' + hue + ',36%,24%)';     // koyu, hue ipuçlu (referans: siyah kedi)
+    var ear = 'hsl(345,60%,68%)';               // pembe kulak içi
+    var eye = '#f4c518';                          // sarı göz
+    var bg = 'hsl(' + hue + ',42%,92%)';         // açık renkli tile
+    var col = { o: body, i: ear, y: eye };
     var rects = '';
-    for (var r = 0; r < MAP.length; r++) {
+    for (var r = 0; r < H; r++) {
       var row = MAP[r];
       for (var c = 0; c < row.length; c++) {
         var ch = row.charAt(c);
         if (ch === ' ') continue;
-        rects += '<rect x="' + c + '" y="' + r + '" width="1.03" height="1.03" fill="' + (col[ch] || fur) + '"/>';
+        rects += '<rect x="' + c + '" y="' + r + '" width="1.03" height="1.03" fill="' + (col[ch] || body) + '"/>';
       }
     }
     var dim = px ? ('width="' + px + '" height="' + px + '"') : 'width="100%" height="100%"';
-    return '<svg viewBox="0 0 ' + U + ' ' + U + '" ' + dim + ' shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" style="display:block">'
-      + '<rect x="0" y="0" width="' + U + '" height="' + U + '" rx="3" fill="' + bg + '"/>'
+    return '<svg viewBox="0 0 ' + U + ' ' + H + '" ' + dim + ' preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" style="display:block">'
+      + '<rect x="-1" y="-1" width="' + (U + 2) + '" height="' + (H + 2) + '" fill="' + bg + '"/>'
       + rects + '</svg>';
   }
 

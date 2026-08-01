@@ -1,23 +1,27 @@
-/* Gri Cat — sınıf rozetleri için deterministik piksel-kedi ikonu.
+/* Gri Cat — sınıf rozetleri için deterministik, sevimli piksel-kedi ikonu.
    Her sınıf (seed) farklı renkli bir kedi alır. Dış kaynak yok, saf inline SVG. */
 (function () {
+  // 16x16 sevimli kedi yüzü: büyük parlak gözler, pembe kulak/burun, allık, pati.
+  // o=kürk, i=kulak içi(pembe), e=göz, h=göz parıltısı(beyaz), n=burun, b=allık, m=ağız
   var MAP = [
-    "  o        o  ",
-    "  oo      oo  ",
-    "  oio    oio  ",
-    "  oiooooooio  ",
-    " oooooooooooo ",
-    " ooeoooooeooo ",
-    " oooooooooooo ",
-    " ooooonnooooo ",
-    " oooooooooooo ",
-    " oooooooooooo ",
-    "  oooooooooo  ",
-    "  oooooooooo  ",
-    "   oooooooo   ",
-    "    oo  oo    "
+    "  oo        oo  ",
+    "  oio      oio  ",
+    "  oiio    oiio  ",
+    "  oooooooooooo  ",
+    " oooooooooooooo ",
+    " oooooooooooooo ",
+    " ooeehooooeehoo ",
+    " ooeehooooeehoo ",
+    " boooooooooooob ",
+    " oooooonnoooooo ",
+    " ooooommmmooooo ",
+    " oooooooooooooo ",
+    "  oooooooooooo  ",
+    "   oooooooooo   ",
+    "   oo  oo  oo   ",
+    "                "
   ];
-  var U = 14;
+  var U = 16;
 
   function hashSeed(seed) {
     var s = String(seed == null ? '' : seed), h = 0;
@@ -28,19 +32,22 @@
   function svg(seed, px) {
     var h = hashSeed(seed);
     var hue = h % 360;
-    var body = 'hsl(' + hue + ',52%,46%)';
-    var ear = 'hsl(' + hue + ',58%,75%)';
-    var bg = 'hsl(' + hue + ',42%,93%)';
-    var eye = '#243039';
-    var nose = 'hsl(342,66%,67%)';
+    var fur = 'hsl(' + hue + ',55%,53%)';
+    var ear = 'hsl(340,72%,80%)';
+    var eye = '#2b2b33';
+    var hl = '#ffffff';
+    var nose = 'hsl(340,76%,66%)';
+    var blush = 'hsl(350,82%,80%)';
+    var mouth = 'hsl(' + hue + ',42%,34%)';
+    var bg = 'hsl(' + hue + ',44%,94%)';
+    var col = { o: fur, i: ear, e: eye, h: hl, n: nose, b: blush, m: mouth };
     var rects = '';
     for (var r = 0; r < MAP.length; r++) {
       var row = MAP[r];
       for (var c = 0; c < row.length; c++) {
         var ch = row.charAt(c);
         if (ch === ' ') continue;
-        var col = ch === 'e' ? eye : ch === 'n' ? nose : ch === 'i' ? ear : body;
-        rects += '<rect x="' + c + '" y="' + r + '" width="1.02" height="1.02" fill="' + col + '"/>';
+        rects += '<rect x="' + c + '" y="' + r + '" width="1.03" height="1.03" fill="' + (col[ch] || fur) + '"/>';
       }
     }
     var dim = px ? ('width="' + px + '" height="' + px + '"') : 'width="100%" height="100%"';
@@ -51,7 +58,6 @@
 
   window.GriCat = {
     svg: svg,
-    // Bir elemanın içini kediyle doldur (badge kare). Yeşil arka planı SVG'nin bg'si kaplar.
     set: function (el, seed, px) {
       if (!el) return;
       el.innerHTML = svg(seed, px);

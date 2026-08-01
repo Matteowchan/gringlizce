@@ -13,7 +13,7 @@ var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelect
 var params=new URLSearchParams(location.search);
 
 var STATE={
-  room:(params.get('room')||'').toUpperCase(), isHost:params.get('host')==='1',
+  room:(params.get('room')||'').toUpperCase(), isHost:params.get('host')==='1', classId:(params.get('class')||''),
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
@@ -424,7 +424,32 @@ function toggleDock(which){
   if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); }
 }
 function bindDockTabs(){ $$('.dock-tab').forEach(function(t){ t.addEventListener('click',function(){ toggleDockTab(t.dataset.dock); }); }); }
-function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-active',which); $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); }); $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); }); if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); } }
+function toggleDockTab(which){ var dock=$('#gmr-dock'); dock.setAttribute('data-active',which); $$('.dock-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.dock===which); }); $$('.dock-pane').forEach(function(p){ p.classList.toggle('hidden',p.getAttribute('data-dock-pane')!==which); }); if(which==='chat'){ chatUnread=0; $('#chat-badge').classList.remove('show'); } if(which==='assign'){ loadClassAssignments(); } }
+// Ders sırasında sınıf ödevlerini + tamamlanma oranını göster (öğretmen sınıftan başlattıysa).
+var _gmAssignLoaded=false;
+function loadClassAssignments(force){
+  var root=document.getElementById('gm-assign-root'); if(!root) return;
+  if(_gmAssignLoaded && !force) return;
+  if(!STATE.supabase || !STATE.classId){ root.innerHTML='<div class="dock-empty" style="padding:8px 0">Sınıf ödevleri yalnızca sınıftan başlatılan canlı derste görünür.</div>'; _gmAssignLoaded=true; return; }
+  root.innerHTML='<div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
+  STATE.supabase.rpc('list_class_assignments',{p_class_id:STATE.classId}).then(function(r){
+    if(r.error) throw r.error;
+    var list=r.data||[]; _gmAssignLoaded=true;
+    if(!list.length){ root.innerHTML='<div class="dock-empty" style="padding:8px 0">Bu sınıfa henüz ödev atanmamış.</div>'; return; }
+    root.innerHTML='<div style="display:flex;flex-direction:column;gap:8px">'+list.map(function(a){
+      var total=parseInt(a.total_students,10)||0, done=parseInt(a.completed_count,10)||0;
+      var pct=total>0?Math.round(100*done/total):0;
+      var url=(a.config&&a.config.url)?a.config.url:'';
+      return '<div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px">'
+        +'<div style="font-weight:600;font-size:13px;margin-bottom:5px">'+esc(a.title||'Ödev')+'</div>'
+        +'<div style="height:6px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin-bottom:5px"><div style="height:100%;width:'+pct+'%;background:#3a9d78"></div></div>'
+        +'<div style="font-size:11px;opacity:.78">'+done+' / '+total+' tamamladı · %'+pct+(url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:#8fd3bd">Aç</a>':'')+'</div>'
+      +'</div>';
+    }).join('')+'</div>'
+    +'<button id="gm-assign-refresh" style="margin-top:8px;width:100%;padding:7px;border:1px solid rgba(255,255,255,.18);background:transparent;color:#cfe;border-radius:8px;cursor:pointer;font-size:12px">Yenile</button>';
+    var rb=document.getElementById('gm-assign-refresh'); if(rb)rb.addEventListener('click',function(){ loadClassAssignments(true); });
+  }).catch(function(e){ root.innerHTML='<div class="dock-empty" style="padding:8px 0;color:#e88">Yüklenemedi: '+esc(e&&e.message||e)+'</div>'; _gmAssignLoaded=false; });
+}
 
 async function shareScreen(){
   if(!STATE.lkRoom){ toast('Ekran paylaşımı için canlı bağlantı gerekli.'); return; }

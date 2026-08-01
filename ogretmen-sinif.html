@@ -4581,6 +4581,24 @@
         return cats;
       }
       var SITE_CATALOG = buildSiteCatalog();
+      // Konu-bazlı drilleri (öğren sayfası dersleri) materyal seçicisine ekle: her ders ayrı,
+      // başlığıyla ve soru sayısıyla. url=<sayfa>#<ders> -> material oto-takip (slug URL'den türer).
+      (function loadDrillTopics() {
+        fetch('assets/drill-catalog.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (cat) {
+          if (!cat || !cat.length) return;
+          var byExam = {};
+          cat.forEach(function (x) { (byExam[x.exam] = byExam[x.exam] || []).push(x); });
+          Object.keys(byExam).forEach(function (ex) {
+            SITE_CATALOG.push({
+              key: 'drilltopic-' + ex,
+              label: ex + ' · Konu Drilleri (otomatik takip)',
+              pages: byExam[ex].map(function (x) {
+                return { name: (x.group ? x.group + ' · ' : '') + x.name + ' (' + x.count + ' soru)', url: x.page + '#' + x.id };
+              })
+            });
+          });
+        }).catch(function () {});
+      })();
       function siteCat(key) { for (var i = 0; i < SITE_CATALOG.length; i++) if (SITE_CATALOG[i].key === key) return SITE_CATALOG[i]; return SITE_CATALOG[0]; }
       function autofillSiteTitle(pageSel) {
         var ttl = document.getElementById('ca-title');

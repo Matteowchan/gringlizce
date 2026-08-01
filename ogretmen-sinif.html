@@ -5353,12 +5353,17 @@
           assignmentsLoaded = false;
           await loadAssignments();
           assignmentsLoaded = true;
+          // GE havuz ödevi eklendiyse "Genel İngilizce" sekmesini yenile + o sekmeye geç (yoksa "çıkmıyor" sanılır).
+          if (_geId) {
+            try { if (typeof loadGeTab === 'function') await loadGeTab(); } catch (e) {}
+            var _geTabBtn = document.querySelector('.ks-tab[data-tab="ge"]'); if (_geTabBtn) _geTabBtn.click();
+          }
           var cd = await sb.rpc('class_detail', { p_class_id: classId });
           if (cd.data) {
             document.getElementById('ks-assignment-count').textContent = cd.data.assignment_count || 0;
           }
         } catch (err) {
-          caErr.textContent = 'Oluşturulamadı: ' + (err.message || err);
+          caErr.innerHTML = (typeof rpcErrMsg === 'function') ? rpcErrMsg(err) : ('Oluşturulamadı: ' + esc(err.message || err));
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = 'Ödevi Oluştur';

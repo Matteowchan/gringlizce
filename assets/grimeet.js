@@ -18,7 +18,7 @@ var STATE={
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
   mirror:true, _bgApplied:false, bgFlip:false,
-  bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, matControl:false, _matScrollLock:false,
+  bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, scrZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
@@ -299,8 +299,21 @@ function attachSelf(){
   else if(STATE.localStream){ if(!v){ v=document.createElement('video'); v.className=mirCls; v.autoplay=true;v.muted=true;v.playsInline=true; v.srcObject=STATE.localStream; var av2=t.querySelector('.avatar'); if(av2)av2.remove(); t.insertBefore(v,t.firstChild); } else { v.className=mirCls; } }
 }
 
-function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); } track.attach(v); $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); }
-function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); }
+function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(!v){ v=document.createElement('video'); v.autoplay=true;v.playsInline=true; if(local)v.muted=true; box.insertBefore(v,box.firstChild); } track.attach(v); $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); applyScreenZoom(); }
+function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); STATE.scrZoom=1; applyScreenZoom(); }
+// Ekran paylaşımı zoom — her izleyici kendi görünümünü büyütür (yerel); >1'de kaydırarak gezilir.
+function applyScreenZoom(){
+  var box=document.getElementById('gmr-screen'); if(!box)return;
+  var v=box.querySelector('video');
+  if(v){ v.style.width=(STATE.scrZoom*100)+'%'; v.style.height='auto'; v.style.maxWidth='none'; v.style.margin='0 auto'; v.style.display='block'; }
+  box.style.overflow = STATE.scrZoom>1 ? 'auto' : 'hidden';
+  var val=document.getElementById('scr-zoom-val'); if(val)val.textContent=Math.round(STATE.scrZoom*100)+'%';
+}
+function bindScreenZoom(){
+  var zi=document.getElementById('scr-zoom-in'), zo=document.getElementById('scr-zoom-out');
+  if(zi)zi.addEventListener('click',function(){ STATE.scrZoom=Math.min(3,Math.round((STATE.scrZoom+0.2)*100)/100); applyScreenZoom(); });
+  if(zo)zo.addEventListener('click',function(){ STATE.scrZoom=Math.max(1,Math.round((STATE.scrZoom-0.2)*100)/100); applyScreenZoom(); });
+}
 
 /* ================= TILES ================= */
 function tileEl(id){ return STATE.tiles[id]; }
@@ -1109,7 +1122,7 @@ function boot(){
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); setupGate();
+  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupGate();
   var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
   window.addEventListener('beforeunload',_teardown);
   window.addEventListener('pagehide',_teardown);

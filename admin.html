@@ -16,8 +16,8 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/site-overrides.css">
-  <script>document.documentElement.setAttribute('data-theme', 'light');</script>
-  <!-- Admin paneli her zaman light tema'da. Dark mode kontrastı bozuyor. -->
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js" defer></script>
   <style>
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
@@ -1343,7 +1343,7 @@
     }
     .status-pill.pending  { background: rgba(200, 154, 60, 0.15); color: #8a6020; }
     .status-pill.success  { background: rgba(90, 138, 58, 0.15); color: #3a5a1f; }
-    .status-pill.overdue  { background: rgba(180, 80, 70, 0.18); color: #6f3530; }
+    .status-pill.overdue  { background: rgba(180, 80, 70, 0.18); color: var(--rm-err-text); }
     .status-pill.scheduled{ background: rgba(74, 106, 138, 0.15); color: #2c4a6e; }
 
     .info-banner {
@@ -1626,7 +1626,7 @@
       background: rgba(180, 80, 70, 0.08);
       border-left: 2px solid #b45046;
       padding: 0.5rem 0.8rem;
-      color: #6f3530;
+      color: var(--rm-err-text);
       font-size: 0.85rem;
       margin-bottom: 0.8rem;
       display: none;
@@ -1637,6 +1637,21 @@
       .kpi-strip { grid-template-columns: repeat(2, 1fr); }
       .ai-feature-row { grid-template-columns: 1fr 70px 80px 70px; }
     }
+
+    /* ===== Dark tema kontrast düzeltmeleri =====
+       Açık zemin için seçilmiş koyu metin renkleri dark modda koyu-üstüne-koyu
+       kalıyordu; dark modda daha açık tonlara çevriliyor. --rm-err-text hem CSS
+       sınıfları hem de JS ile basılan inline hata kutuları için kullanılıyor. */
+    :root { --rm-err-text: #6f3530; }
+    :root[data-theme="dark"] { --rm-err-text: #e28d80; }
+    :root[data-theme="dark"] .status-pill.pending   { color: #e0b45c; }
+    :root[data-theme="dark"] .status-pill.success   { color: #86c368; }
+    :root[data-theme="dark"] .status-pill.scheduled { color: #8fb0d8; }
+    :root[data-theme="dark"] .template-tag.purple   { color: #b79ad6; }
+    :root[data-theme="dark"] .template-tag.blue     { color: #8fb0d8; }
+    :root[data-theme="dark"] .log-level.info        { color: #8fb0d8; }
+    :root[data-theme="dark"] .log-level.audit       { color: #b79ad6; }
+    :root[data-theme="dark"] .stat-hero.live .stat-icon { color: #7cc26a; }
 
   </style>
   <meta name="description" content="Yönetim Paneli — Gri English">
@@ -4546,7 +4561,7 @@
       } catch (e) {
         console.error('[content tab]', e);
         var msg = e.message || e.hint || JSON.stringify(e);
-        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> SQL migration\'ları (16-20 numara) Supabase\'de çalıştırılmamış olabilir.</div>';
+        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: var(--rm-err-text); font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> SQL migration\'ları (16-20 numara) Supabase\'de çalıştırılmamış olabilir.</div>';
         if (grid) grid.innerHTML = errHtml;
         if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: #b45046;">' + escHtml(msg) + '</td></tr>';
       }
@@ -4609,7 +4624,7 @@
         console.error('[ai-health]', e);
         var msg = e.message || e.hint || JSON.stringify(e);
         var box = $('ai-features');
-        if (box) box.innerHTML = '<div style="padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 18 numaralı SQL (ai_call_log) Supabase\'de çalıştırılmamış olabilir.</div>';
+        if (box) box.innerHTML = '<div style="padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: var(--rm-err-text); font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 18 numaralı SQL (ai_call_log) Supabase\'de çalıştırılmamış olabilir.</div>';
       }
     }
 
@@ -4795,7 +4810,7 @@
       } catch (e) {
         console.error('[gamification]', e);
         var msg = e.message || e.hint || JSON.stringify(e);
-        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 16 numaralı SQL (gamification) Supabase\'de çalıştırılmamış olabilir.</div>';
+        var errHtml = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: var(--rm-err-text); font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 16 numaralı SQL (gamification) Supabase\'de çalıştırılmamış olabilir.</div>';
         $('badge-grid').innerHTML = errHtml;
       }
     }
@@ -5096,7 +5111,7 @@
         console.error('[comms]', e);
         var msg = e.message || e.hint || JSON.stringify(e);
         var grid = $('template-grid');
-        if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: #6f3530; font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 19 numaralı SQL (email schema) Supabase\'de çalıştırılmamış olabilir.</div>';
+        if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 1.2rem; background: rgba(180,80,70,0.08); border-left: 3px solid #b45046; color: var(--rm-err-text); font-family: var(--font-display); font-style: italic;">Hata: ' + escHtml(msg) + '<br><br><strong style="font-family: var(--font-ui); font-style: normal;">Olası sebep:</strong> 19 numaralı SQL (email schema) Supabase\'de çalıştırılmamış olabilir.</div>';
       }
     }
     async function openCampaignDetail(id) {

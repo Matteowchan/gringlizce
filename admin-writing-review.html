@@ -170,6 +170,30 @@
     .status-line.err { color: #c63838; }
 
     .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+
+    /* Sabit tema değiştirme butonu — bu sayfada nav yok, theme.js toggle enjekte
+       edemiyor. Kendi inline stiliyle çalışır, main.css'e bağlı değil. */
+    #awr-theme-fab {
+      position: fixed; top: 1rem; right: 1rem; z-index: 200;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      background: #FBF6EC; color: #241E17;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      transition: color .15s ease, border-color .15s ease, background .15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root[data-theme="dark"] #awr-theme-fab {
+      background: #201C17; color: #F1E9D9;
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+    }
+    #awr-theme-fab svg { width: 18px; height: 18px; display: block; }
+    #awr-theme-fab .awr-sun { display: none; }
+    #awr-theme-fab .awr-moon { display: block; }
+    :root[data-theme="dark"] #awr-theme-fab .awr-sun { display: block; }
+    :root[data-theme="dark"] #awr-theme-fab .awr-moon { display: none; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <!-- PWA -->
@@ -213,6 +237,25 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
+
+  <button id="awr-theme-fab" type="button" aria-label="Açık/Koyu tema" title="Açık/Koyu tema">
+    <svg class="awr-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    <svg class="awr-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+  </button>
+  <script>
+  (function () {
+    var KEY = 'gri-theme';
+    var b = document.getElementById('awr-theme-fab');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      var cur = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem(KEY, next); } catch (e) {}
+    });
+  })();
+  </script>
+
   <div class="review-topbar">
     <a class="back" href="admin.html">‹ Yönetim Paneline Dön</a>
     <div class="meta" id="topMeta">—</div>

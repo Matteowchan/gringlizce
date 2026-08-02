@@ -60,6 +60,7 @@
   }
   </script>
   <script src="assets/curriculum.js"></script>
+  <script src="assets/gri-crossword.js?v=1"></script>
   <script src="assets/nav.js?v=8"></script>
   <script src="assets/track.js" defer></script>
   <style>
@@ -498,6 +499,7 @@ function buildPage(){
 
   wireTasks();
   restoreState();
+  mountCrosswords();
   updateDots();
   updateSubmitState();
   odShowSec(1,true);
@@ -547,9 +549,56 @@ function renderTasks(tasks){
       html+='<textarea class="ge-ta" data-key="'+key+'" placeholder="Write your answer here..."></textarea>';
       html+='<div class="ge-wc" id="wc-'+key+'">0 kelime</div>';
       html+='</div>';
+    }else if(task.type==='crossword'){
+      html+='<div class="ge-card ge-cwcard" id="cwc-'+key+'">';
+      html+='<h2>Bulmaca <span class="en">(Crossword)</span></h2>';
+      if(task.intro)html+='<p class="ge-inst">'+esc(task.intro)+'</p>';
+      else html+='<p class="ge-inst">İpuçlarını okuyup harfleri ızgaraya yerleştir. Bir ipucuna tıklayınca ilgili kutular vurgulanır. Bittiğinde <b>Kontrol Et</b>\'e bas.</p>';
+      html+='<div class="ge-cw-host" id="cw-'+key+'" data-key="'+key+'"></div>';
+      html+='<div class="ge-gapbtnrow"><button type="button" class="ge-gapbtn ge-cwbtn" data-key="'+key+'">Kontrol Et</button></div>';
+      html+='<div class="ge-qfb" id="fb-'+key+'"></div>';
+      html+='</div>';
     }
   }
   return html;
+}
+
+/* crossword mount + integration */
+var CW={}; /* key -> GriCrossword instance */
+function mountCrosswords(){
+  CW={};
+  for(var t=0;t<TASKS.length;t++){
+    if(TASKS[t].type!=='crossword')continue;
+    var key=taskKey(t);
+    var el=document.getElementById('cw-'+key);
+    if(!el||!window.GriCrossword)continue;
+    (function(k){
+      var saved=(ST.a[k]&&ST.a[k].cw)?ST.a[k].cw:null;
+      CW[k]=window.GriCrossword.mount(el,taskOf(k),{
+        value:saved,
+        onChange:function(inst){
+          ST.a[k]={t:'crossword',cw:inst.getState().cw,ck:!!(ST.a[k]&&ST.a[k].ck)};
+          saveSt(ST);
+          afterAnswer(k);
+        }
+      });
+      if(ST.a[k]&&ST.a[k].ck)CW[k].check();
+    })(key);
+  }
+}
+function checkCrossword(key){
+  var inst=CW[key];if(!inst)return;
+  var r=inst.check();
+  var task=taskOf(key);
+  var fb=document.getElementById('fb-'+key);
+  var all=(r.correct===r.total);
+  if(fb){
+    fb.className='ge-qfb on '+(all?'ok':'no');
+    fb.textContent=(all?'Tebrikler, bulmacayı tamamladın! ':'Doğru kelime: '+r.correct+'/'+r.total+'. Kırmızı harfleri düzeltip tekrar dene. ')+(task.e||'');
+  }
+  ST.a[key]={t:'crossword',cw:inst.getState().cw,ck:true};
+  saveSt(ST);
+  afterAnswer(key);
 }
 
 /* ---------- interactions ---------- */
@@ -632,6 +681,8 @@ function wireTasks(){
     if(!key)return;
     if(b.className.indexOf('ge-opt')>-1){
       applyMcq(key,parseInt(b.getAttribute('data-i'),10),true);
+    }else if(b.className.indexOf('ge-cwbtn')>-1){
+      checkCrossword(key);
     }else if(b.className.indexOf('ge-gapbtn')>-1){
       checkGap(key,true);
     }
@@ -681,6 +732,7 @@ function taskDone(ti){
   if(task.type==='mcq')return true;
   if(task.type==='gap')return !!a.ck;
   if(task.type==='writing')return (a.n||0)>=(task.min||40);
+  if(task.type==='crossword'){var inst=CW[taskKey(ti)];return inst?inst.isFilled():false;}
   return false;
 }
 function doneCount(){
@@ -784,6 +836,7 @@ window.odSubmit=function(){
     var task=TASKS[t],a=ST.a[taskKey(t)];
     if(task.type==='mcq'){total++;if(a&&a.ok)correct++;}
     else if(task.type==='gap'){total++;if(a&&a.ok)correct++;}
+    else if(task.type==='crossword'){var cwi=CW[taskKey(t)];var g=cwi?cwi.gradeSilent():{correct:0,total:(task.entries||[]).length};total+=g.total;correct+=g.correct;}
     else if(task.type==='writing'&&a){
       writing.push({prompt:task.prompt||'',text:a.text||'',words:a.n||0});
       wcTotal+=(a.n||0);

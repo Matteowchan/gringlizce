@@ -52,7 +52,7 @@
       '.gcw-clue span{color:inherit;flex:1;}',
       '.gcw-len{font-style:normal;color:var(--gcw-num);font-weight:600;white-space:nowrap;}',
       '.gcw-ex{font-style:normal;margin-left:6px;font-size:.68rem;font-weight:800;color:#2c5a82;background:rgba(58,110,168,.16);padding:1px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;}',
-      '@media (prefers-color-scheme:dark){.gcw-ex{color:#8ab8e0;}}',
+      ':root[data-theme="dark"] .gcw-ex{color:#8ab8e0;}',
       '.gcw-hint{flex:none;align-self:flex-start;margin-top:1px;font:700 .72rem/1 inherit;color:var(--gcw-hlb);background:transparent;border:1px solid var(--gcw-hlb);border-radius:6px;padding:3px 9px;cursor:pointer;opacity:.7;transition:opacity .12s,background .12s;}',
       '.gcw-hint:hover{opacity:1;background:var(--gcw-hl);}'
     ].join('');

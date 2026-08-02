@@ -47,6 +47,18 @@
   .oy-tile.soon{opacity:.6;pointer-events:none}
   .oy-secttl{font-family:var(--font-display);font-size:1.15rem;color:var(--text);margin:1.6rem 0 .2rem;display:flex;align-items:center;gap:.6rem}
   .oy-secttl::after{content:"";flex:1;height:1px;background:var(--line)}
+  .oy-howto{line-height:1.65}
+  .oy-howto p{margin:.5rem 0}
+  .oy-howto ol{padding-left:1.2rem;margin:.6rem 0}
+  .oy-howto ul{margin:.4rem 0;padding-left:1.1rem}
+  .oy-howto li{margin:.35rem 0}
+  .oy-chip{display:inline-block;font-size:.76rem;font-weight:700;color:#fff;border-radius:6px;padding:1px 8px;margin-right:2px}
+  .oy-chip.oy-ok{background:#2E6E4E}.oy-chip.oy-pre{background:#C79A3A}.oy-chip.oy-no{background:#b9ad95}
+  .oy-tip{background:var(--bg-soft,rgba(0,0,0,.03));border-left:3px solid var(--gold,#C79A3A);padding:9px 13px;border-radius:6px;margin-top:12px;font-size:.92rem}
+  .oy-faqh{font-family:var(--font-display);margin:1.3rem 0 .5rem;font-size:1.12rem;color:var(--text)}
+  .oy-faq details{border-bottom:1px solid var(--line);padding:.6rem 0}
+  .oy-faq summary{cursor:pointer;font-weight:700;color:var(--text)}
+  .oy-faq details p{margin:.5rem 0 0;color:var(--text-soft);font-size:.92rem}
   </style>
 </head>
 <body>
@@ -85,14 +97,55 @@
       <a class="oy-tile" href="#oyWordle" onclick="document.getElementById('oyWordle').scrollIntoView({behavior:'smooth'});return false;">
         <div class="em">🟩</div><h3>Wordle</h3><p>Her gün yeni kelime, seri (streak) ve paylaşım.</p>
       </a>
-      <a class="oy-tile" href="genel-odevler.html">
+      <a class="oy-tile" href="genel-odevler.html?oyun=bulmaca">
         <div class="em">🧩</div><h3>Bulmaca</h3><p>Seviyene göre kelime bulmacaları — Alıştırmalar havuzunda.</p>
       </a>
-      <div class="oy-tile soon">
-        <div class="em">🔤</div><h3>Kelime Avı</h3><p>Yakında — ızgarada gizli kelimeleri bul.</p>
-      </div>
-      <div class="oy-tile soon">
-        <div class="em">⚡</div><h3>Eşleştirme</h3><p>Yakında — kelime ve anlam eşleştirme yarışı.</p>
+      <a class="oy-tile" href="#oyKelimeAvi" onclick="document.getElementById('oyKelimeAvi').scrollIntoView({behavior:'smooth'});return false;">
+        <div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p>
+      </a>
+      <a class="oy-tile" href="#oyEslestirme" onclick="document.getElementById('oyEslestirme').scrollIntoView({behavior:'smooth'});return false;">
+        <div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p>
+      </a>
+    </div>
+
+    <div class="oy-card" id="oyKelimeAvi">
+      <h2 class="oy-cardttl">Kelime Avı · <span id="wsTheme" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
+      <p class="oy-cardsub">Izgarada gizli İngilizce kelimeleri bul. Harflerin üzerine <b>dokunup sürükle</b> (yatay, dikey, çapraz — ileri veya geri).</p>
+      <div id="wsHost"></div>
+      <div style="text-align:center;margin-top:12px"><button type="button" id="wsNew" class="btn-ghost" style="font-weight:700">Yeni Tema</button></div>
+    </div>
+
+    <div class="oy-card" id="oyEslestirme">
+      <h2 class="oy-cardttl">Eşleştirme</h2>
+      <p class="oy-cardsub">Soldaki İngilizce kelimeyi sağdaki Türkçe anlamıyla eşleştir. En az hamlede tamamlamaya çalış.</p>
+      <div id="mtHost"></div>
+      <div style="text-align:center;margin-top:12px"><button type="button" id="mtNew" class="btn-ghost" style="font-weight:700">Yeni Oyun</button></div>
+    </div>
+
+    <div class="oy-secttl">Wordle Nasıl Oynanır?</div>
+    <div class="oy-card oy-howto">
+      <p>Wordle'da amaç, gizli <b>5 harfli İngilizce kelimeyi 6 denemede</b> bulmaktır. Her gün herkes için aynı kelime geçerlidir — arkadaşlarınla sonucunu paylaşabilirsin.</p>
+      <ol>
+        <li>Klavyeden 5 harfli bir kelime yaz ve <b>ENTER</b>'a bas.</li>
+        <li>Kutuların rengi ipucu verir:
+          <ul>
+            <li><span class="oy-chip oy-ok">Yeşil</span> — harf doğru ve doğru yerde.</li>
+            <li><span class="oy-chip oy-pre">Sarı</span> — harf kelimede var ama yanlış yerde.</li>
+            <li><span class="oy-chip oy-no">Gri</span> — harf kelimede yok.</li>
+          </ul>
+        </li>
+        <li>İpuçlarını kullanarak tahminlerini daralt. Üstteki küçük <b>tematik ipucu</b> kelimenin ne ile ilgili olduğunu (tür/konu) söyler.</li>
+        <li>Kelimeyi bulunca <b>anlamı ve örnek cümlesi</b> açılır — böylece yeni kelime öğrenirsin.</li>
+      </ol>
+      <p class="oy-tip"><b>İpucu:</b> Bol sesli harf içeren bir kelimeyle başla (ör. <i>AROSE</i>, <i>IRATE</i>) — kelimeyi daha hızlı daraltırsın.</p>
+
+      <h3 class="oy-faqh">Sık Sorulanlar</h3>
+      <div class="oy-faq">
+        <details><summary>Günde kaç kez oynayabilirim?</summary><p>Günün kelimesi günde birdir ve herkese aynıdır (gece yarısı yenilenir). Ayrıca Kelime Avı ve Eşleştirme oyunlarını istediğin kadar oynayabilirsin.</p></details>
+        <details><summary>Seri (streak) nedir?</summary><p>Her gün kelimeyi bildiğinde serin bir artar. Bir günü kaçırır ya da bilemezsen seri sıfırlanır. En iyi serin ayrıca kaydedilir.</p></details>
+        <details><summary>Kelimeler neden zor?</summary><p>Kelime dağarcığını gerçekten geliştirmen için ilginç ve zorlayıcı (B2–C1) kelimeler seçiyoruz. Her kelimenin Türkçe anlamı ve örnek cümlesi oyun sonunda gösterilir.</p></details>
+        <details><summary>Herhangi bir kelime yazabilir miyim?</summary><p>Tahminin 5 harfli olmalı. Kelime tamamlanmadan ENTER'a basarsan uyarı alırsın; harfleri geri silmek için ← (backspace) tuşunu kullan.</p></details>
+        <details><summary>Sonucumu paylaşabilir miyim?</summary><p>Evet. Oyunu bitirince “Sonucu Kopyala” ile renkli kareli özetini panoya kopyalayıp paylaşabilirsin — kelimeyi ele vermez.</p></details>
       </div>
     </div>
   </div>
@@ -103,16 +156,17 @@
     </div>
   </footer>
 
-  <script src="assets/gri-wordle.js?v=1"></script>
-  <script src="assets/wordle-daily.js?v=1"></script>
+  <script src="assets/gri-wordle.js?v=2"></script>
+  <script src="assets/wordle-daily.js?v=2"></script>
+  <script src="assets/gri-wordsearch.js?v=1"></script>
+  <script src="assets/gri-match.js?v=1"></script>
   <script>
   (function(){
+    /* Günün Wordle'ı + streak */
     var host=document.getElementById('oyWordle');
-    if(!window.GriWordleDaily){return;}
-    GriWordleDaily.mountDaily(host,{
-      onReady:function(inst,word,streak){ showStreak(streak); },
-      onFinish:function(r,streak){ showStreak(streak); }
-    });
+    if(window.GriWordleDaily){
+      GriWordleDaily.mountDaily(host,{ onReady:function(i,w,s){showStreak(s);}, onFinish:function(r,s){showStreak(s);} });
+    }
     function showStreak(s){
       if(!s)return;
       document.getElementById('oyStreak').style.display='flex';
@@ -120,6 +174,26 @@
       document.getElementById('oyBest').textContent=s.best||0;
       document.getElementById('oyPlayed').textContent=s.played||0;
     }
+
+    /* Kelime Avı + Eşleştirme: game-words.json + wordle-words.json */
+    function pick(arr,n){ arr=arr.slice(); for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;} return arr.slice(0,n); }
+    var THEMES=[];
+    fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ THEMES=(j&&j.themes)||[]; newWordSearch(); }).catch(function(){});
+    function newWordSearch(){
+      if(!THEMES.length||!window.GriWordSearch)return;
+      var t=THEMES[Math.floor(Math.random()*THEMES.length)];
+      document.getElementById('wsTheme').textContent=t.name;
+      GriWordSearch.mount(document.getElementById('wsHost'),{ words:t.words, onReplay:newWordSearch });
+    }
+    var wsBtn=document.getElementById('wsNew'); if(wsBtn)wsBtn.addEventListener('click',newWordSearch);
+
+    var MATCHPOOL=[];
+    fetch('assets/wordle-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ MATCHPOOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};}); newMatch(); }).catch(function(){});
+    function newMatch(){
+      if(!MATCHPOOL.length||!window.GriMatch)return;
+      GriMatch.mount(document.getElementById('mtHost'),{ pairs:pick(MATCHPOOL,6), onReplay:newMatch });
+    }
+    var mtBtn=document.getElementById('mtNew'); if(mtBtn)mtBtn.addEventListener('click',newMatch);
   })();
   </script>
 </body>

@@ -11,33 +11,36 @@
     if(document.getElementById('gri-wd-css'))return;
     var s=document.createElement('style'); s.id='gri-wd-css';
     s.textContent=[
-      '.gwd{--gwd-line:#c9bda6;--gwd-cell:#fffdf7;--gwd-ink:#2b2118;--gwd-empty:#efe8db;--gwd-key:#e7ddca;--gwd-keyink:#2b2118;--gwd-ok:#4c9f70;--gwd-pre:#d8a838;--gwd-no:#9a9184;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}',
-      '@media (prefers-color-scheme:dark){.gwd{--gwd-line:#3a352c;--gwd-cell:#2b271f;--gwd-ink:#f0e9db;--gwd-empty:#232019;--gwd-key:#3a352c;--gwd-keyink:#f0e9db;--gwd-no:#4a453b;}}',
-      '.gwd-board{display:grid;gap:6px;margin:0 auto;}',
-      '.gwd-row{display:grid;gap:6px;grid-template-columns:repeat(var(--n),1fr);}',
-      '.gwd-t{width:54px;height:54px;max-width:14vw;max-height:14vw;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;text-transform:uppercase;border:2px solid var(--gwd-line);background:var(--gwd-empty);color:var(--gwd-ink);border-radius:6px;box-sizing:border-box;transition:transform .1s;}',
-      '.gwd-t.filled{background:var(--gwd-cell);border-color:var(--gwd-ink);animation:gwdpop .1s;}',
-      '@keyframes gwdpop{0%{transform:scale(.9)}100%{transform:scale(1)}}',
+      /* Gri kimliği: krem kağıt hücreler, altın/teal/yeşil aksan; tema site data-theme ile */
+      '.gwd{--gwd-line:#d9cfbb;--gwd-cell:#fffdf7;--gwd-ink:#2b2118;--gwd-empty:#f6f0e4;--gwd-key:#ece2cf;--gwd-keyink:#3a2f22;--gwd-ok:#2E6E4E;--gwd-pre:#C79A3A;--gwd-no:#b9ad95;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}',
+      ':root[data-theme="dark"] .gwd{--gwd-line:#4a4133;--gwd-cell:#2f2a21;--gwd-ink:#f0e9db;--gwd-empty:#26221a;--gwd-key:#3c352b;--gwd-keyink:#ece2cf;--gwd-ok:#3f9068;--gwd-pre:#cfa441;--gwd-no:#4a4235;}',
+      '.gwd-board{display:grid;gap:7px;margin:0 auto;}',
+      '.gwd-row{display:grid;gap:7px;grid-template-columns:repeat(var(--n),1fr);}',
+      '.gwd-t{width:56px;height:56px;max-width:14.5vw;max-height:14.5vw;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;text-transform:uppercase;border:2px solid var(--gwd-line);background:var(--gwd-empty);color:var(--gwd-ink);border-radius:9px;box-sizing:border-box;transition:transform .1s,border-color .1s;}',
+      '.gwd-t.filled{background:var(--gwd-cell);border-color:var(--gwd-pre);animation:gwdpop .1s;}',
+      '@keyframes gwdpop{0%{transform:scale(.88)}100%{transform:scale(1)}}',
       '.gwd-t.ok{background:var(--gwd-ok);border-color:var(--gwd-ok);color:#fff;}',
       '.gwd-t.pre{background:var(--gwd-pre);border-color:var(--gwd-pre);color:#fff;}',
       '.gwd-t.no{background:var(--gwd-no);border-color:var(--gwd-no);color:#fff;}',
       '.gwd-t.rev{animation:gwdflip .5s ease;}',
       '@keyframes gwdflip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}',
-      '.gwd-msg{min-height:1.2em;font-weight:700;font-size:.95rem;text-align:center;}',
+      '.gwd-hint{font-size:.84rem;font-weight:600;color:var(--gwd-ink);opacity:.85;background:var(--gwd-empty);border:1px solid var(--gwd-line);border-radius:20px;padding:5px 15px;}',
+      '.gwd-hint b{color:var(--gwd-pre);}',
+      '.gwd-msg{min-height:1.2em;font-weight:700;font-size:.95rem;text-align:center;color:var(--gwd-ink);}',
       '.gwd-msg.err{color:#c0392b;}',
-      '.gwd-kb{display:flex;flex-direction:column;gap:7px;width:100%;max-width:520px;}',
-      '.gwd-kr{display:flex;gap:5px;justify-content:center;}',
-      '.gwd-k{flex:1;min-width:0;height:52px;border:0;border-radius:7px;background:var(--gwd-key);color:var(--gwd-keyink);font-weight:700;font-size:15px;cursor:pointer;text-transform:uppercase;font-family:inherit;transition:transform .06s;}',
+      '.gwd-kb{display:flex;flex-direction:column;gap:8px;width:100%;max-width:500px;}',
+      '.gwd-kr{display:flex;gap:6px;justify-content:center;}',
+      '.gwd-k{flex:1;min-width:0;height:54px;border:1px solid var(--gwd-line);border-radius:9px;background:var(--gwd-key);color:var(--gwd-keyink);font-weight:700;font-size:15px;cursor:pointer;text-transform:uppercase;font-family:inherit;transition:transform .06s;}',
       '.gwd-k:active{transform:scale(.94);}',
       '.gwd-k.wide{flex:1.6;font-size:12px;}',
-      '.gwd-k.ok{background:var(--gwd-ok);color:#fff;}',
-      '.gwd-k.pre{background:var(--gwd-pre);color:#fff;}',
-      '.gwd-k.no{background:var(--gwd-no);color:#fff;}',
-      '.gwd-done{width:100%;max-width:520px;text-align:center;padding:14px 16px;border:1px solid var(--gwd-line);border-radius:12px;background:var(--gwd-cell);}',
-      '.gwd-done .w{font-size:1.5rem;font-weight:800;letter-spacing:.06em;color:var(--gwd-ink);}',
-      '.gwd-done .tr{font-size:1.05rem;font-weight:700;color:var(--gwd-ok);margin-top:3px;}',
-      '.gwd-done .ex{font-size:.92rem;opacity:.82;margin-top:6px;font-style:italic;}',
-      '.gwd-done .res{font-size:.9rem;font-weight:700;margin-bottom:6px;}'
+      '.gwd-k.ok{background:var(--gwd-ok);color:#fff;border-color:var(--gwd-ok);}',
+      '.gwd-k.pre{background:var(--gwd-pre);color:#fff;border-color:var(--gwd-pre);}',
+      '.gwd-k.no{background:var(--gwd-no);color:#fff;border-color:var(--gwd-no);}',
+      '.gwd-done{width:100%;max-width:500px;text-align:center;padding:16px 18px;border:1px solid var(--gwd-line);border-radius:14px;background:var(--gwd-cell);box-shadow:0 6px 20px rgba(43,33,24,.08);}',
+      '.gwd-done .w{font-family:var(--font-display,Georgia,serif);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--gwd-ink);}',
+      '.gwd-done .tr{font-size:1.08rem;font-weight:700;color:var(--gwd-ok);margin-top:4px;}',
+      '.gwd-done .ex{font-size:.92rem;opacity:.82;margin-top:7px;font-style:italic;color:var(--gwd-ink);}',
+      '.gwd-done .res{font-size:.92rem;font-weight:700;margin-bottom:7px;color:var(--gwd-ink);}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -62,6 +65,7 @@
     if(!N)return null;
     host.className=(host.className||'')+' gwd';
     host.innerHTML='';
+    if(opts.hint){ var hintEl=document.createElement('div'); hintEl.className='gwd-hint'; hintEl.innerHTML='İpucu · <b>'+esc(opts.hint)+'</b>'; host.appendChild(hintEl); }
 
     var st={guesses:(opts.state&&opts.state.guesses)?opts.state.guesses.slice():[], done:!!(opts.state&&opts.state.done), win:!!(opts.state&&opts.state.win)};
     var cur=''; /* current typing row */

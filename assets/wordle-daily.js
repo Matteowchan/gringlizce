@@ -50,7 +50,7 @@
       if(!word){ host.innerHTML='<p style="text-align:center;opacity:.7">Kelime yüklenemedi.</p>'; return; }
       var dk=dateKey(), saved=loadState(dk);
       var inst=window.GriWordle.mount(host,{
-        answer:word.w, tr:word.tr, ex:word.ex, maxRows:6, state:saved,
+        answer:word.w, tr:word.tr, ex:word.ex, hint:word.hint, maxRows:6, state:saved,
         onChange:function(i){ saveState(dk,i.getState()); },
         onFinish:function(r){
           var s=updateStreak(dk,r.win);

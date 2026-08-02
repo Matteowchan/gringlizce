@@ -292,5 +292,32 @@
 
   function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  window.GriCrossword={ mount:mount };
+  /* kelimelerden crossword task üret: list=[{w,clue}] -> {cols,rows,entries:[{num,dir,row,col,answer,clue}]} */
+  function fromWords(list){
+    var items=(list||[]).map(function(o){return {w:String(o.w||'').toUpperCase().replace(/[^A-Z]/g,''),clue:o.clue||''};}).filter(function(o){return o.w.length>=3;});
+    if(items.length<2)return null;
+    var byW={}; items.forEach(function(o){ byW[o.w]=o.clue; });
+    var words=items.map(function(o){return o.w;});
+    function build(ws){
+      var grid={}, placed=[];
+      function g(r,c){return grid[r+','+c];} function s(r,c,ch){grid[r+','+c]=ch;}
+      function can(w,r,c,dir){ var dr=dir==='down'?1:0,dc=dir==='across'?1:0; if(g(r-dr,c-dc))return false; if(g(r+dr*w.length,c+dc*w.length))return false; var cross=0; for(var i=0;i<w.length;i++){var rr=r+dr*i,cc=c+dc*i,cur=g(rr,cc); if(cur){if(cur!==w.charAt(i))return false;cross++;}else{if(dir==='across'){if(g(rr-1,cc)||g(rr+1,cc))return false;}else{if(g(rr,cc-1)||g(rr,cc+1))return false;}}} return cross>0; }
+      function place(w,r,c,dir){var dr=dir==='down'?1:0,dc=dir==='across'?1:0;for(var i=0;i<w.length;i++)s(r+dr*i,c+dc*i,w.charAt(i));placed.push({w:w,r:r,c:c,dir:dir});}
+      ws=ws.slice().sort(function(a,b){return b.length-a.length;}); place(ws[0],0,0,'across');
+      for(var n=1;n<ws.length;n++){ var o=ws[n],done=false; for(var p=0;p<placed.length&&!done;p++){ var pw=placed[p],pdr=pw.dir==='down'?1:0,pdc=pw.dir==='across'?1:0; for(var i=0;i<pw.w.length&&!done;i++){ var pr=pw.r+pdr*i,pc=pw.c+pdc*i,letter=pw.w.charAt(i); for(var j=0;j<o.length&&!done;j++){ if(o.charAt(j)!==letter)continue; var dir=pw.dir==='across'?'down':'across',ddr=dir==='down'?1:0,ddc=dir==='across'?1:0; var r=pr-ddr*j,c=pc-ddc*j; if(can(o,r,c,dir)){place(o,r,c,dir);done=true;} } } } /* yerleşemezse atla */ }
+      var minR=1e9,minC=1e9,maxR=-1e9,maxC=-1e9; for(var kk in grid){var a=kk.split(','),rr=+a[0],cc=+a[1];if(rr<minR)minR=rr;if(cc<minC)minC=cc;if(rr>maxR)maxR=rr;if(cc>maxC)maxC=cc;}
+      placed.forEach(function(pp){pp.r-=minR;pp.c-=minC;});
+      return {cols:maxC-minC+1,rows:maxR-minR+1,placed:placed};
+    }
+    var best=null; for(var t=0;t<words.length;t++){ var arr=t===0?words:words.slice(t).concat(words.slice(0,t)); var res=build(arr); if(res&&(!best||res.placed.length>best.placed.length))best=res; if(best&&best.placed.length===words.length)break; }
+    if(!best||best.placed.length<2)return null;
+    /* numaralandır */
+    var occ={}; best.placed.forEach(function(p){var dr=p.dir==='down'?1:0,dc=p.dir==='across'?1:0;for(var i=0;i<p.w.length;i++)occ[(p.r+dr*i)+'_'+(p.c+dc*i)]=1;});
+    var numAt={},num=0;
+    for(var r=0;r<best.rows;r++)for(var c=0;c<best.cols;c++){ if(!occ[r+'_'+c])continue; var sa=!occ[r+'_'+(c-1)]&&occ[r+'_'+(c+1)]; var sd=!occ[(r-1)+'_'+c]&&occ[(r+1)+'_'+c]; if(sa||sd){num++;numAt[r+'_'+c]=num;} }
+    var entries=best.placed.map(function(p){return {num:numAt[p.r+'_'+p.c],dir:p.dir,row:p.r,col:p.c,answer:p.w,clue:byW[p.w]||''};}).sort(function(a,b){return a.num-b.num||(a.dir<b.dir?-1:1);});
+    return {type:'crossword',cols:best.cols,rows:best.rows,entries:entries};
+  }
+
+  window.GriCrossword={ mount:mount, fromWords:fromWords };
 })();

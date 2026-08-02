@@ -439,9 +439,9 @@ function makeCard(a,assignedMap,locked){
 }
 
 function matchesFilter(a){
+  if(isCW(a))return false; /* bulmacalar Exercises'te değil, Oyunlar'da */
   if((a.audience||'adult')!==AUD_F)return false;
   if(LVL_F!=='ALL'&&a.level!==LVL_F)return false;
-  if(SK_F==='CW')return isCW(a);
   if(SK_F!=='ALL'&&skillOf(a)!==SK_F)return false;
   return true;
 }
@@ -516,10 +516,8 @@ function render(){
   var skRow=document.getElementById('odFilterSkillRow');
   if(skList.length){
     skRow.style.display='flex';
-    var hasCW=false;for(var cwi=0;cwi<VIEW.length;cwi++){if(isCW(VIEW[cwi])){hasCW=true;break;}}
     var shh='<button type="button" class="od-chip cur" data-sk="ALL">Tümü</button>';
     for(var t=0;t<skList.length;t++)shh+='<button type="button" class="od-chip" data-sk="'+skList[t]+'">'+SKILL_TR[skList[t]]+'</button>';
-    if(hasCW)shh+='<button type="button" class="od-chip od-chip-cw" data-sk="CW">Bulmaca</button>';
     skWrap.innerHTML=shh;
     skWrap.addEventListener('click',function(ev){
       var b=ev.target;
@@ -529,15 +527,6 @@ function render(){
       for(var c=0;c<chips.length;c++)chips[c].className='od-chip'+(chips[c]===b?' cur':'');
       renderLists();
     });
-    /* Oyunlar sayfasından "Bulmaca" derin-linki: ?oyun=bulmaca → Bulmaca filtresini uygula */
-    try{
-      var oyun=(new URLSearchParams(window.location.search)).get('oyun');
-      if(oyun==='bulmaca'&&hasCW){
-        SK_F='CW';
-        var chs=skWrap.querySelectorAll('.od-chip');
-        for(var cc=0;cc<chs.length;cc++)chs[cc].className='od-chip'+(chs[cc].getAttribute('data-sk')==='CW'?' cur':'');
-      }
-    }catch(e){}
   }
 
   renderLists();

@@ -97,6 +97,9 @@
       <a class="oy-tile" href="#oyWordle" onclick="document.getElementById('oyWordle').scrollIntoView({behavior:'smooth'});return false;">
         <div class="em">🟩</div><h3>Wordle</h3><p>Her gün yeni kelime, seri (streak) ve paylaşım.</p>
       </a>
+      <a class="oy-tile" href="#oyKelimeYolu" onclick="document.getElementById('oyKelimeYolu').scrollIntoView({behavior:'smooth'});return false;">
+        <div class="em">🎡</div><h3>Kelime Yolu</h3><p>Harf çarkını çevir, kelimeleri bul, ızgarayı doldur. Artan zorluk.</p>
+      </a>
       <a class="oy-tile" href="genel-odevler.html?oyun=bulmaca">
         <div class="em">🧩</div><h3>Bulmaca</h3><p>Seviyene göre kelime bulmacaları — Alıştırmalar havuzunda.</p>
       </a>
@@ -106,6 +109,12 @@
       <a class="oy-tile" href="#oyEslestirme" onclick="document.getElementById('oyEslestirme').scrollIntoView({behavior:'smooth'});return false;">
         <div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p>
       </a>
+    </div>
+
+    <div class="oy-card" id="oyKelimeYolu">
+      <h2 class="oy-cardttl">Kelime Yolu · <span id="woLevel" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
+      <p class="oy-cardsub">Alttaki <b>harf çarkındaki</b> harfleri parmakla birleştirerek kelimeler kur; doğru kelimeler yukarıdaki ızgaraya yerleşir. Her level biraz daha zor.</p>
+      <div id="woHost"></div>
     </div>
 
     <div class="oy-card" id="oyKelimeAvi">
@@ -160,6 +169,7 @@
   <script src="assets/wordle-daily.js?v=2"></script>
   <script src="assets/gri-wordsearch.js?v=1"></script>
   <script src="assets/gri-match.js?v=1"></script>
+  <script src="assets/gri-wheel.js?v=1"></script>
   <script>
   (function(){
     /* Günün Wordle'ı + streak */
@@ -194,6 +204,23 @@
       GriMatch.mount(document.getElementById('mtHost'),{ pairs:pick(MATCHPOOL,6), onReplay:newMatch });
     }
     var mtBtn=document.getElementById('mtNew'); if(mtBtn)mtBtn.addEventListener('click',newMatch);
+
+    /* Kelime Yolu (WOW) — level ilerlemesi */
+    var LEVELS=[], woInst=null;
+    fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ LEVELS=j||[]; loadLevel(getWoLevel()); }).catch(function(){});
+    function getWoLevel(){ try{ var v=parseInt(localStorage.getItem('gri-wow-level'),10); if(v>=1)return v; }catch(e){} return 1; }
+    function setWoLevel(n){ try{ localStorage.setItem('gri-wow-level',n); }catch(e){} }
+    function loadLevel(n){
+      if(!LEVELS.length||!window.GriWheel)return;
+      if(n>LEVELS.length)n=LEVELS.length; if(n<1)n=1;
+      var lv=LEVELS[n-1];
+      document.getElementById('woLevel').textContent='Level '+n+' · '+lv.theme;
+      if(woInst&&woInst.destroy)woInst.destroy();
+      woInst=GriWheel.mount(document.getElementById('woHost'),{ level:lv, onComplete:function(done){
+        var next=Math.min(done+1,LEVELS.length); setWoLevel(next); loadLevel(next);
+        document.getElementById('oyKelimeYolu').scrollIntoView({behavior:'smooth'});
+      }});
+    }
   })();
   </script>
 </body>

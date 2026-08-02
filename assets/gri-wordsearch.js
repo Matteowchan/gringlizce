@@ -97,6 +97,7 @@
 
     var doneEl=null;
     function finish(){
+      if(window.GriConfetti)window.GriConfetti.burst();
       doneEl=document.createElement('div'); doneEl.className='gws-done';
       doneEl.innerHTML='<b>Bravo!</b> Tüm kelimeleri buldun.';
       var btn=document.createElement('button'); btn.className='gws-btn'; btn.textContent='Yeni Oyun';

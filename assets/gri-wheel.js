@@ -29,9 +29,9 @@
       '@keyframes gwosh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}',
       '.gwo-wheelwrap{position:relative;width:'+WH+'px;height:'+WH+'px;max-width:88vw;max-height:88vw;touch-action:none;}',
       '.gwo-wheel{position:absolute;inset:0;border-radius:50%;background:var(--wo-cell);border:2px solid var(--wo-line);box-shadow:0 6px 22px rgba(43,33,24,.10);}',
-      '.gwo-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}',
-      '.gwo-k{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--wo-hide);border:2px solid var(--wo-line);color:var(--wo-ink);font-weight:800;font-size:24px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;transition:transform .12s,background .12s,border-color .12s;user-select:none;}',
-      '.gwo-k.sel{background:var(--wo-gold);border-color:var(--wo-gold);color:#fff;transform:scale(1.14);}',
+      '.gwo-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(43,33,24,.18));}',
+      '.gwo-k{position:absolute;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:var(--wo-cell);border:2.5px solid var(--wo-line);color:var(--wo-ink);font-weight:800;font-size:25px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;transition:transform .14s cubic-bezier(.34,1.56,.64,1),background .14s,border-color .14s,box-shadow .14s;user-select:none;box-shadow:0 2px 6px rgba(43,33,24,.08);}',
+      '.gwo-k.sel{background:var(--wo-gold);border-color:var(--wo-gold);color:#fff;transform:scale(1.22);box-shadow:0 6px 16px rgba(43,33,24,.22);}',
       '.gwo-tools{display:flex;gap:10px;}',
       '.gwo-btn{font:700 13px inherit;padding:8px 16px;border-radius:9px;border:1px solid var(--wo-line);background:var(--wo-cell);color:var(--wo-ink);cursor:pointer;}',
       '.gwo-btn:active{transform:scale(.96);}',
@@ -51,6 +51,7 @@
     css(); opts=opts||{};
     var level=opts.level; if(!level)return null;
     host.className=(host.className||'')+' gwo'; host.innerHTML='';
+    if(opts.accent){ host.style.setProperty('--wo-gold',opts.accent); host.style.setProperty('--wo-ok',opts.accent); }
     var letters=level.letters.toUpperCase().split('');
     var entries=level.grid.map(function(e){return {r:e.r,c:e.c,dir:e.dir,answer:e.answer.toUpperCase()};});
     var totals=entries.length, found={};
@@ -75,7 +76,7 @@
     var wrap=document.createElement('div'); wrap.className='gwo-wheelwrap';
     var wheel=document.createElement('div'); wheel.className='gwo-wheel'; wrap.appendChild(wheel);
     var svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('class','gwo-svg'); svg.setAttribute('viewBox','0 0 '+WH+' '+WH);
-    var poly=document.createElementNS('http://www.w3.org/2000/svg','polyline'); poly.setAttribute('fill','none'); poly.setAttribute('stroke','var(--wo-gold)'); poly.setAttribute('stroke-width','6'); poly.setAttribute('stroke-linecap','round'); poly.setAttribute('stroke-linejoin','round'); poly.setAttribute('opacity','.85');
+    var poly=document.createElementNS('http://www.w3.org/2000/svg','polyline'); poly.setAttribute('fill','none'); poly.setAttribute('stroke','var(--wo-gold)'); poly.setAttribute('stroke-width','9'); poly.setAttribute('stroke-linecap','round'); poly.setAttribute('stroke-linejoin','round'); poly.setAttribute('opacity','.92');
     svg.appendChild(poly); wrap.appendChild(svg);
     var keyEls=[], pos=[];
     var cx=WH/2, cy=WH/2, R=WH/2-34;
@@ -137,6 +138,7 @@
     function fade(){ setTimeout(function(){ pill.textContent=''; pill.className='p'; },420); }
 
     function complete(){
+      if(window.GriConfetti)window.GriConfetti.burst();
       var d=document.createElement('div'); d.className='gwo-done';
       var badge=opts.badge?'<img class="gwo-badge" src="'+opts.badge+'" alt="" width="96" height="96">':'';
       d.innerHTML=badge+'<div class="t">'+esc(level.theme)+' tamamlandı!</div><div style="margin-top:6px;opacity:.85">Tüm kelimeleri buldun.</div>';

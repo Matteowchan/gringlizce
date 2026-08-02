@@ -124,6 +124,7 @@
 
     function finish(win){
       st.done=true; st.win=win;
+      if(win&&!replaying&&window.GriConfetti)window.GriConfetti.burst();
       doneCard=document.createElement('div'); doneCard.className='gwd-done';
       var tries=win?st.guesses.length:('X');
       doneCard.innerHTML='<div class="res">'+(win?'Tebrikler! '+st.guesses.length+'/'+MAX+' denemede buldun.':'Bitti — doğru kelime:')+'</div>'

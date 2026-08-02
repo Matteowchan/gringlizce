@@ -61,6 +61,7 @@
     }
     function finish(){
       done=true;
+      if(window.GriConfetti)window.GriConfetti.burst();
       var sec=Math.round((Date.now()-startT)/1000);
       var acc=Math.round(100*pairs.length/Math.max(moves,pairs.length));
       var card=document.createElement('div'); card.className='gmt-done';

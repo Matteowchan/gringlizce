@@ -75,22 +75,19 @@
   .oy-picktoggle{font-size:.82rem;color:var(--gold,#B78A2E)}
   .oy-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 14px;max-height:230px;overflow:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg-soft,rgba(0,0,0,.02))}
   .oy-picker[hidden]{display:none}
-  .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
-  .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-soft)}
-  .oy-prow{display:flex;flex-wrap:wrap;gap:5px;max-width:420px;justify-content:center}
-  .oy-lv{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--text);font:700 14px var(--font-ui,inherit);cursor:pointer}
-  .oy-lv:hover{border-color:var(--gold,#B78A2E)}
-  .oy-lv.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10}
-  .oy-lv.done{background:rgba(46,110,78,.14);border-color:rgba(46,110,78,.3)}
-  /* oyun kartlarının arkasında şeffaf rozet/mascot watermark */
-  .oy-panel .oy-card{position:relative;z-index:0;overflow:hidden}
-  .oy-panel .oy-card::before{content:"";position:absolute;right:-30px;bottom:-30px;width:210px;height:210px;background:url(assets/gri-mascot.png) no-repeat center/contain;opacity:.06;pointer-events:none;z-index:-1}
-  #view-wordle .oy-card::before{background-image:url(tam-skor.png)}
-  #view-wow .oy-card::before{background-image:url(yol-kaptani.png)}
-  #view-wordsearch .oy-card::before{background-image:url(ince-iscilik.png)}
-  #view-match .oy-card::before{background-image:url(karisim-ustasi.png)}
-  #view-bulmaca .oy-card::before{background-image:url(yaratici.png)}
-  @media(max-width:640px){.oy-panel .oy-card::before{width:150px;height:150px;opacity:.05}}
+  .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+  .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);padding:3px 14px;border-radius:20px;background:rgba(0,0,0,.04)}
+  .oy-pgroup:nth-child(1) .oy-plabel{color:#2E6E4E;background:rgba(46,110,78,.1)}
+  .oy-pgroup:nth-child(2) .oy-plabel{color:#B0791E;background:rgba(199,154,58,.14)}
+  .oy-pgroup:nth-child(3) .oy-plabel{color:#B0442E;background:rgba(192,86,58,.12)}
+  .oy-prow{display:flex;flex-wrap:wrap;gap:8px;max-width:440px;justify-content:center}
+  .oy-lv{position:relative;width:40px;height:40px;border:2px solid var(--line);border-radius:50%;background:var(--card,#fff);color:var(--text);font:800 14px var(--font-ui,inherit);cursor:pointer;transition:transform .12s,box-shadow .12s;box-shadow:0 2px 5px rgba(43,33,24,.08)}
+  .oy-lv:hover{transform:scale(1.14);border-color:var(--gold,#B78A2E)}
+  .oy-lv.done{background:linear-gradient(180deg,#e4f2ea,#cfeddb);border-color:#2E6E4E;color:#2E6E4E}
+  .oy-lv.done::after{content:"★";position:absolute;top:-7px;right:-3px;font-size:12px;color:#C79A3A;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+  .oy-lv.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10;box-shadow:0 0 0 5px rgba(199,154,58,.22);animation:oylvpulse 1.5s ease-in-out infinite}
+  @keyframes oylvpulse{0%,100%{box-shadow:0 0 0 5px rgba(199,154,58,.22)}50%{box-shadow:0 0 0 10px rgba(199,154,58,.06)}}
+  .oy-panel .oy-card{position:relative;overflow:hidden}
   /* hub rozet vitrini */
   .oy-badges{display:flex;flex-wrap:wrap;gap:14px 18px;justify-content:center;margin:6px 0 4px}
   .oy-brz{display:flex;flex-direction:column;align-items:center;gap:5px;width:82px;text-align:center}
@@ -262,11 +259,12 @@
     </div>
   </footer>
 
-  <script src="assets/gri-wordle.js?v=2"></script>
+  <script src="assets/gri-confetti.js?v=1"></script>
+  <script src="assets/gri-wordle.js?v=3"></script>
   <script src="assets/wordle-daily.js?v=3"></script>
-  <script src="assets/gri-wordsearch.js?v=2"></script>
-  <script src="assets/gri-match.js?v=1"></script>
-  <script src="assets/gri-wheel.js?v=4"></script>
+  <script src="assets/gri-wordsearch.js?v=3"></script>
+  <script src="assets/gri-match.js?v=2"></script>
+  <script src="assets/gri-wheel.js?v=5"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=6"></script>
   <script>
@@ -318,18 +316,19 @@
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var LEVELS=j||[], woInst=null, cur=getWoLevel();
           var endless=false, pool=null, endlessN=0;
+          var PALETTE=['#C79A3A','#2E6E6A','#2E6E4E','#C0563A','#7A5CC0','#2C6FA6','#B84A7E','#D08A2E'];
           function scrollToWheel(){ var ww=$('woHost').querySelector('.gwo-wheelwrap'); if(ww)ww.scrollIntoView({behavior:'smooth',block:'end'}); }
-          function mountLv(lv,labelHtml){
+          function mountLv(lv,labelHtml,accent){
             $('woLevel').innerHTML=labelHtml;
             if(woInst&&woInst.destroy)woInst.destroy();
-            woInst=GriWheel.mount($('woHost'),{ level:lv, badge:'yol-kaptani.png', onComplete:function(done){
+            woInst=GriWheel.mount($('woHost'),{ level:lv, accent:accent, badge:'yol-kaptani.png', onComplete:function(done){
               if(endless){ loadEndless(); scrollToWheel(); return; }
               var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); scrollToWheel();
             }});
           }
           function loadEndless(){
             if(!window.GriWheelEndless){ return; }
-            var go2=function(){ var lv=GriWheelEndless.makeLevel(pool); if(!lv){ setTimeout(go2,0); return; } endlessN++; mountLv(lv,'Sonsuz · <span class="th">#'+endlessN+'</span>'); };
+            var go2=function(){ var lv=GriWheelEndless.makeLevel(pool); if(!lv){ setTimeout(go2,0); return; } endlessN++; mountLv(lv,'Sonsuz · <span class="th">#'+endlessN+'</span>',PALETTE[endlessN%PALETTE.length]); };
             if(pool){ go2(); } else { $('woLevel').textContent='Yükleniyor…'; GriWheelEndless.buildPool(function(p){ pool=p; go2(); }); }
           }
           function setEndless(on){
@@ -358,7 +357,7 @@
             var lv=LEVELS[n-1];
             var pv=$('woPrev'); if(pv)pv.disabled=(n<=1);
             if(!$('woPicker').hidden)buildPicker();
-            mountLv(lv,'Seviye '+n+' · <span class="th">'+lv.theme+'</span>');
+            mountLv(lv,'Seviye '+n+' · <span class="th">'+lv.theme+'</span>',PALETTE[(n-1)%PALETTE.length]);
           }
           var pk=$('woPick'); if(pk&&!pk._wired){ pk._wired=1; pk.addEventListener('click',function(){ var p=$('woPicker'); if(!p)return; p.hidden=!p.hidden; pk.textContent=p.hidden?'Seviyeler ▾':'Seviyeler ▴'; if(!p.hidden)buildPicker(); }); }
           var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ if(!endless)loadLevel(cur-1); }); }

@@ -15,25 +15,29 @@
     var s=document.createElement('style');
     s.id='gri-cw-css';
     s.textContent=[
-      '.gcw{--gcw-line:#d7cfc3;--gcw-blank:#efe8dc;--gcw-bg:#fff;--gcw-num:#8a7f6d;--gcw-hl:#fff4d6;--gcw-hlb:#f0c667;--gcw-ok:#1f8a4c;--gcw-okbg:#e4f5ea;--gcw-bad:#c0392b;--gcw-badbg:#fbe7e4;font-family:inherit;}',
-      '@media (prefers-color-scheme:dark){.gcw{--gcw-line:#3a352c;--gcw-blank:#232019;--gcw-bg:#2b271f;--gcw-num:#a99a7f;--gcw-hl:#4a3f22;--gcw-hlb:#7a6425;--gcw-okbg:#1c3327;--gcw-badbg:#3a201c;}}',
-      '.gcw-grid{display:grid;gap:2px;background:var(--gcw-line);border:2px solid var(--gcw-line);border-radius:8px;padding:2px;width:max-content;max-width:100%;overflow:auto;margin:0 0 6px;}',
-      '.gcw-c{position:relative;width:34px;height:34px;background:var(--gcw-bg);}',
-      '.gcw-c.blank{background:var(--gcw-blank);}',
-      '.gcw-c input{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;text-align:center;font-size:16px;font-weight:700;text-transform:uppercase;color:inherit;caret-color:var(--gcw-hlb);padding:0;margin:0;}',
-      '.gcw-c input:focus{outline:0;background:var(--gcw-hl);}',
+      /* kağıt üzerine bulmaca — her iki temada da açık hücre + koyu mürekkep */
+      '.gcw{--gcw-cell:#fffdf7;--gcw-ink:#2b2118;--gcw-line:#c9bda6;--gcw-num:#a08a63;--gcw-hl:#fff1c2;--gcw-hlb:#e6a92e;--gcw-ok:#177a41;--gcw-okbg:#dff3e4;--gcw-bad:#c0392b;--gcw-badbg:#fbe3df;font-family:inherit;}',
+      '.gcw-scroll{width:100%;overflow:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch;}',
+      '.gcw-grid{display:grid;gap:0;width:max-content;margin:0 auto;background:transparent;}',
+      '.gcw-c{position:relative;width:36px;height:36px;box-sizing:border-box;}',
+      '.gcw-c.open{background:var(--gcw-cell);border:1px solid var(--gcw-line);margin:-0.5px;}',
+      '.gcw-c.blank{background:transparent;border:0;}',
+      '.gcw-c input{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;box-sizing:border-box!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;text-align:center!important;font:700 17px/1 inherit!important;text-transform:uppercase!important;color:var(--gcw-ink)!important;caret-color:var(--gcw-hlb)!important;padding:0!important;margin:0!important;min-height:0!important;-webkit-appearance:none!important;appearance:none!important;}',
+      '.gcw-c input:focus{outline:0!important;}',
+      '.gcw-c.open input:focus{background:var(--gcw-hl)!important;}',
       '.gcw-c.hl{background:var(--gcw-hl);}',
-      '.gcw-c.ok input{color:var(--gcw-ok);}.gcw-c.ok{background:var(--gcw-okbg);}',
-      '.gcw-c.bad input{color:var(--gcw-bad);}.gcw-c.bad{background:var(--gcw-badbg);}',
-      '.gcw-n{position:absolute;top:1px;left:2px;font-size:9px;line-height:1;color:var(--gcw-num);font-weight:700;pointer-events:none;}',
-      '.gcw-clues{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;margin-top:10px;}',
-      '@media(max-width:560px){.gcw-clues{grid-template-columns:1fr;}.gcw-c{width:30px;height:30px;}.gcw-c input{font-size:14px;}}',
-      '.gcw-cluecol h4{margin:0 0 6px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;opacity:.75;}',
-      '.gcw-clue{display:flex;gap:7px;font-size:.9rem;line-height:1.4;padding:3px 5px;border-radius:6px;cursor:pointer;}',
+      '.gcw-c.ok{background:var(--gcw-okbg);}.gcw-c.ok input{color:var(--gcw-ok)!important;}',
+      '.gcw-c.bad{background:var(--gcw-badbg);}.gcw-c.bad input{color:var(--gcw-bad)!important;}',
+      '.gcw-n{position:absolute;top:1px;left:2px;font-size:9px;line-height:1;color:var(--gcw-num);font-weight:700;pointer-events:none;z-index:1;}',
+      '.gcw-clues{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin-top:14px;}',
+      '@media(max-width:560px){.gcw-clues{grid-template-columns:1fr;}.gcw-c{width:32px;height:32px;}.gcw-c input{font:700 15px/1 inherit!important;}}',
+      '.gcw-cluecol h4{margin:0 0 8px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gcw-hlb);font-weight:800;}',
+      '.gcw-clue{display:flex;gap:8px;font-size:.92rem;line-height:1.45;padding:4px 7px;border-radius:7px;cursor:pointer;transition:background .12s;}',
       '.gcw-clue:hover{background:var(--gcw-hl);}',
-      '.gcw-clue.cur{background:var(--gcw-hl);box-shadow:inset 0 0 0 1px var(--gcw-hlb);}',
-      '.gcw-clue.solved{opacity:.55;}',
-      '.gcw-clue b{color:var(--gcw-num);min-width:16px;text-align:right;}'
+      '.gcw-clue.cur{background:var(--gcw-hl);box-shadow:inset 0 0 0 1.5px var(--gcw-hlb);}',
+      '.gcw-clue.solved{opacity:.5;text-decoration:line-through;}',
+      '.gcw-clue b{color:var(--gcw-hlb);min-width:16px;text-align:right;font-weight:800;}',
+      '.gcw-clue span{color:inherit;}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -67,15 +71,16 @@
     var active={ent:null};
 
     /* grid */
+    var scroll=document.createElement('div'); scroll.className='gcw-scroll';
     var grid=document.createElement('div');
     grid.className='gcw-grid';
-    grid.style.gridTemplateColumns='repeat('+cols+',auto)';
+    grid.style.gridTemplateColumns='repeat('+cols+',36px)';
     for(var r=0;r<rows;r++){
       for(var c=0;c<cols;c++){
         var k=ck(r,c), cell=cells[k];
         var div=document.createElement('div');
         if(!cell){ div.className='gcw-c blank'; grid.appendChild(div); continue; }
-        div.className='gcw-c'; div.setAttribute('data-k',k);
+        div.className='gcw-c open'; div.setAttribute('data-k',k);
         if(cell.num!=null){ var n=document.createElement('span'); n.className='gcw-n'; n.textContent=cell.num; div.appendChild(n); }
         var inp=document.createElement('input');
         inp.type='text'; inp.setAttribute('maxlength','1');
@@ -86,7 +91,7 @@
         inputs[k]=inp;
       }
     }
-    host.innerHTML=''; host.appendChild(grid);
+    host.innerHTML=''; scroll.appendChild(grid); host.appendChild(scroll);
 
     /* clues */
     var cluesWrap=document.createElement('div'); cluesWrap.className='gcw-clues';

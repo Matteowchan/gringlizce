@@ -28,6 +28,8 @@
       '.gcw-c.hl{background:var(--gcw-hl);}',
       '.gcw-c.ok{background:var(--gcw-okbg);}.gcw-c.ok input{color:var(--gcw-ok)!important;}',
       '.gcw-c.bad{background:var(--gcw-badbg);}.gcw-c.bad input{color:var(--gcw-bad)!important;}',
+      '.gcw-c.given{background:#e7eefb;}.gcw-c.given input{color:#2c5a82!important;font-weight:800!important;}',
+      '.gcw-c.hint{background:var(--gcw-hl);}.gcw-c.hint input{color:var(--gcw-hlb)!important;}',
       '.gcw-n{position:absolute;top:1px;left:2px;font-size:9px;line-height:1;color:var(--gcw-num);font-weight:700;pointer-events:none;z-index:1;}',
       '.gcw-clues{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin-top:14px;}',
       '@media(max-width:560px){.gcw-clues{grid-template-columns:1fr;}.gcw-c{width:32px;height:32px;}.gcw-c input{font:700 15px/1 inherit!important;}}',
@@ -36,8 +38,14 @@
       '.gcw-clue:hover{background:var(--gcw-hl);}',
       '.gcw-clue.cur{background:var(--gcw-hl);box-shadow:inset 0 0 0 1.5px var(--gcw-hlb);}',
       '.gcw-clue.solved{opacity:.5;text-decoration:line-through;}',
-      '.gcw-clue b{color:var(--gcw-hlb);min-width:16px;text-align:right;font-weight:800;}',
-      '.gcw-clue span{color:inherit;}'
+      '.gcw-clue.solved .gcw-hint{display:none;}',
+      '.gcw-clue b{color:var(--gcw-hlb);min-width:16px;text-align:right;font-weight:800;flex:none;}',
+      '.gcw-clue span{color:inherit;flex:1;}',
+      '.gcw-len{font-style:normal;color:var(--gcw-num);font-weight:600;white-space:nowrap;}',
+      '.gcw-ex{font-style:normal;margin-left:6px;font-size:.68rem;font-weight:800;color:#2c5a82;background:rgba(58,110,168,.16);padding:1px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;}',
+      '@media (prefers-color-scheme:dark){.gcw-ex{color:#8ab8e0;}}',
+      '.gcw-hint{flex:none;align-self:flex-start;margin-top:1px;font:700 .72rem/1 inherit;color:var(--gcw-hlb);background:transparent;border:1px solid var(--gcw-hlb);border-radius:6px;padding:3px 9px;cursor:pointer;opacity:.7;transition:opacity .12s,background .12s;}',
+      '.gcw-hint:hover{opacity:1;background:var(--gcw-hl);}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -68,7 +76,12 @@
 
     host.className=(host.className||'')+' gcw';
     var inputs={}; /* k -> input el */
+    var given={};  /* k -> true (örnek/verili hücre, kilitli) */
     var active={ent:null};
+    /* çözülmüş örnek kelime: task.example {num,dir} verilirse o, yoksa en kısa kelime (az spoiler) */
+    var exEnt=(task.example&&typeof task.example==='object')
+      ? entries.filter(function(e){return e.num===task.example.num&&e.dir===task.example.dir;})[0]
+      : entries.slice().sort(function(a,b){return a.answer.length-b.answer.length;})[0];
 
     /* grid */
     var scroll=document.createElement('div'); scroll.className='gcw-scroll';
@@ -101,9 +114,14 @@
       var col=document.createElement('div'); col.className='gcw-cluecol';
       var h=document.createElement('h4'); h.textContent=title; col.appendChild(h);
       list.forEach(function(e){
-        var d=document.createElement('div'); d.className='gcw-clue'; d.setAttribute('data-en',e.dir+'-'+e.num);
-        d.innerHTML='<b>'+e.num+'</b><span>'+escapeHtml(e.clue)+'</span>';
-        d.addEventListener('click',function(){ focusEntry(e); });
+        var d=document.createElement('div'); d.className='gcw-clue'+(e===exEnt?' isex':''); d.setAttribute('data-en',e.dir+'-'+e.num);
+        var ex=(e===exEnt)?'<em class="gcw-ex">örnek</em>':'';
+        var btn=(e===exEnt)?'':'<button type="button" class="gcw-hint" tabindex="-1">ipucu</button>';
+        d.innerHTML='<b>'+e.num+'</b><span>'+escapeHtml(e.clue)+' <i class="gcw-len">('+e.answer.length+')</i>'+ex+'</span>'+btn;
+        d.addEventListener('click',function(ev){
+          if(ev.target&&ev.target.className&&ev.target.className.indexOf('gcw-hint')>-1){ revealHint(e); ev.stopPropagation(); return; }
+          focusEntry(e);
+        });
         col.appendChild(d); e._el=d;
       });
       return col;
@@ -137,6 +155,33 @@
       var arr=entryCells(e); var i=arr.indexOf(k)+step;
       if(i<0||i>=arr.length)return null; return arr[i];
     }
+    function nextEditable(e,k,step){
+      var nk=nextInEntry(e,k,step);
+      while(nk&&given[nk])nk=nextInEntry(e,nk,step);
+      return nk;
+    }
+    function applyExample(){
+      if(!exEnt)return;
+      var ks=entryCells(exEnt);
+      for(var i=0;i<ks.length;i++){
+        var inp=inputs[ks[i]]; if(!inp)continue;
+        inp.value=norm(exEnt.answer.charAt(i)); inp.readOnly=true; given[ks[i]]=true;
+        var p=inp.parentNode;
+        if(p.className.indexOf('given')<0)p.className=p.className.replace(/\s*\b(ok|bad|hint)\b/g,'')+' given';
+      }
+    }
+    function revealHint(e){
+      var ks=entryCells(e);
+      for(var i=0;i<ks.length;i++){
+        var inp=inputs[ks[i]]; if(!inp||given[ks[i]])continue;
+        if(norm(inp.value)!==cells[ks[i]].sol){
+          inp.value=cells[ks[i]].sol;
+          inp.parentNode.className=inp.parentNode.className.replace(/\s*\b(ok|bad)\b/g,'')+' hint';
+          if(opts.onChange)opts.onChange(inst);
+          return;
+        }
+      }
+    }
 
     /* interactions */
     grid.addEventListener('focusin',function(ev){
@@ -157,7 +202,7 @@
       var el=ev.target; var k=el.getAttribute('data-k'); if(!k)return;
       el.value=norm(el.value).slice(0,1);
       el.parentNode.className=el.parentNode.className.replace(/\s*\b(ok|bad)\b/g,'');
-      if(el.value&&active.ent){ var nk=nextInEntry(active.ent,k,1); if(nk&&inputs[nk])inputs[nk].focus(); }
+      if(el.value&&active.ent){ var nk=nextEditable(active.ent,k,1); if(nk&&inputs[nk])inputs[nk].focus(); }
       if(opts.onChange)opts.onChange(inst);
     });
     grid.addEventListener('keydown',function(ev){
@@ -177,7 +222,8 @@
       task:task,
       getState:function(){ var o={}; for(var k in inputs){ if(inputs[k].value)o[k]=inputs[k].value; } return {cw:o}; },
       setState:function(st){
-        var o=(st&&st.cw)||{}; for(var k in inputs){ inputs[k].value=o[k]?norm(o[k]).slice(0,1):''; inputs[k].parentNode.className=inputs[k].parentNode.className.replace(/\s*\b(ok|bad)\b/g,''); }
+        var o=(st&&st.cw)||{}; for(var k in inputs){ if(given[k])continue; inputs[k].value=o[k]?norm(o[k]).slice(0,1):''; inputs[k].parentNode.className=inputs[k].parentNode.className.replace(/\s*\b(ok|bad)\b/g,''); }
+        applyExample();
       },
       isFilled:function(){ for(var k in inputs){ if(!inputs[k].value)return false; } return true; },
       gradeSilent:function(){
@@ -211,6 +257,7 @@
       }
     };
     if(opts.value)inst.setState({cw:opts.value});
+    applyExample();
     return inst;
   }
 

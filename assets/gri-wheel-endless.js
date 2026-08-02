@@ -61,7 +61,8 @@
       {url:'assets/wow-levels.json',pick:function(j){ (j||[]).forEach(function(lv){ (lv.words||[]).forEach(function(o){ addWord(pool,o.w,o.tr); }); }); }},
       {url:'assets/wordle-words.json',pick:function(j){ (j||[]).forEach(function(o){ addWord(pool,o.w,(o.tr||'').split(' / ')[0]); }); }},
       {url:'assets/wordle-words-social.json',pick:function(j){ (j||[]).forEach(function(o){ addWord(pool,o.w,(o.tr||'').split(' / ')[0]); }); }},
-      {url:'assets/game-words.json',pick:function(j){ ((j&&j.themes)||[]).forEach(function(t){ (t.words||[]).forEach(function(o){ addWord(pool,o.w,o.tr); }); }); }}
+      {url:'assets/game-words.json',pick:function(j){ ((j&&j.themes)||[]).forEach(function(t){ (t.words||[]).forEach(function(o){ addWord(pool,o.w,o.tr); }); }); }},
+      {url:'assets/game-dict.json',pick:function(j){ (j||[]).forEach(function(o){ addWord(pool,o.w,o.tr); }); }}
     ];
     var done=0;
     srcs.forEach(function(s){
@@ -79,7 +80,7 @@
       for(var i=0;i<pool.words.length;i++){ var w=pool.words[i]; if(w!==base&&w.length<=base.length&&isSub(w,base))cands.push(w); }
       if(cands.length<3)continue;
       shuffle(cands);
-      var chosen=cands.slice(0,Math.min(5,cands.length));
+      var chosen=cands.slice(0,Math.min(8,cands.length));
       chosen.push(base); chosen=uniq(chosen);
       if(chosen.length<3)continue;
       var res=tryGrid(chosen);

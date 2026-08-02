@@ -19,6 +19,9 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/site-config.js" defer></script>
+  <script src="assets/auth.js" defer></script>
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/assets/app-mode.css">
   <script src="/assets/app-mode.js" defer></script>
@@ -64,7 +67,13 @@
   .oy-back{display:inline-flex;align-items:center;gap:6px;font:700 .92rem var(--font-ui,inherit);color:var(--text);background:transparent;border:1px solid var(--line);border-radius:22px;padding:7px 16px;cursor:pointer;margin-bottom:6px}
   .oy-back:hover{border-color:var(--gold,#B78A2E);color:var(--gold,#B78A2E)}
   .oy-panel[hidden]{display:none}
-  .oy-picker{display:flex;flex-direction:column;align-items:center;gap:12px;margin:4px 0 18px;max-height:360px;overflow:auto;padding:2px}
+  .oy-lvbar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+  .oy-lvnow{font-family:var(--font-display);font-weight:700;color:var(--text);font-size:1.06rem;min-width:130px;text-align:center}
+  .oy-lvnow .th{color:var(--gold,#B78A2E);font-style:italic}
+  .oy-navbtn{font:700 1rem var(--font-ui,inherit);min-width:36px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:20px;background:var(--card,#fff);color:var(--text);cursor:pointer;line-height:1}
+  .oy-navbtn:hover{border-color:var(--gold,#B78A2E)}
+  .oy-picktoggle{font-size:.82rem;color:var(--gold,#B78A2E)}
+  .oy-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 14px;max-height:230px;overflow:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg-soft,rgba(0,0,0,.02))}
   .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
   .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-soft)}
   .oy-prow{display:flex;flex-wrap:wrap;gap:5px;max-width:420px;justify-content:center}
@@ -104,6 +113,18 @@
       <div class="oy-eyebrow">Kelime Oyunları</div>
       <h1>Oyunlar</h1>
       <p>Oynayarak öğren — her gün yeni bir kelime, bulmacalar ve daha fazlası.</p>
+    </div>
+
+    <div id="oyGate" hidden style="text-align:center;padding:24px 8px 40px">
+      <div class="oy-card" style="max-width:460px;margin:0 auto">
+        <div style="font-size:2rem;line-height:1">🔒</div>
+        <h2 class="oy-cardttl">Oyunlar için giriş yap</h2>
+        <p class="oy-cardsub">Wordle, Kelime Yolu ve diğer oyunlara erişmek için ücretsiz bir hesap yeterli — ilerlemen, serin ve puanların kaydedilir.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px">
+          <a href="giris.html?return=/oyunlar.html" class="oy-navbtn" style="background:#2E6E6A;color:#fff;border-color:#2E6E6A;padding:11px 24px;text-decoration:none;font-weight:700">Giriş Yap</a>
+          <a href="giris.html#signup" class="oy-navbtn" style="padding:11px 24px;text-decoration:none;font-weight:700">Ücretsiz Hesap Aç</a>
+        </div>
+      </div>
     </div>
 
     <!-- HUB: kategori kartları -->
@@ -166,9 +187,14 @@
     <div class="oy-panel" id="view-wow" hidden>
       <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
       <div class="oy-card">
-        <h2 class="oy-cardttl">Kelime Yolu · <span id="woLevel" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
-        <p class="oy-cardsub">Alttaki <b>harf çarkındaki</b> harfleri parmakla birleştirerek kelimeler kur; doğru kelimeler yukarıdaki ızgaraya yerleşir. İstediğin zorluktan başlayabilirsin.</p>
-        <div id="woPicker" class="oy-picker"></div>
+        <h2 class="oy-cardttl">Kelime Yolu</h2>
+        <div class="oy-lvbar">
+          <button type="button" class="oy-navbtn" id="woPrev" aria-label="Önceki level">&lsaquo;</button>
+          <span class="oy-lvnow" id="woLevel">Level 1</span>
+          <button type="button" class="oy-navbtn" id="woNext" aria-label="Sonraki level">&rsaquo;</button>
+          <button type="button" class="oy-navbtn oy-picktoggle" id="woPick">Leveller ▾</button>
+        </div>
+        <div id="woPicker" class="oy-picker" hidden></div>
         <div id="woHost"></div>
       </div>
     </div>
@@ -256,14 +282,15 @@
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var LEVELS=j||[], woInst=null, cur=getWoLevel();
           var NL=LEVELS.length, th=Math.ceil(NL/3);
-          var TIERS=(NL<=4)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
+          var TIERS=(NL<=6)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
+          function collapsePicker(){ var p=$('woPicker'); if(p)p.hidden=true; var t=$('woPick'); if(t)t.textContent='Leveller ▾'; }
           function buildPicker(){
             var p=$('woPicker'); if(!p)return; p.innerHTML='';
             TIERS.forEach(function(t){
               var g=document.createElement('div'); g.className='oy-pgroup';
               var lab=document.createElement('div'); lab.className='oy-plabel'; lab.textContent=t[0]; g.appendChild(lab);
               var row=document.createElement('div'); row.className='oy-prow';
-              for(var n=t[1];n<=Math.min(t[2],LEVELS.length);n++){ (function(n){ var b=document.createElement('button'); b.className='oy-lv'+(n===cur?' cur':(n<getWoLevel()?' done':'')); b.textContent=n; b.addEventListener('click',function(){ loadLevel(n); }); row.appendChild(b); })(n); }
+              for(var n=t[1];n<=Math.min(t[2],LEVELS.length);n++){ (function(n){ var b=document.createElement('button'); b.className='oy-lv'+(n===cur?' cur':(n<=getWoLevel()?' done':'')); b.textContent=n; b.addEventListener('click',function(){ loadLevel(n); collapsePicker(); }); row.appendChild(b); })(n); }
               g.appendChild(row); p.appendChild(g);
             });
           }
@@ -271,11 +298,16 @@
             if(!LEVELS.length||!window.GriWheel)return;
             if(n>LEVELS.length)n=LEVELS.length; if(n<1)n=1; cur=n;
             var lv=LEVELS[n-1];
-            $('woLevel').textContent='Level '+n+' · '+lv.theme;
-            buildPicker();
+            $('woLevel').innerHTML='Level '+n+' · <span class="th">'+lv.theme+'</span>';
+            var pv=$('woPrev'); if(pv)pv.disabled=(n<=1);
+            var nx2=$('woNext'); if(nx2)nx2.disabled=(n>=NL);
+            if(!$('woPicker').hidden)buildPicker();
             if(woInst&&woInst.destroy)woInst.destroy();
             woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){ var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); window.scrollTo(0,0); }});
           }
+          var pk=$('woPick'); if(pk&&!pk._wired){ pk._wired=1; pk.addEventListener('click',function(){ var p=$('woPicker'); if(!p)return; p.hidden=!p.hidden; pk.textContent=p.hidden?'Leveller ▾':'Leveller ▴'; if(!p.hidden)buildPicker(); }); }
+          var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ loadLevel(cur-1); }); }
+          var nx=$('woNext'); if(nx&&!nx._wired){ nx._wired=1; nx.addEventListener('click',function(){ loadLevel(cur+1); }); }
           loadLevel(getWoLevel());
         }).catch(function(){});
       },
@@ -308,10 +340,30 @@
     });
     window.addEventListener('hashchange',function(){ var h=location.hash.replace('#',''); if(VIEWS.indexOf(h)>=0)go(h); else go(null); });
 
-    /* ---- ilk görünüm ---- */
-    refreshHub();
-    var h0=location.hash.replace('#','');
-    if(VIEWS.indexOf(h0)>=0)go(h0); else go(null);
+    /* ---- giriş şartı (login gate) ---- */
+    var GATE_IDS=['oyGate','oyHub','view-wordle','view-wow','view-wordsearch','view-match'];
+    function hideAllGated(){ GATE_IDS.forEach(function(id){ var el=$(id); if(el)el.hidden=true; }); }
+    function startApp(){
+      var g=$('oyGate'); if(g)g.hidden=true;
+      refreshHub();
+      var h0=location.hash.replace('#','');
+      if(VIEWS.indexOf(h0)>=0)go(h0); else go(null);
+    }
+    function showGate(){ hideAllGated(); var g=$('oyGate'); if(g)g.hidden=false; }
+    var SB_U=(window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co');
+    var SB_K=(window.SUPABASE_KEY||'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g');
+    function sbWait(cb,t){ t=t||0; if(window.supabase&&window.supabase.createClient)return cb(); if(t>40)return cb(); setTimeout(function(){ sbWait(cb,t+1); },100); }
+    hideAllGated();
+    sbWait(function(){
+      try{
+        if(!(window.supabase&&window.supabase.createClient)){ showGate(); return; }
+        var c=window.griGamesSB||window.supabase.createClient(SB_U,SB_K); window.griGamesSB=c;
+        c.auth.getSession().then(function(r){
+          if(r&&r.data&&r.data.session){ window.GRI_UID=r.data.session.user.id; startApp(); }
+          else showGate();
+        }, showGate);
+      }catch(e){ showGate(); }
+    });
   })();
   </script>
 </body>

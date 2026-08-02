@@ -137,7 +137,7 @@
     function complete(){
       var d=document.createElement('div'); d.className='gwo-done';
       d.innerHTML='<div class="t">'+esc(level.theme)+' tamamlandı!</div><div style="margin-top:6px;opacity:.85">Tüm kelimeleri buldun.</div>';
-      var b=document.createElement('button'); b.className='btn'; b.textContent='Sonraki Level ›';
+      var b=document.createElement('button'); b.className='btn'; b.textContent='Sonraki Seviye ›';
       b.addEventListener('click',function(){ if(opts.onComplete)opts.onComplete(level.n); });
       d.appendChild(b); host.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'center'});
     }

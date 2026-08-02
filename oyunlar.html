@@ -74,6 +74,7 @@
   .oy-navbtn:hover{border-color:var(--gold,#B78A2E)}
   .oy-picktoggle{font-size:.82rem;color:var(--gold,#B78A2E)}
   .oy-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 14px;max-height:230px;overflow:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg-soft,rgba(0,0,0,.02))}
+  .oy-picker[hidden]{display:none}
   .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
   .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-soft)}
   .oy-prow{display:flex;flex-wrap:wrap;gap:5px;max-width:420px;justify-content:center}
@@ -138,7 +139,7 @@
       <div class="oy-streak" id="oyStreak" style="display:none">
         <span class="oy-badge">Wordle serisi: <b id="oySt">0</b> gün</span>
         <span class="oy-badge">En iyi: <b id="oyBest">0</b></span>
-        <span class="oy-badge">Kelime Yolu: <b id="oyWoLvl">1</b>. level</span>
+        <span class="oy-badge">Kelime Yolu: <b id="oyWoLvl">1</b>. seviye</span>
       </div>
       <div class="oy-grid">
         <button type="button" class="oy-tile" data-go="wordle"><div class="em">🟩</div><h3>Wordle</h3><p>Her gün yeni kelime, seri (streak) ve paylaşım.</p></button>
@@ -189,10 +190,10 @@
       <div class="oy-card">
         <h2 class="oy-cardttl">Kelime Yolu</h2>
         <div class="oy-lvbar">
-          <button type="button" class="oy-navbtn" id="woPrev" aria-label="Önceki level">&lsaquo;</button>
-          <span class="oy-lvnow" id="woLevel">Level 1</span>
-          <button type="button" class="oy-navbtn" id="woNext" aria-label="Sonraki level">&rsaquo;</button>
-          <button type="button" class="oy-navbtn oy-picktoggle" id="woPick">Leveller ▾</button>
+          <button type="button" class="oy-navbtn" id="woPrev" aria-label="Önceki seviye">&lsaquo;</button>
+          <span class="oy-lvnow" id="woLevel">Seviye 1</span>
+          <button type="button" class="oy-navbtn" id="woNext" aria-label="Sonraki seviye">&rsaquo;</button>
+          <button type="button" class="oy-navbtn oy-picktoggle" id="woPick">Seviyeler ▾</button>
           <button type="button" class="oy-navbtn oy-picktoggle" id="woEndless">∞ Sonsuz</button>
         </div>
         <div id="woPicker" class="oy-picker" hidden></div>
@@ -233,7 +234,7 @@
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
-  <script src="assets/gri-wheel.js?v=2"></script>
+  <script src="assets/gri-wheel.js?v=3"></script>
   <script src="assets/gri-wheel-endless.js?v=1"></script>
   <script>
   (function(){
@@ -306,7 +307,7 @@
           }
           var NL=LEVELS.length, th=Math.ceil(NL/3);
           var TIERS=(NL<=6)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
-          function collapsePicker(){ var p=$('woPicker'); if(p)p.hidden=true; var t=$('woPick'); if(t)t.textContent='Leveller ▾'; }
+          function collapsePicker(){ var p=$('woPicker'); if(p)p.hidden=true; var t=$('woPick'); if(t)t.textContent='Seviyeler ▾'; }
           function buildPicker(){
             var p=$('woPicker'); if(!p)return; p.innerHTML='';
             TIERS.forEach(function(t){
@@ -323,9 +324,9 @@
             var lv=LEVELS[n-1];
             var pv=$('woPrev'); if(pv)pv.disabled=(n<=1);
             if(!$('woPicker').hidden)buildPicker();
-            mountLv(lv,'Level '+n+' · <span class="th">'+lv.theme+'</span>');
+            mountLv(lv,'Seviye '+n+' · <span class="th">'+lv.theme+'</span>');
           }
-          var pk=$('woPick'); if(pk&&!pk._wired){ pk._wired=1; pk.addEventListener('click',function(){ var p=$('woPicker'); if(!p)return; p.hidden=!p.hidden; pk.textContent=p.hidden?'Leveller ▾':'Leveller ▴'; if(!p.hidden)buildPicker(); }); }
+          var pk=$('woPick'); if(pk&&!pk._wired){ pk._wired=1; pk.addEventListener('click',function(){ var p=$('woPicker'); if(!p)return; p.hidden=!p.hidden; pk.textContent=p.hidden?'Seviyeler ▾':'Seviyeler ▴'; if(!p.hidden)buildPicker(); }); }
           var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ if(!endless)loadLevel(cur-1); }); }
           var nx=$('woNext'); if(nx&&!nx._wired){ nx._wired=1; nx.addEventListener('click',function(){ if(endless)loadEndless(); else loadLevel(cur+1); }); }
           var en=$('woEndless'); if(en&&!en._wired){ en._wired=1; en.addEventListener('click',function(){ setEndless(!endless); }); }

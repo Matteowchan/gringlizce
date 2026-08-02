@@ -297,12 +297,13 @@
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var LEVELS=j||[], woInst=null, cur=getWoLevel();
           var endless=false, pool=null, endlessN=0;
+          function scrollToWheel(){ var ww=$('woHost').querySelector('.gwo-wheelwrap'); if(ww)ww.scrollIntoView({behavior:'smooth',block:'end'}); }
           function mountLv(lv,labelHtml){
             $('woLevel').innerHTML=labelHtml;
             if(woInst&&woInst.destroy)woInst.destroy();
             woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){
-              if(endless){ loadEndless(); window.scrollTo(0,0); return; }
-              var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); window.scrollTo(0,0);
+              if(endless){ loadEndless(); scrollToWheel(); return; }
+              var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); scrollToWheel();
             }});
           }
           function loadEndless(){

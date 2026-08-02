@@ -295,10 +295,9 @@ var EXAMS=[
     ] },
     { label: "Kelime Bankası", href: "kelime-bankasi.html" },
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
+    { label: "Genel İngilizce", href: "genel-ingilizce.html" },
+    { label: "Exercises", href: "genel-odevler.html" },
     { label: "Sınıflarım", href: "sinifim.html" },
-    { label: "Genel İngilizce", href: "genel-ingilizce.html", children: [
-      { label: "Seviyeler", href: "genel-ingilizce.html" },
-      { label: "Exercises", href: "genel-odevler.html" } ] },
     { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
     { label: "Gri Meet", href: "grimeet.html" },
     { label: "AI Detector", href: "ai-araclari.html" },

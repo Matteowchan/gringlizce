@@ -328,7 +328,7 @@
 /* ===== Gri Meet oda içi Ödevler paneli ===== */
 (function () {
   var CLASS_ID = (new URLSearchParams(location.search)).get('class') || '';
-  var TYPE_LABELS = { questions:'Soru Bankası', writing:'Writing', reading:'Reading', vocab:'Kelime', ielts_mock:'Deneme', material:'Materyal' };
+  var TYPE_LABELS = { questions:'Soru Bankası', writing:'Writing', reading:'Reading', vocab:'Kelime', ielts_mock:'Deneme', material:'Materyal', ge:'Genel İngilizce' };
   var SEC_RUN = {
     full:{page:'ielts-deneme.html',meta:'Tam Deneme'}, reading:{page:'ielts-deneme-reading.html',meta:'Reading'},
     listening:{page:'ielts-deneme-listening.html',meta:'Listening'}, writing:{page:'ielts-deneme-writing.html',meta:'Writing'}
@@ -366,7 +366,32 @@
     if (a.type === 'ielts_mock') { var r = SEC_RUN[cfg.section||'full']||SEC_RUN.full; return r.page + '?test=' + encodeURIComponent(cfg.test_slug||''); }
     if (a.type === 'material') return cfg.url || '';
     if (a.type === 'reading') return cfg.url || '';
+    if (a.type === 'ge') return 'odev.html?id=' + encodeURIComponent(a.assignment_id || '');
     return '';
+  }
+
+  // GE havuz ödevleri (class_assignments -> ge_assignments); list_my_assignments bunları döndürmez.
+  async function loadGeAssignmentsGM(sb) {
+    try {
+      var gs = await sb.rpc('ge_student_class_state');
+      var st = gs && gs.data;
+      if (!st || !st.in_class || !st.assignments || !st.assignments.length) return [];
+      var dueById = {}, ids = [];
+      st.assignments.forEach(function (x) { if (x && x.assignment_id) { ids.push(x.assignment_id); dueById[x.assignment_id] = (typeof x.due_date === 'string' && x.due_date) ? x.due_date : null; } });
+      if (!ids.length) return [];
+      var det = await sb.from('ge_assignments').select('id,level,unit,title,description,skill').in('id', ids);
+      var rows = (det && det.data) || [];
+      var subMap = {};
+      try {
+        var subs = await sb.from('ge_submissions').select('assignment_id,teacher_grade,teacher_feedback').eq('task_type', 'assignment').in('assignment_id', ids);
+        (((subs && subs.data)) || []).forEach(function (s) { if (s.assignment_id) subMap[s.assignment_id] = s; });
+      } catch (e) {}
+      var now = new Date();
+      return rows.map(function (a) {
+        var due = dueById[a.id] || null; var sub = subMap[a.id]; var done = !!sub;
+        return { assignment_id: a.id, class_id: st.class_id || '', type: 'ge', title: a.title || 'Genel İngilizce Ödevi', config: {}, due_date: due, status: done ? 'completed' : 'pending', progress_current: 0, progress_target: 1, is_overdue: !!(due && new Date(due) < now && !done) };
+      });
+    } catch (e) { return []; }
   }
 
   async function toast(m){ try{ if(window.STATE){/* reuse gm toast if present */} }catch(e){} var t=document.getElementById('gmr-toast'); if(t){ t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2600);} }
@@ -376,7 +401,10 @@
     root.innerHTML = '<div class="gma-h">Ödevlerim <button data-act="reload">Yenile</button></div><div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
     var r = await sb.rpc('list_my_assignments');
     if (r.error) { root.querySelector('.dock-empty').textContent = 'Yüklenemedi.'; return; }
-    var list = (r.data||[]).filter(function(a){ return !CLASS_ID || a.class_id === CLASS_ID; });
+    var base = (r.data||[]).filter(function(a){ return !CLASS_ID || a.class_id === CLASS_ID; });
+    var ge = await loadGeAssignmentsGM(sb);
+    ge = ge.filter(function(a){ return !CLASS_ID || a.class_id === CLASS_ID; });
+    var list = base.concat(ge);
     var body = '<div class="gma-h">Ödevlerim <button data-act="reload">Yenile</button></div>';
     if (!list.length) { body += '<div class="dock-empty" style="padding:8px 0">Bu sınıfta ödev yok.</div>'; root.innerHTML = body; return; }
     list.forEach(function (a) {

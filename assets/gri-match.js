@@ -23,7 +23,9 @@
       '.gmt-btn{margin-top:10px;font:700 14px inherit;padding:9px 18px;border-radius:9px;border:0;background:var(--mt-ok);color:#fff;cursor:pointer;}'
     ].join('');document.head.appendChild(s);
   }
-  function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=(i*7+3)%(i+1); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+  function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+  function sameOrder(a,b){ if(a.length!==b.length)return false; for(var i=0;i<a.length;i++)if(a[i]!==b[i])return false; return true; }
+  function anyRowMatches(a,b){ for(var i=0;i<a.length;i++)if(a[i]===b[i])return true; return false; }
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   function mount(host,opts){
@@ -40,8 +42,15 @@
     cols.appendChild(lc); cols.appendChild(rc); host.appendChild(cols);
     // build tiles: left=en shuffled, right=tr shuffled, tagged with pair index
     var idx=pairs.map(function(_,i){return i;});
-    shuffle(idx).forEach(function(pi){ lc.appendChild(tile(pairs[pi].en,pi,'en')); });
-    shuffle(idx).forEach(function(pi){ rc.appendChild(tile(pairs[pi].tr,pi,'tr')); });
+    var leftOrder=shuffle(idx);
+    var rightOrder=shuffle(idx), tries=0;
+    // sag sutunu, hicbir satirda esiyle hizalanmayacak sekilde karistir (kolay kacak onlensin)
+    while(idx.length>1 && anyRowMatches(leftOrder,rightOrder) && tries<40){ rightOrder=shuffle(idx); tries++; }
+    if(idx.length>1 && anyRowMatches(leftOrder,rightOrder)){ // son care: kaydir
+      rightOrder=leftOrder.slice(1).concat(leftOrder.slice(0,1));
+    }
+    leftOrder.forEach(function(pi){ lc.appendChild(tile(pairs[pi].en,pi,'en')); });
+    rightOrder.forEach(function(pi){ rc.appendChild(tile(pairs[pi].tr,pi,'tr')); });
 
     function tile(txt,pi,side){
       var d=document.createElement('div'); d.className='gmt-i'; d.textContent=txt; d.setAttribute('data-pi',pi); d.setAttribute('data-side',side);

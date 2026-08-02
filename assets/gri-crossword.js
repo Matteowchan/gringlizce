@@ -54,7 +54,14 @@
       '.gcw-ex{font-style:normal;margin-left:6px;font-size:.68rem;font-weight:800;color:#2c5a82;background:rgba(58,110,168,.16);padding:1px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;}',
       ':root[data-theme="dark"] .gcw-ex{color:#8ab8e0;}',
       '.gcw-hint{flex:none;align-self:flex-start;margin-top:1px;font:700 .72rem/1 inherit;color:var(--gcw-hlb);background:transparent;border:1px solid var(--gcw-hlb);border-radius:6px;padding:3px 9px;cursor:pointer;opacity:.7;transition:opacity .12s,background .12s;}',
-      '.gcw-hint:hover{opacity:1;background:var(--gcw-hl);}'
+      '.gcw-hint:hover{opacity:1;background:var(--gcw-hl);}',
+      /* gece modu: satir highlight krem yerine golge-altin tint (acik yazi okunur kalsin) */
+      ':root[data-theme="dark"] .gcw-clue:hover{background:rgba(230,169,46,.15);}',
+      ':root[data-theme="dark"] .gcw-clue.cur{background:rgba(230,169,46,.15);}',
+      ':root[data-theme="dark"] .gcw-clue.flash{animation:gcwflashd .45s ease;}',
+      '@keyframes gcwflashd{0%{background:rgba(230,169,46,.24);}100%{background:transparent;}}',
+      ':root[data-theme="dark"] .gcw-hint:hover{background:rgba(230,169,46,.15);}',
+      ':root[data-theme="dark"] .gcw-chk:hover{background:rgba(23,122,65,.24);}'
     ].join('');
     document.head.appendChild(s);
   }

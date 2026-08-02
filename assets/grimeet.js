@@ -310,7 +310,7 @@ function attachScreen(track,local){ var box=$('#gmr-screen'); var v=box.querySel
     v.addEventListener('resize',function(){ reflow(); try{ if(STATE._screenTrack) STATE._screenTrack.attach(v); }catch(e){} });
     v.addEventListener('pause',function(){ try{ var pr=v.play(); if(pr&&pr.catch)pr.catch(function(){}); }catch(e){} });
   }
-  $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); applyScreenZoom(); }
+  $('#scr-label').textContent=local?'Ekranını paylaşıyorsun':'Paylaşılan ekran'; setMode('screen'); applyScreenZoom(); if(local&&STATE.isHost&&STATE.scrZoom&&STATE.scrZoom!==1){ try{ sendData({t:'scr-zoom',z:STATE.scrZoom}); }catch(e){} } }
 function clearScreen(){ var box=$('#gmr-screen'); var v=box.querySelector('video'); if(v)v.remove(); STATE._screenTrack=null; STATE.scrZoom=1; applyScreenZoom(); }
 // Ekran paylaşımı zoom — her izleyici kendi görünümünü büyütür (yerel); >1'de kaydırarak gezilir.
 function applyScreenZoom(){
@@ -342,8 +342,8 @@ function setupAutoPiP(){
 }
 function bindScreenZoom(){
   var zi=document.getElementById('scr-zoom-in'), zo=document.getElementById('scr-zoom-out');
-  if(zi)zi.addEventListener('click',function(){ STATE.scrZoom=Math.min(3,Math.round((STATE.scrZoom+0.2)*100)/100); applyScreenZoom(); });
-  if(zo)zo.addEventListener('click',function(){ STATE.scrZoom=Math.max(1,Math.round((STATE.scrZoom-0.2)*100)/100); applyScreenZoom(); });
+  if(zi)zi.addEventListener('click',function(){ STATE.scrZoom=Math.min(3,Math.round((STATE.scrZoom+0.2)*100)/100); applyScreenZoom(); if(STATE.isHost)sendData({t:'scr-zoom',z:STATE.scrZoom}); });
+  if(zo)zo.addEventListener('click',function(){ STATE.scrZoom=Math.max(1,Math.round((STATE.scrZoom-0.2)*100)/100); applyScreenZoom(); if(STATE.isHost)sendData({t:'scr-zoom',z:STATE.scrZoom}); });
 }
 
 /* ================= TILES ================= */
@@ -551,6 +551,7 @@ function onData(payload,p){
   else if(msg.t==='admit'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity) admitSelf(); }
   else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
+  else if(msg.t==='scr-zoom'){ if(!STATE.isHost&&fromHost){ STATE.scrZoom=Math.max(1,Math.min(3, (+msg.z)||1)); applyScreenZoom(); } }
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
   else if(msg.t==='mat'){ if(!STATE.isHost&&fromHost){
       var _ms=(typeof msg.seq==='number')?msg.seq:0;

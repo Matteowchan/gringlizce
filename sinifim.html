@@ -2689,6 +2689,11 @@
 
     <!-- ============ ÖDEVLERIM (Student side, Phase 3) ============ -->
     <div id="my-assignments-section" style="display: none;">
+      <!-- Sınıf-detay ders takvimi (öğrencinin planlı canlı dersleri) -->
+      <div id="sf-class-schedule-wrap" style="display:none;margin:0 0 1.75rem;">
+        <div class="zone-head"><span class="zone-eyebrow">Canlı</span><span class="zone-line"></span><h2>Ders Takvimi · Programım</h2></div>
+        <div id="sf-class-schedule"></div>
+      </div>
       <div class="zone-head">
         <span class="zone-eyebrow">Görev</span>
         <span class="zone-line"></span>
@@ -2957,6 +2962,30 @@
               if (!section || !list) return;
               section.style.display = '';
               if (empty) empty.style.display = 'none';
+              // Sınıf-detay: öğrencinin ders takvimini göster (bir kez mount et)
+              try {
+                var schedWrap = document.getElementById('sf-class-schedule-wrap');
+                var schedCont = document.getElementById('sf-class-schedule');
+                if (schedWrap && schedCont) {
+                  schedWrap.style.display = 'block';
+                  if (!window._sfClassSchedMounted && window.GriSchedule) {
+                    window._sfClassSchedMounted = true;
+                    GriSchedule.mount({
+                      sb: sbCli,
+                      container: schedCont,
+                      role: 'student',
+                      onLoad: function (n) {
+                        try {
+                          if (!n) {
+                            var b = document.querySelector('#sf-class-schedule .gsch-body');
+                            if (b && !b.querySelector('.gsch-item')) b.innerHTML = '<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>';
+                          }
+                        } catch (_e) {}
+                      }
+                    });
+                  }
+                }
+              } catch (_e) {}
               var banner = document.getElementById('assign-filter-banner');
               if (!banner) { banner = document.createElement('div'); banner.id = 'assign-filter-banner'; banner.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(44,88,86,.08);border:1px solid rgba(44,88,86,.2);border-radius:12px;padding:.7rem 1rem;margin:0 0 1rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;'; list.parentNode.insertBefore(banner, list); }
               banner.style.display = 'flex';

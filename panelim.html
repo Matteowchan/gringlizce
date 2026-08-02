@@ -2569,6 +2569,7 @@
   <script src="assets/curriculum.js"></script>
   <script src="assets/nav.js?v=8"></script>
   <script src="assets/track.js" defer></script>
+  <script src="assets/grimeet-schedule.js?v=6" defer></script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -2625,6 +2626,16 @@
       <a href="seviye-belirleme.html"><span class="qi">📊</span><span><b>Seviyeni ölç</b><small>Seviye belirleme</small></span></a>
       <a href="yazi-pratigi.html"><span class="qi">✍️</span><span><b>Yazı yaz</b><small>Gri AI geri bildirim</small></span></a>
       <a href="sinifim.html"><span class="qi">👥</span><span><b>Sınıflarım</b><small>Katıl · ödevler</small></span></a>
+    </div>
+
+    <!-- Programım / Ders Takvimim (öğrencinin planlı canlı dersleri) -->
+    <div id="masam-schedule-wrap" style="display:none;margin:0 0 1.5rem;">
+      <div class="zone-head">
+        <span class="zone-eyebrow">Canlı</span>
+        <span class="zone-line"></span>
+        <h2>Programım · Ders Takvimim</h2>
+      </div>
+      <div id="masam-schedule"></div>
     </div>
 
     <!-- Bölümler içindekiler çubuğu (JS ile dinamik doldurulur) -->
@@ -6171,6 +6182,40 @@
           el.style.display = 'none';
         } catch (e) { msg.textContent = 'Bildirim açılamadı: ' + (e.message || e); btn.disabled = false; }
       });
+    })();
+  </script>
+  <!-- Programım / Ders Takvimim: öğrencinin planlı canlı derslerini göster -->
+  <script>
+    (async function initMasamSchedule(){
+      try{
+        if(!window.supabase || !window.supabase.createClient) return;
+        var wrap = document.getElementById('masam-schedule-wrap');
+        var cont = document.getElementById('masam-schedule');
+        if(!wrap || !cont) return;
+        var sbCli = window.supabase.createClient(
+          'https://vazbvbqgvtlaqkytfsbi.supabase.co',
+          'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g',
+          { auth: { persistSession: true, autoRefreshToken: true } }
+        );
+        var sess = await sbCli.auth.getSession();
+        if(!sess || !sess.data || !sess.data.session) return;
+        if(!window.GriSchedule) return;
+        wrap.style.display = 'block';
+        GriSchedule.mount({
+          sb: sbCli,
+          container: cont,
+          role: 'student',
+          onLoad: function(n){
+            wrap.style.display = 'block';
+            try{
+              if(!n){
+                var b = document.querySelector('#masam-schedule .gsch-body');
+                if(b && !b.querySelector('.gsch-item')) b.innerHTML = '<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>';
+              }
+            }catch(_e){}
+          }
+        });
+      }catch(e){}
     })();
   </script>
 <script src="assets/gri-fx.js" defer></script>

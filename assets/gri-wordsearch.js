@@ -61,7 +61,7 @@
     host.appendChild(gEl);
 
     var list=document.createElement('div'); list.className='gws-list';
-    placed.forEach(function(o,i){ var w=document.createElement('span'); w.className='gws-w'; w.setAttribute('data-i',i); w.innerHTML=o.w+(o.tr?' <small>('+o.tr+')</small>':''); list.appendChild(w); o._el=w; });
+    placed.forEach(function(o,i){ var w=document.createElement('span'); w.className='gws-w'; w.setAttribute('data-i',i); w.innerHTML='<b>'+(o.tr||o.w)+'</b>'; list.appendChild(w); o._el=w; });
     host.appendChild(list);
 
     var foundCount=0, anchor=null, curSel=[];
@@ -82,7 +82,7 @@
         if(placed[i].w===w||placed[i].w===wr){
           placed[i]._done=true; foundCount++;
           curSel.forEach(function(p){ cellEls[p[0]+'_'+p[1]].className='gws-c ok'; });
-          placed[i]._el.className='gws-w found';
+          placed[i]._el.className='gws-w found'; placed[i]._el.innerHTML='<b>'+(placed[i].tr||'')+'</b> <small>'+placed[i].w+'</small>';
           curSel=[];
           if(foundCount===placed.length)finish();
           return;

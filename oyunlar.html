@@ -59,6 +59,27 @@
   .oy-faq details{border-bottom:1px solid var(--line);padding:.6rem 0}
   .oy-faq summary{cursor:pointer;font-weight:700;color:var(--text)}
   .oy-faq details p{margin:.5rem 0 0;color:var(--text-soft);font-size:.92rem}
+  .oy-tile{cursor:pointer;font:inherit;text-align:left;width:100%}
+  .oy-tile .em{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:12px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:1.5rem}
+  .oy-back{display:inline-flex;align-items:center;gap:6px;font:700 .92rem var(--font-ui,inherit);color:var(--text);background:transparent;border:1px solid var(--line);border-radius:22px;padding:7px 16px;cursor:pointer;margin-bottom:6px}
+  .oy-back:hover{border-color:var(--gold,#B78A2E);color:var(--gold,#B78A2E)}
+  .oy-panel[hidden]{display:none}
+  .oy-picker{display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:center;margin:4px 0 18px}
+  .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-soft)}
+  .oy-prow{display:flex;gap:5px}
+  .oy-lv{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--text);font:700 14px var(--font-ui,inherit);cursor:pointer}
+  .oy-lv:hover{border-color:var(--gold,#B78A2E)}
+  .oy-lv.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10}
+  .oy-lv.done{background:rgba(46,110,78,.14);border-color:rgba(46,110,78,.3)}
+  /* oyun kartlarının arkasında şeffaf kedi watermark */
+  .oy-panel .oy-card{position:relative;z-index:0;overflow:hidden}
+  .oy-panel .oy-card::before{content:"";position:absolute;right:-24px;bottom:-24px;width:160px;height:160px;background:url(assets/gri-cat-curious.png) no-repeat center/contain;opacity:.06;pointer-events:none;z-index:-1}
+  #view-wordle .oy-card::before{background-image:url(assets/gri-cat-happy.png)}
+  #view-wow .oy-card::before{background-image:url(assets/gri-cat-curious.png)}
+  #view-wordsearch .oy-card::before{background-image:url(assets/gri-cat-happy.png)}
+  #view-match .oy-card::before{background-image:url(assets/gri-cat-curious.png)}
+  @media(max-width:640px){.oy-panel .oy-card::before{width:120px;height:120px;opacity:.05}}
   </style>
 </head>
 <body>
@@ -80,81 +101,86 @@
       <p>Oynayarak öğren — her gün yeni bir kelime, bulmacalar ve daha fazlası.</p>
     </div>
 
-    <div class="oy-streak" id="oyStreak" style="display:none">
-      <span class="oy-badge">Seri: <b id="oySt">0</b> gün</span>
-      <span class="oy-badge">En iyi: <b id="oyBest">0</b></span>
-      <span class="oy-badge">Toplam: <b id="oyPlayed">0</b> oyun</span>
+    <!-- HUB: kategori kartları -->
+    <div id="oyHub">
+      <div class="oy-streak" id="oyStreak" style="display:none">
+        <span class="oy-badge">Wordle serisi: <b id="oySt">0</b> gün</span>
+        <span class="oy-badge">En iyi: <b id="oyBest">0</b></span>
+        <span class="oy-badge">Kelime Yolu: <b id="oyWoLvl">1</b>. level</span>
+      </div>
+      <div class="oy-grid">
+        <button type="button" class="oy-tile" data-go="wordle"><div class="em">🟩</div><h3>Wordle</h3><p>Her gün yeni kelime, seri (streak) ve paylaşım.</p></button>
+        <button type="button" class="oy-tile" data-go="wow"><div class="em">🎡</div><h3>Kelime Yolu</h3><p>Harf çarkını çevir, kelimeleri bul, ızgarayı doldur. Artan zorluk.</p></button>
+        <a class="oy-tile" href="genel-odevler.html?oyun=bulmaca"><div class="em">🧩</div><h3>Bulmaca</h3><p>Seviyene göre kelime bulmacaları — Alıştırmalar havuzunda.</p></a>
+        <button type="button" class="oy-tile" data-go="wordsearch"><div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p></button>
+        <button type="button" class="oy-tile" data-go="match"><div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p></button>
+      </div>
     </div>
 
-    <div class="oy-card">
-      <h2 class="oy-cardttl">Günün Kelimesi · Wordle</h2>
-      <p class="oy-cardsub">6 denemede 5 harfli İngilizce kelimeyi bul. Yeşil: doğru yer · Sarı: kelimede var, yanlış yer · Gri: yok.</p>
-      <div class="oy-wd-host" id="oyWordle"></div>
+    <!-- PANEL: Wordle -->
+    <div class="oy-panel" id="view-wordle" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Günün Kelimesi · Wordle</h2>
+        <p class="oy-cardsub">6 denemede 5 harfli İngilizce kelimeyi bul. Yeşil: doğru yer · Sarı: kelimede var, yanlış yer · Gri: yok.</p>
+        <div class="oy-wd-host" id="oyWordle"></div>
+      </div>
+      <div class="oy-secttl">Wordle Nasıl Oynanır?</div>
+      <div class="oy-card oy-howto">
+        <p>Wordle'da amaç, gizli <b>5 harfli İngilizce kelimeyi 6 denemede</b> bulmaktır. Her gün herkes için aynı kelime geçerlidir — arkadaşlarınla sonucunu paylaşabilirsin.</p>
+        <ol>
+          <li>Klavyeden 5 harfli bir kelime yaz ve <b>ENTER</b>'a bas.</li>
+          <li>Kutuların rengi ipucu verir:
+            <ul>
+              <li><span class="oy-chip oy-ok">Yeşil</span> — harf doğru ve doğru yerde.</li>
+              <li><span class="oy-chip oy-pre">Sarı</span> — harf kelimede var ama yanlış yerde.</li>
+              <li><span class="oy-chip oy-no">Gri</span> — harf kelimede yok.</li>
+            </ul>
+          </li>
+          <li>İpuçlarını kullanarak tahminlerini daralt. Üstteki küçük <b>tematik ipucu</b> kelimenin ne ile ilgili olduğunu (tür/konu) söyler.</li>
+          <li>Kelimeyi bulunca <b>anlamı ve örnek cümlesi</b> açılır — böylece yeni kelime öğrenirsin.</li>
+        </ol>
+        <p class="oy-tip"><b>İpucu:</b> Bol sesli harf içeren bir kelimeyle başla (ör. <i>AROSE</i>, <i>IRATE</i>) — kelimeyi daha hızlı daraltırsın.</p>
+        <h3 class="oy-faqh">Sık Sorulanlar</h3>
+        <div class="oy-faq">
+          <details><summary>Günde kaç kez oynayabilirim?</summary><p>Günün kelimesi günde birdir ve herkese aynıdır (gece yarısı yenilenir). Diğer oyunları istediğin kadar oynayabilirsin.</p></details>
+          <details><summary>Seri (streak) nedir?</summary><p>Her gün kelimeyi bildiğinde serin bir artar. Bir günü kaçırır ya da bilemezsen seri sıfırlanır. En iyi serin ayrıca kaydedilir.</p></details>
+          <details><summary>Kelimeler neden zor?</summary><p>Kelime dağarcığını gerçekten geliştirmen için ilginç ve zorlayıcı (B2–C1) kelimeler seçiyoruz. Her kelimenin Türkçe anlamı ve örnek cümlesi oyun sonunda gösterilir.</p></details>
+          <details><summary>Sonucumu paylaşabilir miyim?</summary><p>Evet. Oyunu bitirince “Sonucu Kopyala” ile renkli kareli özetini panoya kopyalayıp paylaşabilirsin — kelimeyi ele vermez.</p></details>
+        </div>
+      </div>
     </div>
 
-    <div class="oy-secttl">Tüm Oyunlar</div>
-    <div class="oy-grid">
-      <a class="oy-tile" href="#oyWordle" onclick="document.getElementById('oyWordle').scrollIntoView({behavior:'smooth'});return false;">
-        <div class="em">🟩</div><h3>Wordle</h3><p>Her gün yeni kelime, seri (streak) ve paylaşım.</p>
-      </a>
-      <a class="oy-tile" href="#oyKelimeYolu" onclick="document.getElementById('oyKelimeYolu').scrollIntoView({behavior:'smooth'});return false;">
-        <div class="em">🎡</div><h3>Kelime Yolu</h3><p>Harf çarkını çevir, kelimeleri bul, ızgarayı doldur. Artan zorluk.</p>
-      </a>
-      <a class="oy-tile" href="genel-odevler.html?oyun=bulmaca">
-        <div class="em">🧩</div><h3>Bulmaca</h3><p>Seviyene göre kelime bulmacaları — Alıştırmalar havuzunda.</p>
-      </a>
-      <a class="oy-tile" href="#oyKelimeAvi" onclick="document.getElementById('oyKelimeAvi').scrollIntoView({behavior:'smooth'});return false;">
-        <div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p>
-      </a>
-      <a class="oy-tile" href="#oyEslestirme" onclick="document.getElementById('oyEslestirme').scrollIntoView({behavior:'smooth'});return false;">
-        <div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p>
-      </a>
+    <!-- PANEL: Kelime Yolu -->
+    <div class="oy-panel" id="view-wow" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Kelime Yolu · <span id="woLevel" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
+        <p class="oy-cardsub">Alttaki <b>harf çarkındaki</b> harfleri parmakla birleştirerek kelimeler kur; doğru kelimeler yukarıdaki ızgaraya yerleşir. İstediğin zorluktan başlayabilirsin.</p>
+        <div id="woPicker" class="oy-picker"></div>
+        <div id="woHost"></div>
+      </div>
     </div>
 
-    <div class="oy-card" id="oyKelimeYolu">
-      <h2 class="oy-cardttl">Kelime Yolu · <span id="woLevel" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
-      <p class="oy-cardsub">Alttaki <b>harf çarkındaki</b> harfleri parmakla birleştirerek kelimeler kur; doğru kelimeler yukarıdaki ızgaraya yerleşir. Her level biraz daha zor.</p>
-      <div id="woHost"></div>
+    <!-- PANEL: Kelime Avı -->
+    <div class="oy-panel" id="view-wordsearch" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Kelime Avı · <span id="wsTheme" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
+        <p class="oy-cardsub">Izgarada gizli İngilizce kelimeleri bul. Harflerin üzerine <b>dokunup sürükle</b> (yatay, dikey, çapraz — ileri veya geri).</p>
+        <div id="wsHost"></div>
+        <div style="text-align:center;margin-top:12px"><button type="button" id="wsNew" class="btn-ghost" style="font-weight:700">Yeni Tema</button></div>
+      </div>
     </div>
 
-    <div class="oy-card" id="oyKelimeAvi">
-      <h2 class="oy-cardttl">Kelime Avı · <span id="wsTheme" style="font-style:italic;color:var(--gold,#B78A2E)"></span></h2>
-      <p class="oy-cardsub">Izgarada gizli İngilizce kelimeleri bul. Harflerin üzerine <b>dokunup sürükle</b> (yatay, dikey, çapraz — ileri veya geri).</p>
-      <div id="wsHost"></div>
-      <div style="text-align:center;margin-top:12px"><button type="button" id="wsNew" class="btn-ghost" style="font-weight:700">Yeni Tema</button></div>
-    </div>
-
-    <div class="oy-card" id="oyEslestirme">
-      <h2 class="oy-cardttl">Eşleştirme</h2>
-      <p class="oy-cardsub">Soldaki İngilizce kelimeyi sağdaki Türkçe anlamıyla eşleştir. En az hamlede tamamlamaya çalış.</p>
-      <div id="mtHost"></div>
-      <div style="text-align:center;margin-top:12px"><button type="button" id="mtNew" class="btn-ghost" style="font-weight:700">Yeni Oyun</button></div>
-    </div>
-
-    <div class="oy-secttl">Wordle Nasıl Oynanır?</div>
-    <div class="oy-card oy-howto">
-      <p>Wordle'da amaç, gizli <b>5 harfli İngilizce kelimeyi 6 denemede</b> bulmaktır. Her gün herkes için aynı kelime geçerlidir — arkadaşlarınla sonucunu paylaşabilirsin.</p>
-      <ol>
-        <li>Klavyeden 5 harfli bir kelime yaz ve <b>ENTER</b>'a bas.</li>
-        <li>Kutuların rengi ipucu verir:
-          <ul>
-            <li><span class="oy-chip oy-ok">Yeşil</span> — harf doğru ve doğru yerde.</li>
-            <li><span class="oy-chip oy-pre">Sarı</span> — harf kelimede var ama yanlış yerde.</li>
-            <li><span class="oy-chip oy-no">Gri</span> — harf kelimede yok.</li>
-          </ul>
-        </li>
-        <li>İpuçlarını kullanarak tahminlerini daralt. Üstteki küçük <b>tematik ipucu</b> kelimenin ne ile ilgili olduğunu (tür/konu) söyler.</li>
-        <li>Kelimeyi bulunca <b>anlamı ve örnek cümlesi</b> açılır — böylece yeni kelime öğrenirsin.</li>
-      </ol>
-      <p class="oy-tip"><b>İpucu:</b> Bol sesli harf içeren bir kelimeyle başla (ör. <i>AROSE</i>, <i>IRATE</i>) — kelimeyi daha hızlı daraltırsın.</p>
-
-      <h3 class="oy-faqh">Sık Sorulanlar</h3>
-      <div class="oy-faq">
-        <details><summary>Günde kaç kez oynayabilirim?</summary><p>Günün kelimesi günde birdir ve herkese aynıdır (gece yarısı yenilenir). Ayrıca Kelime Avı ve Eşleştirme oyunlarını istediğin kadar oynayabilirsin.</p></details>
-        <details><summary>Seri (streak) nedir?</summary><p>Her gün kelimeyi bildiğinde serin bir artar. Bir günü kaçırır ya da bilemezsen seri sıfırlanır. En iyi serin ayrıca kaydedilir.</p></details>
-        <details><summary>Kelimeler neden zor?</summary><p>Kelime dağarcığını gerçekten geliştirmen için ilginç ve zorlayıcı (B2–C1) kelimeler seçiyoruz. Her kelimenin Türkçe anlamı ve örnek cümlesi oyun sonunda gösterilir.</p></details>
-        <details><summary>Herhangi bir kelime yazabilir miyim?</summary><p>Tahminin 5 harfli olmalı. Kelime tamamlanmadan ENTER'a basarsan uyarı alırsın; harfleri geri silmek için ← (backspace) tuşunu kullan.</p></details>
-        <details><summary>Sonucumu paylaşabilir miyim?</summary><p>Evet. Oyunu bitirince “Sonucu Kopyala” ile renkli kareli özetini panoya kopyalayıp paylaşabilirsin — kelimeyi ele vermez.</p></details>
+    <!-- PANEL: Eşleştirme -->
+    <div class="oy-panel" id="view-match" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Eşleştirme</h2>
+        <p class="oy-cardsub">Soldaki İngilizce kelimeyi sağdaki Türkçe anlamıyla eşleştir. En az hamlede tamamlamaya çalış.</p>
+        <div id="mtHost"></div>
+        <div style="text-align:center;margin-top:12px"><button type="button" id="mtNew" class="btn-ghost" style="font-weight:700">Yeni Oyun</button></div>
       </div>
     </div>
   </div>
@@ -167,60 +193,91 @@
 
   <script src="assets/gri-wordle.js?v=2"></script>
   <script src="assets/wordle-daily.js?v=2"></script>
-  <script src="assets/gri-wordsearch.js?v=1"></script>
+  <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
   <script src="assets/gri-wheel.js?v=1"></script>
   <script>
   (function(){
-    /* Günün Wordle'ı + streak */
-    var host=document.getElementById('oyWordle');
-    if(window.GriWordleDaily){
-      GriWordleDaily.mountDaily(host,{ onReady:function(i,w,s){showStreak(s);}, onFinish:function(r,s){showStreak(s);} });
-    }
-    function showStreak(s){
-      if(!s)return;
-      document.getElementById('oyStreak').style.display='flex';
-      document.getElementById('oySt').textContent=s.streak||0;
-      document.getElementById('oyBest').textContent=s.best||0;
-      document.getElementById('oyPlayed').textContent=s.played||0;
-    }
-
-    /* Kelime Avı + Eşleştirme: game-words.json + wordle-words.json */
+    function $(id){return document.getElementById(id);}
     function pick(arr,n){ arr=arr.slice(); for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;} return arr.slice(0,n); }
-    var THEMES=[];
-    fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ THEMES=(j&&j.themes)||[]; newWordSearch(); }).catch(function(){});
-    function newWordSearch(){
-      if(!THEMES.length||!window.GriWordSearch)return;
-      var t=THEMES[Math.floor(Math.random()*THEMES.length)];
-      document.getElementById('wsTheme').textContent=t.name;
-      GriWordSearch.mount(document.getElementById('wsHost'),{ words:t.words, onReplay:newWordSearch });
-    }
-    var wsBtn=document.getElementById('wsNew'); if(wsBtn)wsBtn.addEventListener('click',newWordSearch);
-
-    var MATCHPOOL=[];
-    fetch('assets/wordle-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ MATCHPOOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};}); newMatch(); }).catch(function(){});
-    function newMatch(){
-      if(!MATCHPOOL.length||!window.GriMatch)return;
-      GriMatch.mount(document.getElementById('mtHost'),{ pairs:pick(MATCHPOOL,6), onReplay:newMatch });
-    }
-    var mtBtn=document.getElementById('mtNew'); if(mtBtn)mtBtn.addEventListener('click',newMatch);
-
-    /* Kelime Yolu (WOW) — level ilerlemesi */
-    var LEVELS=[], woInst=null;
-    fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ LEVELS=j||[]; loadLevel(getWoLevel()); }).catch(function(){});
     function getWoLevel(){ try{ var v=parseInt(localStorage.getItem('gri-wow-level'),10); if(v>=1)return v; }catch(e){} return 1; }
     function setWoLevel(n){ try{ localStorage.setItem('gri-wow-level',n); }catch(e){} }
-    function loadLevel(n){
-      if(!LEVELS.length||!window.GriWheel)return;
-      if(n>LEVELS.length)n=LEVELS.length; if(n<1)n=1;
-      var lv=LEVELS[n-1];
-      document.getElementById('woLevel').textContent='Level '+n+' · '+lv.theme;
-      if(woInst&&woInst.destroy)woInst.destroy();
-      woInst=GriWheel.mount(document.getElementById('woHost'),{ level:lv, onComplete:function(done){
-        var next=Math.min(done+1,LEVELS.length); setWoLevel(next); loadLevel(next);
-        document.getElementById('oyKelimeYolu').scrollIntoView({behavior:'smooth'});
-      }});
+
+    /* ---- hub streak/level rozetleri (oyun mount etmeden) ---- */
+    function refreshHub(){
+      var s=(window.GriWordleDaily&&GriWordleDaily.getStreak)?GriWordleDaily.getStreak():null;
+      $('oyStreak').style.display='flex';
+      $('oySt').textContent=(s&&s.streak)||0;
+      $('oyBest').textContent=(s&&s.best)||0;
+      $('oyWoLvl').textContent=getWoLevel();
     }
+
+    /* ---- router ---- */
+    var mounted={}, VIEWS=['wordle','wow','wordsearch','match'];
+    function go(name){
+      $('oyHub').hidden=(name!==null);
+      VIEWS.forEach(function(v){ var el=$('view-'+v); if(el)el.hidden=(v!==name); });
+      if(name){ if(!mounted[name]){ mounted[name]=true; MOUNT[name](); } window.scrollTo(0,0);
+        if(location.hash!=='#'+name){ try{ history.replaceState(null,'','#'+name); }catch(e){ location.hash=name; } } }
+      else { refreshHub(); if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } }
+    }
+
+    var MOUNT={
+      wordle:function(){
+        if(window.GriWordleDaily) GriWordleDaily.mountDaily($('oyWordle'),{});
+      },
+      wow:function(){
+        fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+          var LEVELS=j||[], woInst=null, cur=getWoLevel();
+          var TIERS=[['Kolay',1,4],['Orta',5,8],['Zor',9,12]];
+          function buildPicker(){
+            var p=$('woPicker'); if(!p)return; p.innerHTML='';
+            TIERS.forEach(function(t){
+              var g=document.createElement('div'); g.className='oy-pgroup';
+              var lab=document.createElement('div'); lab.className='oy-plabel'; lab.textContent=t[0]; g.appendChild(lab);
+              var row=document.createElement('div'); row.className='oy-prow';
+              for(var n=t[1];n<=Math.min(t[2],LEVELS.length);n++){ (function(n){ var b=document.createElement('button'); b.className='oy-lv'+(n===cur?' cur':(n<getWoLevel()?' done':'')); b.textContent=n; b.addEventListener('click',function(){ loadLevel(n); }); row.appendChild(b); })(n); }
+              g.appendChild(row); p.appendChild(g);
+            });
+          }
+          function loadLevel(n){
+            if(!LEVELS.length||!window.GriWheel)return;
+            if(n>LEVELS.length)n=LEVELS.length; if(n<1)n=1; cur=n;
+            var lv=LEVELS[n-1];
+            $('woLevel').textContent='Level '+n+' · '+lv.theme;
+            buildPicker();
+            if(woInst&&woInst.destroy)woInst.destroy();
+            woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){ var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); window.scrollTo(0,0); }});
+          }
+          loadLevel(getWoLevel());
+        }).catch(function(){});
+      },
+      wordsearch:function(){
+        fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+          var THEMES=(j&&j.themes)||[];
+          function neu(){ if(!THEMES.length||!window.GriWordSearch)return; var t=THEMES[Math.floor(Math.random()*THEMES.length)]; $('wsTheme').textContent=t.name; GriWordSearch.mount($('wsHost'),{ words:t.words, onReplay:neu }); }
+          var b=$('wsNew'); if(b)b.addEventListener('click',neu); neu();
+        }).catch(function(){});
+      },
+      match:function(){
+        fetch('assets/wordle-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+          var POOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};});
+          function neu(){ if(!POOL.length||!window.GriMatch)return; GriMatch.mount($('mtHost'),{ pairs:pick(POOL,6), onReplay:neu }); }
+          var b=$('mtNew'); if(b)b.addEventListener('click',neu); neu();
+        }).catch(function(){});
+      }
+    };
+
+    /* ---- wiring ---- */
+    document.addEventListener('click',function(e){
+      var t=e.target; while(t&&t!==document){ if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; } if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; } t=t.parentNode; }
+    });
+    window.addEventListener('hashchange',function(){ var h=location.hash.replace('#',''); if(VIEWS.indexOf(h)>=0)go(h); else go(null); });
+
+    /* ---- ilk görünüm ---- */
+    refreshHub();
+    var h0=location.hash.replace('#','');
+    if(VIEWS.indexOf(h0)>=0)go(h0); else go(null);
   })();
   </script>
 </body>

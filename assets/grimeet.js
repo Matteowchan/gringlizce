@@ -912,6 +912,8 @@ function loadMaterial(m,remote){
     } else { ff.innerHTML='<iframe id="mat-file-if" src="'+esc('https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(m.value))+'" title="Dosya" allowfullscreen></iframe>'; applyZoom(); }
   } }
   else if(m.kind==='unit'){ matTab('unite'); var frame=$('#mat-unit-frame');
+    // Hızlı geçiş: önceki yükleme-zamanlayıcısını iptal et; reqId artışı eski iframe load/fetch'ini geçersiz kılar (last-wins).
+    clearTimeout(STATE._matLoadTmr);
     if(remote){ var reqId=(STATE._matReqId=(STATE._matReqId||0)+1); var done=false;
       frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe><div class="mat-loading" id="mat-loading">Öğretmenin sayfası yükleniyor…</div>'; var fr=document.getElementById('mat-uni-if'); attachMatScrollSync(fr); applyZoom();
       var stale=function(){ return reqId!==STATE._matReqId; };
@@ -920,9 +922,21 @@ function loadMaterial(m,remote){
       // iframe srcdoc render olunca örtüyü mutlaka kaldır (yeni nav gelirse reqId guard iptal eder)
       if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });
       // 8sn güvenlik ağı: fetch takılırsa "tekrar dene"
-      var tmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },8000);
-      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); }).then(function(h){ if(stale()){ clearTimeout(tmr); return; } done=true; clearTimeout(tmr); var f=document.getElementById('mat-uni-if'); if(f){ f.srcdoc=h; applyZoom(); } clearOv(); }).catch(function(){ if(stale()){ clearTimeout(tmr); return; } done=true; clearTimeout(tmr); failOv(); });
-    } else { frame.innerHTML='<iframe id="mat-uni-if" src="'+esc(new URL(m.value,'https://gringlizce.com/').href)+'" title="Sayfa"></iframe>'; applyZoom(); attachMatScrollSync(document.getElementById('mat-uni-if')); }
+      STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },8000);
+      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); }).then(function(h){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); var f=document.getElementById('mat-uni-if'); if(f){ try{ f.srcdoc=h; }catch(e){} applyZoom(); } clearOv(); }).catch(function(){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); failOv(); });
+    } else {
+      // HOST tarafı: ağır tam-site sayfası yüklenirken öğretmen kilitlenmesin — örtü + 10sn timeout + "Tekrar dene" + reqId iptali.
+      var hReqId=(STATE._matReqId=(STATE._matReqId||0)+1), hDone=false;
+      frame.innerHTML='<iframe id="mat-uni-if" title="Sayfa"></iframe><div class="mat-loading" id="mat-loading">Sayfa yükleniyor…</div>';
+      var hf=document.getElementById('mat-uni-if'); attachMatScrollSync(hf); applyZoom();
+      var hStale=function(){ return hReqId!==STATE._matReqId; };
+      var hClear=function(){ if(hStale())return; var ld=document.getElementById('mat-loading'); if(ld)ld.remove(); };
+      var hFail=function(){ if(hDone||hStale())return; var ld=document.getElementById('mat-loading'); if(!ld)return; ld.style.pointerEvents='auto'; ld.innerHTML='Sayfa yüklenemedi. <button type="button" id="mat-reload-h" style="margin-left:8px;padding:6px 12px;border:1px solid var(--gm-line);border-radius:8px;background:var(--gm-surface);color:var(--gm-ink);cursor:pointer">Tekrar dene</button>'; var rb=document.getElementById('mat-reload-h'); if(rb)rb.addEventListener('click',function(){ loadMaterial(m,false); }); };
+      // iframe yüklenince (ilk yük ve sayfa-içi gezinme) örtüyü kaldır; yeni nav gelirse hStale iptal eder.
+      if(hf) hf.addEventListener('load',function(){ if(hStale())return; hDone=true; clearTimeout(STATE._matLoadTmr); hClear(); });
+      STATE._matLoadTmr=setTimeout(function(){ hFail(); },10000);
+      try{ hf.src=new URL(m.value,'https://gringlizce.com/').href; }catch(e){ clearTimeout(STATE._matLoadTmr); hFail(); }
+    }
   }
   applyZoom();
   if(!remote&&STATE.matShared){ broadcastMat(m.kind,m.value,m.ext,false); }

@@ -64,10 +64,10 @@
   .oy-back{display:inline-flex;align-items:center;gap:6px;font:700 .92rem var(--font-ui,inherit);color:var(--text);background:transparent;border:1px solid var(--line);border-radius:22px;padding:7px 16px;cursor:pointer;margin-bottom:6px}
   .oy-back:hover{border-color:var(--gold,#B78A2E);color:var(--gold,#B78A2E)}
   .oy-panel[hidden]{display:none}
-  .oy-picker{display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:center;margin:4px 0 18px}
-  .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .oy-picker{display:flex;flex-direction:column;align-items:center;gap:12px;margin:4px 0 18px;max-height:360px;overflow:auto;padding:2px}
+  .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
   .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-soft)}
-  .oy-prow{display:flex;gap:5px}
+  .oy-prow{display:flex;flex-wrap:wrap;gap:5px;max-width:420px;justify-content:center}
   .oy-lv{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--text);font:700 14px var(--font-ui,inherit);cursor:pointer}
   .oy-lv:hover{border-color:var(--gold,#B78A2E)}
   .oy-lv.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10}
@@ -206,7 +206,7 @@
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
-  <script src="assets/gri-wheel.js?v=1"></script>
+  <script src="assets/gri-wheel.js?v=2"></script>
   <script>
   (function(){
     function $(id){return document.getElementById(id);}
@@ -255,7 +255,8 @@
       wow:function(){
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var LEVELS=j||[], woInst=null, cur=getWoLevel();
-          var TIERS=[['Kolay',1,4],['Orta',5,8],['Zor',9,12]];
+          var NL=LEVELS.length, th=Math.ceil(NL/3);
+          var TIERS=(NL<=4)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
           function buildPicker(){
             var p=$('woPicker'); if(!p)return; p.innerHTML='';
             TIERS.forEach(function(t){

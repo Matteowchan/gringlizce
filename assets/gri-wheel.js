@@ -13,8 +13,10 @@
       ':root[data-theme="dark"] .gwo{--wo-line:#4a4133;--wo-cell:#2f2a21;--wo-ink:#f0e9db;--wo-hide:#241f18;--wo-goldbg:#5a4a1e;--wo-okbg:#24503a;}',
       '.gwo-top{display:flex;justify-content:space-between;width:100%;max-width:360px;font-weight:700;font-size:.9rem;color:var(--wo-ink);}',
       '.gwo-top .th{color:var(--wo-gold);}',
-      '.gwo-grid{display:grid;gap:4px;justify-content:center;}',
-      '.gwo-cell{width:32px;height:32px;max-width:8vw;max-height:8vw;box-sizing:border-box;}',
+      '.gwo-gridwrap{width:100%;overflow-x:auto;display:flex;justify-content:center;padding:2px 0;}',
+      '.gwo-grid{display:grid;gap:4px;margin:0 auto;--gwo-cs:32px;}',
+      '.gwo-cell{width:var(--gwo-cs);height:var(--gwo-cs);box-sizing:border-box;}',
+      '@media(max-width:480px){.gwo-grid{--gwo-cs:26px;}.gwo-cell.on{font-size:14px;}}',
       '.gwo-cell.on{background:var(--wo-hide);border:1.5px solid var(--wo-line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;text-transform:uppercase;color:transparent;}',
       '.gwo-cell.rev{background:var(--wo-cell);color:var(--wo-ink);animation:gwoflip .5s ease;}',
       '@keyframes gwoflip{0%{transform:rotateX(90deg);background:var(--wo-ok);}60%{background:var(--wo-okbg);}100%{transform:rotateX(0);}}',
@@ -59,9 +61,9 @@
     /* grid */
     var cells={}; // r_c -> {ch, el}
     entries.forEach(function(e){ var dr=e.dir==='down'?1:0,dc=e.dir==='across'?1:0; for(var i=0;i<e.answer.length;i++){ var k=(e.r+dr*i)+'_'+(e.c+dc*i); if(!cells[k])cells[k]={ch:e.answer.charAt(i)}; } });
-    var gEl=document.createElement('div'); gEl.className='gwo-grid'; gEl.style.gridTemplateColumns='repeat('+level.cols+',1fr)';
+    var gEl=document.createElement('div'); gEl.className='gwo-grid'; gEl.style.gridTemplateColumns='repeat('+level.cols+',var(--gwo-cs,32px))';
     for(var r=0;r<level.rows;r++)for(var c=0;c<level.cols;c++){ var k=r+'_'+c; var d=document.createElement('div'); if(cells[k]){ d.className='gwo-cell on'; d.textContent=cells[k].ch; cells[k].el=d; } else d.className='gwo-cell'; gEl.appendChild(d); }
-    host.appendChild(gEl);
+    var gWrap=document.createElement('div'); gWrap.className='gwo-gridwrap'; gWrap.appendChild(gEl); host.appendChild(gWrap);
 
     /* formed pill */
     var formedWrap=document.createElement('div'); formedWrap.className='gwo-formed';

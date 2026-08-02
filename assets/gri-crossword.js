@@ -233,6 +233,7 @@
       el.parentNode.className=el.parentNode.className.replace(/\s*\b(ok|bad)\b/g,'');
       if(el.value&&active.ent){ var nk=nextEditable(active.ent,k,1); if(nk&&inputs[nk])inputs[nk].focus(); }
       if(opts.onChange)opts.onChange(inst);
+      if(opts.onSolved&&!inst._solved){ var allok=true; for(var ck in inputs){ if(norm(inputs[ck].value)!==cells[ck].sol){allok=false;break;} } if(allok){ inst._solved=true; opts.onSolved(); } }
     });
     grid.addEventListener('keydown',function(ev){
       var el=ev.target; var k=el.getAttribute('data-k'); if(!k)return;

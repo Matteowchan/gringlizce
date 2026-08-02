@@ -157,16 +157,16 @@
 
       <div class="oy-secttl">Rozetler</div>
       <div class="oy-badges">
-        <div class="oy-brz"><img src="yol-kaptani.png" alt="Yol Kaptanı"><span>Yol Kaptanı</span></div>
-        <div class="oy-brz"><img src="tam-skor.png" alt="Tam Skor"><span>Tam Skor</span></div>
-        <div class="oy-brz"><img src="karisim-ustasi.png" alt="Karışım Ustası"><span>Karışım Ustası</span></div>
-        <div class="oy-brz"><img src="ince-iscilik.png" alt="İnce İşçilik"><span>İnce İşçilik</span></div>
-        <div class="oy-brz"><img src="yaratici.png" alt="Yaratıcı"><span>Yaratıcı</span></div>
-        <div class="oy-brz"><img src="hedef-belirleyen.png" alt="Hedef Belirleyen"><span>Hedef Belirleyen</span></div>
-        <div class="oy-brz"><img src="tarif-takipci.png" alt="Tarif Takipçi"><span>Tarif Takipçi</span></div>
-        <div class="oy-brz"><img src="icten-yazar.png" alt="İçten Yazar"><span>İçten Yazar</span></div>
+        <div class="oy-brz locked" data-badge="yol-kaptani"><img src="yol-kaptani.png" alt="Yol Kaptanı"><span>Yol Kaptanı</span></div>
+        <div class="oy-brz locked" data-badge="tam-skor"><img src="tam-skor.png" alt="Tam Skor"><span>Tam Skor</span></div>
+        <div class="oy-brz locked" data-badge="karisim-ustasi"><img src="karisim-ustasi.png" alt="Karışım Ustası"><span>Karışım Ustası</span></div>
+        <div class="oy-brz locked" data-badge="ince-iscilik"><img src="ince-iscilik.png" alt="İnce İşçilik"><span>İnce İşçilik</span></div>
+        <div class="oy-brz locked" data-badge="yaratici"><img src="yaratici.png" alt="Yaratıcı"><span>Yaratıcı</span></div>
+        <div class="oy-brz locked" data-badge="hedef-belirleyen"><img src="hedef-belirleyen.png" alt="Hedef Belirleyen"><span>Hedef Belirleyen</span></div>
+        <div class="oy-brz locked" data-badge="tarif-takipci"><img src="tarif-takipci.png" alt="Tarif Takipçi"><span>Tarif Takipçi</span></div>
+        <div class="oy-brz locked" data-badge="icten-yazar"><img src="icten-yazar.png" alt="İçten Yazar"><span>İçten Yazar</span></div>
       </div>
-      <p class="oy-badges-note">Oyunlarda ve derslerde ilerledikçe bu rozetleri kazanırsın.</p>
+      <p class="oy-badges-note">Oyunlarda ilerledikçe bu rozetleri kazanırsın. Coin: <b id="oyCoins">0</b></p>
     </div>
 
     <!-- PANEL: Wordle -->
@@ -262,13 +262,14 @@
 
   <script src="assets/gri-confetti.js?v=1"></script>
   <script src="assets/gri-fx.js?v=1"></script>
+  <script src="assets/gri-games.js?v=1"></script>
   <script src="assets/gri-wordle.js?v=4"></script>
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=4"></script>
   <script src="assets/gri-match.js?v=3"></script>
   <script src="assets/gri-wheel.js?v=6"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
-  <script src="assets/gri-crossword.js?v=6"></script>
+  <script src="assets/gri-crossword.js?v=7"></script>
   <script>
   (function(){
     function $(id){return document.getElementById(id);}
@@ -292,6 +293,7 @@
       for(var i=0;i<btns.length;i++)btns[i].className='oy-catbtn'+(btns[i].getAttribute('data-cat')===CAT?' cur':'');
       $('oyCatHint').textContent=CATHINT[CAT]||'';
       updateSound();
+      if(window.GriGames){ GriGames.paint(); GriGames.paintCoins(); }
     }
     function updateSound(){ var b=$('oySound'); if(!b)return; var m=(window.GriFX&&GriFX.muted()); b.textContent=m?'🔇 Sessiz':'🔊 Ses'; b.className='oy-catbtn'+(m?'':' cur'); }
 
@@ -314,7 +316,9 @@
 
     var MOUNT={
       wordle:function(){
-        if(window.GriWordleDaily) GriWordleDaily.mountDaily($('oyWordle'),{category:CAT});
+        if(window.GriWordleDaily) GriWordleDaily.mountDaily($('oyWordle'),{category:CAT, onFinish:function(r,s){
+          if(window.GriGames){ if(r&&r.win){ GriGames.addCoins(15); if(r.tries<=3)GriGames.unlock('tam-skor'); } if(s&&s.streak>=7)GriGames.unlock('hedef-belirleyen'); }
+        }});
       },
       wow:function(){
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
@@ -326,6 +330,8 @@
             $('woLevel').innerHTML=labelHtml;
             if(woInst&&woInst.destroy)woInst.destroy();
             woInst=GriWheel.mount($('woHost'),{ level:lv, accent:accent, badge:'yol-kaptani.png', onComplete:function(done){
+              if(window.GriGames){ GriGames.addCoins(10); GriGames.bump('words',(lv.words||[]).length); if(GriGames.getCnt('words')>=50)GriGames.unlock('icten-yazar');
+                if(endless){ if(GriGames.bump('endless',1)>=10)GriGames.unlock('tarif-takipci'); } else if(done>=10)GriGames.unlock('yol-kaptani'); }
               if(endless){ loadEndless(); scrollToWheel(); return; }
               var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); scrollToWheel();
             }});
@@ -374,7 +380,7 @@
         fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var ALL=(j&&j.themes)||[];
           function pool(){ var f=ALL.filter(function(t){return (t.category||'social')===CAT;}); return f.length?f:ALL; }
-          function neu(){ var TH=pool(); if(!TH.length||!window.GriWordSearch)return; var t=TH[Math.floor(Math.random()*TH.length)]; $('wsTheme').textContent=t.name; GriWordSearch.mount($('wsHost'),{ words:t.words, onReplay:neu }); }
+          function neu(){ var TH=pool(); if(!TH.length||!window.GriWordSearch)return; var t=TH[Math.floor(Math.random()*TH.length)]; $('wsTheme').textContent=t.name; GriWordSearch.mount($('wsHost'),{ words:t.words, onReplay:neu, onFinish:function(){ if(window.GriGames){GriGames.addCoins(10);GriGames.unlock('ince-iscilik');} } }); }
           var b=$('wsNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});
       },
@@ -382,7 +388,7 @@
         var url=CAT==='academic'?'assets/wordle-words.json':'assets/wordle-words-social.json';
         fetch(url,{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var POOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};});
-          function neu(){ if(!POOL.length||!window.GriMatch)return; GriMatch.mount($('mtHost'),{ pairs:pick(POOL,6), onReplay:neu }); }
+          function neu(){ if(!POOL.length||!window.GriMatch)return; GriMatch.mount($('mtHost'),{ pairs:pick(POOL,6), onReplay:neu, onFinish:function(res){ if(window.GriGames){GriGames.addCoins(10); if(res&&res.acc>=100)GriGames.unlock('karisim-ustasi');} } }); }
           var b=$('mtNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});
       },
@@ -397,7 +403,7 @@
             if(!task){ setTimeout(neu,0); return; }
             $('buTheme').textContent=t.name;
             var host=$('buHost'); host.className=''; host.innerHTML='';
-            GriCrossword.mount(host,task,{});
+            GriCrossword.mount(host,task,{ onSolved:function(){ if(window.GriConfetti)GriConfetti.burst(); if(window.GriFX)GriFX.sound('win'); if(window.GriGames){ GriGames.addCoins(12); GriGames.unlock('yaratici'); } } });
           }
           var b=$('buNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});

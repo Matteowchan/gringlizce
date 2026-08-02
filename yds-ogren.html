@@ -173,7 +173,7 @@ h2 svg{width:18px;height:18px;color:var(--accent);flex:none}
 const D=JSON.parse(document.getElementById('data').textContent);
 const app=document.getElementById('app'),railEl=document.getElementById('rail');
 const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'’]/g,'').replace(/\s+/g,' ').trim();
+const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'\u2019\u2018\u00b4\u02bc\u0060]/g,'').replace(/\s+/g,' ').trim();
 function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
 function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
 function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}

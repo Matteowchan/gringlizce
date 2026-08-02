@@ -60,7 +60,7 @@
   }
   </script>
   <script src="assets/curriculum.js"></script>
-  <script src="assets/gri-crossword.js?v=3"></script>
+  <script src="assets/gri-crossword.js?v=4"></script>
   <script src="assets/nav.js?v=8"></script>
   <script src="assets/track.js" defer></script>
   <style>
@@ -594,7 +594,10 @@ function checkCrossword(key){
   var all=(r.correct===r.total);
   if(fb){
     fb.className='ge-qfb on '+(all?'ok':'no');
-    fb.textContent=(all?'Tebrikler, bulmacayı tamamladın! ':'Doğru kelime: '+r.correct+'/'+r.total+'. Kırmızı harfleri düzeltip tekrar dene. ')+(task.e||'');
+    /* açıklama (kelime anlamları) sadece bulmaca tamamen bitince — erken spoiler yok */
+    fb.textContent=all
+      ? ('Tebrikler, bulmacayı tamamladın! '+(task.e||''))
+      : ('Doğru kelime: '+r.correct+'/'+r.total+'. Kırmızı harfleri düzelt; her ipucunun yanındaki "kontrol" ile tek tek de deneyebilirsin.');
   }
   ST.a[key]={t:'crossword',cw:inst.getState().cw,ck:true};
   saveSt(ST);

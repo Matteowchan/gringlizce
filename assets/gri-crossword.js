@@ -37,8 +37,17 @@
       '.gcw-clue{display:flex;gap:8px;font-size:.92rem;line-height:1.45;padding:4px 7px;border-radius:7px;cursor:pointer;transition:background .12s;}',
       '.gcw-clue:hover{background:var(--gcw-hl);}',
       '.gcw-clue.cur{background:var(--gcw-hl);box-shadow:inset 0 0 0 1.5px var(--gcw-hlb);}',
-      '.gcw-clue.solved{opacity:.5;text-decoration:line-through;}',
-      '.gcw-clue.solved .gcw-hint{display:none;}',
+      '.gcw-clue.solved{opacity:.55;}',
+      '.gcw-clue.solved>span{text-decoration:line-through;}',
+      '.gcw-clue.solved .gcw-acts{display:none;}',
+      '.gcw-clue.solved::after{content:"\\2713";color:var(--gcw-ok);font-weight:800;margin-left:2px;}',
+      '.gcw-clue.wrong>span{color:var(--gcw-bad);}',
+      '.gcw-clue.wrong::after{content:"\\2717";color:var(--gcw-bad);font-weight:800;margin-left:2px;}',
+      '.gcw-clue.flash{animation:gcwflash .45s ease;}',
+      '@keyframes gcwflash{0%{background:var(--gcw-hl);}100%{background:transparent;}}',
+      '.gcw-acts{flex:none;display:flex;gap:5px;align-self:flex-start;margin-top:1px;}',
+      '.gcw-chk{font:700 .72rem/1 inherit;color:var(--gcw-ok);background:transparent;border:1px solid var(--gcw-ok);border-radius:6px;padding:3px 9px;cursor:pointer;opacity:.72;transition:opacity .12s,background .12s;}',
+      '.gcw-chk:hover{opacity:1;background:var(--gcw-okbg);}',
       '.gcw-clue b{color:var(--gcw-hlb);min-width:16px;text-align:right;font-weight:800;flex:none;}',
       '.gcw-clue span{color:inherit;flex:1;}',
       '.gcw-len{font-style:normal;color:var(--gcw-num);font-weight:600;white-space:nowrap;}',
@@ -116,10 +125,12 @@
       list.forEach(function(e){
         var d=document.createElement('div'); d.className='gcw-clue'+(e===exEnt?' isex':''); d.setAttribute('data-en',e.dir+'-'+e.num);
         var ex=(e===exEnt)?'<em class="gcw-ex">örnek</em>':'';
-        var btn=(e===exEnt)?'':'<button type="button" class="gcw-hint" tabindex="-1">ipucu</button>';
-        d.innerHTML='<b>'+e.num+'</b><span>'+escapeHtml(e.clue)+' <i class="gcw-len">('+e.answer.length+')</i>'+ex+'</span>'+btn;
+        var acts=(e===exEnt)?'':'<span class="gcw-acts"><button type="button" class="gcw-chk" tabindex="-1">kontrol</button><button type="button" class="gcw-hint" tabindex="-1">ipucu</button></span>';
+        d.innerHTML='<b>'+e.num+'</b><span>'+escapeHtml(e.clue)+' <i class="gcw-len">('+e.answer.length+')</i>'+ex+'</span>'+acts;
         d.addEventListener('click',function(ev){
-          if(ev.target&&ev.target.className&&ev.target.className.indexOf('gcw-hint')>-1){ revealHint(e); ev.stopPropagation(); return; }
+          var cn=(ev.target&&ev.target.className)||'';
+          if(cn.indexOf('gcw-chk')>-1){ checkEntry(e); ev.stopPropagation(); return; }
+          if(cn.indexOf('gcw-hint')>-1){ revealHint(e); ev.stopPropagation(); return; }
           focusEntry(e);
         });
         col.appendChild(d); e._el=d;
@@ -182,6 +193,24 @@
         }
       }
     }
+    /* tek kelimeyi kontrol et (spoiler yok, sadece bu kelimenin hücrelerini renklendirir) */
+    function checkEntry(e){
+      var ks=entryCells(e), filled=true, ok=true;
+      for(var i=0;i<ks.length;i++){
+        var inp=inputs[ks[i]], p=inp.parentNode;
+        p.className=p.className.replace(/\s*\b(ok|bad)\b/g,'');
+        if(given[ks[i]]){continue;}
+        if(!inp.value){ filled=false; ok=false; continue; }
+        var good=norm(inp.value)===cells[ks[i]].sol;
+        p.className+=(good?' ok':' bad'); if(!good)ok=false;
+      }
+      if(e._el){
+        e._el.className=e._el.className.replace(/\s*\b(solved|wrong|empty)\b/g,'')+(ok?' solved':(filled?' wrong':' empty'));
+        flashClue(e._el);
+      }
+      return {ok:ok,filled:filled};
+    }
+    function flashClue(el){ el.className+=' flash'; setTimeout(function(){ if(el)el.className=el.className.replace(/\s*\bflash\b/g,''); },450); }
 
     /* interactions */
     grid.addEventListener('focusin',function(ev){

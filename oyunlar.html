@@ -82,14 +82,22 @@
   .oy-lv:hover{border-color:var(--gold,#B78A2E)}
   .oy-lv.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10}
   .oy-lv.done{background:rgba(46,110,78,.14);border-color:rgba(46,110,78,.3)}
-  /* oyun kartlarının arkasında şeffaf kedi watermark */
+  /* oyun kartlarının arkasında şeffaf rozet/mascot watermark */
   .oy-panel .oy-card{position:relative;z-index:0;overflow:hidden}
-  .oy-panel .oy-card::before{content:"";position:absolute;right:-24px;bottom:-24px;width:160px;height:160px;background:url(assets/gri-cat-curious.png) no-repeat center/contain;opacity:.06;pointer-events:none;z-index:-1}
-  #view-wordle .oy-card::before{background-image:url(assets/gri-cat-happy.png)}
-  #view-wow .oy-card::before{background-image:url(assets/gri-cat-curious.png)}
-  #view-wordsearch .oy-card::before{background-image:url(assets/gri-cat-happy.png)}
-  #view-match .oy-card::before{background-image:url(assets/gri-cat-curious.png)}
-  @media(max-width:640px){.oy-panel .oy-card::before{width:120px;height:120px;opacity:.05}}
+  .oy-panel .oy-card::before{content:"";position:absolute;right:-30px;bottom:-30px;width:210px;height:210px;background:url(assets/gri-mascot.png) no-repeat center/contain;opacity:.06;pointer-events:none;z-index:-1}
+  #view-wordle .oy-card::before{background-image:url(tam-skor.png)}
+  #view-wow .oy-card::before{background-image:url(yol-kaptani.png)}
+  #view-wordsearch .oy-card::before{background-image:url(ince-iscilik.png)}
+  #view-match .oy-card::before{background-image:url(karisim-ustasi.png)}
+  #view-bulmaca .oy-card::before{background-image:url(yaratici.png)}
+  @media(max-width:640px){.oy-panel .oy-card::before{width:150px;height:150px;opacity:.05}}
+  /* hub rozet vitrini */
+  .oy-badges{display:flex;flex-wrap:wrap;gap:14px 18px;justify-content:center;margin:6px 0 4px}
+  .oy-brz{display:flex;flex-direction:column;align-items:center;gap:5px;width:82px;text-align:center}
+  .oy-brz img{width:64px;height:64px;border-radius:50%;box-shadow:0 3px 10px rgba(43,33,24,.12);transition:transform .15s}
+  .oy-brz:hover img{transform:scale(1.08) rotate(-3deg)}
+  .oy-brz span{font-size:.72rem;font-weight:700;color:var(--text-soft);line-height:1.2}
+  .oy-badges-note{text-align:center;color:var(--text-soft);font-size:.82rem;margin:.2rem 0 0}
   .oy-cat{display:flex;align-items:center;gap:8px;justify-content:center;margin:0 0 8px;flex-wrap:wrap}
   .oy-catlabel{font-size:.8rem;font-weight:700;color:var(--text-soft)}
   .oy-catbtn{font:700 .85rem var(--font-ui,inherit);padding:7px 18px;border-radius:22px;border:1px solid var(--line);background:var(--card,#fff);color:var(--text);cursor:pointer}
@@ -148,6 +156,19 @@
         <button type="button" class="oy-tile" data-go="wordsearch"><div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p></button>
         <button type="button" class="oy-tile" data-go="match"><div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p></button>
       </div>
+
+      <div class="oy-secttl">Rozetler</div>
+      <div class="oy-badges">
+        <div class="oy-brz"><img src="yol-kaptani.png" alt="Yol Kaptanı"><span>Yol Kaptanı</span></div>
+        <div class="oy-brz"><img src="tam-skor.png" alt="Tam Skor"><span>Tam Skor</span></div>
+        <div class="oy-brz"><img src="karisim-ustasi.png" alt="Karışım Ustası"><span>Karışım Ustası</span></div>
+        <div class="oy-brz"><img src="ince-iscilik.png" alt="İnce İşçilik"><span>İnce İşçilik</span></div>
+        <div class="oy-brz"><img src="yaratici.png" alt="Yaratıcı"><span>Yaratıcı</span></div>
+        <div class="oy-brz"><img src="hedef-belirleyen.png" alt="Hedef Belirleyen"><span>Hedef Belirleyen</span></div>
+        <div class="oy-brz"><img src="tarif-takipci.png" alt="Tarif Takipçi"><span>Tarif Takipçi</span></div>
+        <div class="oy-brz"><img src="icten-yazar.png" alt="İçten Yazar"><span>İçten Yazar</span></div>
+      </div>
+      <p class="oy-badges-note">Oyunlarda ve derslerde ilerledikçe bu rozetleri kazanırsın.</p>
     </div>
 
     <!-- PANEL: Wordle -->
@@ -245,7 +266,7 @@
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
-  <script src="assets/gri-wheel.js?v=3"></script>
+  <script src="assets/gri-wheel.js?v=4"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=6"></script>
   <script>
@@ -301,7 +322,7 @@
           function mountLv(lv,labelHtml){
             $('woLevel').innerHTML=labelHtml;
             if(woInst&&woInst.destroy)woInst.destroy();
-            woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){
+            woInst=GriWheel.mount($('woHost'),{ level:lv, badge:'yol-kaptani.png', onComplete:function(done){
               if(endless){ loadEndless(); scrollToWheel(); return; }
               var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); scrollToWheel();
             }});

@@ -36,6 +36,8 @@
       '.gwo-btn{font:700 13px inherit;padding:8px 16px;border-radius:9px;border:1px solid var(--wo-line);background:var(--wo-cell);color:var(--wo-ink);cursor:pointer;}',
       '.gwo-btn:active{transform:scale(.96);}',
       '.gwo-done{text-align:center;padding:18px;border:1px solid var(--wo-line);border-radius:14px;background:var(--wo-cell);color:var(--wo-ink);animation:gwopop .4s;box-shadow:0 8px 24px rgba(43,33,24,.10);}',
+      '.gwo-badge{width:96px;height:96px;border-radius:50%;display:block;margin:0 auto 8px;box-shadow:0 4px 16px rgba(43,33,24,.16);animation:gwobadge .55s ease;}',
+      '@keyframes gwobadge{0%{transform:scale(.4) rotate(-14deg);opacity:0}60%{transform:scale(1.12) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}',
       '.gwo-done .t{font-family:var(--font-display,Georgia,serif);font-size:1.4rem;font-weight:800;color:var(--wo-ok);}',
       '.gwo-done .btn{margin-top:10px;font:700 15px inherit;padding:10px 22px;border-radius:10px;border:0;background:var(--wo-gold);color:#231c10;cursor:pointer;}',
       '.gwo-mean{position:fixed;left:50%;bottom:24%;transform:translateX(-50%) translateY(10px);background:var(--wo-ink);color:#fff;padding:8px 16px;border-radius:22px;font-weight:700;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;}',
@@ -136,7 +138,8 @@
 
     function complete(){
       var d=document.createElement('div'); d.className='gwo-done';
-      d.innerHTML='<div class="t">'+esc(level.theme)+' tamamlandı!</div><div style="margin-top:6px;opacity:.85">Tüm kelimeleri buldun.</div>';
+      var badge=opts.badge?'<img class="gwo-badge" src="'+opts.badge+'" alt="" width="96" height="96">':'';
+      d.innerHTML=badge+'<div class="t">'+esc(level.theme)+' tamamlandı!</div><div style="margin-top:6px;opacity:.85">Tüm kelimeleri buldun.</div>';
       var b=document.createElement('button'); b.className='btn'; b.textContent='Sonraki Seviye ›';
       b.addEventListener('click',function(){ if(opts.onComplete)opts.onComplete(level.n); });
       d.appendChild(b); host.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'center'});

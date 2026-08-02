@@ -131,6 +131,29 @@
   .od-skttl{font-family:var(--font-display);font-size:1.05rem;color:var(--text);margin:1.3rem 0 .7rem;display:flex;align-items:center;gap:.6rem}
   .od-skttl:first-child{margin-top:.2rem}
   .od-skttl::after{content:"";flex:1;height:1px;background:var(--line)}
+  /* Bulmaca (crossword) vurgusu */
+  .od-sk.sk-cw{color:#B0791E;background:rgba(230,169,46,.16)}
+  :root[data-theme="dark"] .od-sk.sk-cw{color:#e6bb5e;background:rgba(230,169,46,.14)}
+  .od-skttl-cw{color:#B0791E}
+  :root[data-theme="dark"] .od-skttl-cw{color:#e6bb5e}
+  .od-cwhint{font-family:var(--font-ui);font-size:.72rem;font-weight:600;opacity:.6;letter-spacing:0}
+  @media(max-width:520px){.od-cwhint{display:none}}
+  .od-chip.od-chip-cw{border-color:rgba(230,169,46,.5);color:#B0791E}
+  .od-chip.od-chip-cw.cur{background:#e6a92e;border-color:#e6a92e;color:#231c10}
+  :root[data-theme="dark"] .od-chip.od-chip-cw{color:#e6bb5e}
+  .od-card.cw{border-color:rgba(230,169,46,.45);background:linear-gradient(180deg,rgba(230,169,46,.06),transparent 60%)}
+  .od-card.cw:hover{border-color:#e6a92e}
+  :root[data-theme="dark"] .od-card.cw{background:linear-gradient(180deg,rgba(230,169,46,.08),transparent 60%)}
+  .od-cwico{display:inline-block;width:13px;height:13px;margin-right:6px;vertical-align:-1px;border-radius:2px;
+    background:
+      linear-gradient(#e6a92e,#e6a92e) 0 0/100% 1.5px no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 0 100%/100% 1.5px no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 0 0/1.5px 100% no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 100% 0/1.5px 100% no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 33% 0/1.5px 100% no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 66% 0/1.5px 100% no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 0 33%/100% 1.5px no-repeat,
+      linear-gradient(#e6a92e,#e6a92e) 0 66%/100% 1.5px no-repeat}
   .od-st{font-family:var(--font-ui);font-size:.66rem;font-weight:700;letter-spacing:.05em;border-radius:20px;padding:.22rem .7rem;white-space:nowrap}
   .od-st.new{color:#2E6E6A;background:var(--teal-soft)}
   :root[data-theme="dark"] .od-st.new{color:var(--teal)}
@@ -285,6 +308,17 @@ function skillOf(a){
   var s=a.skill||(a.content&&a.content.skill)||'';
   return SKILL_TR[s]?s:null;
 }
+function isCW(a){
+  var ts=a.content&&a.content.tasks;
+  if(!ts||!ts.length)return false;
+  for(var i=0;i<ts.length;i++)if(ts[i]&&ts[i].type==='crossword')return true;
+  return false;
+}
+function cwWordCount(a){
+  var ts=(a.content&&a.content.tasks)||[],n=0;
+  for(var i=0;i<ts.length;i++)if(ts[i]&&ts[i].type==='crossword')n+=(ts[i].entries||[]).length;
+  return n;
+}
 
 /* AUD_F'yi öğrencinin track'ine göre otomatik seç + butonu güncelle (manuel tıklama sonradan override eder) */
 function applyAudience(a){
@@ -367,17 +401,20 @@ function dueInfo(due){
 
 function cardHtml(a,st,due,locked){
   var sk=skillOf(a);
+  var cw=isCW(a);
   var nTasks=(a.content&&a.content.tasks&&a.content.tasks.length)?a.content.tasks.length:0;
   var h='';
   h+='<div class="od-toprow"><span class="od-badges">';
-  if(sk)h+='<span class="od-sk sk-'+sk+'">'+SKILL_TR[sk]+'</span>';
+  if(cw)h+='<span class="od-sk sk-cw">Bulmaca</span>';
+  else if(sk)h+='<span class="od-sk sk-'+sk+'">'+SKILL_TR[sk]+'</span>';
   h+='<span class="od-lvl">'+esc(a.level)+' · Ünite '+esc(a.unit)+'</span></span>';
   if(locked)h+='<span class="od-st lock">Öğretmen atayınca açılır</span>';
   else h+='<span class="od-st '+st.cls+'">'+esc(st.txt)+'</span>';
   h+='</div>';
-  h+='<p class="od-title">'+esc(a.title)+'</p>';
+  h+='<p class="od-title">'+(cw?'<span class="od-cwico" aria-hidden="true"></span>':'')+esc(a.title)+'</p>';
   if(a.description)h+='<p class="od-desc">'+esc(a.description)+'</p>';
-  h+='<div class="od-foot"><span>'+(nTasks?nTasks+' görev':'Alıştırma')+'</span>';
+  var footLabel=cw?(cwWordCount(a)+' kelime · bulmaca'):(nTasks?nTasks+' görev':'Alıştırma');
+  h+='<div class="od-foot"><span>'+footLabel+'</span>';
   if(st.grade)h+='<span class="od-grade">Not: '+esc(st.grade)+'</span>';
   else if(due)h+='<span class="due'+(due.warn?' warn':'')+'">'+esc(due.txt)+'</span>';
   h+='</div>';
@@ -388,12 +425,13 @@ function makeCard(a,assignedMap,locked){
   var st=statusOf(a);
   var due=(assignedMap&&typeof assignedMap[a.id]==='string')?dueInfo(assignedMap[a.id]):null;
   var el;
+  var cwCls=isCW(a)?' cw':'';
   if(locked){
     el=document.createElement('div');
-    el.className='od-card locked';
+    el.className='od-card locked'+cwCls;
   }else{
     el=document.createElement('a');
-    el.className='od-card';
+    el.className='od-card'+cwCls;
     el.href='odev.html?id='+encodeURIComponent(a.id);
   }
   el.innerHTML=cardHtml(a,st,due,locked);
@@ -403,6 +441,7 @@ function makeCard(a,assignedMap,locked){
 function matchesFilter(a){
   if((a.audience||'adult')!==AUD_F)return false;
   if(LVL_F!=='ALL'&&a.level!==LVL_F)return false;
+  if(SK_F==='CW')return isCW(a);
   if(SK_F!=='ALL'&&skillOf(a)!==SK_F)return false;
   return true;
 }
@@ -477,8 +516,10 @@ function render(){
   var skRow=document.getElementById('odFilterSkillRow');
   if(skList.length){
     skRow.style.display='flex';
+    var hasCW=false;for(var cwi=0;cwi<VIEW.length;cwi++){if(isCW(VIEW[cwi])){hasCW=true;break;}}
     var shh='<button type="button" class="od-chip cur" data-sk="ALL">Tümü</button>';
     for(var t=0;t<skList.length;t++)shh+='<button type="button" class="od-chip" data-sk="'+skList[t]+'">'+SKILL_TR[skList[t]]+'</button>';
+    if(hasCW)shh+='<button type="button" class="od-chip od-chip-cw" data-sk="CW">Bulmaca</button>';
     skWrap.innerHTML=shh;
     skWrap.addEventListener('click',function(ev){
       var b=ev.target;
@@ -521,11 +562,30 @@ function renderLists(){
   /* Havuz: beceri gruplarina bolunmus */
   while(poolHost.firstChild)poolHost.removeChild(poolHost.firstChild);
   var nPool=0;
-  for(var g=0;g<SKILL_ORD.length;g++){
+
+  /* ---- Bulmacalar: her zaman en üstte, vurgulu ---- */
+  if(SK_F==='ALL'||SK_F==='CW'){
+    var cws=[];
+    for(var cw=0;cw<pool.length;cw++){if(isCW(pool[cw]))cws.push(pool[cw]);}
+    if(cws.length){
+      var cwTtl=document.createElement('div');
+      cwTtl.className='od-skttl od-skttl-cw';
+      cwTtl.innerHTML='<span class="od-sk sk-cw">Bulmaca</span> Kelime Bulmacaları <span class="od-cwhint">— eğlenceli kelime pekiştirme</span>';
+      poolHost.appendChild(cwTtl);
+      var cwGrid=document.createElement('div');
+      cwGrid.className='od-grid';
+      for(var cq=0;cq<cws.length;cq++){cwGrid.appendChild(makeCard(cws[cq],null,IN_CLASS));nPool++;}
+      poolHost.appendChild(cwGrid);
+    }
+  }
+
+  var showSkills=(SK_F!=='CW');
+  for(var g=0;showSkills&&g<SKILL_ORD.length;g++){
     var sk=SKILL_ORD[g];
     if(SK_F!=='ALL'&&SK_F!==sk)continue;
     var items=[];
-    for(var p=0;p<pool.length;p++){if(skillOf(pool[p])===sk)items.push(pool[p]);}
+    /* SK_F==='ALL' iken bulmacalar üstte gösterildi; beceri gruplarında tekrar etme */
+    for(var p=0;p<pool.length;p++){if(skillOf(pool[p])===sk&&!(SK_F==='ALL'&&isCW(pool[p])))items.push(pool[p]);}
     if(!items.length)continue;
     var ttl=document.createElement('div');
     ttl.className='od-skttl';

@@ -73,13 +73,22 @@
   .oy-navbtn{font:700 1rem var(--font-ui,inherit);min-width:36px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:20px;background:var(--card,#fff);color:var(--text);cursor:pointer;line-height:1}
   .oy-navbtn:hover{border-color:var(--gold,#B78A2E)}
   .oy-picktoggle{font-size:.82rem;color:var(--gold,#B78A2E)}
-  .oy-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 14px;max-height:230px;overflow:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg-soft,rgba(0,0,0,.02))}
+  .oy-picker{display:flex;flex-direction:column;align-items:center;gap:12px;margin:0 0 14px;max-height:360px;overflow:auto;padding:0 10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--bg-soft,rgba(0,0,0,.02))}
   .oy-picker[hidden]{display:none}
+  .oy-pmap{position:sticky;top:0;z-index:2;width:100%;display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px 14px 0 0;background:linear-gradient(120deg,rgba(199,154,58,.16),rgba(46,110,106,.14));border-bottom:1px solid var(--line);backdrop-filter:blur(3px)}
+  .oy-pmap img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(43,33,24,.2));flex:0 0 auto}
+  .oy-pmap .t{font-family:var(--font-display);font-weight:800;font-size:1.02rem;color:var(--text);line-height:1.2}
+  .oy-pmap .s{font-size:.76rem;color:var(--text-soft);margin-top:1px}
+  .oy-pmap .bar{height:6px;border-radius:4px;background:rgba(0,0,0,.1);margin-top:5px;overflow:hidden;max-width:220px}
+  .oy-pmap .bar>i{display:block;height:100%;background:linear-gradient(90deg,#2E6E4E,#C79A3A);border-radius:4px;transition:width .5s}
   .oy-pgroup{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
-  .oy-plabel{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);padding:3px 14px;border-radius:20px;background:rgba(0,0,0,.04)}
-  .oy-pgroup:nth-child(1) .oy-plabel{color:#2E6E4E;background:rgba(46,110,78,.1)}
-  .oy-pgroup:nth-child(2) .oy-plabel{color:#B0791E;background:rgba(199,154,58,.14)}
-  .oy-pgroup:nth-child(3) .oy-plabel{color:#B0442E;background:rgba(192,86,58,.12)}
+  .oy-plabel{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);padding:3px 12px 3px 4px;border-radius:20px;background:rgba(0,0,0,.04)}
+  .oy-plabel img{width:26px;height:26px;object-fit:contain;border-radius:50%}
+  .oy-plabel.locked img{filter:grayscale(1) opacity(.45)}
+  .oy-plabel.earned img{filter:drop-shadow(0 1px 3px rgba(199,154,58,.6))}
+  .oy-pgroup:nth-child(2) .oy-plabel{color:#2E6E4E;background:rgba(46,110,78,.1)}
+  .oy-pgroup:nth-child(3) .oy-plabel{color:#B0791E;background:rgba(199,154,58,.14)}
+  .oy-pgroup:nth-child(4) .oy-plabel{color:#B0442E;background:rgba(192,86,58,.12)}
   .oy-prow{display:flex;flex-wrap:wrap;gap:8px;max-width:440px;justify-content:center}
   .oy-lv{position:relative;width:40px;height:40px;border:2px solid var(--line);border-radius:50%;background:var(--card,#fff);color:var(--text);font:800 14px var(--font-ui,inherit);cursor:pointer;transition:transform .12s,box-shadow .12s;box-shadow:0 2px 5px rgba(43,33,24,.08)}
   .oy-lv:hover{transform:scale(1.14);border-color:var(--gold,#B78A2E)}
@@ -355,11 +364,19 @@
           var NL=LEVELS.length, th=Math.ceil(NL/3);
           var TIERS=(NL<=6)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
           function collapsePicker(){ var p=$('woPicker'); if(p)p.hidden=true; var t=$('woPick'); if(t)t.textContent='Seviyeler ▾'; }
+          var TIER_MEDAL=['yol-kaptani.png','tarif-takipci.png','tam-skor.png'];
           function buildPicker(){
             var p=$('woPicker'); if(!p)return; p.innerHTML='';
-            TIERS.forEach(function(t){
+            var NLc=LEVELS.length, doneN=Math.max(0,Math.min(getWoLevel()-1,NLc)), pct=NLc?Math.round(100*doneN/NLc):0;
+            var head=document.createElement('div'); head.className='oy-pmap';
+            head.innerHTML='<img src="assets/gri-mascot.png" alt=""><div><div class="t">Seviye Haritası</div><div class="s">'+doneN+' / '+NLc+' seviye tamamlandı</div><div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+            p.appendChild(head);
+            TIERS.forEach(function(t,ti){
               var g=document.createElement('div'); g.className='oy-pgroup';
-              var lab=document.createElement('div'); lab.className='oy-plabel'; lab.textContent=t[0]; g.appendChild(lab);
+              var earned=(getWoLevel()>Math.min(t[2],NLc));
+              var lab=document.createElement('div'); lab.className='oy-plabel '+(earned?'earned':'locked');
+              lab.innerHTML='<img src="'+(TIER_MEDAL[ti]||TIER_MEDAL[0])+'" alt="">'+t[0];
+              g.appendChild(lab);
               var row=document.createElement('div'); row.className='oy-prow';
               for(var n=t[1];n<=Math.min(t[2],LEVELS.length);n++){ (function(n){ var b=document.createElement('button'); b.className='oy-lv'+(n===cur?' cur':(n<=getWoLevel()?' done':'')); b.textContent=n; b.addEventListener('click',function(){ loadLevel(n); collapsePicker(); }); row.appendChild(b); })(n); }
               g.appendChild(row); p.appendChild(g);

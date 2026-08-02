@@ -193,6 +193,7 @@
           <span class="oy-lvnow" id="woLevel">Level 1</span>
           <button type="button" class="oy-navbtn" id="woNext" aria-label="Sonraki level">&rsaquo;</button>
           <button type="button" class="oy-navbtn oy-picktoggle" id="woPick">Leveller ▾</button>
+          <button type="button" class="oy-navbtn oy-picktoggle" id="woEndless">∞ Sonsuz</button>
         </div>
         <div id="woPicker" class="oy-picker" hidden></div>
         <div id="woHost"></div>
@@ -233,6 +234,7 @@
   <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
   <script src="assets/gri-wheel.js?v=2"></script>
+  <script src="assets/gri-wheel-endless.js?v=1"></script>
   <script>
   (function(){
     function $(id){return document.getElementById(id);}
@@ -281,6 +283,27 @@
       wow:function(){
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var LEVELS=j||[], woInst=null, cur=getWoLevel();
+          var endless=false, pool=null, endlessN=0;
+          function mountLv(lv,labelHtml){
+            $('woLevel').innerHTML=labelHtml;
+            if(woInst&&woInst.destroy)woInst.destroy();
+            woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){
+              if(endless){ loadEndless(); window.scrollTo(0,0); return; }
+              var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); window.scrollTo(0,0);
+            }});
+          }
+          function loadEndless(){
+            if(!window.GriWheelEndless){ return; }
+            var go2=function(){ var lv=GriWheelEndless.makeLevel(pool); if(!lv){ setTimeout(go2,0); return; } endlessN++; mountLv(lv,'Sonsuz · <span class="th">#'+endlessN+'</span>'); };
+            if(pool){ go2(); } else { $('woLevel').textContent='Yükleniyor…'; GriWheelEndless.buildPool(function(p){ pool=p; go2(); }); }
+          }
+          function setEndless(on){
+            endless=on;
+            $('woEndless').className='oy-navbtn oy-picktoggle'+(on?' cur':'');
+            var pk=$('woPick'), pv=$('woPrev'); if(pk)pk.style.display=on?'none':''; if(pv)pv.disabled=on;
+            collapsePicker();
+            if(on){ loadEndless(); } else { loadLevel(cur); }
+          }
           var NL=LEVELS.length, th=Math.ceil(NL/3);
           var TIERS=(NL<=6)?[['Tüm Leveller',1,NL]]:[['Kolay',1,th],['Orta',th+1,2*th],['Zor',2*th+1,NL]];
           function collapsePicker(){ var p=$('woPicker'); if(p)p.hidden=true; var t=$('woPick'); if(t)t.textContent='Leveller ▾'; }
@@ -298,16 +321,14 @@
             if(!LEVELS.length||!window.GriWheel)return;
             if(n>LEVELS.length)n=LEVELS.length; if(n<1)n=1; cur=n;
             var lv=LEVELS[n-1];
-            $('woLevel').innerHTML='Level '+n+' · <span class="th">'+lv.theme+'</span>';
             var pv=$('woPrev'); if(pv)pv.disabled=(n<=1);
-            var nx2=$('woNext'); if(nx2)nx2.disabled=(n>=NL);
             if(!$('woPicker').hidden)buildPicker();
-            if(woInst&&woInst.destroy)woInst.destroy();
-            woInst=GriWheel.mount($('woHost'),{ level:lv, onComplete:function(done){ var nx=Math.min(done+1,LEVELS.length); if(nx>getWoLevel())setWoLevel(nx); loadLevel(nx); window.scrollTo(0,0); }});
+            mountLv(lv,'Level '+n+' · <span class="th">'+lv.theme+'</span>');
           }
           var pk=$('woPick'); if(pk&&!pk._wired){ pk._wired=1; pk.addEventListener('click',function(){ var p=$('woPicker'); if(!p)return; p.hidden=!p.hidden; pk.textContent=p.hidden?'Leveller ▾':'Leveller ▴'; if(!p.hidden)buildPicker(); }); }
-          var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ loadLevel(cur-1); }); }
-          var nx=$('woNext'); if(nx&&!nx._wired){ nx._wired=1; nx.addEventListener('click',function(){ loadLevel(cur+1); }); }
+          var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ if(!endless)loadLevel(cur-1); }); }
+          var nx=$('woNext'); if(nx&&!nx._wired){ nx._wired=1; nx.addEventListener('click',function(){ if(endless)loadEndless(); else loadLevel(cur+1); }); }
+          var en=$('woEndless'); if(en&&!en._wired){ en._wired=1; en.addEventListener('click',function(){ setEndless(!endless); }); }
           loadLevel(getWoLevel());
         }).catch(function(){});
       },

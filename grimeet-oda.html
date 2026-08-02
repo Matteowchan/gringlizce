@@ -582,9 +582,11 @@
         if (!tasks.length) return '<div class="dock-empty" style="padding:6px 0">Bu ödevin soruları bulunamadı.</div>';
         return '<div class="gma-qlist">' + tasks.map(function (t, i) {
           var a = ans ? ans['t' + i] : null; var answered = a && (typeof a.ok === 'boolean');
-          var mark = answered ? (a.ok ? '✓' : '✗') : '•'; var cls = answered ? (a.ok ? 'ok' : 'no') : 'open';
           var cor = correctText(t); var chosen = ''; if (a) { if (a.sel !== null && a.sel !== undefined) chosen = optText(t, a.sel); else if (a.v != null) chosen = String(a.v); }
-          var meta = ''; if (cor) meta += '<span class="gma-right">Doğru: ' + esc(cor) + '</span>'; if (a && chosen && (!answered || !a.ok)) meta += (meta ? ' · ' : '') + 'Öğrenci: <span class="gma-wrong">' + esc(chosen) + '</span>';
+          var apN = function(s){return String(s==null?'':s).toLowerCase().replace(/[‘’ʼ´`]/g,"'").replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');};
+          var okEff = !!(a && a.ok); if (answered && !okEff && chosen && cor && apN(chosen) === apN(cor)) okEff = true;
+          var mark = answered ? (okEff ? '✓' : '✗') : '•'; var cls = answered ? (okEff ? 'ok' : 'no') : 'open';
+          var meta = ''; if (cor) meta += '<span class="gma-right">Doğru: ' + esc(cor) + '</span>'; if (a && chosen && (!answered || !okEff)) meta += (meta ? ' · ' : '') + 'Öğrenci: <span class="gma-wrong">' + esc(chosen) + '</span>';
           var qt = t.q ? esc(String(t.q)) : ('Soru ' + (i + 1));
           return '<div class="gma-qitem ' + cls + '"><span class="gma-mark">' + mark + '</span><div><div class="gma-q">' + (i + 1) + '. ' + qt + '</div>' + (meta ? '<div class="gma-qmeta">' + meta + '</div>' : '') + '</div></div>';
         }).join('') + '</div>';

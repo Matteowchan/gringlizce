@@ -56,8 +56,8 @@
       if(side===selEl.getAttribute('data-side')){ clearSel(); selEl=d; selPair=pi; d.className='gmt-i sel'; return; }
       // second pick opposite side → evaluate
       moves++; document.getElementById('gmtMv').textContent=moves;
-      if(pi===selPair){ d.className='gmt-i ok'; selEl.className='gmt-i ok'; selEl=null;selPair=null; matched++; document.getElementById('gmtM').textContent=matched; if(matched===pairs.length)finish(); }
-      else { var a=selEl,b=d; a.className='gmt-i bad'; b.className='gmt-i bad'; setTimeout(function(){ if(a.className.indexOf('ok')<0)a.className='gmt-i'; if(b.className.indexOf('ok')<0)b.className='gmt-i'; },350); selEl=null;selPair=null; }
+      if(pi===selPair){ d.className='gmt-i ok'; selEl.className='gmt-i ok'; if(window.GriFX){GriFX.sound('ok');GriFX.speak(pairs[pi].en);} selEl=null;selPair=null; matched++; document.getElementById('gmtM').textContent=matched; if(matched===pairs.length)finish(); }
+      else { var a=selEl,b=d; a.className='gmt-i bad'; b.className='gmt-i bad'; if(window.GriFX)GriFX.sound('bad'); setTimeout(function(){ if(a.className.indexOf('ok')<0)a.className='gmt-i'; if(b.className.indexOf('ok')<0)b.className='gmt-i'; },350); selEl=null;selPair=null; }
     }
     function finish(){
       done=true;

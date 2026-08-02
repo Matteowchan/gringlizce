@@ -81,6 +81,7 @@
       for(var i=0;i<placed.length;i++){ if(placed[i]._done)continue;
         if(placed[i].w===w||placed[i].w===wr){
           placed[i]._done=true; foundCount++;
+          if(window.GriFX){ GriFX.sound('ok'); GriFX.speak(placed[i].w); }
           curSel.forEach(function(p){ cellEls[p[0]+'_'+p[1]].className='gws-c ok'; });
           placed[i]._el.className='gws-w found'; placed[i]._el.innerHTML='<b>'+(placed[i].tr||'')+'</b> <small>'+placed[i].w+'</small>';
           curSel=[];

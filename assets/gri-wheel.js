@@ -124,21 +124,23 @@
     function evaluate(){
       var w=path.map(function(li){return letters[li];}).join('');
       if(w.length<2){ setPill(''); pill.textContent=''; return; }
-      if(found[w]){ setPill('dupe'); fade(); return; }
+      if(found[w]){ setPill('dupe'); if(window.GriFX)GriFX.sound('dupe'); fade(); return; }
       var isTarget=false, tr=''; for(var i=0;i<entries.length;i++){ if(entries[i].answer===w){isTarget=true;break;} }
       if(isTarget){
         found[w]=true; setPill('ok'); reveal(w);
         for(var j=0;j<level.words.length;j++){ if(level.words[j].w.toUpperCase()===w){ tr=level.words[j].tr; break; } }
         showMean(w+' — '+tr);
+        if(window.GriFX){ GriFX.sound('ok'); GriFX.speak(w); }
         document.getElementById('gwoN').textContent=Object.keys(found).length;
         fade();
         if(Object.keys(found).length>=totals) setTimeout(complete,650);
-      } else { setPill('bad'); fade(); }
+      } else { setPill('bad'); if(window.GriFX)GriFX.sound('bad'); fade(); }
     }
     function fade(){ setTimeout(function(){ pill.textContent=''; pill.className='p'; },420); }
 
     function complete(){
       if(window.GriConfetti)window.GriConfetti.burst();
+      if(window.GriFX)GriFX.sound('win');
       var d=document.createElement('div'); d.className='gwo-done';
       var badge=opts.badge?'<img class="gwo-badge" src="'+opts.badge+'" alt="" width="96" height="96">':'';
       d.innerHTML=badge+'<div class="t">'+esc(level.theme)+' tamamlandı!</div><div style="margin-top:6px;opacity:.85">Tüm kelimeleri buldun.</div>';

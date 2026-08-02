@@ -38,6 +38,7 @@
       '.gwd-k.no{background:var(--gwd-no);color:#fff;border-color:var(--gwd-no);}',
       '.gwd-done{width:100%;max-width:500px;text-align:center;padding:16px 18px;border:1px solid var(--gwd-line);border-radius:14px;background:var(--gwd-cell);box-shadow:0 6px 20px rgba(43,33,24,.08);}',
       '.gwd-done .w{font-family:var(--font-display,Georgia,serif);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--gwd-ink);}',
+      '.gwd-say{font-size:1rem;background:none;border:0;cursor:pointer;vertical-align:middle;opacity:.7;padding:2px 4px;}.gwd-say:hover{opacity:1;}',
       '.gwd-done .tr{font-size:1.08rem;font-weight:700;color:var(--gwd-ok);margin-top:4px;}',
       '.gwd-done .ex{font-size:.92rem;opacity:.82;margin-top:7px;font-style:italic;color:var(--gwd-ink);}',
       '.gwd-done .res{font-size:.92rem;font-weight:700;margin-bottom:7px;color:var(--gwd-ink);}'
@@ -128,11 +129,13 @@
       doneCard=document.createElement('div'); doneCard.className='gwd-done';
       var tries=win?st.guesses.length:('X');
       doneCard.innerHTML='<div class="res">'+(win?'Tebrikler! '+st.guesses.length+'/'+MAX+' denemede buldun.':'Bitti — doğru kelime:')+'</div>'
-        +'<div class="w">'+answer+'</div>'
+        +'<div class="w">'+answer+' <button type="button" class="gwd-say" aria-label="Sesli oku">🔊</button></div>'
         +(opts.tr?'<div class="tr">'+esc(opts.tr)+'</div>':'')
         +(opts.ex?'<div class="ex">'+esc(opts.ex)+'</div>':'');
       host.appendChild(doneCard);
+      var sayb=doneCard.querySelector('.gwd-say'); if(sayb)sayb.addEventListener('click',function(){ if(window.GriFX)GriFX.speak(answer); });
       if(kb)kb.style.opacity='.5';
+      if(!replaying&&window.GriFX){ if(win)GriFX.sound('win'); GriFX.speak(answer); }
       if(!replaying){
         if(opts.onChange)opts.onChange(inst);
         if(opts.onFinish)opts.onFinish({win:win,tries:win?st.guesses.length:MAX});

@@ -139,6 +139,7 @@
         <span class="oy-catlabel">İçerik:</span>
         <button type="button" class="oy-catbtn" data-cat="social">Social</button>
         <button type="button" class="oy-catbtn" data-cat="academic">Academic</button>
+        <button type="button" class="oy-catbtn" id="oySound" data-sound title="Ses aç/kapa">🔊 Ses</button>
         <span class="oy-cathint" id="oyCatHint"></span>
       </div>
       <div class="oy-streak" id="oyStreak" style="display:none">
@@ -260,11 +261,12 @@
   </footer>
 
   <script src="assets/gri-confetti.js?v=1"></script>
-  <script src="assets/gri-wordle.js?v=3"></script>
+  <script src="assets/gri-fx.js?v=1"></script>
+  <script src="assets/gri-wordle.js?v=4"></script>
   <script src="assets/wordle-daily.js?v=3"></script>
-  <script src="assets/gri-wordsearch.js?v=3"></script>
-  <script src="assets/gri-match.js?v=2"></script>
-  <script src="assets/gri-wheel.js?v=5"></script>
+  <script src="assets/gri-wordsearch.js?v=4"></script>
+  <script src="assets/gri-match.js?v=3"></script>
+  <script src="assets/gri-wheel.js?v=6"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=6"></script>
   <script>
@@ -289,7 +291,9 @@
       var btns=document.querySelectorAll('#oyCat .oy-catbtn');
       for(var i=0;i<btns.length;i++)btns[i].className='oy-catbtn'+(btns[i].getAttribute('data-cat')===CAT?' cur':'');
       $('oyCatHint').textContent=CATHINT[CAT]||'';
+      updateSound();
     }
+    function updateSound(){ var b=$('oySound'); if(!b)return; var m=(window.GriFX&&GriFX.muted()); b.textContent=m?'🔇 Sessiz':'🔊 Ses'; b.className='oy-catbtn'+(m?'':' cur'); }
 
     /* ---- router ---- */
     var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match','bulmaca'];
@@ -403,7 +407,8 @@
     /* ---- wiring ---- */
     document.addEventListener('click',function(e){
       var t=e.target; while(t&&t!==document){
-        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
+        if(t.getAttribute&&t.hasAttribute('data-sound')){ if(window.GriFX){ GriFX.setMuted(!GriFX.muted()); updateSound(); if(!GriFX.muted())GriFX.sound('ok'); } return; }
+        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match','bulmaca'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
         if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; }
         if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; }
         t=t.parentNode;

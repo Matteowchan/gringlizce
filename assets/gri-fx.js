@@ -1,108 +1,46 @@
-/* gri-fx.js — paylaşımlı kalite katmanı: konfeti + boş durum + skeleton yardımcıları
-   Kullanım:
-     GriFX.confetti();                       // ekran ortasından kutlama
-     GriFX.confetti({ x: 0.5, y: 0.3 });     // oransal köken
-     GriFX.emptyState(el, { icon:'🐱', title:'...', text:'...', ctaText:'...', ctaHref:'...' });
-     GriFX.skeleton(el, { lines:3 });        // veya { card:true, count:3 }
-*/
-(function () {
-  'use strict';
-  var reduce = false;
-  try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+/* gri-fx.js — oyun sesleri (WebAudio) + telaffuz (Web Speech). Kütüphanesiz. */
+(function(){
+  if(window.GriFX)return;
+  function muted(){ try{ return localStorage.getItem('gri-fx-mute')==='1'; }catch(e){ return false; } }
+  function setMuted(m){ try{ localStorage.setItem('gri-fx-mute', m?'1':'0'); }catch(e){} }
 
-  var COLORS = ['#2C5856', '#C09947', '#8E3B4C', '#3a726e', '#e0b669', '#4a8a52'];
-
-  function confetti(opts) {
-    opts = opts || {};
-    if (reduce) return;
-    var n = opts.count || 90;
-    var ox = (opts.x != null ? opts.x : 0.5) * window.innerWidth;
-    var oy = (opts.y != null ? opts.y : 0.42) * window.innerHeight;
-
-    var cv = document.createElement('canvas');
-    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999;';
-    cv.width = window.innerWidth; cv.height = window.innerHeight;
-    document.body.appendChild(cv);
-    var ctx = cv.getContext('2d');
-
-    var parts = [];
-    for (var i = 0; i < n; i++) {
-      var ang = (Math.PI * 2) * (i / n) + (i % 3) * 0.2;
-      var spd = 5 + (i % 7);
-      parts.push({
-        x: ox, y: oy,
-        vx: Math.cos(ang) * spd * (0.6 + (i % 5) / 6),
-        vy: Math.sin(ang) * spd - 4 - (i % 4),
-        g: 0.22 + (i % 3) * 0.03,
-        s: 5 + (i % 5),
-        rot: (i % 360) * (Math.PI / 180),
-        vr: (i % 2 ? 1 : -1) * (0.1 + (i % 5) / 30),
-        c: COLORS[i % COLORS.length],
-        life: 0
-      });
-    }
-
-    var maxLife = 120;
-    function frame() {
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      var alive = 0;
-      for (var i = 0; i < parts.length; i++) {
-        var p = parts[i];
-        if (p.life > maxLife) continue;
-        alive++;
-        p.life++;
-        p.vy += p.g;
-        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-        var alpha = Math.max(0, 1 - p.life / maxLife);
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.c;
-        ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
-        ctx.restore();
-      }
-      if (alive > 0) { requestAnimationFrame(frame); }
-      else { if (cv.parentNode) cv.parentNode.removeChild(cv); }
-    }
-    requestAnimationFrame(frame);
+  /* ---- telaffuz ---- */
+  var voices=[];
+  function loadVoices(){ try{ voices=window.speechSynthesis?window.speechSynthesis.getVoices():[]; }catch(e){} }
+  try{ if(window.speechSynthesis){ loadVoices(); window.speechSynthesis.onvoiceschanged=loadVoices; } }catch(e){}
+  function speak(text){
+    try{
+      if(!window.speechSynthesis)return;
+      var u=new SpeechSynthesisUtterance(String(text||''));
+      u.lang='en-US'; u.rate=.92; u.pitch=1;
+      var v=null; for(var i=0;i<voices.length;i++){ if(/en[-_]?US/i.test(voices[i].lang)){ v=voices[i]; break; } }
+      if(!v){ for(var j=0;j<voices.length;j++){ if(/^en/i.test(voices[j].lang)){ v=voices[j]; break; } } }
+      if(v)u.voice=v;
+      window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    }catch(e){}
   }
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+  /* ---- ses efektleri ---- */
+  var actx=null;
+  function ctx(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx&&actx.state==='suspended'){ try{actx.resume();}catch(e){} } return actx; }
+  function tone(freq,dur,type,vol,when){
+    var c=ctx(); if(!c)return;
+    var o=c.createOscillator(), g=c.createGain();
+    o.type=type||'sine'; o.frequency.value=freq;
+    var t=c.currentTime+(when||0);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.06,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  function sound(name){
+    if(muted())return;
+    if(name==='ok'){ tone(660,.12,'sine',.06); tone(880,.12,'sine',.05,.06); }
+    else if(name==='bad'){ tone(200,.18,'sawtooth',.05); }
+    else if(name==='dupe'){ tone(520,.09,'sine',.04); }
+    else if(name==='win'){ [523,659,784,1047].forEach(function(f,i){ tone(f,.2,'triangle',.06,i*0.09); }); }
+    else if(name==='coin'){ tone(988,.07,'square',.05); tone(1319,.1,'square',.05,.06); }
+    else if(name==='key'){ tone(430,.045,'sine',.028); }
   }
 
-  function emptyState(el, o) {
-    if (!el) return;
-    o = o || {};
-    var cta = (o.ctaText && o.ctaHref)
-      ? '<a class="gri-empty-cta" href="' + esc(o.ctaHref) + '">' + esc(o.ctaText) + '</a>'
-      : '';
-    el.innerHTML = '<div class="gri-empty">'
-      + '<div class="gri-empty-ic">' + (o.icon || '🐱') + '</div>'
-      + '<h4>' + esc(o.title || 'Burada henüz bir şey yok') + '</h4>'
-      + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
-      + cta
-      + '</div>';
-  }
-
-  function skeleton(el, o) {
-    if (!el) return;
-    o = o || {};
-    var html = '<div class="gri-skel-wrap">';
-    if (o.card) {
-      var cn = o.count || 3;
-      for (var i = 0; i < cn; i++) html += '<div class="gri-skeleton gri-skel-card"></div>';
-    } else {
-      var ln = o.lines || 3;
-      var widths = ['w80', '', 'w60', 'w40', 'w80', 'w60'];
-      for (var j = 0; j < ln; j++) html += '<div class="gri-skeleton gri-skel-line ' + (widths[j % widths.length]) + '"></div>';
-    }
-    html += '</div>';
-    el.innerHTML = html;
-  }
-
-  window.GriFX = { confetti: confetti, emptyState: emptyState, skeleton: skeleton, reduce: reduce };
+  window.GriFX={ speak:speak, sound:sound, muted:muted, setMuted:setMuted };
 })();

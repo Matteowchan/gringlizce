@@ -80,6 +80,11 @@
   #view-wordsearch .oy-card::before{background-image:url(assets/gri-cat-happy.png)}
   #view-match .oy-card::before{background-image:url(assets/gri-cat-curious.png)}
   @media(max-width:640px){.oy-panel .oy-card::before{width:120px;height:120px;opacity:.05}}
+  .oy-cat{display:flex;align-items:center;gap:8px;justify-content:center;margin:0 0 8px;flex-wrap:wrap}
+  .oy-catlabel{font-size:.8rem;font-weight:700;color:var(--text-soft)}
+  .oy-catbtn{font:700 .85rem var(--font-ui,inherit);padding:7px 18px;border-radius:22px;border:1px solid var(--line);background:var(--card,#fff);color:var(--text);cursor:pointer}
+  .oy-catbtn.cur{background:var(--gold,#C79A3A);border-color:var(--gold,#C79A3A);color:#231c10}
+  .oy-cathint{width:100%;text-align:center;font-size:.8rem;color:var(--text-soft);margin-top:2px}
   </style>
 </head>
 <body>
@@ -103,6 +108,12 @@
 
     <!-- HUB: kategori kartları -->
     <div id="oyHub">
+      <div class="oy-cat" id="oyCat">
+        <span class="oy-catlabel">İçerik:</span>
+        <button type="button" class="oy-catbtn" data-cat="social">Social</button>
+        <button type="button" class="oy-catbtn" data-cat="academic">Academic</button>
+        <span class="oy-cathint" id="oyCatHint"></span>
+      </div>
       <div class="oy-streak" id="oyStreak" style="display:none">
         <span class="oy-badge">Wordle serisi: <b id="oySt">0</b> gün</span>
         <span class="oy-badge">En iyi: <b id="oyBest">0</b></span>
@@ -192,7 +203,7 @@
   </footer>
 
   <script src="assets/gri-wordle.js?v=2"></script>
-  <script src="assets/wordle-daily.js?v=2"></script>
+  <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=2"></script>
   <script src="assets/gri-match.js?v=1"></script>
   <script src="assets/gri-wheel.js?v=1"></script>
@@ -203,6 +214,11 @@
     function getWoLevel(){ try{ var v=parseInt(localStorage.getItem('gri-wow-level'),10); if(v>=1)return v; }catch(e){} return 1; }
     function setWoLevel(n){ try{ localStorage.setItem('gri-wow-level',n); }catch(e){} }
 
+    /* ---- kategori (Academic / Social) ---- */
+    var CAT=(function(){ try{ var c=localStorage.getItem('gri-games-cat'); return c==='academic'?'academic':'social'; }catch(e){ return 'social'; } })();
+    function setCat(c){ CAT=(c==='academic'?'academic':'social'); try{ localStorage.setItem('gri-games-cat',CAT); }catch(e){} }
+    var CATHINT={ social:'Genel & günlük hayat kelimeleri', academic:'Sınav İngilizcesi & akademik kelimeler' };
+
     /* ---- hub streak/level rozetleri (oyun mount etmeden) ---- */
     function refreshHub(){
       var s=(window.GriWordleDaily&&GriWordleDaily.getStreak)?GriWordleDaily.getStreak():null;
@@ -210,21 +226,31 @@
       $('oySt').textContent=(s&&s.streak)||0;
       $('oyBest').textContent=(s&&s.best)||0;
       $('oyWoLvl').textContent=getWoLevel();
+      var btns=document.querySelectorAll('#oyCat .oy-catbtn');
+      for(var i=0;i<btns.length;i++)btns[i].className='oy-catbtn'+(btns[i].getAttribute('data-cat')===CAT?' cur':'');
+      $('oyCatHint').textContent=CATHINT[CAT]||'';
     }
 
     /* ---- router ---- */
-    var mounted={}, VIEWS=['wordle','wow','wordsearch','match'];
+    var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match'];
     function go(name){
+      current=name;
       $('oyHub').hidden=(name!==null);
       VIEWS.forEach(function(v){ var el=$('view-'+v); if(el)el.hidden=(v!==name); });
       if(name){ if(!mounted[name]){ mounted[name]=true; MOUNT[name](); } window.scrollTo(0,0);
         if(location.hash!=='#'+name){ try{ history.replaceState(null,'','#'+name); }catch(e){ location.hash=name; } } }
       else { refreshHub(); if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } }
     }
+    /* kategori değişince içerik-bağımlı oyunları sıfırla (wow hariç) */
+    function resetContentGames(){
+      ['wordle','wordsearch','match'].forEach(function(v){ mounted[v]=false; });
+      ['oyWordle','wsHost','mtHost'].forEach(function(id){ var el=$(id); if(el)el.innerHTML=''; });
+      var wt=$('wsTheme'); if(wt)wt.textContent='';
+    }
 
     var MOUNT={
       wordle:function(){
-        if(window.GriWordleDaily) GriWordleDaily.mountDaily($('oyWordle'),{});
+        if(window.GriWordleDaily) GriWordleDaily.mountDaily($('oyWordle'),{category:CAT});
       },
       wow:function(){
         fetch('assets/wow-levels.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
@@ -254,23 +280,30 @@
       },
       wordsearch:function(){
         fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
-          var THEMES=(j&&j.themes)||[];
-          function neu(){ if(!THEMES.length||!window.GriWordSearch)return; var t=THEMES[Math.floor(Math.random()*THEMES.length)]; $('wsTheme').textContent=t.name; GriWordSearch.mount($('wsHost'),{ words:t.words, onReplay:neu }); }
-          var b=$('wsNew'); if(b)b.addEventListener('click',neu); neu();
+          var ALL=(j&&j.themes)||[];
+          function pool(){ var f=ALL.filter(function(t){return (t.category||'social')===CAT;}); return f.length?f:ALL; }
+          function neu(){ var TH=pool(); if(!TH.length||!window.GriWordSearch)return; var t=TH[Math.floor(Math.random()*TH.length)]; $('wsTheme').textContent=t.name; GriWordSearch.mount($('wsHost'),{ words:t.words, onReplay:neu }); }
+          var b=$('wsNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});
       },
       match:function(){
-        fetch('assets/wordle-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+        var url=CAT==='academic'?'assets/wordle-words.json':'assets/wordle-words-social.json';
+        fetch(url,{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var POOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};});
           function neu(){ if(!POOL.length||!window.GriMatch)return; GriMatch.mount($('mtHost'),{ pairs:pick(POOL,6), onReplay:neu }); }
-          var b=$('mtNew'); if(b)b.addEventListener('click',neu); neu();
+          var b=$('mtNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});
       }
     };
 
     /* ---- wiring ---- */
     document.addEventListener('click',function(e){
-      var t=e.target; while(t&&t!==document){ if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; } if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; } t=t.parentNode; }
+      var t=e.target; while(t&&t!==document){
+        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
+        if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; }
+        if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; }
+        t=t.parentNode;
+      }
     });
     window.addEventListener('hashchange',function(){ var h=location.hash.replace('#',''); if(VIEWS.indexOf(h)>=0)go(h); else go(null); });
 

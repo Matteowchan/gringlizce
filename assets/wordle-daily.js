@@ -3,12 +3,14 @@
  */
 (function(){
   if(window.GriWordleDaily)return;
-  var WORDS_URL='assets/wordle-words.json';
-  var cache=null;
+  var URLS={academic:'assets/wordle-words.json',social:'assets/wordle-words-social.json'};
+  var cache={};
 
-  function fetchWords(cb){
-    if(cache)return cb(cache);
-    fetch(WORDS_URL,{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ cache=j||[]; cb(cache); })
+  function urlFor(cat){ return URLS[cat==='social'?'social':'academic']; }
+  function fetchWords(cb,cat){
+    var url=urlFor(cat);
+    if(cache[url])return cb(cache[url]);
+    fetch(url,{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){ cache[url]=j||[]; cb(cache[url]); })
       .catch(function(){ cb([]); });
   }
   function epochDay(){ return Math.floor(Date.now()/86400000); }
@@ -18,8 +20,8 @@
   function lsGet(k,def){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
-  function loadState(dk){ return lsGet('gri-wd-'+dk,null); }
-  function saveState(dk,st){ lsSet('gri-wd-'+dk,st); }
+  function loadState(dk,cat){ return lsGet('gri-wd-'+dk+(cat==='social'?'-s':''),null); }
+  function saveState(dk,st,cat){ lsSet('gri-wd-'+dk+(cat==='social'?'-s':''),st); }
 
   function getStreak(){ return lsGet('gri-wd-streak',{last:null,streak:0,best:0,played:0,wins:0}); }
   function yesterdayKey(){ var d=new Date(Date.now()-86400000); function p(n){return (n<10?'0':'')+n;} return d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate()); }
@@ -45,13 +47,15 @@
 
   function mountDaily(host,opts){
     opts=opts||{};
+    var cat=opts.category==='social'?'social':'academic';
+    host.innerHTML='';
     fetchWords(function(words){
       var word=todayWord(words);
       if(!word){ host.innerHTML='<p style="text-align:center;opacity:.7">Kelime yüklenemedi.</p>'; return; }
-      var dk=dateKey(), saved=loadState(dk);
+      var dk=dateKey(), saved=loadState(dk,cat);
       var inst=window.GriWordle.mount(host,{
         answer:word.w, tr:word.tr, ex:word.ex, hint:word.hint, maxRows:6, state:saved,
-        onChange:function(i){ saveState(dk,i.getState()); },
+        onChange:function(i){ saveState(dk,i.getState(),cat); },
         onFinish:function(r){
           var s=updateStreak(dk,r.win);
           renderExtras(host,inst,word,s);
@@ -60,7 +64,7 @@
       });
       if(saved&&saved.done){ renderExtras(host,inst,word,getStreak()); }
       if(opts.onReady)opts.onReady(inst,word,getStreak(),saved);
-    });
+    },cat);
   }
 
   function renderExtras(host,inst,word,streak){

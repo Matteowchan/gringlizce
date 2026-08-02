@@ -214,6 +214,7 @@
           <button type="button" class="oy-navbtn" id="woNext" aria-label="Sonraki seviye">&rsaquo;</button>
           <button type="button" class="oy-navbtn oy-picktoggle" id="woPick">Seviyeler ▾</button>
           <button type="button" class="oy-navbtn oy-picktoggle" id="woEndless">∞ Sonsuz</button>
+          <button type="button" class="oy-navbtn oy-picktoggle" id="woHint">İpucu (15)</button>
         </div>
         <div id="woPicker" class="oy-picker" hidden></div>
         <div id="woHost"></div>
@@ -267,7 +268,7 @@
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=4"></script>
   <script src="assets/gri-match.js?v=3"></script>
-  <script src="assets/gri-wheel.js?v=6"></script>
+  <script src="assets/gri-wheel.js?v=7"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=7"></script>
   <script>
@@ -329,7 +330,10 @@
           function mountLv(lv,labelHtml,accent){
             $('woLevel').innerHTML=labelHtml;
             if(woInst&&woInst.destroy)woInst.destroy();
-            woInst=GriWheel.mount($('woHost'),{ level:lv, accent:accent, badge:'yol-kaptani.png', onComplete:function(done){
+            woInst=GriWheel.mount($('woHost'),{ level:lv, accent:accent, badge:'yol-kaptani.png',
+              dict:(pool?pool.gloss:null),
+              onBonus:function(w){ if(window.GriGames)GriGames.addCoins(3); },
+              onComplete:function(done){
               if(window.GriGames){ GriGames.addCoins(10); GriGames.bump('words',(lv.words||[]).length); if(GriGames.getCnt('words')>=50)GriGames.unlock('icten-yazar');
                 if(endless){ if(GriGames.bump('endless',1)>=10)GriGames.unlock('tarif-takipci'); } else if(done>=10)GriGames.unlock('yol-kaptani'); }
               if(endless){ loadEndless(); scrollToWheel(); return; }
@@ -373,7 +377,8 @@
           var pv=$('woPrev'); if(pv&&!pv._wired){ pv._wired=1; pv.addEventListener('click',function(){ if(!endless)loadLevel(cur-1); }); }
           var nx=$('woNext'); if(nx&&!nx._wired){ nx._wired=1; nx.addEventListener('click',function(){ if(endless)loadEndless(); else loadLevel(cur+1); }); }
           var en=$('woEndless'); if(en&&!en._wired){ en._wired=1; en.addEventListener('click',function(){ setEndless(!endless); }); }
-          loadLevel(getWoLevel());
+          var hb=$('woHint'); if(hb&&!hb._wired){ hb._wired=1; hb.addEventListener('click',function(){ if(!woInst||!woInst.hint)return; if(window.GriGames&&GriGames.coins()<15){ hb.textContent='Coin yok'; setTimeout(function(){hb.textContent='İpucu (15)';},1200); return; } if(woInst.hint()){ if(window.GriGames)GriGames.addCoins(-15); } }); }
+          if(window.GriWheelEndless&&!pool){ GriWheelEndless.buildPool(function(p){ pool=p; loadLevel(getWoLevel()); }); } else { loadLevel(getWoLevel()); }
         }).catch(function(){});
       },
       wordsearch:function(){

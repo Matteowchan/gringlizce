@@ -51,10 +51,13 @@
     css(); opts=opts||{};
     var level=opts.level; if(!level)return null;
     host.className=(host.className||'')+' gwo'; host.innerHTML='';
-    if(opts.accent){ host.style.setProperty('--wo-gold',opts.accent); host.style.setProperty('--wo-ok',opts.accent); }
+    if(opts.accent){ host.style.setProperty('--wo-gold',opts.accent); host.style.setProperty('--wo-ok',opts.accent);
+      var am=/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(opts.accent);
+      if(am){ var ar=parseInt(am[1],16),ag=parseInt(am[2],16),ab=parseInt(am[3],16); host.style.background='radial-gradient(circle at 50% 58%, rgba('+ar+','+ag+','+ab+',.09), transparent 60%)'; host.style.borderRadius='16px'; }
+    }
     var letters=level.letters.toUpperCase().split('');
     var entries=level.grid.map(function(e){return {r:e.r,c:e.c,dir:e.dir,answer:e.answer.toUpperCase()};});
-    var totals=entries.length, found={};
+    var totals=entries.length, found={}, bonus={};
 
     /* top */
     var top=document.createElement('div'); top.className='gwo-top';
@@ -134,7 +137,14 @@
         document.getElementById('gwoN').textContent=Object.keys(found).length;
         fade();
         if(Object.keys(found).length>=totals) setTimeout(complete,650);
-      } else { setPill('bad'); if(window.GriFX)GriFX.sound('bad'); fade(); }
+      } else {
+        var dw=opts.dict; var trb=(dw&&typeof dw==='object')?dw[w]:null;
+        if(trb!=null&&!bonus[w]&&w.length>=3){
+          bonus[w]=true; setPill('ok'); if(window.GriFX){GriFX.sound('coin');GriFX.speak(w);}
+          showMean(w+(trb?' — '+trb+' (bonus!)':' — bonus!'));
+          if(opts.onBonus)opts.onBonus(w); fade();
+        } else { setPill('bad'); if(window.GriFX)GriFX.sound('bad'); fade(); }
+      }
     }
     function fade(){ setTimeout(function(){ pill.textContent=''; pill.className='p'; },420); }
 
@@ -148,7 +158,10 @@
       b.addEventListener('click',function(){ if(opts.onComplete)opts.onComplete(level.n); });
       d.appendChild(b); host.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'center'});
     }
-    return { destroy:function(){ if(toast&&toast.parentNode)toast.parentNode.removeChild(toast); } };
+    return {
+      hint:function(){ var hidden=[],k; for(k in cells){ var el=cells[k].el; if(el&&el.className.indexOf('rev')<0)hidden.push(k); } if(!hidden.length)return false; var kk=hidden[(Math.random()*hidden.length)|0]; cells[kk].el.className='gwo-cell on rev'; if(window.GriFX)GriFX.sound('coin'); return true; },
+      destroy:function(){ if(toast&&toast.parentNode)toast.parentNode.removeChild(toast); }
+    };
   }
   window.GriWheel={ mount:mount };
 })();

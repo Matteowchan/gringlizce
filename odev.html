@@ -61,6 +61,7 @@
   </script>
   <script src="assets/curriculum.js"></script>
   <script src="assets/gri-crossword.js?v=4"></script>
+  <script src="assets/gri-wordle.js?v=1"></script>
   <script src="assets/nav.js?v=8"></script>
   <script src="assets/track.js" defer></script>
   <style>
@@ -500,6 +501,7 @@ function buildPage(){
   wireTasks();
   restoreState();
   mountCrosswords();
+  mountWordles();
   updateDots();
   updateSubmitState();
   odShowSec(1,true);
@@ -558,6 +560,13 @@ function renderTasks(tasks){
       html+='<div class="ge-gapbtnrow"><button type="button" class="ge-gapbtn ge-cwbtn" data-key="'+key+'">Kontrol Et</button></div>';
       html+='<div class="ge-qfb" id="fb-'+key+'"></div>';
       html+='</div>';
+    }else if(task.type==='wordle'){
+      html+='<div class="ge-card ge-cwcard" id="wdc-'+key+'">';
+      html+='<h2>Kelime Oyunu <span class="en">(Wordle)</span></h2>';
+      html+='<p class="ge-inst">'+esc(task.intro||'6 denemede '+(String(task.answer||'').length||5)+' harfli kelimeyi bul. Yeşil: doğru yer · Sarı: kelimede var, yanlış yer · Gri: yok.')+'</p>';
+      html+='<div class="ge-wd-host" id="wd-'+key+'" data-key="'+key+'" style="display:flex;justify-content:center"></div>';
+      html+='<div class="ge-qfb" id="fb-'+key+'"></div>';
+      html+='</div>';
     }
   }
   return html;
@@ -583,6 +592,29 @@ function mountCrosswords(){
         }
       });
       if(ST.a[k]&&ST.a[k].ck)CW[k].check();
+    })(key);
+  }
+}
+var WD={}; /* key -> GriWordle instance */
+function mountWordles(){
+  WD={};
+  for(var t=0;t<TASKS.length;t++){
+    if(TASKS[t].type!=='wordle')continue;
+    var key=taskKey(t);
+    var el=document.getElementById('wd-'+key);
+    if(!el||!window.GriWordle)continue;
+    (function(k){
+      var task=taskOf(k);
+      var saved=(ST.a[k]&&ST.a[k].wd)?ST.a[k].wd:null;
+      WD[k]=window.GriWordle.mount(el,{
+        answer:task.answer,tr:task.tr,ex:task.ex,maxRows:task.maxRows||6,state:saved,
+        onChange:function(inst){ ST.a[k]={t:'wordle',wd:inst.getState()}; saveSt(ST); afterAnswer(k); },
+        onFinish:function(r){
+          var fb=document.getElementById('fb-'+k);
+          if(fb){ fb.className='ge-qfb on '+(r.win?'ok':'no'); fb.textContent=r.win?('Bravo! '+r.tries+' denemede buldun.'):'Bitti — doğru kelimeyi ve anlamını yukarıda görebilirsin.'; }
+          ST.a[k]={t:'wordle',wd:WD[k].getState()}; saveSt(ST); afterAnswer(k);
+        }
+      });
     })(key);
   }
 }
@@ -736,6 +768,7 @@ function taskDone(ti){
   if(task.type==='gap')return !!a.ck;
   if(task.type==='writing')return (a.n||0)>=(task.min||40);
   if(task.type==='crossword'){var inst=CW[taskKey(ti)];return inst?inst.isFilled():false;}
+  if(task.type==='wordle'){var wi=WD[taskKey(ti)];return wi?wi.isDone():false;}
   return false;
 }
 function doneCount(){
@@ -840,6 +873,7 @@ window.odSubmit=function(){
     if(task.type==='mcq'){total++;if(a&&a.ok)correct++;}
     else if(task.type==='gap'){total++;if(a&&a.ok)correct++;}
     else if(task.type==='crossword'){var cwi=CW[taskKey(t)];var g=cwi?cwi.gradeSilent():{correct:0,total:(task.entries||[]).length};total+=g.total;correct+=g.correct;}
+    else if(task.type==='wordle'){var wi=WD[taskKey(t)];total++;if(wi&&wi.result().win)correct++;}
     else if(task.type==='writing'&&a){
       writing.push({prompt:task.prompt||'',text:a.text||'',words:a.n||0});
       wcTotal+=(a.n||0);

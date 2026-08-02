@@ -297,6 +297,7 @@ var EXAMS=[
     { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
     { label: "Genel İngilizce", href: "genel-ingilizce.html" },
     { label: "Exercises", href: "genel-odevler.html" },
+    { label: "Oyunlar", href: "oyunlar.html" },
     { label: "Sınıflarım", href: "sinifim.html" },
     { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
     { label: "Gri Meet", href: "grimeet.html" },

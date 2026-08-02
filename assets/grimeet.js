@@ -333,7 +333,7 @@ function setupAutoPiP(){
     try{
       if(document.hidden){
         if(document.pictureInPictureElement) return;
-        var v=pickVideo(); if(v && v.requestPictureInPicture) v.requestPictureInPicture().catch(function(){});
+        var v=pickVideo(); if(v && v.requestPictureInPicture){ try{ if(v.paused){ var _pp=v.play(); if(_pp&&_pp.catch)_pp.catch(function(){}); } }catch(_e){} v.requestPictureInPicture().catch(function(){}); }
       } else {
         if(document.pictureInPictureElement) document.exitPictureInPicture().catch(function(){});
       }

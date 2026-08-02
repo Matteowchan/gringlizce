@@ -2257,17 +2257,40 @@
         <!-- Vocab config -->
         <div class="t-config-block" data-config="vocab">
           <div class="t-config-eyebrow">Kelime Ödevi</div>
-          <label for="ca-v-words">Kelimeler</label>
-          <textarea id="ca-v-words" rows="10" maxlength="20000" placeholder="Her satıra bir kelime, format: en - tr&#10;Örnek:&#10;shy - utangaç&#10;loud - gürültülü&#10;calm - sakin"></textarea>
-          <p class="t-config-note">Her satıra bir kelime. Format: <strong>en - tr</strong> (ayraç boşluk-tire-boşluk). İsteğe bağlı 3. parça pos: <em>shy - utangaç - adj</em>. Öğrenciler flashcard tarzında çözer, kendi değerlendirir.</p>
-          <div class="t-modal-row" style="margin-top:0.8rem;">
-            <div>
-              <select id="ca-v-student-select" class="btn-secondary" style="width:100%; cursor:pointer;">
-                <option value="">— Öğrenci Sözlüğünden Yükle —</option>
-              </select>
+          <div class="ca-seg" id="ca-v-mode-seg">
+            <button type="button" data-vmode="bank" class="on">Kelime Bankası · otomatik</button>
+            <button type="button" data-vmode="manual">Manuel liste</button>
+          </div>
+
+          <!-- Mod 1: Kelime Bankası'ndan sayı-bazlı, otomatik takipli -->
+          <div id="ca-v-bank">
+            <div class="t-modal-row">
+              <div>
+                <label for="ca-v-cat">Kategori</label>
+                <select id="ca-v-cat"><option value="">Tüm kategoriler (karma)</option></select>
+              </div>
+              <div>
+                <label for="ca-v-count">Hedef Kelime Sayısı</label>
+                <input type="number" id="ca-v-count" min="5" max="200" value="20">
+              </div>
             </div>
-            <div>
-              <span id="ca-v-counter" style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; height:100%;">0 kelime</span>
+            <p class="t-config-note">Öğrenci Kelime Bankası'nda flashcard çözer. İlerleme <strong>otomatik</strong> takip edilir; hedef sayıda farklı kelimeyi çözünce ödev tamamlanır.</p>
+          </div>
+
+          <!-- Mod 2: Manuel flashcard listesi (mevcut davranış) -->
+          <div id="ca-v-manual" style="display:none;">
+            <label for="ca-v-words">Kelimeler</label>
+            <textarea id="ca-v-words" rows="10" maxlength="20000" placeholder="Her satıra bir kelime, format: en - tr&#10;Örnek:&#10;shy - utangaç&#10;loud - gürültülü&#10;calm - sakin"></textarea>
+            <p class="t-config-note">Her satıra bir kelime. Format: <strong>en - tr</strong> (ayraç boşluk-tire-boşluk). İsteğe bağlı 3. parça pos: <em>shy - utangaç - adj</em>. Öğrenciler flashcard tarzında çözer, kendi değerlendirir.</p>
+            <div class="t-modal-row" style="margin-top:0.8rem;">
+              <div>
+                <select id="ca-v-student-select" class="btn-secondary" style="width:100%; cursor:pointer;">
+                  <option value="">— Öğrenci Sözlüğünden Yükle —</option>
+                </select>
+              </div>
+              <div>
+                <span id="ca-v-counter" style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; height:100%;">0 kelime</span>
+              </div>
             </div>
           </div>
         </div>
@@ -5172,6 +5195,60 @@
         });
       }
 
+      // ---- Kelime Bankası (otomatik) modu ----
+      // Kategori slug'ları kelimeler tablosuyla ve vocab_answer event'iyle birebir aynı olmalı.
+      var KB_CATS = [
+        ['zaman-ve-sureklilik', 'Zaman ve Süreklilik'],
+        ['argumantasyon-ve-elestiri', 'Argümantasyon ve Eleştiri'],
+        ['analiz-ve-cikarim', 'Analiz ve Çıkarım'],
+        ['sebep-etki-onleme', 'Sebep, Etki, Önleme'],
+        ['degisim-ve-donusum', 'Değişim ve Dönüşüm'],
+        ['miktar-ve-derece', 'Miktar ve Derece'],
+        ['akademik-tutum', 'Akademik Tutum'],
+        ['toplum-ve-yapi', 'Toplum ve Yapı'],
+        ['dusunce-ve-yargi', 'Düşünce ve Yargı'],
+        ['karsitlik-ve-uyum', 'Karşıtlık ve Uyum'],
+        ['bilim-ve-doga', 'Bilim ve Doğa'],
+        ['sanat-ve-edebiyat', 'Sanat ve Edebiyat'],
+        ['ekonomi-ve-is', 'Ekonomi ve İş'],
+        ['tarih-ve-politika', 'Tarih ve Politika'],
+        ['insan-ve-davranis', 'İnsan ve Davranış'],
+        ['iletisim-ve-dil', 'İletişim ve Dil'],
+        ['mekan-ve-hareket', 'Mekân ve Hareket'],
+        ['saglik-ve-tip', 'Sağlık ve Tıp'],
+        ['teknoloji-ve-dijital', 'Teknoloji ve Dijital'],
+        ['cevre-ve-iklim', 'Çevre ve İklim']
+      ];
+      var caVocabMode = 'bank';
+      var caVCatSel = document.getElementById('ca-v-cat');
+      if (caVCatSel && caVCatSel.options.length <= 1) {
+        KB_CATS.forEach(function (c) {
+          var o = document.createElement('option');
+          o.value = c[0]; o.textContent = c[1];
+          caVCatSel.appendChild(o);
+        });
+      }
+      function setVocabMode(m) {
+        caVocabMode = (m === 'manual') ? 'manual' : 'bank';
+        var seg = document.getElementById('ca-v-mode-seg');
+        if (seg) seg.querySelectorAll('button[data-vmode]').forEach(function (b) {
+          b.classList.toggle('on', b.getAttribute('data-vmode') === caVocabMode);
+        });
+        var bankEl = document.getElementById('ca-v-bank');
+        var manEl = document.getElementById('ca-v-manual');
+        if (bankEl) bankEl.style.display = caVocabMode === 'bank' ? '' : 'none';
+        if (manEl) manEl.style.display = caVocabMode === 'manual' ? '' : 'none';
+      }
+      (function () {
+        var seg = document.getElementById('ca-v-mode-seg');
+        if (!seg) return;
+        seg.addEventListener('click', function (e) {
+          var btn = e.target.closest('button[data-vmode]');
+          if (!btn) return;
+          setVocabMode(btn.getAttribute('data-vmode'));
+        });
+      })();
+
       // "Öğrenci Sözlüğünden Yükle" dropdown — sınıftaki öğrenci seç, sözlüğünü ekle
       var caVocabSelect = document.getElementById('ca-v-student-select');
 
@@ -5245,6 +5322,7 @@
         document.getElementById('ca-tpl-save-name').disabled = true;
         document.getElementById('ca-preview-out').innerHTML = '';
         if (caVocabCounter) caVocabCounter.textContent = '0 kelime';
+        setVocabMode('bank');
         populateVocabStudentSelect();
         setType('questions');
         caModal.classList.add('show');
@@ -5392,12 +5470,31 @@
           var mNote = document.getElementById('ca-m-note').value.trim();
           if (mNote) config.note = mNote;
         } else if (caCurrentType === 'vocab') {
-          var rawWords = document.getElementById('ca-v-words').value.trim();
-          if (!rawWords) { caErr.textContent = 'Kelime listesi boş olamaz.'; return; }
-          var vocabWords = parseVocabWords(rawWords);
-          if (vocabWords.length === 0) { caErr.textContent = 'Geçerli kelime bulunamadı. Format: en - tr (her satıra bir tane).'; return; }
-          if (vocabWords.length > 200) { caErr.textContent = 'En fazla 200 kelime ekleyebilirsin.'; return; }
-          config._vocab_words = vocabWords;
+          if (caVocabMode === 'bank') {
+            var vbCount = parseInt(document.getElementById('ca-v-count').value, 10);
+            if (isNaN(vbCount)) { caErr.textContent = 'Geçerli bir kelime sayısı gir (5-200).'; return; }
+            if (vbCount < 5) vbCount = 5;
+            if (vbCount > 200) vbCount = 200;
+            var vbCat = document.getElementById('ca-v-cat').value || '';
+            var vbCatSel = document.getElementById('ca-v-cat');
+            var vbCatLbl = vbCatSel.selectedOptions && vbCatSel.selectedOptions[0] ? vbCatSel.selectedOptions[0].textContent : 'Tüm kategoriler';
+            // vocab_flash: module tipi altında, events(vocab_answer) ile otomatik takip
+            config.kind = 'vocab_flash';
+            // Kategori seçiliyse doğrudan o kategorinin flashcard'ına yönlendir (cevaplar doğru kategoriye işlensin);
+            // karma ise kategori hub'ına (öğrenci istediği kategoriyi çözer, hepsi sayılır).
+            config.url = vbCat ? ('kelime.html?cat=' + vbCat) : 'kelime-bankasi.html';
+            config.category = vbCat;
+            config.count = vbCount;
+            config.label = 'Kelime Bankası — ' + vbCount + ' kelime' + (vbCat ? ' · ' + vbCatLbl : '');
+            config._vocab_bank = true; // dispatch: module RPC'sine yönlendir
+          } else {
+            var rawWords = document.getElementById('ca-v-words').value.trim();
+            if (!rawWords) { caErr.textContent = 'Kelime listesi boş olamaz.'; return; }
+            var vocabWords = parseVocabWords(rawWords);
+            if (vocabWords.length === 0) { caErr.textContent = 'Geçerli kelime bulunamadı. Format: en - tr (her satıra bir tane).'; return; }
+            if (vocabWords.length > 200) { caErr.textContent = 'En fazla 200 kelime ekleyebilirsin.'; return; }
+            config._vocab_words = vocabWords;
+          }
         } else if (caCurrentType === 'module') {
           var mgExam = document.getElementById('ca-mod-exam').value;
           var mgGroup = moduleGroup(mgExam);
@@ -5442,6 +5539,17 @@
             r = { data: null };
           } else if (caCurrentType === 'ge_pool') {
             caErr.textContent = 'Bir alıştırma seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return;
+          } else if (caCurrentType === 'vocab' && config._vocab_bank) {
+            // Kelime Bankası otomatik: module tipi + vocab_flash config (list_my_assignments ile otomatik takip)
+            var vbConfig = { kind: config.kind, url: config.url, category: config.category, count: config.count, label: config.label };
+            r = await sb.rpc('create_assignment', {
+              p_class_id: classId,
+              p_type: 'module',
+              p_title: title,
+              p_description: desc || null,
+              p_config: vbConfig,
+              p_due_date: dueIso
+            });
           } else if (caCurrentType === 'vocab') {
             r = await sb.rpc('vocab_assignment_create', {
               p_class_id: classId,

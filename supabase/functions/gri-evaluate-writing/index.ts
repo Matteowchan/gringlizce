@@ -301,7 +301,7 @@ serve(async (req) => {
     }
 
     // ===== 7) Submission kaydet =====
-    const totalScore = computeTotalScore(evaluation);
+    const totalScore = computeTotalScore(evaluation, textType);
     const totalMax = textType.rubric_json?.total_max ?? 30;
 
     await supabase.from("writing_submissions").insert({
@@ -554,7 +554,16 @@ Evaluate and return JSON. Remember: ALL human-facing text fields ("comments", "s
   };
 }
 
-function computeTotalScore(evaluation: any): number {
+function computeTotalScore(evaluation: any, textType?: any): number {
   const scores = evaluation?.scores || {};
-  return Object.values(scores).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0);
+  const vals = Object.values(scores).map((v: any) => Number(v) || 0);
+  if (!vals.length) return 0;
+  // IELTS: her kriter 1-9 band; genel skor = kriterlerin ortalaması, en yakın 0.5 band'a yuvarlanır
+  // (toplam DEĞİL — aksi halde total_max=9 ile "53/9" gibi anlamsız değer çıkıyordu).
+  if (textType?.exam === "IELTS") {
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return Math.round(avg * 2) / 2;
+  }
+  // Diğer sınavlar: kriter puanları toplamı (mevcut davranış korunur).
+  return vals.reduce((a, b) => a + b, 0);
 }

@@ -14,6 +14,8 @@
       '@media(max-width:520px){.gws-c{font-size:13px;border-radius:4px;}}',
       '.gws-c.sel{background:var(--ws-selbg);border-color:var(--ws-sel);}',
       '.gws-c.ok{background:var(--ws-okbg);border-color:var(--ws-ok);color:var(--ws-ok);}',
+      ':root[data-theme="dark"] .gws-c.ok{color:#7fd4a3;border-color:#3f9068;}',
+      ':root[data-theme="dark"] .gws-w.found{color:#8bcfa8;}',
       '.gws-list{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;}',
       '.gws-w{font-size:.9rem;font-weight:700;color:var(--ws-ink);padding:2px 4px;}',
       '.gws-w small{font-weight:500;opacity:.6;}',

@@ -16,6 +16,7 @@
       '.gmt-i:active{transform:scale(.97);}',
       '.gmt-i.sel{background:var(--mt-selbg);border-color:var(--mt-sel);}',
       '.gmt-i.ok{background:var(--mt-okbg);border-color:var(--mt-ok);color:var(--mt-ok);cursor:default;pointer-events:none;opacity:.75;}',
+      ':root[data-theme="dark"] .gmt-i.ok{color:#7fd4a3;border-color:#3f9068;opacity:.9;}',
       '.gmt-i.bad{background:var(--mt-badbg);border-color:var(--mt-bad);animation:gmtsh .35s;}',
       '@keyframes gmtsh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}',
       '.gmt-done{text-align:center;margin-top:14px;padding:14px;border:1px solid var(--mt-line);border-radius:12px;background:var(--mt-cell);color:var(--mt-ink);}',

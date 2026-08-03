@@ -12,7 +12,7 @@
     var s=document.createElement('style'); s.id='gri-wd-css';
     s.textContent=[
       /* Gri kimliği: krem kağıt hücreler, altın/teal/yeşil aksan; tema site data-theme ile */
-      '.gwd{--gwd-line:#d9cfbb;--gwd-cell:#fffdf7;--gwd-ink:#2b2118;--gwd-empty:#f6f0e4;--gwd-key:#ece2cf;--gwd-keyink:#3a2f22;--gwd-ok:#2E6E4E;--gwd-pre:#C79A3A;--gwd-no:#b9ad95;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}',
+      '.gwd{--gwd-line:#d9cfbb;--gwd-cell:#fffdf7;--gwd-ink:#2b2118;--gwd-empty:#f6f0e4;--gwd-key:#ece2cf;--gwd-keyink:#3a2f22;--gwd-ok:#2E6E4E;--gwd-pre:#C79A3A;--gwd-no:#7c766b;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}',
       ':root[data-theme="dark"] .gwd{--gwd-line:#4a4133;--gwd-cell:#2f2a21;--gwd-ink:#f0e9db;--gwd-empty:#26221a;--gwd-key:#3c352b;--gwd-keyink:#ece2cf;--gwd-ok:#3f9068;--gwd-pre:#cfa441;--gwd-no:#4a4235;}',
       '.gwd-board{display:grid;gap:7px;margin:0 auto;}',
       '.gwd-row{display:grid;gap:7px;grid-template-columns:repeat(var(--n),1fr);}',

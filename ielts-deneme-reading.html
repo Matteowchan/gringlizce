@@ -18,9 +18,10 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script>try{var t=localStorage.getItem('gri-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <style>
+    html, body { overflow-x: hidden; max-width: 100%; }
     body { background: #fafaf7; margin: 0; }
 
-    .timer-bar { position: sticky; top: 0; z-index: 99; background: #2C5856; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    .timer-bar { position: sticky; top: 0; z-index: 99; background: #2C5856; color: #fff; padding: 0.75rem 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
     .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; flex: 1; }
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #ff9090; }
@@ -109,6 +110,21 @@
     .hl-btn.erase.on { background: #f2c9c9; border-color: #b33; color: #7a1f1f; }
     span.ihl { border-radius: 3px; padding: 0 1px; box-decoration-break: clone; -webkit-box-decoration-break: clone; cursor: pointer; }
     body.hl-armed .passage-content, body.hl-erase .passage-content { cursor: crosshair; }
+
+    /* ===== Mobil (≤640px): araç çubuğu taşmasın + dokunma hedefleri ===== */
+    @media (max-width: 640px) {
+      .timer-bar { padding: 0.6rem 0.9rem; row-gap: 0.5rem; }
+      .timer-bar .timer { flex: 1 1 auto; font-size: 0.95rem; }
+      .timer-toggle-btn { flex: 0 0 auto; }
+      /* zoom ve highlight gruplarını ikinci satıra al */
+      .font-zoom-group { flex: 1 1 100%; justify-content: center; order: 3; }
+      .hl-group { flex: 1 1 100%; order: 4; margin-left: 0; flex-wrap: wrap; justify-content: center; row-gap: 4px; }
+      .timer-bar .submit-btn { order: 2; }
+      /* dokunma hedefleri büyüsün */
+      .font-zoom-btn { padding: 0.5rem 0.85rem; min-height: 34px; }
+      .hl-btn { width: 32px; height: 32px; font-size: 0.8rem; }
+      .hl-btn.erase, .hl-btn.clear { width: auto; height: 32px; padding: 0 12px; }
+    }
 
     /* ===== Koyu tema: chrome koyu, sınav panelleri açık "kağıt" (içerik birebir render) ===== */
     [data-theme="dark"] body { background: #0f1419; color: #d8d8d8; }

@@ -56,6 +56,18 @@
     + '.gsch-cell.sel .ev{background:rgba(255,255,255,.22);color:#fff;}'
     + '.gsch-cell.sel .ev.ev-more{background:transparent;color:#eee;}'
     + '.gsch-daylist{margin-top:12px;}'
+    + '.gsch-split{display:flex;gap:16px;align-items:stretch;}'
+    + '.gsch-col{min-width:0;}'
+    + '.gsch-col-cal{flex:1 1 56%;}'
+    + '.gsch-col-list{flex:1 1 44%;position:relative;}'
+    + '.gsch-col-list-inner{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-right:6px;}'
+    + '.gsch-col-list-inner::-webkit-scrollbar{width:8px;}'
+    + '.gsch-col-list-inner::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
+    + '.gsch-col-list-inner::-webkit-scrollbar-track{background:transparent;}'
+    + '.gsch-item{transition:box-shadow .15s,border-color .15s,transform .1s;}'
+    + '.gsch-item:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(30,25,20,.10);}'
+    + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
+    + '@media(max-width:760px){.gsch-split{flex-direction:column;}.gsch-col-list{position:static;}.gsch-col-list-inner{position:static;max-height:320px;}}'
     + '@media(max-width:480px){'
     + '.gsch-cal{padding:8px;}'
     + '.gsch-grid{gap:2px;}'
@@ -102,10 +114,7 @@
 
     cont.innerHTML =
       '<div class="gsch">'
-      + '<div class="gsch-head">'
-      +   '<div class="gsch-toggle"><button data-v="list"'+(state.view==='list'?' class="on"':'')+'>Liste</button><button data-v="cal"'+(state.view==='cal'?' class="on"':'')+'>Takvim</button></div>'
-      +   (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
-      + '</div>'
+      + (role==='teacher' ? '<div class="gsch-head"><button class="gsch-new">+ Yeni Ders Planla</button></div>' : '')
       + (role==='teacher' ?
           '<div class="gsch-form">'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
@@ -193,7 +202,7 @@
       var cls=row.classes&&row.classes.name?row.classes.name:'';
       var showCls=(role==='student'||aggregate);
       var sub=WD[(d.getDay()+6)%7]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' · '+hhmm(d)+' · '+dur+' dk'+(showCls&&cls?(' · '+esc(cls)):'')+' · '+relLabel(d);
-      return '<div class="gsch-item'+(soon?' soon':'')+'">'
+      return '<div class="gsch-item'+(soon?' soon':'')+'" data-date="'+d.toDateString()+'">'
         + '<div class="gsch-date"><div class="d">'+d.getDate()+'</div><div class="m">'+MONTHS[d.getMonth()]+'</div></div>'
         + '<div class="gsch-meta"><div class="t">'+esc(row.title)+'</div><div class="s">'+sub+(row.note?(' — '+esc(row.note)):'')+'</div></div>'
         + '<div class="go">'+actionBtns(row)+'</div>'
@@ -204,13 +213,20 @@
       scope.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click',function(){ cancelLesson(b.getAttribute('data-cancel')); }); });
     }
 
-    function renderList(){
-      if(!state.rows.length){ body.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan canlı ders yok.')+'</div>'; return; }
-      body.innerHTML='<div class="gsch-list">'+state.rows.map(itemHTML).join('')+'</div>';
-      bindActions(body);
+    function renderListInner(el){
+      if(!state.rows.length){ el.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan canlı ders yok.')+'</div>'; return; }
+      el.innerHTML='<div class="gsch-list">'+state.rows.map(itemHTML).join('')+'</div>';
+      bindActions(el);
     }
 
-    function renderCal(){
+    function highlightDay(dt){
+      var lst=cont.querySelector('.gsch-col-list-inner'); if(!lst)return;
+      var key=dt.toDateString(), first=null;
+      lst.querySelectorAll('.gsch-item').forEach(function(it){ var on=it.getAttribute('data-date')===key; it.classList.toggle('hl',on); if(on&&!first)first=it; });
+      if(first&&first.scrollIntoView) first.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+
+    function renderCal(el){
       var m=state.month, y=m.getFullYear(), mo=m.getMonth();
       var first=new Date(y,mo,1), startWd=(first.getDay()+6)%7; // Pzt=0
       var days=new Date(y,mo+1,0).getDate();
@@ -220,26 +236,23 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,3).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
-        if(evs.length>3) evHTML+='<span class="ev ev-more">+'+(evs.length-3)+' ders</span>';
+        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }
-      body.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><button class="cal-prev">‹</button><b>'+MONTHS_L[mo]+' '+y+'</b><button class="cal-next">›</button></div>'
-        + '<div class="gsch-grid">'+WD.map(function(w){return '<div class="wd">'+w+'</div>';}).join('')+cells+'</div>'
-        + '<div class="gsch-daylist"></div></div>';
-      body.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(); });
-      body.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(); });
-      body.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ state.sel=new Date(y,mo,parseInt(c.dataset.day,10)); renderCal(); }); });
-      var dl=body.querySelector('.gsch-daylist');
-      var showDay = state.sel || (Object.keys(byDay).length? new Date(y,mo,parseInt(Object.keys(byDay).sort(function(a,b){return a-b;})[0],10)) : null);
-      if(showDay){ state.sel=showDay; body.querySelectorAll('.gsch-cell').forEach(function(c){ if(c.dataset.day) c.classList.toggle('sel', parseInt(c.dataset.day,10)===showDay.getDate()); });
-        var list=byDay[showDay.getDate()]||[];
-        dl.innerHTML='<div class="gsch-list">'+list.map(itemHTML).join('')+'</div>';
-        bindActions(dl);
-      }
+      el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><button class="cal-prev" aria-label="Önceki ay">‹</button><b>'+MONTHS_L[mo]+' '+y+'</b><button class="cal-next" aria-label="Sonraki ay">›</button></div>'
+        + '<div class="gsch-grid">'+WD.map(function(w){return '<div class="wd">'+w+'</div>';}).join('')+cells+'</div></div>';
+      el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
+      el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
+      el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });
     }
 
-    function render(){ if(state.view==='list') renderList(); else renderCal(); }
+    function render(){
+      if(!state.rows.length){ body.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan canlı ders yok.')+'</div>'; return; }
+      body.innerHTML='<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
+      renderCal(body.querySelector('.gsch-col-cal'));
+      renderListInner(body.querySelector('.gsch-col-list-inner'));
+    }
 
     load();
     return { reload:load };

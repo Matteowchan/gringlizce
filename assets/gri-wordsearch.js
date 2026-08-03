@@ -9,8 +9,9 @@
     s.textContent=[
       '.gws{--ws-line:#d9cfbb;--ws-cell:#fffdf7;--ws-ink:#2b2118;--ws-sel:#C79A3A;--ws-selbg:#ffe9ad;--ws-ok:#2E6E4E;--ws-okbg:#bfe6cd;font-family:inherit;width:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;}',
       ':root[data-theme="dark"] .gws{--ws-line:#4a4133;--ws-cell:#2f2a21;--ws-ink:#f0e9db;--ws-selbg:#6a5622;--ws-okbg:#24503a;}',
-      '.gws-grid{display:grid;gap:3px;background:transparent;touch-action:none;user-select:none;-webkit-user-select:none;width:max-content;max-width:100%;}',
-      '.gws-c{width:34px;height:34px;max-width:8.6vw;max-height:8.6vw;display:flex;align-items:center;justify-content:center;background:var(--ws-cell);border:1px solid var(--ws-line);border-radius:6px;font-weight:700;font-size:16px;text-transform:uppercase;color:var(--ws-ink);box-sizing:border-box;}',
+      '.gws-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}',
+      '.gws-grid{display:grid;gap:3px;background:transparent;touch-action:none;user-select:none;-webkit-user-select:none;width:max-content;max-width:100%;margin:0 auto;}',
+      '.gws-c{width:34px;height:34px;max-width:7.2vw;max-height:7.2vw;display:flex;align-items:center;justify-content:center;background:var(--ws-cell);border:1px solid var(--ws-line);border-radius:6px;font-weight:700;font-size:16px;text-transform:uppercase;color:var(--ws-ink);box-sizing:border-box;}',
       '@media(max-width:520px){.gws-c{font-size:13px;border-radius:4px;}}',
       '.gws-c.sel{background:var(--ws-selbg);border-color:var(--ws-sel);}',
       '.gws-c.ok{background:var(--ws-okbg);border-color:var(--ws-ok);color:var(--ws-ok);}',
@@ -60,7 +61,7 @@
       var d=document.createElement('div'); d.className='gws-c'; d.textContent=grid[r3][c3]; d.setAttribute('data-r',r3); d.setAttribute('data-c',c3);
       gEl.appendChild(d); cellEls[r3+'_'+c3]=d;
     }
-    host.appendChild(gEl);
+    var scroll=document.createElement('div'); scroll.className='gws-scroll'; scroll.appendChild(gEl); host.appendChild(scroll);
 
     var list=document.createElement('div'); list.className='gws-list';
     placed.forEach(function(o,i){ var w=document.createElement('span'); w.className='gws-w'; w.setAttribute('data-i',i); w.innerHTML='<b>'+(o.tr||o.w)+'</b>'; list.appendChild(w); o._el=w; });

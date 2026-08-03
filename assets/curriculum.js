@@ -312,10 +312,10 @@ var EXAMS=[
       { label: "Alıştırmalar", href: "genel-odevler.html" },
       { label: "Oyunlar", href: "oyunlar.html" }
     ] },
+    { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
     { label: "Araçlar", children: [
       { label: "AI Araçları", href: "ai-araclari.html" },
       { label: "Gri Meet", href: "grimeet.html" },
-      { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
       { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
       { label: "Bize Ulaşın", href: "iletisim.html" }
     ] },

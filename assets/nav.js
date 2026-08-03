@@ -28,6 +28,11 @@
     ".gri-grp{padding:4px 0}.gri-grp+.gri-grp{border-top:1px solid var(--gri-line-soft);margin-top:4px}",
     ".gri-grp>.gh{font-weight:700;color:var(--gri-ink);font-size:12.5px}",
     ".gri-grp .gri-sub a{padding-left:22px;font-size:13.5px;color:var(--gri-ink-soft)}",
+    ".gri-dd-mega .gri-dd-menu{display:grid;grid-template-columns:repeat(3,minmax(158px,1fr));gap:0 6px;min-width:540px;max-width:min(92vw,740px);max-height:calc(100vh - 88px);overflow-y:auto;align-content:start}",
+    ".gri-dd-mega .gri-grp{padding:4px 2px}.gri-dd-mega .gri-grp+.gri-grp{border-top:none;margin-top:0}",
+    ".gri-dd-mega .gri-dd-menu a{padding:5px 9px;font-size:13px}.gri-dd-mega .gri-grp>.gh{padding:6px 9px 2px}.gri-dd-mega .gri-sub a{padding-left:11px}",
+    ".gri-dd-cols2 .gri-dd-menu{left:auto;right:0;display:grid;grid-template-columns:repeat(2,minmax(134px,1fr));gap:0 4px;max-width:min(92vw,420px)}",
+    ".gri-dd.gri-dd-mega.open>.gri-dd-menu,.gri-dd.gri-dd-mega:hover>.gri-dd-menu,.gri-dd.gri-dd-cols2.open>.gri-dd-menu,.gri-dd.gri-dd-cols2:hover>.gri-dd-menu{display:grid}",
     ".gri-nav .right{margin-left:auto;display:flex;align-items:center;gap:9px}",
     ".gri-ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:12.5px}",
     ".gri-ico:hover{color:var(--gri-ink);border-color:var(--gri-ink-faint)}",
@@ -111,6 +116,9 @@
     var links = MENU.map(function (it) {
       var active = hrefsOf(it, []).indexOf(here) !== -1;
       if (!it.children) return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
+      var isMega = it.children.some(function (ch) { return ch.children && ch.children.length; });
+      var cols2 = !isMega && it.children.length >= 7;
+      var ddCls = "gri-dd" + (active ? " here" : "") + (isMega ? " gri-dd-mega" : (cols2 ? " gri-dd-cols2" : ""));
       var groups = it.children.map(function (ch) {
         if (ch.children) {
           var subs = ch.children.map(function (g) { return '<a href="' + href(g.href) + '">' + esc(g.label) + "</a>"; }).join("");
@@ -118,7 +126,7 @@
         }
         return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
-      return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
+      return '<div class="' + ddCls + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
     }).join("");
 
     // Mobil: tum linkler duz (gruplu) liste olarak kalir — masaustu dropdown'lari

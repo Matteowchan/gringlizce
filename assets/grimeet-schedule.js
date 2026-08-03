@@ -86,7 +86,37 @@
     + '.gsch-head{gap:6px;}'
     + '.gsch-form .acts{flex-wrap:wrap;}'
     + '.gsch-form .acts .gsch-btn{flex:1 1 auto;}'
-    + '}';
+    + '}'
+    /* ── Gece modu (data-theme="dark") override — açık tema aynen korunur ── */
+    + ':root[data-theme="dark"] .gsch{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-toggle{border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-toggle button{background:#2a2419;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-form{background:#1f1b14;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-form label{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-form input,:root[data-theme="dark"] .gsch-form select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-form .f-colon{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-btn.ghost{color:#b5ac98;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-btn.danger{color:#e6796a;border-color:#5a3630;}'
+    + ':root[data-theme="dark"] .gsch-item{background:#241f18;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-daypill{background:#22403e;color:#bfe0da;}'
+    + ':root[data-theme="dark"] .gsch-item-title{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-item-sub{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-item-note{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-empty{background:#1f1b14;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-cal{background:#241f18;border-color:#3a3428;box-shadow:0 2px 10px rgba(0,0,0,.25);}'
+    + ':root[data-theme="dark"] .gsch-cal-h b{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-cal-h button{background:#2a2419;border-color:#3a3428;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-cal-h button:hover{background:#2C5856;color:#fff;border-color:#2C5856;}'
+    + ':root[data-theme="dark"] .gsch-grid .wd{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-cell:not(.out):not(.sel){background:#1c1813;border-color:#332e23;}'
+    + ':root[data-theme="dark"] .gsch-cell.has:not(.sel){background:#241f18;border-color:#2f4e4b;}'
+    + ':root[data-theme="dark"] .gsch-cell.today{border-color:#C79A3A;box-shadow:inset 0 0 0 1px #C79A3A;}'
+    + ':root[data-theme="dark"] .gsch-cell:not(.sel) .num{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-cell.today .num{color:#E0B85A;}'
+    + ':root[data-theme="dark"] .gsch-cell:not(.sel) .ev{background:#22403e;color:#bfe0da;}'
+    + ':root[data-theme="dark"] .gsch-cell:not(.sel) .ev.ev-more{background:transparent;color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-col-list-inner::-webkit-scrollbar-thumb{background:#3a3428;}'
+    + '';
 
   function injectCSS(){ if(document.getElementById('gsch-css'))return; var s=document.createElement('style'); s.id='gsch-css'; s.textContent=CSS; document.head.appendChild(s); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }

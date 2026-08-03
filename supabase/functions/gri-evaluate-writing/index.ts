@@ -372,11 +372,30 @@ async function callOpenAI(opts: {
   const totalMax = rubric?.total_max ?? 30;
   const levelStr = level ? ` (${level.toUpperCase()})` : "";
 
+  const isIelts = examName === "IELTS";
+  const isTask1 = /task\s*1/i.test(textTypeName);
+  const ieltsGuidance = isIelts ? `
+IELTS WRITING — RESMİ DEĞERLENDİRME MANTIĞI (bunu KATI uygula; bu bir IELTS ${textTypeName})
+Dört kriter 1–9 band ölçeğinde ayrı ayrı puanlanır (yarım band serbest) ve ortalaması alınır. Kriterler:
+1) ${isTask1 ? "TASK ACHIEVEMENT (Task 1)" : "TASK RESPONSE (Task 2)"} — ${isTask1
+    ? "Öğrenci ana özellikleri/eğilimleri özetlemiş mi; bir Overview/Overall cümlesi (genel resim) VAR mı; verileri ve karşılaştırmaları doğru raporlamış mı; ≥150 kelime mi? Overview YOKSA bu kriter 5–6'yı geçemez."
+    : "Prompt'un TÜM parçalarına cevap vermiş mi; net ve tutarlı bir position var mı; ana fikirler reason/example ile geliştirilmiş mi; ≥250 kelime mi? Tek taraf eksik veya position belirsizse 6'yı zor geçer."}
+2) COHERENCE & COHESION — mantıksal ilerleme, net paragraflama (her paragrafta tek central idea), cohesive device'ların DOĞAL ve çeşitli kullanımı (mekanik/aşırı 'firstly, secondly' değil), referencing.
+3) LEXICAL RESOURCE — kelime çeşitliliği ve İSABETİ, collocation, yerinde kullanılan less-common kelimeler, doğru spelling/word-formation.
+4) GRAMMATICAL RANGE & ACCURACY — yapı çeşitliliği (complex/subordinate cümleler), doğruluk, noktalama.
+BAND SINIRLARI (uygula):
+- Band 5: görev kısmen/dengesiz karşılanmış; sınırlı kelime + belirgin hatalar; sınırlı gramer kontrolü.
+- Band 6: görev karşılanmış ama fikirler under-developed; kelime yeterli ama limited/tekrarlı; hatalar fark edilir ama anlamı nadiren bozar.
+- Band 7: net position/overview; geliştirilmiş & desteklenmiş fikirler; esnek kelime + some less-common lexis + collocation farkındalığı; sık sık hatasız complex cümleler.
+- Band 8: tam gelişmiş; geniş ve isabetli kelime doğal kullanılmış; cümlelerin çoğu hatasız.
+HER kriter yorumunda ŞUNU yap: (a) verdiğin band'ı yaz, (b) bu metinde o band'da TUTAN spesifik özelliği kısa bir alıntıyla göster, (c) bir üst yarım-band için TAM olarak neyi değiştireceğini söyle.
+` : "";
+
   const systemPrompt = `You are Gri — an AI English tutor designed for Turkish university and high school students preparing for international exams. A student has submitted a ${textTypeName} for ${examName}${levelStr}. You will evaluate it against the rubric below.
 
 RUBRIC (TOTAL: ${totalMax} points):
 ${rubricText}
-
+${ieltsGuidance}
 WORD COUNT CONTEXT
 - Student's word count: ${word_count} words
 - Target range for this text type: ${minWc ?? "—"} to ${maxWc ?? "—"} words${level === "hl" ? " (HL)" : level === "sl" ? " (SL)" : ""}
@@ -398,16 +417,18 @@ All human-facing fields must be BILINGUAL with Turkish-DOMINANT code-switching, 
   - For IB English B, end with "Bir üst achievement level'a çıkmak için [somut aksiyon]."
   - For TOEFL or other exams, end with "Bir üst seviyeye çıkmak için [somut aksiyon]."
   Example tone for IELTS Task Response: "Task response açısından prompt'a verdiğin cevap kısmen yeterli ama position belirsiz. Birinci body paragraphta 'tourism brings money' diye başlamışsın, hangi ülke veya hangi sektör belli değil, somut bir örnek konmamış. İkinci paragraphta counter-argument tek cümleyle geçilmiş, develop edilmemiş. Conclusion'da position tekrar edilmiş ama yeni bir formülasyon yok. 6.5 bandına çıkmak için her body paragraph'ta en az bir spesifik örnek koy (ülke, sektör, çalışma vb.) ve counter-argument'ı 3-4 cümleyle aç."
-- "specificMistakes":
+- "specificMistakes": Provide 8–12 items. Include TWO kinds:
+  (a) ACTUAL ERRORS → "type": "grammar" | "convention" | "tone".
+  (b) LEXICAL/STRUCTURAL UPGRADES → "type": "upgrade" — the phrase is correct but basic, repetitive or imprecise; show a stronger, more precise or more academic alternative (band-raising). If the text has few outright errors, include AT LEAST 4 "upgrade" items so the student always gets vocabulary/phrasing guidance ("yerine yazabileceği kelimeler").
   - "original": the exact phrase from the student's text, in English, as written.
-  - "correction": the corrected English phrase.
-  - "explanation": BILINGUAL TURKISH-DOMINANT. 1-2 sentences. Turkish explains what is wrong and why, English grammar terms are preserved. Example: "Subject-verb agreement hatası, 'students' plural olduğu için 'is' yerine 'are' gelmeli."
+  - "correction": the improved English. For "upgrade" items give 2–3 alternatives separated by " / " (e.g., "rose steadily / climbed gradually / increased progressively"); for errors give the single correct form.
+  - "explanation": BILINGUAL TURKISH-DOMINANT. 1-2 sentences. Errors: neyin yanlış olduğunu + nedenini söyle (English grammar terms korunur). Upgrades: neden daha güçlü/daha isabetli olduğunu ve hangi bağlamda tercih edileceğini söyle. Örnek (error): "Subject-verb agreement hatası, 'students' plural olduğu için 'is' yerine 'are' gelmeli." Örnek (upgrade): "'increased' Task 1 için çok temel; 'rose steadily / climbed gradually' daha isabetli ve lexical resource band'ini yukarı çeker."
 - "overallComment": BILINGUAL TURKISH-DOMINANT. 2-3 sentences. Example tone: "Argument yapın net ama supporting examples çok yüzeysel kalmış. Vocabulary range yeterli, fakat cohesion'da boşluklar var ve birkaç yerde awkward phrasing göze çarpıyor."
 - "improvementAdvice": BILINGUAL TURKISH-DOMINANT. 3-5 sentences. Address the student directly ("sen", "yazın"). Focus on ONE priority improvement for this specific text and tell them exactly how to work on it. Never list multiple issues. Example tone: "Senin introduction'ın iyi ama body paragraph'larında supporting evidence çok zayıf. Özellikle ikinci paragraphta 'many people think' gibi vague claim'ler yerine somut bir örnek ver, kendi deneyimin veya bir okuduğun kaynaktan. Bir sonraki yazında her ana claim'in arkasına 'because + specific reason' yapısı ekle. Bu küçük disiplin senin development & support skorunu belirgin şekilde yukarı çeker."
 
 EVALUATION APPROACH
 - Apply the rubric rigorously. Be fair — do not inflate scores but also do not punish unnecessarily.
-- In "specificMistakes" list AT MOST 6 issues, only the most critical ones. "type" must be one of: "grammar", "convention", "tone".
+- In "specificMistakes" provide 8–12 items total: the most critical errors PLUS lexical/structural "upgrade" suggestions (weak→stronger phrasing with alternatives). "type" must be one of: "grammar", "convention", "tone", "upgrade". When the text is short or has few errors, prioritise "upgrade" items so the section is always substantial and genuinely useful.
 - Mentor tone. Neither overly positive nor harsh.
 
 NEVER WRITE THIS STYLE
@@ -463,7 +484,7 @@ Evaluate and return JSON. Remember: ALL human-facing text fields ("comments", "s
             original: { type: "string" },
             correction: { type: "string" },
             explanation: { type: "string" },
-            type: { type: "string", enum: ["grammar", "convention", "tone"] },
+            type: { type: "string", enum: ["grammar", "convention", "tone", "upgrade"] },
           },
           required: ["original", "correction", "explanation", "type"],
           additionalProperties: false,

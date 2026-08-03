@@ -180,6 +180,9 @@
     }
     .fb-mistake.grammar { border-left-color: #A03A2F; }
     .fb-mistake.convention { border-left-color: #B07A35; }
+    .fb-mistake.upgrade { border-left-color: #2E6E6A; }
+    .fb-mistake.upgrade .fb-mistake-type { color: #2E6E6A; }
+    .fb-mistake.upgrade .corr { color: #1f5b4e; }
     .fb-mistake.tone { border-left-color: #2C5856; }
     .fb-mistake-type {
       display: inline-block; font-family: var(--font-ui);
@@ -642,12 +645,14 @@
 
       // Specific mistakes (kombine, üstte küçük bir kart)
       if (evaluation.specificMistakes && evaluation.specificMistakes.length > 0) {
+        var MTYPE_LBL = { grammar:'Gramer', convention:'Yazım', tone:'Üslup', upgrade:'Geliştirme', note:'Not' };
         html += '<div class="fb-task-card">' +
-          '<div class="fb-section-title">Spesifik Hatalar (' + evaluation.specificMistakes.length + ')</div>' +
+          '<div class="fb-section-title">Hatalar &amp; Geliştirme Önerileri (' + evaluation.specificMistakes.length + ')</div>' +
           '<div class="fb-mistakes">';
         evaluation.specificMistakes.forEach(function(m) {
-          html += '<div class="fb-mistake ' + escapeHtml(m.type || '') + '">' +
-            '<span class="fb-mistake-type">' + escapeHtml(m.type || 'note') + '</span>' +
+          var mt = (m.type || 'note');
+          html += '<div class="fb-mistake ' + escapeHtml(mt) + '">' +
+            '<span class="fb-mistake-type">' + escapeHtml(MTYPE_LBL[mt] || mt) + '</span>' +
             '<div class="orig">' + escapeHtml(m.original || '') + '</div>' +
             '<div class="corr">' + escapeHtml(m.correction || '') + '</div>' +
             '<p class="expl">' + escapeHtml(m.explanation || '') + '</p>' +

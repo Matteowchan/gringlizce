@@ -440,6 +440,74 @@
       color: var(--text);
     }
 
+    /* === SPR / Grid-in (öğrenci-üretimli cevap) === */
+    .q-spr { display: flex; flex-direction: column; gap: 0.75rem; }
+    .q-spr-label {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .q-spr-row { display: flex; gap: 0.6rem; align-items: stretch; flex-wrap: wrap; }
+    .q-spr-input {
+      flex: 1;
+      min-width: 170px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.2rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      padding: 0.85rem 1.05rem;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      box-sizing: border-box;
+    }
+    .q-spr-input:focus { outline: none; border-color: var(--cat-accent); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+    .q-spr-input::placeholder { color: var(--text-muted); opacity: 0.7; font-size: 1rem; }
+    .q-spr-input.correct { border-color: #3c825a; background: rgba(60, 130, 90, 0.10); color: var(--text); }
+    .q-spr-input.incorrect { border-color: #b45046; background: rgba(180, 80, 70, 0.08); color: var(--text); }
+    .q-spr-input:disabled { -webkit-text-fill-color: var(--text); opacity: 1; }
+    .q-spr-check {
+      flex: 0 0 auto;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.85rem 1.5rem;
+      border: 1px solid var(--teal);
+      border-radius: 10px;
+      background: var(--teal);
+      color: #fff;
+      cursor: pointer;
+      transition: filter 0.15s, opacity 0.15s;
+    }
+    .q-spr-check:hover { filter: brightness(1.08); }
+    .q-spr-check:disabled { opacity: 0.45; cursor: default; filter: none; }
+    .q-spr-feedback {
+      font-family: var(--font-ui);
+      font-size: 0.86rem;
+      font-weight: 600;
+      min-height: 1.2rem;
+      line-height: 1.4;
+    }
+    .q-spr-feedback.correct { color: #3c825a; }
+    .q-spr-feedback.incorrect { color: #b45046; }
+    .q-spr-note {
+      font-family: var(--font-ui);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    @media (max-width: 540px) {
+      .q-spr-input { font-size: 1.1rem; padding: 0.9rem 1rem; }
+      .q-spr-check { width: 100%; padding: 0.85rem 1rem; }
+    }
+
     .q-explanation {
       display: none;
       background: var(--bg-card);
@@ -1860,6 +1928,8 @@
       'lines_angles_triangles': 'Lines, Angles, and Triangles',
       'right_triangles_trigonometry': 'Right Triangles and Trigonometry',
       'circles': 'Circles',
+      // Math — Grid-in (öğrenci-üretimli cevap)
+      'student_produced_response': 'Grid-in (Öğrenci-Üretimli Cevap)',
       // UDSP — Reading & Writing
       'grammar': 'Dilbilgisi',
       'vocabulary': 'Kelime Bilgisi',
@@ -2483,6 +2553,47 @@
       });
     }
 
+    // === SPR / Grid-in helpers ===
+    // Bir soru SPR (öğrenci-üretimli cevap) tipiyse options boş dizidir.
+    function isSprQuestion(q) {
+      return !!q && Array.isArray(q.options) && q.options.length === 0;
+    }
+    // Girilen ham cevabı sayısal değere normalize et.
+    // Kabul edilen biçimler: tam sayı, ondalık (".5", "0.5"), kesir ("1/2"), önde +/-.
+    // Geçersizse null döner.
+    function parseSprValue(raw) {
+      if (raw == null) return null;
+      var s = String(raw).trim();
+      if (!s) return null;
+      s = s.replace(/\s+/g, '').replace(/^\+/, '');
+      // Basit kesir a/b
+      if (/^-?\d+\/\d+$/.test(s)) {
+        var parts = s.split('/');
+        var a = parseFloat(parts[0]);
+        var b = parseFloat(parts[1]);
+        if (!b) return null;
+        return a / b;
+      }
+      // Ondalık / tam sayı (önde nokta destekli: ".5")
+      if (/^-?(\d+\.?\d*|\.\d+)$/.test(s)) {
+        var n = parseFloat(s);
+        return isNaN(n) ? null : n;
+      }
+      return null;
+    }
+    // Kullanıcının cevabı, "|" ile ayrılmış kabul listesindeki herhangi biriyle eşleşiyor mu?
+    function sprIsCorrect(userRaw, acceptedRaw) {
+      var u = parseSprValue(userRaw);
+      if (u == null) return false;
+      var accepted = String(acceptedRaw == null ? '' : acceptedRaw).split('|');
+      for (var i = 0; i < accepted.length; i++) {
+        var a = parseSprValue(accepted[i]);
+        if (a == null) continue;
+        if (Math.abs(u - a) < 1e-6) return true;
+      }
+      return false;
+    }
+
     function renderQuestion(q) {
       // Body data-cat for color theming
       document.body.setAttribute('data-cat', q.exam_type);
@@ -2594,7 +2705,27 @@
       // Options
       const optionsEl = document.getElementById('qOptions');
       optionsEl.dataset.correct = q.correct_answer;
-      optionsEl.innerHTML = q.options.map(opt => `
+      const spr = isSprQuestion(q);
+      optionsEl.dataset.spr = spr ? '1' : '';
+      const optHint = document.querySelector('.q-hint-options');
+      if (spr) {
+        // SPR / Grid-in: 4 şık yerine sayısal metin girişi
+        if (optHint) optHint.style.display = 'none';
+        optionsEl.innerHTML = `
+          <div class="q-spr" id="qSpr">
+            <label class="q-spr-label" for="qSprInput">Cevabını gir</label>
+            <div class="q-spr-row">
+              <input type="text" id="qSprInput" class="q-spr-input" inputmode="decimal"
+                     autocomplete="off" autocapitalize="off" spellcheck="false"
+                     placeholder="ör. 7 · 1.5 · 3/4" aria-label="Cevabın">
+              <button type="button" id="qSprCheck" class="q-spr-check">Kontrol Et</button>
+            </div>
+            <div class="q-spr-feedback" id="qSprFeedback" aria-live="polite"></div>
+            <p class="q-spr-note">Tam sayı, ondalık veya kesir girebilirsin. 1/2, 0.5 ve .5 aynı kabul edilir.</p>
+          </div>`;
+      } else {
+        if (optHint) optHint.style.display = '';
+        optionsEl.innerHTML = q.options.map(opt => `
         <label class="q-option">
           <input type="radio" name="answer" value="${esc(opt.letter)}">
           <span class="q-letter">${esc(opt.letter)}</span>
@@ -2607,6 +2738,7 @@
           </span>
         </label>
       `).join('');
+      }
 
       // Explanation tabs and panels
       const tabsEl = document.getElementById('expTabs');
@@ -2632,7 +2764,32 @@
       });
 
       try {
-        if (!hasPerOptExp && hasSingleExp) {
+        if (spr) {
+        // SPR / Grid-in EXPLANATION — no tabs; doğru cevabı + adım adım çözümü göster
+        tabsEl.innerHTML = '';
+        tabsEl.style.display = 'none';
+        const accDisplay = String(q.correct_answer || '').split('|').join('  ·  ');
+        const sprSteps = (q.explanations && q.explanations.answer && q.explanations.answer.steps) || [];
+        const sprStepsHtml = sprSteps.map(step => `
+          <div class="exp-step">
+            <h4>${esc(step.title || '')}</h4>
+            ${step.body ? `<div class="exp-body">${safeHtml(step.body)}</div>` : ''}
+            ${step.quote ? `<blockquote>${safeHtml(step.quote)}</blockquote>` : ''}
+          </div>
+        `).join('') || '<div class="exp-empty">Bu soru için adım adım açıklama henüz eklenmemiş.</div>';
+        contentEl.innerHTML = `
+          <div class="exp-panel active">
+            <div class="exp-answer-box correct">
+              <span class="exp-answer-letter">✓</span>
+              <div class="exp-answer-text">
+                <span class="exp-answer-status">Doğru Cevap</span>
+                <strong>${esc(accDisplay)}</strong>
+              </div>
+            </div>
+            ${sprStepsHtml}
+          </div>
+        `;
+      } else if (!hasPerOptExp && hasSingleExp) {
         // SINGLE EXPLANATION MODE — no tabs
         tabsEl.innerHTML = '';
         tabsEl.style.display = 'none';
@@ -2752,13 +2909,71 @@
       // Option selection — multi-attempt: wrong locks only that one, correct locks all
       const options = document.querySelectorAll('.q-option');
       const optionsContainer = document.getElementById('qOptions');
+      const isSpr = optionsContainer.dataset.spr === '1';
       const correctLetter = optionsContainer.dataset.correct;
       const currentSlug = SUBCATEGORY_LIST[CURRENT_INDEX]?.slug;
       const priorAnswer = currentSlug ? getAnswerStatus(currentSlug) : null;
       let firstAttemptRecorded = !!priorAnswer; // already answered → don't overwrite
 
+      // === SPR / Grid-in: sayısal giriş + Kontrol ===
+      if (isSpr) {
+        const sprInput = document.getElementById('qSprInput');
+        const sprCheck = document.getElementById('qSprCheck');
+        const sprFeedback = document.getElementById('qSprFeedback');
+        const acceptedRaw = correctLetter; // "|" ile ayrılmış kabul listesi
+        const firstAccepted = String(acceptedRaw || '').split('|')[0] || '';
+
+        function submitSpr() {
+          if (!sprInput || sprInput.disabled) return;
+          const val = sprInput.value;
+          if (parseSprValue(val) == null) {
+            sprFeedback.textContent = 'Geçerli bir sayı gir (ör. 7, 1.5 veya 3/4).';
+            sprFeedback.className = 'q-spr-feedback incorrect';
+            return;
+          }
+          const ok = sprIsCorrect(val, acceptedRaw);
+          if (!firstAttemptRecorded) {
+            if (currentSlug) {
+              setAnswerStatus(currentSlug, ok ? 'correct' : 'incorrect');
+              renderNavigator();
+            }
+            firstAttemptRecorded = true;
+          }
+          sprInput.disabled = true;
+          sprCheck.disabled = true;
+          sprInput.classList.remove('correct', 'incorrect');
+          if (ok) {
+            sprInput.classList.add('correct');
+            sprFeedback.textContent = 'Doğru! Adım adım çözüm için Açıklama’ya bakabilirsin.';
+            sprFeedback.className = 'q-spr-feedback correct';
+            stopTimer();
+          } else {
+            sprInput.classList.add('incorrect');
+            sprFeedback.textContent = 'Yanlış. Doğru cevap ve çözüm için Açıklama’yı aç.';
+            sprFeedback.className = 'q-spr-feedback incorrect';
+          }
+        }
+
+        if (priorAnswer && sprInput) {
+          // Revizit: doğru cevabı göster (MCQ'deki gibi doğru şık her zaman açılır)
+          sprInput.value = firstAccepted;
+          sprInput.disabled = true;
+          if (sprCheck) sprCheck.disabled = true;
+          sprInput.classList.add('correct');
+          sprFeedback.textContent = priorAnswer === 'correct'
+            ? 'Bu soruyu doğru cevaplamıştın.'
+            : 'Önceki denemende yanlıştı — doğru cevap gösteriliyor.';
+          sprFeedback.className = 'q-spr-feedback ' + (priorAnswer === 'correct' ? 'correct' : 'incorrect');
+        }
+
+        if (sprCheck) sprCheck.addEventListener('click', submitSpr);
+        if (sprInput) sprInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); submitSpr(); }
+        });
+      }
+
       // Restore visual state if question was previously answered (any revisit)
-      if (priorAnswer) {
+      if (!isSpr && priorAnswer) {
         options.forEach(o => {
           const letter = o.querySelector('input')?.value;
           if (letter === correctLetter) {

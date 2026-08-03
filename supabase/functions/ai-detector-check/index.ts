@@ -50,6 +50,41 @@ const PAYWALL_PACKS = [
   { slug: "ai-pack-50", name: "50 Soru", price: 425, url: "https://www.shopier.com/SATquestionBank/47230505" },
 ];
 
+// ===== AI call logging (diger fonksiyonlardaki desen) =====
+const PRICING: Record<string, { input: number; output: number }> = {
+  "gpt-4o-mini":   { input: 0.150, output: 0.600 },
+  "gpt-4o":        { input: 2.500, output: 10.000 },
+  "gpt-4o-2024":   { input: 2.500, output: 10.000 },
+  "gpt-4.1":       { input: 2.000, output: 8.000 },
+  "gpt-3.5-turbo": { input: 0.500, output: 1.500 },
+  "gpt-4-turbo":   { input: 10.000, output: 30.000 },
+};
+function calcCostUsd(model: string, promptTokens: number, completionTokens: number): number {
+  let pricing = PRICING[model];
+  if (!pricing) {
+    for (const key of Object.keys(PRICING)) {
+      if (model.startsWith(key)) { pricing = PRICING[key]; break; }
+    }
+  }
+  if (!pricing) return 0;
+  return Number((((promptTokens / 1_000_000) * pricing.input) + ((completionTokens / 1_000_000) * pricing.output)).toFixed(6));
+}
+type LogPayload = {
+  feature: string; user_id: string | null; user_email: string | null; provider: string;
+  model?: string | null; status: "success" | "error" | "timeout"; error_msg?: string | null;
+  duration_ms: number; prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost_usd?: number;
+};
+async function logAiCall(p: LogPayload): Promise<void> {
+  try {
+    await supabase.from("ai_call_log").insert({
+      feature: p.feature, user_id: p.user_id, user_email: p.user_email, provider: p.provider,
+      model: p.model || null, status: p.status, error_msg: p.error_msg || null, duration_ms: p.duration_ms,
+      prompt_tokens: p.prompt_tokens || null, completion_tokens: p.completion_tokens || null,
+      total_tokens: p.total_tokens || null, cost_usd: p.cost_usd || 0,
+    });
+  } catch (e) { console.error("ai_call_log insert failed:", e); }
+}
+
 // ===== 1) Deterministik metrikler =====
 const CONNECTORS = [
   "moreover", "furthermore", "in addition", "additionally", "however", "therefore",
@@ -118,8 +153,14 @@ interface Rubric {
   esl_note: string;
 }
 
-async function callRubric(text: string, m: Metrics): Promise<Rubric> {
+type RubricResult = {
+  rubric: Rubric; model: string;
+  prompt_tokens: number; completion_tokens: number; total_tokens: number; duration_ms: number;
+};
+
+async function callRubric(text: string, m: Metrics): Promise<RubricResult> {
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY secret is not set");
+  const start = Date.now();
   const metricsBlock = `OLCULEN METRIKLER:
 - Cumle sayisi: ${m.sentence_count}
 - Ortalama cumle uzunlugu: ${m.mean_len} kelime
@@ -172,13 +213,22 @@ async function callRubric(text: string, m: Metrics): Promise<Rubric> {
       })).filter((f) => f.text)
     : [];
 
-  return {
+  const rubric: Rubric = {
     idiomaticity: clamp(Math.round(Number(p.idiomaticity ?? 0)), 0, 10),
     formulaic_structure: clamp(Math.round(Number(p.formulaic_structure ?? 0)), 0, 10),
     learner_errors: errors,
     flagged_sentences: flagged,
     summary: String(p.summary || "").slice(0, 1200),
     esl_note: String(p.esl_note || "").slice(0, 1200),
+  };
+  const usage = data?.usage || {};
+  return {
+    rubric,
+    model: data?.model || DETECT_MODEL,
+    prompt_tokens: usage.prompt_tokens || 0,
+    completion_tokens: usage.completion_tokens || 0,
+    total_tokens: usage.total_tokens || 0,
+    duration_ms: Date.now() - start,
   };
 }
 
@@ -261,7 +311,8 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   if (userError || !userData?.user) return json({ ok: false, error: "invalid_token" }, 401);
   const userId = userData.user.id;
-  const isAdmin = ADMIN_EMAILS.includes(userData.user.email || "");
+  const userEmail = userData.user.email || null;
+  const isAdmin = ADMIN_EMAILS.includes(userEmail || "");
 
   let body: { text?: string };
   try { body = await req.json(); } catch { return json({ ok: false, error: "invalid_body" }, 400); }
@@ -298,32 +349,46 @@ Deno.serve(async (req) => {
       message: "Bugunluk ucretsiz kontrolun bitti ve token yetersiz. Yarin tekrar dene veya Gri Token al.",
       packs: PAYWALL_PACKS, quota }, 402);
   }
-  const useDailyFree = quota.daily_free_remaining > 0;
 
   // Metrik + rubrik
   const metrics = computeMetrics(text);
   let analysis;
+  const callStart = Date.now();
   try {
-    const rubric = await callRubric(text, metrics);
-    analysis = buildAnalysis(metrics, rubric);
+    const rr = await callRubric(text, metrics);
+    analysis = buildAnalysis(metrics, rr.rubric);
+    await logAiCall({
+      feature: "ai-detector-check", user_id: userId, user_email: userEmail, provider: "openai",
+      model: rr.model, status: "success", duration_ms: rr.duration_ms,
+      prompt_tokens: rr.prompt_tokens, completion_tokens: rr.completion_tokens,
+      total_tokens: rr.total_tokens,
+      cost_usd: calcCostUsd(rr.model, rr.prompt_tokens, rr.completion_tokens),
+    });
   } catch (e) {
     console.error("AI call failed:", e);
-    return json({ ok: false, error: "ai_unavailable", detail: String(e).slice(0, 300) }, 502);
+    const errMsg = String(e);
+    const isTimeout = /timeout|timed out|aborted/i.test(errMsg);
+    await logAiCall({
+      feature: "ai-detector-check", user_id: userId, user_email: userEmail, provider: "openai",
+      model: DETECT_MODEL, status: isTimeout ? "timeout" : "error", error_msg: errMsg.slice(0, 500),
+      duration_ms: Date.now() - callStart,
+    });
+    return json({ ok: false, error: "ai_unavailable", detail: errMsg.slice(0, 300) }, 502);
   }
 
-  // Kota dusur
+  // Kota dusur — ATOMIK RPC (read-modify-write yerine yaris kosulunu keser)
   let cost = 0;
   if (!isAdmin) {
-    const today = todayUTC();
-    if (useDailyFree) {
-      const last = quotaRow?.detector_last_used_date || null;
-      const newUsed = (last === today) ? Number(quotaRow?.detector_daily_used_count ?? 0) + 1 : 1;
-      await supabase.from("ai_quota").upsert(
-        { user_id: userId, detector_daily_used_count: newUsed, detector_last_used_date: today },
-        { onConflict: "user_id" });
-    } else {
-      const newBonusUsed = Number(quotaRow?.bonus_used ?? 0) + BONUS_COST;
-      await supabase.from("ai_quota").upsert({ user_id: userId, bonus_used: newBonusUsed }, { onConflict: "user_id" });
+    const { data: consumeData, error: consumeErr } = await supabase.rpc("consume_detector_quota", {
+      p_user_id: userId, p_bonus_cost: BONUS_COST,
+    });
+    const row = Array.isArray(consumeData) ? consumeData[0] : consumeData;
+    if (consumeErr) {
+      console.error("consume_detector_quota failed:", consumeErr);
+    } else if (row && row.success === false) {
+      // Yaris kosulunda hak bitmis olabilir; analiz zaten uretildi, kullaniciyi cezalandirma
+      console.warn("consume_detector_quota returned success=false (race)");
+    } else if (row && row.used_free === false) {
       cost = BONUS_COST;
     }
   }

@@ -201,6 +201,11 @@ serve(async (req) => {
       return err("Eksik alan: text_type_id, text, prompt_snapshot, word_count zorunlu", 400);
     }
 
+    // Cap: devasa input maliyetini kes (normal yazi << 20000 karakter)
+    if (typeof text === "string" && text.length > 20000) {
+      return err("Metin cok uzun (en fazla 20000 karakter).", 400, "text_too_long");
+    }
+
     // ===== 3) Text type config =====
     const { data: textType, error: ttErr } = await supabase
       .from("writing_text_types")

@@ -90,8 +90,14 @@ List at most 12 corrections, only real errors. If there are none, return the tex
   return { system, user: text, jsonMode };
 }
 
-async function callModel(system: string, user: string, jsonMode: boolean): Promise<string> {
+type ModelResult = {
+  content: string; model: string;
+  prompt_tokens: number; completion_tokens: number; total_tokens: number; duration_ms: number;
+};
+
+async function callModel(system: string, user: string, jsonMode: boolean): Promise<ModelResult> {
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY secret is not set");
+  const start = Date.now();
   const reqBody: Record<string, unknown> = {
     model: MODEL,
     messages: [
@@ -123,7 +129,49 @@ async function callModel(system: string, user: string, jsonMode: boolean): Promi
     console.error("OpenAI output truncated at max_tokens; tool output may be incomplete");
     if (jsonMode) throw new Error("Output truncated (max_tokens) in JSON mode");
   }
-  return content.trim();
+  const usage = data?.usage || {};
+  return {
+    content: content.trim(),
+    model: data?.model || MODEL,
+    prompt_tokens: usage.prompt_tokens || 0,
+    completion_tokens: usage.completion_tokens || 0,
+    total_tokens: usage.total_tokens || 0,
+    duration_ms: Date.now() - start,
+  };
+}
+
+// ===== AI call logging (diger fonksiyonlardaki desen) =====
+const PRICING: Record<string, { input: number; output: number }> = {
+  "gpt-4o-mini":   { input: 0.150, output: 0.600 },
+  "gpt-4o":        { input: 2.500, output: 10.000 },
+  "gpt-4o-2024":   { input: 2.500, output: 10.000 },
+  "gpt-3.5-turbo": { input: 0.500, output: 1.500 },
+  "gpt-4-turbo":   { input: 10.000, output: 30.000 },
+};
+function calcCostUsd(model: string, promptTokens: number, completionTokens: number): number {
+  let pricing = PRICING[model];
+  if (!pricing) {
+    for (const key of Object.keys(PRICING)) {
+      if (model.startsWith(key)) { pricing = PRICING[key]; break; }
+    }
+  }
+  if (!pricing) return 0;
+  return Number((((promptTokens / 1_000_000) * pricing.input) + ((completionTokens / 1_000_000) * pricing.output)).toFixed(6));
+}
+type LogPayload = {
+  feature: string; user_id: string | null; user_email: string | null; provider: string;
+  model?: string | null; status: "success" | "error" | "timeout"; error_msg?: string | null;
+  duration_ms: number; prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost_usd?: number;
+};
+async function logAiCall(p: LogPayload): Promise<void> {
+  try {
+    await supabase.from("ai_call_log").insert({
+      feature: p.feature, user_id: p.user_id, user_email: p.user_email, provider: p.provider,
+      model: p.model || null, status: p.status, error_msg: p.error_msg || null, duration_ms: p.duration_ms,
+      prompt_tokens: p.prompt_tokens || null, completion_tokens: p.completion_tokens || null,
+      total_tokens: p.total_tokens || null, cost_usd: p.cost_usd || 0,
+    });
+  } catch (e) { console.error("ai_call_log insert failed:", e); }
 }
 
 interface ToolQuota { daily_free_remaining: number; bonus_tokens: number; total_remaining: number; }
@@ -148,7 +196,8 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   if (userError || !userData?.user) return json({ ok: false, error: "invalid_token" }, 401);
   const userId = userData.user.id;
-  const isAdmin = ADMIN_EMAILS.includes(userData.user.email || "");
+  const userEmail = userData.user.email || null;
+  const isAdmin = ADMIN_EMAILS.includes(userEmail || "");
 
   // Body
   let body: { tool?: string; text?: string; options?: Record<string, string> };
@@ -185,16 +234,30 @@ Deno.serve(async (req) => {
     }, 402);
   }
 
-  const useDailyFree = quota.daily_free_remaining > 0;
-
   // AI cagrisi (dusum basaridan sonra)
   const { system, user, jsonMode } = buildPrompts(tool, text, options);
   let raw: string;
+  const callStart = Date.now();
   try {
-    raw = await callModel(system, user, jsonMode);
+    const aiRes = await callModel(system, user, jsonMode);
+    raw = aiRes.content;
+    await logAiCall({
+      feature: `ai-tools:${tool}`, user_id: userId, user_email: userEmail, provider: "openai",
+      model: aiRes.model, status: "success", duration_ms: aiRes.duration_ms,
+      prompt_tokens: aiRes.prompt_tokens, completion_tokens: aiRes.completion_tokens,
+      total_tokens: aiRes.total_tokens,
+      cost_usd: calcCostUsd(aiRes.model, aiRes.prompt_tokens, aiRes.completion_tokens),
+    });
   } catch (e) {
     console.error("AI call failed:", e);
-    return json({ ok: false, error: "ai_unavailable", detail: String(e).slice(0, 300) }, 502);
+    const errMsg = String(e);
+    const isTimeout = /timeout|timed out|aborted/i.test(errMsg);
+    await logAiCall({
+      feature: `ai-tools:${tool}`, user_id: userId, user_email: userEmail, provider: "openai",
+      model: MODEL, status: isTimeout ? "timeout" : "error", error_msg: errMsg.slice(0, 500),
+      duration_ms: Date.now() - callStart,
+    });
+    return json({ ok: false, error: "ai_unavailable", detail: errMsg.slice(0, 300) }, 502);
   }
 
   // Sonucu sekillendir
@@ -217,23 +280,19 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Kota dusur (admin atlar)
+  // Kota dusur (admin atlar) — ATOMIK RPC (read-modify-write yerine yaris kosulunu keser)
   let cost = 0;
   if (!isAdmin) {
-    const today = todayUTC();
-    if (useDailyFree) {
-      const newUsed = (toolRow && (toolRow as any).used_date === today) ? Number((toolRow as any).used_count || 0) + 1 : 1;
-      await supabase.from("tool_usage_daily").upsert(
-        { user_id: userId, feature: tool, used_date: today, used_count: newUsed, updated_at: new Date().toISOString() },
-        { onConflict: "user_id,feature" },
-      );
-      cost = 0;
-    } else {
-      const newBonusUsed = Number((bonusRow as any)?.bonus_used ?? 0) + TOKEN_COST;
-      await supabase.from("ai_quota").upsert(
-        { user_id: userId, bonus_used: newBonusUsed },
-        { onConflict: "user_id" },
-      );
+    const { data: consumeData, error: consumeErr } = await supabase.rpc("consume_tool_quota", {
+      p_user_id: userId, p_feature: tool, p_free_per_day: FREE_PER_DAY, p_token_cost: TOKEN_COST,
+    });
+    const row = Array.isArray(consumeData) ? consumeData[0] : consumeData;
+    if (consumeErr) {
+      console.error("consume_tool_quota failed:", consumeErr);
+    } else if (row && row.success === false) {
+      // Yaris kosulunda hak bitmis olabilir; AI zaten uretildi, kullaniciyi cezalandirma
+      console.warn("consume_tool_quota returned success=false (race)");
+    } else if (row && row.used_free === false) {
       cost = TOKEN_COST;
     }
   }

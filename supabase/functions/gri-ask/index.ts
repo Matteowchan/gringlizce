@@ -175,19 +175,20 @@ function buildInlineUserPrompt(
     }
   }
 
-  const passage = inline.passage ? String(inline.passage).trim() : "";
+  // Cap: her inline alan en fazla 4000 karakter (devasa input maliyetini kes)
+  const passage = inline.passage ? String(inline.passage).slice(0, 4000).trim() : "";
   if (passage) {
     parts.push("\nPasaj:");
     parts.push(passage);
   }
 
-  const data = inline.data ? String(inline.data).trim() : "";
+  const data = inline.data ? String(inline.data).slice(0, 4000).trim() : "";
   if (data) {
     parts.push("\nVeri/Şekil:");
     parts.push(data);
   }
 
-  const question = inline.question ? String(inline.question).trim() : "";
+  const question = inline.question ? String(inline.question).slice(0, 4000).trim() : "";
   if (question) {
     parts.push("\nSoru:");
     parts.push(question);

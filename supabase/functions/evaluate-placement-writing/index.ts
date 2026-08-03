@@ -8,7 +8,19 @@
 // Secret: OPENAI_API_KEY
 // -----------------------------------------------------------------------------
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+// Guvenlik/maliyet capleri
+const MAX_TASKS = 4;
+const MAX_TOTAL_INPUT = 15000; // tum task prompt+text toplam karakter siniri
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -34,11 +46,23 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS });
   if (!OPENAI_API_KEY) return new Response(JSON.stringify({ error: "OPENAI_API_KEY missing" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
 
+  // ===== Auth zorunlu (gecerli oturum) =====
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  if (userError || !userData?.user) return new Response(JSON.stringify({ error: "invalid_token" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
+
   let body: { tasks?: Task[] };
   try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "invalid json" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }); }
 
   const tasks = (body.tasks || []).filter((t) => t && typeof t.text === "string");
   if (!tasks.length) return new Response(JSON.stringify({ error: "no tasks" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  // Cap: task sayisi
+  if (tasks.length > MAX_TASKS) return new Response(JSON.stringify({ error: "too_many_tasks" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  // Cap: toplam input (per-task 3000 kirpmaya ek olarak toplam guvenligi)
+  const totalInput = tasks.reduce((n, t) => n + String(t.prompt || "").length + String(t.text || "").length, 0);
+  if (totalInput > MAX_TOTAL_INPUT) return new Response(JSON.stringify({ error: "input_too_long" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
 
   // Aşırı uzun girişleri kırp (token güvenliği)
   const userMsg = tasks.map((t, i) =>

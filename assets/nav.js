@@ -44,6 +44,9 @@
     ".gri-mcards{display:block;margin-top:4px}",
     ".gri-mcard{display:block;padding:14px 2px;border-bottom:1px solid var(--gri-line-soft);text-decoration:none;color:var(--gri-ink-soft);font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;line-height:1.3}",
     ".gri-mcard:active,.gri-mcard:hover{color:var(--gri-accent)}",
+    ".gri-mgrp-h{font-family:Inter,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gri-ink-faint);padding:16px 2px 4px}",
+    ".gri-mcard.sub{padding-left:16px;font-size:15px;font-weight:500;color:var(--gri-ink-faint)}",
+    ".gri-mcard.sub:active,.gri-mcard.sub:hover{color:var(--gri-accent)}",
     ".gri-mmenu #navUserMountSlot{margin:2px 0 14px}",
     ".gri-mmenu #navUserMountSlot .btn-nav-cta,.gri-mmenu #navUserMountSlot .gri-giris{display:block;text-align:center;padding:12px;border-radius:12px;font-size:15px}",
     ".gri-mmenu #navUserMountSlot .nav-user{display:block;position:static}",
@@ -115,13 +118,24 @@
         }
         return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
-      return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd>' + twoline(it.label, true) + '</button><div class="gri-dd-menu">' + groups + "</div></div>";
+      return '<div class="gri-dd' + (active ? " here" : "") + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
     }).join("");
 
-    function firstHref(it){ if(it.href) return it.href; if(it.children){ for(var i=0;i<it.children.length;i++){ var h=firstHref(it.children[i]); if(h) return h; } } return ""; }
+    // Mobil: tum linkler duz (gruplu) liste olarak kalir — masaustu dropdown'lari
+    // mobilde ise tek tek erisilebilir olsun diye agac gezilir.
+    function mcard(label, h, sub){ return '<a class="gri-mcard' + (sub ? " sub" : "") + '" href="' + href(h) + '">' + esc(label) + "</a>"; }
+    function mhead(label){ return '<div class="gri-mgrp-h">' + esc(label) + "</div>"; }
     var mcards = MENU.map(function (it) {
-      var dest = firstHref(it) || (BASE + "index.html");
-      return '<a class="gri-mcard" href="' + href(dest) + '">' + esc(it.label) + "</a>";
+      if (!it.children) return mcard(it.label, it.href, false);
+      var out = it.href ? mcard(it.label, it.href, false) : mhead(it.label);
+      out += it.children.map(function (ch) {
+        if (ch.children) {
+          var head = ch.href ? mcard(ch.label, ch.href, false) : mhead(ch.label);
+          return head + ch.children.map(function (g) { return mcard(g.label, g.href, true); }).join("");
+        }
+        return mcard(ch.label, ch.href, true);
+      }).join("");
+      return out;
     }).join("");
 
     var tOpts = themeOptsHtml();
@@ -155,19 +169,24 @@
     var _mnt = document.getElementById("navUserMount");
     if (_mnt && !_mnt.innerHTML.trim()) _mnt.innerHTML = '<a href="' + BASE + 'giris.html" class="gri-giris">Giriş</a>';
 
+    function closeAllDD() { document.querySelectorAll(".gri-dd.open,.gri-rdd.open").forEach(function (x) { x.classList.remove("open"); }); syncAria(); }
+    function syncAria() { document.querySelectorAll(".gri-dd>[data-dd],.gri-rdd>[data-dd]").forEach(function (b) { b.setAttribute("aria-expanded", b.parentNode.classList.contains("open") ? "true" : "false"); }); }
     document.addEventListener("click", function (e) {
       var t = e.target;
       var themeBtn = t.closest && t.closest(".gri-th-opt[data-t]");
-      if (themeBtn) { applyTheme(themeBtn.getAttribute("data-t"));
-        document.querySelectorAll(".gri-dd.open,.gri-rdd.open").forEach(function (x) { x.classList.remove("open"); }); return; }
+      if (themeBtn) { applyTheme(themeBtn.getAttribute("data-t")); closeAllDD(); return; }
       var dd = t.closest && t.closest("[data-dd]");
       if (dd) { var box = dd.closest(".gri-dd,.gri-rdd"); var wasOpen = box.classList.contains("open");
-        document.querySelectorAll(".gri-dd.open,.gri-rdd.open").forEach(function (x) { x.classList.remove("open"); });
-        if (!wasOpen) box.classList.add("open"); e.stopPropagation(); return; }
+        closeAllDD();
+        if (!wasOpen) box.classList.add("open"); syncAria(); e.stopPropagation(); return; }
       var ms = t.closest && t.closest("[data-msec]");
       if (ms && !t.closest("a")) { ms.parentNode.classList.toggle("open"); return; }
-      if (!(t.closest && (t.closest(".gri-dd-menu") || t.closest(".gri-rdd-menu")))) {
-        document.querySelectorAll(".gri-dd.open,.gri-rdd.open").forEach(function (x) { x.classList.remove("open"); });
+      if (!(t.closest && (t.closest(".gri-dd-menu") || t.closest(".gri-rdd-menu")))) { closeAllDD(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" || e.keyCode === 27) {
+        var anyOpen = document.querySelector(".gri-dd.open,.gri-rdd.open");
+        if (anyOpen) { var focusBtn = anyOpen.querySelector("[data-dd]"); closeAllDD(); if (focusBtn) try { focusBtn.focus(); } catch (er) {} }
       }
     });
     var dark = document.getElementById("gri-dark");

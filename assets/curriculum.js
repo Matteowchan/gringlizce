@@ -275,34 +275,51 @@ var EXAMS=[
   window.GRI_DATA = { IC: IC, EXAMS: EXAMS,
     PULSE: { overall: 0, streak: 0, weekLessons: 0, newBadges: 0 } };
   window.GRI_INFO = null; // gercek launch-banner korunur; ileride admin kaynagina baglanir
+  /* Nav sadelestirme: 15 duz oge -> 6 gruplu dropdown.
+     Tum eski hedef URL'ler korunur (link kaybi yok); dil Turkcelestirildi. */
   window.GRI_NAV = [
-    { label: "Öğrenme Haritası", href: "ogrenme-haritasi.html" },
-    { label: "Soru Bankası", href: "soru-bankasi.html", children: [
-      { label: "SAT", href: "sat-soru-bankasi.html", children: [
+    { label: "Sınavlar", children: [
+      { label: "SAT", href: "sat.html", children: [
         { label: "Reading & Writing", href: "sat-soru-bankasi-rw.html" },
-        { label: "Math", href: "sat-soru-bankasi-math.html" } ] },
-      { label: "IELTS", href: "ielts-soru-bankasi.html", children: [
+        { label: "Math", href: "sat-soru-bankasi-math.html" },
+        { label: "Soru Bankası", href: "sat-soru-bankasi.html" } ] },
+      { label: "IELTS", href: "ielts.html", children: [
         { label: "Tam Deneme", href: "ielts-deneme.html" },
-        { label: "Bölüm Bazlı", href: "ielts-bolum-calisma.html" } ] },
-      { label: "TOEFL", href: "toefl-soru-bankasi.html" },
-      { label: "UDSP", href: "udsp-soru-bankasi.html" },
-      { label: "YDT", href: "ydt-soru-bankasi.html" },
-      { label: "YDS / YÖKDİL", href: "yds-soru-bankasi.html", children: [
+        { label: "Bölüm Bazlı", href: "ielts-bolum-calisma.html" },
+        { label: "Soru Bankası", href: "ielts-soru-bankasi.html" } ] },
+      { label: "TOEFL", href: "toefl.html", children: [
+        { label: "Soru Bankası", href: "toefl-soru-bankasi.html" } ] },
+      { label: "YDS / YÖKDİL", href: "yds.html", children: [
         { label: "YDS", href: "yds-soru-bankasi-yds.html" },
         { label: "YÖKDİL Fen", href: "yds-soru-bankasi-yokdil-fen.html" },
         { label: "YÖKDİL Sosyal", href: "yds-soru-bankasi-yokdil-sosyal.html" },
-        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" } ] }
+        { label: "YÖKDİL Sağlık", href: "yds-soru-bankasi-yokdil-saglik.html" },
+        { label: "Soru Bankası", href: "yds-soru-bankasi.html" } ] },
+      { label: "YDT", href: "ydt.html", children: [
+        { label: "Soru Bankası", href: "ydt-soru-bankasi.html" } ] },
+      { label: "ÜDS / UDSP", href: "udsp.html", children: [
+        { label: "Soru Bankası", href: "udsp-soru-bankasi.html" } ] },
+      { label: "IB English B", href: "ib.html", children: [
+        { label: "HL", href: "ib-english-b-hl.html" },
+        { label: "SL", href: "ib-english-b-sl.html" } ] }
     ] },
-    { label: "Kelime Bankası", href: "kelime-bankasi.html" },
-    { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
     { label: "Genel İngilizce", href: "genel-ingilizce.html" },
-    { label: "Exercises", href: "genel-odevler.html" },
-    { label: "Oyunlar", href: "oyunlar.html" },
+    { label: "Çalış", children: [
+      { label: "Öğrenme Haritası", href: "ogrenme-haritasi.html" },
+      { label: "Soru Bankası", href: "soru-bankasi.html" },
+      { label: "Kelime Bankası", href: "kelime-bankasi.html" },
+      { label: "Yazı Pratiği", href: "yazi-pratigi.html" },
+      { label: "Alıştırmalar", href: "genel-odevler.html" },
+      { label: "Oyunlar", href: "oyunlar.html" }
+    ] },
+    { label: "Araçlar", children: [
+      { label: "AI Araçları", href: "ai-araclari.html" },
+      { label: "Gri Meet", href: "grimeet.html" },
+      { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
+      { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
+      { label: "Bize Ulaşın", href: "iletisim.html" }
+    ] },
     { label: "Sınıflarım", href: "sinifim.html" },
-    { label: "Seviye Belirleme", href: "seviye-belirleme.html" },
-    { label: "Gri Meet", href: "grimeet.html" },
-    { label: "AI Detector", href: "ai-araclari.html" },
-    { label: "Çalışma Paketleri", href: "calisma-paketleri.html" },
     { label: "Blog", href: "blog.html", children: [
       { label: "SAT", href: "blog-sat.html" },
       { label: "IELTS", href: "blog-ielts.html" },
@@ -312,7 +329,6 @@ var EXAMS=[
       { label: "IB English B", href: "blog-ib-english.html" },
       { label: "Deutsch B", href: "blog-deutsch.html" },
       { label: "TOK", href: "blog-tok.html" }
-    ] },
-    { label: "Bize Ulaşın", href: "iletisim.html" }
+    ] }
   ];
 })();

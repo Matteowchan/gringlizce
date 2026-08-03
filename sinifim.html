@@ -2766,7 +2766,10 @@
         if (!sess || !sess.data || !sess.data.session) return;
         var userId = sess.data.session.user.id;
 
-        try{ if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); } }catch(e){}
+        try{ (function mountLandingSched(tries){
+          if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); }
+          else if((tries||0)<40){ setTimeout(function(){ mountLandingSched((tries||0)+1); }, 100); }
+        })(0); }catch(e){}
 
         // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
         var roleRes = await sbCli.from('profiles').select('role,full_name').eq('id', userId).maybeSingle();

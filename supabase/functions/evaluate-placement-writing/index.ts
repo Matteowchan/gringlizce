@@ -46,12 +46,17 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS });
   if (!OPENAI_API_KEY) return new Response(JSON.stringify({ error: "OPENAI_API_KEY missing" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
 
-  // ===== Auth zorunlu (gecerli oturum) =====
+  // ===== Auth: gecerli kullanici oturumu varsa kullan; yoksa (kurumsal anonim gizli-URL demo) devam =====
+  // Gateway verify_jwt=true zaten gecerli apikey/anon ister. Kod-ici getUser'i ZORUNLU tutmak
+  // kurumsal anonim demo akisini kiriyordu (401 invalid_token). Maliyet MAX_TASKS + per-task 3000
+  // char cap ile sinirli oldugundan anonim cagriya izin veriyoruz; oturumlu cagrida userId cozulur.
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
-  const { data: userData, error: userError } = await supabase.auth.getUser(token);
-  if (userError || !userData?.user) return new Response(JSON.stringify({ error: "invalid_token" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
+  let userId: string | null = null;
+  if (token) {
+    const { data: userData } = await supabase.auth.getUser(token);
+    userId = userData?.user?.id ?? null;
+  }
 
   let body: { tasks?: Task[] };
   try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "invalid json" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }); }

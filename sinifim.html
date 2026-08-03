@@ -24,7 +24,7 @@
   <script src="assets/theme.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth.js" defer></script>
-  <script src="assets/grimeet-schedule.js?v=8" defer></script>
+  <script src="assets/grimeet-schedule.js?v=9" defer></script>
   <script src="assets/site-config.js" defer></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2637,7 +2637,7 @@
       </div>
     </div>
     <div id="sf-schedule-wrap" style="display:none;margin:0 0 1.75rem;">
-      <div class="zone-head"><span class="zone-eyebrow">Canlı</span><span class="zone-line"></span><h2>Yaklaşan Canlı Dersler</h2></div>
+      <div class="zone-head"><span class="zone-eyebrow">Online</span><span class="zone-line"></span><h2>Yaklaşan Online Dersler</h2><button type="button" id="sf-sched-toggle" class="zone-toggle" style="flex:0 0 auto;margin-left:10px;font:600 12px var(--font-ui,inherit);color:#6a6250;background:transparent;border:1px solid #d8d2c4;border-radius:20px;padding:5px 14px;cursor:pointer">Gizle</button></div>
       <div id="sf-schedule"></div>
     </div>
     <!-- ============ SINIFLARIM (Teacher Dashboard - Student side) ============ -->
@@ -2770,6 +2770,15 @@
           if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); }
           else if((tries||0)<40){ setTimeout(function(){ mountLandingSched((tries||0)+1); }, 100); }
         })(0); }catch(e){}
+
+        // Yaklaşan Online Dersler: gizle/göster
+        try{ var _st=document.getElementById('sf-sched-toggle'), _sm=document.getElementById('sf-schedule');
+          if(_st&&_sm){ var _hid=false; try{ _hid=localStorage.getItem('sf-sched-hidden')==='1'; }catch(_e){}
+            function _applySched(){ _sm.style.display=_hid?'none':''; _st.textContent=_hid?'Göster':'Gizle'; }
+            _applySched();
+            _st.addEventListener('click',function(){ _hid=!_hid; try{ localStorage.setItem('sf-sched-hidden',_hid?'1':'0'); }catch(_e){} _applySched(); });
+          }
+        }catch(e){}
 
         // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
         var roleRes = await sbCli.from('profiles').select('role,full_name').eq('id', userId).maybeSingle();

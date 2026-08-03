@@ -220,7 +220,7 @@
     }
 
     function renderListInner(el){
-      if(!state.rows.length){ el.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan canlı ders yok.')+'</div>'; return; }
+      if(!state.rows.length){ el.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'; return; }
       el.innerHTML='<div class="gsch-list">'+state.rows.map(itemHTML).join('')+'</div>';
       bindActions(el);
     }
@@ -254,7 +254,7 @@
     }
 
     function render(){
-      if(!state.rows.length){ body.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan canlı ders yok.')+'</div>'; return; }
+      if(!state.rows.length){ body.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'; return; }
       body.innerHTML='<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
       renderCal(body.querySelector('.gsch-col-cal'));
       renderListInner(body.querySelector('.gsch-col-list-inner'));

@@ -24,8 +24,7 @@
       home: 'sat.html',
       subnav: [
         { label: 'Soru Bankası', href: 'sat-soru-bankasi.html' },
-        { label: 'RW Notları',   href: 'sat-rw-ders-notlari.html' },
-        { label: 'Math Notları', href: 'sat-math-ders-notlari.html' },
+        { label: 'Öğren',        href: 'sat-ogren.html' },
         { label: 'Coaching',     href: 'sat-coaching.html' }
       ]
     },
@@ -36,8 +35,7 @@
         { label: 'Tam Deneme',       href: 'ielts-deneme.html' },
         { label: 'Soru Bankası',     href: 'ielts-soru-bankasi.html' },
         { label: 'Bölüm Çalışma',    href: 'ielts-bolum-calisma.html' },
-        { label: 'Writing Feedback', href: 'ielts-writing-feedback.html' },
-        { label: 'Ders Notları',     href: 'ielts-ders-notlari.html' },
+        { label: 'Writing',          href: 'ielts-writing-task1.html' },
         { label: 'Coaching',         href: 'ielts-coaching.html' }
       ]
     },
@@ -47,8 +45,7 @@
       subnav: [
         { label: 'Soru Bankası',  href: 'toefl-soru-bankasi.html' },
         { label: 'Reading',       href: 'toefl-soru-bankasi-reading.html' },
-        { label: 'Writing',       href: 'toefl-writing-practice.html' },
-        { label: 'Ders Notları',  href: 'toefl-ders-notlari.html' },
+        { label: 'Writing',       href: 'toefl-writing.html' },
         { label: 'Coaching',      href: 'toefl-coaching.html' }
       ]
     },
@@ -61,7 +58,7 @@
         { label: 'TOK',           href: 'ib-tok.html' },
         { label: 'Yazı Pratiği',  href: 'ib-yazi-pratigi.html' },
         { label: 'Soru Bankası',  href: 'ib-soru-bankasi.html' },
-        { label: 'Ders Notları',  href: 'ib-ders-notlari.html' },
+        { label: 'Öğren',         href: 'ib-ogren.html' },
         { label: 'Coaching',      href: 'ib-coaching.html' }
       ]
     },
@@ -70,12 +67,8 @@
       home: 'ydt.html',
       subnav: [
         { label: 'Soru Bankası',  href: 'ydt-soru-bankasi.html' },
-        { label: 'Tenses',        href: 'ydt-tenses.html' },
-        { label: 'Modals',        href: 'ydt-modals.html' },
-        { label: 'Conditionals',  href: 'ydt-conditionals.html' },
-        { label: 'Rel. Clauses',  href: 'ydt-relative-clauses.html' },
+        { label: 'Öğren',         href: 'ydt-ogren.html' },
         { label: 'YDT-YDS',       href: 'ydt-yds.html' },
-        { label: 'Ders Notları',  href: 'ydt-ders-notlari.html' },
         { label: 'Coaching',      href: 'ydt-coaching.html' }
       ]
     },
@@ -88,8 +81,7 @@
         { label: 'YÖKDİL Fen',       href: 'yds-soru-bankasi-yokdil-fen.html' },
         { label: 'YÖKDİL Sağlık',    href: 'yds-soru-bankasi-yokdil-saglik.html' },
         { label: 'YÖKDİL Sosyal',    href: 'yds-soru-bankasi-yokdil-sosyal.html' },
-        { label: 'Mini Denemeler',   href: 'yds-mini-deneme-1.html' },
-        { label: 'Ders Notları',     href: 'yds-ders-notlari.html' },
+        { label: 'Öğren',            href: 'yds-ogren.html' },
         { label: 'Coaching',         href: 'yds-coaching.html' }
       ]
     },

@@ -7,6 +7,10 @@
 (function(){
   if(window.GriWordle)return;
 
+  /* Aktif instance: fiziksel klavye yalnız son etkileşilen board'a gitsin.
+   * Tek-wordle sayfalarında ilk (ve tek) mount otomatik aktif olur → davranış aynı. */
+  var activeInst=null;
+
   function injectCss(){
     if(document.getElementById('gri-wd-css'))return;
     var s=document.createElement('style'); s.id='gri-wd-css';
@@ -103,6 +107,9 @@
       return b;
     }
 
+    /* Host'a dokunma/tıklama gelince bu instance'ı aktif yap (klavye ona odaklansın) */
+    if(!opts.readOnly)host.addEventListener('pointerdown',function(){ activeInst=inst; });
+
     var doneCard=null;
 
     function paintRow(ri,guess,res){
@@ -127,7 +134,6 @@
       st.done=true; st.win=win;
       if(win&&!replaying&&window.GriConfetti)window.GriConfetti.burst();
       doneCard=document.createElement('div'); doneCard.className='gwd-done';
-      var tries=win?st.guesses.length:('X');
       doneCard.innerHTML='<div class="res">'+(win?'Tebrikler! '+st.guesses.length+'/'+MAX+' denemede buldun.':'Bitti — doğru kelime:')+'</div>'
         +'<div class="w">'+answer+' <button type="button" class="gwd-say" aria-label="Sesli oku">🔊</button></div>'
         +(opts.tr?'<div class="tr">'+esc(opts.tr)+'</div>':'')
@@ -163,6 +169,7 @@
     }
 
     function onKey(e){
+      if(activeInst!==inst)return; /* yalnız aktif board fiziksel klavyeyi işlesin (çapraz-besleme fix) */
       if(st.done)return;
       if(e.key==='Enter'){ handle('ENTER'); }
       else if(e.key==='Backspace'){ handle('BACK'); e.preventDefault(); }
@@ -184,8 +191,10 @@
       setState:function(s){ /* not needed post-mount; state passed at mount */ },
       isDone:function(){ return st.done; },
       result:function(){ return {done:st.done,win:st.win,tries:st.done?(st.win?st.guesses.length:MAX):0}; },
-      destroy:function(){ if(!opts.readOnly)document.removeEventListener('keydown',onKey); }
+      destroy:function(){ if(!opts.readOnly)document.removeEventListener('keydown',onKey); if(activeInst===inst)activeInst=null; }
     };
+    /* İlk (tek) etkileşimli board otomatik aktif: tek-wordle sayfası tıklamasız çalışır (regresyon yok) */
+    if(!opts.readOnly&&activeInst===null)activeInst=inst;
     return inst;
   }
 

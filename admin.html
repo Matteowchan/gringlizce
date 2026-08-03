@@ -1753,6 +1753,7 @@
       <div class="admin-tabs" role="tablist">
         <button class="admin-tab" data-tab="overview" role="tab"><span class="tab-ico">📊</span>Genel Bakış</button>
         <button class="admin-tab" data-tab="users" role="tab"><span class="tab-ico">👥</span>Kullanıcılar</button>
+        <button class="admin-tab" data-tab="placement" role="tab"><span class="tab-ico">🎯</span>Seviye Tespit</button>
         <button class="admin-tab" data-tab="writing" role="tab"><span class="tab-ico">✍️</span><span lang="en">Writing</span></button>
         <span class="tab-sep" aria-hidden="true"></span>
         <button class="admin-tab" data-tab="ai-health" role="tab"><span class="tab-ico">🩺</span>AI Sağlık</button>
@@ -2025,6 +2026,41 @@
 
           <div id="users-empty" style="display:none; text-align:center; padding:2rem; color: var(--text-muted); font-style: italic;">
             Eşleşen kullanıcı yok.
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ PLACEMENT (SEVİYE TESPİT) TAB ============ -->
+      <div class="admin-tab-content" data-tab-content="placement">
+        <section class="admin-section">
+          <span class="sec-eyebrow">Yerleştirme</span>
+          <h2>Seviye Tespit Sonuçları</h2>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.2rem; line-height: 1.6;">
+            Seviye tespit (placement) sınavını tamamlayan öğrencilerin CEFR seviyesi, skoru ve tarihi. En yeni üstte.
+          </p>
+
+          <div class="users-controls">
+            <input type="search" id="placement-search" placeholder="E-posta ile ara..." class="users-search-input" autocomplete="off" name="admin-placement-q" data-lpignore="true" data-1p-ignore data-form-type="other">
+            <span id="placement-count" class="users-count-label">—</span>
+          </div>
+
+          <div class="table-wrap"><table class="users-table" id="placement-table">
+            <thead>
+              <tr>
+                <th>Öğrenci</th>
+                <th>Seviye</th>
+                <th class="num">Skor</th>
+                <th class="num">Yüzde</th>
+                <th>Tarih</th>
+              </tr>
+            </thead>
+            <tbody id="placement-tbody">
+              <tr><td colspan="5" style="text-align:center; padding:2rem; color: var(--text-muted);">Yükleniyor...</td></tr>
+            </tbody>
+          </table></div>
+
+          <div id="placement-empty" style="display:none; text-align:center; padding:2rem; color: var(--text-muted); font-style: italic;">
+            Henüz seviye tespit sonucu yok.
           </div>
         </section>
       </div>
@@ -3027,7 +3063,7 @@
       var saved = 'overview';
       try { saved = localStorage.getItem(TAB_KEY) || 'overview'; } catch (e) {}
       // Doğrulama: kayıtlı tab gerçekten var mı
-      var valid = ['overview', 'users', 'content', 'settings', 'products', 'writing', 'ai-health', 'gamification', 'comms'];
+      var valid = ['overview', 'users', 'placement', 'content', 'settings', 'products', 'writing', 'ai-health', 'gamification', 'comms'];
       if (valid.indexOf(saved) === -1) saved = 'overview';
       activate(saved);
     }
@@ -4472,12 +4508,13 @@
     // ===================================================================
     // NEW TABS: Content, AI Health, Gamification, Comms, Audit Log
     // ===================================================================
-    var NEW_TAB_LOADED = { content: false, 'ai-health': false, gamification: false, comms: false };
+    var NEW_TAB_LOADED = { content: false, placement: false, 'ai-health': false, gamification: false, comms: false };
 
     // Top-level: hem tab click'i hem de dashboard jump-linkleri (activate) buradan tetikler
     function triggerTabLoader(t) {
       if (!Object.prototype.hasOwnProperty.call(NEW_TAB_LOADED, t) || NEW_TAB_LOADED[t]) return;
       NEW_TAB_LOADED[t] = true;
+      if (t === 'placement')    loadPlacementTab();
       if (t === 'ai-health')    loadAiHealthTab();
       if (t === 'gamification') loadGamificationTab();
       if (t === 'comms')        loadCommsTab();
@@ -4486,6 +4523,55 @@
       // Aktif tab zaten lazy bir tab ise ilk acilista yukle
       var active = document.querySelector('.admin-tab.active');
       if (active) triggerTabLoader(active.dataset.tab);
+    }
+
+    // ============ PLACEMENT (SEVİYE TESPİT) ============
+    var placementRows = [];
+    var placementSearchBound = false;
+    async function loadPlacementTab() {
+      var tbody = $('placement-tbody');
+      try {
+        var res = await sb.from('placement_results').select('*').order('created_at', { ascending: false });
+        if (res.error) throw res.error;
+        placementRows = res.data || [];
+        if (!placementSearchBound) {
+          var inp = $('placement-search');
+          if (inp) { inp.addEventListener('input', function () { renderPlacement(inp.value); }); }
+          placementSearchBound = true;
+        }
+        renderPlacement('');
+      } catch (e) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#b45046;">Sonuçlar okunamadı: ' + escHtml(e.message || String(e)) + '</td></tr>';
+      }
+    }
+    function renderPlacement(q) {
+      var tbody = $('placement-tbody');
+      var empty = $('placement-empty');
+      var countEl = $('placement-count');
+      if (!tbody) return;
+      q = (q || '').trim().toLowerCase();
+      var rows = q ? placementRows.filter(function (r) { return String(r.email || '').toLowerCase().indexOf(q) !== -1; }) : placementRows;
+      if (countEl) countEl.textContent = rows.length + ' sonuç';
+      if (!rows.length) {
+        tbody.innerHTML = '';
+        if (empty) {
+          empty.style.display = 'block';
+          empty.textContent = placementRows.length ? 'Eşleşen sonuç yok.' : 'Henüz seviye tespit sonucu yok.';
+        }
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      tbody.innerHTML = rows.map(function (r) {
+        var pct = (r.pct != null) ? r.pct : (r.total ? Math.round((Number(r.score) / Number(r.total)) * 100) : 0);
+        var skor = (r.score != null && r.total != null) ? (escHtml(String(r.score)) + '/' + escHtml(String(r.total))) : '—';
+        return '<tr>' +
+          '<td>' + escHtml(r.email || '—') + '</td>' +
+          '<td><span style="display:inline-block; padding:2px 11px; border-radius:999px; background:var(--teal,#2C5856); color:#fff; font-weight:700; font-size:0.82rem; letter-spacing:0.02em;">' + escHtml(r.cefr || '—') + '</span></td>' +
+          '<td class="num">' + skor + '</td>' +
+          '<td class="num">%' + escHtml(String(pct)) + '</td>' +
+          '<td>' + (r.created_at ? fmtDate(r.created_at) : '—') + '</td>' +
+        '</tr>';
+      }).join('');
     }
 
     function escHtml(s) {

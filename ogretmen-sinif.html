@@ -742,6 +742,9 @@
     .qd-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; }
     .qd-meta .qd-ans-wrong { color: #c0453b; font-weight: 600; }
     .qd-meta .qd-ans-right { color: #2e8b57; font-weight: 600; }
+    .qd-writing { margin-top: 0.35rem; }
+    .qd-writing-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal, #2C5856); margin-bottom: 0.28rem; }
+    .qd-writing-text { white-space: pre-wrap; font-size: 0.86rem; line-height: 1.5; color: var(--text, #2b2b2b); background: rgba(44,88,86,0.05); border: 1px solid var(--line, #D9D2C4); border-left: 3px solid var(--teal, #2C5856); border-radius: 4px; padding: 0.5rem 0.7rem; }
     .qd-empty { color: var(--text-muted); font-style: italic; text-align: center; padding: 0.6rem; }
     .qd-open { margin-left: auto; font-size: 0.8rem; font-weight: 600; color: var(--teal, #2C5856); text-decoration: none; white-space: nowrap; }
     .qd-open:hover { text-decoration: underline; }
@@ -3038,6 +3041,30 @@
             function apN(s){return String(s==null?'':s).toLowerCase().replace(/[‘’ʼ´`]/g,"'").replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');}
             var rows = tasks.map(function (t, i) {
               var a = ans ? ans['t' + i] : null;
+              var qtext = t.q ? esc(String(t.q)) : ('Soru ' + (i + 1));
+
+              // YAZMA (writing) görevi: otomatik doğru/yanlış yok — öğrencinin yazdığı metni AÇIKÇA göster.
+              // ge_submissions.content.answers.t{i} shape: { t:'writing', text:'...', n:<kelime> }
+              var wText = a ? (a.text != null ? a.text : (a.t === 'writing' && a.v != null ? a.v : null)) : null;
+              var isWriting = !!(a && a.t === 'writing')
+                || (t && (t.type === 'writing' || t.t === 'writing' || t.kind === 'writing'))
+                || (wText != null && !geCorrectText(t));
+              if (isWriting) {
+                var wc = a ? (a.n != null ? a.n : a.words) : null;
+                var wcTxt = (wc != null && wc !== '') ? ' <span style="color:var(--text-muted);font-weight:400;">· ' + esc(String(wc)) + ' kelime</span>' : '';
+                var wBody;
+                if (wText != null && String(wText).trim() !== '') {
+                  wBody = '<div class="qd-writing"><div class="qd-writing-label">Öğrenci yazısı:' + wcTxt + '</div>'
+                    + '<div class="qd-writing-text">' + esc(String(wText)) + '</div></div>';
+                } else {
+                  wBody = '<div class="qd-meta" style="color:var(--text-muted);">Öğrenci bu yazma görevine henüz cevap yazmadı.</div>';
+                }
+                return '<div class="qd-item open"><span class="qd-mark">✎</span>'
+                  + '<div class="qd-body"><div class="qd-q">' + (i + 1) + '. ' + qtext + '</div>'
+                  + wBody
+                  + '</div></div>';
+              }
+
               var answered = a && (typeof a.ok === 'boolean');
               var correct = geCorrectText(t);
               var chosen = '';
@@ -3053,7 +3080,6 @@
               var meta = '';
               if (correct) meta += '<span class="qd-ans-right">Doğru: ' + esc(correct) + '</span>';
               if (a && chosen && (!answered || !okEff)) meta += (meta ? ' · ' : '') + 'Öğrenci: <span class="qd-ans-wrong">' + esc(chosen) + '</span>';
-              var qtext = t.q ? esc(String(t.q)) : ('Soru ' + (i + 1));
               return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
                 + '<div class="qd-body"><div class="qd-q">' + (i + 1) + '. ' + qtext + '</div>'
                 + (meta ? '<div class="qd-meta">' + meta + '</div>' : '')
@@ -4437,16 +4463,36 @@
         }
       }
 
+      // Asla-boş garantisi: veri elimizdeyken hiçbir koşulda gövde tamamen boş kalmasın.
+      // En kötü durumda bile öğrenci e-postası + ilerleme (cur/tgt) + durumu listeler.
+      function adRawProgressFallback(progress, note) {
+        var L = { completed: 'Tamamlandı', in_progress: 'Devam Ediyor', pending: 'Başlamadı' };
+        var rows = (progress || []).map(function (p) {
+          p = p || {};
+          var st = p.status || 'pending';
+          var cur = (p.progress_current != null) ? p.progress_current : '?';
+          var tgt = (p.progress_target != null) ? p.progress_target : '?';
+          return '<li class="ad-row"><div class="ad-email">' + esc(p.student_email || '(e-posta yok)') + '</div>'
+            + '<div class="ad-progress progress-' + esc(st) + '">' + esc(String(cur)) + ' / ' + esc(String(tgt)) + '</div>'
+            + '<span class="ad-status-pill status-' + esc(st) + '">' + esc(L[st] || st) + '</span>'
+          + '</li>';
+        }).join('');
+        var head = note ? '<p style="color:var(--text-muted); font-style:italic; text-align:center; margin:0 0 .5rem;">' + note + '</p>' : '';
+        return head + '<ul class="ad-list">' + rows + '</ul>';
+      }
+
       async function openAssignDrawer(assignmentId, title) {
         adTitle.textContent = title || 'Ödev Detayı';
+        if (!adBody) return;
         adBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
         aDrawer.classList.add('show');
         document.body.style.overflow = 'hidden';
 
+        var progress = [];
         try {
           var r = await withTimeout(sb.rpc('assignment_progress', { p_assignment_id: assignmentId }), 12000, 'Ödev ilerlemesi');
           if (r.error) throw r.error;
-          var progress = r.data || [];
+          progress = r.data || [];
 
           // Sprint 2: Bonus puanlarını paralel yükle
           var bonusMap = {};
@@ -4465,31 +4511,47 @@
           var STATUS_LABELS = { completed: 'Tamamlandı', in_progress: 'Devam Ediyor', pending: 'Başlamadı' };
 
           var html = '<ul class="ad-list">' + progress.map(function (p) {
-            var completedAt = p.completed_at ? '<span class="ad-completed-at">' + fmtRelative(p.completed_at) + '</span>' : '';
-            var bonus = bonusMap[p.student_id];
-            var bonusTag = '';
-            var bonusDataset = '';
-            if (bonus) {
-              var cls = bonus.points >= 0 ? 'positive' : 'negative';
-              var sign = bonus.points > 0 ? '+' : '';
-              bonusTag = '<span class="ad-bonus-tag ' + cls + '" title="' + esc(bonus.reason || '') + '">' + sign + bonus.points + '</span>';
-              bonusDataset = ' data-points="' + bonus.points + '" data-reason="' + esc(bonus.reason || '') + '"';
+            try {
+              var completedAt = p.completed_at ? '<span class="ad-completed-at">' + fmtRelative(p.completed_at) + '</span>' : '';
+              var bonus = bonusMap[p.student_id];
+              var bonusTag = '';
+              var bonusDataset = '';
+              if (bonus) {
+                var cls = bonus.points >= 0 ? 'positive' : 'negative';
+                var sign = bonus.points > 0 ? '+' : '';
+                bonusTag = '<span class="ad-bonus-tag ' + cls + '" title="' + esc(bonus.reason || '') + '">' + sign + bonus.points + '</span>';
+                bonusDataset = ' data-points="' + bonus.points + '" data-reason="' + esc(bonus.reason || '') + '"';
+              }
+              return '<li class="ad-row">'
+                + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + completedAt + bonusTag + '</div>'
+                + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + '</div>'
+                + '<span class="ad-status-pill status-' + p.status + '">' + (STATUS_LABELS[p.status] || p.status || '') + '</span>'
+                + '<div class="ad-actions">'
+                  + '<button type="button" class="ad-inspect-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-target="adx-' + esc(p.student_id) + '">İncele</button>'
+                  + '<button type="button" class="ad-bonus-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-email="' + esc(p.student_email || '') + '"' + bonusDataset + '>' + (bonus ? 'Bonus ✎' : '+ Bonus') + '</button>'
+                + '</div>'
+              + '</li>'
+              + '<li class="ad-detail-row" id="adx-' + esc(p.student_id) + '" hidden><div class="ad-detail-inner"></div></li>';
+            } catch (rowErr) {
+              // Tek satır patlarsa tüm paneli boş bırakma — asgari bilgiyi bas
+              var _cur = (p && p.progress_current != null) ? p.progress_current : '?';
+              var _tgt = (p && p.progress_target != null) ? p.progress_target : '?';
+              return '<li class="ad-row"><div class="ad-email">' + esc((p && p.student_email) || '(e-posta yok)') + '</div>'
+                + '<div class="ad-progress">' + esc(String(_cur)) + ' / ' + esc(String(_tgt)) + '</div></li>';
             }
-            return '<li class="ad-row">'
-              + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + completedAt + bonusTag + '</div>'
-              + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + '</div>'
-              + '<span class="ad-status-pill status-' + p.status + '">' + STATUS_LABELS[p.status] + '</span>'
-              + '<div class="ad-actions">'
-                + '<button type="button" class="ad-inspect-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-target="adx-' + esc(p.student_id) + '">İncele</button>'
-                + '<button type="button" class="ad-bonus-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-email="' + esc(p.student_email || '') + '"' + bonusDataset + '>' + (bonus ? 'Bonus ✎' : '+ Bonus') + '</button>'
-              + '</div>'
-            + '</li>'
-            + '<li class="ad-detail-row" id="adx-' + esc(p.student_id) + '" hidden><div class="ad-detail-inner"></div></li>';
           }).join('') + '</ul>';
 
           adBody.innerHTML = html;
+
+          // ASLA-BOŞ garantisi: veri geldiği halde görünür içerik yoksa ham ilerlemeyi bas
+          if (!adBody.querySelector('.ad-row') || (adBody.textContent || '').trim().length < 2) {
+            adBody.innerHTML = adRawProgressFallback(progress, 'Veri yüklendi ama detay gösterilemedi — özet aşağıda.');
+          }
         } catch (err) {
-          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + rpcErrMsg(err) + '</p>';
+          // Hata olsa bile elimizde veri varsa göster; hiçbir durumda tamamen boş kalma
+          var msg = rpcErrMsg(err) || 'Ödev ilerlemesi yüklenemedi.';
+          var fallback = (progress && progress.length) ? adRawProgressFallback(progress, null) : '';
+          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + msg + '</p>' + fallback;
         }
       }
 

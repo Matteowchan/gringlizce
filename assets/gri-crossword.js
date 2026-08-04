@@ -122,6 +122,21 @@
     }
     host.innerHTML=''; scroll.appendChild(grid); host.appendChild(scroll);
 
+    /* Responsive fit: hücre boyutunu konteynıra göre ölçekle (taşma/kırpılma önlenir). */
+    function gcwFit(){
+      var avail = host.clientWidth || scroll.clientWidth || 0;
+      if(!avail){ return; } // ölçülemezse 36px + scroll fallback kalır
+      var cs = Math.max(20, Math.min(36, Math.floor((avail - 2) / cols)));
+      grid.style.gridTemplateColumns = 'repeat(' + cols + ',' + cs + 'px)';
+      var fs = Math.max(11, Math.round(cs * 0.5));
+      var cells2 = grid.querySelectorAll('.gcw-c');
+      for(var i=0;i<cells2.length;i++){ cells2[i].style.width=cs+'px'; cells2[i].style.height=cs+'px'; }
+      var inps = grid.querySelectorAll('.gcw-c input');
+      for(var j=0;j<inps.length;j++){ inps[j].style.fontSize=fs+'px'; }
+    }
+    gcwFit();
+    var _gcwRT; window.addEventListener('resize', function(){ clearTimeout(_gcwRT); _gcwRT=setTimeout(gcwFit,150); });
+
     /* clues */
     var cluesWrap=document.createElement('div'); cluesWrap.className='gcw-clues';
     var across=entries.filter(function(e){return e.dir==='across';}).sort(function(a,b){return a.num-b.num;});

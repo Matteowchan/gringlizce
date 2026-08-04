@@ -49,7 +49,32 @@
     + '.ga-row .p{min-width:5rem;text-align:right;color:var(--text-muted,#6b6862);}'
     + '.ga-assign{flex:0 0 auto;border:1px solid var(--teal,#2C5856);background:transparent;color:var(--teal,#2C5856);border-radius:7px;padding:2px 8px;font:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;}'
     + '.ga-assign:hover{background:var(--teal,#2C5856);color:#fff;}'
-    + '.ga-verdict{margin-top:1rem;padding:0.8rem 1rem;background:var(--bg-card,#fff);border:1px solid var(--line,#e6ddca);border-left:3px solid var(--teal,#2C5856);border-radius:8px;font-size:0.86rem;line-height:1.55;}';
+    + '.ga-verdict{margin-top:1rem;padding:0.8rem 1rem;background:var(--bg-card,#fff);border:1px solid var(--line,#e6ddca);border-left:3px solid var(--teal,#2C5856);border-radius:8px;font-size:0.86rem;line-height:1.55;}'
+    + '.ga-att{border:1px solid var(--line,#e6ddca);border-radius:9px;margin:0.45rem 0;background:var(--bg-card,#fff);overflow:hidden;}'
+    + '.ga-att>summary{list-style:none;cursor:pointer;padding:0.55rem 0.75rem;display:flex;align-items:center;gap:0.5rem;font-size:0.84rem;font-weight:600;}'
+    + '.ga-att>summary::-webkit-details-marker{display:none;}'
+    + '.ga-att>summary::before{content:"\\25B8";color:var(--teal,#2C5856);font-size:0.75rem;flex:0 0 auto;}'
+    + '.ga-att[open]>summary::before{content:"\\25BE";}'
+    + '.ga-att .ga-secname{font-family:var(--font-display,Georgia),serif;}'
+    + '.ga-att .ga-bchip{margin-left:auto;font-weight:600;}'
+    + '.ga-att .ga-when{color:var(--text-muted,#6b6862);font-weight:400;font-size:0.74rem;}'
+    + '.ga-qs{padding:0 0.75rem 0.6rem;}'
+    + '.ga-q{display:flex;gap:0.5rem;align-items:flex-start;padding:0.32rem 0;border-top:1px solid var(--line,#efe9db);font-size:0.8rem;}'
+    + '.ga-q .qn{flex:0 0 2.7rem;color:var(--text-muted,#6b6862);font-variant-numeric:tabular-nums;}'
+    + '.ga-q .qmark{flex:0 0 0.9rem;font-weight:700;text-align:center;}'
+    + '.ga-q.ok .qmark{color:#1FA971;}.ga-q.no .qmark{color:#c0392b;}.ga-q.part .qmark{color:#B78A2E;}'
+    + '.ga-q .qtext{flex:1;min-width:0;}'
+    + '.ga-q .qans{display:block;color:var(--text-muted,#6b6862);font-size:0.75rem;margin-top:1px;}'
+    + '.ga-q .qgood{color:#1FA971;font-weight:600;}.ga-q .qbad{color:#c0392b;}'
+    + '.ga-essay{margin:0.55rem 0 0.2rem;}'
+    + '.ga-essay .et{font-size:0.8rem;font-weight:600;margin-bottom:0.25rem;}'
+    + '.ga-essay .et small{font-weight:400;color:var(--text-muted,#6b6862);}'
+    + '.ga-essay-box{white-space:pre-wrap;background:var(--bg,#faf7ef);border:1px solid var(--line,#e6ddca);border-radius:7px;padding:0.6rem 0.7rem;font-size:0.8rem;line-height:1.55;max-height:240px;overflow:auto;}'
+    + '.ga-fb{font-size:0.77rem;color:var(--text-muted,#6b6862);margin:0.3rem 0 0;line-height:1.5;padding-left:0.7rem;border-left:2px solid var(--line,#e6ddca);}'
+    + '.ga-fb b{color:var(--text,#1a2230);}'
+    + '.ga-bchip,.ga-chip{display:inline-block;font-size:0.72rem;padding:1px 8px;border-radius:20px;background:var(--teal,#2C5856);color:#fff;}'
+    + '.ga-chip.mut{background:var(--line,#e6ddca);color:var(--text,#1a2230);}'
+    + '.ga-empty-mini{color:var(--text-muted,#6b6862);font-style:italic;font-size:0.8rem;padding:0.3rem 0;}';
 
   function injectCSS() { if (document.getElementById('ga-css')) return; var s = document.createElement('style'); s.id = 'ga-css'; s.textContent = CSS; document.head.appendChild(s); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -154,16 +179,96 @@
   }
 
   function bandColor(b) { return b >= 6.5 ? '#1FA971' : (b >= 5 ? '#B78A2E' : '#c0392b'); }
+  function fmtDate(iso) { if (!iso) return ''; var dd = new Date(iso); if (isNaN(dd)) return ''; return dd.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  var WR_LBL = {
+    task1_achievement: 'Task 1 · Görev Başarımı', task1_coherence: 'Task 1 · Tutarlılık', task1_lexical: 'Task 1 · Kelime', task1_grammar: 'Task 1 · Gramer',
+    task2_response: 'Task 2 · Görev Yanıtı', task2_coherence: 'Task 2 · Tutarlılık', task2_lexical: 'Task 2 · Kelime', task2_grammar: 'Task 2 · Gramer'
+  };
+
+  // Bir denemenin (attempt) soru dökümünü render eder — doğru yeşil ✓, yanlış kırmızı ✗
+  function ieltsQuestionRows(qs) {
+    if (!qs || !qs.length) return '<div class="ga-empty-mini">Soru dökümü yok.</div>';
+    return qs.map(function (q) {
+      var pooled = !!q.pooled;
+      var ok = q.ok === true;
+      var cls = ok ? 'ok' : (pooled && q.correct_count > 0 ? 'part' : 'no');
+      var mark = ok ? '✓' : (pooled && q.correct_count > 0 ? '±' : '✗');
+      var qtext = q.q ? esc(String(q.q)) : '';
+      var ans = '';
+      if (pooled) {
+        ans = '<span class="qans">Seçilen: ' + (q.user ? esc(q.user) : '<span class="qbad">— boş —</span>')
+            + ' · Doğru: <span class="qgood">' + esc(q.correct || '') + '</span>'
+            + ' · <b>' + (q.correct_count || 0) + '/' + (q.span || 0) + '</b></span>';
+      } else if (ok) {
+        ans = '<span class="qans"><span class="qgood">' + esc(q.user || q.correct || '') + '</span></span>';
+      } else {
+        ans = '<span class="qans">Öğrenci: ' + (q.user ? '<span class="qbad">' + esc(q.user) + '</span>' : '<span class="qbad">— boş —</span>')
+            + ' · Doğru: <span class="qgood">' + esc(q.correct || '') + '</span></span>';
+      }
+      return '<div class="ga-q ' + cls + '"><span class="qn">' + esc(String(q.n)) + '</span><span class="qmark">' + mark + '</span>'
+        + '<span class="qtext">' + (qtext || '<span style="color:var(--text-muted,#6b6862);">Soru ' + esc(String(q.n)) + '</span>') + ans + '</span></div>';
+    }).join('');
+  }
+
+  function ieltsAttemptBlock(a) {
+    var band = num1(a.band);
+    var when = fmtDate(a.completed_at);
+    var raw = (a.raw_score != null && a.total_questions != null) ? (a.raw_score + '/' + a.total_questions) : '';
+    var head = '<summary><span class="ga-secname">' + esc(SECTION_LABEL[a.section] || a.section) + '</span>'
+      + (when ? ' <span class="ga-when">' + esc(when) + '</span>' : '')
+      + '<span class="ga-bchip" style="background:' + (band != null ? bandColor(band) : 'var(--teal,#2C5856)') + '">Band ' + (band != null ? band.toFixed(1) : '—') + (raw ? ' · ' + raw : '') + '</span></summary>';
+    return '<details class="ga-att">' + head + '<div class="ga-qs">' + ieltsQuestionRows(a.questions) + '</div></details>';
+  }
+
+  function ieltsEssayBlock(w) {
+    var head = '<summary><span class="ga-secname">Writing — ' + esc(w.test_name || 'Deneme') + '</span>'
+      + (w.submitted_at ? ' <span class="ga-when">' + esc(fmtDate(w.submitted_at)) + '</span>' : '')
+      + '<span class="ga-bchip">' + (w.overall_band != null ? 'Band ' + num1(w.overall_band).toFixed(1) : (w.evaluated ? 'Değerlendirildi' : 'Değerlendirilmedi')) + '</span></summary>';
+    var comments = w.comments || {};
+    function taskHtml(n) {
+      var essay = n === 1 ? w.task1_essay : w.task2_essay;
+      var wc = n === 1 ? w.task1_word_count : w.task2_word_count;
+      var band = num1(n === 1 ? w.task1_band : w.task2_band);
+      if ((essay == null || String(essay).trim() === '') && band == null) return '';
+      var h = '<div class="ga-essay"><div class="et">Task ' + n
+        + (band != null ? ' <span class="ga-chip" style="background:' + bandColor(band) + '">Band ' + band.toFixed(1) + '</span>' : '')
+        + (wc != null ? ' <small>· ' + wc + ' kelime</small>' : '') + '</div>';
+      if (essay != null && String(essay).trim() !== '') {
+        h += '<div class="ga-essay-box">' + esc(String(essay)) + '</div>';
+      } else {
+        h += '<div class="ga-empty-mini">Bu göreve yazı girilmemiş.</div>';
+      }
+      // ilgili task yorumları
+      var fb = '';
+      Object.keys(WR_LBL).forEach(function (k) {
+        if (k.indexOf('task' + n) === 0 && comments[k]) {
+          fb += '<div class="ga-fb"><b>' + esc(WR_LBL[k].replace('Task ' + n + ' · ', '')) + ':</b> ' + esc(String(comments[k])) + '</div>';
+        }
+      });
+      h += fb + '</div>';
+      return h;
+    }
+    return '<details class="ga-att">' + head + '<div class="ga-qs">' + (taskHtml(1) + taskHtml(2) || '<div class="ga-empty-mini">Yazı bulunamadı.</div>') + '</div></details>';
+  }
+
   function buildIelts(d) {
     var att = d.attempts || 0;
-    if (!att) return '<div class="ga-empty">IELTS deneme verisi yok.</div>';
+    var detail = d.attempts_detail || [];
+    var writing = d.writing || [];
+    if (!att && !writing.length) return '<div class="ga-empty">IELTS deneme verisi yok.</div>';
     var overall = num1(d.overall);
     var secs = (d.sections || []).slice();
     var html = '<div class="ga-cards">';
     html += card('Genel Band', overall != null ? overall.toFixed(1) : '—', '/9', att, true);
     secs.forEach(function (s) { var av = num1(s.avg); html += card(SECTION_LABEL[s.section] || s.section, av != null ? av.toFixed(1) : '—', '/9', s.attempts); });
+    // Yazma ortalama bandı (essay'lerden)
+    var wBands = writing.map(function (w) { return num1(w.overall_band); }).filter(function (x) { return x != null; });
+    var wAvg = wBands.length ? (wBands.reduce(function (a, b) { return a + b; }, 0) / wBands.length) : null;
+    if (wAvg != null && !secs.some(function (s) { return s.section === 'writing'; })) {
+      html += card('Writing', wAvg.toFixed(1), '/9', wBands.length);
+    }
     html += '</div>';
-    html += '<div class="ga-note">Gerçek IELTS deneme band ortalaması · ' + att + ' deneme · ' + secs.length + ' bölüm.</div>';
+    html += '<div class="ga-note">Gerçek IELTS deneme verisi · ' + att + ' bölüm denemesi · ' + writing.length + ' yazma gönderimi.</div>';
     var goal = num1(d.goal);
     if (goal != null && overall != null) {
       var gap = Math.round((goal - overall) * 10) / 10;
@@ -171,15 +276,41 @@
       var gTxt = gap <= 0 ? 'hedefin üzerinde ▲' : ('hedefe ' + gap + ' band var');
       html += '<div class="ga-goal">🎯 Hedef band: <b>' + esc(String(d.goal)) + '</b> · Ortalama: <b>' + overall.toFixed(1) + '</b> · <b style="color:' + gColor + '">' + gTxt + '</b></div>';
     } else if (d.goal) { html += '<div class="ga-goal">🎯 Hedef band: <b>' + esc(String(d.goal)) + '</b></div>'; }
-    html += '<div class="ga-grp">Bölüm Detayı (en iyi · son)</div>';
-    html += secs.map(function (s) {
-      var av = num1(s.avg) || 0, p = Math.round(av / 9 * 100);
-      var best = num1(s.best), last = num1(s.last);
-      return '<div class="ga-row"><span class="n">' + esc(SECTION_LABEL[s.section] || s.section) + '</span>' + bar(p, bandColor(av)) + '<span class="p">' + av.toFixed(1) + ' <span style="opacity:.65">(' + (best != null ? best.toFixed(1) : '—') + ' · ' + (last != null ? last.toFixed(1) : '—') + ')</span></span></div>';
-    }).join('');
-    var sorted = secs.filter(function (s) { return num1(s.avg) != null; }).sort(function (a, b) { return num1(b.avg) - num1(a.avg); });
+
+    if (secs.length) {
+      html += '<div class="ga-grp">Bölüm Ortalaması (en iyi · son)</div>';
+      html += secs.map(function (s) {
+        var av = num1(s.avg) || 0, p = Math.round(av / 9 * 100);
+        var best = num1(s.best), last = num1(s.last);
+        return '<div class="ga-row"><span class="n">' + esc(SECTION_LABEL[s.section] || s.section) + '</span>' + bar(p, bandColor(av)) + '<span class="p">' + av.toFixed(1) + ' <span style="opacity:.65">(' + (best != null ? best.toFixed(1) : '—') + ' · ' + (last != null ? last.toFixed(1) : '—') + ')</span></span></div>';
+      }).join('');
+    }
+
+    // Soru-düzeyi deneme dökümü (reading & listening)
+    if (detail.length) {
+      html += '<div class="ga-grp">Deneme Dökümü — Soru / Cevap (' + detail.length + ')</div>';
+      html += detail.map(ieltsAttemptBlock).join('');
+    }
+
+    // Yazma essay'leri (tam metin + band + geri bildirim)
+    if (writing.length) {
+      html += '<div class="ga-grp">Yazma (Writing) — Öğrenci Metinleri (' + writing.length + ')</div>';
+      html += writing.map(ieltsEssayBlock).join('');
+    }
+
+    // Güçlü/zayıf verdict — reading + listening + writing birlikte
+    var perf = [];
+    secs.forEach(function (s) { var av = num1(s.avg); if (av != null) perf.push({ label: SECTION_LABEL[s.section] || s.section, val: av }); });
+    if (wAvg != null && !perf.some(function (p) { return p.label === 'Writing'; })) perf.push({ label: 'Writing', val: wAvg });
+    perf.sort(function (a, b) { return b.val - a.val; });
     var v = '<b>IELTS</b>: Ortalama band <b>' + (overall != null ? overall.toFixed(1) : '—') + '</b>. ';
-    if (sorted.length) { v += 'En güçlü: ' + esc(SECTION_LABEL[sorted[0].section] || sorted[0].section) + ' (' + num1(sorted[0].avg).toFixed(1) + '). '; if (sorted.length > 1) { var w = sorted[sorted.length - 1]; v += 'En zayıf: <b>' + esc(SECTION_LABEL[w.section] || w.section) + '</b> (' + num1(w.avg).toFixed(1) + ') — bu bölüme ağırlık verilmeli.'; } }
+    if (perf.length) {
+      v += 'En güçlü: <b>' + esc(perf[0].label) + '</b> (' + perf[0].val.toFixed(1) + '). ';
+      if (perf.length > 1) { var wk = perf[perf.length - 1]; v += 'En zayıf: <b>' + esc(wk.label) + '</b> (' + wk.val.toFixed(1) + ') — bu bölüme ağırlık verilmeli. '; }
+    }
+    if (wAvg != null) {
+      v += 'Yazmada ortalama <b>' + wAvg.toFixed(1) + '</b>; ' + (wAvg < 6 ? 'gramer ve görev yanıtı üzerine çalışılmalı.' : (wAvg < 7 ? 'sağlam, tutarlılık ve kelime çeşitliliğiyle yükselebilir.' : 'güçlü, koru.'));
+    }
     html += '<div class="ga-verdict">' + v + '</div>';
     return html;
   }
@@ -216,7 +347,7 @@
       + '</style></head><body>'
       + '<h1>Sınav Analizi — ' + esc(studentLabel || 'Öğrenci') + '</h1>'
       + '<div class="ga-sub">' + esc(examLabel) + ' · ' + esc(when) + ' · Gri English</div>'
-      + '<div class="ga">' + (body ? body.innerHTML : '') + '</div>'
+      + '<div class="ga">' + (body ? body.innerHTML.replace(/<details/g, '<details open') : '') + '</div>'
       + '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},300);};</scr' + 'ipt>'
       + '</body></html>';
     win.document.open(); win.document.write(doc); win.document.close();

@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/grimeet-schedule.js?v=10" defer></script>
-  <script src="assets/student-analysis.js?v=3" defer></script>
+  <script src="assets/student-analysis.js?v=4" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/gri-cat.js"></script>
@@ -3125,6 +3125,116 @@
           adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
         }
       }
+      // ============================================================
+      // IELTS Deneme (mock) ödevi çekmecesi — bölüm band'i + soru/cevap + öğrenci essay'leri
+      // ============================================================
+      async function openIeltsMockDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'IELTS Deneme Ödevi';
+        adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
+        var SECL = { reading: 'Reading', listening: 'Listening', writing: 'Writing', full: 'Tüm bölümler', genel: 'Genel' };
+        function bandChip(b) {
+          var n = parseFloat(b);
+          var c = isNaN(n) ? '#2C5856' : (n >= 6.5 ? '#1FA971' : (n >= 5 ? '#B78A2E' : '#c0392b'));
+          return '<span style="display:inline-block;padding:1px 8px;border-radius:20px;background:' + c + ';color:#fff;font-size:.72rem;font-weight:600;">Band ' + (isNaN(n) ? '—' : n.toFixed(1)) + '</span>';
+        }
+        function qRows(qs) {
+          if (!qs || !qs.length) return '<p class="qd-empty">Soru dökümü bulunamadı.</p>';
+          return '<div class="qd-list geq-scroll">' + qs.map(function (q) {
+            var pooled = !!q.pooled, ok = q.ok === true;
+            var cls = ok ? 'ok' : (pooled && q.correct_count > 0 ? 'open' : 'no');
+            var mark = ok ? '✓' : (pooled && q.correct_count > 0 ? '±' : '✗');
+            var meta;
+            if (pooled) {
+              meta = 'Seçilen: ' + (q.user ? esc(q.user) : '—') + ' · Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span> · <b>' + (q.correct_count || 0) + '/' + (q.span || 0) + '</b>';
+            } else if (ok) {
+              meta = 'Doğru: <span class="qd-ans-right">' + esc(q.user || q.correct || '') + '</span>';
+            } else {
+              meta = 'Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span> · Öğrenci: <span class="qd-ans-wrong">' + (q.user ? esc(q.user) : '— boş —') + '</span>';
+            }
+            var qtext = q.q ? esc(String(q.q)) : ('Soru ' + esc(String(q.n)));
+            return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
+              + '<div class="qd-body"><div class="qd-q">' + esc(String(q.n)) + '. ' + qtext + '</div>'
+              + '<div class="qd-meta">' + meta + '</div></div></div>';
+          }).join('') + '</div>';
+        }
+        function essayHtml(w) {
+          if (!w) return '';
+          var comments = w.comments || {};
+          function task(n) {
+            var essay = n === 1 ? w.task1_essay : w.task2_essay;
+            var wc = n === 1 ? w.task1_word_count : w.task2_word_count;
+            var band = n === 1 ? w.task1_band : w.task2_band;
+            if ((essay == null || String(essay).trim() === '') && band == null) return '';
+            var h = '<div class="qd-writing"><div class="qd-writing-label">Task ' + n + (band != null ? ' · ' + bandChip(band) : '') + (wc != null ? ' <span style="color:var(--text-muted);font-weight:400;">· ' + esc(String(wc)) + ' kelime</span>' : '') + '</div>';
+            h += (essay && String(essay).trim() !== '') ? '<div class="qd-writing-text">' + esc(String(essay)) + '</div>' : '<div class="qd-meta" style="color:var(--text-muted);">Bu göreve yazı girilmemiş.</div>';
+            var fb = '';
+            ['achievement', 'response', 'coherence', 'lexical', 'grammar'].forEach(function (k) {
+              var key = 'task' + n + '_' + k;
+              if (comments[key]) fb += '<div class="qd-meta" style="margin-top:3px;"><b>' + esc(k) + ':</b> ' + esc(String(comments[key])) + '</div>';
+            });
+            return h + fb + '</div>';
+          }
+          var t = task(1) + task(2);
+          return t ? ('<div style="margin-top:8px;"><div class="qd-q" style="font-weight:600;">Writing — Öğrenci Metni' + (w.overall_band != null ? ' · ' + bandChip(w.overall_band) : '') + '</div>' + t + '</div>') : '';
+        }
+        try {
+          var r = await withTimeout(sb.rpc('teacher_ielts_mock_detail', { p_assignment_id: assignmentId }), 15000, 'Deneme detayı');
+          if (r.error) throw r.error;
+          var d = r.data || {};
+          if (d.error) {
+            var msg = d.error === 'forbidden'
+              ? 'Bu sınıfı görüntüleme yetkin yok veya oturumun düşmüş görünüyor. Sağ üstten <b>çıkış yapıp tekrar giriş</b> yapıp tekrar dene.'
+              : (d.error === 'assignment_not_found' ? 'Ödev bulunamadı.' : rpcErrMsg(d.error));
+            adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + msg + '</p>';
+            return;
+          }
+          var students = d.students || [];
+          var header = '<div class="gepool-head"><a href="ielts-deneme.html" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
+            + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.test_name || '') + ' · ' + esc(SECL[d.section] || d.section || '') + '</span></div>';
+          if (d.test_found === false) header += '<p class="qd-empty">Bu deneme testi (' + esc(d.test_slug || '') + ') sistemde bulunamadı; öğrenci cevapları eşleştirilemedi.</p>';
+          if (!students.length) { adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
+          var html = header + '<ul class="ad-list">' + students.map(function (st) {
+            var email = st.email || '(e-posta yok)';
+            var attempts = st.attempts || [], writing = st.writing;
+            var didAny = attempts.length > 0 || !!writing;
+            var parts = attempts.map(function (a) { return (SECL[a.section] || a.section) + ' ' + (a.band != null ? parseFloat(a.band).toFixed(1) : '—'); });
+            if (writing && writing.overall_band != null) parts.push('Writing ' + parseFloat(writing.overall_band).toFixed(1));
+            var summ = parts.join(' · ');
+            var detailInner;
+            if (!didAny) {
+              detailInner = '<div class="ad-detail-inner"><p class="qd-empty">Bu öğrenci bu denemeyi henüz yapmadı.</p></div>';
+            } else {
+              var body = attempts.map(function (a) {
+                return '<div style="margin-top:8px;"><div class="qd-q" style="font-weight:600;">' + esc(SECL[a.section] || a.section) + ' ' + bandChip(a.band)
+                  + (a.raw_score != null && a.total_questions != null ? ' <span style="color:var(--text-muted);font-size:.75rem;">' + a.raw_score + '/' + a.total_questions + ' doğru</span>' : '')
+                  + '</div>' + qRows(a.questions) + '</div>';
+              }).join('');
+              body += essayHtml(writing);
+              detailInner = '<div class="ad-detail-inner"><div class="qd-summary"><span>' + esc(summ || '—') + '</span></div>' + body + '</div>';
+            }
+            var pill = didAny ? '<span class="ad-status-pill status-completed">Yaptı</span>' : '<span class="ad-status-pill status-pending">Yapmadı</span>';
+            return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
+              + '<div class="ad-progress ' + (didAny ? 'progress-completed' : 'progress-pending') + '">' + (didAny ? (attempts.length + (writing ? 1 : 0)) + ' ✓' : '—') + '</div>'
+              + pill
+              + '<div class="ad-actions"><button type="button" class="ad-inspect-btn ielts-mock-inspect">İncele</button></div></li>'
+              + '<li class="ad-detail-row" hidden>' + detailInner + '</li>';
+          }).join('') + '</ul>';
+          adBody.innerHTML = html;
+          adBody.querySelectorAll('.ielts-mock-inspect').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var row = btn.closest('.ad-row').nextElementSibling;
+              if (row && row.classList.contains('ad-detail-row')) {
+                row.hidden = !row.hidden; btn.textContent = row.hidden ? 'İncele' : 'Gizle'; btn.classList.toggle('open', !row.hidden);
+              }
+            });
+          });
+          if (students.length === 1) { var b0 = adBody.querySelector('.ielts-mock-inspect'); if (b0) b0.click(); }
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
+        }
+      }
+
       function slugLabel(slug) {
         if (!slug) return 'Soru';
         var m = String(slug).match(/(\d+)\s*$/);
@@ -4251,6 +4361,8 @@
                 openVocabAssignDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.kind === 'gepool') {
                 openGePoolDrawer(card.dataset.id, card.dataset.title);
+              } else if (card.dataset.type === 'ielts_mock') {
+                openIeltsMockDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'writing') {
                 openWritingAssignDrawer(card.dataset.id, card.dataset.title);
               } else {

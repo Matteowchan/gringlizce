@@ -69,6 +69,21 @@
   function norm(ch){ return String(ch||'').toUpperCase().replace(/[^A-ZÇĞİÖŞÜ]/g,''); }
   function ck(r,c){ return r+'_'+c; }
 
+  // Tek global resize dinleyicisi + canlı grid kaydı (mount başına listener sızıntısı önlenir).
+  var _gcwReg = [];
+  var _gcwBound = false;
+  function _gcwBindResize(){
+    if(_gcwBound) return; _gcwBound = true;
+    var t;
+    window.addEventListener('resize', function(){
+      clearTimeout(t);
+      t = setTimeout(function(){
+        _gcwReg = _gcwReg.filter(function(e){ return document.body.contains(e.grid); });
+        _gcwReg.forEach(function(e){ try{ e.fit(); }catch(_e){} });
+      }, 150);
+    });
+  }
+
   function mount(host, task, opts){
     injectCss();
     opts=opts||{};
@@ -135,7 +150,7 @@
       for(var j=0;j<inps.length;j++){ inps[j].style.fontSize=fs+'px'; }
     }
     gcwFit();
-    var _gcwRT; window.addEventListener('resize', function(){ clearTimeout(_gcwRT); _gcwRT=setTimeout(gcwFit,150); });
+    _gcwReg.push({ grid: grid, fit: gcwFit }); _gcwBindResize();
 
     /* clues */
     var cluesWrap=document.createElement('div'); cluesWrap.className='gcw-clues';

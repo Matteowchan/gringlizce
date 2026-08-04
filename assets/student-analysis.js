@@ -69,6 +69,7 @@
     + '.ga-q .qexp{display:block;font-size:0.74rem;line-height:1.5;color:var(--text-muted,#6b6862);font-style:italic;margin-top:4px;padding:4px 8px;background:rgba(183,138,46,0.09);border-left:3px solid #B78A2E;border-radius:4px;}'
     + '.ga-q .qexp b{color:#8a6a1e;font-style:normal;}'
     + '.ga-q.no .qexp{background:rgba(192,57,43,0.08);border-left-color:#c0392b;}.ga-q.no .qexp b{color:#b33a3a;}'
+    + ':root[data-theme="dark"] .ga-q .qexp b{color:#D8B25A;}:root[data-theme="dark"] .ga-q.no .qexp b{color:#e5837b;}'
     + '.ga-essay{margin:0.55rem 0 0.2rem;}'
     + '.ga-essay .et{font-size:0.8rem;font-weight:600;margin-bottom:0.25rem;}'
     + '.ga-essay .et small{font-weight:400;color:var(--text-muted,#6b6862);}'

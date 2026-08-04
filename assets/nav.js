@@ -88,7 +88,7 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  function twoline(label, caret) { var i = label.indexOf(" "); var w1 = i === -1 ? label : label.slice(0, i); var w2 = i === -1 ? "" : label.slice(i + 1); return '<span class="nw1">' + esc(w1) + (caret ? CVDOWN : "") + '</span>' + (w2 ? '<span class="nw2">' + esc(w2) + "</span>" : ""); }
+  function twoline(label, caret) { var i = label.indexOf(" "); var w1 = i === -1 ? label : label.slice(0, i); var w2 = i === -1 ? "" : label.slice(i + 1); var cv = caret ? CVDOWN : ""; return '<span class="nw1">' + esc(w1) + (w2 ? "" : cv) + '</span>' + (w2 ? '<span class="nw2">' + esc(w2) + cv + "</span>" : ""); }
 
   function readTheme() { try { return localStorage.getItem("gri-theme") || "krem"; } catch (e) { return "krem"; } }
   function applyTheme(t) {

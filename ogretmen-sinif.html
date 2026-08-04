@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/grimeet-schedule.js?v=10" defer></script>
-  <script src="assets/student-analysis.js?v=4" defer></script>
+  <script src="assets/student-analysis.js?v=5" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/gri-cat.js"></script>
@@ -742,9 +742,21 @@
     .qd-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; }
     .qd-meta .qd-ans-wrong { color: #c0453b; font-weight: 600; }
     .qd-meta .qd-ans-right { color: #2e8b57; font-weight: 600; }
+    .qd-exp { font-size: 0.76rem; line-height: 1.5; color: var(--text-muted); font-style: italic; margin-top: 0.28rem; padding: 0.32rem 0.5rem; background: rgba(183,138,46,0.08); border-left: 3px solid #B78A2E; border-radius: 4px; }
+    .qd-exp b { color: #8a6a1e; font-style: normal; }
+    .qd-item.no .qd-exp { background: rgba(192,69,59,0.07); border-left-color: #c0453b; }
+    .qd-item.no .qd-exp b { color: #b33a3a; }
     .qd-writing { margin-top: 0.35rem; }
     .qd-writing-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal, #2C5856); margin-bottom: 0.28rem; }
     .qd-writing-text { white-space: pre-wrap; font-size: 0.86rem; line-height: 1.5; color: var(--text, #2b2b2b); background: rgba(44,88,86,0.05); border: 1px solid var(--line, #D9D2C4); border-left: 3px solid var(--teal, #2C5856); border-radius: 4px; padding: 0.5rem 0.7rem; }
+    .gri-eval-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+    .gri-eval-btn { border: 1px solid var(--teal, #2C5856); background: var(--teal, #2C5856); color: #fff; font-size: 0.78rem; font-weight: 600; padding: 0.34rem 0.75rem; border-radius: 7px; cursor: pointer; transition: opacity .12s; }
+    .gri-eval-btn:hover { opacity: 0.88; }
+    .gri-eval-btn:disabled { opacity: 0.6; cursor: default; }
+    .gri-eval-badge { font-size: 0.7rem; font-weight: 600; color: #1FA971; background: rgba(31,169,113,0.12); border-radius: 20px; padding: 2px 9px; }
+    .gri-eval-msg { font-size: 0.76rem; width: 100%; }
+    .gri-eval-msg .gri-eval-pending { color: var(--text-muted); font-style: italic; }
+    .gri-eval-msg .gri-eval-err { color: #c0453b; }
     .qd-empty { color: var(--text-muted); font-style: italic; text-align: center; padding: 0.6rem; }
     .qd-open { margin-left: auto; font-size: 0.8rem; font-weight: 600; color: var(--teal, #2C5856); text-decoration: none; white-space: nowrap; }
     .qd-open:hover { text-decoration: underline; }
@@ -3133,6 +3145,66 @@
         adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
         aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
         var SECL = { reading: 'Reading', listening: 'Listening', writing: 'Writing', full: 'Tüm bölümler', genel: 'Genel' };
+        var EVAL_ENDPOINT = SUPABASE_URL + '/functions/v1/gri-evaluate-writing';
+        var IELTS_WR_PROMPT = 'IELTS Writing test: Task 1 (visual description, 150-200 words) and Task 2 (argumentative essay, 250-300 words). Evaluate both tasks separately using IELTS Band Descriptors (0-9). Provide separate band scores for each criterion of each task.';
+        var ieltsWritingMap = {};
+        function evalControls(w) {
+          var evaluated = !!w.evaluated;
+          var label = evaluated ? 'Gri ile yeniden değerlendir' : 'Gri ile değerlendir';
+          var badge = evaluated ? '<span class="gri-eval-badge">Gri değerlendirdi</span>' : '';
+          return '<div class="gri-eval-row">'
+            + '<button type="button" class="gri-eval-btn" data-sub="' + esc(String(w.id)) + '">' + label + '</button>'
+            + badge
+            + '<div class="gri-eval-msg" data-for="' + esc(String(w.id)) + '"></div>'
+            + '</div>';
+        }
+        function attachGriHandlers(scope) {
+          (scope || adBody).querySelectorAll('.gri-eval-btn').forEach(function (btn) {
+            if (btn.dataset.bound) return; btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+              var subId = btn.dataset.sub;
+              var msgEl = (scope || adBody).querySelector('.gri-eval-msg[data-for="' + subId + '"]');
+              runGriEval(subId, btn, msgEl);
+            });
+          });
+        }
+        async function runGriEval(subId, btn, msgEl) {
+          var w = ieltsWritingMap[subId];
+          if (!w) return;
+          var orig = btn.textContent;
+          btn.disabled = true; btn.textContent = 'Değerlendiriliyor…';
+          if (msgEl) msgEl.innerHTML = '<span class="gri-eval-pending">Gri yazıyı okuyor, 10-20 sn…</span>';
+          try {
+            var sess = (await sb.auth.getSession()).data.session;
+            if (!sess) throw new Error('Oturum bulunamadı, tekrar giriş yap.');
+            var combinedText = '## TASK 1\n\n' + (w.task1_essay || '(boş)') + '\n\n## TASK 2\n\n' + (w.task2_essay || '(boş)');
+            var combinedWordCount = (w.task1_word_count || 0) + (w.task2_word_count || 0);
+            var r = await fetch(EVAL_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sess.access_token },
+              body: JSON.stringify({ text_type_id: 'ielts-writing-complete', level: null, prompt_id: null, prompt_snapshot: IELTS_WR_PROMPT, text: combinedText, word_count: combinedWordCount })
+            });
+            if (r.status === 402) { var pb = await r.json().catch(function () { return {}; }); throw new Error(pb.error || 'Değerlendirme hakkı bitti.'); }
+            if (!r.ok) { var eb = await r.json().catch(function () { return {}; }); throw new Error(eb.error || ('HTTP ' + r.status)); }
+            var j = await r.json();
+            var evaluation = j.evaluation || {};
+            var sc = evaluation.scores || {};
+            function avg(keys) { var v = keys.map(function (k) { return Number(sc[k]); }).filter(function (x) { return !isNaN(x); }); return v.length ? Math.round((v.reduce(function (a, b) { return a + b; }, 0) / v.length) * 2) / 2 : null; }
+            var t1 = avg(['task1_achievement', 'task1_coherence', 'task1_lexical', 'task1_grammar']);
+            var t2 = avg(['task2_response', 'task2_coherence', 'task2_lexical', 'task2_grammar']);
+            var overall = (t1 != null && t2 != null) ? Math.round(((t1 + 2 * t2) / 3) * 2) / 2 : null;
+            var sv = await sb.rpc('teacher_save_ielts_writing_eval', { p_submission_id: subId, p_evaluation: evaluation, p_task1_band: t1, p_task2_band: t2, p_overall: overall });
+            if (sv.error) throw sv.error;
+            if (sv.data && sv.data.error) throw new Error(sv.data.error === 'forbidden' ? 'Bu öğrencinin yazısını değerlendirme yetkin yok.' : sv.data.error);
+            w.evaluated = true; w.comments = evaluation.comments || {}; w.scores = evaluation.scores || {};
+            w.task1_band = t1; w.task2_band = t2; w.overall_band = overall;
+            var wrap = document.getElementById('iww-' + String(subId));
+            if (wrap) { wrap.innerHTML = renderWritingInner(w); attachGriHandlers(wrap); }
+          } catch (e) {
+            if (msgEl) msgEl.innerHTML = '<span class="gri-eval-err">' + esc(e.message || String(e)) + '</span>';
+            btn.disabled = false; btn.textContent = orig;
+          }
+        }
         function bandChip(b) {
           var n = parseFloat(b);
           var c = isNaN(n) ? '#2C5856' : (n >= 6.5 ? '#1FA971' : (n >= 5 ? '#B78A2E' : '#c0392b'));
@@ -3153,13 +3225,13 @@
               meta = 'Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span> · Öğrenci: <span class="qd-ans-wrong">' + (q.user ? esc(q.user) : '— boş —') + '</span>';
             }
             var qtext = q.q ? esc(String(q.q)) : ('Soru ' + esc(String(q.n)));
+            var expHtml = (q.exp && String(q.exp).trim()) ? '<div class="qd-exp"><b>Neden:</b> ' + esc(String(q.exp)) + '</div>' : '';
             return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
               + '<div class="qd-body"><div class="qd-q">' + esc(String(q.n)) + '. ' + qtext + '</div>'
-              + '<div class="qd-meta">' + meta + '</div></div></div>';
+              + '<div class="qd-meta">' + meta + '</div>' + expHtml + '</div></div>';
           }).join('') + '</div>';
         }
-        function essayHtml(w) {
-          if (!w) return '';
+        function renderWritingInner(w) {
           var comments = w.comments || {};
           function task(n) {
             var essay = n === 1 ? w.task1_essay : w.task2_essay;
@@ -3176,7 +3248,14 @@
             return h + fb + '</div>';
           }
           var t = task(1) + task(2);
-          return t ? ('<div style="margin-top:8px;"><div class="qd-q" style="font-weight:600;">Writing — Öğrenci Metni' + (w.overall_band != null ? ' · ' + bandChip(w.overall_band) : '') + '</div>' + t + '</div>') : '';
+          if (!t) return '';
+          return '<div style="margin-top:8px;"><div class="qd-q" style="font-weight:600;">Writing — Öğrenci Metni' + (w.overall_band != null ? ' · ' + bandChip(w.overall_band) : '') + '</div>' + t + evalControls(w) + '</div>';
+        }
+        function essayHtml(w) {
+          if (!w) return '';
+          if (w.id) ieltsWritingMap[String(w.id)] = w;
+          var inner = renderWritingInner(w);
+          return inner ? ('<div class="ielts-wr-wrap" id="iww-' + esc(String(w.id)) + '">' + inner + '</div>') : '';
         }
         try {
           var r = await withTimeout(sb.rpc('teacher_ielts_mock_detail', { p_assignment_id: assignmentId }), 15000, 'Deneme detayı');
@@ -3229,6 +3308,7 @@
               }
             });
           });
+          attachGriHandlers(adBody);
           if (students.length === 1) { var b0 = adBody.querySelector('.ielts-mock-inspect'); if (b0) b0.click(); }
         } catch (err) {
           adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';

@@ -66,6 +66,9 @@
     + '.ga-q .qtext{flex:1;min-width:0;}'
     + '.ga-q .qans{display:block;color:var(--text-muted,#6b6862);font-size:0.75rem;margin-top:1px;}'
     + '.ga-q .qgood{color:#1FA971;font-weight:600;}.ga-q .qbad{color:#c0392b;}'
+    + '.ga-q .qexp{display:block;font-size:0.74rem;line-height:1.5;color:var(--text-muted,#6b6862);font-style:italic;margin-top:4px;padding:4px 8px;background:rgba(183,138,46,0.09);border-left:3px solid #B78A2E;border-radius:4px;}'
+    + '.ga-q .qexp b{color:#8a6a1e;font-style:normal;}'
+    + '.ga-q.no .qexp{background:rgba(192,57,43,0.08);border-left-color:#c0392b;}.ga-q.no .qexp b{color:#b33a3a;}'
     + '.ga-essay{margin:0.55rem 0 0.2rem;}'
     + '.ga-essay .et{font-size:0.8rem;font-weight:600;margin-bottom:0.25rem;}'
     + '.ga-essay .et small{font-weight:400;color:var(--text-muted,#6b6862);}'
@@ -74,7 +77,14 @@
     + '.ga-fb b{color:var(--text,#1a2230);}'
     + '.ga-bchip,.ga-chip{display:inline-block;font-size:0.72rem;padding:1px 8px;border-radius:20px;background:var(--teal,#2C5856);color:#fff;}'
     + '.ga-chip.mut{background:var(--line,#e6ddca);color:var(--text,#1a2230);}'
-    + '.ga-empty-mini{color:var(--text-muted,#6b6862);font-style:italic;font-size:0.8rem;padding:0.3rem 0;}';
+    + '.ga-empty-mini{color:var(--text-muted,#6b6862);font-style:italic;font-size:0.8rem;padding:0.3rem 0;}'
+    + '.gri-eval-row{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin:0.55rem 0 0.2rem;}'
+    + '.gri-eval-btn{border:1px solid var(--teal,#2C5856);background:var(--teal,#2C5856);color:#fff;font:inherit;font-size:0.76rem;font-weight:600;padding:0.32rem 0.72rem;border-radius:7px;cursor:pointer;}'
+    + '.gri-eval-btn:hover{opacity:0.88;}.gri-eval-btn:disabled{opacity:0.6;cursor:default;}'
+    + '.gri-eval-badge{font-size:0.68rem;font-weight:600;color:#1FA971;background:rgba(31,169,113,0.12);border-radius:20px;padding:2px 9px;}'
+    + '.gri-eval-msg{font-size:0.75rem;width:100%;}'
+    + '.gri-eval-msg .gri-eval-pending{color:var(--text-muted,#6b6862);font-style:italic;}'
+    + '.gri-eval-msg .gri-eval-err{color:#c0392b;}';
 
   function injectCSS() { if (document.getElementById('ga-css')) return; var s = document.createElement('style'); s.id = 'ga-css'; s.textContent = CSS; document.head.appendChild(s); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -205,8 +215,9 @@
         ans = '<span class="qans">Öğrenci: ' + (q.user ? '<span class="qbad">' + esc(q.user) + '</span>' : '<span class="qbad">— boş —</span>')
             + ' · Doğru: <span class="qgood">' + esc(q.correct || '') + '</span></span>';
       }
+      var expHtml = (q.exp && String(q.exp).trim()) ? '<span class="qexp"><b>Neden:</b> ' + esc(String(q.exp)) + '</span>' : '';
       return '<div class="ga-q ' + cls + '"><span class="qn">' + esc(String(q.n)) + '</span><span class="qmark">' + mark + '</span>'
-        + '<span class="qtext">' + (qtext || '<span style="color:var(--text-muted,#6b6862);">Soru ' + esc(String(q.n)) + '</span>') + ans + '</span></div>';
+        + '<span class="qtext">' + (qtext || '<span style="color:var(--text-muted,#6b6862);">Soru ' + esc(String(q.n)) + '</span>') + ans + expHtml + '</span></div>';
     }).join('');
   }
 
@@ -220,7 +231,74 @@
     return '<details class="ga-att">' + head + '<div class="ga-qs">' + ieltsQuestionRows(a.questions) + '</div></details>';
   }
 
+  // ===== Öğretmen/admin: öğrenci yazısını Gri ile değerlendirme =====
+  var _sb = null, _ieltsWrMap = {};
+  var A_EVAL_ENDPOINT = 'https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/gri-evaluate-writing';
+  var GRI_WR_PROMPT = 'IELTS Writing test: Task 1 (visual description, 150-200 words) and Task 2 (argumentative essay, 250-300 words). Evaluate both tasks separately using IELTS Band Descriptors (0-9). Provide separate band scores for each criterion of each task.';
+  function griEvalControls(w) {
+    if (!w || !w.id) return '';
+    var evaluated = !!w.evaluated;
+    var label = evaluated ? 'Gri ile yeniden değerlendir' : 'Gri ile değerlendir';
+    var badge = evaluated ? '<span class="gri-eval-badge">Gri değerlendirdi</span>' : '';
+    return '<div class="gri-eval-row">'
+      + '<button type="button" class="gri-eval-btn" data-sub="' + esc(String(w.id)) + '">' + label + '</button>'
+      + badge + '<div class="gri-eval-msg" data-for="' + esc(String(w.id)) + '"></div></div>';
+  }
+  function attachGriHandlers(scope) {
+    if (!scope) return;
+    scope.querySelectorAll('.gri-eval-btn').forEach(function (btn) {
+      if (btn.dataset.bound) return; btn.dataset.bound = '1';
+      btn.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var subId = btn.dataset.sub;
+        var msgEl = document.querySelector('.gri-eval-msg[data-for="' + subId + '"]');
+        runGriEval(subId, btn, msgEl);
+      });
+    });
+  }
+  async function runGriEval(subId, btn, msgEl) {
+    var w = _ieltsWrMap[subId];
+    if (!w || !_sb) return;
+    var orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Değerlendiriliyor…';
+    if (msgEl) msgEl.innerHTML = '<span class="gri-eval-pending">Gri yazıyı okuyor, 10-20 sn…</span>';
+    try {
+      var sess = (await _sb.auth.getSession()).data.session;
+      if (!sess) throw new Error('Oturum bulunamadı, tekrar giriş yap.');
+      var combinedText = '## TASK 1\n\n' + (w.task1_essay || '(boş)') + '\n\n## TASK 2\n\n' + (w.task2_essay || '(boş)');
+      var combinedWordCount = (w.task1_word_count || 0) + (w.task2_word_count || 0);
+      var r = await fetch(A_EVAL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sess.access_token },
+        body: JSON.stringify({ text_type_id: 'ielts-writing-complete', level: null, prompt_id: null, prompt_snapshot: GRI_WR_PROMPT, text: combinedText, word_count: combinedWordCount })
+      });
+      if (r.status === 402) { var pb = await r.json().catch(function () { return {}; }); throw new Error(pb.error || 'Değerlendirme hakkı bitti.'); }
+      if (!r.ok) { var eb = await r.json().catch(function () { return {}; }); throw new Error(eb.error || ('HTTP ' + r.status)); }
+      var j = await r.json();
+      var evaluation = j.evaluation || {};
+      var sc = evaluation.scores || {};
+      function avg(keys) { var v = keys.map(function (k) { return Number(sc[k]); }).filter(function (x) { return !isNaN(x); }); return v.length ? Math.round((v.reduce(function (a, b) { return a + b; }, 0) / v.length) * 2) / 2 : null; }
+      var t1 = avg(['task1_achievement', 'task1_coherence', 'task1_lexical', 'task1_grammar']);
+      var t2 = avg(['task2_response', 'task2_coherence', 'task2_lexical', 'task2_grammar']);
+      var overall = (t1 != null && t2 != null) ? Math.round(((t1 + 2 * t2) / 3) * 2) / 2 : null;
+      var sv = await _sb.rpc('teacher_save_ielts_writing_eval', { p_submission_id: subId, p_evaluation: evaluation, p_task1_band: t1, p_task2_band: t2, p_overall: overall });
+      if (sv.error) throw sv.error;
+      if (sv.data && sv.data.error) throw new Error(sv.data.error === 'forbidden' ? 'Bu öğrencinin yazısını değerlendirme yetkin yok.' : sv.data.error);
+      w.evaluated = true; w.comments = evaluation.comments || {}; w.scores = evaluation.scores || {};
+      w.task1_band = t1; w.task2_band = t2; w.overall_band = overall;
+      var wrap = document.getElementById('giw-' + String(subId));
+      if (wrap) { wrap.innerHTML = ieltsEssayInner(w, true); attachGriHandlers(wrap); }
+    } catch (e) {
+      if (msgEl) msgEl.innerHTML = '<span class="gri-eval-err">' + esc(e.message || String(e)) + '</span>';
+      btn.disabled = false; btn.textContent = orig;
+    }
+  }
+
   function ieltsEssayBlock(w) {
+    if (w && w.id) _ieltsWrMap[String(w.id)] = w;
+    return '<div class="giw-wrap" id="giw-' + esc(String(w.id)) + '">' + ieltsEssayInner(w, false) + '</div>';
+  }
+  function ieltsEssayInner(w, keepOpen) {
     var head = '<summary><span class="ga-secname">Writing — ' + esc(w.test_name || 'Deneme') + '</span>'
       + (w.submitted_at ? ' <span class="ga-when">' + esc(fmtDate(w.submitted_at)) + '</span>' : '')
       + '<span class="ga-bchip">' + (w.overall_band != null ? 'Band ' + num1(w.overall_band).toFixed(1) : (w.evaluated ? 'Değerlendirildi' : 'Değerlendirilmedi')) + '</span></summary>';
@@ -248,7 +326,7 @@
       h += fb + '</div>';
       return h;
     }
-    return '<details class="ga-att">' + head + '<div class="ga-qs">' + (taskHtml(1) + taskHtml(2) || '<div class="ga-empty-mini">Yazı bulunamadı.</div>') + '</div></details>';
+    return '<details class="ga-att"' + (keepOpen ? ' open' : '') + '>' + head + '<div class="ga-qs">' + (taskHtml(1) + taskHtml(2) || '<div class="ga-empty-mini">Yazı bulunamadı.</div>') + griEvalControls(w) + '</div></details>';
   }
 
   function buildIelts(d) {
@@ -356,6 +434,7 @@
   function mount(opts) {
     var sb = opts.sb, cont = opts.container, userId = opts.userId, onAssign = opts.onAssign;
     if (!sb || !cont || !userId) return;
+    _sb = sb;
     injectCSS();
     cont.innerHTML = '<div class="ga"><div class="ga-head"><select class="ga-exam"><option>Yükleniyor…</option></select><button class="ga-print" type="button">PDF / Yazdır</button></div><div class="ga-body ga-empty">Yükleniyor…</div></div>';
     var sel = cont.querySelector('.ga-exam'), body = cont.querySelector('.ga-body'), printBtn = cont.querySelector('.ga-print');
@@ -371,7 +450,7 @@
         if (r.error) throw r.error;
         body.className = 'ga-body';
         var d = r.data || {};
-        if (exam === 'ielts') { body.innerHTML = buildIelts(d); }
+        if (exam === 'ielts') { body.innerHTML = buildIelts(d); attachGriHandlers(body); }
         else if (exam === 'vocab') { body.innerHTML = buildVocab(d); }
         else {
           body.innerHTML = build(exam, d, !!onAssign, opts.assignLabel);

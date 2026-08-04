@@ -179,9 +179,9 @@ const S={id:D.lessons[0].id};
 function renderRail(){
   const groups=D.groups.map(g=>{
     const items=D.lessons.filter(l=>l.group===g).map(l=>`<div class="rlink ${S.id===l.id?'cur':''}" data-go="${l.id}"><span class="dot"></span>${esc(l.name)}</div>`).join('');
-    return `<div class="rsec">${esc(g)}</div>${items}`;
+    return `<div class="rsec" lang="en">${esc(g)}</div>${items}`;
   }).join('');
-  railEl.innerHTML=`<div class="rc"><span class="u">${esc(D.badge||'TOEFL')}</span><div class="ut">${esc(D.title)}</div>${groups}</div>`;
+  railEl.innerHTML=`<div class="rc"><span class="u" lang="en">${esc(D.badge||'TOEFL')}</span><div class="ut">${esc(D.title)}</div>${groups}</div>`;
   railEl.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>show(e.getAttribute('data-go')));
 }
 function blockHTML(b,i){
@@ -239,7 +239,7 @@ function blockHTML(b,i){
 function show(id){
   S.id=id;renderRail();window.scrollTo(0,0);
   const l=D.lessons.find(x=>x.id===id);
-  let h=`<div class="head"><div class="eyebrow">${esc(l.eyebrow||l.group)}</div><h1>${esc(l.name)}</h1><div class="lead">${esc(l.lead||D.title)}</div></div><div class="pad">`;
+  let h=`<div class="head"><div class="eyebrow" lang="en">${esc(l.eyebrow||l.group)}</div><h1>${esc(l.name)}</h1><div class="lead">${esc(l.lead||D.title)}</div></div><div class="pad">`;
   (l.blocks||[]).forEach((b,i)=>h+=blockHTML(b,i));
   h+=`</div>`;app.innerHTML=h;wire();
   try{location.hash!=='#'+id&&history.replaceState(null,'','#'+id);localStorage.setItem('gri_resume',JSON.stringify({exam:D.badge||D.title,lesson:(l.name||''),url:location.pathname.split('/').pop()+'#'+id,t:Date.now()}));}catch(e){}

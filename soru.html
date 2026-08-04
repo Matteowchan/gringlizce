@@ -2889,11 +2889,16 @@
       // Tags chip bar (category + subcategory only; difficulty shown via grid colors)
       const tagsBarEl = document.getElementById('qTagsBar');
       const tagsHtml = [];
+      // İngilizce etiket → lang="en" (noktasız uppercase); Türkçe etiket → dokunma (İ korunur).
+      // Türkçe-özel harf yoksa ama ASCII-Türkçe ("Dilbilgisi") ise de İngilizce sayma.
+      const _isEnLabel = s => !/[çğıöşüİÇĞÖŞÜ]/.test(s) && !/\b(dilbilgisi)\b/i.test(s);
       if (q.category) {
-        tagsHtml.push(`<span class="q-tag-chip primary" lang="en">${esc(CATEGORY_LABELS[q.category] || humanize(q.category))}</span>`);
+        const _cl = CATEGORY_LABELS[q.category] || humanize(q.category);
+        tagsHtml.push(`<span class="q-tag-chip primary"${_isEnLabel(_cl) ? ' lang="en"' : ''}>${esc(_cl)}</span>`);
       }
       if (q.subcategory) {
-        tagsHtml.push(`<span class="q-tag-chip" lang="en">${esc(SUBCATEGORY_LABELS[q.subcategory] || humanize(q.subcategory))}</span>`);
+        const _sl = SUBCATEGORY_LABELS[q.subcategory] || humanize(q.subcategory);
+        tagsHtml.push(`<span class="q-tag-chip"${_isEnLabel(_sl) ? ' lang="en"' : ''}>${esc(_sl)}</span>`);
       }
       tagsBarEl.innerHTML = tagsHtml.join('');
 

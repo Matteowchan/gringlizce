@@ -185,28 +185,31 @@ function renderRail(){
   railEl.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>show(e.getAttribute('data-go')));
 }
 function blockHTML(b,i){
+  // İngilizce başlık → lang="en" (uppercase'de noktasız I); Türkçe → dokunma (İ korunur).
+  // Türkçe-özel harf yoksa ama ASCII-Türkçe ("Veri/Verildi") ise İngilizce sayma.
+  const eT=s=>(!/[çğıöşüİÇĞÖŞÜ]/.test(String(s||''))&&!/\b(veri|verildi)\b/i.test(String(s||'')))?' lang="en"':'';
   if(b.t==='p')return `<p>${esc(b.x)}</p>`;
   if(b.t==='h')return `<h2>${esc(b.x)}</h2><div class="rule"></div>`;
   if(b.t==='table'){const head=(b.head||[]).map(h=>`<th>${esc(h)}</th>`).join('');
     const rows=b.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
     return `<table class="dt">${b.head?`<thead><tr>${head}</tr></thead>`:''}<tbody>${rows}</tbody></table>`;}
   if(b.t==='note'){const li=b.lines.map(x=>`<li>${esc(x)}</li>`).join('');
-    return `<div class="note ${b.k||'ipucu'}"><span class="nt">${esc(b.title)}</span><ul>${li}</ul></div>`;}
-  if(b.t==='task')return `<div class="task"><span class="tl">${esc(b.title||'Görev')}</span>${b.lines.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`;
-  if(b.t==='given')return `<div class="given"><span class="gl">${esc(b.title)}</span>${esc(b.x)}</div>`;
+    return `<div class="note ${b.k||'ipucu'}"><span class="nt"${eT(b.title)}>${esc(b.title)}</span><ul>${li}</ul></div>`;}
+  if(b.t==='task')return `<div class="task"><span class="tl"${eT(b.title||'Görev')}>${esc(b.title||'Görev')}</span>${b.lines.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`;
+  if(b.t==='given')return `<div class="given"><span class="gl"${eT(b.title)}>${esc(b.title)}</span>${esc(b.x)}</div>`;
   if(b.t==='svg')return `<div class="figure">${b.svg}${b.cap?`<div class="figcap">${esc(b.cap)}</div>`:''}</div>`;
-  if(b.t==='qlist'){let h='<div class="qlist">';(b.groups||[]).forEach(gr=>{h+=`<div class="qh">${esc(gr.h)}</div><ol>`+gr.items.map(q=>`<li>${esc(q)}</li>`).join('')+'</ol>';});return h+'</div>';}
-  if(b.t==='plan'){return `<div class="plan">`+b.fields.map(f=>`<div class="pf"><label>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;}
+  if(b.t==='qlist'){let h='<div class="qlist">';(b.groups||[]).forEach(gr=>{h+=`<div class="qh"${eT(gr.h)}>${esc(gr.h)}</div><ol>`+gr.items.map(q=>`<li>${esc(q)}</li>`).join('')+'</ol>';});return h+'</div>';}
+  if(b.t==='plan'){return `<div class="plan">`+b.fields.map(f=>`<div class="pf"><label${eT(f)}>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;}
   if(b.t==='cue'){return `<div class="task"><span class="tl">Cue card</span><div><b>${esc(b.title)}</b></div><div style="margin-top:6px">You should say:</div><ul style="margin:4px 0 0;padding-left:20px">`+b.points.map(p=>`<li>${esc(p)}</li>`).join('')+`</ul></div>`;}
   if(b.t==='wizard'){
     let h=`<div class="wz">`;
-    if(b.prompt)h+=`<div class="task"><span class="tl">${esc(b.ptitle||'Görev')}</span>${esc(b.prompt)}</div>`;
-    if(b.given)b.given.forEach(g=>h+=`<div class="given"><span class="gl">${esc(g.title)}</span>${esc(g.x)}</div>`);
-    if(b.plan)h+=`<div class="plan">`+b.plan.map(f=>`<div class="pf"><label>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;
+    if(b.prompt)h+=`<div class="task"><span class="tl"${eT(b.ptitle||'Görev')}>${esc(b.ptitle||'Görev')}</span>${esc(b.prompt)}</div>`;
+    if(b.given)b.given.forEach(g=>h+=`<div class="given"><span class="gl"${eT(g.title)}>${esc(g.title)}</span>${esc(g.x)}</div>`);
+    if(b.plan)h+=`<div class="plan">`+b.plan.map(f=>`<div class="pf"><label${eT(f)}>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;
     h+=`<textarea class="editor" data-target="${b.target||150}" placeholder="Buraya yaz. En az ${b.target||150} kelime."></textarea>`;
     h+=`<div class="wc">Kelime: <b class="cnt">0</b> / ${b.target||150}</div>`;
     if(b.check)h+=`<div class="check">`+b.check.map(c=>`<div class="ci"><span class="box">✓</span><span class="ct">${esc(c)}</span></div>`).join('')+`</div>`;
-    if(b.model)h+=`<div class="reveal"><button class="btn ghost rvb">Model cevabı göster</button><div class="body"><div class="given"><span class="gl">${esc(b.model.title||'Model cevap')}</span>${esc(b.model.x)}</div></div></div>`;
+    if(b.model)h+=`<div class="reveal"><button class="btn ghost rvb">Model cevabı göster</button><div class="body"><div class="given"><span class="gl"${eT(b.model.title||'Model cevap')}>${esc(b.model.title||'Model cevap')}</span>${esc(b.model.x)}</div></div></div>`;
     if(b.ai!==false)h+=`<div class="griwz"><button class="btn griask" type="button">Gri'ye sor . yazını değerlendir</button><span class="griq">5 token</span><div class="grifb"></div></div>`;
     h+=`</div>`;return h;
   }

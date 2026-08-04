@@ -304,7 +304,7 @@ var EXAMS=[
         { label: "SL", href: "ib-english-b-sl.html" } ] }
     ] },
     { label: "Genel İngilizce", href: "genel-ingilizce.html" },
-    { label: "Çalış", children: [
+    { label: "Çalışma Alanı", children: [
       { label: "Öğrenme Haritası", href: "ogrenme-haritasi.html" },
       { label: "Soru Bankası", href: "soru-bankasi.html" },
       { label: "Kelime Bankası", href: "kelime-bankasi.html" },

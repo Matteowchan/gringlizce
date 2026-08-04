@@ -18,6 +18,10 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js" defer></script>
+  <!-- Modern paylaşımlı nav (gri-nav): curriculum.js GRI_NAV'ı sağlar, nav.js body'e enjekte eder, site-config.js hesap widget'ını doldurur -->
+  <script src="assets/curriculum.js?v=11"></script>
+  <script src="assets/nav.js?v=12"></script>
+  <script src="assets/site-config.js" defer></script>
   <style>
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
@@ -1755,21 +1759,6 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
-  <header class="site-header">
-    <div class="wrap nav">
-      <a href="index.html" class="brand">
-        Gri <span class="it">English</span>
-      </a>
-      <nav>
-        <ul class="nav-links">
-          <li><a href="index.html">Anasayfa</a></li>
-          <li><a href="panelim.html">Çalışma Masam</a></li>
-          <li><a href="#" id="logout-link">Çıkış</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
   <main class="admin-wrap">
 
     <div id="loading" class="center-msg">
@@ -5664,13 +5653,17 @@
       $('reverify-password').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') attemptReverify();
       });
-      $('logout-link').addEventListener('click', async function (e) {
-        e.preventDefault();
-        clearReverified();
-        await sb.auth.signOut();
-        try { localStorage.removeItem('gri_cache'); } catch (err) {}
-        location.href = 'index.html';
-      });
+      // Eski header kaldırıldı; çıkış artık modern nav hesap menüsünden. Eski #logout-link varsa yine de bağla.
+      var _logoutLink = $('logout-link');
+      if (_logoutLink) {
+        _logoutLink.addEventListener('click', async function (e) {
+          e.preventDefault();
+          clearReverified();
+          await sb.auth.signOut();
+          try { localStorage.removeItem('gri_cache'); } catch (err) {}
+          location.href = 'index.html';
+        });
+      }
 
       initUsersTab();
       loadEverything();

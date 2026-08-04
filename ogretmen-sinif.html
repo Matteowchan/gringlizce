@@ -1804,7 +1804,7 @@
   <link rel="stylesheet" href="/assets/pwa-install.css">
   <script src="/assets/pwa-install.js" defer></script>
   <script src="assets/curriculum.js?v=11"></script>
-  <script src="assets/nav.js?v=12"></script>
+  <script src="assets/nav.js?v=13"></script>
   <script src="assets/track.js" defer></script>
   <style>
     /* Öğretmen sınıf detayı — Yön 2: Modern Panel (teal aksan) */
@@ -3048,12 +3048,63 @@
             if (t.a != null && t.a !== '') return String(t.a);
             return '';
           }
+          // ---- Crossword (bulmaca) yardımcıları: ipucu + cevap + öğrencinin doldurduğu kelime ----
+          function geCwNorm(s){ return String(s==null?'':s).toUpperCase().replace(/[^A-ZÇĞİÖŞÜ]/g,''); }
+          function geCwStudentWord(entry, cw){
+            var len = String(entry.answer||'').length, w='', any=false;
+            for (var i=0;i<len;i++){
+              var r=(entry.row|0)+(entry.dir==='down'?i:0), c=(entry.col|0)+(entry.dir==='across'?i:0);
+              var ch = cw ? (cw[r+'_'+c]||'') : '';
+              if (ch) any=true;
+              w += ch ? geCwNorm(ch).charAt(0) : '·';
+            }
+            return any ? w : '';
+          }
+          function geCwEntryOk(entry, cw){
+            if (!cw) return false;
+            var sw = geCwStudentWord(entry, cw);
+            return !!sw && geCwNorm(sw) === geCwNorm(entry.answer);
+          }
+          function geCwGrade(t, a){
+            var es=(t&&t.entries)||[], cw=(a&&a.cw)||null, c=0;
+            es.forEach(function(e){ if (geCwEntryOk(e,cw)) c++; });
+            return { correct:c, total:es.length };
+          }
+          function geCrosswordBlock(t, i, a){
+            var es=(t&&t.entries)||[];
+            var cw=(a&&a.cw)||null;
+            var g=geCwGrade(t,a);
+            var solvedTxt = cw
+              ? '<span class="qd-acc">' + g.correct + ' / ' + g.total + ' doğru</span>'
+              : '<span style="color:var(--text-muted);font-size:.74rem">' + g.total + ' kelime · öğrenci henüz doldurmadı</span>';
+            var head='<div class="qd-q" style="font-weight:700;">' + (i + 1) + '. Kelime bulmacası ' + solvedTxt + '</div>';
+            var sorted=es.slice().sort(function(x,y){ return (x.num||0)-(y.num||0) || (String(x.dir)<String(y.dir)?-1:1); });
+            var rows=sorted.map(function(e){
+              var dirTr = e.dir==='down' ? 'Aşağı' : 'Yatay';
+              var ok = cw ? geCwEntryOk(e,cw) : null;
+              var sw = cw ? geCwStudentWord(e,cw) : '';
+              var mark = cw ? (ok?'✓':'✗') : '•';
+              var cls = cw ? (ok?'ok':'no') : 'open';
+              var meta = '<span class="qd-ans-right">Cevap: ' + esc(String(e.answer||'')) + '</span>';
+              if (cw && !ok) meta += ' · Öğrenci: <span class="qd-ans-wrong">' + esc(sw||'—') + '</span>';
+              return '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
+                + '<div class="qd-body"><div class="qd-q"><b>' + esc(String(e.num||'')) + ' ' + dirTr + '</b> · ' + esc(String(e.clue||'')) + '</div>'
+                + '<div class="qd-meta">' + meta + '</div></div></div>';
+            }).join('');
+            return '<div class="qd-cw">' + head + '<div class="qd-cw-list">' + rows + '</div></div>';
+          }
+
           function geBuildQList(ans) {
             if (!tasks.length) return '<p class="qd-empty">Bu ödevin soruları bulunamadı.</p>';
             function apN(s){return String(s==null?'':s).toLowerCase().replace(/[‘’ʼ´`]/g,"'").replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');}
             var rows = tasks.map(function (t, i) {
               var a = ans ? ans['t' + i] : null;
               var qtext = t.q ? esc(String(t.q)) : ('Soru ' + (i + 1));
+
+              // KELİME BULMACASI (crossword): tek "Soru N" yerine tüm ipuçları + cevaplar + öğrenci dolgusu
+              if (t && t.type === 'crossword' && Array.isArray(t.entries) && t.entries.length) {
+                return geCrosswordBlock(t, i, a);
+              }
 
               // YAZMA (writing) görevi: otomatik doğru/yanlış yok — öğrencinin yazdığı metni AÇIKÇA göster.
               // ge_submissions.content.answers.t{i} shape: { t:'writing', text:'...', n:<kelime> }
@@ -3103,7 +3154,12 @@
             var email = st.email || '(e-posta yok)';
             var ans = st.answers || null;
             var correctN = 0, tot = 0;
-            tasks.forEach(function (t, i) { var a = ans ? ans['t' + i] : null; if (a && typeof a.ok === 'boolean') { tot++; if (a.ok) correctN++; } });
+            tasks.forEach(function (t, i) {
+              var a = ans ? ans['t' + i] : null;
+              if (t && t.type === 'crossword' && Array.isArray(t.entries) && t.entries.length) {
+                if (a && a.cw) { var g = geCwGrade(t, a); tot += g.total; correctN += g.correct; }
+              } else if (a && typeof a.ok === 'boolean') { tot++; if (a.ok) correctN++; }
+            });
             var acc = tot ? Math.round(correctN * 100 / tot) : 0;
             var gradeTxt = (st.grade != null && st.grade !== '') ? (' · Not: ' + esc(st.grade)) : '';
             var summary = '<div class="qd-summary">'
@@ -4374,7 +4430,9 @@
           }
 
           var seenGroups = {};
+          window.__adMeta = window.__adMeta || {};
           list.innerHTML = assignments.map(function (a) {
+            window.__adMeta[a.assignment_id] = { type: a.type, config: a.config || {}, title: a.title };
             var total = parseInt(a.total_students) || 0;
             var completed = parseInt(a.completed_count) || 0;
             var pct = total > 0 ? Math.round(100 * completed / total) : 0;
@@ -4673,6 +4731,33 @@
         return head + '<ul class="ad-list">' + rows + '</ul>';
       }
 
+      // Ödev tipi başlığı: çekmecenin ne tür ödev olduğunu + nasıl takip edildiğini net gösterir.
+      // Böylece module/drill/vocab_flash/reading çekmeceleri asla "boş/anlamsız" görünmez.
+      function adTypeHeader(assignmentId) {
+        var meta = (window.__adMeta || {})[assignmentId] || {};
+        var type = meta.type, cfg = meta.config || {};
+        var kind = cfg.kind || null;
+        var AUTO = ['vocab_flash', 'drill', 'ogren_spa', 'sat_unit'];
+        var isAuto = (type === 'module' && AUTO.indexOf(kind) !== -1) || type === 'questions';
+        var label;
+        if (type === 'module' && kind === 'vocab_flash') label = 'Kelime Bankası — Flashcard';
+        else if (type === 'module' && kind === 'drill') label = 'Alıştırma Serisi';
+        else if (type === 'module' && kind === 'ogren_spa') label = 'Öğren Modülü';
+        else if (type === 'module' && kind === 'sat_unit') label = 'SAT Ünitesi';
+        else if (type === 'module') label = 'Modül';
+        else if (type === 'questions') label = 'Soru Bankası';
+        else if (type === 'reading') label = 'Okuma / Materyal';
+        else if (type === 'material') label = 'Materyal';
+        else label = (typeof TYPE_LABELS !== 'undefined' && TYPE_LABELS[type]) || 'Ödev';
+        if (cfg.label && label.indexOf(cfg.label) === -1) label += ' · ' + cfg.label;
+        var tgt = cfg.count ? cfg.count : null;
+        var tracking = isAuto ? ('Otomatik takip' + (tgt ? ' · hedef ' + tgt : '')) : 'Aç · işaretle';
+        return '<div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin:0 0 .8rem;padding:.55rem .7rem;background:rgba(44,88,86,.06);border-radius:8px;">'
+          + '<span style="font-family:var(--font-ui,sans-serif);font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--teal,#2C5856);">' + esc(label) + '</span>'
+          + '<span style="font-family:var(--font-ui,sans-serif);font-size:.72rem;color:var(--text-muted);">' + esc(tracking) + '</span>'
+          + '</div>';
+      }
+
       async function openAssignDrawer(assignmentId, title) {
         adTitle.textContent = title || 'Ödev Detayı';
         if (!adBody) return;
@@ -4681,6 +4766,7 @@
         document.body.style.overflow = 'hidden';
 
         var progress = [];
+        var headerHtml = adTypeHeader(assignmentId);
         try {
           var r = await withTimeout(sb.rpc('assignment_progress', { p_assignment_id: assignmentId }), 12000, 'Ödev ilerlemesi');
           if (r.error) throw r.error;
@@ -4696,13 +4782,13 @@
           } catch (e) { /* bonus listing optional */ }
 
           if (progress.length === 0) {
-            adBody.innerHTML = '<p style="color:var(--text-muted); font-style:italic; text-align:center;">Bu sınıfta henüz öğrenci yok.</p>';
+            adBody.innerHTML = headerHtml + '<p style="color:var(--text-muted); font-style:italic; text-align:center;">Bu sınıfta henüz öğrenci yok.</p>';
             return;
           }
 
           var STATUS_LABELS = { completed: 'Tamamlandı', in_progress: 'Devam Ediyor', pending: 'Başlamadı' };
 
-          var html = '<ul class="ad-list">' + progress.map(function (p) {
+          var html = headerHtml + '<ul class="ad-list">' + progress.map(function (p) {
             try {
               var completedAt = p.completed_at ? '<span class="ad-completed-at">' + fmtRelative(p.completed_at) + '</span>' : '';
               var bonus = bonusMap[p.student_id];
@@ -4714,9 +4800,14 @@
                 bonusTag = '<span class="ad-bonus-tag ' + cls + '" title="' + esc(bonus.reason || '') + '">' + sign + bonus.points + '</span>';
                 bonusDataset = ' data-points="' + bonus.points + '" data-reason="' + esc(bonus.reason || '') + '"';
               }
+              var pcur = parseInt(p.progress_current) || 0, ptgt = parseInt(p.progress_target) || 0;
+              var barPct = ptgt > 0 ? Math.min(100, Math.round(100 * pcur / ptgt)) : 0;
+              var bar = ptgt > 1
+                ? '<div style="margin-top:4px;height:4px;width:70px;background:var(--line,#e3ddd0);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:var(--teal,#2C5856);"></div></div>'
+                : '';
               return '<li class="ad-row">'
                 + '<div class="ad-email" title="' + esc(p.student_email) + '">' + esc(p.student_email || '(e-posta yok)') + completedAt + bonusTag + '</div>'
-                + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + '</div>'
+                + '<div class="ad-progress progress-' + p.status + '">' + p.progress_current + ' / ' + p.progress_target + bar + '</div>'
                 + '<span class="ad-status-pill status-' + p.status + '">' + (STATUS_LABELS[p.status] || p.status || '') + '</span>'
                 + '<div class="ad-actions">'
                   + '<button type="button" class="ad-inspect-btn" data-aid="' + esc(assignmentId) + '" data-sid="' + esc(p.student_id) + '" data-target="adx-' + esc(p.student_id) + '">İncele</button>'
@@ -4737,13 +4828,13 @@
 
           // ASLA-BOŞ garantisi: veri geldiği halde görünür içerik yoksa ham ilerlemeyi bas
           if (!adBody.querySelector('.ad-row') || (adBody.textContent || '').trim().length < 2) {
-            adBody.innerHTML = adRawProgressFallback(progress, 'Veri yüklendi ama detay gösterilemedi — özet aşağıda.');
+            adBody.innerHTML = headerHtml + adRawProgressFallback(progress, 'Veri yüklendi ama detay gösterilemedi — özet aşağıda.');
           }
         } catch (err) {
           // Hata olsa bile elimizde veri varsa göster; hiçbir durumda tamamen boş kalma
           var msg = rpcErrMsg(err) || 'Ödev ilerlemesi yüklenemedi.';
           var fallback = (progress && progress.length) ? adRawProgressFallback(progress, null) : '';
-          adBody.innerHTML = '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + msg + '</p>' + fallback;
+          adBody.innerHTML = headerHtml + '<p style="color:#b33a3a; font-style:italic; text-align:center;">' + msg + '</p>' + fallback;
         }
       }
 

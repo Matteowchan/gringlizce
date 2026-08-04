@@ -132,18 +132,15 @@
     // Mobil: tum linkler duz (gruplu) liste olarak kalir — masaustu dropdown'lari
     // mobilde ise tek tek erisilebilir olsun diye agac gezilir.
     function mcard(label, h, sub){ return '<a class="gri-mcard' + (sub ? " sub" : "") + '" href="' + href(h) + '">' + esc(label) + "</a>"; }
-    function mhead(label){ return '<div class="gri-mgrp-h">' + esc(label) + "</div>"; }
+    var MCARET = '<svg class="cv" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    // Mobil: gruplar KAPALI baslar, basliga dokununca acilir (akordeon). Duz top-level linkler dogrudan.
     var mcards = MENU.map(function (it) {
       if (!it.children) return mcard(it.label, it.href, false);
-      var out = it.href ? mcard(it.label, it.href, false) : mhead(it.label);
-      out += it.children.map(function (ch) {
-        if (ch.children) {
-          var head = ch.href ? mcard(ch.label, ch.href, false) : mhead(ch.label);
-          return head + ch.children.map(function (g) { return mcard(g.label, g.href, true); }).join("");
-        }
-        return mcard(ch.label, ch.href, true);
+      var inner = it.children.map(function (ch) {
+        if (!ch.href) return "";
+        return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
-      return out;
+      return '<div class="gri-msec"><div class="gri-mrow" data-msec>' + esc(it.label) + MCARET + '</div><div class="gri-msub">' + inner + "</div></div>";
     }).join("");
 
     var tOpts = themeOptsHtml();

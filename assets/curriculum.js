@@ -83,7 +83,7 @@ var EXAMS=[
 {label:"Ogren . Math",units:[
     {name:"Math",desc:"Dört ana konu, konu konu çözümlü - 120 soru, dört şıklı, ücretsiz",state:"live",lessons:[
       {name:"SAT Math Yapisi",s:"todo",href:"sat-math#basla"},
-      {name:"Heart of Algebra (30 soru)",s:"todo",href:"sat-math#algebra"},
+      {name:"Algebra (30 soru)",s:"todo",href:"sat-math#algebra"},
       {name:"Problem Solving & Data (30 soru)",s:"todo",href:"sat-math#data"},
       {name:"Advanced Math (30 soru)",s:"todo",href:"sat-math#advanced"},
       {name:"Geometry & Trigonometri (30 soru)",s:"todo",href:"sat-math#geometry"}]}]}]},
@@ -230,8 +230,8 @@ var EXAMS=[
       {name:"7. Stadt und Verkehr",s:"todo",href:"udsp-ogren#p7"},
       {name:"8. Arbeit und Zeit",s:"todo",href:"udsp-ogren#p8"}]}
   ]}]},
- {id:"ydt",name:"YDT",mark:"Y",desc:"Yabancı Dil . tüm soru tipleri, beş şıklı",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"Kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, diyalog, restatement, çeviri ve paragraf drilleri. Beş şıklı, puanlı.",href:"ydt-ogren"}],
+ {id:"ydt",name:"YDT",mark:"Y",desc:"Yabancı Dil Testi · tüm soru tipleri, beş şıklı",pct:0,
+  tools:[{ic:"soru",label:"Driller",desc:"Kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, diyalog, restatement, çeviri ve paragraf drilleri. Beş şıklı, puanlı.",href:"ydt-ogren"}],
   sections:[{label:"Ogren",units:[
     {name:"Yapı ve Strateji",desc:"YDT yapisi, puanlama, taktik",state:"live",lessons:[
       {name:"YDT Yapisi",s:"todo",href:"ydt-ogren#basla"}]},
@@ -252,7 +252,7 @@ var EXAMS=[
       {name:"Zamanlar (Tenses)",s:"todo",href:"ydt-ogren#tenses"}]}
   ]}]},
  {id:"yds",name:"YDS / YOKDIL",mark:"Y",desc:"Akademik . tüm soru tipleri, beş şıklı",pct:0,
-  tools:[{ic:"soru",label:"Drilller",desc:"Akademik kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, restatement, çeviri, paragraf ve diyalog drilleri. Beş şıklı, puanlı.",href:"yds-ogren"}],
+  tools:[{ic:"soru",label:"Driller",desc:"Akademik kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, restatement, çeviri, paragraf ve diyalog drilleri. Beş şıklı, puanlı.",href:"yds-ogren"}],
   sections:[{label:"Ogren",units:[
     {name:"Yapı ve Strateji",desc:"YDS/YOKDIL yapisi, puanlama",state:"live",lessons:[
       {name:"YDS / YOKDIL Yapisi",s:"todo",href:"yds-ogren#basla"}]},

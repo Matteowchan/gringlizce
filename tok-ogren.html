@@ -178,6 +178,9 @@ h2 svg{width:18px;height:18px;color:var(--accent);flex:none}
 const D=JSON.parse(document.getElementById('data').textContent);
 const app=document.getElementById('app'),railEl=document.getElementById('rail');
 const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// tr-locale sayfada CSS-uppercase, İngilizce kelimeleri noktalı İ ile büyütür (Exhibition->EXHİBİTİON).
+// Uppercase edilen etiketlerde İngilizce terimleri lang="en" ile sar; Türkçeye dokunma.
+const escEn=s=>esc(s).replace(/\b(Exhibition|claim|counterclaim|prescribed|title|question)\b/g,'<span lang="en">$1</span>');
 const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'\u2019\u2018\u00b4\u02bc\u0060]/g,'').replace(/\s+/g,' ').trim();
 function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
 function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
@@ -188,7 +191,7 @@ async function loadProgress(){try{if(!window.GRI_SB||!window.GRI_UID)return;var 
 function renderRail(){
   const groups=D.groups.map(g=>{
     const items=D.lessons.filter(l=>l.group===g).map(l=>`<div class="rlink ${S.id===l.id?'cur':''} ${S.done[l.id]?'done':''}" data-go="${l.id}"><span class="dot"></span>${esc(l.name)}</div>`).join('');
-    return `<div class="rsec">${esc(g)}</div>${items}`;
+    return `<div class="rsec">${escEn(g)}</div>${items}`;
   }).join('');
   railEl.innerHTML=`<div class="rc"><span class="u">${esc(D.badge||'IELTS')}</span><div class="ut">${esc(D.title)}</div>${groups}</div>`;
   railEl.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>show(e.getAttribute('data-go')));
@@ -200,9 +203,9 @@ function blockHTML(b,i){
     const rows=b.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
     return `<table class="dt">${b.head?`<thead><tr>${head}</tr></thead>`:''}<tbody>${rows}</tbody></table>`;}
   if(b.t==='note'){const li=b.lines.map(x=>`<li>${esc(x)}</li>`).join('');
-    return `<div class="note ${b.k||'ipucu'}"><span class="nt">${esc(b.title)}</span><ul>${li}</ul></div>`;}
-  if(b.t==='task')return `<div class="task"><span class="tl">${esc(b.title||'Görev')}</span>${b.lines.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`;
-  if(b.t==='given')return `<div class="given"><span class="gl">${esc(b.title)}</span>${esc(b.x)}</div>`;
+    return `<div class="note ${b.k||'ipucu'}"><span class="nt">${escEn(b.title)}</span><ul>${li}</ul></div>`;}
+  if(b.t==='task')return `<div class="task"><span class="tl">${escEn(b.title||'Görev')}</span>${b.lines.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`;
+  if(b.t==='given')return `<div class="given"><span class="gl">${escEn(b.title)}</span>${esc(b.x)}</div>`;
   if(b.t==='svg')return `<div class="figure">${b.svg}${b.cap?`<div class="figcap">${esc(b.cap)}</div>`:''}</div>`;
   if(b.t==='qlist'){let h='<div class="qlist">';(b.groups||[]).forEach(gr=>{h+=`<div class="qh">${esc(gr.h)}</div><ol>`+gr.items.map(q=>`<li>${esc(q)}</li>`).join('')+'</ol>';});return h+'</div>';}
   if(b.t==='plan'){return `<div class="plan">`+b.fields.map(f=>`<div class="pf"><label>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;}
@@ -210,12 +213,12 @@ function blockHTML(b,i){
   if(b.t==='wizard'){
     let h=`<div class="wz"${b.wt?` data-wt="${esc(b.wt)}"`:''}>`;
     if(b.prompt)h+=`<div class="task"><span class="tl">${esc(b.ptitle||'Görev')}</span>${esc(b.prompt)}</div>`;
-    if(b.given)b.given.forEach(g=>h+=`<div class="given"><span class="gl">${esc(g.title)}</span>${esc(g.x)}</div>`);
+    if(b.given)b.given.forEach(g=>h+=`<div class="given"><span class="gl">${escEn(g.title)}</span>${esc(g.x)}</div>`);
     if(b.plan)h+=`<div class="plan">`+b.plan.map(f=>`<div class="pf"><label>${esc(f)}</label><textarea rows="2"></textarea></div>`).join('')+`</div>`;
     h+=`<textarea class="editor" data-target="${b.target||150}" placeholder="Buraya yaz. En az ${b.target||150} kelime."></textarea>`;
     h+=`<div class="wc">Kelime: <b class="cnt">0</b> / ${b.target||150}</div>`;
     if(b.check)h+=`<div class="check">`+b.check.map(c=>`<div class="ci"><span class="box">✓</span><span class="ct">${esc(c)}</span></div>`).join('')+`</div>`;
-    if(b.model)h+=`<div class="reveal"><button class="btn ghost rvb">Model cevabı göster</button><div class="body"><div class="given"><span class="gl">${esc(b.model.title||'Model cevap')}</span>${esc(b.model.x)}</div></div></div>`;
+    if(b.model)h+=`<div class="reveal"><button class="btn ghost rvb">Model cevabı göster</button><div class="body"><div class="given"><span class="gl">${escEn(b.model.title||'Model cevap')}</span>${esc(b.model.x)}</div></div></div>`;
     if(b.ai!==false)h+=`<div class="griwz"><button class="btn griask" type="button">Gri'ye sor . yazını değerlendir</button><span class="griq">5 token</span><div class="grifb"></div></div>`;
     h+=`</div>`;return h;
   }
@@ -226,7 +229,7 @@ function blockHTML(b,i){
   }
   if(b.t==='checklist'){
     let h='';
-    if(b.title)h+=`<div class="rl" style="font-family:Inter,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:10px 0 4px">${esc(b.title)}</div>`;
+    if(b.title)h+=`<div class="rl" style="font-family:Inter,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:10px 0 4px">${escEn(b.title)}</div>`;
     h+='<div class="check">'+b.items.map(c=>`<div class="ci"><span class="box">✓</span><span class="ct">${esc(c)}</span></div>`).join('')+'</div>';
     return h;
   }
@@ -248,7 +251,7 @@ function blockHTML(b,i){
 function show(id){
   S.id=id;renderRail();window.scrollTo(0,0);
   const l=D.lessons.find(x=>x.id===id);
-  let h=`<div class="head"><div class="eyebrow">${esc(l.eyebrow||l.group)}</div><h1>${esc(l.name)}</h1><div class="lead">${esc(l.lead||D.title)}</div></div><div class="pad">`;
+  let h=`<div class="head"><div class="eyebrow">${escEn(l.eyebrow||l.group)}</div><h1>${esc(l.name)}</h1><div class="lead">${esc(l.lead||D.title)}</div></div><div class="pad">`;
   (l.blocks||[]).forEach((b,i)=>h+=blockHTML(b,i));
   h+=`</div>`;app.innerHTML=h;wire();
   try{location.hash!=='#'+id&&history.replaceState(null,'','#'+id);localStorage.setItem('gri_resume',JSON.stringify({exam:D.badge||D.title,lesson:(l.name||''),url:location.pathname.split('/').pop()+'#'+id,t:Date.now()}));}catch(e){}

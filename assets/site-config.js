@@ -113,11 +113,27 @@
     return inner;
   }
 
+  function bannerContrast(hex) {
+    try {
+      var h = String(hex).replace('#', '');
+      if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+      var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+      return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#241E17' : '#ffffff';
+    } catch (e) { return '#ffffff'; }
+  }
+
   function applyBanner(cfg) {
     var banner = cfg.banner || { enabled: false, text: '' };
     document.querySelectorAll('[data-site-banner]').forEach(function (el) {
       if (banner.enabled && banner.text) {
         el.innerHTML = (banner.v === 2) ? buildBannerHtml(banner) : banner.text;
+        if (banner.v === 2 && banner.bg) {
+          el.style.background = banner.bg;
+          el.style.color = banner.color ? '' : bannerContrast(banner.bg);
+        } else {
+          el.style.background = '';
+          el.style.color = '';
+        }
         el.style.display = 'block';
       } else {
         el.style.display = 'none';

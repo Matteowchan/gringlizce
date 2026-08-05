@@ -21,7 +21,7 @@
   <!-- Modern paylaşımlı nav (gri-nav): curriculum.js GRI_NAV'ı sağlar, nav.js body'e enjekte eder, site-config.js hesap widget'ını doldurur -->
   <script src="assets/curriculum.js?v=12"></script>
   <script src="assets/nav.js?v=16"></script>
-  <script src="assets/site-config.js?v=3" defer></script>
+  <script src="assets/site-config.js?v=4" defer></script>
   <style>
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
@@ -1930,6 +1930,25 @@
         </div>
 
         <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Arka plan rengi</label>
+          <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+            <label class="switch"><input type="checkbox" id="banner-bg-on"><span class="slider"></span></label>
+            <label style="margin:0;">Özel arka plan</label>
+            <input type="color" id="banner-bg" value="#2C5856" style="width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer;">
+            <span style="opacity:0.55; font-size:0.85rem; margin-left:0.3rem;">Tema:</span>
+            <button type="button" class="banner-bg-sw" data-bg="#2C5856" title="Teal" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#2C5856;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#B78A2E" title="Altın" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#B78A2E;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#0B8C86" title="Tiffany" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#0B8C86;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#8A4A63" title="Erik" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#8A4A63;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#2E5E8A" title="Okyanus" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#2E5E8A;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#8E3B4C" title="Bordo" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#8E3B4C;"></button>
+            <button type="button" class="banner-bg-sw" data-bg="#241E17" title="Koyu" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:#241E17;"></button>
+            <button type="button" id="banner-bg-reset" style="font-size:0.8rem; padding:0.3rem 0.6rem; border:1px solid var(--line); border-radius:6px; background:var(--bg-card); color:var(--text); cursor:pointer;">Varsayılan</button>
+          </div>
+          <div style="opacity:0.55; font-size:0.8rem; margin-top:0.35rem;">Metin rengi arka plana göre otomatik ayarlanır; istersen "Özel renk" ile değiştir.</div>
+        </div>
+
+        <div class="field-row" style="display:block;">
           <label style="display:block; margin-bottom:0.4rem;">Link (opsiyonel)</label>
           <input type="text" id="banner-link" placeholder="Örn. udsp-soru-bankasi.html" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
         </div>
@@ -2766,8 +2785,18 @@
         bold: $('banner-bold').checked,
         italic: $('banner-italic').checked,
         size: $('banner-size').value || '',
+        bg: $('banner-bg-on').checked ? $('banner-bg').value : '',
         link: ($('banner-link').value || '').trim()
       };
+    }
+
+    function bannerContrast(hex) {
+      try {
+        var h = String(hex).replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+        return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#241E17' : '#ffffff';
+      } catch (e) { return '#ffffff'; }
     }
 
     function parseBannerTextAdmin(raw) {
@@ -2801,6 +2830,13 @@
       var el = $('banner-preview');
       if (!el) { return; }
       el.innerHTML = b.text ? buildBannerHtmlAdmin(b) : '<span style="opacity:0.45;">(önizleme)</span>';
+      if (b.bg) {
+        el.style.background = b.bg;
+        el.style.color = b.color ? '' : bannerContrast(b.bg);
+      } else {
+        el.style.background = '';
+        el.style.color = '';
+      }
       el.style.opacity = b.enabled ? '1' : '0.5';
     }
 
@@ -2815,6 +2851,8 @@
       $('banner-bold').checked = !!b.bold;
       $('banner-italic').checked = !!b.italic;
       $('banner-size').value = b.size || '';
+      $('banner-bg').value = b.bg || '#2C5856';
+      $('banner-bg-on').checked = !!b.bg;
       $('banner-link').value = b.link || '';
       updateBannerPreview();
     }
@@ -5629,9 +5667,22 @@
           if (body) { body.style.display = (body.style.display === 'none' || !body.style.display) ? 'block' : 'none'; }
         });
       }
-      ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-link'].forEach(function (id) {
+      ['banner-enabled','banner-text','banner-color','banner-color-on','banner-bold','banner-italic','banner-size','banner-bg','banner-bg-on','banner-link'].forEach(function (id) {
         var el = $(id); if (el) { el.addEventListener('input', updateBannerPreview); el.addEventListener('change', updateBannerPreview); }
       });
+      document.querySelectorAll('.banner-bg-sw').forEach(function (sw) {
+        sw.addEventListener('click', function () {
+          $('banner-bg').value = sw.getAttribute('data-bg');
+          $('banner-bg-on').checked = true;
+          updateBannerPreview();
+        });
+      });
+      if ($('banner-bg-reset')) {
+        $('banner-bg-reset').addEventListener('click', function () {
+          $('banner-bg-on').checked = false;
+          updateBannerPreview();
+        });
+      }
       $('save-discount').addEventListener('click', saveDiscount);
       $('reverify-submit').addEventListener('click', attemptReverify);
       $('reverify-password').addEventListener('keydown', function (e) {

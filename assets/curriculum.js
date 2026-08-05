@@ -301,7 +301,11 @@ var EXAMS=[
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
-        { label: "SL", href: "ib-english-b-sl" } ] }
+        { label: "SL", href: "ib-english-b-sl" } ] },
+      { label: "Deutsch B", href: "deutsch-ogren", children: [
+        { label: "Textsorten (Öğren)", href: "deutsch-ogren" } ] },
+      { label: "TOK", href: "ib-tok", children: [
+        { label: "TOK Rehberi (Öğren)", href: "tok-ogren" } ] }
     ] },
     { label: "Genel İngilizce", href: "genel-ingilizce" },
     { label: "Çalışma Alanı", children: [

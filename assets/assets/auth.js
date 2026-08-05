@@ -124,7 +124,7 @@
   function requireAuth(slug, redirectPath) {
     var auth = verify();
     if (!auth) {
-      window.location.href = '/giris.html?return=' + encodeURIComponent(redirectPath || window.location.pathname);
+      window.location.href = '/giris?return=' + encodeURIComponent(redirectPath || window.location.pathname);
       return null;
     }
     if (slug && !hasAccess(auth.record, slug)) {

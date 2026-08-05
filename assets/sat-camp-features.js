@@ -71,7 +71,7 @@
   // Auth check
   // -----------------------------------------------------------
   function loginRedirect() {
-    location.href = '../giris.html?return=' + encodeURIComponent(location.pathname + location.search);
+    location.href = '../giris?return=' + encodeURIComponent(location.pathname + location.search);
   }
 
   async function loadUser() {

@@ -168,7 +168,7 @@
   function requireAuth(slug, redirectPath) {
     var auth = verify();
     if (!auth) {
-      window.location.href = '/giris.html?return=' + encodeURIComponent(redirectPath || window.location.pathname);
+      window.location.href = '/giris?return=' + encodeURIComponent(redirectPath || window.location.pathname);
       return null;
     }
     if (slug && !hasAccess(auth.record, slug)) {
@@ -213,7 +213,7 @@
         'box-shadow:0 2px 10px rgba(0,0,0,.28);';
       bar.innerHTML =
         '<span style="vertical-align:middle;">Oturumunun süresi doldu — veriler görüntülenemeyebilir. </span>' +
-        '<a href="/giris.html?return=' + ret + '" style="color:#fff;font-weight:700;' +
+        '<a href="/giris?return=' + ret + '" style="color:#fff;font-weight:700;' +
         'text-decoration:underline;vertical-align:middle;margin:0 4px;">Tekrar giriş yap</a>' +
         '<button type="button" id="gri-session-bar-x" aria-label="Kapat" style="position:absolute;' +
         'top:50%;right:12px;transform:translateY(-50%);background:transparent;border:0;color:#fff;' +

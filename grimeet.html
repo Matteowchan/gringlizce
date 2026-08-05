@@ -82,8 +82,8 @@ h1,h2,h3{font-family:'Lora',serif;color:var(--teal-dark);}
 </style>
 </head>
 <body>
-  <script src="assets/curriculum.js?v=11"></script>
-  <script src="assets/nav.js?v=14"></script>
+  <script src="assets/curriculum.js?v=12"></script>
+  <script src="assets/nav.js?v=15"></script>
 
   <div class="gm-wrap">
 
@@ -161,7 +161,7 @@ h1,h2,h3{font-family:'Lora',serif;color:var(--teal-dark);}
   <div class="gm-toast" id="gm-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="/assets/app-mode.js" defer></script>
+<script src="/assets/app-mode.js?v=2" defer></script>
 <script src="/assets/pwa-install.js" defer></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -176,7 +176,7 @@ const roomCode=()=>{const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let 
 document.getElementById('gm-join-btn').addEventListener('click',()=>{
   const code=(document.getElementById('gm-code').value||'').trim().toUpperCase();
   if(code.length<4){toast('Geçerli bir oda kodu gir.');return;}
-  location.href='grimeet-oda.html?room='+encodeURIComponent(code);
+  location.href='grimeet-oda?room='+encodeURIComponent(code);
 });
 document.getElementById('gm-code').addEventListener('keydown',(e)=>{if(e.key==='Enter')document.getElementById('gm-join-btn').click();});
 
@@ -190,7 +190,7 @@ document.getElementById('gm-code').addEventListener('keydown',(e)=>{if(e.key==='
   try{ const r=await supabase.auth.getUser(); user=r.data&&r.data.user; }catch(e){}
   if(!user){
     hostBtn.textContent='Giriş Yap';hostBtn.disabled=false;
-    hostBtn.onclick=()=>{location.href='giris.html?return=/grimeet.html';};
+    hostBtn.onclick=()=>{location.href='giris?return=/grimeet.html';};
     hostNote.textContent='Oda açmak için öğretmen hesabıyla giriş yapmalısın.';
     lock.classList.remove('hidden');
     lockMsg.innerHTML='Gri Meet premium bir canlı ders özelliğidir. Odaya katılmak için giriş yapman, oda <b>açmak</b> için ise öğretmen hesabın olması gerekir.';
@@ -200,11 +200,11 @@ document.getElementById('gm-code').addEventListener('keydown',(e)=>{if(e.key==='
   try{ const p=await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle(); role=(p.data&&p.data.role)||'customer'; }catch(e){}
   if(role==='teacher'||role==='admin'){
     hostBtn.textContent='Yeni Oda Aç ›';hostBtn.disabled=false;
-    hostBtn.onclick=()=>{const c=roomCode();location.href='grimeet-oda.html?room='+c+'&host=1';};
+    hostBtn.onclick=()=>{const c=roomCode();location.href='grimeet-oda?room='+c+'&host=1';};
     hostNote.textContent='Oda açıldığında öğrencilerinle paylaşacağın 6 haneli bir kod üretilir.';
   }else{
     hostBtn.textContent='Öğretmen Ol';hostBtn.disabled=false;
-    hostBtn.onclick=()=>{location.href='ogretmen.html';};
+    hostBtn.onclick=()=>{location.href='ogretmen';};
     hostNote.innerHTML='Şu an öğrenci hesabındasın. Oda açmak için öğretmen paneline geç.';
     lock.classList.remove('hidden');
     lockMsg.innerHTML='Odaya <b>katılmak</b> için hazırsın — öğretmeninden gelen kodu gir. Oda <b>açmak</b> öğretmen hesabı gerektirir.';

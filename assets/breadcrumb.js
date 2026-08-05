@@ -430,6 +430,7 @@
     if (isExamLikePage()) return;
 
     var filename = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (filename && !/\.html$/.test(filename)) filename += '.html'; // temiz URL (uzantısız) -> .html anahtarlarıyla eşleşsin
     if (!filename || filename === 'index.html') return; // Ana sayfada breadcrumb olmaz
 
     var data = buildCrumbs(filename);

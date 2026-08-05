@@ -113,10 +113,10 @@
     var BASE = _inDir > 0 ? new Array(_inDir + 1).join("../") : "";
     function href(h){ return esc((/^(https?:|\/|#)/.test(h) ? "" : BASE) + h); }
     var MENU = window.GRI_NAV || [];
-    var here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    var here = (location.pathname.split("/").pop() || "index.html").toLowerCase().replace(/\.html$/, "");
 
     var links = MENU.map(function (it) {
-      var active = hrefsOf(it, []).indexOf(here) !== -1;
+      var active = hrefsOf(it, []).map(function (h) { return String(h).replace(/\.html$/, ""); }).indexOf(here) !== -1;
       if (!it.children) return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
       var isMega = it.children.some(function (ch) { return ch.children && ch.children.length; });
       var cols2 = !isMega && it.children.length >= 7;

@@ -107,11 +107,11 @@
     nav.className = 'app-bottom-nav';
     nav.setAttribute('aria-label', 'App navigation');
     var items = [
-      { href: '/', label: 'Ana Sayfa', icon: 'home', match: ['index.html', ''] },
-      { href: '/soru-bankasi.html', label: 'Soru', icon: 'questions', match: ['soru-bankasi.html'] },
-      { href: '/kelime-bankasi.html', label: 'Kelime', icon: 'book', match: ['kelime-bankasi.html'] },
-      { href: '/yazi-pratigi.html', label: 'Yazı', icon: 'pencil', match: ['yazi-pratigi.html'] },
-      { href: '/panelim.html', label: 'Profil', icon: 'user', match: ['panelim.html'] }
+      { href: '/', label: 'Ana Sayfa', icon: 'home', match: ['index', ''] },
+      { href: '/soru-bankasi', label: 'Soru', icon: 'questions', match: ['soru-bankasi'] },
+      { href: '/kelime-bankasi', label: 'Kelime', icon: 'book', match: ['kelime-bankasi'] },
+      { href: '/yazi-pratigi', label: 'Yazı', icon: 'pencil', match: ['yazi-pratigi'] },
+      { href: '/panelim', label: 'Profil', icon: 'user', match: ['panelim'] }
     ];
     var icons = {
       home: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/></svg>',
@@ -120,7 +120,7 @@
       pencil: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
       user: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>'
     };
-    var currentFile = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    var currentFile = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase().replace(/\.html$/, '');
     items.forEach(function(item) {
       var link = document.createElement('a');
       link.href = item.href;
@@ -160,7 +160,7 @@
 
   function isHomepage() {
     var p = window.location.pathname;
-    return p === '/' || p === '/index.html' || p.endsWith('/index.html');
+    return p === '/' || p === '/index' || p === '/index.html' || p.endsWith('/index.html') || p.endsWith('/index');
   }
 
   function isAppMode() {

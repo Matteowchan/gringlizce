@@ -153,7 +153,7 @@
 
     frag.insertAdjacentHTML("beforeend",
       '<header class="gri-nav"><div class="in">' +
-      '<a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a>' +
+      '<a href="/" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
@@ -163,7 +163,7 @@
       "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +
-      '<div class="gri-mclose"><a href="' + BASE + 'index.html" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
+      '<div class="gri-mclose"><a href="/" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
       '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
       '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h">Tema' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
@@ -266,7 +266,7 @@
       ensureTabbarCss();
       var file = p.split("/").pop() || "index.html";
       var tabs = [
-        { href: "/index.html", label: "Ana Sayfa", match: ["index.html", ""], icon: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },
+        { href: "/", label: "Ana Sayfa", match: ["index.html", ""], icon: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },
         { href: "/ogrenme-haritasi.html", label: "Harita", match: ["ogrenme-haritasi.html"], icon: '<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>' },
         { href: "/soru-bankasi.html", label: "Soru", match: ["soru-bankasi.html"], icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
         { href: "/sinifim.html", label: "Sınıf", match: ["sinifim.html", "ogretmen.html", "ogretmen-sinif.html"], icon: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-3-4.9"/>' },

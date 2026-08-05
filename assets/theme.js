@@ -262,9 +262,9 @@
       } else {
         var path = window.location.pathname;
         if (path.indexOf('/urun/') !== -1 || path.indexOf('/calisma/') !== -1) {
-          window.location.href = '../index.html';
+          window.location.href = '/';
         } else {
-          window.location.href = 'index.html';
+          window.location.href = '/';
         }
       }
     });

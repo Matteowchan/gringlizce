@@ -302,7 +302,7 @@
 
   // ----------- BREADCRUMB ÜRET ------------
   function buildCrumbs(filename) {
-    var crumbs = [{ label: 'Ana Sayfa', href: 'index.html' }];
+    var crumbs = [{ label: 'Ana Sayfa', href: '/' }];
     var cat = inferCategory(filename);
     if (cat && CATEGORIES[cat]) {
       crumbs.push({ label: CATEGORIES[cat].label, href: CATEGORIES[cat].home });

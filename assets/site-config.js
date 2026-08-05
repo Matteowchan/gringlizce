@@ -484,7 +484,7 @@
         try {
           await sb.auth.signOut();
         } catch (e) {}
-        location.href = pageHref('index.html');
+        location.href = '/';
       });
     }
   }

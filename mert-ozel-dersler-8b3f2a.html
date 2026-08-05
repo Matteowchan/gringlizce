@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mert'in Özel Dersleri | Gri English</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="assets/main.css">
+<link rel="stylesheet" href="assets/site-overrides.css">
+<script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return 'light';})());</script>
+<script src="assets/theme.js" defer></script>
+<script src="assets/curriculum.js?v=11"></script>
+<script src="assets/nav.js?v=13"></script>
+<script src="assets/site-config.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --oz-teal:#2C5856; --oz-teal2:#1E4A47; --oz-gold:#B78A2E;
+    --oz-ink:#22201d; --oz-soft:#6b6862; --oz-line:#e6e0d4; --oz-bg:#faf8f3; --oz-card:#ffffff;
+    --oz-speak:#2C5856; --oz-listen:#2f6f9e; --oz-read:#b0791f; --oz-write:#7a4f8a;
+  }
+  :root[data-theme="dark"]{
+    --oz-ink:#e9e4da; --oz-soft:#a9a297; --oz-line:#33302b; --oz-bg:#17150f; --oz-card:#201d17;
+    --oz-teal:#4d8f8b; --oz-teal2:#6fb3ae; --oz-gold:#D8B25A;
+    --oz-speak:#4d8f8b; --oz-listen:#5b97c4; --oz-read:#d0a24e; --oz-write:#b087c2;
+  }
+  .oz-wrap{max-width:900px;margin:0 auto;padding:1.5rem 1.1rem 5rem;color:var(--oz-ink);}
+  .oz-gate{max-width:520px;margin:5rem auto;text-align:center;color:var(--oz-soft);font-size:1rem;}
+  .oz-hero{background:linear-gradient(135deg,var(--oz-teal),var(--oz-teal2));color:#fff;border-radius:18px;padding:1.8rem 1.6rem;margin-bottom:1.4rem;box-shadow:0 8px 30px rgba(44,88,86,.25);}
+  .oz-hero .ey{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:700;}
+  .oz-hero h1{margin:.35rem 0 .3rem;font-size:1.9rem;line-height:1.1;}
+  .oz-hero .sub{font-size:1.05rem;font-weight:600;opacity:.95;}
+  .oz-hero .meta{margin-top:.7rem;font-size:.9rem;opacity:.9;line-height:1.5;}
+  .oz-toc{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1.3rem;}
+  .oz-toc a{font-size:.82rem;text-decoration:none;color:var(--oz-teal2);border:1px solid var(--oz-line);background:var(--oz-card);border-radius:999px;padding:.28rem .7rem;transition:.15s;}
+  .oz-toc a:hover{border-color:var(--oz-teal);color:var(--oz-teal);}
+  details.oz-les{background:var(--oz-card);border:1px solid var(--oz-line);border-radius:14px;margin-bottom:.85rem;overflow:hidden;}
+  details.oz-les[open]{box-shadow:0 4px 20px rgba(0,0,0,.06);}
+  summary.oz-sum{list-style:none;cursor:pointer;padding:1rem 1.15rem;display:flex;align-items:center;gap:.8rem;}
+  summary.oz-sum::-webkit-details-marker{display:none;}
+  .oz-no{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--oz-bg);color:var(--oz-teal2);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+  .oz-sum .t{flex:1;min-width:0;}
+  .oz-sum .t b{display:block;font-size:1.04rem;line-height:1.25;color:var(--oz-ink);}
+  .oz-sum .t span{font-size:.82rem;color:var(--oz-soft);}
+  .oz-badge{flex:0 0 auto;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;border-radius:999px;padding:.22rem .6rem;}
+  .oz-chev{flex:0 0 auto;color:var(--oz-soft);transition:.2s;font-size:1.1rem;}
+  details[open] .oz-chev{transform:rotate(90deg);}
+  .oz-body{padding:.2rem 1.15rem 1.3rem;border-top:1px solid var(--oz-line);}
+  .oz-body h3{font-size:1rem;color:var(--oz-teal2);margin:1.2rem 0 .3rem;padding-bottom:.25rem;border-bottom:2px solid var(--oz-line);}
+  .oz-body p{margin:.4rem 0;line-height:1.6;}
+  .oz-body ul{margin:.35rem 0 .6rem;padding-left:1.2rem;line-height:1.6;}
+  .oz-body ul li{margin:.2rem 0;}
+  .oz-obj{background:var(--oz-bg);border-left:3px solid var(--oz-gold);border-radius:8px;padding:.6rem .8rem;margin:.3rem 0 .5rem;font-size:.95rem;}
+  .oz-time{font-size:.82rem;color:var(--oz-soft);margin:.1rem 0 .3rem;}
+  .oz-box{background:var(--oz-bg);border:1px solid var(--oz-line);border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;}
+  .oz-box .bt{font-weight:800;font-size:.82rem;letter-spacing:.05em;text-transform:uppercase;color:var(--oz-teal2);margin-bottom:.35rem;}
+  .oz-qa{margin:.5rem 0;}
+  .oz-qa .q{font-weight:700;}
+  .oz-qa .a{margin:.15rem 0 .55rem;padding-left:.8rem;border-left:2px solid var(--oz-teal);color:var(--oz-ink);font-style:italic;}
+  ol.oz-qs{margin:.35rem 0 .6rem;padding-left:1.3rem;line-height:1.6;}
+  ol.oz-qs li{margin:.25rem 0;}
+  .oz-note{font-size:.9rem;color:var(--oz-soft);background:var(--oz-bg);border-radius:8px;padding:.5rem .75rem;margin:.5rem 0;}
+  .oz-hw{background:linear-gradient(135deg,rgba(183,138,46,.12),rgba(183,138,46,.04));border:1px dashed var(--oz-gold);border-radius:10px;padding:.65rem .9rem;margin:.8rem 0 .2rem;}
+  .oz-hw b{color:var(--oz-read);}
+  .oz-video{position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;margin:.6rem 0;background:#000;}
+  .oz-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .oz-link{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;background:var(--oz-teal);color:#fff;font-weight:700;font-size:.92rem;border-radius:10px;padding:.6rem .95rem;margin:.5rem 0;transition:.15s;}
+  .oz-link:hover{background:var(--oz-teal2);}
+  .oz-src{font-size:.82rem;color:var(--oz-soft);margin:.15rem 0 .4rem;}
+  @media(max-width:560px){.oz-hero h1{font-size:1.5rem;}.oz-sum .t b{font-size:.96rem;}}
+</style>
+</head>
+<body>
+<main>
+  <div id="ozLoading" class="oz-gate">Yükleniyor…</div>
+  <div id="ozWrap" class="oz-wrap" style="display:none;">
+    <div class="oz-hero">
+      <div class="ey">Mert'in Özel Dersleri</div>
+      <h1>Adult Speaking B1</h1>
+      <div class="sub">10 Derslik Konuşma Odaklı Program</div>
+      <div class="meta">Her ders ~60 dakika · 5 Konuşma · 2 Dinleme (TED) · 2 Okuma (makale) · 1 Yazı<br>Yalnızca sana özel — bu sayfa menüde görünmez.</div>
+    </div>
+    <nav class="oz-toc" id="ozToc"></nav>
+    <div id="ozLessons"></div>
+  </div>
+</main>
+
+<script>
+(async function(){
+  var SUPABASE_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SUPABASE_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  var ADMIN_EMAILS=['mertatasal@gmail.com','atasal@gringlizce.com'];
+  var loading=document.getElementById('ozLoading');
+  try{
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    var sess=await sb.auth.getSession();
+    if(!sess||!sess.data||!sess.data.session){
+      window.location.href='giris.html?next='+encodeURIComponent(location.pathname+location.search); return;
+    }
+    if(ADMIN_EMAILS.indexOf(sess.data.session.user.email)===-1){
+      loading.innerHTML='<p>Bu sayfa yalnızca yöneticiye açıktır.</p>'; return;
+    }
+  }catch(e){
+    loading.innerHTML='<p>Oturum doğrulanamadı. Lütfen tekrar giriş yap.</p>'; return;
+  }
+  render();
+})();
+
+var SKILL={
+  speak:{label:'Konuşma',color:'var(--oz-speak)'},
+  listen:{label:'Dinleme',color:'var(--oz-listen)'},
+  read:{label:'Okuma',color:'var(--oz-read)'},
+  write:{label:'Yazı',color:'var(--oz-write)'}
+};
+
+var LESSONS=[
+{no:1,skill:'speak',title:'İş Görüşmeleri & İş İngilizcesi',
+ objective:'Öğrenci bir iş görüşmesinde kendini tanıtabilir ve sık sorulan sorulara yapılandırılmış cevaplar verebilir.',
+ timing:'Isınma 8’ · Kelime 10’ · Model Soru-Cevap 17’ · Rol-oyun 20’ · Kapanış 5’',
+ blocks:[
+  {t:'h3',v:'Isınma (8’)'},
+  {t:'ul',v:['Have you ever had a job interview in English? How did it feel?','What makes a good first impression in an interview?']},
+  {t:'box',bt:'Hedef Dil / Kalıplar',items:[
+    'Strengths: “One of my strengths is… / I’d say I’m good at…”',
+    'Weaknesses (positive): “Something I’m working on is… / I used to struggle with…, but now…”',
+    'Experience: “I have X years of experience in… / In my current role, I’m responsible for…”',
+    'Closing: “I’m really keen on this role because… / Do you have any questions for me?”',
+    'Vocab: candidate, position, responsibilities, achievement, deadline, team player, deal with, take on']},
+  {t:'h3',v:'Sık Görüşme Soruları + Örnek Cevaplar (öğret ve çalıştır)'},
+  {t:'qa',q:'1. Tell me about yourself.',a:'“Sure. I’m a marketing assistant with about three years of experience. I’m organised, I enjoy working with people, and I’m looking for a role where I can grow.”'},
+  {t:'qa',q:'2. Why do you want this job?',a:'“I want this job because it matches my skills and I like your company’s focus on customers. I think I can add value to your team.”'},
+  {t:'qa',q:'3. What are your strengths?',a:'“One of my strengths is staying calm under pressure. Even with tight deadlines, I plan my work and stay focused.”'},
+  {t:'qa',q:'4. What is your weakness?',a:'“Something I’m working on is saying no. I used to take on too much, but now I set priorities and ask for help when needed.”'},
+  {t:'qa',q:'5. Where do you see yourself in five years?',a:'“In five years, I’d like to be a team leader. I want to keep learning and take on more responsibility.”'},
+  {t:'qa',q:'6. Why should we hire you?',a:'“You should hire me because I’m reliable, I learn quickly, and I really care about doing a good job.”'},
+  {t:'qa',q:'7. Do you have any questions for us?',a:'“Yes. What does a typical day look like in this role? / How do you measure success here?”'},
+  {t:'h3',v:'Ana Etkinlik — Rol-oyun (20’)'},
+  {t:'p',v:'Öğretmen görüşmeci, öğrenci aday. İki tur: (1) yapılandırılmış sorular, (2) beklenmedik takip soruları (“Can you give an example?”). Sonra rolleri değiştir; öğrenci soru sorsun.'},
+  {t:'p',v:'<b>Serbest konuşma:</b> Öğrenci 60 saniyelik “elevator pitch” hazırlar ve anlatır; öğretmen 3 iyileştirme notu verir.'},
+  {t:'hw',v:'Kendi işi/hedef pozisyonu için “Tell me about yourself” cevabını 6-8 cümle yaz, sözlü getir.'}
+ ]},
+
+{no:2,skill:'speak',title:'Tanışma & Networking / Small Talk',
+ objective:'Sosyal ve profesyonel ortamda tanışma; small talk başlatma, sürdürme ve nazikçe bitirme.',
+ timing:'Isınma 7’ · Kalıplar 12’ · Dinle-tekrarla 6’ · Rol-oyun 25’ · Kapanış 10’',
+ blocks:[
+  {t:'h3',v:'Isınma (7’)'},
+  {t:'ul',v:['Do you find small talk easy or hard?','What do people talk about at events or coffee breaks?']},
+  {t:'box',bt:'Hedef Dil',items:[
+    'Openers: “Is this seat free? / How do you know the host? / So, what do you do?”',
+    'Follow-ups: “Oh interesting — how long have you been doing that? / What’s that like?”',
+    'Reacting: “That sounds great. / No way! / I know what you mean.”',
+    'Safe topics: weather, travel, food, weekend, the event itself (avoid salary, age, politics)',
+    'Exiting: “It was really nice talking to you. / I’d better catch up with a few people — enjoy the rest of your evening.”']},
+  {t:'h3',v:'Ana Etkinlik — 3 Rol-oyun (25’)'},
+  {t:'ul',v:['(a) at a conference coffee break','(b) meeting a new colleague','(c) a networking dinner']},
+  {t:'p',v:'Öğrenci her turda açış → sürdürme → kapanış üçlüsünü kullanır.'},
+  {t:'p',v:'<b>Serbest konuşma:</b> Öğrenci kendini 4 cümleyle tanıtır; öğretmen açık uçlu 3 soruyla sohbeti uzatır.'},
+  {t:'hw',v:'5 açık uçlu small-talk sorusu yaz; kendi işini 3 farklı şekilde tanıt (formal / casual / one-line).'}
+ ]},
+
+{no:3,skill:'listen',title:'Dinleme — TED: “Try Something New for 30 Days” (Matt Cutts)',
+ objective:'Kısa ve net bir konuşmada ana fikri ve detayları yakalamak; kişisel hedeflerden konuşmak.',
+ timing:'Kelime 8’ · İzleme 1 (genel) 5’ · İzleme 2 (detay) 8’ · Anlama 12’ · Tartışma 22’ · Kapanış 5’',
+ blocks:[
+  {t:'video',id:'UNP03fDSj1U'},
+  {t:'src',v:'~3 dakika · İngilizce/otomatik altyazı mevcut'},
+  {t:'box',bt:'Ön Kelime',items:['challenge, habit, add up, sustainable, willpower, comfort zone, take on, give up']},
+  {t:'h3',v:'İzleme 1 — Genel Fikir (5’)'},
+  {t:'p',v:'Tek soru: What is Matt Cutts’s main idea? <i>(Yeni bir şeyi 30 gün dene → alışkanlık kur/bırak.)</i>'},
+  {t:'h3',v:'İzleme 2 — Anlama Soruları'},
+  {t:'qs',v:[
+    'Why 30 days and not longer? (Alışkanlık kurmaya yetecek kadar uzun, motivasyonu koruyacak kadar kısa.)',
+    'Name two things he tried. (Cycling to work / a photo a day / writing a novel / climbing.)',
+    'What happened to his confidence? (Arttı; daha maceracı oldu.)',
+    'Were the changes “sustainable”? Big vs small challenges hakkında ne diyor?',
+    'What does he mean by “the next 30 days are going to pass whether you like it or not”?']},
+  {t:'h3',v:'Tartışma (konuşma odaklı)'},
+  {t:'ul',v:['What 30-day challenge would you choose? Why?','Have you ever built or broken a habit? How?','Do you agree small steps beat big goals?']},
+  {t:'hw',v:'Kendi 30 günlük hedefini seç, 5 cümleyle plan yaz (I’m going to… / My goal is to…).'}
+ ]},
+
+{no:4,skill:'read',title:'Okuma — “Benefits of Working From Home” (HuffPost)',
+ objective:'Bir yaşam/işyeri makalesinde tarama + detaylı okuma, kelime çıkarımı ve fikir tartışması.',
+ timing:'Isınma 7’ · Kelime 8’ · Tarama 6’ · Detay 14’ · Kelime çalışması 10’ · Tartışma 12’ · Kapanış 3’',
+ blocks:[
+  {t:'link',url:'https://www.huffpost.com/entry/benefits-of-working-from-home-according-to-science_l_660c30a0e4b0328a72be17cd',label:'Makaleyi Aç — HuffPost'},
+  {t:'src',v:'HuffPost, 2024 · “10 Undeniable Benefits Of Working From Home, According To Science” · B1'},
+  {t:'h3',v:'Isınma (7’)'},
+  {t:'p',v:'Would you prefer to work from home, in an office, or hybrid? Why?'},
+  {t:'box',bt:'Ön Kelime',items:['remote / hybrid, commute, productivity, well-being, flexibility, drawback, burnout, carbon emissions']},
+  {t:'h3',v:'Tarama (Skim, 6’)'},
+  {t:'p',v:'Sadece başlıkları oku → beklediğin 3 faydayı listele.'},
+  {t:'h3',v:'Detay Soruları'},
+  {t:'qs',v:[
+    'Find one benefit related to health or stress.',
+    'Find one benefit related to the environment.',
+    'What drawback does the article mention? (e.g. longer hours / less collaboration)',
+    'Does the article say home working is better for everyone? (Hayır — dengeli.)',
+    'Which benefit do you find most convincing, and which do you doubt?']},
+  {t:'p',v:'<b>Kelime çalışması:</b> Öğrenci metinden 5 yeni kelime seçer → tahmin → sözlük → kendi cümlesi.'},
+  {t:'box',bt:'Tartışma (konuşmaya köprü)',items:['“In my opinion… / The main advantage for me is… / On the other hand…”']},
+  {t:'hw',v:'6-8 cümlelik kısa görüş paragrafı: “Is working from home good for productivity?”'}
+ ]},
+
+{no:5,skill:'speak',title:'Fikir Belirtme: Katılma & Katılmama',
+ objective:'Tartışmada görüş bildirme, nazikçe katılma/katılmama ve gerekçe verme.',
+ timing:'Isınma 6’ · Fonksiyonel dil 12’ · Kontrollü alıştırma 12’ · Münazara 25’ · Kapanış 5’',
+ blocks:[
+  {t:'box',bt:'Hedef Dil',items:[
+    'Opinion: “In my opinion… / If you ask me… / The way I see it…”',
+    'Agreeing: “Exactly. / That’s a good point. / I couldn’t agree more.”',
+    'Disagreeing (soft): “I see your point, but… / I’m not so sure. / That’s true, however…”',
+    'Balancing: “It depends. / There are two sides to this.”',
+    'Reasons: “…because… / for example… / that’s why…”']},
+  {t:'p',v:'<b>Kontrollü alıştırma:</b> Öğretmen görüş söyler, öğrenci katılır/karşı çıkar + gerekçe (10 hızlı tur).'},
+  {t:'h3',v:'Ana Etkinlik — Mini Münazaralar (25’)'},
+  {t:'ul',v:['“Money is more important than free time.”','“Social media does more harm than good.”','“It’s better to be a specialist than a generalist.”','“Cities are better places to live than villages.”']},
+  {t:'p',v:'Öğrenci bir taraf tutar, 3 gerekçe verir; öğretmen karşı çıkar → öğrenci savunur.'},
+  {t:'hw',v:'Bir konuda “for / against” 3’er madde hazırla, sözlü savunmaya gel.'}
+ ]},
+
+{no:6,skill:'listen',title:'Dinleme — TED: “How to Speak So That People Want to Listen” (Julian Treasure)',
+ objective:'Orta uzunlukta bir konuşmada yapı ve teknikleri yakalamak; konuşma becerisine köprü kurmak.',
+ timing:'Kelime 8’ · İzleme 1 8’ · İzleme 2 8’ · Anlama 14’ · Ses araçları alıştırması 17’ · Kapanış 5’',
+ blocks:[
+  {t:'video',id:'eIho2S0ZahI'},
+  {t:'src',v:'~10 dakika · İngilizce altyazı mevcut'},
+  {t:'box',bt:'Ön Kelime',items:['gossip, judging, negativity, complaining, register, timbre, pace, pitch, silence, empathy']},
+  {t:'h3',v:'Anlama Soruları'},
+  {t:'qs',v:[
+    'What are the “seven deadly sins of speaking”? (gossip, judging, negativity, complaining, excuses, exaggeration/lying, dogmatism)',
+    'What does HAIL stand for? (Honesty, Authenticity, Integrity, Love)',
+    'Name two vocal “tools” he mentions. (register, timbre, prosody, pace, pitch, volume)',
+    'Why does he value silence?',
+    'Which tip do you think is most useful for you?']},
+  {t:'p',v:'<b>Alıştırma (konuşma):</b> Öğrenci aynı cümleyi farklı pace / pitch / volume ile söyler; kısa bir parçayı “HAIL” ilkesiyle yeniden anlatır.'},
+  {t:'hw',v:'1 dakikalık konuşma hazırla; en az 2 vocal tool bilinçli kullan, bir sonraki konuşma dersinde uygula.'}
+ ]},
+
+{no:7,skill:'speak',title:'Anı Anlatma (Storytelling): Geçmiş Deneyimler',
+ objective:'Bir anıyı akıcı şekilde anlatma; past simple/continuous + zaman bağlaçları.',
+ timing:'Isınma 6’ · Hedef dil 12’ · Model anlatı 8’ · Alıştırma 24’ · Kapanış 10’',
+ blocks:[
+  {t:'box',bt:'Hedef Dil',items:[
+    'Sequencing: “First… / then… / after that… / in the end…”',
+    'Setting the scene (past continuous): “I was walking home when…”',
+    'Reacting: “I couldn’t believe it. / It was such a relief.”',
+    'Keeping the listener: “You’ll never guess what happened. / Guess what?”']},
+  {t:'p',v:'<b>Model:</b> Öğretmen 45 saniyelik kişisel bir anı anlatır; öğrenci yapı öğelerini işaretler.'},
+  {t:'h3',v:'Ana Etkinlik — Anlatı Tetikleyicileri (24’)'},
+  {t:'ul',v:['A time you were nervous but it went well.','A trip that didn’t go as planned.','A time technology saved or ruined your day.','A memorable first day (job/school).']},
+  {t:'p',v:'Öğrenci seçer, 1-2 dk anlatır; öğretmen 3 takip sorusu sorar, sonra düzeltme.'},
+  {t:'hw',v:'Bir anıyı 8-10 cümle yaz (past tenses), sözlü anlatmaya hazır gel.'}
+ ]},
+
+{no:8,skill:'read',title:'Okuma — “Which Jobs Could Get Replaced By AI” (HuffPost)',
+ objective:'Güncel bir teknoloji makalesinde ana argümanı ve karşı görüşü ayırt etmek; teknoloji kelime dağarcığı.',
+ timing:'Isınma 7’ · Kelime 8’ · Tarama 6’ · Detay 15’ · Kelime 10’ · Tartışma 11’ · Kapanış 3’',
+ blocks:[
+  {t:'link',url:'https://www.huffpost.com/entry/microsoft-ai-list_l_6890ea3ee4b0ef7cc79e6f76',label:'Makaleyi Aç — HuffPost'},
+  {t:'src',v:'HuffPost, 2025 · Microsoft’un AI-etki listesi üzerine · B1-B2'},
+  {t:'h3',v:'Isınma (7’)'},
+  {t:'p',v:'Do you think AI will change your job? How?'},
+  {t:'box',bt:'Ön Kelime',items:['replace, exposure/overlap, applicability, knowledge worker, high-stakes, oversimplify, expertise, imminent']},
+  {t:'h3',v:'Tarama (Skim, 6’)'},
+  {t:'p',v:'What is the article’s main claim? <i>(Yüksek AI örtüşmesi ≠ işlerin yok olması.)</i>'},
+  {t:'h3',v:'Detay Soruları'},
+  {t:'qs',v:[
+    'How did Microsoft researchers do the study? (200.000 chatbot konuşması analiz edildi.)',
+    'Which kinds of jobs have the most “AI overlap”? (Yazı/iletişim/bilgi işi.)',
+    'What did the lead researcher say the study does NOT prove? (AI’nin işleri değiştirebileceğini.)',
+    'What example shows why human judgment still matters? (Tıbbi/hukuki çeviri — yüksek risk.)',
+    'Does the article say people should panic? What’s the balanced view?']},
+  {t:'p',v:'<b>Kelime çalışması:</b> 5 kelime seç → eş anlamlı bul → cümle kur.'},
+  {t:'box',bt:'Tartışma (konuşmaya köprü)',items:['“I’m optimistic/worried because… / AI can help with…, but it can’t…”']},
+  {t:'hw',v:'“Will AI help or replace your job?” — 8 cümlelik görüş.'}
+ ]},
+
+{no:9,skill:'write',title:'Yazı — Profesyonel E-postalar',
+ objective:'Net ve doğru tonlu profesyonel e-posta yazma (rica, teşekkür, takip).',
+ timing:'Isınma 6’ · Yapı 12’ · Kalıp bankası 10’ · Yönlendirmeli yazma 22’ · Gözden geçirme 10’',
+ blocks:[
+  {t:'h3',v:'E-posta Yapısı'},
+  {t:'p',v:'Subject → Greeting → Reason → Details/Request → Polite closing → Sign-off.'},
+  {t:'box',bt:'Kalıp Bankası',items:[
+    'Greetings: “Dear Mr/Ms… / Hi [name],” (resmi vs yarı-resmi)',
+    'Opening: “I’m writing to… / I hope you’re well. / Thank you for your email.”',
+    'Requesting: “Could you please… / I’d be grateful if you could… / Would it be possible to…”',
+    'Referring/attaching: “Please find attached… / As we discussed…”',
+    'Closing: “Looking forward to hearing from you. / Please let me know if you need anything else.”',
+    'Sign-off: “Best regards, / Kind regards,”']},
+  {t:'p',v:'<b>Karşılaştırma:</b> Aynı mesajı çok resmi vs samimi tonda yaz — ne değişiyor?'},
+  {t:'h3',v:'Yönlendirmeli Yazma (22’)'},
+  {t:'p',v:'Öğrenci bir senaryo seçip 80-120 kelimelik e-posta yazar:'},
+  {t:'ul',v:['Toplantıyı erteleme ricası','İş görüşmesi sonrası teşekkür maili','Bir bilgi/rapor talebi + takip']},
+  {t:'p',v:'<b>Gözden geçirme:</b> Öğretmen ton, yapı ve doğruluk üzerine geri bildirim verir; öğrenci düzeltir.'},
+  {t:'hw',v:'İkinci bir e-posta senaryosu yaz, bir sonraki derse getir.'}
+ ]},
+
+{no:10,skill:'speak',title:'Mini Sunum: Kendi İşini / Bir Projeni Anlat',
+ objective:'Kısa, yapılandırılmış bir sunum yapma (giriş-gelişme-sonuç); sıralama ve vurgulama dili.',
+ timing:'Isınma 6’ · Yapı + dil 14’ · Hazırlık 12’ · Sunum + Soru-Cevap 22’ · Geri bildirim 6’',
+ blocks:[
+  {t:'box',bt:'Hedef Dil',items:[
+    'Opening: “Today I’d like to talk about… / I’ll cover three points.”',
+    'Sequencing: “Firstly… / Moving on… / Finally…”',
+    'Emphasis: “The key point is… / What really matters is…”',
+    'Example: “For example… / To give you an idea…”',
+    'Closing: “To sum up… / Thanks for listening — any questions?”']},
+  {t:'p',v:'<b>Hazırlık (12’):</b> Öğrenci konu seçer (kendi işi / bir proje / bir hedef), 3 ana nokta + açış-kapanış cümlesi planlar.'},
+  {t:'h3',v:'Ana Etkinlik — Sunum + Soru-Cevap (22’)'},
+  {t:'p',v:'Öğrenci 3-4 dk sunar; öğretmen dinleyici olarak 3 soru sorar; öğrenci yanıtlar. Sonra kısa, iyileştirilmiş ikinci deneme.'},
+  {t:'p',v:'<b>Geri bildirim + program kapanışı:</b> Yapı, akıcılık, vocal tools (Ders 6), göz teması. 10 ders boyunca gelişim özeti ve sonraki adımlar.'},
+  {t:'hw',v:'Sunumu kaydedip kendini izle; öğretmenle bir sonraki program üzerine konuş.'}
+ ]}
+];
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// NOTE: content strings intentionally allow inline <b>/<i> tags authored above.
+
+function renderBlock(b){
+  if(b.t==='p') return '<p>'+b.v+'</p>';
+  if(b.t==='h3') return '<h3>'+b.v+'</h3>';
+  if(b.t==='ul') return '<ul>'+b.v.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+  if(b.t==='qs') return '<ol class="oz-qs">'+b.v.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ol>';
+  if(b.t==='box') return '<div class="oz-box"><div class="bt">'+b.bt+'</div><ul>'+b.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';
+  if(b.t==='qa') return '<div class="oz-qa"><div class="q">'+b.q+'</div><div class="a">'+b.a+'</div></div>';
+  if(b.t==='hw') return '<div class="oz-hw"><b>Ödev.</b> '+b.v+'</div>';
+  if(b.t==='note') return '<div class="oz-note">'+b.v+'</div>';
+  if(b.t==='src') return '<div class="oz-src">'+b.v+'</div>';
+  if(b.t==='video') return '<div class="oz-video"><iframe src="https://www.youtube-nocookie.com/embed/'+b.id+'?rel=0" title="TED" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+  if(b.t==='link') return '<a class="oz-link" href="'+b.url+'" target="_blank" rel="noopener noreferrer">'+b.label+' ↗</a>';
+  return '';
+}
+
+function render(){
+  var toc=document.getElementById('ozToc');
+  var host=document.getElementById('ozLessons');
+  var tocHtml='', lesHtml='';
+  LESSONS.forEach(function(L,i){
+    var sk=SKILL[L.skill];
+    tocHtml+='<a href="#les'+L.no+'">'+L.no+'. '+esc(L.title.split(' — ')[0])+'</a>';
+    var body='<div class="oz-obj">'+L.objective+'</div>'+
+             '<div class="oz-time">⏱ '+L.timing+'</div>'+
+             L.blocks.map(renderBlock).join('');
+    lesHtml+='<details class="oz-les" id="les'+L.no+'"'+(i===0?' open':'')+'>'+
+      '<summary class="oz-sum">'+
+        '<span class="oz-no">'+L.no+'</span>'+
+        '<span class="t"><b>'+esc(L.title)+'</b></span>'+
+        '<span class="oz-badge" style="background:'+sk.color+'">'+sk.label+'</span>'+
+        '<span class="oz-chev">›</span>'+
+      '</summary>'+
+      '<div class="oz-body">'+body+'</div>'+
+    '</details>';
+  });
+  toc.innerHTML=tocHtml;
+  host.innerHTML=lesHtml;
+  document.getElementById('ozLoading').style.display='none';
+  document.getElementById('ozWrap').style.display='';
+  // TOC click opens target details
+  toc.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click',function(){
+      var id=a.getAttribute('href').slice(1);
+      var d=document.getElementById(id); if(d) d.open=true;
+    });
+  });
+}
+</script>
+</body>
+</html>

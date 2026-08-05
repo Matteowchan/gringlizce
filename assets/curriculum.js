@@ -216,20 +216,31 @@ var EXAMS=[
       {name:"TOK Essay Nasil Yazilir",s:"todo",href:"tok-ogren#essay"},
       {name:"TOK Exhibition Nasil Yapilir",s:"todo",href:"tok-ogren#exhibition"}]}
   ]}]},
- {id:"udsp",name:"UDSP",mark:"U",desc:"Almanca + İngilizce . 8 tema paketi",pct:0,
-  tools:[{ic:"kelime",label:"Kelime",desc:"8 tema paketi (Alltag, Schule, Reisen, Essen, Familie, Natur, Stadt, Arbeit). Almanca-İngilizce-Türkçe + eşleştirme quizleri.",href:"udsp-ogren"}],
-  sections:[{label:"Ogren",units:[
-    {name:"Kelime Paketleri",desc:"Almanca-İngilizce, tema tema, quizli",state:"live",lessons:[
-      {name:"UDSP Hakkinda",s:"todo",href:"udsp-ogren#basla"},
-      {name:"1. Alltag (Günlük)",s:"todo",href:"udsp-ogren#p1"},
-      {name:"2. Schule (Okul)",s:"todo",href:"udsp-ogren#p2"},
-      {name:"3. Reisen (Seyahat)",s:"todo",href:"udsp-ogren#p3"},
-      {name:"4. Essen und Trinken",s:"todo",href:"udsp-ogren#p4"},
-      {name:"5. Familie und Menschen",s:"todo",href:"udsp-ogren#p5"},
-      {name:"6. Natur und Wetter",s:"todo",href:"udsp-ogren#p6"},
-      {name:"7. Stadt und Verkehr",s:"todo",href:"udsp-ogren#p7"},
-      {name:"8. Arbeit und Zeit",s:"todo",href:"udsp-ogren#p8"}]}
-  ]}]},
+ {id:"udsp",name:"UDSP",mark:"U",desc:"MEB Uluslararası Diploma/Sertifika Programı · İngilizce veya Almanca · 50 soru / 110 dk",pct:0,
+  tools:[{ic:"soru",label:"İngilizce",desc:"UDSP İngilizce hazırlık: kelime, dilbilgisi, cloze, cümle tamamlama, diyalog, okuma, restatement. 8-10. sınıf, A2-B1. Beş şıklı, çözümlü.",href:"udsp-ingilizce-ogren"},
+    {ic:"soru",label:"Almanca",desc:"UDSP Almanca hazırlık: Wortschatz, Grammatik (Artikel, Fälle), Lückentext, Satzergänzung, Dialog, Leseverstehen. 8-10. sınıf, A2-B1.",href:"udsp-almanca-ogren"}],
+  sections:[
+    {label:"İngilizce",units:[
+      {name:"UDSP İngilizce",desc:"50 soru / 110 dk · A2-B1 · çözümlü",state:"live",lessons:[
+        {name:"UDSP Nedir",s:"todo",href:"udsp-ingilizce-ogren#basla"},
+        {name:"Kelime",s:"todo",href:"udsp-ingilizce-ogren#kelime"},
+        {name:"Dilbilgisi",s:"todo",href:"udsp-ingilizce-ogren#dilbilgisi"},
+        {name:"Cloze",s:"todo",href:"udsp-ingilizce-ogren#cloze"},
+        {name:"Cümle Tamamlama",s:"todo",href:"udsp-ingilizce-ogren#tamamlama"},
+        {name:"Diyalog",s:"todo",href:"udsp-ingilizce-ogren#diyalog"},
+        {name:"Okuma",s:"todo",href:"udsp-ingilizce-ogren#okuma"},
+        {name:"Restatement",s:"todo",href:"udsp-ingilizce-ogren#restatement"}]}]},
+    {label:"Almanca",units:[
+      {name:"UDSP Almanca",desc:"50 soru / 110 dk · A2-B1 · çözümlü",state:"live",lessons:[
+        {name:"UDSP Nedir",s:"todo",href:"udsp-almanca-ogren#basla"},
+        {name:"Wortschatz",s:"todo",href:"udsp-almanca-ogren#kelime"},
+        {name:"Grammatik",s:"todo",href:"udsp-almanca-ogren#dilbilgisi"},
+        {name:"Lückentext",s:"todo",href:"udsp-almanca-ogren#cloze"},
+        {name:"Satzergänzung",s:"todo",href:"udsp-almanca-ogren#tamamlama"},
+        {name:"Dialog",s:"todo",href:"udsp-almanca-ogren#diyalog"},
+        {name:"Leseverstehen",s:"todo",href:"udsp-almanca-ogren#okuma"},
+        {name:"Restatement",s:"todo",href:"udsp-almanca-ogren#restatement"}]}]}
+  ]},
  {id:"ydt",name:"YDT",mark:"Y",desc:"Yabancı Dil Testi · tüm soru tipleri, beş şıklı",pct:0,
   tools:[{ic:"soru",label:"Driller",desc:"Kelime, dilbilgisi, bağlaç, cloze, cümle tamamlama, diyalog, restatement, çeviri ve paragraf drilleri. Beş şıklı, puanlı.",href:"ydt-ogren"}],
   sections:[{label:"Ogren",units:[
@@ -297,7 +308,9 @@ var EXAMS=[
         { label: "Soru Bankası", href: "yds-soru-bankasi" } ] },
       { label: "YDT", href: "ydt", children: [
         { label: "Soru Bankası", href: "ydt-soru-bankasi" } ] },
-      { label: "ÜDS / UDSP", href: "udsp", children: [
+      { label: "UDSP", href: "udsp", children: [
+        { label: "İngilizce", href: "udsp-ingilizce-ogren" },
+        { label: "Almanca", href: "udsp-almanca-ogren" },
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
@@ -330,6 +343,7 @@ var EXAMS=[
       { label: "TOEFL", href: "blog-toefl" },
       { label: "YDS / YÖKDİL", href: "blog-yds" },
       { label: "YDT", href: "blog-ydt" },
+      { label: "UDSP", href: "blog-udsp" },
       { label: "IB English B", href: "blog-ib-english" },
       { label: "Deutsch B", href: "blog-deutsch" },
       { label: "TOK", href: "blog-tok" }

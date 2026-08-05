@@ -389,6 +389,7 @@
     return parts.length >= 2;
   }
   function pageHref(name) {
+    name = name.replace(/\.html$/, ''); // temiz URL: uzantısız
     return inSubdir() ? ('../' + name) : name;
   }
 

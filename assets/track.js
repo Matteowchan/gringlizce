@@ -62,9 +62,9 @@
   function trackName(t) { return t === "junior" ? "Junior" : t === "teen" ? "Teen" : "Adult"; }
   function pageIdentity() {
     var p = (location.pathname.split("/").pop() || "").toLowerCase();
-    var m = p.match(/^genel-(junior|teen)-(a1|a2|b1|b2|c1|c2)-unite-\d+\.html$/);
+    var m = p.match(/^genel-(junior|teen)-(a1|a2|b1|b2|c1|c2)-unite-\d+(?:\.html)?$/);
     if (m) return { track: m[1], level: m[2].toUpperCase() };
-    var m2 = p.match(/^genel-(a1|a2|b1|b2|c1|c2)-unite-\d+\.html$/);
+    var m2 = p.match(/^genel-(a1|a2|b1|b2|c1|c2)-unite-\d+(?:\.html)?$/);
     if (m2) return { track: "adult", level: m2[1].toUpperCase() };
     return null;
   }

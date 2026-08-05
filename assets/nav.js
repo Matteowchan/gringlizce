@@ -276,7 +276,7 @@
       nav.className = "gri-tabbar";
       nav.setAttribute("aria-label", "Hızlı gezinme");
       nav.innerHTML = tabs.map(function (t) {
-        var on = t.match.indexOf(file) >= 0;
+        var on = t.match.map(function (m) { return m.replace(/\.html$/, ""); }).indexOf(file.replace(/\.html$/, "")) >= 0;
         return '<a href="' + t.href + '"' + (on ? ' class="on" aria-current="page"' : "") + '>'
           + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + t.icon + '</svg>'
           + '<span>' + t.label + '</span></a>';

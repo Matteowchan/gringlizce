@@ -672,6 +672,7 @@
     var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
     var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
     var EVAL_ENDPOINT = SUPABASE_URL + '/functions/v1/gri-evaluate-writing';
+    var WRITING_COST = 5; // Gri Token / yazı değerlendirmesi (edge function gri-evaluate-writing ile aynı)
 
     // Paywall paketleri (mevcut Gri sisteminden)
     var PACKAGES = [
@@ -871,7 +872,7 @@
       var dailyRemaining = Math.max(0, dailyLimit - dailyUsed);
 
       var bonusRemaining = Math.max(0, (row.bonus_quota || 0) - (row.bonus_used || 0));
-      var bonusWritings = Math.floor(bonusRemaining / 10);
+      var bonusWritings = Math.floor(bonusRemaining / WRITING_COST);
 
       state.quota = {
         daily_remaining: dailyRemaining,
@@ -1130,7 +1131,7 @@
             ? 'Bonus haklarınla devam edebilirsin (' + data.quota.bonus_remaining + ' adet kaldı).'
             : 'Yarın yeni hak kazanacaksın veya Gri hakkı satın alabilirsin.') + '</div>';
       } else if (data.cost_source === 'bonus') {
-        costMsg = '<div class="wiz-info" style="margin-bottom:1rem;">Bonus quota\'dan 10 birim kullanıldı. Kalan bonus: ' +
+        costMsg = '<div class="wiz-info" style="margin-bottom:1rem;">Bonus quotadan ' + WRITING_COST + ' Gri Token kullanıldı. Kalan bonus: ' +
           (data.quota && data.quota.bonus_remaining || 0) + ' değerlendirme.</div>';
       }
 
@@ -1204,7 +1205,7 @@
           '</a>';
       });
       html += '</div>' +
-        '<p class="pw-note">Not: Her yazı değerlendirmesi 10 bonus quota tüketir. 10 Soru Paketi = 1 yazı değerlendirmesi.</p>' +
+        '<p class="pw-note">Not: Her yazı değerlendirmesi ' + WRITING_COST + ' Gri Token tüketir.</p>' +
         '</div>';
       document.getElementById('feedbackBody').innerHTML = html;
     }

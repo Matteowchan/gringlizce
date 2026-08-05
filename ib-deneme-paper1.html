@@ -365,11 +365,12 @@
             <span class="eyebrow">IB English B &middot; Paper 1 (Yazılı Üretim)</span>
             <h1 id="testName">Yükleniyor...</h1>
             <p class="p1-lead">Bu Paper 1 denemesi tek bir yazılı üretim görevi ister. Aşağıdaki üç seçenekten birini seç, yanıtını yaz ve Gri AI'dan Language, Message ve Conceptual Understanding kriterleri üzerinden geri bildirim al.</p>
+            <p class="p1-lead" style="font-size:0.85rem; opacity:0.85; margin-top:0.5rem;">Resmi IB English B Paper 1 süresi SL için yaklaşık 1 saat 15 dakika (75 dk), HL için yaklaşık 1 saat 30 dakikadır (90 dk). Süreler oturuma göre güncellenebildiğinden güncel IB kılavuzundan doğrula.</p>
           </div>
           <div class="p1-hero-side">
             <span class="p1-timer" id="timerPill" style="display:none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-              Süre <strong id="timerVal">60:00</strong>
+              Süre <strong id="timerVal">75:00</strong>
             </span>
             <span class="quota-pill" id="quotaPill" style="display:none;">
               <span class="qp-num" id="qpNum">—</span>
@@ -533,8 +534,8 @@
       quota: null,
       isAnalyzing: false,
       savedAttempt: false,
-      // timer
-      duration: 60 * 60,
+      // timer (varsayılan: SL Paper 1 ~75 dk; DB'deki time_minutes önceliklidir)
+      duration: 75 * 60,
       startedAt: null,
       timerInterval: null,
     };
@@ -582,7 +583,7 @@
         return;
       }
       state.test = testRes.data;
-      state.duration = ((state.test.time_minutes || 60) * 60);
+      state.duration = ((state.test.time_minutes || 75) * 60);
 
       // Parts (task options)
       var partsRes = await sb.from('ib_parts').select('*')

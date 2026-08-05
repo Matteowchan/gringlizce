@@ -31,12 +31,22 @@ Her ajan (kendi dosyalarında):
 - **Deutsch:** paper1:91 tema adları; Erfindungsgabe teyit; oral CTA; writing wizard ai:true (config). Blog: blog-deutsch-*.
 - **TOK:** /ib-tok "Yakında"→gerçek modül+blog linkleri; IES→IA prompt; doğrulama→gerekçelendirme; meta description; Knowledge Framework 4 ayak isimlendirme. Blog: blog-tok-*.
 
+## Dalga 1.5 — Konu anlatımı QA (her içerik modülü sonrası)
+Üretilen 1500-2500 kelimelik konu anlatımlarını denetle+düzelt:
+- İngilizce yazım/dilbilgisi/doğal kullanım; (Deutsch) Almanca doğruluk.
+- Türkçe yazım + diakritik.
+- **Uppercase-İ:** CSS text-transform:uppercase İngilizce metinde noktalı "İ" üretir → İngilizce parçalara `lang="en"` sarmala (memory: ingilizce-uppercase-lang-en). Türkçe metne dokunma.
+- Akademik doğruluk (uydurma bilgi yok). Her modülün içerik ajanı bitip commit'lenince o modüle özel QA ajanı (dosya serbestken).
+
 ## Dalga 2 — Kalıcı iyileştirme (merkezî, ajanlar sonrası)
 - Açıklama şemasını harf-bağımsız `why_wrong{A,B,C,D}`'ye standardize (debias bağışıklığı).
 - `lang="en"` sarmalama (İng içerik a11y) + SVG title/aria.
 - DB-akış fallback + hata izleme (checkpoint/mock/bank).
 - Hub'lara "Ücretsiz başla" birincil CTA + "Yakında" temizliği.
 - Koçluk çift-kopya tekilleştirme.
+
+## Dalga 2.5 — Görsel cila + animasyon (içerik QA sonrası)
+Minimal ama etkili: nazik hover/geçiş, kart lift+gölge, scroll-reveal fade-in, ince gradient/derinlik, bölüm giriş animasyonları. Performans-dostu, `prefers-reduced-motion` saygılı, tema-uyumlu (light/dark + Tiffany). Otonom.
 
 ## Dalga 3 — DB-BLOCKED (MCP bağlanınca)
 - Soru bankalarında `why` harf-kayması denetimi (YDS/SAT çapraz risk).

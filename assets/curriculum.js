@@ -149,7 +149,8 @@ var EXAMS=[
   ]}]},
  {id:"ib",name:"IB English B",mark:"IB",desc:"SL ve HL . Paper 1, 14 metin türü + Gri AI",pct:0,
   tools:[{ic:"soru",label:"Metin turleri",desc:"14 metin türü (makale, blog, günlük, röportaj, haber, inceleme, rapor, öneri, yönerge, deneme...). Her biri sözleşme + model + Gri AI'li yazma sihirbazı.",href:"ib-ogren"},
-    {ic:"deneme",label:"Paper 1 & Paper 2",desc:"HL ve SL için bölüm bazlı sınav pratiği: Paper 1 yazılı üretim (Gri AI), Paper 2 okuma anlama (otomatik puanlama).",href:"ib-english-b-hl"}],
+    {ic:"deneme",label:"Paper 1 & Paper 2",desc:"HL ve SL için bölüm bazlı sınav pratiği: Paper 1 yazılı üretim (Gri AI), Paper 2 okuma anlama (otomatik puanlama).",href:"ib-english-b-hl"},
+    {ic:"yazi",label:"Individual Oral",desc:"SL görsel uyaran pratiği: 20 görsel, 3-4 dk model sunum, takip ve genel tartışma soruları, örnek cevaplar + Türkçe ipuçları.",href:"ib-english-b-io"}],
   sections:[{label:"Ogren . Paper 1",units:[
     {name:"Giriş ve Kriterler",desc:"Paper 1, A/B/C kriterleri, tur secimi",state:"live",lessons:[
       {name:"Paper 1 ve Kriterler",s:"todo",href:"ib-ogren#basla"},

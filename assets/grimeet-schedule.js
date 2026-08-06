@@ -310,7 +310,7 @@
       var gcal='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(webcalUrl);
       var outlook='https://outlook.live.com/calendar/0/addfromweb?url='+encodeURIComponent(httpsUrl)+'&name='+encodeURIComponent('Gringlizce Dersleri');
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal"><h4>Takvime Abone Ol</h4>'
+      ov.innerHTML='<div class="gsch-modal" style="max-width:460px"><h4>Takvime Abone Ol</h4>'
         + '<p>Derslerin Google, Outlook veya Apple takvimine otomatik gelir ve düzenli güncellenir. Bu bağlantı sana özeldir — paylaşma.</p>'
         + '<div class="mrow"><input type="text" class="m-url" readonly value="'+esc(httpsUrl)+'" style="flex:1;min-width:0;font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;"><button type="button" class="gsch-btn m-copy">Kopyala</button></div>'
         + '<div class="macts" style="flex-wrap:wrap;justify-content:flex-start;">'

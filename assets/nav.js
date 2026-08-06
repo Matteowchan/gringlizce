@@ -6,7 +6,7 @@
   "use strict";
 
   var CSS = [
-    ":root{--gri-bg:#F1EAD9;--gri-surface:#FBF6EC;--gri-surface-2:#F4EDDC;--gri-ink:#241E17;--gri-ink-soft:#6E6353;--gri-ink-faint:#9A8E7B;--gri-line:#E3D8C3;--gri-line-soft:#EDE4D2;--gri-gold:#B78A2E;--gri-accent:#2E6E6A;--gri-accent-soft:#DDEBE8;--gri-accent-deep:#123C39;--gri-info:#6E4A8E;--gri-info-ink:#F5EEFB;--gri-nav-bg:#F7F1E4;--gri-shadow:0 2px 4px rgba(40,30,20,.05),0 12px 32px rgba(40,30,20,.06)}",
+    ":root{--gri-bg:#F1EAD9;--gri-surface:#FBF6EC;--gri-surface-2:#F4EDDC;--gri-ink:#241E17;--gri-ink-soft:#6E6353;--gri-ink-faint:#877B67;--gri-line:#E3D8C3;--gri-line-soft:#EDE4D2;--gri-gold:#B78A2E;--gri-accent:#2E6E6A;--gri-accent-soft:#DDEBE8;--gri-accent-deep:#123C39;--gri-info:#6E4A8E;--gri-info-ink:#F5EEFB;--gri-nav-bg:#F7F1E4;--gri-shadow:0 2px 4px rgba(40,30,20,.05),0 12px 32px rgba(40,30,20,.06)}",
     "[data-theme='erik']{--bg:#F1E7EC;--bg-soft:#F7EEF2;--teal:#8A4A63;--teal-deep:#5C3042;--teal-soft:rgba(138,74,99,.13);--cat-accent:#8A4A63;--gri-bg:#F1E7EC;--gri-surface:#FAF3F6;--bg-card:#FAF3F6;--gri-surface-2:#F3E7EC;--gri-accent:#8A4A63;--gri-accent-soft:#F0DFE6;--gri-accent-deep:#5C3042}",
     "[data-theme='orman']{--bg:#E8EEE5;--bg-soft:#F0F4EE;--teal:#3E6B4A;--teal-deep:#20402B;--teal-soft:rgba(62,107,74,.13);--cat-accent:#3E6B4A;--gri-bg:#E8EEE5;--gri-surface:#F2F6F0;--bg-card:#F2F6F0;--gri-surface-2:#E6EDE4;--gri-accent:#3E6B4A;--gri-accent-soft:#DFEBE1;--gri-accent-deep:#20402B}",
     "[data-theme='tiffany']{--bg:#E1F3F0;--bg-soft:#EFFAF8;--teal:#0B8C86;--teal-deep:#08615D;--teal-soft:rgba(11,140,134,.14);--cat-accent:#0B8C86;--gri-bg:#E1F3F0;--gri-surface:#EFFAF8;--bg-card:#EFFAF8;--gri-surface-2:#DBEFEB;--gri-accent:#0B8C86;--gri-accent-soft:#CDEBE7;--gri-accent-deep:#08615D}",
@@ -15,7 +15,7 @@
     "[data-theme='persimmon']{--bg:#F6EAE1;--bg-soft:#FBF3ED;--teal:#BC5A2E;--teal-deep:#8A3E1C;--teal-soft:rgba(188,90,46,.13);--cat-accent:#BC5A2E;--gri-bg:#F6EAE1;--gri-surface:#FBF3ED;--bg-card:#FBF3ED;--gri-surface-2:#F3E6DA;--gri-accent:#BC5A2E;--gri-accent-soft:#F3DFD0;--gri-accent-deep:#8A3E1C}",
     "[data-theme='wasabi']{--bg:#EDF0DC;--bg-soft:#F5F6E8;--teal:#6F7D1C;--teal-deep:#4A5312;--teal-soft:rgba(111,125,28,.14);--cat-accent:#6F7D1C;--gri-bg:#EDF0DC;--gri-surface:#F5F6E9;--bg-card:#F5F6E9;--gri-surface-2:#E7ECD5;--gri-accent:#6F7D1C;--gri-accent-soft:#E4E8C9;--gri-accent-deep:#4A5312}",
     "[data-theme='kum']{--bg:#F3EAD6;--bg-soft:#F8F1E2;--teal:#A9772E;--teal-deep:#6E4B18;--teal-soft:rgba(169,119,46,.14);--cat-accent:#A9772E;--gri-bg:#F3EAD6;--gri-surface:#FAF3E4;--bg-card:#FAF3E4;--gri-surface-2:#F3EAD4;--gri-accent:#A9772E;--gri-accent-soft:#F3E7CD;--gri-accent-deep:#6E4B18}","[data-theme='okyanus']{--bg:#E7EDF3;--bg-soft:#F0F4F9;--teal:#2E5E8A;--teal-deep:#1E3E5C;--teal-soft:rgba(46,94,138,.13);--cat-accent:#2E5E8A;--gri-bg:#E7EDF3;--gri-surface:#F2F6FA;--bg-card:#F2F6FA;--gri-surface-2:#E4EDF4;--gri-accent:#2E5E8A;--gri-accent-soft:#DBE6F0;--gri-accent-deep:#1E3E5C}","[data-theme='gul']{--bg:#F3E9EE;--bg-soft:#F9F1F5;--teal:#B0567A;--teal-deep:#7E3A56;--teal-soft:rgba(176,86,122,.13);--cat-accent:#B0567A;--gri-bg:#F3E9EE;--gri-surface:#FAF3F6;--bg-card:#FAF3F6;--gri-surface-2:#F3E7EE;--gri-accent:#B0567A;--gri-accent-soft:#F1DFE8;--gri-accent-deep:#7E3A56}","[data-theme='bordo']{--bg:#F1E8EA;--bg-soft:#F8F1F2;--teal:#8E3B4C;--teal-deep:#5E2632;--teal-soft:rgba(142,59,76,.13);--cat-accent:#8E3B4C;--gri-bg:#F1E8EA;--gri-surface:#FAF2F4;--bg-card:#FAF2F4;--gri-surface-2:#F2E6E9;--gri-accent:#8E3B4C;--gri-accent-soft:#EFDCE1;--gri-accent-deep:#5E2632}","[data-theme='lavanta']{--bg:#ECE9F3;--bg-soft:#F4F2F9;--teal:#6E5AA0;--teal-deep:#493A6E;--teal-soft:rgba(110,90,160,.13);--cat-accent:#6E5AA0;--gri-bg:#ECE9F3;--gri-surface:#F5F3FA;--bg-card:#F5F3FA;--gri-surface-2:#E9E5F2;--gri-accent:#6E5AA0;--gri-accent-soft:#E4DEF0;--gri-accent-deep:#493A6E}",
-    "[data-theme='dark']{--gri-bg:#151210;--gri-surface:#201C17;--gri-surface-2:#1B1813;--gri-ink:#F1E9D9;--gri-ink-soft:#B7AB96;--gri-ink-faint:#7E7362;--gri-line:#332C22;--gri-line-soft:#2A241C;--gri-gold:#D8B25A;--gri-accent:#6FB6AF;--gri-accent-soft:#22322F;--gri-accent-deep:#A9D6D1;--gri-info:#8B6BA9;--gri-nav-bg:#1C1813;--gri-shadow:0 2px 4px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.4)}",
+    "[data-theme='dark']{--gri-bg:#151210;--gri-surface:#201C17;--gri-surface-2:#1B1813;--gri-ink:#F1E9D9;--gri-ink-soft:#B7AB96;--gri-ink-faint:#918674;--gri-line:#332C22;--gri-line-soft:#2A241C;--gri-gold:#D8B25A;--gri-accent:#6FB6AF;--gri-accent-soft:#22322F;--gri-accent-deep:#A9D6D1;--gri-info:#8B6BA9;--gri-nav-bg:#1C1813;--teal:#6FB6AF;--teal-deep:#A9D6D1;--teal-soft:rgba(111,182,175,.16);--cat-accent:#6FB6AF;--gri-shadow:0 2px 4px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.4)}",
     ".gri-nav{position:sticky;top:0;z-index:60;background:var(--gri-surface);border-bottom:1px solid var(--gri-line);font-family:Inter,sans-serif}",
     ".gri-nav .in{max-width:1200px;margin:0 auto 0 max(0px,calc((100% - 1200px)*0.35));padding:0 26px;display:flex;align-items:center;gap:20px;height:66px}",
     ".gri-nav .brand{display:flex;align-items:baseline;font-family:'Playfair Display',serif;font-weight:600;font-size:1.45rem;letter-spacing:-.01em;white-space:nowrap;color:var(--gri-ink);text-decoration:none}",
@@ -166,7 +166,7 @@
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
       "<button class='gri-ico' id='gri-dark' title='Gece modu'><svg viewBox='0 0 20 20' width='16' height='16' fill='currentColor'><path d='M13 2a8 8 0 105 14A7 7 0 0113 2z'/></svg></button>" +
       '<div id="navUserMount" class="gri-user-mount"></div>' +
-      "<button class='gri-burger' id='gri-burger'><svg viewBox='0 0 24 24' fill='none'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
+      "<button class='gri-burger' id='gri-burger' aria-label='Menü' aria-expanded='false' aria-controls='gri-mmenu'><svg viewBox='0 0 24 24' fill='none' aria-hidden='true'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +
       '<div class="gri-mclose"><a href="/" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
@@ -214,10 +214,20 @@
     });
     var burger = document.getElementById("gri-burger");
     var mmenuEl = document.getElementById("gri-mmenu");
-    function setMenu(open) { if (!mmenuEl) return; mmenuEl.classList.toggle("open", open); try { document.documentElement.style.overflow = open ? "hidden" : ""; } catch (e) {} }
+    function setMenu(open) {
+      if (!mmenuEl) return;
+      mmenuEl.classList.toggle("open", open);
+      try { document.documentElement.style.overflow = open ? "hidden" : ""; } catch (e) {}
+      if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
+      try {
+        if (open) { var fx = document.getElementById("gri-mclose-x"); if (fx && fx.focus) fx.focus(); }
+        else if (burger && burger.focus) { burger.focus(); }
+      } catch (e) {}
+    }
     if (burger) burger.addEventListener("click", function () { setMenu(!mmenuEl.classList.contains("open")); });
     var mclose = document.getElementById("gri-mclose-x");
     if (mclose) mclose.addEventListener("click", function () { setMenu(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && mmenuEl && mmenuEl.classList.contains("open")) setMenu(false); });
     var mth = document.getElementById("gri-mtheme-h");
     if (mth) mth.addEventListener("click", function () { mth.parentNode.classList.toggle("open"); });
 

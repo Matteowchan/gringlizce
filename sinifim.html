@@ -24,7 +24,7 @@
   <script src="assets/theme.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth.js" defer></script>
-  <script src="assets/grimeet-schedule.js?v=12" defer></script>
+  <script src="assets/grimeet-schedule.js?v=13" defer></script>
   <script src="assets/site-config.js?v=4" defer></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2776,10 +2776,8 @@
         if (!sess || !sess.data || !sess.data.session) return;
         var userId = sess.data.session.user.id;
 
-        try{ (function mountLandingSched(tries){
-          if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', userId:userId, manageOwn:true, onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); }
-          else if((tries||0)<40){ setTimeout(function(){ mountLandingSched((tries||0)+1); }, 100); }
-        })(0); }catch(e){}
+        function _schedOnLoad(n){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} }
+        function _mountSched(cfg){ (function go(tries){ if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount(cfg); } else if((tries||0)<40){ setTimeout(function(){ go((tries||0)+1); }, 100); } })(0); }
 
         // Yaklaşan Online Dersler: gizle/göster
         try{ var _st=document.getElementById('sf-sched-toggle'), _sm=document.getElementById('sf-schedule');
@@ -2793,6 +2791,16 @@
         // Rol kontrol et — banner içeriğini doldur (öğretmen ise "Panele Git", değilse "Kayıt Ol")
         var roleRes = await sbCli.from('profiles').select('role,full_name').eq('id', userId).maybeSingle();
         var userRole = (roleRes && roleRes.data && roleRes.data.role) || 'customer';
+        // Yaklaşan dersler takvimi: öğretmen/admin ise tam program (planla+düzenle+sürükle), değilse sahibi olduğu dersi düzenle
+        try {
+          if (userRole === 'teacher' || userRole === 'admin') {
+            var _clsRes = await sbCli.rpc('list_my_classes');
+            var _clsList = (((_clsRes && _clsRes.data) || []).map(function (c) { return { id: c.class_id, name: c.name }; }));
+            _mountSched({ sb: sbCli, container: document.getElementById('sf-schedule'), role: 'teacher', aggregate: true, userId: userId, classes: _clsList, onLoad: _schedOnLoad });
+          } else {
+            _mountSched({ sb: sbCli, container: document.getElementById('sf-schedule'), role: 'student', userId: userId, manageOwn: true, onLoad: _schedOnLoad });
+          }
+        } catch (e) { try { _mountSched({ sb: sbCli, container: document.getElementById('sf-schedule'), role: 'student', userId: userId, manageOwn: true, onLoad: _schedOnLoad }); } catch (_e) {} }
         try {
           var _nm = roleRes && roleRes.data && roleRes.data.full_name;
           if (_nm) { var _fn = String(_nm).trim().split(/\s+/)[0]; var _h = document.getElementById('sf-hero-name'); if (_h && _fn) _h.textContent = ', ' + _fn; }

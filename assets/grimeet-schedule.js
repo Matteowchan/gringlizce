@@ -62,6 +62,14 @@
     + '.gsch-cell .ev.dragging{opacity:.4;}'
     + '.gsch-cell.drop-ok{border-color:#2C5856;background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.30);}'
     + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
+    + '.gsch-modal-ov{position:fixed;inset:0;background:rgba(20,16,12,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;}'
+    + '.gsch-modal{background:#fff;border-radius:16px;padding:18px;max-width:340px;width:100%;box-shadow:0 18px 50px rgba(20,16,12,.3);font-family:inherit;}'
+    + '.gsch-modal h4{margin:0 0 6px;font-size:16px;font-weight:700;color:#2a2a2a;}'
+    + '.gsch-modal p{margin:0 0 14px;font-size:13px;color:#6a6250;line-height:1.5;}'
+    + '.gsch-modal .mrow{display:flex;align-items:center;gap:8px;margin-bottom:16px;}'
+    + '.gsch-modal .mrow label{font-size:12px;color:#6a6250;font-weight:600;}'
+    + '.gsch-modal select{font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
+    + '.gsch-modal .macts{display:flex;gap:8px;justify-content:flex-end;}'
     + '.gsch-form .edit-tag{display:none;font-size:12px;color:#2C5856;font-weight:700;margin-bottom:8px;}'
     + '.gsch-form.editing .edit-tag{display:block;}'
     + '.gsch-cell.sel .ev{background:rgba(255,255,255,.22);color:#fff;}'
@@ -122,6 +130,11 @@
     + ':root[data-theme="dark"] .gsch-cell:not(.sel) .ev{background:#22403e;color:#bfe0da;}'
     + ':root[data-theme="dark"] .gsch-cell:not(.sel) .ev.ev-more{background:transparent;color:#9a917d;}'
     + ':root[data-theme="dark"] .gsch-col-list-inner::-webkit-scrollbar-thumb{background:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-modal{background:#241f18;}'
+    + ':root[data-theme="dark"] .gsch-modal h4{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-modal p{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-modal .mrow label{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-modal select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '';
 
   function injectCSS(){ if(document.getElementById('gsch-css'))return; var s=document.createElement('style'); s.id='gsch-css'; s.textContent=CSS; document.head.appendChild(s); }
@@ -357,11 +370,30 @@
     function dropReschedule(id,y,mo,day){
       var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
       if(!row || !canManage(row)) return;
+      openDropModal(row,y,mo,day);
+    }
+
+    function openDropModal(row,y,mo,day){
       var od=row._d;
-      if(od.getFullYear()===y && od.getMonth()===mo && od.getDate()===day) return;
-      var nd=new Date(y,mo,day,od.getHours(),od.getMinutes(),0,0);
-      if(!confirm('“'+(row.title||'Ders')+'” dersi '+day+' '+MONTHS_L[mo]+' '+y+', '+hhmm(od)+' saatine taşınsın mı?\n(Saati değiştirmek için Düzenle’yi kullan.)')) return;
-      reschedule(id, nd.toISOString());
+      var ov=document.createElement('div'); ov.className='gsch-modal-ov';
+      ov.innerHTML='<div class="gsch-modal"><h4>Dersi Taşı</h4>'
+        + '<p>“'+esc(row.title||'Ders')+'” &rarr; <b>'+day+' '+MONTHS_L[mo]+' '+y+'</b></p>'
+        + '<div class="mrow"><label>Saat</label><select class="m-h">'+_hopt+'</select><span class="f-colon">:</span><select class="m-m">'+_mopt+'</select></div>'
+        + '<div class="macts"><button type="button" class="gsch-btn ghost m-cancel">Vazgeç</button><button type="button" class="gsch-btn m-ok">Taşı</button></div>'
+        + '</div>';
+      document.body.appendChild(ov);
+      var hSel=ov.querySelector('.m-h'), mSel=ov.querySelector('.m-m');
+      hSel.value=two(od.getHours()); mSel.value=two(Math.floor(od.getMinutes()/5)*5);
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.querySelector('.m-cancel').addEventListener('click',close);
+      ov.querySelector('.m-ok').addEventListener('click',function(){
+        var H=parseInt(hSel.value,10); if(isNaN(H))H=od.getHours();
+        var M=parseInt(mSel.value,10); if(isNaN(M))M=od.getMinutes();
+        var nd=new Date(y,mo,day,H,M,0,0);
+        close();
+        reschedule(row.id, nd.toISOString());
+      });
     }
 
     function render(){

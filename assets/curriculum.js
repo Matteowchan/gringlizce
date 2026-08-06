@@ -337,7 +337,6 @@ var EXAMS=[
     { label: "Araçlar", children: [
       { label: "AI Araçları", href: "ai-araclari" },
       { label: "Gri Meet", href: "grimeet" },
-      { label: "Çalışma Paketleri", href: "calisma-paketleri" },
       { label: "Bize Ulaşın", href: "iletisim" }
     ] },
     { label: "Sınıflarım", href: "sinifim" },

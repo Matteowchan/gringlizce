@@ -105,10 +105,9 @@
   ];
 
   function hasAccess(rec, slug) {
-    if (slug && FREE_DEMO_SLUGS.indexOf(slug) !== -1) return true;
-    var owned = getOwnedProducts(rec);
-    if (owned === '*') return true;
-    return owned.indexOf(slug) !== -1;
+    // Politika (2026-08): Gri Token dışında sitede ücretli içerik yok.
+    // Tüm eski "çalışma paketi" içeriği artık herkese ücretsiz açık.
+    return true;
   }
 
   async function login(email, password) {

@@ -24,8 +24,7 @@
       home: 'sat.html',
       subnav: [
         { label: 'Soru Bankası', href: 'sat-soru-bankasi.html' },
-        { label: 'Öğren',        href: 'sat-ogren.html' },
-        { label: 'Coaching',     href: 'sat-coaching.html' }
+        { label: 'Öğren',        href: 'sat-ogren.html' }
       ]
     },
     ielts: {
@@ -35,8 +34,7 @@
         { label: 'Tam Deneme',       href: 'ielts-deneme.html' },
         { label: 'Soru Bankası',     href: 'ielts-soru-bankasi.html' },
         { label: 'Bölüm Çalışma',    href: 'ielts-bolum-calisma.html' },
-        { label: 'Writing',          href: 'ielts-writing-task1.html' },
-        { label: 'Coaching',         href: 'ielts-coaching.html' }
+        { label: 'Writing',          href: 'ielts-writing-task1.html' }
       ]
     },
     toefl: {
@@ -45,8 +43,7 @@
       subnav: [
         { label: 'Soru Bankası',  href: 'toefl-soru-bankasi.html' },
         { label: 'Reading',       href: 'toefl-soru-bankasi-reading.html' },
-        { label: 'Writing',       href: 'toefl-writing.html' },
-        { label: 'Coaching',      href: 'toefl-coaching.html' }
+        { label: 'Writing',       href: 'toefl-writing.html' }
       ]
     },
     ib: {
@@ -58,8 +55,7 @@
         { label: 'TOK',           href: 'ib-tok.html' },
         { label: 'Yazı Pratiği',  href: 'ib-yazi-pratigi.html' },
         { label: 'Soru Bankası',  href: 'ib-soru-bankasi.html' },
-        { label: 'Öğren',         href: 'ib-ogren.html' },
-        { label: 'Coaching',      href: 'ib-coaching.html' }
+        { label: 'Öğren',         href: 'ib-ogren.html' }
       ]
     },
     ydt: {
@@ -68,8 +64,7 @@
       subnav: [
         { label: 'Soru Bankası',  href: 'ydt-soru-bankasi.html' },
         { label: 'Öğren',         href: 'ydt-ogren.html' },
-        { label: 'YDT-YDS',       href: 'ydt-yds.html' },
-        { label: 'Coaching',      href: 'ydt-coaching.html' }
+        { label: 'YDT-YDS',       href: 'ydt-yds.html' }
       ]
     },
     yds: {
@@ -81,8 +76,7 @@
         { label: 'YÖKDİL Fen',       href: 'yds-soru-bankasi-yokdil-fen.html' },
         { label: 'YÖKDİL Sağlık',    href: 'yds-soru-bankasi-yokdil-saglik.html' },
         { label: 'YÖKDİL Sosyal',    href: 'yds-soru-bankasi-yokdil-sosyal.html' },
-        { label: 'Öğren',            href: 'yds-ogren.html' },
-        { label: 'Coaching',         href: 'yds-coaching.html' }
+        { label: 'Öğren',            href: 'yds-ogren.html' }
       ]
     },
     udsp: {
@@ -99,7 +93,6 @@
   var PAGE_LABELS = {
     'index.html': 'Ana Sayfa',
     'sat.html': 'SAT',
-    'sat-coaching.html': 'Coaching',
     'sat-ders-notlari.html': 'Ders Notları',
     'sat-rw-ders-notlari.html': 'RW Ders Notları',
     'sat-math-ders-notlari.html': 'Math Ders Notları',
@@ -109,7 +102,6 @@
     'sat-rw-cross-text-connections-1.html': 'Cross-Text Connections',
 
     'ielts.html': 'IELTS',
-    'ielts-coaching.html': 'Coaching',
     'ielts-ders-notlari.html': 'Ders Notları',
     'ielts-soru-bankasi.html': 'Soru Bankası',
     'ielts-bolum-calisma.html': 'Bölüm Çalışması',
@@ -122,14 +114,12 @@
     'ielts-writing-feedback.html': 'Writing Feedback',
 
     'toefl.html': 'TOEFL',
-    'toefl-coaching.html': 'Coaching',
     'toefl-ders-notlari.html': 'Ders Notları',
     'toefl-soru-bankasi.html': 'Soru Bankası',
     'toefl-soru-bankasi-reading.html': 'Reading',
     'toefl-writing-practice.html': 'Writing Pratiği',
 
     'ib.html': 'IB',
-    'ib-coaching.html': 'Coaching',
     'ib-ders-notlari.html': 'Ders Notları',
     'ib-english-b-sl.html': 'English B SL',
     'ib-english-b-hl.html': 'English B HL',
@@ -143,7 +133,6 @@
     'udsp-soru-bankasi.html': 'Soru Bankası',
 
     'ydt.html': 'YDT',
-    'ydt-coaching.html': 'Coaching',
     'ydt-ders-notlari.html': 'Ders Notları',
     'ydt-soru-bankasi.html': 'Soru Bankası',
     'ydt-conditionals.html': 'Conditionals',
@@ -153,7 +142,6 @@
     'ydt-yds.html': 'YDT-YDS',
 
     'yds.html': 'YDS',
-    'yds-coaching.html': 'Coaching',
     'yds-ders-notlari.html': 'Ders Notları',
     'yds-soru-bankasi.html': 'Soru Bankası',
     'yds-soru-bankasi-yds.html': 'YDS',
@@ -167,7 +155,6 @@
     'soru-bankasi.html': 'Soru Bankası',
     'ders-notlari.html': 'Ders Notları',
     'yazi-pratigi.html': 'Yazı Pratiği',
-    'calisma-paketleri.html': 'Tüm Paketler',
     'panelim.html': 'Çalışma Masam',
     'hakkinda.html': 'Hakkımızda',
     'iletisim.html': 'İletişim',
@@ -178,15 +165,11 @@
     'soru.html': 'Soru',
     'sorular.html': 'Sorular',
     'spelling-practice.html': 'Spelling Pratiği',
-    'study-pack.html': 'Çalışma Paketi',
-    'task1-line-bar-chart.html': 'Task 1 Chart',
     'tok-essay-feedback.html': 'TOK Essay Feedback',
     'vocabulary-pack.html': 'Vocabulary Pack',
 
     // urun/
-    'sat-rw-8-gunluk-kamp.html': '8 Günlük SAT Kamp',
     'sat-mock-1.html': 'Tam Deneme 1',
-    'sat-full-deneme-1.html': 'Full Deneme 1',
     'sat-full-deneme-1-sinav.html': 'Full Deneme 1 — Sınav',
     'day-1-information-and-ideas.html': 'Day 1 — Information and Ideas',
     'day-1-math-linear.html': 'Day 1 — Math Linear',
@@ -204,12 +187,6 @@
     'day-7-math-geo.html': 'Day 7 — Math Geo',
     'day-8-final-review.html': 'Day 8 — Final Review',
     'day-8-math-mock.html': 'Day 8 — Math Mock',
-    'full-test-1.html': 'Full Test 1',
-    'full-test-2.html': 'Full Test 2',
-    'full-test-3.html': 'Full Test 3',
-    'full-test-4.html': 'Full Test 4',
-    'full-test-5.html': 'Full Test 5',
-    'full-test-bundle.html': 'Full Test Bundle',
     'grammar-pack-1.html': 'Grammar Pack 1',
     'grammar-pack-2.html': 'Grammar Pack 2',
     'grammar-pack-3.html': 'Grammar Pack 3'
@@ -252,19 +229,6 @@
     }
     if (filename.indexOf('yds-soru-bankasi-') === 0) {
       crumbs.push({ label: 'Soru Bankası', href: 'yds-soru-bankasi.html' });
-    }
-    if (filename === 'day-1-information-and-ideas.html' || filename === 'day-1-math-linear.html' ||
-        filename === 'day-2-inferences-quantitative.html' || filename === 'day-2-math-systems.html' ||
-        filename === 'day-3-words-in-context.html' || filename === 'day-3-math-quadratic.html' ||
-        filename === 'day-4-structure-and-connections.html' || filename === 'day-4-math-epr.html' ||
-        filename === 'day-5-transitions.html' || filename === 'day-5-math-psda.html' ||
-        filename === 'day-6-rhetorical-synthesis.html' || filename === 'day-6-math-stats.html' ||
-        filename === 'day-7-mock-review.html' || filename === 'day-7-math-geo.html' ||
-        filename === 'day-8-final-review.html' || filename === 'day-8-math-mock.html') {
-      crumbs.push({ label: '8 Günlük Kamp', href: 'sat-rw-8-gunluk-kamp.html' });
-    }
-    if (filename === 'sat-full-deneme-1-sinav.html') {
-      crumbs.push({ label: 'Full Deneme 1', href: 'sat-full-deneme-1.html' });
     }
     return crumbs;
   }

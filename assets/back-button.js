@@ -4,7 +4,7 @@
    Tüm ürün sayfalarında (urun/*.html) sol üstte sticky bir
    "‹ Geri" butonu gösterir. Tıklandığında akıllı geri davranış:
      - document.referrer aynı sitedeyse → history.back()
-     - Değilse → ../calisma-paketleri.html'e gider (Tüm Paketler)
+     - Değilse → sat.html'e gider (SAT ana sayfası)
 
    Otomatik gizleme:
      - Sayfada aktif kamp/sınav topbar'ı (.topbar.show veya
@@ -72,13 +72,12 @@
         }
       } catch (e) { /* fall through */ }
 
-      // Fallback: Tüm Paketler sayfası
-      // Eğer dosya zaten urun/ klasöründeyse ../calisma-paketleri.html doğru
+      // Fallback: SAT ana sayfası
       var path = location.pathname || '';
       if (path.indexOf('/urun/') !== -1) {
-        location.href = '../calisma-paketleri.html';
+        location.href = '../sat.html';
       } else {
-        location.href = 'calisma-paketleri.html';
+        location.href = 'sat.html';
       }
     });
 

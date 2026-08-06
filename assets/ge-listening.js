@@ -98,7 +98,7 @@
   }
   function renderTable(task, base, slugBase){
     // headers:[...], rows:[[cell,...]] ; cell = string (sabit) veya {gap:true, answer:[...]}
-    var h='<div class="ge-ltask"><div class="ge-linst">'+esc(task.instruction||"Tabloyu doldur.")+'</div><table class="ge-ltbl"><thead><tr>';
+    var h='<div class="ge-ltask"><div class="ge-linst">'+esc(task.instruction||"Tabloyu doldur.")+'</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="ge-ltbl"><thead><tr>';
     (task.headers||[]).forEach(function(hd){ h+='<th>'+esc(hd)+'</th>'; });
     h+='</tr></thead><tbody>'; var gi=0;
     task.rows.forEach(function(row){ h+='<tr>'; row.forEach(function(cell){
@@ -106,7 +106,7 @@
         h+='<td class="ge-lq" data-slug="'+slugBase+'-'+n+'" data-t="gap" data-a="'+esc(cell.answer.join("|"))+'"><input type="text" class="ge-lgap" autocomplete="off" aria-label="Hücre '+n+'"><span class="ge-lfb"></span></td>';
       } else { h+='<td>'+esc(cell)+'</td>'; }
     }); h+='</tr>'; });
-    return h+'</tbody></table></div>';
+    return h+'</tbody></table></div></div>';
   }
 
   var RENDER={mcq:renderMCQ, gap:renderGap, tf:renderTF, match:renderMatch, order:renderOrder, table:renderTable};

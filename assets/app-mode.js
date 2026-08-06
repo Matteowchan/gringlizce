@@ -15,7 +15,6 @@
     document.body.classList.add('app-mode');
     injectPurchaseHideCss();
     hidePurchaseEntries();
-    setupCalismaPaketleriModal();
     injectBottomNav();
   }
 

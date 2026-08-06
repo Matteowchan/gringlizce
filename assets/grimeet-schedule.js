@@ -22,6 +22,23 @@
     + '.gsch-sub{background:transparent;color:#2C5856;border:1px solid #bcd8d3;border-radius:9px;padding:8px 14px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;}'
     + '.gsch-sub:hover{background:#e7f0ee;}'
     + '.gsch-sub:disabled{opacity:.5;cursor:default;}'
+    + '.gsch-ext-tag{font-size:11px;font-weight:700;color:#8a8172;background:#f1ece1;border:1px dashed #c9bfa8;border-radius:20px;padding:4px 10px;}'
+    + '.gsch-cell .ev.ev-ext b{font-weight:600;}'
+    + '.gsch-imp{margin-top:16px;border-top:1px solid #e5ddcd;padding-top:14px;}'
+    + '.gsch-imp h5{margin:0 0 4px;font-size:14px;font-weight:700;color:#2a2a2a;}'
+    + '.gsch-imp p{margin:0 0 10px;font-size:12px;color:#6a6250;line-height:1.5;}'
+    + '.gsch-imp .imp-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}'
+    + '.gsch-imp input{flex:1;min-width:120px;font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
+    + '.gsch-imp .imp-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;}'
+    + '.gsch-imp .imp-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#2a2a2a;background:#faf7f0;border:1px solid #ece4d4;border-radius:8px;padding:7px 9px;}'
+    + '.gsch-imp .imp-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.gsch-imp .imp-item .rm{background:none;border:none;color:#b3402f;cursor:pointer;font-size:12px;font-weight:700;}'
+    + ':root[data-theme="dark"] .gsch-ext-tag{color:#b5ac98;background:#2a2419;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-imp{border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-imp h5{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-imp p{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-imp input{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-imp .imp-item{background:#1f1b14;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-form{background:#faf7f0;border:1px solid #e5ddcd;border-radius:12px;padding:14px;margin-bottom:14px;display:none;}'
     + '.gsch-form.open{display:block;}'
     + '.gsch-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}'
@@ -229,8 +246,19 @@
       cont.querySelector('.f-save').addEventListener('click', save);
     }
 
-    function canManage(row){ return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
-    function rowColor(row){ if(row.classes && row.classes.color) return row.classes.color; if(row.class_id) return autoColor(row.class_id); return '#2C5856'; }
+    function canManage(row){ if(row._ext) return false; return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
+    function rowColor(row){ if(row._ext) return '#8a8172'; if(row.classes && row.classes.color) return row.classes.color; if(row.class_id) return autoColor(row.class_id); return '#2C5856'; }
+
+    var _extTried=false;
+    async function maybeSyncExternal(){
+      if(_extTried || !opts.userId) return; _extTried=true;
+      var flag=false; try{ flag=localStorage.getItem('gsch-ext-on-'+opts.userId)==='1'; }catch(_e){}
+      if(!flag) return;
+      var key='gsch-extsync-'+opts.userId, last=0; try{ last=+(localStorage.getItem(key)||0); }catch(_e){}
+      if(Date.now()-last < 15*60000) return;
+      try{ localStorage.setItem(key, String(Date.now())); }catch(_e){}
+      try{ var res=await sb.functions.invoke('ext-calendar',{body:{action:'sync'}}); if(res && !res.error) load(); }catch(_e){}
+    }
 
     var _subBtn=cont.querySelector('.gsch-sub:not(.gsch-colors)'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
     var _colBtn=cont.querySelector('.gsch-colors'); if(_colBtn) _colBtn.addEventListener('click', openColorsModal);
@@ -291,6 +319,10 @@
           + '<a class="gsch-btn ghost" href="'+esc(outlook)+'" target="_blank" rel="noopener">Outlook</a>'
         + '</div>'
         + '<p style="margin-top:12px;font-size:12px;">Düğmeyle açılmazsa: bağlantıyı <b>Kopyala</b> → takvim uygulamanda “URL’den takvim ekle / abone ol” alanına yapıştır.</p>'
+        + (opts.userId ? ('<div class="gsch-imp"><h5>Dış takvimini Gri’ye aktar</h5>'
+            + '<p>Outlook/Google takvimini yayınla, <b>ICS (https)</b> bağlantısını yapıştır. Etkinlikler Gri takviminde <b>salt-okunur</b> (kesikli) görünür, düzenli güncellenir.</p>'
+            + '<div class="imp-row"><input type="text" class="imp-url" placeholder="https://...ics"><input type="text" class="imp-label" placeholder="Ad (ör. Outlook)" style="flex:0 1 130px"><button type="button" class="gsch-btn imp-add">Ekle</button></div>'
+            + '<div class="imp-list"></div></div>') : '')
         + '<div class="macts" style="margin-top:10px;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div>'
         + '</div>';
       document.body.appendChild(ov);
@@ -303,6 +335,35 @@
         function ok(){ b.textContent='Kopyalandı'; setTimeout(function(){ b.textContent='Kopyala'; },1500); }
         try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(ok,function(){ try{document.execCommand('copy');ok();}catch(__e){} }); } else { document.execCommand('copy'); ok(); } }catch(_e){}
       });
+      if(opts.userId){
+        var impList=ov.querySelector('.imp-list');
+        async function refreshImp(){
+          impList.innerHTML='<div style="font-size:12px;color:#8a8172">Yükleniyor…</div>';
+          try{
+            var r=await sb.functions.invoke('ext-calendar',{body:{action:'list'}});
+            var items=(r.data&&r.data.items)||[];
+            try{ localStorage.setItem('gsch-ext-on-'+opts.userId, items.length?'1':'0'); }catch(_e){}
+            if(!items.length){ impList.innerHTML=''; return; }
+            impList.innerHTML=items.map(function(it){ var st=it.last_synced_at?'Senkron ✓':'Bekliyor'; return '<div class="imp-item"><span class="nm" title="'+esc(it.url)+(it.last_error?(' — '+esc(it.last_error)):'')+'">'+esc(it.label||it.url)+' · <span style="color:'+(it.last_error?'#b3402f':'#8a8172')+'">'+(it.last_error?'Hata':st)+'</span></span><button type="button" class="rm" data-id="'+esc(it.id)+'">Kaldır</button></div>'; }).join('');
+            impList.querySelectorAll('.rm').forEach(function(b){ b.addEventListener('click',async function(){ b.disabled=true; try{ await sb.functions.invoke('ext-calendar',{body:{action:'remove',id:b.getAttribute('data-id')}}); }catch(_e){} refreshImp(); load(); }); });
+          }catch(e){ impList.innerHTML='<div style="font-size:12px;color:#b3402f">Liste alınamadı.</div>'; }
+        }
+        ov.querySelector('.imp-add').addEventListener('click', async function(){
+          var b=ov.querySelector('.imp-add'); var iu=ov.querySelector('.imp-url'), il=ov.querySelector('.imp-label');
+          var u2=(iu.value||'').trim(), lbl=(il.value||'').trim();
+          if(!u2){ alert('ICS bağlantısı gir.'); return; }
+          u2=u2.replace(/^webcal:\/\//i,'https://');
+          b.disabled=true; var ot=b.textContent; b.textContent='Ekleniyor…';
+          try{
+            var r=await sb.functions.invoke('ext-calendar',{body:{action:'add',url:u2,label:lbl}});
+            var err=(r.data&&r.data.error)||(r.error&&r.error.message);
+            if(err){ alert('Eklenemedi: '+err); }
+            else { iu.value=''; il.value=''; try{ localStorage.setItem('gsch-extsync-'+opts.userId,'0'); localStorage.setItem('gsch-ext-on-'+opts.userId,'1'); }catch(_e){} }
+          }catch(e){ alert('Eklenemedi: '+(e.message||'hata')); }
+          b.disabled=false; b.textContent=ot; refreshImp(); load();
+        });
+        refreshImp();
+      }
     }
 
     function startEdit(id){
@@ -382,12 +443,21 @@
         var r=await q;
         if(r.error) throw r.error;
         state.rows=(r.data||[]).map(function(x){ x._d=new Date(x.starts_at); return x; });
+        if(opts.userId){
+          try{
+            var ex=await sb.from('external_events').select('id,title,starts_at,ends_at,all_day,location').eq('user_id',opts.userId).gte('starts_at',floor).order('starts_at',{ascending:true});
+            (ex.data||[]).forEach(function(e){ var d=new Date(e.starts_at); var dur=e.ends_at?Math.max(15,Math.round((new Date(e.ends_at).getTime()-d.getTime())/60000)):60; state.rows.push({ id:'ext-'+e.id, title:e.title, starts_at:e.starts_at, duration_min:dur, note:e.location||null, all_day:e.all_day, _d:d, _ext:true }); });
+            state.rows.sort(function(a,b){ return a._d.getTime()-b._d.getTime(); });
+          }catch(_e){}
+        }
         render();
+        maybeSyncExternal();
         if(opts.onLoad) try{ opts.onLoad(state.rows.length); }catch(_e){}
       }catch(e){ body.innerHTML='<div class="gsch-empty">Program yüklenemedi.</div>'; if(opts.onLoad) try{ opts.onLoad(0); }catch(_e){} }
     }
 
     function actionBtns(row){
+      if(row._ext){ return '<span class="gsch-ext-tag">Dış takvim</span>'; }
       var start=row._d, dur=row.duration_min||60;
       var openFrom=start.getTime()-15*60000, openTo=start.getTime()+ (dur+30)*60000;
       var now=Date.now(), live=now>=openFrom&&now<=openTo;
@@ -443,7 +513,7 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev" style="background:'+col+'22;color:'+col+';border-left:3px solid '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }

@@ -316,7 +316,9 @@ var EXAMS=[
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
-        { label: "SL", href: "ib-english-b-sl" } ] },
+        { label: "SL", href: "ib-english-b-sl" },
+        { label: "Individual Oral (SL)", href: "ib-english-b-io" },
+        { label: "Individual Oral (HL)", href: "ib-english-b-io-hl" } ] },
       { label: "Deutsch B", href: "deutsch-ogren", children: [
         { label: "Textsorten (Öğren)", href: "deutsch-ogren" } ] },
       { label: "TOK", href: "ib-tok", children: [

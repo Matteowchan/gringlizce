@@ -7,6 +7,10 @@
   if (window.GriSchedule) return;
 
   var FEED_BASE='https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/calendar-feed';
+  // Sınıf rengi paleti — nav.js tema accent renkleri
+  var PALETTE=['#2E6E6A','#0ABAB5','#A47864','#C8303E','#D2662F','#8DA01F','#8A4A63','#3E6B4A','#2E5E8A','#6E5AA0','#B0567A','#A9772E'];
+  function clsHash(s){ s=String(s||''); var h=0; for(var i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return Math.abs(h); }
+  function autoColor(classId){ return PALETTE[clsHash(classId)%PALETTE.length]; }
 
   var CSS = ''
     + '.gsch{font-family:inherit;color:#2a2a2a;}'
@@ -75,6 +79,14 @@
     + '.gsch-modal .mrow label{font-size:12px;color:#6a6250;font-weight:600;}'
     + '.gsch-modal select{font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
     + '.gsch-modal .macts{display:flex;gap:8px;justify-content:flex-end;}'
+    + '.gsch-clrlist{display:flex;flex-direction:column;gap:12px;max-height:52vh;overflow-y:auto;}'
+    + '.gsch-clrrow{display:flex;flex-direction:column;gap:6px;}'
+    + '.gsch-clrname{font-size:13px;font-weight:700;color:#2a2a2a;}'
+    + '.gsch-sws{display:flex;flex-wrap:wrap;gap:6px;}'
+    + '.gsch-sw{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:0 0 0 1px rgba(0,0,0,.12);}'
+    + '.gsch-sw.on{border-color:#2a2a2a;box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;}'
+    + ':root[data-theme="dark"] .gsch-clrname{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-sw.on{border-color:#f0e9db;box-shadow:0 0 0 2px #241f18,0 0 0 4px currentColor;}'
     + '.gsch-form .edit-tag{display:none;font-size:12px;color:#2C5856;font-weight:700;margin-bottom:8px;}'
     + '.gsch-form.editing .edit-tag{display:block;}'
     + '.gsch-cell.sel .ev{background:rgba(255,255,255,.22);color:#fff;}'
@@ -178,6 +190,7 @@
     cont.innerHTML =
       '<div class="gsch">'
       + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
+        + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Sınıf Renkleri</button>' : '')
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + ((role==='teacher'||manageOwn) ?
@@ -217,8 +230,44 @@
     }
 
     function canManage(row){ return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
+    function rowColor(row){ if(row.classes && row.classes.color) return row.classes.color; if(row.class_id) return autoColor(row.class_id); return '#2C5856'; }
 
-    var _subBtn=cont.querySelector('.gsch-sub'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
+    var _subBtn=cont.querySelector('.gsch-sub:not(.gsch-colors)'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
+    var _colBtn=cont.querySelector('.gsch-colors'); if(_colBtn) _colBtn.addEventListener('click', openColorsModal);
+
+    async function openColorsModal(){
+      var btn=cont.querySelector('.gsch-colors'); var oldt=btn?btn.textContent:'';
+      if(btn){ btn.disabled=true; btn.textContent='Yükleniyor…'; }
+      var colorMap={};
+      try{
+        var ids=classList.map(function(c){return c.id;});
+        var r=await sb.from('classes').select('id,color').in('id',ids);
+        if(r.error) throw r.error;
+        (r.data||[]).forEach(function(c){ if(c.color) colorMap[c.id]=c.color; });
+      }catch(e){ /* stored yoksa auto kullan */ }
+      if(btn){ btn.disabled=false; btn.textContent=oldt; }
+      var swatches=function(cid){ var cur=colorMap[cid]||autoColor(cid); return PALETTE.map(function(hx){ return '<button type="button" class="gsch-sw'+(hx.toLowerCase()===cur.toLowerCase()?' on':'')+'" data-cid="'+esc(cid)+'" data-hx="'+hx+'" style="background:'+hx+'" aria-label="'+hx+'"></button>'; }).join(''); };
+      var ov=document.createElement('div'); ov.className='gsch-modal-ov';
+      ov.innerHTML='<div class="gsch-modal" style="max-width:420px"><h4>Sınıf Renkleri</h4>'
+        + '<p>Her sınıfa takvimde kullanılacak rengi seç. Otomatik atanır, dilediğinde değiştirebilirsin.</p>'
+        + '<div class="gsch-clrlist">'
+        + classList.map(function(c){ return '<div class="gsch-clrrow"><span class="gsch-clrname">'+esc(c.name||c.id)+'</span><div class="gsch-sws" data-for="'+esc(c.id)+'">'+swatches(c.id)+'</div></div>'; }).join('')
+        + '</div>'
+        + '<div class="macts" style="margin-top:14px;"><button type="button" class="gsch-btn m-close">Bitti</button></div>'
+        + '</div>';
+      document.body.appendChild(ov);
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); load(); }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.querySelector('.m-close').addEventListener('click',close);
+      ov.querySelectorAll('.gsch-sw').forEach(function(sw){
+        sw.addEventListener('click', async function(){
+          var cid=sw.getAttribute('data-cid'), hx=sw.getAttribute('data-hx');
+          var group=sw.parentNode; group.querySelectorAll('.gsch-sw').forEach(function(x){ x.classList.remove('on'); }); sw.classList.add('on');
+          try{ var r=await sb.from('classes').update({color:hx}).eq('id',cid); if(r.error) throw r.error; }
+          catch(e){ alert('Renk kaydedilemedi: '+(e.message||'hata')); }
+        });
+      });
+    }
 
     async function openSubscribeModal(){
       var btn=cont.querySelector('.gsch-sub'); var oldt=btn?btn.textContent:'';
@@ -328,7 +377,7 @@
       body.innerHTML='<div class="gsch-empty">Yükleniyor…</div>';
       try{
         var floor=new Date(Date.now()-3*3600*1000).toISOString(); // son 3 saati de göster
-        var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,room_code,note,status,class_id,teacher_id,classes(name)').eq('status','scheduled').gte('starts_at',floor).order('starts_at',{ascending:true});
+        var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,room_code,note,status,class_id,teacher_id,classes(name,color)').eq('status','scheduled').gte('starts_at',floor).order('starts_at',{ascending:true});
         if(role==='teacher'){ if(aggregate) q=q.eq('teacher_id',opts.userId); else q=q.eq('class_id',opts.classId); }
         var r=await q;
         if(r.error) throw r.error;
@@ -357,8 +406,9 @@
       var cls=row.classes&&row.classes.name?row.classes.name:'';
       var showCls=(role==='student'||aggregate);
       var line=WD[(d.getDay()+6)%7]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' · '+hhmm(d)+' · '+dur+' dk'+(showCls&&cls?(' · '+esc(cls)):'');
-      return '<div class="gsch-item'+(soon?' soon':'')+'" data-date="'+d.toDateString()+'">'
-        + '<div class="gsch-item-head"><span class="gsch-daypill">'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span><span class="gsch-item-title">'+esc(row.title)+'</span></div>'
+      var col=rowColor(row);
+      return '<div class="gsch-item'+(soon?' soon':'')+'" data-date="'+d.toDateString()+'" style="border-left:4px solid '+col+'">'
+        + '<div class="gsch-item-head"><span class="gsch-daypill" style="background:'+col+';color:#fff">'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span><span class="gsch-item-title">'+esc(row.title)+'</span></div>'
         + '<div class="gsch-item-sub">'+line+'</div>'
         + (row.note?'<div class="gsch-item-note">'+esc(row.note)+'</div>':'')
         + '<div class="gsch-item-actions">'+actionBtns(row)+'</div>'
@@ -393,7 +443,7 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev" style="background:'+col+'22;color:'+col+';border-left:3px solid '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }

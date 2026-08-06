@@ -6,6 +6,8 @@
 (function(){
   if (window.GriSchedule) return;
 
+  var FEED_BASE='https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/calendar-feed';
+
   var CSS = ''
     + '.gsch{font-family:inherit;color:#2a2a2a;}'
     + '.gsch-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}'
@@ -13,6 +15,9 @@
     + '.gsch-toggle button{border:none;background:#f4efe6;color:#6a6250;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer;}'
     + '.gsch-toggle button.on{background:#2C5856;color:#fff;}'
     + '.gsch-new{margin-left:auto;background:#2C5856;color:#fff;border:none;border-radius:9px;padding:9px 16px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;}'
+    + '.gsch-sub{background:transparent;color:#2C5856;border:1px solid #bcd8d3;border-radius:9px;padding:8px 14px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;}'
+    + '.gsch-sub:hover{background:#e7f0ee;}'
+    + '.gsch-sub:disabled{opacity:.5;cursor:default;}'
     + '.gsch-form{background:#faf7f0;border:1px solid #e5ddcd;border-radius:12px;padding:14px;margin-bottom:14px;display:none;}'
     + '.gsch-form.open{display:block;}'
     + '.gsch-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}'
@@ -135,6 +140,9 @@
     + ':root[data-theme="dark"] .gsch-modal p{color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-modal .mrow label{color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-modal select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-modal .m-url{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-sub{color:#bfe0da;border-color:#2f4e4b;}'
+    + ':root[data-theme="dark"] .gsch-sub:hover{background:#22403e;}'
     + '';
 
   function injectCSS(){ if(document.getElementById('gsch-css'))return; var s=document.createElement('style'); s.id='gsch-css'; s.textContent=CSS; document.head.appendChild(s); }
@@ -169,7 +177,9 @@
 
     cont.innerHTML =
       '<div class="gsch">'
-      + (role==='teacher' ? '<div class="gsch-head"><button class="gsch-new">+ Yeni Ders Planla</button></div>' : '')
+      + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
+        + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
+      + '</div>'
       + ((role==='teacher'||manageOwn) ?
           '<div class="gsch-form">'
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
@@ -207,6 +217,44 @@
     }
 
     function canManage(row){ return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
+
+    var _subBtn=cont.querySelector('.gsch-sub'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
+
+    async function openSubscribeModal(){
+      var btn=cont.querySelector('.gsch-sub'); var oldt=btn?btn.textContent:'';
+      if(btn){ btn.disabled=true; btn.textContent='Bağlantı alınıyor…'; }
+      var token='';
+      try{ var r=await sb.rpc('get_or_create_calendar_token'); if(r.error) throw r.error; token=r.data; }
+      catch(e){ alert('Abonelik bağlantısı alınamadı: '+(e.message||'hata')); if(btn){btn.disabled=false;btn.textContent=oldt;} return; }
+      if(btn){ btn.disabled=false; btn.textContent=oldt; }
+      if(!token){ alert('Abonelik bağlantısı alınamadı.'); return; }
+      var httpsUrl=FEED_BASE+'?token='+encodeURIComponent(token);
+      var webcalUrl=httpsUrl.replace(/^https:\/\//,'webcal://');
+      var gcal='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(webcalUrl);
+      var outlook='https://outlook.live.com/calendar/0/addfromweb?url='+encodeURIComponent(httpsUrl)+'&name='+encodeURIComponent('Gringlizce Dersleri');
+      var ov=document.createElement('div'); ov.className='gsch-modal-ov';
+      ov.innerHTML='<div class="gsch-modal"><h4>Takvime Abone Ol</h4>'
+        + '<p>Derslerin Google, Outlook veya Apple takvimine otomatik gelir ve düzenli güncellenir. Bu bağlantı sana özeldir — paylaşma.</p>'
+        + '<div class="mrow"><input type="text" class="m-url" readonly value="'+esc(httpsUrl)+'" style="flex:1;min-width:0;font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;"><button type="button" class="gsch-btn m-copy">Kopyala</button></div>'
+        + '<div class="macts" style="flex-wrap:wrap;justify-content:flex-start;">'
+          + '<a class="gsch-btn" href="'+esc(webcalUrl)+'">Apple / Takvim uygulaması</a>'
+          + '<a class="gsch-btn ghost" href="'+esc(gcal)+'" target="_blank" rel="noopener">Google Takvim</a>'
+          + '<a class="gsch-btn ghost" href="'+esc(outlook)+'" target="_blank" rel="noopener">Outlook</a>'
+        + '</div>'
+        + '<p style="margin-top:12px;font-size:12px;">Düğmeyle açılmazsa: bağlantıyı <b>Kopyala</b> → takvim uygulamanda “URL’den takvim ekle / abone ol” alanına yapıştır.</p>'
+        + '<div class="macts" style="margin-top:10px;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div>'
+        + '</div>';
+      document.body.appendChild(ov);
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.querySelector('.m-close').addEventListener('click',close);
+      ov.querySelector('.m-copy').addEventListener('click',function(){
+        var inp=ov.querySelector('.m-url'); try{ inp.select(); }catch(_e){}
+        var b=ov.querySelector('.m-copy');
+        function ok(){ b.textContent='Kopyalandı'; setTimeout(function(){ b.textContent='Kopyala'; },1500); }
+        try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(ok,function(){ try{document.execCommand('copy');ok();}catch(__e){} }); } else { document.execCommand('copy'); ok(); } }catch(_e){}
+      });
+    }
 
     function startEdit(id){
       var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }

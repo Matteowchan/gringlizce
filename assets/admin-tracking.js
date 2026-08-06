@@ -40,7 +40,7 @@
   }
 
   var CSS =
-    ".gat-fab{position:fixed;right:18px;bottom:18px;z-index:99998;background:#2C5856;color:#fff;border:none;border-radius:24px;padding:11px 18px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25)}" +
+    ".gat-fab{position:fixed;right:18px;bottom:18px;z-index:99998;background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:24px;padding:11px 18px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25)}" +
     ".gat-fab .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fe0a0;margin-right:7px;animation:gatpulse 1.6s infinite}" +
     "@keyframes gatpulse{0%,100%{opacity:1}50%{opacity:.3}}" +
     ".gat-panel{position:fixed;right:18px;bottom:66px;width:360px;max-width:92vw;max-height:70vh;background:#fff;border:1px solid #e0dcd0;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.28);z-index:99998;display:none;flex-direction:column;overflow:hidden;font-family:Inter,sans-serif}" +

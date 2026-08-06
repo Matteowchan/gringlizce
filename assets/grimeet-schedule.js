@@ -146,6 +146,7 @@
     var sb=opts.sb, role=opts.role, cont=opts.container;
     if(!sb||!cont) return null;
     var aggregate=!!opts.aggregate;               // öğretmenin TÜM sınıfları tek takvimde
+    var manageOwn=!!opts.manageOwn;               // öğrenci sayfasında da SAHİBİ olduğun dersi düzenle
     var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
     var _savedView='list'; try{ var _v=localStorage.getItem('gsch-view'); if(_v==='cal'||_v==='list') _savedView=_v; }catch(e){}
     var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null };
@@ -156,7 +157,7 @@
     cont.innerHTML =
       '<div class="gsch">'
       + (role==='teacher' ? '<div class="gsch-head"><button class="gsch-new">+ Yeni Ders Planla</button></div>' : '')
-      + (role==='teacher' ?
+      + ((role==='teacher'||manageOwn) ?
           '<div class="gsch-form">'
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
@@ -181,9 +182,10 @@
       cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value='';
     }
 
-    if(role==='teacher'){
-      var form=cont.querySelector('.gsch-form');
-      cont.querySelector('.gsch-new').addEventListener('click',function(){
+    var form=cont.querySelector('.gsch-form');
+    if(form){
+      var newBtn=cont.querySelector('.gsch-new');
+      if(newBtn) newBtn.addEventListener('click',function(){
         if(form.classList.contains('open')){ resetForm(); }
         else { resetForm(); form.classList.add('open'); }
       });
@@ -191,9 +193,11 @@
       cont.querySelector('.f-save').addEventListener('click', save);
     }
 
+    function canManage(row){ return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
+
     function startEdit(id){
       var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
-      if(!row) return;
+      if(!row || !canManage(row)) return;
       state.editing=id;
       var d=row._d;
       if(aggregate){ var fc=cont.querySelector('.f-class'); if(fc) fc.value=row.class_id; }
@@ -263,7 +267,7 @@
       body.innerHTML='<div class="gsch-empty">Yükleniyor…</div>';
       try{
         var floor=new Date(Date.now()-3*3600*1000).toISOString(); // son 3 saati de göster
-        var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,room_code,note,status,class_id,classes(name)').eq('status','scheduled').gte('starts_at',floor).order('starts_at',{ascending:true});
+        var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,room_code,note,status,class_id,teacher_id,classes(name)').eq('status','scheduled').gte('starts_at',floor).order('starts_at',{ascending:true});
         if(role==='teacher'){ if(aggregate) q=q.eq('teacher_id',opts.userId); else q=q.eq('class_id',opts.classId); }
         var r=await q;
         if(r.error) throw r.error;
@@ -277,7 +281,7 @@
       var start=row._d, dur=row.duration_min||60;
       var openFrom=start.getTime()-15*60000, openTo=start.getTime()+ (dur+30)*60000;
       var now=Date.now(), live=now>=openFrom&&now<=openTo;
-      if(role==='teacher'){
+      if(canManage(row)){
         return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'&host=1">'+(live?'Şimdi Başlat':'Başlat')+'</a>'
              + '<button class="gsch-btn ghost" data-edit="'+row.id+'">Düzenle</button>'
              + '<button class="gsch-btn danger" data-cancel="'+row.id+'">İptal</button>';
@@ -328,8 +332,7 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var canDrag=(role==='teacher');
-        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"'+(canDrag?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }
@@ -338,7 +341,7 @@
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });
-      if(role==='teacher'){
+      if(role==='teacher'||manageOwn){
         el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
           ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });
           ev.addEventListener('dragend',function(){ ev.classList.remove('dragging'); el.querySelectorAll('.drop-ok').forEach(function(x){x.classList.remove('drop-ok');}); });
@@ -353,7 +356,7 @@
 
     function dropReschedule(id,y,mo,day){
       var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
-      if(!row) return;
+      if(!row || !canManage(row)) return;
       var od=row._d;
       if(od.getFullYear()===y && od.getMonth()===mo && od.getDate()===day) return;
       var nd=new Date(y,mo,day,od.getHours(),od.getMinutes(),0,0);

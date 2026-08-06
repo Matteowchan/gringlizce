@@ -24,7 +24,7 @@
   <script src="assets/theme.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth.js" defer></script>
-  <script src="assets/grimeet-schedule.js?v=11" defer></script>
+  <script src="assets/grimeet-schedule.js?v=12" defer></script>
   <script src="assets/site-config.js?v=4" defer></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2777,7 +2777,7 @@
         var userId = sess.data.session.user.id;
 
         try{ (function mountLandingSched(tries){
-          if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); }
+          if(window.GriSchedule){ var _sw=document.getElementById('sf-schedule-wrap'); if(_sw)_sw.style.display='block'; GriSchedule.mount({ sb:sbCli, container:document.getElementById('sf-schedule'), role:'student', userId:userId, manageOwn:true, onLoad:function(n){ if(_sw)_sw.style.display='block'; try{ if(!n){ var _b=document.querySelector('#sf-schedule .gsch-body'); if(_b && !_b.querySelector('.gsch-item')) _b.innerHTML='<div class="gsch-empty">Yaklaşan planlı ders yok. Öğretmenin ders planladığında burada görünür.</div>'; } }catch(_e){} } }); }
           else if((tries||0)<40){ setTimeout(function(){ mountLandingSched((tries||0)+1); }, 100); }
         })(0); }catch(e){}
 
@@ -2996,6 +2996,8 @@
                       sb: sbCli,
                       container: schedCont,
                       role: 'student',
+                      userId: userId,
+                      manageOwn: true,
                       onLoad: function (n) {
                         try {
                           if (!n) {

@@ -58,6 +58,12 @@
     + '.gsch-cell .ev{display:block;font-size:9.5px;line-height:1.35;background:#e7f0ee;color:#2C5856;border-radius:5px;padding:2px 5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
     + '.gsch-cell .ev b{font-weight:800;}'
     + '.gsch-cell .ev.ev-more{background:transparent;color:#8a8172;padding:0 5px;font-weight:700;}'
+    + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
+    + '.gsch-cell .ev.dragging{opacity:.4;}'
+    + '.gsch-cell.drop-ok{border-color:#2C5856;background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.30);}'
+    + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
+    + '.gsch-form .edit-tag{display:none;font-size:12px;color:#2C5856;font-weight:700;margin-bottom:8px;}'
+    + '.gsch-form.editing .edit-tag{display:block;}'
     + '.gsch-cell.sel .ev{background:rgba(255,255,255,.22);color:#fff;}'
     + '.gsch-cell.sel .ev.ev-more{background:transparent;color:#eee;}'
     + '.gsch-daylist{margin-top:12px;}'
@@ -142,7 +148,7 @@
     var aggregate=!!opts.aggregate;               // öğretmenin TÜM sınıfları tek takvimde
     var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
     var _savedView='list'; try{ var _v=localStorage.getItem('gsch-view'); if(_v==='cal'||_v==='list') _savedView=_v; }catch(e){}
-    var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null };
+    var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null };
 
     var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
     var _mopt='<option value="">--</option>'; for(var _m=0;_m<60;_m+=5){ var _mm=('0'+_m).slice(-2); _mopt+='<option value="'+_mm+'">'+_mm+'</option>'; }
@@ -152,6 +158,7 @@
       + (role==='teacher' ? '<div class="gsch-head"><button class="gsch-new">+ Yeni Ders Planla</button></div>' : '')
       + (role==='teacher' ?
           '<div class="gsch-form">'
+          + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
           + '<label>Tarih & saat<span class="f-when-ctl"><input type="date" class="f-date" lang="tr-TR"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
@@ -166,11 +173,48 @@
     var body=cont.querySelector('.gsch-body');
     cont.querySelectorAll('.gsch-toggle button').forEach(function(b){ b.addEventListener('click',function(){ state.view=b.dataset.v; try{localStorage.setItem('gsch-view',state.view);}catch(e){} cont.querySelectorAll('.gsch-toggle button').forEach(function(x){x.classList.toggle('on',x===b);}); render(); }); });
 
+    function resetForm(){
+      var f=cont.querySelector('.gsch-form'); if(!f) return;
+      f.classList.remove('open'); f.classList.remove('editing');
+      state.editing=null;
+      var sv=cont.querySelector('.f-save'); if(sv) sv.textContent='Planla';
+      cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value='';
+    }
+
     if(role==='teacher'){
       var form=cont.querySelector('.gsch-form');
-      cont.querySelector('.gsch-new').addEventListener('click',function(){ form.classList.toggle('open'); });
-      cont.querySelector('.f-cancel').addEventListener('click',function(){ form.classList.remove('open'); });
+      cont.querySelector('.gsch-new').addEventListener('click',function(){
+        if(form.classList.contains('open')){ resetForm(); }
+        else { resetForm(); form.classList.add('open'); }
+      });
+      cont.querySelector('.f-cancel').addEventListener('click', resetForm);
       cont.querySelector('.f-save').addEventListener('click', save);
+    }
+
+    function startEdit(id){
+      var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
+      if(!row) return;
+      state.editing=id;
+      var d=row._d;
+      if(aggregate){ var fc=cont.querySelector('.f-class'); if(fc) fc.value=row.class_id; }
+      cont.querySelector('.f-title').value=row.title||'';
+      cont.querySelector('.f-date').value=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
+      cont.querySelector('.f-h').value=two(d.getHours());
+      cont.querySelector('.f-m').value=two(Math.floor(d.getMinutes()/5)*5);
+      cont.querySelector('.f-dur').value=String(row.duration_min||60);
+      cont.querySelector('.f-note').value=row.note||'';
+      var f=cont.querySelector('.gsch-form'); f.classList.add('open'); f.classList.add('editing');
+      cont.querySelector('.f-save').textContent='Güncelle';
+      if(f.scrollIntoView) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+
+    async function reschedule(id, iso){
+      try{
+        var r=await sb.from('grimeet_schedule').update({starts_at:iso}).eq('id',id);
+        if(r.error) throw r.error;
+        sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:id}}).catch(function(){});
+        await load();
+      }catch(e){ alert('Taşınamadı: '+(e.message||'hata')); }
     }
 
     async function save(){
@@ -190,11 +234,21 @@
       var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
       var btn=cont.querySelector('.f-save'); btn.disabled=true; var old=btn.textContent; btn.textContent='Kaydediliyor…';
       try{
-        var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
-        if(r.error) throw r.error;
-        if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
-        cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value=''; cont.querySelector('.gsch-form').classList.remove('open');
-        await load();
+        if(state.editing){
+          var upd={ title:title, starts_at:startsAt.toISOString(), duration_min:dur, note:note||null };
+          if(aggregate && classId){ upd.class_id=classId; upd.room_code=room; }
+          var ru=await sb.from('grimeet_schedule').update(upd).eq('id',state.editing);
+          if(ru.error) throw ru.error;
+          sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:state.editing}}).catch(function(){});
+          resetForm();
+          await load();
+        } else {
+          var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
+          if(r.error) throw r.error;
+          if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
+          resetForm();
+          await load();
+        }
       }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }
       finally{ btn.disabled=false; btn.textContent=old; }
     }
@@ -225,6 +279,7 @@
       var now=Date.now(), live=now>=openFrom&&now<=openTo;
       if(role==='teacher'){
         return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'&host=1">'+(live?'Şimdi Başlat':'Başlat')+'</a>'
+             + '<button class="gsch-btn ghost" data-edit="'+row.id+'">Düzenle</button>'
              + '<button class="gsch-btn danger" data-cancel="'+row.id+'">İptal</button>';
       }
       if(live) return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'">Katıl</a>';
@@ -247,6 +302,7 @@
 
     function bindActions(scope){
       scope.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click',function(){ cancelLesson(b.getAttribute('data-cancel')); }); });
+      scope.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click',function(){ startEdit(b.getAttribute('data-edit')); }); });
     }
 
     function renderListInner(el){
@@ -272,7 +328,8 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        var canDrag=(role==='teacher');
+        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); return '<span class="ev"'+(canDrag?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }
@@ -281,6 +338,27 @@
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });
+      if(role==='teacher'){
+        el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
+          ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });
+          ev.addEventListener('dragend',function(){ ev.classList.remove('dragging'); el.querySelectorAll('.drop-ok').forEach(function(x){x.classList.remove('drop-ok');}); });
+        });
+        el.querySelectorAll('.gsch-cell:not(.out)').forEach(function(c){
+          c.addEventListener('dragover',function(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_e){} c.classList.add('drop-ok'); });
+          c.addEventListener('dragleave',function(){ c.classList.remove('drop-ok'); });
+          c.addEventListener('drop',function(e){ e.preventDefault(); c.classList.remove('drop-ok'); var id=''; try{ id=e.dataTransfer.getData('text/plain'); }catch(_e){} var day=parseInt(c.dataset.day,10); if(!id||!day) return; dropReschedule(id,y,mo,day); });
+        });
+      }
+    }
+
+    function dropReschedule(id,y,mo,day){
+      var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
+      if(!row) return;
+      var od=row._d;
+      if(od.getFullYear()===y && od.getMonth()===mo && od.getDate()===day) return;
+      var nd=new Date(y,mo,day,od.getHours(),od.getMinutes(),0,0);
+      if(!confirm('“'+(row.title||'Ders')+'” dersi '+day+' '+MONTHS_L[mo]+' '+y+', '+hhmm(od)+' saatine taşınsın mı?\n(Saati değiştirmek için Düzenle’yi kullan.)')) return;
+      reschedule(id, nd.toISOString());
     }
 
     function render(){

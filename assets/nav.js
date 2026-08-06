@@ -301,7 +301,73 @@
     } catch (e) {}
   }
 
-  function boot() { build(); buildTabbar(); }
+  // ===== Erişilebilirlik: skip-link + main landmark + modal dialog semantiği =====
+  function a11y() {
+    try {
+      // 1) Skip-link (odaklanınca görünür) + ana içerik landmark'ı
+      if (!document.querySelector(".gri-skip")) {
+        var s = document.createElement("style");
+        s.textContent = ".gri-skip{position:fixed;left:8px;top:-60px;z-index:100000;background:var(--gri-accent,#2E6E6A);color:#fff;padding:10px 16px;border-radius:8px;font:600 14px/1 Inter,system-ui,sans-serif;text-decoration:none;transition:top .15s}.gri-skip:focus{top:8px;outline:2px solid #fff;outline-offset:2px}";
+        (document.head || document.documentElement).appendChild(s);
+        var sk = document.createElement("a");
+        sk.className = "gri-skip"; sk.href = "#gri-main"; sk.textContent = "Ana içeriğe geç";
+        document.body.insertBefore(sk, document.body.firstChild);
+      }
+      var mn = document.querySelector('main, [role="main"], #gri-main');
+      if (!mn) {
+        var cands = document.querySelectorAll("body > main, body > section, .wrap, .content, #content, .page-wrap");
+        for (var i = 0; i < cands.length; i++) {
+          var c = cands[i];
+          if (!c.classList.contains("gri-tabbar") && !(c.closest && c.closest(".gri-nav"))) { mn = c; break; }
+        }
+      }
+      if (mn) {
+        if (!mn.id) mn.id = "gri-main";
+        if (!mn.hasAttribute("tabindex")) mn.setAttribute("tabindex", "-1");
+        if (mn.tagName !== "MAIN" && !mn.getAttribute("role")) mn.setAttribute("role", "main");
+      }
+      // 2) Modal dialog semantiği — görünür olunca role/aria + odağı kapsayıcıya taşı
+      var SEL = '.modal-overlay,.app-mode-modal-overlay,.gsch-modal-ov,.sb-overlay,.iom-overlay,.gri-modal,.modal-writing,[data-modal-overlay]';
+      var _n = 0;
+      function visible(el) { var st = window.getComputedStyle(el); return st.display !== "none" && st.visibility !== "hidden" && parseFloat(st.opacity || "1") > 0.01; }
+      function enhance(el) {
+        try {
+          if (!el.matches || !el.matches(SEL)) return;
+          if (!visible(el)) { el.__a11yOpen = 0; return; }
+          if (el.__a11yOpen) return; el.__a11yOpen = 1;
+          if (!el.getAttribute("role")) el.setAttribute("role", "dialog");
+          if (!el.getAttribute("aria-modal")) el.setAttribute("aria-modal", "true");
+          if (!el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby")) {
+            var hd = el.querySelector("h1,h2,h3,h4,.modal-title");
+            if (hd) { if (!hd.id) hd.id = "a11y-mt-" + (++_n); el.setAttribute("aria-labelledby", hd.id); }
+            else el.setAttribute("aria-label", "İletişim kutusu");
+          }
+          // odak modal içinde değilse kapsayıcıya taşı (kontrolleri tetiklemeden)
+          if (!el.contains(document.activeElement)) {
+            if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+            try { el.focus({ preventScroll: false }); } catch (e) {}
+          }
+        } catch (e) {}
+      }
+      try {
+        var mo = new MutationObserver(function (muts) {
+          for (var i = 0; i < muts.length; i++) {
+            var m = muts[i], t = m.target;
+            if (t && t.nodeType === 1 && t.matches && t.matches(SEL)) enhance(t);
+            if (m.addedNodes) for (var j = 0; j < m.addedNodes.length; j++) {
+              var n = m.addedNodes[j];
+              if (n.nodeType !== 1) continue;
+              if (n.matches && n.matches(SEL)) enhance(n);
+              if (n.querySelectorAll) { var q = n.querySelectorAll(SEL); for (var k = 0; k < q.length; k++) enhance(q[k]); }
+            }
+          }
+        });
+        mo.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["class", "style", "hidden", "aria-hidden"], childList: true });
+      } catch (e) {}
+    } catch (e) {}
+  }
+
+  function boot() { build(); buildTabbar(); a11y(); }
   if (document.readyState !== "loading") boot();
   else document.addEventListener("DOMContentLoaded", boot);
 })();

@@ -95,6 +95,8 @@
   /* Audio player card (listening) */
   .ge-audio{width:100%;margin:.3rem 0 .2rem;display:block}
   .ge-audiohint{font-family:var(--font-ui);font-size:.78rem;color:var(--text-soft);margin:.55rem 0 0;line-height:1.5}
+  .ge-lvideo{position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;margin:.3rem 0 .2rem}
+  .ge-lvideo iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
   /* Reading passage */
   .ge-passage{font-family:var(--font-serif,Georgia,serif);font-size:1rem;line-height:1.8;color:var(--text);white-space:pre-wrap;margin:0}
@@ -448,7 +450,7 @@ function buildPage(){
   /* ---- section plan ---- */
   SECS=[];
   SECS.push({id:'intro',label:'Yönerge'});
-  if(SKILL==='listening'&&content.audio)SECS.push({id:'media',label:'Dinleme'});
+  if(SKILL==='listening'&&(content.audio||content.video))SECS.push({id:'media',label:'Dinleme'});
   else if(SKILL==='reading'&&content.passage)SECS.push({id:'media',label:'Metin'});
   SECS.push({id:'tasks',label:'Görevler'});
   if(!SUBMITTED)SECS.push({id:'submit',label:'Gönder'});
@@ -468,8 +470,19 @@ function buildPage(){
       html+='<p class="ge-inst">'+esc(content.intro||'')+'</p></div>';
     }else if(sec.id==='media'&&SKILL==='listening'){
       html+='<div class="ge-card"><h2>Listening <span class="en">(Dinleme)</span></h2>';
-      html+='<audio class="ge-audio" controls preload="none" src="'+esc(content.audio)+'"></audio>';
-      html+='<p class="ge-audiohint">Kaydı istediğin kadar dinleyebilir, durdurup geri sarabilirsin. Hazır olduğunda görevlere geç.</p></div>';
+      if(content.video){
+        var vp=content.video.provider,vr=content.video.ref;
+        var vsrc=vp==='ted'?('https://embed.ted.com/talks/'+vr)
+                :vp==='youtube'?('https://www.youtube-nocookie.com/embed/'+vr)
+                :(content.video.url||'');
+        html+='<div class="ge-lvideo"><iframe src="'+esc(vsrc)+'" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="Listening"></iframe></div>';
+        html+='<p class="ge-audiohint">Videoyu istediğin kadar izleyebilir, durdurup geri sarabilirsin. Hazır olduğunda görevlere geç.</p>';
+        if(content.video.source)html+='<p class="ge-audiohint" style="opacity:.7">Kaynak: '+esc(content.video.source)+'</p>';
+        html+='</div>';
+      }else{
+        html+='<audio class="ge-audio" controls preload="none" src="'+esc(content.audio)+'"></audio>';
+        html+='<p class="ge-audiohint">Kaydı istediğin kadar dinleyebilir, durdurup geri sarabilirsin. Hazır olduğunda görevlere geç.</p></div>';
+      }
     }else if(sec.id==='media'&&SKILL==='reading'){
       html+='<div class="ge-card"><h2>Reading <span class="en">(Metin)</span></h2>';
       html+='<div class="ge-passage">'+passageHtml(content.passage)+'</div></div>';

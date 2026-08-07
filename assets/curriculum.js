@@ -349,7 +349,9 @@ var EXAMS=[
       { label: "UDSP", href: "blog-udsp" },
       { label: "IB English B", href: "blog-ib-english" },
       { label: "Deutsch B", href: "blog-deutsch" },
-      { label: "TOK", href: "blog-tok" }
+      { label: "TOK", href: "blog-tok" },
+      { label: "Extended Essay", href: "blog-extended-essay" },
+      { label: "CAS", href: "blog-cas" }
     ] }
   ];
 })();

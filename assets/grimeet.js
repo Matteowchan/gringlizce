@@ -23,7 +23,8 @@ var STATE={
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
   waitingRoom:true, admitted:false, pending:[], _admitTimer:null,
-  attendance:{}, points:{}, pnames:{}, startedAt:null
+  attendance:{}, points:{}, pnames:{}, startedAt:null,
+  captionsOn:false, transcript:[]
 };
 
 var BGS=[
@@ -636,6 +637,7 @@ function onData(payload,p){
   else if(msg.t==='promote'){ if(fromHost&&msg.target){ promotedHosts.add(msg.target); if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity) becomeHost(); refreshPeople(); } }
   else if(msg.t==='wb'){ WB.applyRemote(msg); }
   else if(msg.t==='anno'){ ANNO.applyRemote(msg.strokes); }
+  else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin) pushTranscript(cwho,msg.text||''); if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
 function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked}); }
 function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
@@ -1299,10 +1301,62 @@ function endLessonPackage(){
   var att=Object.keys(STATE.attendance).map(function(id){ var a=STATE.attendance[id]; var mins=Math.max(1,Math.round(((a.left||Date.now())-a.joined)/60000)); return '<tr><td>'+esc(a.name)+'</td><td>'+mins+' dk</td></tr>'; }).join('')||'<tr><td colspan=2>—</td></tr>';
   var pts=Object.keys(STATE.points).map(function(id){ return {n:STATE.pnames[id]||'Öğrenci',p:STATE.points[id]}; }).sort(function(a,b){return b.p-a.p;}).map(function(x,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(x.n)+'</td><td>'+x.p+'</td></tr>'; }).join('')||'<tr><td colspan=3>—</td></tr>';
   var notes=esc(($('#notes-ta')&&$('#notes-ta').value)||'');
-  var html='<!doctype html><meta charset="utf-8"><title>Gri Meet Ders Özeti</title><body style="font-family:Arial,sans-serif;max-width:760px;margin:24px auto;color:#241E17"><h1 style="color:#2C5856">Gri Meet — Ders Özeti</h1><p><b>Oda:</b> '+esc(STATE.room)+' &nbsp; <b>Tarih:</b> '+new Date().toLocaleString('tr-TR')+' &nbsp; <b>Süre:</b> '+dur+'</p><h2>Yoklama</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>Katılımcı</th><th>Süre</th></tr>'+att+'</table><h2>Katılım Puanı</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>#</th><th>Öğrenci</th><th>Puan</th></tr>'+pts+'</table>'+(notes?'<h2>Notlar</h2><pre style="white-space:pre-wrap;background:#f5f0e3;padding:12px;border-radius:8px">'+notes+'</pre>':'')+'</body>';
+  /* Ders transcript'i (canlı altyazıdan biriken) */
+  var trHtml=STATE.transcript.length?STATE.transcript.map(function(x){ var ts=STATE.startedAt?fmt(Math.max(0,(x.t-STATE.startedAt)/1000)):''; return '<div style="margin:2px 0"><b>'+esc(x.name)+'</b> <span style="color:#999">['+ts+']</span> '+esc(x.text)+'</div>'; }).join(''):'<i>Bu derste canlı altyazı kullanılmadı.</i>';
+  var html='<!doctype html><meta charset="utf-8"><title>Gri Meet Ders Özeti</title><body style="font-family:Arial,sans-serif;max-width:760px;margin:24px auto;color:#241E17"><h1 style="color:#2C5856">Gri Meet — Ders Özeti</h1><p><b>Oda:</b> '+esc(STATE.room)+' &nbsp; <b>Tarih:</b> '+new Date().toLocaleString('tr-TR')+' &nbsp; <b>Süre:</b> '+dur+'</p><h2>Yoklama</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>Katılımcı</th><th>Süre</th></tr>'+att+'</table><h2>Katılım Puanı</h2><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>#</th><th>Öğrenci</th><th>Puan</th></tr>'+pts+'</table>'+(notes?'<h2>Notlar</h2><pre style="white-space:pre-wrap;background:#f5f0e3;padding:12px;border-radius:8px">'+notes+'</pre>':'')+'<h2>Ders Metni (Canlı Altyazı)</h2><div style="line-height:1.55;font-size:14px">'+trHtml+'</div></body>';
   var b=new Blob([html],{type:'text/html'}),u=URL.createObjectURL(b),a2=document.createElement('a'); a2.href=u; a2.download='gri-meet-ders-ozeti-'+dstamp()+'.html'; document.body.appendChild(a2); a2.click(); setTimeout(function(){URL.revokeObjectURL(u);a2.remove();},800);
-  toast('Ders paketi indirildi (tahta PNG + özet).');
+  /* Transcript ayrı .txt olarak da indir (öğretmen için düz metin) */
+  if(STATE.transcript.length){
+    var txt=STATE.transcript.map(function(x){ var ts=STATE.startedAt?fmt(Math.max(0,(x.t-STATE.startedAt)/1000)):''; return '['+ts+'] '+x.name+': '+x.text; }).join('\n');
+    var tb=new Blob([txt],{type:'text/plain;charset=utf-8'}),tu=URL.createObjectURL(tb),a3=document.createElement('a'); a3.href=tu; a3.download='gri-meet-transcript-'+dstamp()+'.txt'; document.body.appendChild(a3); a3.click(); setTimeout(function(){URL.revokeObjectURL(tu);a3.remove();},1200);
+  }
+  toast('Ders paketi indirildi (tahta PNG + özet'+(STATE.transcript.length?' + transcript':'')+').');
 }
+
+/* ================= CANLI ALTYAZI (Web Speech API) =================
+   Her katılımcı kendi mikrofonunu tarayıcıda tanır (sunucu/STT maliyeti yok),
+   final metni veri kanalından yayınlar; herkes altyazı barında görür.
+   Öğretmen tüm konuşmacıların transcript'ini biriktirir → ders sonu paketinde indirir. */
+var GRECOG=null, _capTimer=null;
+function captionsSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+function ensureCaptionBar(){
+  var el=document.getElementById('gmr-captions');
+  if(!el){ el=document.createElement('div'); el.id='gmr-captions'; el.className='gmr-captions hidden';
+    var host=document.getElementById('gmr-stage')||document.getElementById('gmr-videos')||document.body; host.appendChild(el); }
+  return el;
+}
+function showCaption(name,text,final){
+  if(!STATE.captionsOn && !final) { /* kendi arayüzünde kapalıysa gelen final'i yine göster */ }
+  var el=ensureCaptionBar(); el.classList.remove('hidden');
+  el.innerHTML='<span class="cap-name">'+esc(name)+':</span> <span class="cap-txt'+(final?'':' interim')+'">'+esc(text)+'</span>';
+  clearTimeout(_capTimer); _capTimer=setTimeout(function(){ el.classList.add('hidden'); }, final?6000:4000);
+}
+function pushTranscript(name,text){ text=(text||'').trim(); if(!text)return; STATE.transcript.push({t:Date.now(),name:name,text:text}); }
+function startCaptions(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('Tarayıcın canlı altyazıyı desteklemiyor (Chrome/Edge önerilir).'); return false; }
+  if(GRECOG)return true;
+  var r; try{ r=new SR(); }catch(e){ toast('Altyazı başlatılamadı.'); return false; }
+  GRECOG=r; r.lang='en-US'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+  r.onresult=function(e){
+    var interim='',fin='';
+    for(var i=e.resultIndex;i<e.results.length;i++){ var seg=e.results[i][0]?e.results[i][0].transcript:''; if(e.results[i].isFinal) fin+=seg; else interim+=seg; }
+    if(fin){ fin=fin.trim(); sendData({t:'caption',name:STATE.name,text:fin,fin:true}); showCaption(STATE.name+' (Sen)',fin,true); pushTranscript(STATE.name,fin); }
+    else if(interim){ interim=interim.trim(); sendData({t:'caption',name:STATE.name,text:interim,fin:false}); showCaption(STATE.name+' (Sen)',interim,false); }
+  };
+  r.onerror=function(ev){ if(ev&&(ev.error==='not-allowed'||ev.error==='service-not-allowed')){ toast('Altyazı için mikrofon izni gerekli.'); stopCaptions(); syncCaptionBtn(); } };
+  r.onend=function(){ if(STATE.captionsOn && GRECOG){ try{ GRECOG.start(); }catch(e){} } };
+  try{ r.start(); }catch(e){}
+  return true;
+}
+function stopCaptions(){ if(GRECOG){ try{ GRECOG.onend=null; GRECOG.stop(); }catch(e){} GRECOG=null; } var el=document.getElementById('gmr-captions'); if(el)el.classList.add('hidden'); }
+function syncCaptionBtn(){ var b=document.getElementById('ctrl-caption'); if(b){ b.classList.toggle('active',STATE.captionsOn); var l=b.querySelector('.cl'); if(l)l.textContent=STATE.captionsOn?'Altyazı Açık':'Altyazı'; } }
+function toggleCaptions(){
+  if(!STATE.captionsOn){ if(!captionsSupported()){ toast('Tarayıcın canlı altyazıyı desteklemiyor (Chrome/Edge).'); return; } STATE.captionsOn=true; if(!startCaptions()){ STATE.captionsOn=false; } toast('Canlı altyazı açık — konuştukça altyazı çıkar.'); }
+  else { STATE.captionsOn=false; stopCaptions(); toast('Canlı altyazı kapatıldı (transcript birikmeye devam eder).'); }
+  syncCaptionBtn();
+}
+function bindCaptions(){ var b=document.getElementById('ctrl-caption'); if(b) b.addEventListener('click',toggleCaptions); }
 
 /* ================= BOOT ================= */
 function boot(){
@@ -1315,7 +1369,7 @@ function boot(){
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); setupGate();
+  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();
   var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
   window.addEventListener('beforeunload',_teardown);
   window.addEventListener('pagehide',_teardown);

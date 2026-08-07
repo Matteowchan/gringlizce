@@ -252,7 +252,28 @@ function hideWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.add('hidden');
 function admitSelf(){ if(STATE.admitted)return; STATE.admitted=true; clearTimeout(STATE._admitTimer); hideWaiting(); $$('#gmr-videos audio').forEach(function(a){a.muted=false;}); publishLocal(); if(STATE.breakout) refreshBreakoutAV(); }
 function addPending(id,name){ if(!id||STATE.pending.some(function(p){return p.id===id;}))return; STATE.pending.push({id:id,name:name}); renderPending(); toast(name+' kapıda bekliyor.'); }
 function removePending(id){ STATE.pending=STATE.pending.filter(function(p){return p.id!==id;}); renderPending(); }
-function renderPending(){ var el=$('#pending-list'); if(!el)return; if(!STATE.pending.length){ el.innerHTML=''; return; } el.innerHTML='<div class="hq-h">Kapıda bekleyenler ('+STATE.pending.length+')</div>'+STATE.pending.map(function(p){ return '<div class="pend-item"><span class="hqn">'+esc(p.name)+'</span><button data-admit="'+esc(p.id)+'">Kabul</button><button class="deny" data-deny="'+esc(p.id)+'">Reddet</button></div>'; }).join(''); }
+function pendItemsHtml(){ return STATE.pending.map(function(p){ return '<div class="pend-item"><span class="hqn">'+esc(p.name)+'</span><button data-admit="'+esc(p.id)+'">Kabul</button><button class="deny" data-deny="'+esc(p.id)+'">Reddet</button></div>'; }).join(''); }
+function ensurePendPop(){
+  var pop=document.getElementById('gmr-pendpop');
+  if(pop)return pop;
+  pop=document.createElement('div'); pop.id='gmr-pendpop'; pop.className='gmr-pendpop hidden';
+  pop.innerHTML='<div class="gmr-pendpop-h"><span class="gmr-pendpop-t">Kapıda bekleyenler</span><button class="gmr-pendpop-x" title="Gizle" aria-label="Gizle">&times;</button></div><div class="gmr-pendpop-list"></div>';
+  document.body.appendChild(pop);
+  pop.querySelector('.gmr-pendpop-x').addEventListener('click',function(){ pop.classList.add('hidden'); });
+  pop.querySelector('.gmr-pendpop-list').addEventListener('click',function(e){ var a=e.target.closest('[data-admit]'),d=e.target.closest('[data-deny]'); if(a){ var id=a.getAttribute('data-admit'); sendData({t:'admit',target:id}); removePending(id); } else if(d){ var id2=d.getAttribute('data-deny'); sendData({t:'deny',target:id2}); removePending(id2); } });
+  return pop;
+}
+function renderPending(){
+  var items=pendItemsHtml();
+  var el=$('#pending-list'); if(el){ el.innerHTML=STATE.pending.length?('<div class="hq-h">Kapıda bekleyenler ('+STATE.pending.length+')</div>'+items):''; }
+  /* Sağ alt köşede kalıcı popup — öğretmen paneli açmadan da bekleyenleri görür ve içeri alır */
+  var pop=ensurePendPop();
+  if(STATE.pending.length){
+    var t=pop.querySelector('.gmr-pendpop-t'); if(t)t.textContent='Kapıda bekleyenler ('+STATE.pending.length+')';
+    var lst=pop.querySelector('.gmr-pendpop-list'); if(lst)lst.innerHTML=items;
+    pop.classList.remove('hidden');
+  } else { pop.classList.add('hidden'); }
+}
 function bindWaiting(){
   var b=$('#btn-waiting'); if(b){ b.textContent='Bekleme Odası: '+(STATE.waitingRoom?'Açık':'Kapalı'); b.classList.toggle('on',STATE.waitingRoom); b.addEventListener('click',function(){ STATE.waitingRoom=!STATE.waitingRoom; this.textContent='Bekleme Odası: '+(STATE.waitingRoom?'Açık':'Kapalı'); this.classList.toggle('on',STATE.waitingRoom); toast(STATE.waitingRoom?'Bekleme odası açık — girenler onay bekler.':'Bekleme odası kapalı.'); if(!STATE.waitingRoom){ STATE.pending.forEach(function(p){ sendData({t:'admit',target:p.id}); }); STATE.pending=[]; renderPending(); } }); }
   var pl=$('#pending-list'); if(pl)pl.addEventListener('click',function(e){ var a=e.target.closest('[data-admit]'),d=e.target.closest('[data-deny]'); if(a){ var id=a.getAttribute('data-admit'); sendData({t:'admit',target:id}); removePending(id); } else if(d){ var id2=d.getAttribute('data-deny'); sendData({t:'deny',target:id2}); removePending(id2); } });
@@ -324,21 +345,47 @@ function applyScreenZoom(){
 // Sekme gizlenince en anlamlı videoyu PiP'e alır; geri dönünce kapatır.
 function setupAutoPiP(){
   if(!('pictureInPictureEnabled' in document) || !document.pictureInPictureEnabled) return;
-  function pickVideo(){
-    var sel=['#gmr-screen video','#gmr-spotlight video','.vtile.speaking video.cam','#gmr-videos .vtile video.cam','#gmr-videos video'];
-    for(var i=0;i<sel.length;i++){ var v=document.querySelector(sel[i]); if(v && v.readyState>=2 && v.videoWidth>0) return v; }
-    return null;
+  var cv=null,cx=null,hv=null,stm=null,drawT=null;
+  function screenVid(){ var v=document.querySelector('#gmr-screen video'); return (v&&v.videoWidth>0&&v.readyState>=2)?v:null; }
+  function cams(){ var out=[]; document.querySelectorAll('#gmr-spotlight video.cam, #gmr-videos video.cam').forEach(function(v){ if(v.videoWidth>0&&v.readyState>=2&&v.offsetParent!==null) out.push(v); }); return out; }
+  function stopDraw(){ if(drawT){clearInterval(drawT);drawT=null;} if(stm){ try{stm.getTracks().forEach(function(t){t.stop();});}catch(e){} stm=null;} if(hv){ try{hv.srcObject=null;}catch(e){} } }
+  function drawFrame(){
+    var list=cams(); if(!list.length) return;
+    var n=Math.min(list.length,12), cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols);
+    var CW=640, CH=360; if(cv.width!==CW){cv.width=CW;} if(cv.height!==CH){cv.height=CH;}
+    cx.fillStyle='#0d0f10'; cx.fillRect(0,0,CW,CH);
+    var cw=CW/cols, ch=CH/rows, gap=3;
+    for(var i=0;i<n;i++){
+      var v=list[i], r=Math.floor(i/cols), c=i%cols;
+      var ox=c*cw+gap, oy=r*ch+gap, w=cw-gap*2, h=ch-gap*2;
+      var vr=v.videoWidth/v.videoHeight, br=w/h, sw,sh,sx,sy;
+      if(vr>br){ sh=v.videoHeight; sw=sh*br; sx=(v.videoWidth-sw)/2; sy=0; } else { sw=v.videoWidth; sh=sw/br; sx=0; sy=(v.videoHeight-sh)/2; }
+      cx.save();
+      try{
+        if(v.classList.contains('mirror')){ cx.translate(ox+w,oy); cx.scale(-1,1); cx.drawImage(v,sx,sy,sw,sh,0,0,w,h); }
+        else { cx.drawImage(v,sx,sy,sw,sh,ox,oy,w,h); }
+      }catch(e){}
+      cx.restore();
+    }
   }
-  document.addEventListener('visibilitychange',function(){
-    try{
-      if(document.hidden){
-        if(document.pictureInPictureElement) return;
-        var v=pickVideo(); if(v && v.requestPictureInPicture){ try{ if(v.paused){ var _pp=v.play(); if(_pp&&_pp.catch)_pp.catch(function(){}); } }catch(_e){} v.requestPictureInPicture().catch(function(){}); }
-      } else {
-        if(document.pictureInPictureElement) document.exitPictureInPicture().catch(function(){});
-      }
-    }catch(e){}
-  });
+  async function enterPiP(){
+    if(document.pictureInPictureElement) return;
+    var scr=screenVid();
+    if(scr && scr.requestPictureInPicture){ try{ if(scr.paused){var p=scr.play(); if(p&&p.catch)p.catch(function(){});} await scr.requestPictureInPicture(); }catch(e){} return; }
+    var list=cams(); if(!list.length) return;
+    /* Birden çok kamerayı (öğrenciler + öğretmen) tek PiP'te göstermek için canvas'a grid çiz;
+       self'i ekrandaki tile ile aynı aynalama yönünde çiz (flip algısını önler). */
+    if(!cv){ cv=document.createElement('canvas'); cv.width=640; cv.height=360; cx=cv.getContext('2d'); }
+    if(!hv){ hv=document.createElement('video'); hv.muted=true; hv.playsInline=true; hv.setAttribute('playsinline',''); hv.style.cssText='position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;'; document.body.appendChild(hv); }
+    stopDraw();
+    drawFrame();
+    drawT=setInterval(drawFrame,120); /* arka planda tarayıcı ~1fps'e kısabilir; yüzleri görmek için yeterli */
+    try{ stm=cv.captureStream(12); hv.srcObject=stm; var pp=hv.play(); if(pp&&pp.catch)pp.catch(function(){}); }catch(e){ stopDraw(); return; }
+    try{ await hv.requestPictureInPicture(); }catch(e){ stopDraw(); }
+  }
+  function exitPiP(){ try{ if(document.pictureInPictureElement) document.exitPictureInPicture().catch(function(){}); }catch(e){} stopDraw(); }
+  document.addEventListener('visibilitychange',function(){ try{ if(document.hidden) enterPiP(); else exitPiP(); }catch(e){} });
+  document.addEventListener('leavepictureinpicture',function(){ stopDraw(); });
 }
 function bindScreenZoom(){
   var zi=document.getElementById('scr-zoom-in'), zo=document.getElementById('scr-zoom-out');
@@ -530,8 +577,18 @@ function bindHostActions(){
   });
 }
 function showShareReq(id,who){
-  if(confirm(who+' ekranını paylaşmak istiyor. İzin verilsin mi?')){ sendData({t:'share-grant',target:id}); toast(who+' için ekran paylaşımına izin verildi.'); }
-  else sendData({t:'share-deny',target:id});
+  /* Bloklamayan anlık onay: native confirm() arka plan sekmede/başka dialog açıkken
+     gösterilmiyordu (host'a "geç" geliyordu). Sağ-alt in-app kart + çınlama ile anında. */
+  var wrap=document.getElementById('gmr-reqpop');
+  if(!wrap){ wrap=document.createElement('div'); wrap.id='gmr-reqpop'; wrap.className='gmr-reqpop'; document.body.appendChild(wrap); }
+  if(wrap.querySelector('[data-reqid="'+id+'"]')) return; /* aynı kişiden tekrar isteği çoğaltma */
+  var card=document.createElement('div'); card.className='gmr-reqcard'; card.setAttribute('data-reqid',id);
+  card.innerHTML='<div class="gmr-reqtxt"><b>'+esc(who)+'</b> ekranını paylaşmak istiyor.</div><div class="gmr-reqbtns"><button class="ok">İzin Ver</button><button class="no">Reddet</button></div>';
+  card.querySelector('.ok').addEventListener('click',function(){ sendData({t:'share-grant',target:id}); toast(who+' için ekran paylaşımına izin verildi.'); card.remove(); });
+  card.querySelector('.no').addEventListener('click',function(){ sendData({t:'share-deny',target:id}); card.remove(); });
+  wrap.appendChild(card);
+  try{ playJoinChime(); }catch(e){}
+  try{ toast(who+' ekran paylaşmak istiyor — sağ altta onayla.'); }catch(e){}
 }
 
 /* ================= DATA ================= */

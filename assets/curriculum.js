@@ -356,6 +356,7 @@ var EXAMS=[
       { label: "TOK", href: "blog-tok" },
       { label: "Extended Essay", href: "blog-extended-essay" },
       { label: "CAS", href: "blog-cas" }
-    ] }
+    ] },
+    { label: "Destek Ol", href: "destek" }
   ];
 })();

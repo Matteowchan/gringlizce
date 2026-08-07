@@ -556,7 +556,7 @@ async function doShareScreen(){
   try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); STATE._shareOK=false; } else { clearScreen(); setMode('grid'); } }
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
-function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; hardLeave(); }
+function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; if(STATE.isHost){ try{ if(confirm('Ayrılmadan ders paketini (özet + transcript + tahta) indirmek ister misin?')) endLessonPackage(); }catch(e){} } hardLeave(); }
 // TÜM kamera/mikrofon kaynaklarını serbest bırak — yayınlanmış VE yayınlanmamış
 // (preTrack, gateStream, camTrack, localStream). Her çıkış yolunda çağrılmalı, yoksa
 // track açık kalır ve OS kamerayı "kullanımda" görür → başka sekme/site de alamaz.
@@ -1362,6 +1362,8 @@ function bindNotes(){ var ta=$('#notes-ta'); if(!ta)return; var key='gm-notes-'+
 /* ================= CLOSE ROOM + HEARTBEAT ================= */
 function bindCloseRoom(){ var b=$('#btn-close-room'); if(!b)return; b.addEventListener('click',async function(){
   if(!confirm('Oda kapatılsın mı? Öğrenciler çıkarılır ve bu kodla tekrar girilemez.'))return;
+  /* Kapatmadan önce ders paketini indir (özet + transcript + tahta) — oda yıkılınca veri kaybolmasın */
+  try{ endLessonPackage(); }catch(e){}
   try{ var h={'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session)h['Authorization']='Bearer '+s.data.session.access_token; }
     await fetch(SUPABASE_URL+'/functions/v1/grimeet-room-close',{method:'POST',headers:h,body:JSON.stringify({room:STATE.room})}); }catch(e){}
   sendData({t:'room-closed'}); setTimeout(function(){ sendData({t:'room-closed'}); },500); toast('Oda kapatıldı. Katılımcılar çıkarılıyor…'); clearInterval(STATE._hb); setTimeout(hardLeave,2600);
@@ -1389,7 +1391,7 @@ function endLessonPackage(){
     var txt=STATE.transcript.map(function(x){ var ts=STATE.startedAt?fmt(Math.max(0,(x.t-STATE.startedAt)/1000)):''; return '['+ts+'] '+x.name+': '+x.text; }).join('\n');
     var tb=new Blob([txt],{type:'text/plain;charset=utf-8'}),tu=URL.createObjectURL(tb),a3=document.createElement('a'); a3.href=tu; a3.download='gri-meet-transcript-'+dstamp()+'.txt'; document.body.appendChild(a3); a3.click(); setTimeout(function(){URL.revokeObjectURL(tu);a3.remove();},1200);
   }
-  toast('Ders paketi indirildi (tahta PNG + özet'+(STATE.transcript.length?' + transcript':'')+').');
+  toast(STATE.transcript.length ? 'Ders paketi indirildi (özet + transcript + tahta PNG).' : 'Ders paketi indirildi (özet + tahta PNG). Transcript yok — bu derste canlı altyazı açılmadığı için konuşma metni birikmedi.');
 }
 
 /* ================= CANLI ALTYAZI (Web Speech API) =================

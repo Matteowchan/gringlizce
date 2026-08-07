@@ -22,7 +22,7 @@
     ".gri-nav .brand .it{font-style:italic;font-weight:400;color:var(--gri-accent);margin-left:.32em}",
     ".gri-nav .links,.gri-nav .links .gri-dd>button{font-family:'Crimson Pro',Georgia,serif}",".gri-nav .links{display:flex;align-items:stretch;gap:1.5rem;margin-left:10px}",
     ".gri-nav .links>a,.gri-nav .links .gri-dd>button{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;line-height:1.2;color:var(--gri-ink-soft);background:none;border:none;border-bottom:1.5px solid transparent;cursor:pointer;padding:5px 0;white-space:nowrap;text-decoration:none;font-family:'Crimson Pro',Georgia,serif}",".gri-nav .nw1{font-family:'Crimson Pro',Georgia,serif;font-size:15px;font-weight:500;color:var(--gri-ink-soft);display:inline-flex;align-items:center;gap:4px}",".gri-nav .nw2{font-family:'Crimson Pro',Georgia,serif;font-size:15px;font-weight:500;color:var(--gri-ink-soft)}",
-    ".gri-nav .links>a:hover,.gri-dd:hover>button,.gri-nav .links>a.here,.gri-dd.here>button{border-bottom-color:var(--gri-gold)}",".gri-nav .links>a:hover .nw1,.gri-dd:hover .nw1,.gri-nav .links>a.here .nw1,.gri-dd.here .nw1,.gri-nav .links>a:hover .nw2,.gri-dd:hover .nw2,.gri-nav .links>a.here .nw2,.gri-dd.here .nw2{color:var(--gri-accent)}",
+    ".gri-nav .links>a:hover,.gri-dd:hover>button,.gri-nav .links>a.here,.gri-dd.here>button{border-bottom-color:var(--gri-gold)}",".gri-nav .links>a.gri-cta{background:var(--gri-gold);color:#241E17;border:none;border-radius:999px;padding:5px 15px;font-family:Inter,sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.01em;gap:6px;box-shadow:0 3px 12px rgba(183,138,46,.4);transition:transform .15s ease,box-shadow .15s ease;align-self:center}",".gri-nav .links>a.gri-cta:hover{border-bottom-color:transparent;transform:translateY(-1px) scale(1.03);box-shadow:0 6px 18px rgba(183,138,46,.55);color:#241E17}",".gri-nav .links>a.gri-cta svg{color:#B02A37}",".gri-nav .links>a:hover .nw1,.gri-dd:hover .nw1,.gri-nav .links>a.here .nw1,.gri-dd.here .nw1,.gri-nav .links>a:hover .nw2,.gri-dd:hover .nw2,.gri-nav .links>a.here .nw2,.gri-dd.here .nw2{color:var(--gri-accent)}",
     
     ".gri-dd{position:relative}",
     ".gri-dd .cv{width:8px;height:8px;opacity:.5;transition:.2s}.gri-dd.open .cv{transform:rotate(180deg)}",
@@ -123,7 +123,10 @@
 
     var links = MENU.map(function (it) {
       var active = hrefsOf(it, []).map(function (h) { return String(h).replace(/\.html$/, ""); }).indexOf(here) !== -1;
-      if (!it.children) return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
+      if (!it.children) {
+        if (it.cta) { var HRT='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M12 21s-6.7-4.35-9.33-8.02C1.1 10.6 1.53 7.6 3.7 6.2c1.9-1.22 4.2-.6 5.3.98L12 11l3-3.82c1.1-1.58 3.4-2.2 5.3-.98 2.17 1.4 2.6 4.4.03 6.78C18.7 16.65 12 21 12 21z"/></svg>'; return '<a href="' + href(it.href) + '" class="gri-cta' + (active ? ' here' : '') + '">' + HRT + esc(it.label) + "</a>"; }
+        return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
+      }
       var isMega = it.children.some(function (ch) { return ch.children && ch.children.length; });
       var cols2 = !isMega && it.children.length >= 7;
       var ddCls = "gri-dd" + (active ? " here" : "") + (isMega ? " gri-dd-mega" : (cols2 ? " gri-dd-cols2" : ""));

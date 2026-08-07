@@ -46,6 +46,11 @@
     '#gs-pop .gs-x{background:none;border:none;color:var(--text-muted,#8a8073);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;}' +
     '#gs-pop .gs-msg{font-size:12.5px;color:var(--text-soft,#6E6353);line-height:1.5;}' +
     '#gs-pop .gs-msg a{color:var(--gri-accent,#2C5856);}' +
+    '#gs-pop .gs-search{display:flex;gap:7px;margin-top:2px;}' +
+    '#gs-pop .gs-search input{flex:1;min-width:0;background:var(--bg-soft,#f1ead9);border:1px solid var(--line,#e3d8c3);border-radius:9px;padding:8px 11px;font:600 14px Inter,system-ui,sans-serif;color:var(--text,#241E17);outline:none;}' +
+    '#gs-pop .gs-search input:focus{border-color:var(--gri-accent,#2C5856);}' +
+    '#gs-pop .gs-search button{background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:9px;padding:0 14px;font:700 13px Inter,sans-serif;cursor:pointer;}' +
+    '#gs-pop .gs-hint{font-size:11.5px;color:var(--text-muted,#8a8073);margin-top:.5rem;}' +
     '#gs-spin{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--gri-accent,#2C5856);animation:gsSpin .8s linear infinite;margin:8px auto;}' +
     '@keyframes gsSpin{to{transform:rotate(360deg)}}' +
     '.gs-tool{display:inline-flex;align-items:center;gap:5px;background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:8px;padding:5px 11px;font:600 12.5px/1 Inter,system-ui,sans-serif;cursor:pointer;margin-right:8px;vertical-align:middle;white-space:nowrap;}' +
@@ -59,7 +64,7 @@
       btn = document.createElement('button'); btn.id='gs-btn'; btn.type='button';
       btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Sözlük';
       btn.addEventListener('mousedown', function(e){ e.preventDefault(); });
-      btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(lastWord) lookup(lastWord); });
+      btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(lastWord) lookup(lastWord); else renderSearchBox(); });
       document.body.appendChild(btn);
     }
     if (!pop) {
@@ -142,14 +147,34 @@
     else { var fz = document.querySelector('.font-zoom-btn'); if (fz && fz.parentElement) { tb = fz.parentElement.parentElement || fz.parentElement; before = fz.parentElement; } }
     if (!tb) return;
     var b = document.createElement('button'); b.id='gs-tool'; b.type='button'; b.className='gs-tool';
-    b.title='Sözlük: bir kelimeye çift tıkla ya da seçip buna bas';
+    b.title='Sözlük: kelimeye çift tıkla, seçip buna bas ya da yazarak ara';
     b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Sözlük';
     // seçim, click'ten önce dağılmasın diye kelimeyi mousedown'da yakala
-    b.addEventListener('mousedown', function(){ var w=selWord(); if(w){ lastWord=w.text; popAnchor=w.range; } });
-    b.addEventListener('click', function(e){ e.preventDefault(); if(lastWord){ lookup(lastWord); } else { popAnchor=null; renderMsgAt('Bir kelimeye çift tıkla ya da bir kelime seçip bu butona bas.'); } });
+    var armed = null;
+    b.addEventListener('mousedown', function(){ armed = selWord(); });
+    b.addEventListener('click', function(e){ e.preventDefault(); if(armed){ lastWord=armed.text; popAnchor=armed.range; lookup(armed.text); armed=null; } else { popAnchor=null; renderSearchBox(); } });
     if (before) tb.insertBefore(b, before); else tb.appendChild(b);
   }
   function renderMsgAt(html){ ensureEls(); pop.classList.add('show'); renderMsg(html); }
+
+  // SAT'taki gibi: elle kelime yazıp arama kutusu
+  function renderSearchBox(prefill){
+    ensureEls(); pop.classList.add('show');
+    pop.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.5rem">' +
+        '<div class="gs-w" style="font-size:1rem">Sözlükte ara</div>' +
+        '<button class="gs-x" title="Kapat">&times;</button></div>' +
+      '<div class="gs-search"><input type="text" id="gs-q" placeholder="İngilizce kelime yaz…" autocomplete="off" spellcheck="false" value="' + esc(prefill||'') + '">' +
+        '<button type="button" id="gs-go">Ara</button></div>' +
+      '<div class="gs-hint">Bir kelimeye çift tıklayarak da arayabilirsin.</div>';
+    pop.querySelector('.gs-x').addEventListener('click', hidePop);
+    var inp = pop.querySelector('#gs-q'), go = pop.querySelector('#gs-go');
+    function run(){ var v=(inp.value||'').trim(); if(v){ popAnchor=null; lastWord=v; lookup(v); } else { inp.focus(); } }
+    go.addEventListener('click', run);
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); run(); } else if(e.key==='Escape'){ hidePop(); } });
+    positionPop();
+    setTimeout(function(){ try{ inp.focus(); inp.select(); }catch(_){}}, 30);
+  }
 
   function positionPop(){
     var pw = pop.offsetWidth||300, ph = pop.offsetHeight||160, top, left, r = null;

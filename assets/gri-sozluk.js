@@ -10,7 +10,7 @@
   var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
   var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
   var FN = SB_URL + '/functions/v1/vocab-lookup';
-  var sb = null, UID = null, TOKEN = null, btn = null, pop = null, lastWord = '', hideT = null;
+  var sb = null, UID = null, TOKEN = null, btn = null, pop = null, lastWord = '', hideT = null, FLOAT_ON = true, popAnchor = null;
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
 
@@ -47,7 +47,10 @@
     '#gs-pop .gs-msg{font-size:12.5px;color:var(--text-soft,#6E6353);line-height:1.5;}' +
     '#gs-pop .gs-msg a{color:var(--gri-accent,#2C5856);}' +
     '#gs-spin{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--gri-accent,#2C5856);animation:gsSpin .8s linear infinite;margin:8px auto;}' +
-    '@keyframes gsSpin{to{transform:rotate(360deg)}}';
+    '@keyframes gsSpin{to{transform:rotate(360deg)}}' +
+    '.gs-tool{display:inline-flex;align-items:center;gap:5px;background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:8px;padding:5px 11px;font:600 12.5px/1 Inter,system-ui,sans-serif;cursor:pointer;margin-right:8px;vertical-align:middle;white-space:nowrap;}' +
+    '.gs-tool svg{width:14px;height:14px;}' +
+    '.gs-tool:hover{filter:brightness(1.1);}';
 
   function injectCss(){ var s=document.createElement('style'); s.setAttribute('data-gri-sozluk',''); s.textContent=CSS; (document.head||document.documentElement).appendChild(s); }
 
@@ -100,17 +103,45 @@
     setTimeout(function(){
       var w = selWord();
       if (!w) { hideBtn(); return; }
-      lastWord = w.text;
-      showBtn(w.range);
+      lastWord = w.text; popAnchor = w.range;
+      if (FLOAT_ON) showBtn(w.range);  // highlight sayfalarında (.hl-group) kapalı — çift-tık + toolbar butonu kullanılır
     }, 10);
   }
+  function onDblClick(){
+    var w = selWord(); if (!w) return;  // çift tık kelimeyi otomatik seçer
+    lastWord = w.text; popAnchor = w.range; lookup(w.text);
+  }
+  // Araç çubuğuna (İşaretle'nin soluna) kalıcı "Sözlük" butonu enjekte et
+  function injectToolbarBtn(){
+    if (document.getElementById('gs-tool')) return;
+    var hl = document.querySelector('.hl-group'), tb = null, before = null;
+    if (hl && hl.parentElement) { tb = hl.parentElement; before = hl; }
+    else { var fz = document.querySelector('.font-zoom-btn'); if (fz && fz.parentElement) { tb = fz.parentElement.parentElement || fz.parentElement; before = fz.parentElement; } }
+    if (!tb) return;
+    var b = document.createElement('button'); b.id='gs-tool'; b.type='button'; b.className='gs-tool';
+    b.title='Sözlük: bir kelimeye çift tıkla ya da seçip buna bas';
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Sözlük';
+    // seçim, click'ten önce dağılmasın diye kelimeyi mousedown'da yakala
+    b.addEventListener('mousedown', function(){ var w=selWord(); if(w){ lastWord=w.text; popAnchor=w.range; } });
+    b.addEventListener('click', function(e){ e.preventDefault(); if(lastWord){ lookup(lastWord); } else { popAnchor=null; renderMsgAt('Bir kelimeye çift tıkla ya da bir kelime seçip bu butona bas.'); } });
+    if (before) tb.insertBefore(b, before); else tb.appendChild(b);
+  }
+  function renderMsgAt(html){ ensureEls(); pop.classList.add('show'); renderMsg(html); }
 
   function positionPop(){
-    // butonun yakınına aç
-    var bt = parseFloat(btn.style.top)||window.scrollY+80, bl = parseFloat(btn.style.left)||window.scrollX+20;
-    var pw = pop.offsetWidth||300;
-    var left = Math.max(8, Math.min(bl, window.innerWidth + window.scrollX - pw - 8));
-    pop.style.top = (bt + 34) + 'px'; pop.style.left = left + 'px';
+    var pw = pop.offsetWidth||300, ph = pop.offsetHeight||160, top, left, r = null;
+    if (popAnchor && popAnchor.getBoundingClientRect) { var rr = popAnchor.getBoundingClientRect(); if (rr && (rr.width||rr.height)) r = rr; }
+    if (!r) { var tbtn = document.getElementById('gs-tool'); if (tbtn) r = tbtn.getBoundingClientRect(); }
+    if (r) {
+      top = r.bottom + window.scrollY + 8;
+      if (top + ph > window.scrollY + window.innerHeight - 8) top = Math.max(window.scrollY + 8, r.top + window.scrollY - ph - 8);
+      left = r.left + window.scrollX;
+    } else {
+      top = (parseFloat(btn.style.top)||window.scrollY+80) + 34;
+      left = parseFloat(btn.style.left)||window.scrollX+20;
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - pw - 8));
+    pop.style.top = top + 'px'; pop.style.left = left + 'px';
   }
 
   async function lookup(word){
@@ -179,11 +210,17 @@
 
   function boot(){
     injectCss(); ensureEls(); loadSession();
+    // Highlight (.hl-group) olan sayfalarda seçim-popup'ı kapat (çakışma önle); çift-tık + toolbar butonu her yerde çalışır
+    FLOAT_ON = !document.querySelector('.hl-group');
     document.addEventListener('mouseup', onSelectionMaybe);
     document.addEventListener('touchend', onSelectionMaybe);
+    document.addEventListener('dblclick', onDblClick);
     document.addEventListener('selectionchange', function(){ var s=window.getSelection(); if(!s||!s.toString().trim()){ hideBtn(); } });
     document.addEventListener('mousedown', onDocDown, true);
     window.addEventListener('scroll', function(){ hideBtn(); }, { passive:true });
+    injectToolbarBtn();
+    // Toolbar sonradan render olabilir → kısa bir süre dene
+    var tries=0; var iv=setInterval(function(){ injectToolbarBtn(); if(document.getElementById('gs-tool')||++tries>20) clearInterval(iv); }, 400);
   }
   if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
 })();

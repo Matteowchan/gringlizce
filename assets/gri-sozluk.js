@@ -107,8 +107,31 @@
       if (FLOAT_ON) showBtn(w.range);  // highlight sayfalarında (.hl-group) kapalı — çift-tık + toolbar butonu kullanılır
     }, 10);
   }
-  function onDblClick(){
-    var w = selWord(); if (!w) return;  // çift tık kelimeyi otomatik seçer
+  // Çift-tık koordinatından kelimeyi bul (seçim highlight tarafından temizlense bile çalışır)
+  function wordAtPoint(x, y){
+    var range = null;
+    if (document.caretRangeFromPoint) range = document.caretRangeFromPoint(x, y);
+    else if (document.caretPositionFromPoint) { var cp = document.caretPositionFromPoint(x, y); if (cp) { range = document.createRange(); range.setStart(cp.offsetNode, cp.offset); range.collapse(true); } }
+    if (!range) return null;
+    var node = range.startContainer; if (!node || node.nodeType !== 3) return null;
+    var el = node.parentElement;
+    if (el && el.closest && el.closest('input,textarea,[contenteditable=""],[contenteditable="true"],.gri-nav,.site-footer,#gs-pop,#gs-btn,.gmr-controls,.gmr-nav')) return null;
+    var text = node.nodeValue || '', off = range.startOffset, s = off, e = off;
+    while (s > 0 && /[A-Za-z'’-]/.test(text.charAt(s-1))) s--;
+    while (e < text.length && /[A-Za-z'’-]/.test(text.charAt(e))) e++;
+    var w = text.slice(s, e).replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+    if (!w || !/[A-Za-z]/.test(w)) return null;
+    var wr = document.createRange(); try { wr.setStart(node, s); wr.setEnd(node, e); } catch(_){ wr = range; }
+    return { text: w, range: wr };
+  }
+  // Çift tık = sözlük. Highlight (passage) mouseup'ı BUBBLE fazında seçimi <mark>'a sarıp
+  // temizliyor; biz CAPTURE fazında yakalayıp durduruyoruz → sözlük açılır, highlight olmaz.
+  function onDblMouseUp(e){
+    if (e.detail < 2) return;  // sadece çift tık
+    var w = wordAtPoint(e.clientX, e.clientY) || selWord();
+    if (!w) return;
+    e.stopPropagation();
+    try { window.getSelection().removeAllRanges(); } catch(_){}
     lastWord = w.text; popAnchor = w.range; lookup(w.text);
   }
   // Araç çubuğuna (İşaretle'nin soluna) kalıcı "Sözlük" butonu enjekte et
@@ -212,9 +235,10 @@
     injectCss(); ensureEls(); loadSession();
     // Highlight (.hl-group) olan sayfalarda seçim-popup'ı kapat (çakışma önle); çift-tık + toolbar butonu her yerde çalışır
     FLOAT_ON = !document.querySelector('.hl-group');
+    document.addEventListener('mouseup', onDblMouseUp, true);  // capture: highlight'tan önce çift-tık'ı yakala
     document.addEventListener('mouseup', onSelectionMaybe);
     document.addEventListener('touchend', onSelectionMaybe);
-    document.addEventListener('dblclick', onDblClick);
+    document.addEventListener('dblclick', function(e){ e.preventDefault && e.preventDefault(); });
     document.addEventListener('selectionchange', function(){ var s=window.getSelection(); if(!s||!s.toString().trim()){ hideBtn(); } });
     document.addEventListener('mousedown', onDocDown, true);
     window.addEventListener('scroll', function(){ hideBtn(); }, { passive:true });

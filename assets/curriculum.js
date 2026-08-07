@@ -323,8 +323,9 @@ var EXAMS=[
         { label: "Textsorten (Öğren)", href: "deutsch-ogren" } ] },
       { label: "TOK", href: "ib-tok", children: [
         { label: "TOK Rehberi (Öğren)", href: "tok-ogren" } ] },
-      { label: "Extended Essay", href: "blog-extended-essay", children: [
-        { label: "EE Rehberi", href: "blog-extended-essay" } ] },
+      { label: "Extended Essay", href: "ib-extended-essay", children: [
+        { label: "EE Modülü (Süreç + Kriterler)", href: "ib-extended-essay" },
+        { label: "EE Blog Serisi", href: "blog-extended-essay" } ] },
       { label: "CAS", href: "blog-cas", children: [
         { label: "CAS Rehberi", href: "blog-cas" } ] }
     ] },

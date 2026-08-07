@@ -52,14 +52,28 @@ var ROOM_THEMES=[
   {t:'gul',n:'Gül',bg:'#F3E9EE',stage:'#E7D9E1',s1:'#FAF3F6',s2:'#F3E7EE',line:'#E7D6DF',ink:'#2A1E24',isoft:'#6E5A63',ifaint:'#9A8A91',a:'#B0567A',d:'#7E3A56',g:'#A05A6A'},
   {t:'bordo',n:'Bordo',bg:'#F1E8EA',stage:'#E5D6DA',s1:'#FAF2F4',s2:'#F2E6E9',line:'#E5D6DA',ink:'#2A1E21',isoft:'#6E5A5E',ifaint:'#9A8A8E',a:'#8E3B4C',d:'#5E2632',g:'#8A4A3B'},
   {t:'lavanta',n:'Lavanta',bg:'#ECE9F3',stage:'#DED9EC',s1:'#F5F3FA',s2:'#E9E5F2',line:'#DED9EC',ink:'#221E2A',isoft:'#5A566E',ifaint:'#8A86A2',a:'#6E5AA0',d:'#493A6E',g:'#8A6A9A'},
+  {t:'tiffany',n:'Tiffany',bg:'#E1F3F0',stage:'#D2E9E5',s1:'#EFFAF8',s2:'#DBEFEB',line:'#CFE6E1',ink:'#16302D',isoft:'#4E6763',ifaint:'#86A19C',a:'#0B8C86',d:'#08615D',g:'#C79A3A'},
+  {t:'mocha',n:'Mocha',bg:'#F1E8E2',stage:'#E5D8CE',s1:'#F8F1EC',s2:'#EFE3DA',line:'#E4D5C9',ink:'#2A1E17',isoft:'#6E5C4E',ifaint:'#9A8A7B',a:'#8A5A44',d:'#5E3B2C',g:'#B0864A'},
+  {t:'visne',n:'Vişne',bg:'#F5E7E8',stage:'#E9D6D8',s1:'#FBF2F2',s2:'#F3E4E5',line:'#E9D6D8',ink:'#2A1A1C',isoft:'#6E5658',ifaint:'#9A868A',a:'#B02A37',d:'#7E1D27',g:'#B0764A'},
+  {t:'persimmon',n:'Persimmon',bg:'#F6EAE1',stage:'#EBD9CC',s1:'#FBF3ED',s2:'#F3E6DA',line:'#E9D8C9',ink:'#2A1E14',isoft:'#6E5C4C',ifaint:'#9A8A78',a:'#BC5A2E',d:'#8A3E1C',g:'#A9772E'},
+  {t:'wasabi',n:'Wasabi',bg:'#EDF0DC',stage:'#DEE3C8',s1:'#F5F6E9',s2:'#E7ECD5',line:'#DCE2C7',ink:'#24280F',isoft:'#5E634A',ifaint:'#8A9070',a:'#6F7D1C',d:'#4A5312',g:'#A9902E'},
   {t:'dark',n:'Gece',bg:'#161311',stage:'#0e0c0a',s1:'#211d18',s2:'#2a251f',line:'#352f27',ink:'#F1E9D9',isoft:'#B7AB96',ifaint:'#8A7E6C',a:'#6FB6AF',d:'#2E6E6A',g:'#D8B25A'}
 ];
 function applyRoomTheme(t){ var x=null; for(var i=0;i<ROOM_THEMES.length;i++){ if(ROOM_THEMES[i].t===t){x=ROOM_THEMES[i];break;} } if(!x)x=ROOM_THEMES[0]; var r=document.documentElement.style;
   r.setProperty('--gm-bg',x.bg); r.setProperty('--gm-stage',x.stage); r.setProperty('--gm-surface',x.s1); r.setProperty('--gm-surface-2',x.s2); r.setProperty('--gm-line',x.line);
   r.setProperty('--gm-ink',x.ink); r.setProperty('--gm-ink-soft',x.isoft); r.setProperty('--gm-ink-faint',x.ifaint);
   r.setProperty('--gm-teal',x.a); r.setProperty('--gm-teal-deep',x.d); r.setProperty('--gm-gold',x.g);
-  try{localStorage.setItem('gri-theme',x.t);}catch(e){} var sel=document.getElementById('gmr-theme'); if(sel)sel.value=x.t; }
-function buildThemeSel(){ var sel=document.getElementById('gmr-theme'); if(!sel)return; ROOM_THEMES.forEach(function(x){ var o=document.createElement('option'); o.value=x.t; o.textContent='Tema: '+x.n; sel.appendChild(o); }); var saved='krem'; try{ saved=localStorage.getItem('gri-theme')||'krem'; }catch(e){} sel.addEventListener('change',function(){ applyRoomTheme(sel.value); }); applyRoomTheme(saved); }
+  try{localStorage.setItem('gri-theme',x.t);}catch(e){}
+  var pop=document.getElementById('gmr-theme-pop'); if(pop){ var bs=pop.querySelectorAll('.gmr-sw'); for(var k=0;k<bs.length;k++){ bs[k].classList.toggle('on', bs[k].getAttribute('data-t')===x.t); } }
+}
+function buildThemeSel(){
+  var pop=document.getElementById('gmr-theme-pop'), btn=document.getElementById('gmr-theme-btn'); if(!pop||!btn)return;
+  pop.innerHTML=ROOM_THEMES.map(function(x){ return '<button class="gmr-sw" data-t="'+x.t+'" title="'+esc(x.n)+'" aria-label="'+esc(x.n)+'"><span class="sw-dot" style="background:'+x.a+'"></span><span class="sw-n">'+esc(x.n)+'</span></button>'; }).join('');
+  pop.addEventListener('click',function(e){ var b=e.target.closest('.gmr-sw'); if(!b)return; applyRoomTheme(b.getAttribute('data-t')); pop.classList.remove('open'); btn.setAttribute('aria-expanded','false'); });
+  btn.addEventListener('click',function(e){ e.stopPropagation(); var open=pop.classList.toggle('open'); btn.setAttribute('aria-expanded',open?'true':'false'); });
+  document.addEventListener('click',function(e){ if(!pop.contains(e.target)&&!btn.contains(e.target)){ pop.classList.remove('open'); btn.setAttribute('aria-expanded','false'); } });
+  var saved='krem'; try{ saved=localStorage.getItem('gri-theme')||'krem'; }catch(e){} applyRoomTheme(saved);
+}
 
 var toastT;
 function toast(m){var t=$('#gmr-toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}

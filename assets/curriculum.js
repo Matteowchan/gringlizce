@@ -322,7 +322,11 @@ var EXAMS=[
       { label: "Deutsch B", href: "deutsch-ogren", children: [
         { label: "Textsorten (Öğren)", href: "deutsch-ogren" } ] },
       { label: "TOK", href: "ib-tok", children: [
-        { label: "TOK Rehberi (Öğren)", href: "tok-ogren" } ] }
+        { label: "TOK Rehberi (Öğren)", href: "tok-ogren" } ] },
+      { label: "Extended Essay", href: "blog-extended-essay", children: [
+        { label: "EE Rehberi", href: "blog-extended-essay" } ] },
+      { label: "CAS", href: "blog-cas", children: [
+        { label: "CAS Rehberi", href: "blog-cas" } ] }
     ] },
     { label: "Genel İngilizce", href: "genel-ingilizce" },
     { label: "Çalışma Alanı", children: [

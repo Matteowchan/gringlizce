@@ -191,6 +191,10 @@
   .ge-wc.in{color:var(--teal);font-weight:700}
   :root[data-theme="dark"] .ge-wc.in{color:var(--teal)}
 
+    /* İnceleme modu banner (öğretmen) */
+  .ge-review-banner{background:var(--teal,#2C5856);color:#fff;border-radius:10px;padding:.75rem 1rem;margin:0 0 1rem;font-family:var(--font-ui);font-size:.9rem;line-height:1.5}
+  .ge-review-banner b{color:#fff}
+
   /* Submission preview + feedback */
   .ge-prev{display:none;margin:0 0 1rem}
   .ge-prev.on{display:block}
@@ -776,7 +780,7 @@ sbWait(function(){
 });
 
 /* recAns — user_answers upsert */
-function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
+function recAns(slug,status,chosen){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;var row={user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()};if(chosen!=null&&chosen>=0){row.chosen=chosen;row.selected_letter=String.fromCharCode(65+chosen);}window.GRI_SB.from('user_answers').upsert(row,{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
 
 /* ---------- Exam state ---------- */
 var examStarted=false,finished=false,remaining=6000,timerInt=null;
@@ -1064,6 +1068,64 @@ buildMcq('readMcq2',RM2,'r',true);
   });
 })();
 
+/* ---------- İNCELEME MODU (öğretmen: ?review=<sid>&assignment=<aid>) — salt-okunur ---------- */
+(function(){
+  var qs; try{qs=new URLSearchParams(location.search);}catch(e){return;}
+  var sid=qs.get('review'), aid=qs.get('assignment');
+  if(!sid||!aid)return;
+  /* Başlat/Bitir/şık tıklamayı anında kilitle (senkron) */
+  examStarted=true; finished=true;
+  function paint(items){
+    if(timerInt){try{clearInterval(timerInt);}catch(e){}}
+    var rt=document.getElementById('railTimer'); if(rt)rt.textContent='İnceleme';
+    var rn=document.getElementById('railTimerNote'); if(rn)rn.textContent='Öğrenci cevapları (salt-okunur)';
+    var sbn=document.getElementById('startBtn'); if(sbn){sbn.style.display='none';}
+    var links=document.querySelectorAll('.ge-sub a'); for(var li=0;li<links.length;li++){links[li].className=links[li].className.replace(/\s*\blk\b/g,'');}
+    document.querySelectorAll('.ge-opt').forEach(function(b){b.disabled=true;});
+    document.querySelectorAll('.ge-gap input').forEach(function(i){i.disabled=true;});
+    document.querySelectorAll("[onclick*='finishExam']").forEach(function(b){b.style.display='none';});
+    var by={}; items.forEach(function(it){by[it.slug]=it;});
+    var gcnt=0,tcnt=0;
+    for(var i=0;i<MCQREG.length;i++){
+      var q=MCQREG[i], it=by[q.slug]; if(!it)continue; tcnt++;
+      var w=document.getElementById('q-'+q.slug); if(!w)continue;
+      var ok=!!it.is_correct; if(ok)gcnt++;
+      var ch=-1, raw=(it.chosen!=null?String(it.chosen):'');
+      if(/^[0-9]+$/.test(raw))ch=parseInt(raw,10); else if(/^[A-Za-z]$/.test(raw))ch=raw.toUpperCase().charCodeAt(0)-65;
+      var btns=w.querySelectorAll('.ge-opt');
+      for(var k=0;k<btns.length;k++){
+        var ki=parseInt(btns[k].getAttribute('data-i'),10);
+        if(ki===q.c)btns[k].className+=' correct';
+        else if(ch>=0&&ki===ch&&!ok)btns[k].className+=' wrong';
+        if(ch>=0&&ki===ch)btns[k].className+=' sel';
+      }
+      var fb=document.getElementById('fb-'+q.slug);
+      if(fb){fb.className='ge-qfb on '+(ok?'ok':'no');
+        if(ok)fb.textContent='Öğrenci doğru cevapladı. '+q.e;
+        else if(ch>=0)fb.textContent='Öğrenci "'+q.o[ch]+'" seçti — doğru cevap: "'+q.o[q.c]+'". '+q.e;
+        else fb.textContent='Öğrenci yanlış cevapladı — doğru cevap: "'+q.o[q.c]+'". (Bu eski denemede seçilen tam şık kaydı yok; yeni denemelerde görünür.) '+q.e;
+      }
+    }
+    document.querySelectorAll('.ge-gap[data-slug]').forEach(function(gp){
+      var it=by[gp.getAttribute('data-slug')]; if(!it)return; tcnt++; if(it.is_correct)gcnt++;
+      gp.className=gp.className.replace(/\s*\b(ok|no)\b/g,'')+(it.is_correct?' ok':' no');
+      var inp=gp.querySelector('input'); if(inp)inp.disabled=true;
+    });
+    var bn=document.createElement('div'); bn.className='ge-review-banner';
+    bn.innerHTML='<b>İnceleme modu</b> — öğrencinin cevapları işaretlendi (yeşil: doğru şık · kırmızı: öğrencinin yanlış seçtiği şık). Üstteki menüden bölümler arası gez. &nbsp; <b>'+gcnt+' / '+tcnt+'</b> doğru.';
+    var shell=document.querySelector('.ge-shell');
+    if(shell&&shell.parentNode){shell.parentNode.insertBefore(bn,shell);} else {document.body.insertBefore(bn,document.body.firstChild);}
+  }
+  function go(n){ n=n||0;
+    if(!window.GRI_SB){ if(n>80)return; return setTimeout(function(){go(n+1);},150); }
+    window.GRI_SB.rpc('assignment_student_detail',{p_assignment_id:aid,p_student_id:sid}).then(function(r){
+      if(r&&!r.error&&r.data){ paint((r.data.items)||[]); }
+      else { alert('Öğrenci cevapları yüklenemedi'+(r&&r.error?': '+r.error.message:'.')); }
+    },function(e){ alert('Öğrenci cevapları yüklenemedi.'); });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){go();}); else go();
+})();
+
 /* ---------- Scoring ---------- */
 function scoreMcqs(t){
   for(var i=0;i<MCQREG.length;i++){
@@ -1086,7 +1148,7 @@ function scoreMcqs(t){
       if(good)fb.textContent='Doğru. '+q.e;
       else fb.textContent=(user===-1?'Cevaplanmadı':'Yanlış')+' — doğru cevap: "'+q.o[q.c]+'". '+q.e;
     }
-    recAns(q.slug,good?'correct':'incorrect');
+    recAns(q.slug,good?'correct':'incorrect',user);
     if(good)t[q.sec]++;
     else if(q.sec==='g'&&q.u)unitWrong[q.u]++;
   }

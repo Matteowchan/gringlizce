@@ -32,9 +32,9 @@
     + '.gsch-imp .imp-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;}'
     + '.gsch-imp .imp-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#2a2a2a;background:#faf7f0;border:1px solid #ece4d4;border-radius:8px;padding:7px 9px;}'
     + '.gsch-imp .imp-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-    + '.gsch-imp .imp-item .rm{background:none;border:none;color:#b3402f;cursor:pointer;font-size:12px;font-weight:700;}
-.imp-sws{margin:2px 0 10px 2px;}
-.imp-sws .gsch-sw{width:20px;height:20px;}'
+    + '.gsch-imp .imp-item .rm{background:none;border:none;color:#b3402f;cursor:pointer;font-size:12px;font-weight:700;}'
+    + '.gsch-imp .imp-sws{margin:2px 0 10px 2px;}'
+    + '.gsch-imp .imp-sws .gsch-sw{width:20px;height:20px;}'
     + ':root[data-theme="dark"] .gsch-ext-tag{color:#b5ac98;background:#2a2419;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-imp{border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-imp h5{color:#f0e9db;}'

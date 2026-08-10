@@ -209,7 +209,7 @@
     cont.innerHTML =
       '<div class="gsch">'
       + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
-        + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Sınıf Renkleri</button>' : '')
+        + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Takvim Renkleri</button>' : '')
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + ((role==='teacher'||manageOwn) ?
@@ -275,25 +275,37 @@
         if(r.error) throw r.error;
         (r.data||[]).forEach(function(c){ if(c.color) colorMap[c.id]=c.color; });
       }catch(e){ /* stored yoksa auto kullan */ }
+      var extCals=[];
+      if(opts.userId){ try{ var er=await sb.from('external_calendars').select('id,label,color').eq('user_id',opts.userId).order('created_at',{ascending:true}); extCals=er.data||[]; }catch(e){} }
       if(btn){ btn.disabled=false; btn.textContent=oldt; }
       var swatches=function(cid){ var cur=colorMap[cid]||autoColor(cid); return PALETTE.map(function(hx){ return '<button type="button" class="gsch-sw'+(hx.toLowerCase()===cur.toLowerCase()?' on':'')+'" data-cid="'+esc(cid)+'" data-hx="'+hx+'" style="background:'+hx+'" aria-label="'+hx+'"></button>'; }).join(''); };
+      var extSwatches=function(cid,cur){ cur=cur||''; return PALETTE.map(function(hx){ return '<button type="button" class="gsch-sw'+(String(cur).toLowerCase()===hx.toLowerCase()?' on':'')+'" data-eid="'+esc(cid)+'" data-hx="'+hx+'" style="background:'+hx+'" aria-label="'+hx+'"></button>'; }).join(''); };
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal" style="max-width:420px"><h4>Sınıf Renkleri</h4>'
-        + '<p>Her sınıfa takvimde kullanılacak rengi seç. Otomatik atanır, dilediğinde değiştirebilirsin.</p>'
+      ov.innerHTML='<div class="gsch-modal" style="max-width:420px"><h4>Takvim Renkleri</h4>'
+        + '<p>Her sınıfa ve abone olduğun dış takvime takvimde kullanılacak rengi seç. Otomatik atanır, dilediğinde değiştirebilirsin.</p>'
         + '<div class="gsch-clrlist">'
         + classList.map(function(c){ return '<div class="gsch-clrrow"><span class="gsch-clrname">'+esc(c.name||c.id)+'</span><div class="gsch-sws" data-for="'+esc(c.id)+'">'+swatches(c.id)+'</div></div>'; }).join('')
         + '</div>'
+        + (extCals.length ? ('<div style="font-weight:700;font-size:13px;margin:16px 0 6px;color:#2a2a2a">Abone takvimler</div><div class="gsch-clrlist">' + extCals.map(function(c){ return '<div class="gsch-clrrow"><span class="gsch-clrname">'+esc(c.label||'Dış takvim')+'</span><div class="gsch-sws" data-extfor="'+esc(c.id)+'">'+extSwatches(c.id,c.color)+'</div></div>'; }).join('') + '</div>') : '')
         + '<div class="macts" style="margin-top:14px;"><button type="button" class="gsch-btn m-close">Bitti</button></div>'
         + '</div>';
       document.body.appendChild(ov);
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); load(); }
       ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
       ov.querySelector('.m-close').addEventListener('click',close);
-      ov.querySelectorAll('.gsch-sw').forEach(function(sw){
+      ov.querySelectorAll('.gsch-sw[data-cid]').forEach(function(sw){
         sw.addEventListener('click', async function(){
           var cid=sw.getAttribute('data-cid'), hx=sw.getAttribute('data-hx');
           var group=sw.parentNode; group.querySelectorAll('.gsch-sw').forEach(function(x){ x.classList.remove('on'); }); sw.classList.add('on');
           try{ var r=await sb.from('classes').update({color:hx}).eq('id',cid); if(r.error) throw r.error; }
+          catch(e){ alert('Renk kaydedilemedi: '+(e.message||'hata')); }
+        });
+      });
+      ov.querySelectorAll('.gsch-sw[data-eid]').forEach(function(sw){
+        sw.addEventListener('click', async function(){
+          var eid=sw.getAttribute('data-eid'), hx=sw.getAttribute('data-hx');
+          var group=sw.parentNode; group.querySelectorAll('.gsch-sw').forEach(function(x){ x.classList.remove('on'); }); sw.classList.add('on');
+          try{ var r=await sb.from('external_calendars').update({color:hx}).eq('id',eid); if(r.error) throw r.error; }
           catch(e){ alert('Renk kaydedilemedi: '+(e.message||'hata')); }
         });
       });

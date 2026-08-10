@@ -155,6 +155,21 @@
     b.addEventListener('click', function(e){ e.preventDefault(); if(armed){ lastWord=armed.text; popAnchor=armed.range; lookup(armed.text); armed=null; } else { popAnchor=null; renderSearchBox(); } });
     if (before) tb.insertBefore(b, before); else tb.appendChild(b);
   }
+  // Toolbar çapası olmayan sayfalarda (ödev havuzu vb.) kalıcı floating "Sözlük" butonu
+  function injectFloatingBtn(){
+    if (document.getElementById('gs-fab')) return;
+    var b = document.createElement('button'); b.id='gs-fab'; b.type='button';
+    b.title='Sözlük: kelimeye çift tıkla, seç ya da buraya basıp yaz';
+    b.setAttribute('aria-label','Sözlük');
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Sözlük</span>';
+    b.style.cssText='position:fixed;right:16px;bottom:84px;z-index:9997;display:inline-flex;align-items:center;gap:7px;background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:100px;padding:11px 16px;font:700 14px Inter,system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:pointer;';
+    var svg=b.querySelector('svg'); if(svg){ svg.style.width='18px'; svg.style.height='18px'; svg.style.flex='0 0 auto'; }
+    var armed=null;
+    b.addEventListener('mousedown', function(){ armed = selWord(); });
+    b.addEventListener('touchstart', function(){ armed = selWord(); }, { passive:true });
+    b.addEventListener('click', function(e){ e.preventDefault(); var w = armed || selWord(); armed=null; if (w){ lastWord=w.text; popAnchor=w.range; lookup(w.text); } else { popAnchor=null; renderSearchBox(); } });
+    document.body.appendChild(b);
+  }
   function renderMsgAt(html){ ensureEls(); pop.classList.add('show'); renderMsg(html); }
 
   // SAT'taki gibi: elle kelime yazıp arama kutusu
@@ -270,6 +285,8 @@
     injectToolbarBtn();
     // Toolbar sonradan render olabilir → kısa bir süre dene
     var tries=0; var iv=setInterval(function(){ injectToolbarBtn(); if(document.getElementById('gs-tool')||++tries>20) clearInterval(iv); }, 400);
+    // Toolbar çapası olmayan sayfalarda (ödev havuzu vb.) kalıcı floating buton göster
+    if (!document.querySelector('.hl-group, .font-zoom-btn')) injectFloatingBtn();
   }
   if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
 })();

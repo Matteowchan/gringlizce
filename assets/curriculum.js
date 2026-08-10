@@ -358,6 +358,7 @@ var EXAMS=[
       { label: "Extended Essay", href: "blog-extended-essay" },
       { label: "CAS", href: "blog-cas" }
     ] },
+    { label: "Premium", href: "premium" },
     { label: "Destek Ol", href: "destek", cta: true }
   ];
 })();

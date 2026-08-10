@@ -32,7 +32,9 @@
     + '.gsch-imp .imp-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;}'
     + '.gsch-imp .imp-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#2a2a2a;background:#faf7f0;border:1px solid #ece4d4;border-radius:8px;padding:7px 9px;}'
     + '.gsch-imp .imp-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-    + '.gsch-imp .imp-item .rm{background:none;border:none;color:#b3402f;cursor:pointer;font-size:12px;font-weight:700;}'
+    + '.gsch-imp .imp-item .rm{background:none;border:none;color:#b3402f;cursor:pointer;font-size:12px;font-weight:700;}
+.imp-sws{margin:2px 0 10px 2px;}
+.imp-sws .gsch-sw{width:20px;height:20px;}'
     + ':root[data-theme="dark"] .gsch-ext-tag{color:#b5ac98;background:#2a2419;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-imp{border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-imp h5{color:#f0e9db;}'
@@ -247,7 +249,7 @@
     }
 
     function canManage(row){ if(row._ext) return false; return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
-    function rowColor(row){ if(row._ext) return '#8a8172'; if(row.classes && row.classes.color) return row.classes.color; if(row.class_id) return autoColor(row.class_id); return '#2C5856'; }
+    function rowColor(row){ if(row._ext) return row._extColor || '#8a8172'; if(row.classes && row.classes.color) return row.classes.color; if(row.class_id) return autoColor(row.class_id); return '#2C5856'; }
 
     var _extTried=false;
     async function maybeSyncExternal(){
@@ -344,8 +346,10 @@
             var items=(r.data&&r.data.items)||[];
             try{ localStorage.setItem('gsch-ext-on-'+opts.userId, items.length?'1':'0'); }catch(_e){}
             if(!items.length){ impList.innerHTML=''; return; }
-            impList.innerHTML=items.map(function(it){ var st=it.last_synced_at?'Senkron ✓':'Bekliyor'; return '<div class="imp-item"><span class="nm" title="'+esc(it.url)+(it.last_error?(' — '+esc(it.last_error)):'')+'">'+esc(it.label||it.url)+' · <span style="color:'+(it.last_error?'#b3402f':'#8a8172')+'">'+(it.last_error?'Hata':st)+'</span></span><button type="button" class="rm" data-id="'+esc(it.id)+'">Kaldır</button></div>'; }).join('');
+            var cmap={}; try{ var cr=await sb.from('external_calendars').select('id,color'); (cr.data||[]).forEach(function(c){ cmap[c.id]=c.color; }); }catch(_e){}
+            impList.innerHTML=items.map(function(it){ var st=it.last_synced_at?'Senkron ✓':'Bekliyor'; var cur=cmap[it.id]||'#8a8172'; var sws=PALETTE.map(function(hx){ return '<button type="button" class="gsch-sw'+(hx.toLowerCase()===String(cur).toLowerCase()?' on':'')+'" data-cid="'+esc(it.id)+'" data-hx="'+hx+'" style="background:'+hx+'" aria-label="'+hx+'"></button>'; }).join(''); return '<div class="imp-item"><span class="nm" title="'+esc(it.url)+(it.last_error?(' — '+esc(it.last_error)):'')+'">'+esc(it.label||it.url)+' · <span style="color:'+(it.last_error?'#b3402f':'#8a8172')+'">'+(it.last_error?'Hata':st)+'</span></span><button type="button" class="rm" data-id="'+esc(it.id)+'">Kaldır</button></div><div class="gsch-sws imp-sws" data-for="'+esc(it.id)+'">'+sws+'</div>'; }).join('');
             impList.querySelectorAll('.rm').forEach(function(b){ b.addEventListener('click',async function(){ b.disabled=true; try{ await sb.functions.invoke('ext-calendar',{body:{action:'remove',id:b.getAttribute('data-id')}}); }catch(_e){} refreshImp(); load(); }); });
+            impList.querySelectorAll('.imp-sws .gsch-sw').forEach(function(sw){ sw.addEventListener('click', async function(){ var cid=sw.getAttribute('data-cid'), hx=sw.getAttribute('data-hx'); var grp=sw.parentNode; grp.querySelectorAll('.gsch-sw').forEach(function(x){ x.classList.remove('on'); }); sw.classList.add('on'); try{ var ur=await sb.from('external_calendars').update({color:hx}).eq('id',cid); if(ur.error) throw ur.error; load(); }catch(e){ alert('Renk kaydedilemedi: '+(e.message||'hata')); } }); });
           }catch(e){ impList.innerHTML='<div style="font-size:12px;color:#b3402f">Liste alınamadı.</div>'; }
         }
         ov.querySelector('.imp-add').addEventListener('click', async function(){
@@ -445,8 +449,9 @@
         state.rows=(r.data||[]).map(function(x){ x._d=new Date(x.starts_at); return x; });
         if(opts.userId){
           try{
-            var ex=await sb.from('external_events').select('id,title,starts_at,ends_at,all_day,location').eq('user_id',opts.userId).gte('starts_at',floor).order('starts_at',{ascending:true});
-            (ex.data||[]).forEach(function(e){ var d=new Date(e.starts_at); var dur=e.ends_at?Math.max(15,Math.round((new Date(e.ends_at).getTime()-d.getTime())/60000)):60; state.rows.push({ id:'ext-'+e.id, title:e.title, starts_at:e.starts_at, duration_min:dur, note:e.location||null, all_day:e.all_day, _d:d, _ext:true }); });
+            var _ecm={}; try{ var _ec=await sb.from('external_calendars').select('id,color').eq('user_id',opts.userId); (_ec.data||[]).forEach(function(c){ if(c.color) _ecm[c.id]=c.color; }); }catch(_e){}
+            var ex=await sb.from('external_events').select('id,calendar_id,title,starts_at,ends_at,all_day,location').eq('user_id',opts.userId).gte('starts_at',floor).order('starts_at',{ascending:true});
+            (ex.data||[]).forEach(function(e){ var d=new Date(e.starts_at); var dur=e.ends_at?Math.max(15,Math.round((new Date(e.ends_at).getTime()-d.getTime())/60000)):60; state.rows.push({ id:'ext-'+e.id, title:e.title, starts_at:e.starts_at, duration_min:dur, note:e.location||null, all_day:e.all_day, _d:d, _ext:true, _extColor:_ecm[e.calendar_id]||null }); });
             state.rows.sort(function(a,b){ return a._d.getTime()-b._d.getTime(); });
           }catch(_e){}
         }

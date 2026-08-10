@@ -651,7 +651,7 @@ function onData(payload,p){
   else if(msg.t==='promote'){ if(fromHost&&msg.target){ promotedHosts.add(msg.target); if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity) becomeHost(); refreshPeople(); } }
   else if(msg.t==='wb'){ WB.applyRemote(msg); }
   else if(msg.t==='anno'){ ANNO.applyRemote(msg); }
-  else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin) pushTranscript(cwho,msg.text||''); if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
+  else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
 function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked}); }
 function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
@@ -1399,6 +1399,21 @@ function endLessonPackage(){
    final metni veri kanalından yayınlar; herkes altyazı barında görür.
    Öğretmen tüm konuşmacıların transcript'ini biriktirir → ders sonu paketinde indirir. */
 var GRECOG=null, _capTimer=null;
+/* Eko-dedup: uzaktan gelen son altyazıları tut; yerel mikrofon karşı tarafı duyup
+   transkript ederse (eko) bunu yayma. */
+var _remoteCaps=[];
+function _normCap(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+function _rememberRemoteCap(t){ t=_normCap(t); if(!t)return; _remoteCaps.push({t:Date.now(),x:t}); if(_remoteCaps.length>12)_remoteCaps.shift(); }
+function _isEchoOfRemote(text){
+  var n=_normCap(text); if(!n)return false; var nw=n.split(' ').filter(Boolean); if(nw.length<2)return false;
+  var now=Date.now();
+  for(var i=_remoteCaps.length-1;i>=0;i--){ var rc=_remoteCaps[i]; if(now-rc.t>6000)break;
+    var rw=rc.x.split(' ').filter(Boolean); if(rw.length<2)continue;
+    var set={}; rw.forEach(function(w){set[w]=1;}); var common=0; nw.forEach(function(w){ if(set[w])common++; });
+    if(common/Math.min(nw.length,rw.length) >= 0.5) return true;
+  }
+  return false;
+}
 function captionsSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
 function ensureCaptionBar(){
   var el=document.getElementById('gmr-captions');
@@ -1421,8 +1436,13 @@ function startCaptions(){
   GRECOG=r; r.lang='en-US'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
   r.onresult=function(e){
     var interim='',fin='';
-    for(var i=e.resultIndex;i<e.results.length;i++){ var seg=e.results[i][0]?e.results[i][0].transcript:''; if(e.results[i].isFinal) fin+=seg; else interim+=seg; }
-    if(fin){ fin=fin.trim(); sendData({t:'caption',name:STATE.name,text:fin,fin:true}); showCaption(STATE.name+' (Sen)',fin,true); pushTranscript(STATE.name,fin); }
+    for(var i=e.resultIndex;i<e.results.length;i++){ var alt=e.results[i][0]; var seg=alt?alt.transcript:'';
+      if(e.results[i].isFinal){ var cf=(alt&&typeof alt.confidence==='number')?alt.confidence:1; if(cf>0 && cf<0.5) continue; /* düşük güven → çöp/eko olma ihtimali yüksek */ fin+=seg; }
+      else interim+=seg; }
+    if(fin){ fin=fin.trim();
+      if(fin.length<3) return;                    // tek kısa token → çöp (ör. "jio")
+      if(_isEchoOfRemote(fin)) return;            // karşı tarafın ekosu → yayma
+      sendData({t:'caption',name:STATE.name,text:fin,fin:true}); showCaption(STATE.name+' (Sen)',fin,true); pushTranscript(STATE.name,fin); }
     else if(interim){ interim=interim.trim(); sendData({t:'caption',name:STATE.name,text:interim,fin:false}); showCaption(STATE.name+' (Sen)',interim,false); }
   };
   r.onerror=function(ev){ if(ev&&(ev.error==='not-allowed'||ev.error==='service-not-allowed')){ toast('Altyazı için mikrofon izni gerekli.'); stopCaptions(); syncCaptionBtn(); } };

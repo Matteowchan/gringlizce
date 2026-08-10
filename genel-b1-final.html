@@ -1067,10 +1067,18 @@ buildMcq('readMcq2',RM2,'r',true);
     var shell=document.querySelector('.ge-shell');
     if(shell&&shell.parentNode){shell.parentNode.insertBefore(bn,shell);} else {document.body.insertBefore(bn,document.body.firstChild);}
   }
+  function loadReviewWriting(){
+    if(!window.GRI_SB)return;
+    window.GRI_SB.rpc('assignment_student_writing',{p_assignment_id:aid,p_student_id:sid}).then(function(r){
+      if(!r||r.error||!r.data)return;
+      var wr=r.data.writing||[]; if(!wr.length)return;
+      wr.forEach(function(w){try{if(typeof renderSubmission==='function')renderSubmission(w.task_type,{content:w.content,teacher_feedback:w.teacher_feedback,teacher_grade:w.teacher_grade});}catch(e){}});
+    },function(){});
+  }
   function go(n){ n=n||0;
     if(!window.GRI_SB){ if(n>80)return; return setTimeout(function(){go(n+1);},150); }
     window.GRI_SB.rpc('assignment_student_detail',{p_assignment_id:aid,p_student_id:sid}).then(function(r){
-      if(r&&!r.error&&r.data){ paint((r.data.items)||[]); }
+      if(r&&!r.error&&r.data){ paint((r.data.items)||[]); loadReviewWriting(); }
       else { alert('Öğrenci cevapları yüklenemedi'+(r&&r.error?': '+r.error.message:'.')); }
     },function(e){ alert('Öğrenci cevapları yüklenemedi.'); });
   }

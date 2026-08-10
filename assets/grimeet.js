@@ -1000,7 +1000,8 @@ function loadMaterial(m,remote){
       if(_isApp){
         if(fr) fr.addEventListener('load',function(){ if(stale())return; done=true; clearTimeout(STATE._matLoadTmr); clearOv(); });
         STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },10000);
-        try{ fr.src=new URL(m.value,'https://gringlizce.com/').href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
+        // present=1: öğrenci atanmamış olsa bile sunum modunda salt-okunur görebilsin (odev.html iframe+present kontrolü yapar)
+        try{ var _pu=new URL(m.value,'https://gringlizce.com/'); _pu.searchParams.set('present','1'); fr.src=_pu.href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
       } else {
         // Statik içerik sayfası: proxy ile çek, srcdoc'a bas (öğrencinin erişimi olmasa da içerik görünür).
         if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });

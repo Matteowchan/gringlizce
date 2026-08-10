@@ -331,6 +331,7 @@ function qparam(name){
   return m?decodeURIComponent(m[1].replace(/\+/g,' ')):null;
 }
 var AID=qparam('id');
+var PRESENT=(qparam('present')==='1')&&(window.top!==window.self); /* Gri Meet sunum modu: iframe içinde + present=1 → atama kapısı atlanır, salt görüntüleme */
 var STATE_KEY='ga_'+AID+'_state';
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -408,7 +409,7 @@ function ready(){
     return;
   }
   IN_CLASS=!!(CLS&&CLS.in_class);
-  if(IN_CLASS){
+  if(IN_CLASS && !PRESENT){
     var assigned=false;
     var list=(CLS.assignments||[]);
     for(var i=0;i<list.length;i++){
@@ -469,7 +470,7 @@ function buildPage(){
   if(SKILL==='listening'&&(content.audio||content.video))SECS.push({id:'media',label:'Dinleme'});
   else if(SKILL==='reading'&&content.passage)SECS.push({id:'media',label:'Metin'});
   SECS.push({id:'tasks',label:'Görevler'});
-  if(!SUBMITTED)SECS.push({id:'submit',label:'Gönder'});
+  if(!SUBMITTED && !PRESENT)SECS.push({id:'submit',label:'Gönder'});
 
   var host=document.getElementById('odSecs');
   var html='';
@@ -514,6 +515,8 @@ function buildPage(){
     html+='</section>';
   }
   host.innerHTML=html;
+
+  if(PRESENT){ var _pb=document.createElement('div'); _pb.className='ge-card'; _pb.style.cssText='border-left:4px solid var(--teal,#2C5856)'; _pb.innerHTML='<b>Sunum modu</b> — öğretmenin ders sırasında paylaştığı içerik (salt görüntüleme).'; host.insertBefore(_pb, host.firstChild); }
 
   /* rail section links */
   var rail=document.getElementById('railDays');

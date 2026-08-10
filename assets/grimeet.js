@@ -992,11 +992,21 @@ function loadMaterial(m,remote){
       var stale=function(){ return reqId!==STATE._matReqId; };
       var clearOv=function(){ if(stale())return; var ld=document.getElementById('mat-loading'); if(ld)ld.remove(); };
       var failOv=function(){ if(stale())return; var ld=document.getElementById('mat-loading'); if(!ld)return; ld.style.pointerEvents='auto'; ld.innerHTML='Sayfa yüklenemedi. <button type="button" id="mat-reload" style="margin-left:8px;padding:6px 12px;border:1px solid var(--gm-line);border-radius:8px;background:var(--gm-surface);color:var(--gm-ink);cursor:pointer">Tekrar dene</button>'; var rb=document.getElementById('mat-reload'); if(rb)rb.addEventListener('click',function(){ loadMaterial(m,true); }); };
-      // iframe srcdoc render olunca örtüyü mutlaka kaldır (yeni nav gelirse reqId guard iptal eder)
-      if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });
-      // 8sn güvenlik ağı: fetch takılırsa "tekrar dene"
-      STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },8000);
-      fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); }).then(function(h){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); var f=document.getElementById('mat-uni-if'); if(f){ try{ f.srcdoc=h; }catch(e){} applyZoom(); } clearOv(); }).catch(function(){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); failOv(); });
+      // Uygulama/parametreli sayfalar (odev, sinif, panelim, ?id= / #hash vb.): srcdoc render'ı
+      // window.location'ı about:srcdoc yapar → sayfa ?id/?class parametrelerini ve gringlizce.com
+      // oturumunu okuyamaz ("Ödev/Sınıf bulunamadı"). Bunları gerçek same-origin iframe.src ile yükle:
+      // öğrencinin kendi oturumu + URL parametreleri korunur (host tarafıyla aynı yol).
+      var _isApp = /[?#]/.test(m.value) || /(^|\/)(odev|sinifim|ogretmen-sinif|panelim)\.html/i.test(m.value);
+      if(_isApp){
+        if(fr) fr.addEventListener('load',function(){ if(stale())return; done=true; clearTimeout(STATE._matLoadTmr); clearOv(); });
+        STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },10000);
+        try{ fr.src=new URL(m.value,'https://gringlizce.com/').href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
+      } else {
+        // Statik içerik sayfası: proxy ile çek, srcdoc'a bas (öğrencinin erişimi olmasa da içerik görünür).
+        if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });
+        STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },8000);
+        fetch(materialProxy(m.value),{headers:{apikey:SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); }).then(function(h){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); var f=document.getElementById('mat-uni-if'); if(f){ try{ f.srcdoc=h; }catch(e){} applyZoom(); } clearOv(); }).catch(function(){ if(stale()){ return; } done=true; clearTimeout(STATE._matLoadTmr); failOv(); });
+      }
     } else {
       // HOST tarafı: ağır tam-site sayfası yüklenirken öğretmen kilitlenmesin — örtü + 10sn timeout + "Tekrar dene" + reqId iptali.
       var hReqId=(STATE._matReqId=(STATE._matReqId||0)+1), hDone=false;

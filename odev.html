@@ -117,7 +117,12 @@
   .ge-qstem{font-size:1.05rem;margin:0 0 .7rem;line-height:1.6}
   .ge-qstem .qn{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--teal-soft);color:#2E6E6A;font-family:var(--font-ui);font-size:.75rem;font-weight:700;margin-right:.5rem;vertical-align:middle}
   :root[data-theme="dark"] .ge-qstem .qn{color:var(--teal)}
+  .ge-qimg{margin:0 0 .8rem}
+  .ge-qimg img{max-width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
   .ge-opts{display:flex;gap:.5rem;flex-wrap:wrap}
+  .ge-opts-abc .ge-opt{min-width:3.2rem;text-align:center;font-weight:700}
+  .ge-lpart{border-left:4px solid var(--teal,#2C5856)}
+  .ge-lpart .ge-audio{margin-top:.6rem}
   .ge-opt{font-family:var(--font-ui);font-size:.88rem;font-weight:500;padding:.5rem 1.1rem;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;transition:border-color .12s,background .12s}
   .ge-opt:hover{border-color:#2E6E6A}
   .ge-opt.correct{border-color:#2E6E6A;background:var(--teal-soft);color:#2E6E6A;font-weight:700}
@@ -471,7 +476,7 @@ function buildPage(){
     var sec=SECS[i],n=i+1;
     html+='<section class="ge-section" id="ge-sec-'+n+'">';
     html+='<div class="ge-sec-head">';
-    html+='<div class="ge-eyebrow">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+(SKILL_TR[SKILL]?' · '+SKILL_TR[SKILL]:'')+'</div>';
+    html+='<div class="ge-eyebrow">'+esc(ASG.level)+(content.pet?' · PET Preliminary':' · Ünite '+esc(ASG.unit))+(SKILL_TR[SKILL]?' · '+SKILL_TR[SKILL]:'')+'</div>';
     html+='<h1>'+esc(sec.label)+'</h1>';
     html+='</div>';
 
@@ -547,9 +552,16 @@ function renderTasks(tasks){
   var qn=0;
   for(var t=0;t<tasks.length;t++){
     var task=tasks[t],key=taskKey(t);
-    if(task.type==='mcq'){
+    if(task.type==='audio'){
+      html+='<div class="ge-card ge-lpart"><h2>'+esc(task.title||'Bölüm')+'</h2>';
+      if(task.instr)html+='<p class="ge-inst">'+esc(task.instr)+'</p>';
+      if(task.audio)html+='<audio class="ge-audio" controls preload="none" src="'+esc(task.audio)+'"></audio>';
+      html+='</div>';
+    }else if(task.type==='mcq'){
       qn++;
-      html+='<div class="ge-q" id="q-'+key+'" data-key="'+key+'"><div class="ge-qstem"><span class="qn">'+qn+'</span>'+esc(task.q)+'</div><div class="ge-opts">';
+      html+='<div class="ge-q" id="q-'+key+'" data-key="'+key+'"><div class="ge-qstem"><span class="qn">'+qn+'</span>'+esc(task.q)+'</div>';
+      if(task.img)html+='<div class="ge-qimg"><img src="'+esc(task.img)+'" alt="Soru '+qn+'" loading="lazy"></div>';
+      html+='<div class="ge-opts'+(task.img?' ge-opts-abc':'')+'">';
       for(var o=0;o<(task.o||[]).length;o++){
         html+='<button type="button" class="ge-opt" data-key="'+key+'" data-i="'+o+'">'+esc(task.o[o])+'</button>';
       }
@@ -787,6 +799,7 @@ function restoreState(){
 /* ---------- completion ---------- */
 function taskDone(ti){
   var task=TASKS[ti];
+  if(task&&task.type==='audio')return true;
   var a=ST.a[taskKey(ti)];
   if(!a)return false;
   if(task.type==='mcq')return true;

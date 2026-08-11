@@ -466,6 +466,8 @@ function updateFeatured(){
 }
 function togglePin(id){ if(!id)return; STATE.pinned=(STATE.pinned===id?null:id); if(STATE.pinned&&STATE.layout!=='speaker'){ setLayout('speaker'); } else updateFeatured(); toast(STATE.pinned?'Katılımcı sabitlendi':'Sabitleme kaldırıldı'); }
 function toggleFullscreen(){ try{ if(!document.fullscreenElement){ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el); $('#gmr-fs').classList.add('on'); } else { (document.exitFullscreen||document.webkitExitFullscreen).call(document); $('#gmr-fs').classList.remove('on'); } }catch(e){} }
+/* Resizable galeri: kamera tile min-genişligini ayarla (herkesin kamerasi grid'de) */
+function setTileSize(px,save){ px=Math.max(160,Math.min(520,px|0)); document.documentElement.style.setProperty('--tile-min',px+'px'); var app=$('#gm-app'); if(app)app.setAttribute('data-tilemanual','1'); var r=$('#gmr-tile-range'); if(r&&(+r.value)!==px)r.value=px; if(save!==false){ try{ localStorage.setItem('gm-tilemin',px); }catch(e){} } }
 
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
@@ -494,6 +496,7 @@ function bindControls(){
   $$('.gmr-modal').forEach(function(m){ if(m.id==='quiz-modal')return; m.addEventListener('click',function(e){ if(e.target===m)m.classList.add('hidden'); }); });
   $('#dock-close').addEventListener('click',function(){ $('#gmr-dock').classList.add('hidden'); $('#ctrl-people').classList.remove('active'); $('#ctrl-chat').classList.remove('active'); var ct=$('#ctrl-tools'); if(ct)ct.classList.remove('active'); });
   $('#gmr-layout').addEventListener('click',function(){ setLayout(STATE.layout==='gallery'?'speaker':'gallery'); });
+  (function(){ var r=$('#gmr-tile-range'); if(r)r.addEventListener('input',function(){ setTileSize(+this.value); }); var d=$('#gmr-tile-down'); if(d)d.addEventListener('click',function(){ var c=(+($('#gmr-tile-range')||{}).value)||230; setTileSize(c-40); }); var u=$('#gmr-tile-up'); if(u)u.addEventListener('click',function(){ var c=(+($('#gmr-tile-range')||{}).value)||230; setTileSize(c+40); }); })();
   $('#gmr-fs').addEventListener('click',toggleFullscreen);
   $('#gmr-videos').addEventListener('dblclick',function(e){ var t=e.target.closest('.vtile'); if(t) togglePin(t.dataset.id); });
   document.addEventListener('fullscreenchange',function(){ var b=$('#gmr-fs'); if(b)b.classList.toggle('on',!!document.fullscreenElement); });
@@ -1479,6 +1482,7 @@ function boot(){
   try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
   try{ var _r=localStorage.getItem('gm-res'); if(_r&&RES_MAP[_r]) STATE.camRes=_r; }catch(e){}
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
+  try{ var _tm=parseInt(localStorage.getItem('gm-tilemin'),10); if(_tm>=160&&_tm<=520){ setTileSize(_tm,false); } }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();

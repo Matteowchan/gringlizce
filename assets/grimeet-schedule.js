@@ -74,7 +74,7 @@
     + '.gsch-cal-h button:hover{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856);}'
     + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}'
     + '.gsch-grid .wd{text-align:center;font-size:10.5px;color:#a89a78;padding:2px 0 6px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}'
-    + '.gsch-cell{min-height:66px;border:1px solid #efe7d6;border-radius:10px;padding:5px;font-size:12px;position:relative;cursor:default;background:#fdfbf7;overflow:hidden;transition:border-color .12s,background .12s,box-shadow .12s;}'
+    + '.gsch-cell{min-height:90px;border:1px solid #efe7d6;border-radius:10px;padding:6px;font-size:12px;position:relative;cursor:default;background:#fdfbf7;overflow:hidden;transition:border-color .12s,background .12s,box-shadow .12s;}'
     + '.gsch-cell.out{opacity:.3;background:transparent;border-color:transparent;}'
     + '.gsch-cell.has{cursor:pointer;background:#fff;border-color:#cbe0dc;}'
     + '.gsch-cell.has:hover{border-color:#2C5856;box-shadow:0 3px 10px rgba(44,88,86,.12);}'
@@ -82,8 +82,8 @@
     + '.gsch-cell.today .num{color:#B0791E;}'
     + '.gsch-cell.sel{background:#2C5856;border-color:#2C5856;color:#fff;}'
     + '.gsch-cell.sel .num{color:#fff;}'
-    + '.gsch-cell .num{font-weight:700;font-size:12.5px;color:#6a6250;}'
-    + '.gsch-cell .ev{display:block;font-size:9.5px;line-height:1.35;background:#e7f0ee;color:#2C5856;border-radius:5px;padding:2px 5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
+    + '.gsch-cell .num{font-weight:700;font-size:14px;color:#6a6250;}'
+    + '.gsch-cell .ev{display:block;font-size:11px;line-height:1.45;background:#e7f0ee;color:#2C5856;border-radius:5px;padding:3px 6px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
     + '.gsch-cell .ev b{font-weight:800;}'
     + '.gsch-cell .ev.ev-more{background:transparent;color:#8a8172;padding:0 5px;font-weight:700;}'
     + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
@@ -126,9 +126,9 @@
     + '@media(max-width:480px){'
     + '.gsch-cal{padding:8px;}'
     + '.gsch-grid{gap:2px;}'
-    + '.gsch-cell{min-height:50px;padding:2px 3px;font-size:11px;}'
-    + '.gsch-cell .num{font-size:11px;}'
-    + '.gsch-cell .ev{font-size:8px;padding:1px 3px;margin-top:2px;}'
+    + '.gsch-cell{min-height:64px;padding:3px 4px;font-size:11px;}'
+    + '.gsch-cell .num{font-size:12px;}'
+    + '.gsch-cell .ev{font-size:9.5px;padding:2px 4px;margin-top:3px;}'
     + '.gsch-date{min-width:44px;}'
     + '.gsch-date .d{font-size:19px;}'
     + '.gsch-item{gap:10px;padding:10px 11px;}'
@@ -530,8 +530,8 @@
       for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
       for(var dnum=1;dnum<=days;dnum++){
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
-        var evHTML=evs.slice(0,2).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
-        if(evs.length>2) evHTML+='<span class="ev ev-more">+'+(evs.length-2)+'</span>';
+        var evHTML=evs.slice(0,3).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        if(evs.length>3) evHTML+='<span class="ev ev-more">+'+(evs.length-3)+' ders</span>';
         cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
       }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><button class="cal-prev" aria-label="Önceki ay">‹</button><b>'+MONTHS_L[mo]+' '+y+'</b><button class="cal-next" aria-label="Sonraki ay">›</button></div>'

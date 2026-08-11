@@ -314,12 +314,8 @@ var EXAMS=[
         { label: "İngilizce", href: "udsp-ingilizce-ogren" },
         { label: "Almanca", href: "udsp-almanca-ogren" },
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
-      { label: "Üniversite Hazırlık Atlama", href: "universite-hazirlik-atlama", children: [
-        { label: "Deneme 1", href: "universite-hazirlik-atlama" },
-        { label: "Deneme 2", href: "universite-hazirlik-atlama-2" },
-        { label: "Deneme 3", href: "universite-hazirlik-atlama-3" },
-        { label: "Deneme 4", href: "universite-hazirlik-atlama-4" },
-        { label: "Deneme 5", href: "universite-hazirlik-atlama-5" } ] },
+      { label: "Üniversite Hazırlık Atlama", href: "universite-hazirlik-atlama-denemeler", children: [
+        { label: "Denemeler", href: "universite-hazirlik-atlama-denemeler" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
         { label: "SL", href: "ib-english-b-sl" },

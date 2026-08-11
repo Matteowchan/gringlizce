@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/grimeet-schedule.js?v=18" defer></script>
+  <script src="assets/grimeet-schedule.js?v=20" defer></script>
   <script src="assets/student-analysis.js?v=6" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
@@ -2114,6 +2114,10 @@
               <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1z"/><path d="M9 12l1.5 1.5L14 10"/></svg></span>
               <span><span class="t-type-name">Deneme</span><span class="t-type-hint">Tam / bölüm</span></span>
             </button>
+            <button type="button" class="t-type-btn" data-type="hazirlik">
+              <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></span>
+              <span><span class="t-type-name">Hazırlık Atlama</span><span class="t-type-hint">Otomatik takipli</span></span>
+            </button>
             <button type="button" class="t-type-btn" data-type="writing">
               <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
               <span><span class="t-type-name" lang="en">Writing</span><span class="t-type-hint">Prompt + rubric</span></span>
@@ -2272,6 +2276,21 @@
           <label for="ca-im-test">Deneme seç</label>
           <select id="ca-im-test"><option value="">— Yükleniyor… —</option></select>
           <p class="t-config-note" id="ca-im-note">Tam deneme: Listening + Reading + Writing tek denemede. Öğrenci panelinden başlatır; sonuç çalışma geçmişine işlenir.</p>
+        </div>
+
+        <!-- Üniversite Hazırlık Atlama config -->
+        <div class="t-config-block" data-config="hazirlik">
+          <div class="t-config-eyebrow">Hazırlık Atlama Sınavı</div>
+          <label for="haSelect">Sınav seç</label>
+          <select id="haSelect">
+            <option value="mini-40" data-url="seviye-tespit">Seviye Belirleme Testi (40+Essay)</option>
+            <option value="hazirlik-full-1" data-url="universite-hazirlik-atlama">Üniversite Hazırlık Atlama — Deneme 1</option>
+            <option value="hazirlik-full-2" data-url="universite-hazirlik-atlama-2">Üniversite Hazırlık Atlama — Deneme 2</option>
+            <option value="hazirlik-full-3" data-url="universite-hazirlik-atlama-3">Üniversite Hazırlık Atlama — Deneme 3</option>
+            <option value="hazirlik-full-4" data-url="universite-hazirlik-atlama-4">Üniversite Hazırlık Atlama — Deneme 4</option>
+            <option value="hazirlik-full-5" data-url="universite-hazirlik-atlama-5">Üniversite Hazırlık Atlama — Deneme 5</option>
+          </select>
+          <p class="t-config-note">Öğrenci sınavı panelinden açıp çözer. İlerleme <strong>otomatik</strong> takip edilir; seçilen sınavı (ödev tarihinden sonra) tamamlayınca ödev tamamlanmış sayılır.</p>
         </div>
 
         <!-- Site materyali config -->
@@ -3892,7 +3911,7 @@
         }
       });
 
-      var TYPE_LABELS = { questions: 'Soru Bankası', writing: '<span lang="en">Writing</span>', reading: '<span lang="en">Reading</span>', vocab: 'Kelime', ielts_mock: 'Deneme', material: 'Materyal', module: 'Modül', gepool: 'Genel İngilizce' };
+      var TYPE_LABELS = { questions: 'Soru Bankası', writing: '<span lang="en">Writing</span>', reading: '<span lang="en">Reading</span>', vocab: 'Kelime', ielts_mock: 'Deneme', hazirlik: 'Hazırlık Atlama', material: 'Materyal', module: 'Modül', gepool: 'Genel İngilizce' };
 
       var writingsLoaded_flag = false;
       async function loadWritings() {
@@ -4466,6 +4485,9 @@
             } else if (a.type === 'gepool' && a.config) {
               if (a.config.level) meta.push(a.config.level + (a.config.unit ? ' · Ünite ' + a.config.unit : ''));
               if (a.config.skill) meta.push(GE_SKILL_TR[a.config.skill] || a.config.skill);
+            } else if (a.type === 'hazirlik' && a.config) {
+              if (a.config.label) meta.push(a.config.label);
+              meta.push('Otomatik takip');
             }
 
             var descHtml = a.description
@@ -5808,6 +5830,14 @@
           config.section = _ieltsSection || 'full';
           var imOpt = imSel.selectedOptions && imSel.selectedOptions[0];
           config.test_name = imOpt ? (imOpt.getAttribute('data-name') || '') : '';
+        } else if (caCurrentType === 'hazirlik') {
+          var haSelect = document.getElementById('haSelect');
+          if (!haSelect || !haSelect.value) { caErr.textContent = 'Bir sınav seç.'; return; }
+          config.exam_set = haSelect.value;
+          var opt = haSelect.options[haSelect.selectedIndex];
+          config.url = opt.getAttribute('data-url');
+          config.label = opt.text;
+          if (!title) title = opt.text;
         } else if (caCurrentType === 'material') {
           var mPageSel = document.getElementById('ca-m-page');
           var mUrl = mPageSel ? mPageSel.value.trim() : '';

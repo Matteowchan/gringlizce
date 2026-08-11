@@ -34,7 +34,7 @@
   <script src="assets/theme.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth.js" defer></script>
-  <script src="assets/grimeet-schedule.js?v=18" defer></script>
+  <script src="assets/grimeet-schedule.js?v=20" defer></script>
   <script src="assets/site-config.js?v=5" defer></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2448,6 +2448,7 @@
     .my-assign-type.type-writing   { background: rgba(200,154,60,0.18); color: #8b6627; }
     .my-assign-type.type-reading   { background: rgba(120,80,40,0.15); color: #6b4422; }
     .my-assign-type.type-ielts_mock{ background: rgba(142,59,76,0.15); color: #8E3B4C; }
+    .my-assign-type.type-hazirlik  { background: rgba(44,88,86,0.16); color: #2C5856; }
     .my-assign-type.type-material  { background: rgba(44,88,86,0.14); color: #2C5856; }
     .my-assign-type.type-vocab     { background: rgba(200,154,60,0.16); color: #7d5f24; }
     .my-assign-type.type-module    { background: rgba(90,70,150,0.15); color: #5a4696; }
@@ -3081,6 +3082,7 @@
           reading:   'Reading',
           vocab:     'Kelime',
           ielts_mock: 'Deneme',
+          hazirlik:  'Hazırlık Atlama',
           material:  'Materyal',
           module:    'Modül',
           ge:        'Genel İngilizce'
@@ -3343,6 +3345,19 @@
                   actionsHtml = ''
                     + '<span class="my-assign-completed-pill">Tamamlandı</span>'
                     + '<button class="my-assign-btn outline" data-action="unmark" data-id="' + escMA(a.assignment_id) + '" type="button">Geri Al</button>';
+                }
+              } else if (a.type === 'hazirlik') {
+                if (cfg.label) meta.push(cfg.label);
+                var hzUrl = (cfg.url || '#') + '?assignment=' + encodeURIComponent(a.assignment_id) + '&class=' + encodeURIComponent(a.class_id || '');
+                bodyHtml = ''
+                  + '<div class="my-assign-progress">'
+                  + '<div class="my-assign-progress-bar"><div class="my-assign-progress-fill ' + (isCompleted ? 'completed' : '') + '" style="width:' + Math.min(pct, 100) + '%"></div></div>'
+                  + '<div class="my-assign-progress-text">' + (isCompleted ? 'Tamamlandı' : 'Henüz çözülmedi') + '</div>'
+                  + '</div>';
+                if (!isCompleted) {
+                  actionsHtml = '<a href="' + escMA(hzUrl) + '" target="_blank" rel="noopener" class="my-assign-btn">Sınavı Başlat →</a>';
+                } else {
+                  actionsHtml = '<span class="my-assign-completed-pill">Tamamlandı</span>';
                 }
               } else if (a.type === 'material') {
                 var matUrl = cfg.url || '#';

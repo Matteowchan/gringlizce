@@ -211,7 +211,7 @@ function wordCount(t){t=(t||'').trim();return t?t.split(/\s+/).filter(Boolean).l
   var gate=document.getElementById('auth-gate'), actions=document.getElementById('auth-actions');
   function showGate(){ gate.classList.remove('hidden'); var ret=encodeURIComponent('/universite-hazirlik-atlama-3.html'+location.search);
     actions.innerHTML='<a class="btn gold" href="giris?return='+ret+'">Giriş Yap</a> &nbsp; <a class="btn ghost" href="giris#signup">Ücretsiz Hesap Aç</a>'; }
-  var sb=null; try{ sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SBURL,SBKEY):null; }catch(e){}
+  var sb=null; try{ sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SBURL,SBKEY):null; }catch(e){} window.__SBC=sb;
   if(!sb){ showGate(); return; }
   sb.auth.getSession().then(function(r){ var sess=r&&r.data&&r.data.session;
     if(sess){ window.USER=sess.user; window.__SB_TOKEN=sess.access_token; intro.classList.remove('hidden'); } else showGate();
@@ -457,7 +457,7 @@ function finalize(essayScore, essayEval){
 function saveAttempt(essayScore, essayEval){
   try{
     if(!window.USER) return;
-    var sb=window.supabase&&window.supabase.createClient?window.supabase.createClient(SBURL,SBKEY,{global:{headers:{Authorization:'Bearer '+(window.__SB_TOKEN||SBKEY)}}}):null;
+    var sb=window.__SBC||(window.supabase&&window.supabase.createClient?window.supabase.createClient(SBURL,SBKEY,{global:{headers:{Authorization:'Bearer '+(window.__SB_TOKEN||SBKEY)}}}):null);
     if(!sb) return;
     var R=window.__RES; var meta=window.USER.user_metadata||{};
     var total=R.mcScore+(typeof essayScore==='number'?essayScore:0);
@@ -473,7 +473,7 @@ function saveAttempt(essayScore, essayEval){
       total_score:total, passed:(typeof essayScore==='number'?(total>=EXAM.pass):null),
       answers:STATE.answers, review:review, essay_prompt:(ess?('Konu '+ess.id+': '+ess.prompt):null),
       essay_text:STATE.writing||null, essay_eval:essayEval||null, section_breakdown:sb_break
-    }).then(function(){},function(){});
+    }).then(function(r){if(r&&r.error&&window.console)console.error('haz-save',r.error.message||r.error);},function(e){if(window.console)console.error('haz-save',e);});
   }catch(e){}
 }
 /* PDF */

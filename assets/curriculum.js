@@ -338,7 +338,10 @@ var EXAMS=[
       { label: "Alıştırmalar", href: "genel-odevler" },
       { label: "Oyunlar", href: "oyunlar" }
     ] },
-    { label: "Seviye Belirleme", href: "seviye-belirleme" },
+    { label: "Seviye Belirleme", href: "seviye-belirleme", children: [
+      { label: "Seviye Belirleme Sınavı", href: "seviye-belirleme" },
+      { label: "Seviye Tespit Denemesi", href: "seviye-tespit" }
+    ] },
     { label: "Araçlar", children: [
       { label: "AI Araçları", href: "ai-araclari" },
       { label: "Gri Meet", href: "grimeet" },

@@ -316,20 +316,12 @@ var EXAMS=[
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
       { label: "Üniversite Hazırlık Atlama", href: "universite-hazirlik-atlama-denemeler", children: [
         { label: "Denemeler", href: "universite-hazirlik-atlama-denemeler" } ] },
-      { label: "IB English B", href: "ib", children: [
-        { label: "HL", href: "ib-english-b-hl" },
-        { label: "SL", href: "ib-english-b-sl" },
-        { label: "Individual Oral (SL)", href: "ib-english-b-io" },
-        { label: "Individual Oral (HL)", href: "ib-english-b-io-hl" } ] },
-      { label: "Deutsch B", href: "deutsch-ogren", children: [
-        { label: "Textsorten (Öğren)", href: "deutsch-ogren" } ] },
-      { label: "TOK", href: "ib-tok", children: [
-        { label: "TOK Rehberi (Öğren)", href: "tok-ogren" } ] },
-      { label: "Extended Essay", href: "ib-extended-essay", children: [
-        { label: "EE Modülü (Süreç + Kriterler)", href: "ib-extended-essay" },
-        { label: "EE Blog Serisi", href: "blog-extended-essay" } ] },
-      { label: "CAS", href: "blog-cas", children: [
-        { label: "CAS Rehberi", href: "blog-cas" } ] }
+      { label: "IB Diploma Programme", href: "ib", children: [
+        { label: "IB English B", href: "ib" },
+        { label: "Deutsch B", href: "deutsch-ogren" },
+        { label: "Theory of Knowledge (TOK)", href: "ib-tok" },
+        { label: "Extended Essay", href: "ib-extended-essay" },
+        { label: "CAS", href: "blog-cas" } ] }
     ] },
     { label: "Genel İngilizce", href: "genel-ingilizce" },
     { label: "Çalışma Alanı", children: [

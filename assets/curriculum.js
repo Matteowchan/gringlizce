@@ -317,7 +317,8 @@ var EXAMS=[
       { label: "Üniversite Hazırlık Atlama", href: "universite-hazirlik-atlama", children: [
         { label: "Deneme 1", href: "universite-hazirlik-atlama" },
         { label: "Deneme 2", href: "universite-hazirlik-atlama-2" },
-        { label: "Deneme 3", href: "universite-hazirlik-atlama-3" } ] },
+        { label: "Deneme 3", href: "universite-hazirlik-atlama-3" },
+        { label: "Deneme 5", href: "universite-hazirlik-atlama-5" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
         { label: "SL", href: "ib-english-b-sl" },

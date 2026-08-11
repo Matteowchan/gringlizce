@@ -463,13 +463,15 @@ function saveAttempt(essayScore, essayEval){
     var total=R.mcScore+(typeof essayScore==='number'?essayScore:0);
     var sb_break={}; SEC_ORDER.forEach(function(s){sb_break[s]={c:R.bySection[s].c,t:R.bySection[s].t};});
     var ess=EXAM.essays.filter(function(e){return e.id===STATE.essayId;})[0];
+    function _stem(q){var d=document.createElement('div');d.innerHTML=q.question_text||'';var p=d.querySelector('.yds-passage');if(p&&p.parentNode)p.parentNode.removeChild(p);var s=(d.textContent||'').trim();return s.length>320?s.slice(0,320):s;}
+    var review=(EXAM.questions||[]).map(function(q){var ch=STATE.answers[q._gid]||null;var of=function(L){var a=(q.options||[]);for(var i=0;i<a.length;i++){if(a[i].letter===L)return a[i].text;}return '';};return {n:q._num,sec:q.section,q:_stem(q),ch:ch,co:of(ch),ca:q.correct_answer,cc:of(q.correct_answer),ok:(ch===q.correct_answer)};});
     sb.from('hazirlik_atlama_attempts').insert({
       user_id:window.USER.id, user_email:window.USER.email||null,
       user_name:(meta.full_name||meta.name||null), exam_set:EXAM.set,
       mc_correct:R.correct, mc_total:EXAM.mcTotal, mc_score:R.mcScore,
       essay_score:(typeof essayScore==='number'?essayScore:null),
       total_score:total, passed:(typeof essayScore==='number'?(total>=EXAM.pass):null),
-      answers:STATE.answers, essay_prompt:(ess?('Konu '+ess.id+': '+ess.prompt):null),
+      answers:STATE.answers, review:review, essay_prompt:(ess?('Konu '+ess.id+': '+ess.prompt):null),
       essay_text:STATE.writing||null, essay_eval:essayEval||null, section_breakdown:sb_break
     }).then(function(){},function(){});
   }catch(e){}

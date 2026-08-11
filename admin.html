@@ -3858,9 +3858,11 @@
           var hrows = (hr && hr.data) || [];
           if (hrows.length) {
             var SECN = { use_of_english:'Use of English', vocabulary:'Vocabulary', sentence_analysis:'Sentence Analysis', reading:'Reading' };
-            htHtml = '<div style="margin-top:0.9rem; padding-top:0.7rem; border-top:1px dashed var(--line);"><div style="font-weight:700; font-size:0.82rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem;">Seviye Belirleme Testi (40+1)</div>' +
+            htHtml = '<div style="margin-top:0.9rem; padding-top:0.7rem; border-top:1px dashed var(--line);"><div style="font-weight:700; font-size:0.82rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem;">Hazırlık Atlama / Seviye Belirleme sınavları</div>' +
               hrows.map(function (a) {
                 var total = (a.total_score != null) ? a.total_score : '—';
+                var esKey = String(a.exam_set || '');
+                var setLabel = esKey === 'mini-40' ? 'Seviye Belirleme Testi' : (esKey.indexOf('hazirlik-full-') === 0 ? ('Üniversite Hazırlık Atlama — Deneme ' + esKey.replace('hazirlik-full-', '')) : (esKey || 'Sınav'));
                 var passed = (a.passed === true) ? '<span style="color:var(--good,#4a8a52); font-weight:700;">Referans üstü</span>' : (a.passed === false ? '<span style="color:var(--bad,#b94a4a); font-weight:700;">Referans altı</span>' : '<span style="color:var(--text-muted);">essay bekliyor</span>');
                 var sb2 = a.section_breakdown || {};
                 var secRows = Object.keys(SECN).map(function (k) { var o = sb2[k] || {}; var c = (o.c != null ? o.c : '-'), t = (o.t != null ? o.t : '-'); var p = (o.t ? Math.round(100 * o.c / o.t) : 0); var col = p >= 75 ? 'var(--good,#4a8a52)' : p >= 50 ? 'var(--warn,#c08a2c)' : 'var(--bad,#b94a4a)'; return '<div style="display:flex; justify-content:space-between; font-size:0.82rem; padding:2px 0;"><span>' + SECN[k] + '</span><span style="color:' + col + '; font-weight:600;">' + c + '/' + t + ' · %' + p + '</span></div>'; }).join('');
@@ -3873,9 +3875,28 @@
                     (ev.strengths ? '<br><b>Güçlü:</b> ' + escHtmlAdmin(ev.strengths) : '') + (ev.improvements ? '<br><b>Geliştir:</b> ' + escHtmlAdmin(ev.improvements) : '') + (ev.comment ? '<br>' + escHtmlAdmin(ev.comment) : '') + '</div>';
                 } else if (a.essay_text) { evHtml = '<div style="margin-top:0.5rem; font-size:0.82rem; color:var(--text-muted);">Essay değerlendirmesi kaydedilmemiş.</div>'; }
                 var essayBlock = a.essay_text ? ('<div style="margin-top:0.5rem;"><b style="font-size:0.82rem;">Essay yazısı:</b><div style="white-space:pre-wrap; font-size:0.82rem; background:var(--bg-soft,#f5f0e3); border-radius:8px; padding:8px 11px; margin-top:3px; max-height:220px; overflow:auto;">' + escHtmlAdmin(a.essay_text) + '</div></div>') : '';
+                var rv = Array.isArray(a.review) ? a.review : [];
+                var revBlock = '';
+                if (rv.length) {
+                  var rvOk = rv.filter(function (x) { return x.ok === true; }).length;
+                  var revInner = '';
+                  Object.keys(SECN).forEach(function (sec) {
+                    var items = rv.filter(function (x) { return x.sec === sec; });
+                    if (!items.length) return;
+                    revInner += '<div style="font-size:0.77rem; font-weight:700; color:var(--text-muted); margin:7px 0 2px;">' + SECN[sec] + '</div>';
+                    revInner += items.map(function (x) {
+                      var ok = x.ok === true;
+                      var mark = ok ? '<span style="color:var(--good,#4a8a52); font-weight:700;">✓</span>' : '<span style="color:var(--bad,#b94a4a); font-weight:700;">✗</span>';
+                      var chosen = x.ch ? (escHtmlAdmin(x.ch) + ') ' + escHtmlAdmin(x.co || '')) : '<i>boş bırakıldı</i>';
+                      var corr = ok ? '' : (' <span style="color:var(--text-muted);">→ doğru: <b>' + escHtmlAdmin(x.ca || '') + ') ' + escHtmlAdmin(x.cc || '') + '</b></span>');
+                      return '<div style="font-size:0.8rem; padding:4px 0; border-bottom:1px solid var(--line);">' + mark + ' <b>' + escHtmlAdmin(String(x.n)) + '.</b> ' + escHtmlAdmin(x.q || '') + '<br><span style="margin-left:1.2rem; ' + (ok ? '' : 'color:var(--bad,#b94a4a);') + '">Öğrenci: ' + chosen + '</span>' + corr + '</div>';
+                    }).join('');
+                  });
+                  revBlock = '<details style="margin-top:0.55rem;"><summary style="cursor:pointer; font-size:0.82rem; font-weight:600;">Soru soru inceleme (' + rvOk + '/' + rv.length + ' doğru)</summary><div style="margin-top:4px;">' + revInner + '</div></details>';
+                }
                 return '<details style="border:1px solid var(--line); border-radius:10px; padding:0.4rem 0.7rem; margin-bottom:0.5rem;">' +
-                  '<summary style="cursor:pointer; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.86rem;"><b>' + escHtmlAdmin(String(total)) + '/100</b> ' + passed + '<span style="color:var(--text-muted);">MC ' + escHtmlAdmin(String(a.mc_correct != null ? a.mc_correct : '-')) + '/' + escHtmlAdmin(String(a.mc_total != null ? a.mc_total : '-')) + '</span><span style="color:var(--text-muted); margin-left:auto;">' + (a.created_at ? fmtDate(a.created_at) : '—') + '</span></summary>' +
-                  '<div style="margin-top:0.6rem;"><div style="font-weight:600; font-size:0.82rem; margin-bottom:3px;">Bölüm dağılımı</div>' + secRows + essayBlock + evHtml + '</div></details>';
+                  '<summary style="cursor:pointer; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.86rem;"><b>' + escHtmlAdmin(String(total)) + '/100</b> ' + passed + '<span style="color:var(--accent,#7a5c9e); font-weight:600;">' + escHtmlAdmin(setLabel) + '</span><span style="color:var(--text-muted);">MC ' + escHtmlAdmin(String(a.mc_correct != null ? a.mc_correct : '-')) + '/' + escHtmlAdmin(String(a.mc_total != null ? a.mc_total : '-')) + '</span><span style="color:var(--text-muted); margin-left:auto;">' + (a.created_at ? fmtDate(a.created_at) : '—') + '</span></summary>' +
+                  '<div style="margin-top:0.6rem;"><div style="font-weight:600; font-size:0.82rem; margin-bottom:3px;">Bölüm dağılımı</div>' + secRows + revBlock + essayBlock + evHtml + '</div></details>';
               }).join('') + '</div>';
           }
         } catch (he) { /* tablo yoksa sessiz gec */ }

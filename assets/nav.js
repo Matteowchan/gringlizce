@@ -41,7 +41,11 @@
     ".gri-dd-mega .gri-dd-menu a:hover{background:var(--gri-surface);color:var(--gri-accent)}",
     ".gri-dd-mega .gri-grp>.gh{display:block;padding:0 3px 7px;margin-bottom:6px;font-family:Inter,sans-serif;font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--gri-accent);white-space:normal;line-height:1.3;border-bottom:1px solid var(--gri-line-soft)}.gri-dd-mega .gri-sub a{padding-left:11px}",
     ".gri-dd-cols2 .gri-dd-menu{left:auto;right:0;grid-template-columns:repeat(2,minmax(134px,1fr));gap:0 4px;max-width:min(92vw,420px)}",
-    ".gri-dd.gri-dd-mega.open>.gri-dd-menu{display:block}",".gri-dd.gri-dd-cols2.open>.gri-dd-menu{display:grid}",
+    ".gri-dd-menu .gri-grp-flat{padding:6px;background:var(--gri-surface-2);border:1px solid var(--gri-line-soft);border-radius:12px}",
+    ".gri-dd:not(.gri-dd-mega) .gri-dd-menu a{display:block;padding:8px 11px;border-radius:8px;font-size:13px;color:var(--gri-ink-soft);transition:background .12s ease,color .12s ease}",
+    ".gri-dd:not(.gri-dd-mega) .gri-dd-menu a:hover{background:var(--gri-surface);color:var(--gri-accent)}",
+    ".gri-dd-cols2 .gri-grp-flat{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:2px 6px}",
+    ".gri-dd.gri-dd-mega.open>.gri-dd-menu{display:block}",".gri-dd.gri-dd-cols2.open>.gri-dd-menu{display:block}",
     ".gri-nav .right{margin-left:auto;display:flex;align-items:center;gap:9px}",
     ".gri-ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:12.5px}",
     ".gri-ico:hover{color:var(--gri-ink);border-color:var(--gri-ink-faint)}",
@@ -182,6 +186,7 @@
         }
         return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
+      if (!isMega) groups = '<div class="gri-grp gri-grp-flat">' + groups + "</div>";
       return '<div class="' + ddCls + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
     }).join("");
 

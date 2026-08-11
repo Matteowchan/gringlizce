@@ -17,6 +17,7 @@ var STATE={
   name:'', identity:'u'+Math.random().toString(36).slice(2,9),
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
+  _leaving:false, _reconnecting:false, _reconnectTries:0, _reconnectTimer:null,
   mirror:true, _bgApplied:false, bgFlip:false,
   bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, scrZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
@@ -44,7 +45,7 @@ function flipImageUrl(url){ return new Promise(function(res){ if(_flipCache[url]
 async function bgSrc(id){ var u=bgFile(id); if(STATE.bgFlip){ try{ u=await flipImageUrl(u); }catch(e){} } return u; }
 
 var ROOM_THEMES=[
-  {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#2E6E6A',d:'#1E4E4B',g:'#B78A2E'},
+  {t:'krem',n:'Krem',bg:'#F1EAD9',stage:'#E7DDC8',s1:'#FBF6EC',s2:'#F4EDDC',line:'#E3D8C3',ink:'#241E17',isoft:'#6E6353',ifaint:'#9A8E7B',a:'#3B7A75',d:'#2C5856',g:'#C79A3A'},
   {t:'erik',n:'Erik',bg:'#F1E7EC',stage:'#E7DAE0',s1:'#FAF3F6',s2:'#F3E7EC',line:'#E7D6DE',ink:'#2A1E24',isoft:'#6E5A63',ifaint:'#9A8A91',a:'#8A4A63',d:'#5C3042',g:'#B0764A'},
   {t:'orman',n:'Orman',bg:'#E8EEE5',stage:'#DAE3D6',s1:'#F2F6F0',s2:'#E6EDE4',line:'#D6E0D2',ink:'#1E2A20',isoft:'#586355',ifaint:'#889183',a:'#3E6B4A',d:'#20402B',g:'#8A7A2E'},
   {t:'kum',n:'Kum',bg:'#F3EAD6',stage:'#E7DBC0',s1:'#FAF3E4',s2:'#F3EAD4',line:'#E3D6BC',ink:'#2A2213',isoft:'#6E6048',ifaint:'#9A8E70',a:'#A9772E',d:'#6E4B18',g:'#8A6A1E'},
@@ -218,7 +219,7 @@ async function connectLiveKit(){
     room.on(LK.RoomEvent.TrackUnsubscribed,function(track,pub,p){ if(isScreen(pub)){ clearScreen(); if(STATE.mode==='screen') setMode('grid',{remote:true}); } else if(track.kind==='video'){ renderPlaceholder(p.identity); } });
     room.on(LK.RoomEvent.ActiveSpeakersChanged,onSpeakers);
     room.on(LK.RoomEvent.DataReceived,onData);
-    room.on(LK.RoomEvent.Disconnected,function(){ setStatus('err','Bağlantı koptu'); });
+    room.on(LK.RoomEvent.Disconnected,function(reason){ handleDisconnect(reason); });
     room.on(LK.RoomEvent.TrackMuted,function(pub,p){ if(pub.kind==='audio')updateMic(p.identity,false); refreshPeople(); });
     room.on(LK.RoomEvent.TrackUnmuted,function(pub,p){ if(pub.kind==='audio')updateMic(p.identity,true); refreshPeople(); });
     room.on(LK.RoomEvent.LocalTrackPublished,function(pub){ if(pub.source===LK.Track.Source.Camera){ STATE.camTrack=pub.videoTrack; attachSelf(); scheduleAutoBg(); } else if(pub.source===LK.Track.Source.ScreenShare){ attachScreen(pub.track,true); } });
@@ -226,12 +227,51 @@ async function connectLiveKit(){
     room.on(LK.RoomEvent.ConnectionQualityChanged,function(q,p){ var pid=(p===room.localParticipant)?'self':p.identity; var t=tileEl(pid); if(!t)return; var d=t.querySelector('.qdot'); if(d)d.className='qdot '+(q==='excellent'?'q-excellent':(q==='poor'||q==='lost')?'q-poor':'q-good'); });
 
     await room.connect(LIVEKIT_URL,token);
-    STATE.connected=true; setStatus('live','Canlı');
+    STATE.connected=true; STATE._reconnecting=false; STATE._reconnectTries=0; clearTimeout(STATE._reconnectTimer);
+    var _reconGate=document.getElementById('gmr-recon'); if(_reconGate)_reconGate.remove();
+    setStatus('live','Canlı');
     room.remoteParticipants.forEach(onParticipant);
     refreshPeople(); updateGridCount(); startHeartbeat();
     if(STATE.isHost){ STATE.admitted=true; await publishLocal(); }
+    else if(STATE.admitted){ hideWaiting(); $$('#gmr-videos audio').forEach(function(a){a.muted=false;}); await publishLocal(); setTimeout(function(){ sendData({t:'req-state'}); },600); }
     else { showWaiting(); setTimeout(function(){ sendData({t:'knock',name:STATE.name}); },400); STATE._admitTimer=setTimeout(admitSelf,20000); setTimeout(function(){ sendData({t:'req-state'}); },1200); }
-  }catch(e){ enterDemo('Bağlanılamadı'); }
+  }catch(e){ if(STATE._reconnecting){ scheduleReconnect(); } else { enterDemo('Bağlanılamadı'); } }
+}
+/* ---- Tam kopmada otomatik yeniden bağlanma ----
+   Not: LiveKit'in kendi Reconnecting/Reconnected (ICE) akışı ayrıdır; bu yalnızca TAM disconnect içindir.
+   Kasıtlı ayrılma (leaveRoom/hardLeave/kick/deny/room-closed) STATE._leaving ile ayrılır — o durumda rejoin edilmez. */
+var GM_MAX_RECON=4;
+function handleDisconnect(reason){
+  if(STATE._leaving) return; // kasıtlı çıkış
+  try{ if(LK&&LK.DisconnectReason&&reason===LK.DisconnectReason.CLIENT_INITIATED) return; }catch(e){}
+  if(STATE.demo) return;
+  STATE.connected=false;
+  scheduleReconnect();
+}
+function scheduleReconnect(){
+  if(STATE._leaving) return;
+  clearTimeout(STATE._reconnectTimer);
+  if(STATE._reconnectTries>=GM_MAX_RECON){ STATE._reconnecting=false; showReconnectFailed(); return; }
+  STATE._reconnectTries++;
+  setStatus('connecting','Yeniden bağlanılıyor…');
+  var delay=STATE._reconnectTries===1?2200:3500;
+  STATE._reconnectTimer=setTimeout(function(){
+    if(STATE._leaving) return;
+    STATE._reconnecting=true;
+    // Eski oda referansını temizle (dinleyiciler + bağlantı) — yeni bir Room ile taze bağlanılır.
+    try{ if(STATE.lkRoom){ if(STATE.lkRoom.removeAllListeners)STATE.lkRoom.removeAllListeners(); STATE.lkRoom.disconnect(true); } }catch(e){}
+    STATE.lkRoom=null; STATE._tokenPromise=null;
+    connectLiveKit();
+  }, delay);
+}
+function showReconnectFailed(){
+  setStatus('err','Bağlantı koptu');
+  var ex=document.getElementById('gmr-recon'); if(ex)ex.remove();
+  var b=document.createElement('div'); b.className='gmr-modal'; b.id='gmr-recon';
+  b.innerHTML='<div class="gmr-modal-card" style="max-width:380px;text-align:center"><h3 style="margin-bottom:10px">Bağlantı koptu</h3><p style="color:var(--gm-ink-soft);font-size:14px;line-height:1.5;margin-bottom:18px">Sunucuya yeniden bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.</p><button class="gmr-btn" id="recon-retry">Tekrar Dene</button><button class="gmr-btn" id="recon-exit" style="background:transparent;border:1px solid var(--gm-line);color:var(--gm-ink-soft);margin-top:8px">Çıkış</button></div>';
+  document.body.appendChild(b);
+  b.querySelector('#recon-retry').addEventListener('click',function(){ b.remove(); STATE._reconnectTries=0; scheduleReconnect(); });
+  b.querySelector('#recon-exit').addEventListener('click',function(){ STATE._leaving=true; hardLeave(); });
 }
 async function publishLocal(){ if(!STATE.lkRoom)return;
   try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
@@ -295,6 +335,8 @@ function bindWaiting(){
   var wc=$('#wait-cancel'); if(wc)wc.addEventListener('click',hardLeave);
 }
 function enterDemo(reason){
+  // Yeniden bağlanma denemesi sırasında demo moduna DÜŞME — yeniden dene / "Tekrar dene" göster.
+  if(STATE._reconnecting && !STATE._leaving){ scheduleReconnect(); return; }
   STATE.demo=true; setStatus('demo','Demo modu');
   try{ if(STATE.preTrack){ STATE.preTrack.detach(); STATE.preTrack.stop(); STATE.preTrack=null; } }catch(e){}
   sysChat('Demo modu: '+reason+'. Gerçek video/arka plan için canlı bağlantı gerekir; tahta, materyal ve araçlar çalışır.');
@@ -303,6 +345,7 @@ function enterDemo(reason){
 }
 function setStatus(cls,txt){ $('#gmr-status').className='gmr-status '+cls; $('#gmr-status-txt').textContent=txt; }
 function blockJoin(msg){
+  STATE._reconnecting=false; STATE._reconnectTries=0; clearTimeout(STATE._reconnectTimer);
   setStatus('err','Oda yok');
   var ex=document.getElementById('gmr-block'); if(ex)ex.remove();
   var b=document.createElement('div'); b.className='gmr-gate'; b.id='gmr-block';
@@ -570,7 +613,7 @@ function releaseAllMedia(){
   try{ if(gateStream){ gateStream.getTracks().forEach(function(t){try{t.stop();}catch(_){}}); gateStream=null; } }catch(e){}
   try{ if(STATE.localStream){ STATE.localStream.getTracks().forEach(function(t){try{t.stop();}catch(_){}}); STATE.localStream=null; } }catch(e){}
 }
-function hardLeave(){ try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} releaseAllMedia(); location.href='grimeet.html'; }
+function hardLeave(){ STATE._leaving=true; clearTimeout(STATE._reconnectTimer); try{if(STATE.lkRoom)STATE.lkRoom.disconnect();}catch(e){} releaseAllMedia(); location.href='grimeet.html'; }
 function setSelfHand(up){ var t=tileEl('self'); if(!t)return; var h=t.querySelector('.hand'); if(up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';t.appendChild(d);} else if(!up&&h)h.remove(); }
 
 function bindSplit(){
@@ -621,10 +664,10 @@ function onData(payload,p){
   else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); if(STATE.isHost)addPoint(id,from,1); } else handQueueRemove(id); } }
   else if(msg.t==='react'){ floatReact(msg.e); if(STATE.isHost&&id){ STATE._rp=STATE._rp||{}; var _now=Date.now(); if(!STATE._rp[id]||_now-STATE._rp[id]>10000){ STATE._rp[id]=_now; addPoint(id,from,1); } } }
   else if(msg.t==='lower-one'){ if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); sendData({t:'hand',up:false}); } }
-  else if(msg.t==='room-closed'){ if(!STATE.isHost&&fromHost){ toast('Öğretmen odayı kapattı.'); setTimeout(hardLeave,1500); } }
+  else if(msg.t==='room-closed'){ if(!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen odayı kapattı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='knock'){ if(STATE.isHost&&id){ if(STATE.waitingRoom) addPending(id,from); else sendData({t:'admit',target:id}); } }
   else if(msg.t==='admit'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity) admitSelf(); }
-  else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
+  else if(msg.t==='deny'){ if(!STATE.isHost&&fromHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE._leaving=true; toast('Öğretmen katılımını onaylamadı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='view'){ if(!STATE.isHost&&fromHost) setMode(msg.mode,{remote:true}); }
   else if(msg.t==='scr-zoom'){ if(!STATE.isHost&&fromHost){ STATE.scrZoom=Math.max(1,Math.min(3, (+msg.z)||1)); applyScreenZoom(); } }
   else if(msg.t==='spotlight'){ if(!STATE.isHost&&fromHost){ if(msg.target){ STATE.spotlight=msg.target; applySpotlightVideo(); setMode('spotlight',{remote:true}); var tt=tileEl(msg.target); $('#spot-label').textContent=(tt?tt.querySelector('.nm').textContent:'Odak'); } else { STATE.spotlight=null; setMode('grid',{remote:true}); } } }
@@ -638,7 +681,7 @@ function onData(payload,p){
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
-  else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
+  else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
   else if(msg.t==='chat-lock'){ if(!STATE.isHost&&fromHost){ STATE.chatLocked=msg.on; applyChatLock(); } }
   else if(msg.t==='quizset'){ if(!STATE.isHost&&fromHost) openQuizSet(msg.list,msg.dur); }
@@ -1380,7 +1423,7 @@ function bindCloseRoom(){ var b=$('#btn-close-room'); if(!b)return; b.addEventLi
   try{ endLessonPackage(); }catch(e){}
   try{ var h={'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session)h['Authorization']='Bearer '+s.data.session.access_token; }
     await fetch(SUPABASE_URL+'/functions/v1/grimeet-room-close',{method:'POST',headers:h,body:JSON.stringify({room:STATE.room})}); }catch(e){}
-  sendData({t:'room-closed'}); setTimeout(function(){ sendData({t:'room-closed'}); },500); toast('Oda kapatıldı. Katılımcılar çıkarılıyor…'); clearInterval(STATE._hb); setTimeout(hardLeave,2600);
+  STATE._leaving=true; sendData({t:'room-closed'}); setTimeout(function(){ sendData({t:'room-closed'}); },500); toast('Oda kapatıldı. Katılımcılar çıkarılıyor…'); clearInterval(STATE._hb); setTimeout(hardLeave,2600);
 }); }
 function startHeartbeat(){ if(!STATE.isHost)return; clearInterval(STATE._hb); STATE._hb=setInterval(async function(){ try{ var h={'Content-Type':'application/json'}; if(STATE.supabase){ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ h['Authorization']='Bearer '+s.data.session.access_token; h['apikey']=SUPABASE_ANON_KEY; } } fetch(TOKEN_ENDPOINT,{method:'POST',headers:h,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:true,heartbeat:true})}); }catch(e){} },5*60*1000); }
 

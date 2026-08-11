@@ -4,6 +4,13 @@
   --gm-line:#352f27; --gm-ink:#F1E9D9; --gm-ink-soft:#B7AB96; --gm-ink-faint:#8A7E6C;
   --gm-teal:#6FB6AF; --gm-teal-deep:#2E6E6A; --gm-gold:#D8B25A; --gm-bad:#d66; --gm-good:#7bc47f;
   --gm-shadow:0 8px 30px rgba(0,0,0,.45); --strip:236px; --tile-min:230px;
+  /* Türetilmiş, tema-duyarlı tonlar (açık/koyu temada tutarlı) */
+  --gm-tile-bg:#050505;
+  --gm-hover:color-mix(in srgb,var(--gm-surface-2) 80%,var(--gm-ink) 20%);
+  --gm-avatar-bg:radial-gradient(circle at 50% 38%,var(--gm-surface-2),var(--gm-stage));
+  --gm-speak-glow:color-mix(in srgb,var(--gm-teal) 42%,transparent);
+  --gm-gold-ring:color-mix(in srgb,var(--gm-gold) 70%,transparent);
+  --gm-gold-glow:color-mix(in srgb,var(--gm-gold) 26%,transparent);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
@@ -12,7 +19,7 @@ button{font-family:inherit;cursor:pointer;}
 .hidden{display:none!important;}
 h1,h2,h3{font-family:'Lora',serif;}
 ::-webkit-scrollbar{width:10px;height:10px;}
-::-webkit-scrollbar-thumb{background:#3a342b;border-radius:6px;}
+::-webkit-scrollbar-thumb{background:var(--gm-hover);border-radius:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 
 .gm-room{display:flex;flex-direction:column;height:100vh;height:100dvh;}
@@ -84,18 +91,20 @@ h1,h2,h3{font-family:'Lora',serif;}
 #gm-app[data-mode="spotlight"] .gmr-spotlight{display:flex;}
 
 /* Tiles */
-.vtile{position:relative;background:#050505;border-radius:16px;overflow:hidden;border:2.5px solid transparent;aspect-ratio:16/10;box-shadow:var(--gm-shadow);min-height:0;transition:border-color .15s;}
-.vtile.speaking{border-color:var(--gm-good,#7bc47f);animation:gm-speak 1.5s ease-out infinite;}
-@keyframes gm-speak{0%{box-shadow:0 0 0 2px var(--gm-good,#7bc47f),0 0 0 5px rgba(123,196,127,.45),var(--gm-shadow)}70%{box-shadow:0 0 0 2px var(--gm-good,#7bc47f),0 0 0 13px rgba(123,196,127,0),var(--gm-shadow)}100%{box-shadow:0 0 0 2px var(--gm-good,#7bc47f),0 0 0 13px rgba(123,196,127,0),var(--gm-shadow)}}
-@media(prefers-reduced-motion:reduce){.vtile.speaking{animation:none;box-shadow:0 0 0 3px var(--gm-good,#7bc47f),var(--gm-shadow);}}
+.vtile{position:relative;background:var(--gm-tile-bg);border-radius:18px;overflow:hidden;border:2.5px solid transparent;aspect-ratio:16/10;box-shadow:var(--gm-shadow);min-height:0;transition:border-color .18s ease,box-shadow .18s ease;}
+.vtile.speaking{border-color:var(--gm-teal);animation:gm-speak 1.8s ease-out infinite;}
+@keyframes gm-speak{0%{box-shadow:0 0 0 2px var(--gm-teal),0 0 0 5px var(--gm-speak-glow),var(--gm-shadow)}70%{box-shadow:0 0 0 2px var(--gm-teal),0 0 0 12px transparent,var(--gm-shadow)}100%{box-shadow:0 0 0 2px var(--gm-teal),0 0 0 12px transparent,var(--gm-shadow)}}
+@media(prefers-reduced-motion:reduce){.vtile.speaking{animation:none;box-shadow:0 0 0 3px var(--gm-teal),var(--gm-shadow);}}
 .vtile.host{border-color:var(--gm-gold);}
+/* Featured / sabitlenmiş konuşmacı — zarif altın vurgu */
+.vtile.featured,.vtile.pinned{box-shadow:0 0 0 1px var(--gm-gold-ring),0 0 22px var(--gm-gold-glow),var(--gm-shadow);}
 .vtile video{width:100%;height:100%;object-fit:cover;display:block;background:#000;}
 .vtile video.mirror{transform:scaleX(-1);}
 /* PiP'e giden video ana tab'da "Playing in picture-in-picture" yer-tutucusunu AYNALI gösteriyordu; PiP'teki elemanın transform'unu sıfırla (PiP penceresi içeriği etkilenmez). */
 video:picture-in-picture{transform:none!important;}
-.vtile .avatar{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 38%,#2a2620,#121010);}
+.vtile .avatar{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--gm-avatar-bg);}
 .vtile .avatar span{width:74px;height:74px;border-radius:50%;background:var(--gm-teal-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-family:'Lora',serif;}
-.vtile .name{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.58);backdrop-filter:blur(6px);color:#fff;font-size:12px;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:6px;max-width:88%;}
+.vtile .name{position:absolute;left:8px;bottom:8px;background:color-mix(in srgb,#000 60%,var(--gm-teal-deep));backdrop-filter:blur(6px);color:#fff;font-size:12px;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:6px;max-width:88%;}
 .vtile .name .mic-off{color:var(--gm-bad);}
 .vtile .badge{position:absolute;right:8px;top:8px;background:var(--gm-gold);color:#1b1b1b;font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:20px;text-transform:uppercase;}
 .vtile .hand{position:absolute;left:8px;top:8px;font-size:19px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));animation:handwave 1s ease-in-out infinite;}
@@ -107,9 +116,9 @@ video:picture-in-picture{transform:none!important;}
 .vtile .tilectrl button.danger:hover{background:var(--gm-bad);}
 .vtile .tilectrl svg{width:14px;height:14px;}
 .vtile .qdot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:transparent;box-shadow:0 0 0 2px rgba(0,0,0,.35);display:none;}
-.vtile .qdot.q-excellent{display:block;background:#7bc47f;}
-.vtile .qdot.q-good{display:block;background:#d8b25a;}
-.vtile .qdot.q-poor{display:block;background:#d66;}
+.vtile .qdot.q-excellent{display:block;background:var(--gm-good);}
+.vtile .qdot.q-good{display:block;background:var(--gm-gold);}
+.vtile .qdot.q-poor{display:block;background:var(--gm-bad);}
 .vtile.host .qdot{right:74px;}
 
 /* Screen + spotlight (big content) */
@@ -293,16 +302,18 @@ video:picture-in-picture{transform:none!important;}
 .points-list .pt-val{font-weight:800;color:var(--gm-teal);}
 
 /* Controls */
-.gmr-controls{flex:none;display:flex;align-items:center;justify-content:center;gap:20px;height:82px;background:var(--gm-surface);border-top:1px solid var(--gm-line);padding:0 16px;flex-wrap:wrap;}
-.gmr-ctrl-group{display:flex;gap:8px;}
-.gmr-ctrl{display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:none;color:var(--gm-ink-soft);width:64px;padding:6px 4px;border-radius:12px;position:relative;}
-.gmr-ctrl .ci{width:46px;height:46px;border-radius:14px;background:var(--gm-surface-2);display:flex;align-items:center;justify-content:center;transition:.15s;}
+.gmr-controls{flex:none;display:flex;align-items:center;justify-content:center;gap:22px;height:82px;background:var(--gm-surface);border-top:1px solid var(--gm-line);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:0 18px;flex-wrap:wrap;}
+.gmr-ctrl-group{display:flex;gap:6px;position:relative;}
+/* Gruplar arası ince ayraç */
+.gmr-ctrl-group + .gmr-ctrl-group::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:1px;height:34px;background:var(--gm-line);}
+.gmr-ctrl{display:flex;flex-direction:column;align-items:center;gap:5px;background:transparent;border:none;color:var(--gm-ink-soft);width:64px;padding:6px 4px;border-radius:12px;position:relative;}
+.gmr-ctrl .ci{width:46px;height:46px;border-radius:14px;background:var(--gm-surface-2);display:flex;align-items:center;justify-content:center;transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease;}
 .gmr-ctrl .ci svg{width:22px;height:22px;}
 .gmr-ctrl .cl{font-size:11px;font-weight:500;}
 .gmr-ctrl .badge-dot{position:absolute;top:2px;right:12px;min-width:16px;height:16px;border-radius:9px;background:var(--gm-bad);color:#fff;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 4px;}
 .gmr-ctrl .badge-dot.show{display:flex;}
-.gmr-ctrl:hover .ci{background:#3a342b;color:var(--gm-ink);}
-.gmr-ctrl.active .ci{background:var(--gm-teal-deep);color:#fff;}
+.gmr-ctrl:hover .ci{background:var(--gm-hover);color:var(--gm-ink);transform:translateY(-1px);}
+.gmr-ctrl.active .ci{background:var(--gm-teal-deep);color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--gm-teal-deep) 42%,transparent);}
 .gmr-ctrl[data-on="0"] .ci{background:#4a2020;color:var(--gm-bad);}
 .gmr-ctrl.leave .ci{background:var(--gm-bad);color:#fff;}
 .gmr-ctrl.leave:hover .ci{background:#c14545;}

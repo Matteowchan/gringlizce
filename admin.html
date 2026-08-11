@@ -3839,12 +3839,7 @@
         var r = await sb.from('placement_results').select('*').eq('user_id', userId).order('created_at', { ascending: false });
         if (r.error) { throw r.error; }
         var rows = r.data || [];
-        if (!rows.length) {
-          box.innerHTML = '<div style="color:var(--text-muted); font-style:italic;">Seviye tespiti yapılmamış.</div>';
-          if (msg) { msg.textContent = ''; }
-          return;
-        }
-        var html = rows.map(function (p, i) {
+        var html = !rows.length ? '' : rows.map(function (p, i) {
           var pct = (p.pct != null) ? p.pct : (p.total ? Math.round((Number(p.score) / Number(p.total)) * 100) : 0);
           var skor = (p.score != null && p.total != null) ? (escHtmlAdmin(String(p.score)) + '/' + escHtmlAdmin(String(p.total))) : '—';
           var latest = i === 0;
@@ -3856,7 +3851,35 @@
             (latest ? '<span style="flex:0 0 auto; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">en güncel</span>' : '') +
           '</div>';
         }).join('');
-        box.innerHTML = html;
+        // ---- Seviye Belirleme Testi (hazirlik_atlama_attempts) — tiklaninca tam rapor ----
+        var htHtml = '';
+        try {
+          var hr = await sb.from('hazirlik_atlama_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+          var hrows = (hr && hr.data) || [];
+          if (hrows.length) {
+            var SECN = { use_of_english:'Use of English', vocabulary:'Vocabulary', sentence_analysis:'Sentence Analysis', reading:'Reading' };
+            htHtml = '<div style="margin-top:0.9rem; padding-top:0.7rem; border-top:1px dashed var(--line);"><div style="font-weight:700; font-size:0.82rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem;">Seviye Belirleme Testi (40+1)</div>' +
+              hrows.map(function (a) {
+                var total = (a.total_score != null) ? a.total_score : '—';
+                var passed = (a.passed === true) ? '<span style="color:var(--good,#4a8a52); font-weight:700;">Referans üstü</span>' : (a.passed === false ? '<span style="color:var(--bad,#b94a4a); font-weight:700;">Referans altı</span>' : '<span style="color:var(--text-muted);">essay bekliyor</span>');
+                var sb2 = a.section_breakdown || {};
+                var secRows = Object.keys(SECN).map(function (k) { var o = sb2[k] || {}; var c = (o.c != null ? o.c : '-'), t = (o.t != null ? o.t : '-'); var p = (o.t ? Math.round(100 * o.c / o.t) : 0); var col = p >= 75 ? 'var(--good,#4a8a52)' : p >= 50 ? 'var(--warn,#c08a2c)' : 'var(--bad,#b94a4a)'; return '<div style="display:flex; justify-content:space-between; font-size:0.82rem; padding:2px 0;"><span>' + SECN[k] + '</span><span style="color:' + col + '; font-weight:600;">' + c + '/' + t + ' · %' + p + '</span></div>'; }).join('');
+                var ev = a.essay_eval || null;
+                var evHtml = '';
+                if (ev) {
+                  var sc = ev.scores || {};
+                  evHtml = '<div style="margin-top:0.5rem; font-size:0.83rem;"><b>Essay (Gri AI):</b> ' + escHtmlAdmin(String(a.essay_score != null ? a.essay_score : (ev.overall20 != null ? ev.overall20 : '—'))) + '/20' + (ev.cefr ? ' · ' + escHtmlAdmin(ev.cefr) : '') + '<br>' +
+                    '<span style="color:var(--text-muted);">Content ' + (sc.content != null ? sc.content : '-') + '/5 · Comm ' + (sc.communication != null ? sc.communication : '-') + '/5 · Org ' + (sc.organisation != null ? sc.organisation : '-') + '/5 · Lang ' + (sc.language != null ? sc.language : '-') + '/5</span>' +
+                    (ev.strengths ? '<br><b>Güçlü:</b> ' + escHtmlAdmin(ev.strengths) : '') + (ev.improvements ? '<br><b>Geliştir:</b> ' + escHtmlAdmin(ev.improvements) : '') + (ev.comment ? '<br>' + escHtmlAdmin(ev.comment) : '') + '</div>';
+                } else if (a.essay_text) { evHtml = '<div style="margin-top:0.5rem; font-size:0.82rem; color:var(--text-muted);">Essay değerlendirmesi kaydedilmemiş.</div>'; }
+                var essayBlock = a.essay_text ? ('<div style="margin-top:0.5rem;"><b style="font-size:0.82rem;">Essay yazısı:</b><div style="white-space:pre-wrap; font-size:0.82rem; background:var(--bg-soft,#f5f0e3); border-radius:8px; padding:8px 11px; margin-top:3px; max-height:220px; overflow:auto;">' + escHtmlAdmin(a.essay_text) + '</div></div>') : '';
+                return '<details style="border:1px solid var(--line); border-radius:10px; padding:0.4rem 0.7rem; margin-bottom:0.5rem;">' +
+                  '<summary style="cursor:pointer; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.86rem;"><b>' + escHtmlAdmin(String(total)) + '/100</b> ' + passed + '<span style="color:var(--text-muted);">MC ' + escHtmlAdmin(String(a.mc_correct != null ? a.mc_correct : '-')) + '/' + escHtmlAdmin(String(a.mc_total != null ? a.mc_total : '-')) + '</span><span style="color:var(--text-muted); margin-left:auto;">' + (a.created_at ? fmtDate(a.created_at) : '—') + '</span></summary>' +
+                  '<div style="margin-top:0.6rem;"><div style="font-weight:600; font-size:0.82rem; margin-bottom:3px;">Bölüm dağılımı</div>' + secRows + essayBlock + evHtml + '</div></details>';
+              }).join('') + '</div>';
+          }
+        } catch (he) { /* tablo yoksa sessiz gec */ }
+        box.innerHTML = (html + htHtml) || '<div style="color:var(--text-muted); font-style:italic;">Seviye tespiti yapılmamış.</div>';
         if (msg) { msg.textContent = ''; }
       } catch (e) { box.innerHTML = ''; if (msg) { msg.textContent = 'Hata: ' + (e.message || e); } }
     }

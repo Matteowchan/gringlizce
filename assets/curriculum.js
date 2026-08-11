@@ -315,7 +315,8 @@ var EXAMS=[
         { label: "Almanca", href: "udsp-almanca-ogren" },
         { label: "Soru Bankası", href: "udsp-soru-bankasi" } ] },
       { label: "Üniversite Hazırlık Atlama", href: "universite-hazirlik-atlama", children: [
-        { label: "Deneme 1", href: "universite-hazirlik-atlama" } ] },
+        { label: "Deneme 1", href: "universite-hazirlik-atlama" },
+        { label: "Deneme 2", href: "universite-hazirlik-atlama-2" } ] },
       { label: "IB English B", href: "ib", children: [
         { label: "HL", href: "ib-english-b-hl" },
         { label: "SL", href: "ib-english-b-sl" },

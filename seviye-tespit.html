@@ -11,11 +11,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, follow">
-<title>Seviye Tespit Denemesi — İngilizce Seviye Testi | Gri English</title>
+<title>Seviye Belirleme Testi — İngilizce Seviye Testi | Gri English</title>
 <meta name="description" content="40 soru + essay ile İngilizce seviye tespit denemesi (B2). Use of English, Vocabulary, Sentence Analysis, Reading. Sonunda CEFR seviyen, bölüm-bazlı güçlü/zayıf analizi ve kelime bilgisi geri bildirimi.">
 <link rel="canonical" href="https://gringlizce.com/seviye-tespit">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Seviye Tespit Denemesi — Gri English">
+<meta property="og:title" content="Seviye Belirleme Testi — Gri English">
 <meta property="og:site_name" content="Gri English">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/main.css">
@@ -160,7 +160,7 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 
   <div id="auth-gate" class="hidden">
     <div class="sb-card sb-hero" style="text-align:center">
-      <h1>Seviye Tespit Denemesi</h1>
+      <h1>Seviye Belirleme Testi</h1>
       <p class="sub">Bu teste girmek ve kişisel raporunu almak için <b>ücretsiz hesabınla giriş yapmalısın</b>. Sonuçların kaydedilir, PDF raporunu indirebilirsin.</p>
       <div id="auth-actions"></div>
     </div>
@@ -168,13 +168,13 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
 
   <div id="intro" class="hidden">
     <div class="sb-card sb-hero">
-      <span class="eyebrow" style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700">İngilizce Seviye Tespit · B2</span>
-      <h1>Seviye Tespit Denemesi</h1>
-      <p class="sub">İngilizce seviyeni ölçen kapsamlı bir <b>seviye tespit denemesi</b>. Use of English, Vocabulary, Sentence Analysis ve Reading bölümlerinden <b>40 çoktan seçmeli</b> soru + bir <b>essay</b>. Sonunda tahmini <b>CEFR seviyen</b>, bölüm-bazlı güçlü/zayıf analizin, <b>kelime bilgisi geri bildirimin</b> ve üniversite yeterlik/muafiyet eşiği tahminin (100 üzerinden). Üniversite hazırlık atlama sınavlarına da hazırlık.</p>
+      <span class="eyebrow" style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700">İngilizce Seviye Belirleme · B2</span>
+      <h1>Seviye Belirleme Testi</h1>
+      <p class="sub">İngilizce seviyeni ölçen kapsamlı bir <b>seviye belirleme testi</b>. Use of English, Vocabulary, Sentence Analysis ve Reading bölümlerinden <b>40 çoktan seçmeli</b> soru + bir <b>essay</b>. Sonunda tahmini <b>CEFR seviyen</b>, bölüm-bazlı güçlü/zayıf analizin, <b>kelime bilgisi geri bildirimin</b> ve 100 üzerinden referans puanın. Sınav pratiği ve seviye ölçümü için ideal.</p>
       <div class="sb-facts">
         <div class="sb-fact"><b>40 + Essay</b><span>4 bölüm çoktan seçmeli + yazma</span></div>
         <div class="sb-fact"><b>60 dk</b><span>Otomatik sayaç</span></div>
-        <div class="sb-fact"><b>CEFR + %</b><span>Seviye + muafiyet eşiği tahmini</span></div>
+        <div class="sb-fact"><b>CEFR + %</b><span>Seviye + referans puan (100)</span></div>
       </div>
       <div class="sb-note">Sınav başlayınca <b>60 dakikalık sayaç</b> çalışır; süre bitince cevapların otomatik değerlendirilir. Çoktan seçmeli bölümler objektif puanlanır (her doğru MC 2 puan → 80); essay <b>Gri AI</b> ile 20 üzerinden değerlendirilir. Sessiz bir ortamda çöz; sekme değiştirme (3 uyarıda sınav başa döner).</div>
       <button class="btn gold" id="start-btn">Sınavı Başlat &rsaquo;</button>
@@ -233,7 +233,7 @@ function renderMC(q,n){
   var stem=isReading?q.question_text:('<p class="stem"><span class="qn">'+n+'.</span> '+q.question_text+'</p>');
   if(isReading) stem='<div>'+q.question_text.replace(/<p>([^<]*)<\/p>\s*$/,'<p class="stem"><span class="qn">'+n+'.</span> $1</p>')+'</div>';
   var opts=q.options.map(function(o){
-    var name='q'+q._gid, id=name+'_'+o.letter, ck=(STATE.answers[q._gid]===o.letter);
+    var name=q._gid, id=name+'_'+o.letter, ck=(STATE.answers[q._gid]===o.letter);
     return '<label class="opt'+(ck?' sel':'')+'"><input type="radio" name="'+name+'" value="'+o.letter+'"'+(ck?' checked':'')+'><span class="l">'+o.letter+')</span><span>'+esc(o.text)+'</span></label>';
   }).join('');
   return '<div class="q">'+stem+'<div class="opts">'+opts+'</div></div>';
@@ -282,7 +282,7 @@ function gotoStep(i){ if(i<0||i>=STEPS.length)return; CURSTEP=i; renderStep(); }
 
 /* timer */
 function fmt(s){var m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss;}
-function renderBar(){ barMount.innerHTML='<div class="sb-bar"><span class="prog">Seviye Tespit Denemesi</span><span class="sb-timer" id="sb-timer">'+fmt(STATE.remaining)+'</span></div>'; }
+function renderBar(){ barMount.innerHTML='<div class="sb-bar"><span class="prog">Seviye Belirleme Testi</span><span class="sb-timer" id="sb-timer">'+fmt(STATE.remaining)+'</span></div>'; }
 function tick(){ STATE.remaining--; var el=document.getElementById('sb-timer'); if(el){el.textContent=fmt(STATE.remaining); if(STATE.remaining<=300)el.classList.add('warn');}
   if(STATE.remaining<=0){clearInterval(STATE.timer); alert('Süre doldu. Cevapların değerlendiriliyor.'); finish();} }
 function start(){
@@ -322,8 +322,8 @@ function finish(){
 function pf(total){return total>=EXAM.pass;}
 function cefrBand(total){
   if(total>=88) return {c:'C1',name:'İleri',desc:'Akademik dili büyük ölçüde doğru ve akıcı kullanıyorsun; karmaşık yapıları ve nüansları çözebiliyorsun.'};
-  if(total>=76) return {c:'B2',name:'Orta-üst',desc:'Üniversite düzeyi metinleri ve yapıları büyük oranda anlıyorsun; çoğu yeterlik/muafiyet eşiğinin üzerindesin.'};
-  if(total>=60) return {c:'B1+',name:'Eşik-üstü',desc:'Sağlam bir temelin var; hedefli çalışmayla B2/muafiyet seviyesine yakınsın.'};
+  if(total>=76) return {c:'B2',name:'Orta-üst',desc:'Akademik ve günlük İngilizceyi büyük oranda anlıyorsun; çoğu seviye eşiğinin üzerindesin.'};
+  if(total>=60) return {c:'B1+',name:'Eşik-üstü',desc:'Sağlam bir temelin var; hedefli çalışmayla B2 seviyesine yakınsın.'};
   if(total>=42) return {c:'B1',name:'Orta',desc:'Günlük ve yarı-akademik dili anlıyorsun; ileri gramer ve akademik kelime alanlarında boşlukların var.'};
   if(total>=25) return {c:'A2',name:'Temel-üstü',desc:'Temel yapıları biliyorsun; akademik kelime, karmaşık gramer ve okuma-çıkarımında ciddi gelişim alanı var.'};
   return {c:'A2-',name:'Temel',desc:'Temelleri güçlendirmen gerekiyor; düzenli, konu-bazlı çalışmayla hızla ilerleyebilirsin.'};
@@ -353,16 +353,16 @@ function renderResults(essayScore){
   var pu=(function(){var u=window.USER||{},meta=u.user_metadata||{};var name=String(meta.full_name||meta.name||'').trim(),email=String(u.email||'').trim();if(!name&&email)name=email.split('@')[0];return {name:name||'Öğrenci',email:email};})();
   var h='';
   h+='<div class="sb-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:baseline">'
-    +'<div><div style="font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700">Seviye Tespit · Deneme Raporu</div>'
+    +'<div><div style="font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700">Seviye Belirleme Testi · Rapor</div>'
     +'<div style="font-family:Lora,serif;font-size:1.3rem;margin-top:3px">'+esc(pu.name)+'</div>'+(pu.email?'<div style="color:var(--muted);font-size:.92rem">'+esc(pu.email)+'</div>':'')+'</div>'
     +'<div style="text-align:right;color:var(--muted);font-size:.85rem">'+new Date().toLocaleDateString('tr-TR')+'</div></div></div>';
   // score summary
   h+='<div class="sb-card" style="text-align:center">';
-  var badge = essayKnown ? (pf(total)?'<div class="pf-badge pf-pass">Muafiyet eşiğinin üstünde</div>':'<div class="pf-badge pf-fail">Muafiyet eşiğinin altında</div>') : '<div class="instr">Essay değerlendirmesi hazırlanıyor…</div>';
+  var badge = essayKnown ? (pf(total)?'<div class="pf-badge pf-pass">Referans eşiğin üstünde</div>':'<div class="pf-badge pf-fail">Referans eşiğin altında</div>') : '<div class="instr">Essay değerlendirmesi hazırlanıyor…</div>';
   h+=badge;
   h+='<div class="score-big" style="margin:8px 0">'+total+' <small>/ 100'+(essayKnown?'':' (essay bekleniyor)')+'</small></div>';
   h+='<div class="instr">Çoktan seçmeli: <b>'+R.correct+' / '+EXAM.mcTotal+'</b> doğru → <b>'+R.mcScore+' / 80</b>'+(essayKnown?(' &nbsp;·&nbsp; Essay: <b>'+essayScore+' / 20</b>'):'')+'</div>';
-  h+='<p class="instr">Geçme/muafiyet eşiği (tahmini): <b>60 / 100</b>. Bu bir seviye tespit tahminidir; gerçek üniversite yeterlik sınavının içeriği değişebilir.</p></div>';
+  h+='<p class="instr">Referans eşik (tahmini): <b>60 / 100</b>. Bu bir seviye belirleme tahminidir; farklı sınavların içeriği ve eşiği değişebilir.</p></div>';
   // CEFR band
   var cb = essayKnown ? cefrBand(total) : cefrBand(R.mcScore*100/80*0.8+0); // essay yoksa MC üzerinden yaklaşık
   h+='<div class="sb-card"><div class="charts-row" style="justify-content:flex-start;gap:18px">'
@@ -479,7 +479,7 @@ function printReport(){
   var box=document.getElementById('ai-essay-eval');
   var loading=box&&/Hazırlanıyor|değerlendiriyor/.test(box.textContent);
   var prev=document.title;
-  function go(){ document.title='Gri-Seviye-Tespit-Raporu'; window.print(); setTimeout(function(){document.title=prev;},900); }
+  function go(){ document.title='Gri-Seviye-Belirleme-Testi-Raporu'; window.print(); setTimeout(function(){document.title=prev;},900); }
   if(!loading){ go(); return; }
   var btn=document.getElementById('pdf-btn'); if(btn){btn.disabled=true;btn.textContent='AI değerlendirmesi bekleniyor…';}
   var tries=0, iv=setInterval(function(){ tries++; var b=document.getElementById('ai-essay-eval');

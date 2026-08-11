@@ -340,7 +340,7 @@ var EXAMS=[
     ] },
     { label: "Seviye Belirleme", href: "seviye-belirleme", children: [
       { label: "Seviye Belirleme Sınavı", href: "seviye-belirleme" },
-      { label: "Seviye Tespit Denemesi", href: "seviye-tespit" }
+      { label: "Seviye Belirleme Testi", href: "seviye-tespit" }
     ] },
     { label: "Araçlar", children: [
       { label: "AI Araçları", href: "ai-araclari" },

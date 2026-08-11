@@ -97,11 +97,13 @@
     if (window.innerWidth > 700) return;
     if (document.querySelector('.app-bottom-nav')) return;
 
-    // Soru çözme sayfalarında (q-actionbar olanlar) bottom-nav gizle
+    // Soru çözme sayfalarında (q-actionbar olanlar) padding için işaretle
     if (document.querySelector('.q-actionbar')) {
       document.body.classList.add('has-actionbar');
-      return;
     }
+    // Alt bar (app-bottom-nav) kaldırıldı — gezinme burger menü + drawer'da (nav.js).
+    return;
+    // eslint-disable-next-line no-unreachable
     var nav = document.createElement('nav');
     nav.className = 'app-bottom-nav';
     nav.setAttribute('aria-label', 'App navigation');

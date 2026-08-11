@@ -50,31 +50,51 @@
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
     "@media(max-width:1200px){.gri-nav .links,.gri-rdd,.gri-ico{display:none}.gri-burger{display:flex}",
-    ".gri-mmenu.open{display:block;position:fixed;left:0;right:0;top:0;bottom:0;z-index:950;background:var(--gri-nav-bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}",
-    ".gri-mmenu .in{max-width:640px;margin:0 auto;padding:0 22px 44px;display:block;height:auto}",
-    ".gri-mclose{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--gri-nav-bg);padding:16px 0 12px;border-bottom:1px solid var(--gri-line);margin-bottom:10px;z-index:2}",
-    ".gri-mclose .brand{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gri-ink);text-decoration:none;white-space:nowrap}.gri-mclose .brand .it{font-style:italic;color:var(--gri-accent);margin-left:.3em}",
-    ".gri-mclose-x{width:40px;height:40px;border-radius:10px;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink);font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}",
-    ".gri-mcards{display:block;margin-top:4px}",
-    ".gri-mcard{display:block;padding:14px 2px;border-bottom:1px solid var(--gri-line-soft);text-decoration:none;color:var(--gri-ink-soft);font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;line-height:1.3}",
-    ".gri-mcard:active,.gri-mcard:hover{color:var(--gri-accent)}",
-    ".gri-mgrp-h{font-family:Inter,sans-serif;font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--gri-accent);padding:18px 2px 6px;border-bottom:1px solid var(--gri-line-soft);margin-bottom:2px}",
-    ".gri-mcard.sub{padding-left:16px;font-size:15px;font-weight:500;color:var(--gri-ink-faint)}",
-    ".gri-mcard.sub:active,.gri-mcard.sub:hover{color:var(--gri-accent)}",
-    ".gri-mmenu #navUserMountSlot{margin:2px 0 14px}",
-    ".gri-mmenu #navUserMountSlot .btn-nav-cta,.gri-mmenu #navUserMountSlot .gri-giris{display:block;text-align:center;padding:12px;border-radius:12px;font-size:15px}",
+    ".gri-mmenu.open{display:block;position:fixed;inset:0;z-index:950;background:var(--gri-nav-bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,env(safe-area-inset-bottom))}",
+    ".gri-mmenu .in{max-width:640px;margin:0 auto;padding:0 18px 40px;display:block;height:auto}",
+    ".gri-mclose{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--gri-nav-bg);padding:15px 0 12px;border-bottom:1px solid var(--gri-line);margin-bottom:14px;z-index:2}",
+    ".gri-mclose .brand{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--gri-ink);text-decoration:none;white-space:nowrap}",
+    ".gri-mclose .brand .it{font-style:italic;color:var(--gri-accent);margin-left:.3em}",
+    ".gri-mclose-x{width:42px;height:42px;border-radius:12px;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink);font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}",
+    ".gri-mclose-x:active{background:var(--gri-surface-2)}",
+    ".gri-mquick{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:0 0 18px}",
+    ".gri-mquick a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:64px;padding:9px 3px;border:1px solid var(--gri-line);background:var(--gri-surface);border-radius:14px;text-decoration:none;color:var(--gri-ink-soft);font-family:Inter,sans-serif;font-size:10px;font-weight:600;letter-spacing:.01em;text-align:center;line-height:1.1;transition:background .15s,color .15s,border-color .15s}",
+    ".gri-mquick a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}",
+    ".gri-mquick a:active{background:var(--gri-surface-2)}",
+    ".gri-mquick a.here{color:var(--gri-accent);border-color:var(--gri-accent);background:var(--gri-accent-soft)}",
+    ".gri-th-lbl{font-family:Inter,sans-serif;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gri-ink-faint);padding:4px 2px 8px;display:block}",
+    ".gri-mmenu #navUserMountSlot{margin:2px 0 16px}",
+    ".gri-mmenu #navUserMountSlot .btn-nav-cta,.gri-mmenu #navUserMountSlot .gri-giris{display:block;text-align:center;padding:13px;border-radius:12px;font-size:15px}",
     ".gri-mmenu #navUserMountSlot .nav-user{display:block;position:static}",
     ".gri-mmenu #navUserMountSlot .nav-user-btn{display:none}",
     ".gri-mmenu #navUserMountSlot .nav-user-menu{position:static;display:block;box-shadow:none;border:none;min-width:0;padding:0;margin:0}",
-    ".gri-mtheme{border-top:1px solid var(--gri-line-soft);margin-top:6px}",
-    ".gri-mtheme-h{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:14px 2px;font-family:'Crimson Pro',Georgia,serif;font-size:16px;font-weight:600;color:var(--gri-ink-soft)}",
-    ".gri-mtheme-h .cv{width:12px;height:12px;opacity:.6;transition:.2s}.gri-mtheme.open .gri-mtheme-h .cv{transform:rotate(180deg)}",
-    ".gri-mtheme-body{display:none;padding-bottom:8px}.gri-mtheme.open .gri-mtheme-body{display:block}",
-    ".gri-mrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gri-line-soft);font-size:15px;font-weight:500;color:var(--gri-ink-soft);cursor:pointer}",
-    ".gri-mrow a{color:inherit;text-decoration:none;flex:1}.gri-mrow .cv{width:12px;height:12px;transition:.2s}.gri-msec.open .gri-mrow .cv{transform:rotate(180deg)}",
-    ".gri-msub{display:none;padding:2px 0 8px 12px}.gri-msec.open .gri-msub{display:block}",
-    ".gri-msub a{display:block;padding:9px 0;font-size:14px;color:var(--gri-ink-faint);text-decoration:none}",
-    ".gri-mth{display:flex;gap:8px;margin-top:16px;align-items:center}.gri-mth button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer}}"
+    ".gri-mcards{display:block;margin-top:2px}",
+    ".gri-mcard{display:flex;align-items:center;min-height:54px;padding:14px 16px;margin-bottom:8px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:13px;text-decoration:none;color:var(--gri-ink);font-family:'Crimson Pro',Georgia,serif;font-size:16.5px;font-weight:600;line-height:1.25;transition:border-color .15s,color .15s,background .15s}",
+    ".gri-mcard:active,.gri-mcard:hover{color:var(--gri-accent);border-color:var(--gri-accent)}",
+    ".gri-mcard.here{color:var(--gri-accent);border-color:var(--gri-accent);box-shadow:inset 3px 0 0 var(--gri-accent)}",
+    ".gri-mcard.sub{padding-left:22px;font-size:15px;font-weight:500;color:var(--gri-ink-faint)}",
+    ".gri-msec{margin-bottom:8px}",
+    ".gri-mrow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:54px;padding:14px 16px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:13px;font-family:'Crimson Pro',Georgia,serif;font-size:16.5px;font-weight:600;color:var(--gri-ink);cursor:pointer;transition:border-color .15s,color .15s,background .15s}",
+    ".gri-mrow:active{background:var(--gri-surface-2)}",
+    ".gri-mrow .cv{width:14px;height:14px;flex:none;opacity:.55;transition:transform .2s}",
+    ".gri-msec.open>.gri-mrow{border-color:var(--gri-accent);color:var(--gri-accent);border-bottom-left-radius:0;border-bottom-right-radius:0;background:var(--gri-accent-soft)}",
+    ".gri-msec.open>.gri-mrow .cv{transform:rotate(180deg);opacity:.9}",
+    ".gri-msec.here>.gri-mrow{box-shadow:inset 3px 0 0 var(--gri-accent)}",
+    ".gri-msub{display:none;padding:4px 8px 8px;border:1px solid var(--gri-accent);border-top:none;border-bottom-left-radius:13px;border-bottom-right-radius:13px;background:var(--gri-surface);margin-top:-1px}",
+    ".gri-msec.open>.gri-msub{display:block}",
+    ".gri-msub a{display:flex;align-items:center;min-height:48px;padding:11px 14px;font-family:'Crimson Pro',Georgia,serif;font-size:15px;font-weight:500;color:var(--gri-ink-soft);text-decoration:none;border-radius:9px;border-bottom:1px solid var(--gri-line-soft)}",
+    ".gri-msub a:last-child{border-bottom:none}",
+    ".gri-msub a:active{background:var(--gri-surface-2);color:var(--gri-accent)}",
+    ".gri-msub a.here{color:var(--gri-accent);font-weight:600}",
+    ".gri-mgrp-h{font-family:Inter,sans-serif;font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--gri-accent);padding:16px 2px 6px}",
+    ".gri-mtheme{border-top:1px solid var(--gri-line);margin-top:16px;padding-top:4px}",
+    ".gri-mtheme-h{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:16px 2px;font-family:'Crimson Pro',Georgia,serif;font-size:16.5px;font-weight:600;color:var(--gri-ink)}",
+    ".gri-mtheme-h .cv{width:13px;height:13px;opacity:.6;transition:transform .2s}.gri-mtheme.open .gri-mtheme-h .cv{transform:rotate(180deg)}",
+    ".gri-mtheme-body{display:none;padding:6px 0 8px}.gri-mtheme.open .gri-mtheme-body{display:block}",
+    ".gri-mtheme-body .gri-thgrid{grid-template-columns:repeat(5,1fr);gap:8px;min-width:0}",
+    ".gri-mtheme-body .gri-th-opt{padding:10px 3px;font-size:10px;gap:7px}",
+    ".gri-mtheme-body .gri-th-opt .dot{width:30px;height:30px;font-size:0}",
+    ".gri-mth{display:flex;gap:8px;margin-top:16px;align-items:center}.gri-mth button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}}"
   ].join("");
 
   var SPRITE =
@@ -171,14 +191,30 @@
     function mcard(label, h, sub){ return '<a class="gri-mcard' + (sub ? " sub" : "") + '" href="' + href(h) + '">' + esc(label) + "</a>"; }
     var MCARET = '<svg class="cv" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
     // Mobil: gruplar KAPALI baslar, basliga dokununca acilir (akordeon). Duz top-level linkler dogrudan.
+    // Bulunulan sayfa isaretlenir (here) ve o bolum otomatik acilir.
+    function isHere(h){ return h && String(h).toLowerCase().split("/").pop().replace(/\.html$/, "") === here; }
     var mcards = MENU.map(function (it) {
-      if (!it.children) return mcard(it.label, it.href, false);
+      var act = hrefsOf(it, []).map(function (h) { return String(h).replace(/\.html$/, ""); }).indexOf(here) !== -1;
+      if (!it.children) return '<a class="gri-mcard' + (act ? " here" : "") + '" href="' + href(it.href) + '">' + esc(it.label) + "</a>";
       var inner = it.children.map(function (ch) {
         if (!ch.href) return "";
-        return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
+        return '<a' + (isHere(ch.href) ? ' class="here"' : "") + ' href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
       }).join("");
-      return '<div class="gri-msec"><div class="gri-mrow" data-msec>' + esc(it.label) + MCARET + '</div><div class="gri-msub">' + inner + "</div></div>";
+      return '<div class="gri-msec' + (act ? " open here" : "") + '"><div class="gri-mrow" data-msec>' + esc(it.label) + MCARET + '</div><div class="gri-msub">' + inner + "</div></div>";
     }).join("");
+
+    // Mobil hizli-erisim izgarasi (kaldirilan alt tabbar'in tek-dokunus hedefleri drawer'da)
+    var MQ = [
+      { h: "/", f: "index", l: "Ana Sayfa", ic: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },
+      { h: "/ogrenme-haritasi.html", f: "ogrenme-haritasi", l: "Harita", ic: '<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>' },
+      { h: "/soru-bankasi.html", f: "soru-bankasi", l: "Soru", ic: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
+      { h: "/sinifim.html", f: "sinifim", l: "Sınıf", ic: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-3-4.9"/>' },
+      { h: "/panelim.html", f: "panelim", l: "Masam", ic: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' }
+    ];
+    var mquick = '<div class="gri-mquick">' + MQ.map(function (q) {
+      var on = here === q.f || (q.f === "index" && (here === "" || here === "index"));
+      return '<a href="' + q.h + '"' + (on ? ' class="here"' : "") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + q.ic + '</svg><span>' + q.l + '</span></a>';
+    }).join("") + "</div>";
 
     var tOpts = themeOptsHtml();
 
@@ -199,8 +235,9 @@
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +
       '<div class="gri-mclose"><a href="/" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
+      mquick +
       '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
-      '<a class="gri-mcard" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
+      '<a class="gri-mcard' + (here === "panelim" ? " here" : "") + '" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
       '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h">Tema' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
@@ -277,59 +314,6 @@
     })();
   }
 
-  // ===== Mobil alt sekme çubuğu =====
-  // Kendi CSS'ini enjekte eder — main.css/site-overrides.css yüklemeyen sayfalarda da
-  // doğru çalışsın (aksi halde stilsiz kalıp ikonlar sayfayı kaplar).
-  function ensureTabbarCss() {
-    if (document.getElementById("gri-tabbar-css")) return;
-    var st = document.createElement("style");
-    st.id = "gri-tabbar-css";
-    st.textContent =
-      ".gri-tabbar{display:none}" +
-      "@media(max-width:640px){" +
-      ".gri-tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:900;" +
-      "background:rgba(250,247,238,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);" +
-      "border-top:1px solid #e6ddca;padding:4px 2px max(4px,env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(60,45,25,.07)}" +
-      ".gri-tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:#8a8172;" +
-      "font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:.02em;padding:6px 2px 3px;border-radius:12px;transition:color .15s,background .15s}" +
-      ".gri-tabbar a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}" +
-      ".gri-tabbar a.on{color:var(--teal,#2C5856)}.gri-tabbar a.on svg{stroke:var(--teal,#2C5856)}" +
-      ".gri-tabbar a:active{background:rgba(44,88,86,.08)}" +
-      "body{padding-bottom:60px}body.app-mode{padding-bottom:70px}}" +
-      ":root[data-theme=\"dark\"] .gri-tabbar,html.dark .gri-tabbar{background:rgba(28,24,19,.97);border-top-color:#332c22}" +
-      ":root[data-theme=\"dark\"] .gri-tabbar a,html.dark .gri-tabbar a{color:#b5ac96}" +
-      ":root[data-theme=\"dark\"] .gri-tabbar a.on,html.dark .gri-tabbar a.on{color:#6FB6AF}" +
-      ":root[data-theme=\"dark\"] .gri-tabbar a.on svg,html.dark .gri-tabbar a.on svg{stroke:#6FB6AF}";
-    (document.head || document.documentElement).appendChild(st);
-  }
-  function buildTabbar() {
-    try {
-      var p = (location.pathname || "").toLowerCase();
-      if (/deneme|seviye-belirleme|grimeet-oda/.test(p)) return;
-      if (document.documentElement.classList.contains("app-mode")) return;
-      if (document.querySelector(".gri-tabbar")) return;
-      ensureTabbarCss();
-      var file = p.split("/").pop() || "index.html";
-      var tabs = [
-        { href: "/", label: "Ana Sayfa", match: ["index.html", ""], icon: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>' },
-        { href: "/ogrenme-haritasi.html", label: "Harita", match: ["ogrenme-haritasi.html"], icon: '<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>' },
-        { href: "/soru-bankasi.html", label: "Soru", match: ["soru-bankasi.html"], icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
-        { href: "/sinifim.html", label: "Sınıf", match: ["sinifim.html", "ogretmen.html", "ogretmen-sinif.html"], icon: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-3-4.9"/>' },
-        { href: "/panelim.html", label: "Masam", match: ["panelim.html"], icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' }
-      ];
-      var nav = document.createElement("nav");
-      nav.className = "gri-tabbar";
-      nav.setAttribute("aria-label", "Hızlı gezinme");
-      nav.innerHTML = tabs.map(function (t) {
-        var on = t.match.map(function (m) { return m.replace(/\.html$/, ""); }).indexOf(file.replace(/\.html$/, "")) >= 0;
-        return '<a href="' + t.href + '"' + (on ? ' class="on" aria-current="page"' : "") + '>'
-          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + t.icon + '</svg>'
-          + '<span>' + t.label + '</span></a>';
-      }).join("");
-      document.body.appendChild(nav);
-    } catch (e) {}
-  }
-
   // ===== Erişilebilirlik: skip-link + main landmark + modal dialog semantiği =====
   function a11y() {
     try {
@@ -347,7 +331,7 @@
         var cands = document.querySelectorAll("body > main, body > section, .wrap, .content, #content, .page-wrap");
         for (var i = 0; i < cands.length; i++) {
           var c = cands[i];
-          if (!c.classList.contains("gri-tabbar") && !(c.closest && c.closest(".gri-nav"))) { mn = c; break; }
+          if (!(c.closest && c.closest(".gri-nav"))) { mn = c; break; }
         }
       }
       if (mn) {
@@ -396,7 +380,7 @@
     } catch (e) {}
   }
 
-  function boot() { build(); buildTabbar(); a11y(); }
+  function boot() { build(); a11y(); }
   if (document.readyState !== "loading") boot();
   else document.addEventListener("DOMContentLoaded", boot);
 })();

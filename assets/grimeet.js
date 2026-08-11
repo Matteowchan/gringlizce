@@ -58,7 +58,7 @@ var ROOM_THEMES=[
   {t:'persimmon',n:'Persimmon',ic:'🍊',bg:'#F6EAE1',stage:'#EBD9CC',s1:'#FBF3ED',s2:'#F3E6DA',line:'#E9D8C9',ink:'#2A1E14',isoft:'#6E5C4C',ifaint:'#9A8A78',a:'#BC5A2E',d:'#8A3E1C',g:'#A9772E'},
   {t:'wasabi',n:'Wasabi',ic:'🥬',bg:'#EDF0DC',stage:'#DEE3C8',s1:'#F5F6E9',s2:'#E7ECD5',line:'#DCE2C7',ink:'#24280F',isoft:'#5E634A',ifaint:'#8A9070',a:'#6F7D1C',d:'#4A5312',g:'#A9902E'},
   {t:'matcha',n:'Matcha',ic:'🍵',bg:'#EAF0E3',stage:'#DBE6CF',s1:'#F3F7EC',s2:'#E6EEDB',line:'#D8E2C9',ink:'#1F2818',isoft:'#586150',ifaint:'#88927E',a:'#5B8C4E',d:'#3A6030',g:'#A9902E'},
-  {t:'barbie',n:'Barbie',ic:'🎀',bg:'#FBE6F1',stage:'#F4D4E4',s1:'#FEF1F8',s2:'#F8E2EE',line:'#F2D2E2',ink:'#2E1522',isoft:'#7A5364',ifaint:'#B085A0',a:'#E0218A',d:'#A81466',g:'#C79A3A'},
+  {t:'barbie',n:'Barbie',ic:'🎀',bg:'#FBE6F1',stage:'#F4D4E4',s1:'#FEF1F8',s2:'#F8E2EE',line:'#F2D2E2',ink:'#2E1522',isoft:'#7A5364',ifaint:'#B085A0',a:'#E24E9C',d:'#B23C7E',g:'#C79A3A'},
   {t:'kobalt',n:'Kobalt',ic:'🔵',bg:'#E6EAF5',stage:'#D5DDF1',s1:'#F1F3FB',s2:'#E2E8F6',line:'#D3DCEF',ink:'#171E30',isoft:'#525A72',ifaint:'#858FA9',a:'#2E52C8',d:'#1E357E',g:'#C79A3A'},
   {t:'somon',n:'Somon',ic:'🍣',bg:'#FBEAE3',stage:'#F4D8CD',s1:'#FEF3EE',s2:'#F8E5DC',line:'#F2D6CB',ink:'#2E1913',isoft:'#7A594E',ifaint:'#B0877A',a:'#E0705A',d:'#B04A38',g:'#C79A3A'},
   {t:'karamel',n:'Karamel',ic:'🍮',bg:'#F6EDDD',stage:'#EBDDC4',s1:'#FCF5E9',s2:'#F4E9D4',line:'#EADBC0',ink:'#2A2013',isoft:'#6E6046',ifaint:'#9A8C70',a:'#C07A34',d:'#8A521C',g:'#A9772E'},
@@ -67,6 +67,13 @@ var ROOM_THEMES=[
   {t:'gokyuzu',n:'Gökyüzü',ic:'🌤️',bg:'#E5F0F8',stage:'#D3E5F2',s1:'#F0F7FC',s2:'#E1EEF7',line:'#D1E3F0',ink:'#16283A',isoft:'#4E6070',ifaint:'#8598A8',a:'#2E86C6',d:'#1E5E90',g:'#C79A3A'},
   {t:'zeytin',n:'Zeytin',ic:'🫒',bg:'#EEEFDE',stage:'#E0E2CA',s1:'#F6F6EB',s2:'#E9EAD7',line:'#DEE0C8',ink:'#26280F',isoft:'#5E6048',ifaint:'#8E9070',a:'#77803A',d:'#4E541F',g:'#A9902E'},
   {t:'pudra',n:'Pudra',ic:'🌸',bg:'#FAECEF',stage:'#F3DBE1',s1:'#FEF4F6',s2:'#F8E5EA',line:'#F2D7DE',ink:'#2E1A1F',isoft:'#7A5860',ifaint:'#B0868E',a:'#D06A82',d:'#A24458',g:'#C79A3A'},
+  {t:'indigo',n:'İndigo',ic:'🔷',bg:'#E9E7F5',stage:'#DAD6EC',s1:'#F3F2FB',s2:'#E4E2F2',line:'#D6D2EA',ink:'#1A1630',isoft:'#524E6E',ifaint:'#8884A2',a:'#4B3B8F',d:'#31266B',g:'#C79A3A'},
+  {t:'menekse',n:'Menekşe',ic:'🟣',bg:'#EFE7F3',stage:'#E2D6EA',s1:'#F7F1FA',s2:'#EAE0F0',line:'#E0D3E8',ink:'#241A2A',isoft:'#5E526A',ifaint:'#8E82A0',a:'#7B3FA0',d:'#552A70',g:'#C79A3A'},
+  {t:'seftali',n:'Şeftali',ic:'🍑',bg:'#FBEEE1',stage:'#F0DDCB',s1:'#FEF6EE',s2:'#F8E9D9',line:'#EEDBC7',ink:'#2A1E14',isoft:'#6E5C4C',ifaint:'#9A8A78',a:'#D9824A',d:'#A85B2C',g:'#C79A3A'},
+  {t:'lacivert',n:'Lacivert',ic:'🫐',bg:'#E6EAF0',stage:'#D5DCE8',s1:'#F1F3F7',s2:'#E1E6EE',line:'#D3DAE6',ink:'#161E2A',isoft:'#4E5A6A',ifaint:'#8894A2',a:'#26426B',d:'#172A47',g:'#C79A3A'},
+  {t:'bakir',n:'Bakır',ic:'🟤',bg:'#F5E9E1',stage:'#E9D6C9',s1:'#FBF3ED',s2:'#F2E4D9',line:'#E7D5C7',ink:'#2A1A12',isoft:'#6E5648',ifaint:'#9A8676',a:'#B05C36',d:'#7E3E20',g:'#C79A3A'},
+  {t:'sis',n:'Sis',ic:'🌫️',bg:'#ECEEF0',stage:'#DCE0E4',s1:'#F5F6F7',s2:'#E4E7EA',line:'#DADEE3',ink:'#1A1E22',isoft:'#525A63',ifaint:'#868E97',a:'#5C6673',d:'#3A424C',g:'#C79A3A'},
+  {t:'bugday',n:'Buğday',ic:'🌾',bg:'#F6EFDC',stage:'#EBE0C4',s1:'#FCF6E8',s2:'#F3EBD3',line:'#E9DEC2',ink:'#2A2410',isoft:'#6E6446',ifaint:'#9A9070',a:'#C7A24A',d:'#8E6E24',g:'#C79A3A'},
   {t:'dark',n:'Gece',ic:'🌙',bg:'#161311',stage:'#0e0c0a',s1:'#211d18',s2:'#2a251f',line:'#352f27',ink:'#F1E9D9',isoft:'#B7AB96',ifaint:'#8A7E6C',a:'#6FB6AF',d:'#2E6E6A',g:'#D8B25A'}
 ];
 function applyRoomTheme(t){ var x=null; for(var i=0;i<ROOM_THEMES.length;i++){ if(ROOM_THEMES[i].t===t){x=ROOM_THEMES[i];break;} } if(!x)x=ROOM_THEMES[0]; var r=document.documentElement.style;

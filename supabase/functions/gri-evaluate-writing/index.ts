@@ -25,7 +25,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 
-const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_MODEL = "gpt-4o";  // IELTS band nuansini gpt-4o-mini iyi kalibre edemiyordu (herseye 6-7); gpt-4o daha ogretmen-gozu
 
 // Admin emails: kota check'lerini ve sayaç artışını atlar
 const ADMIN_EMAILS = ["mertatasal@gmail.com", "atasal@gringlizce.com"];
@@ -394,10 +394,12 @@ BAND SINIRLARI (uygula):
 - Band 7: net position/overview; geliştirilmiş & desteklenmiş fikirler; esnek kelime + some less-common lexis + collocation farkındalığı; sık sık hatasız complex cümleler. (İYİ)
 - Band 8: fikirler tam gelişmiş ve iyi desteklenmiş; geniş, isabetli, DOĞAL kelime (idiomatic collocation); complex cümlelerin ÇOĞU hatasız, yalnızca ara sıra küçük slip; akıcı ve kontrollü. (ÇOK İYİ)
 - Band 9: tümüyle gelişmiş; tam esnek ve isabetli dil; hata pratikte yok. (UZMAN)
-KALİBRASYON (ÇOK ÖNEMLİ — tedbirli davranıp herkese 7 verme):
+KALİBRASYON (ÇOK ÖNEMLİ — tedbirli davranıp herkese 6-7 verme):
 - 7 = iyi, 8 = çok iyi, 9 = uzman. Gerçekten güçlü, akıcı, iyi geliştirilmiş, geniş ve isabetli kelimeli bir cevabı TEDBİRDEN 7'ye çekme; hak ediyorsa 7.5–8.5 ver.
 - Dört kriteri gerçek farklara göre AYIR — hepsi aynı olmak zorunda DEĞİL (örn. CC 8, LR 7, GRA 8, TR 7.5 doğal ve beklenen bir dağılımdır). Tüm kriterlere aynı puanı vermek genelde yanlış kalibrasyondur.
-- LEXICAL: birkaç yazım/typo slip'i (ör. "Futhermore", "poeple", "Howerver"), kelime yelpazesi ve isabeti aksi halde GENİŞ ve doğalsa LR'yi EN FAZLA yarım band düşürür — 2-3 typo yüzünden collocation'ı güçlü bir metni 6-7'ye çekme.
+- BAND 6 vs BAND 7 SINIRI (en sık yapılan kalibrasyon hatası budur): Net bir position taşıyan, fikirleri örnekle GELİŞTİRİLMİŞ, mantıksal paragraflanmış (giriş + gövde + sonuç) ve çeşitli bağlaç (However, For instance, In conclusion, Another...) kullanan, kelime dağarcığı yeterli-üstü bir deneme BAND 7'dir — birkaç yazım hatası olsa BİLE. Band 6, fikirlerin under-developed olduğu, cohesion'ın mekanik olduğu VEYA hataların anlaşılırlığı bozduğu denemeler içindir. Düzenli, geliştirilmiş, örnekli bir denemeyi SIRF yazım/typo yüzünden 6'ya ÇEKME.
+- YAZIM HATALARI YALNIZCA LEXICAL RESOURCE'U etkiler; Task Response, Coherence & Cohesion ve Grammar puanlarına DOKUNMAZ. Çok sayıda yazım slip'i (ör. "pyshical", "convinent", "reustarants", "Furtermore", "becaause") LR'yi Band 6'ya kadar çekebilir AMA daha aşağı değil ve diğer üç kriteri düşürmez. Örnek dağılım: iyi organize + gelişmiş ama yazımı zayıf bir deneme = TR 7 / CC 7 / LR 6 / GRA 6.5 → ortalama ≈ 6.5-7, ASLA düz 6 değil.
+- LEXICAL: kelime yelpazesi ve isabeti GENİŞ ve doğalsa, birkaç typo LR'yi EN FAZLA yarım band düşürür; kelime dağarcığı temel/tekrarlıysa typo'lar LR'yi 6'da tutabilir — ama yine de TR/CC/GRA bundan etkilenmez.
 - Güçlü collocation + kontrollü complex yapı + net gelişim varsa ilgili kriterler 8'e ulaşabilir; bir üst band'ı sadece "mükemmel olmadığı" için esirgeme.
 HER kriter yorumunda ŞUNU yap: (a) verdiğin band'ı yaz, (b) bu metinde o band'da TUTAN spesifik özelliği kısa bir alıntıyla göster, (c) bir üst yarım-band için TAM olarak neyi değiştireceğini söyle.
 ` : "";

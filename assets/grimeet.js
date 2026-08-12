@@ -488,13 +488,15 @@ function onSpeakers(sp){ var ids={},first=null; sp.forEach(function(p){ var tid=
 function updateGridCount(){ var n=Object.keys(STATE.tiles).length; $('#gmr-videos').setAttribute('data-n',n); $('#gmr-count-n').textContent=n; if(STATE.layout==='speaker') updateFeatured(); }
 
 /* ================= MODE / VIEW ================= */
-var MODE_LBL={grid:'Kameralar',board:'Tahta',materials:'Materyal',screen:'Ekran',spotlight:'Odak'};
+var MODE_LBL={grid:'Kameralar',board:'Tahta',materials:'Materyal',screen:'Ekran',spotlight:'Odak',doc:'Doküman'};
 function setMode(mode,opts){
   opts=opts||{}; STATE.mode=mode; $('#gm-app').setAttribute('data-mode',mode);
   $('#ctrl-board').classList.toggle('active',mode==='board');
   $('#ctrl-materials').classList.toggle('active',mode==='materials');
+  var _cd=$('#ctrl-doc'); if(_cd) _cd.classList.toggle('active',mode==='doc');
   $('#gmr-share-what').textContent=MODE_LBL[mode]||'Kameralar';
   if(mode==='board') setTimeout(WB.resize,40);
+  if(mode==='doc') setTimeout(function(){ var a=$('#doc-area'); if(a)a.focus(); },60);
   if(STATE.isHost&&!opts.remote) sendData({t:'view',mode:mode});
 }
 
@@ -538,6 +540,7 @@ function bindControls(){
   $('#ctrl-share').addEventListener('click',shareScreen);
   $('#ctrl-board').addEventListener('click',function(){ setMode(STATE.mode==='board'?'grid':'board'); });
   $('#ctrl-materials').addEventListener('click',function(){ setMode(STATE.mode==='materials'?'grid':'materials'); });
+  var _cdoc=$('#ctrl-doc'); if(_cdoc) _cdoc.addEventListener('click',function(){ setMode(STATE.mode==='doc'?'grid':'doc'); });
   $('#ctrl-bg').addEventListener('click',function(){ $('#bg-modal').classList.remove('hidden'); });
   $('#ctrl-record').addEventListener('click',function(){ $('#rec-modal').classList.remove('hidden'); });
   $('#ctrl-hand').addEventListener('click',function(){ STATE.handUp=!STATE.handUp; this.classList.toggle('active',STATE.handUp); setSelfHand(STATE.handUp); sendData({t:'hand',up:STATE.handUp}); if(STATE.handUp)toast('El kaldırdın.'); });
@@ -703,6 +706,7 @@ function onData(payload,p){
   else if(msg.t==='quizset'){ if(!STATE.isHost&&fromHost) openQuizSet(msg.list,msg.dur); }
   else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizSet){ var vi=msg.idx||0; var vv=STATE.quizSet.votes[vi]=STATE.quizSet.votes[vi]||{}; vv[msg.a]=(vv[msg.a]||0)+1; renderQuizSetTally(); addPoint(id,msg.name||from,2); } }
   else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); }
+  else if(msg.t==='doc'){ DOC.applyRemote(msg.text,msg.seq); }
   else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
@@ -715,8 +719,8 @@ function onData(payload,p){
   else if(msg.t==='anno'){ ANNO.applyRemote(msg); }
   else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
-function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked}); }
-function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
+function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,doc:DOC.get(),docSeq:STATE._docSeq||0}); }
+function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(typeof msg.doc==='string') DOC.applyRemote(msg.doc,msg.docSeq); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
 
 /* ================= CHAT / PEOPLE ================= */
 var chatUnread=0;
@@ -726,6 +730,34 @@ function addChat(who,text){ chatEmpty(); var log=$('#chat-log'); var d=document.
 function sysChat(text){ chatEmpty(); var log=$('#chat-log'); var d=document.createElement('div'); d.className='chat-msg sys'; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
 function applyChatLock(){ var i=$('#chat-text'),b=$('#chat-send'); var locked=STATE.chatLocked&&!STATE.isHost; i.disabled=locked; b.disabled=locked; i.placeholder=locked?'Sohbet öğretmen tarafından kapatıldı':'Mesaj yaz…'; }
 function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return; var i=$('#chat-text'); var t=(i.value||'').trim(); if(!t)return; addChat(STATE.name+' (Sen)',t); sendData({t:'chat',text:t}); i.value=''; } $('#chat-send').addEventListener('click',send); $('#chat-text').addEventListener('keydown',function(e){ if(e.key==='Enter')send(); }); }
+
+/* ===== Ortak Doküman (collaborative writing — Google Doc benzeri) ===== */
+var DOC=(function(){
+  var el,last='',tmr=null,applying=false;
+  function count(){ var t=el?el.value:''; var w=(t.trim().match(/\S+/g)||[]).length; var c=$('#doc-count'); if(c)c.textContent=w+' kelime'; }
+  function push(){ if(!el)return; var v=el.value; if(v===last)return; last=v; sendData({t:'doc',text:v}); }
+  function schedule(){ count(); if(tmr)clearTimeout(tmr); tmr=setTimeout(push,180); }
+  function applyRemote(text){
+    if(typeof text!=='string')return;
+    if(!el){ STATE._docPending=text; return; }
+    if(el.value===text){ last=text; count(); return; }
+    var focused=(document.activeElement===el), s=el.selectionStart, e=el.selectionEnd, atEnd=(s===el.value.length);
+    applying=true; el.value=text; last=text; applying=false;
+    if(focused){ var len=text.length; if(atEnd){ el.selectionStart=el.selectionEnd=len; } else { el.selectionStart=Math.min(s,len); el.selectionEnd=Math.min(e,len); } }
+    count();
+  }
+  function get(){ return el?el.value:(STATE._docPending||''); }
+  function init(){
+    el=$('#doc-area'); if(!el)return;
+    if(STATE._docPending!=null){ el.value=STATE._docPending; last=STATE._docPending; STATE._docPending=null; }
+    el.addEventListener('input',function(){ if(applying)return; schedule(); });
+    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=new Blob([get()],{type:'text/plain;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(_){} },1000);}catch(e){} });
+    var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge temizlensin mi?'))return; el.value=''; last=''; push(); count(); });
+    count();
+  }
+  return { init:init, applyRemote:applyRemote, get:get };
+})();
+function bindDoc(){ DOC.init(); }
 function refreshPeople(){
   var ul=$('#people-list'); if(!ul)return; ul.innerHTML='';
   var list=[{name:STATE.name+' (Sen)',host:STATE.isHost,mic:STATE.micOn,id:null}];
@@ -1543,7 +1575,7 @@ function boot(){
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
   try{ var _tm=parseInt(localStorage.getItem('gm-tilemin'),10); if(_tm>=160&&_tm<=520){ setTileSize(_tm,false); } }catch(e){}
   initSupabase();
-  bindControls(); bindDockTabs(); bindChat(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
+  bindControls(); bindDockTabs(); bindChat(); bindDoc(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();
   var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
   window.addEventListener('beforeunload',_teardown);

@@ -326,6 +326,7 @@ var EXAMS=[
     { label: "Genel İngilizce", href: "genel-ingilizce" },
     { label: "Çalışma Alanı", children: [
       { label: "Öğrenme Haritası", href: "ogrenme-haritasi" },
+      { label: "Konu Anlatımı", href: "konu-anlatimi" },
       { label: "Soru Bankası", href: "soru-bankasi" },
       { label: "Kelime Bankası", href: "kelime-bankasi" },
       { label: "Yazı Pratiği", href: "yazi-pratigi" },

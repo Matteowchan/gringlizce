@@ -20,6 +20,8 @@
   <script>try{var t=localStorage.getItem('gri-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <style>
     body { background: var(--bg, #fafaf7); }
+    .launch-banner { width: 100%; background: var(--teal, #2C5856); color: #fff; text-align: center; padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 600; letter-spacing: .02em; box-sizing: border-box; }
+    .launch-banner:empty { display: none; }
     .audio-bar { position: sticky; top: 0; z-index: 100; background: var(--teal, #2C5856); color: #fff; padding: 0.75rem 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
     .audio-bar .wrap { display: flex; align-items: center; gap: 1rem; max-width: 1100px; margin: 0 auto; }
     .audio-bar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 14px; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
@@ -40,20 +42,20 @@
     .timer-bar .timer { font-family: Georgia, serif; font-size: 1.05rem; color: var(--teal, #2C5856); flex: 1; }
     .timer-bar .timer strong { font-family: monospace; font-size: 1.25rem; margin-left: 0.4rem; }
     .timer-bar .timer.warning strong { color: #c63838; }
-    .timer-bar .timer.paused strong { color: #999; }
-    .timer-toggle-btn { border: none; padding: 0.55rem 1.3rem; font-weight: 600; cursor: pointer; border-radius: 6px; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+    .timer-bar .timer.paused strong { color: var(--text-muted, #8a7f68); }
+    .timer-toggle-btn { border: none; padding: 0.55rem 1.3rem; font-weight: 600; cursor: pointer; border-radius: 6px; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; transition: background 0.15s; }
     .timer-toggle-btn.start { background: #2c8a4d; }
     .timer-toggle-btn.start:hover { background: #34a05a; }
     .timer-toggle-btn.stop { background: #b33a3a; }
     .timer-toggle-btn.stop:hover { background: #c34646; }
-    .timer-bar .submit-btn { background: var(--teal, #2C5856); color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 6px; }
+    .timer-bar .submit-btn { background: var(--teal, #2C5856); color: #fff; border: none; padding: 0.6rem 1.4rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: background 0.15s; }
     .timer-bar .submit-btn:hover { background: var(--accent, #C09947); }
 
     .tab-bar { position: sticky; top: 124px; z-index: 98; background: var(--bg-card, var(--gri-surface, #fff)); border-bottom: 1px solid var(--gri-line, #d8d2c4); max-width: 1100px; margin: 0 auto; display: flex; overflow-x: auto; }
-    .tab-btn { background: transparent; border: none; padding: 1rem 1.5rem; cursor: pointer; font-family: Georgia, serif; font-size: 1rem; color: #555; border-bottom: 3px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
+    .tab-btn { background: transparent; border: none; padding: 1rem 1.5rem; cursor: pointer; font-family: Georgia, serif; font-size: 1rem; color: var(--text-muted, #8a7f68); border-bottom: 3px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; transition: color 0.15s, background 0.15s, border-color 0.15s; }
     .tab-btn:hover { color: var(--teal, #2C5856); background: var(--bg, #fafaf7); }
     .tab-btn.active { color: var(--teal, #2C5856); border-bottom-color: var(--accent, #C09947); font-weight: 700; }
-    .tab-btn .tab-progress { font-size: 0.75rem; background: #f0ede5; color: #555; padding: 0.15rem 0.5rem; border-radius: 10px; font-family: monospace; font-weight: normal; }
+    .tab-btn .tab-progress { font-size: 0.75rem; background: var(--teal-soft, #f0ede5); color: var(--text-muted, #8a7f68); padding: 0.15rem 0.5rem; border-radius: 10px; font-family: monospace; font-weight: normal; }
     .tab-btn.active .tab-progress { background: var(--accent, #C09947); color: #fff; }
     .tab-btn.completed .tab-progress { background: #4a7a4a; color: #fff; }
 
@@ -68,20 +70,20 @@
     [data-theme="dark"] .part-section { background: #faf8f2; border-color: #2d3548; }
     .part-section.active { display: block; }
     .part-section h2 { font-family: Georgia, serif; font-size: 1.6rem; margin: 0 0 0.25rem; color: var(--teal, #2C5856); padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent, #C09947); }
-    .part-section .part-context { color: #555; font-style: italic; margin: 1rem 0 1.5rem; padding: 0.75rem 1rem; background: var(--bg, #fafaf7); border-left: 3px solid var(--accent, #C09947); }
-    .next-part-btn { display: block; margin: 2.5rem 0 1rem; background: var(--bg-card, var(--gri-surface, #fff)); border: 1px solid var(--teal, #2C5856); color: var(--teal, #2C5856); padding: 0.9rem 1.5rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; font-size: 1rem; border-radius: 8px; }
+    .part-section .part-context { color: var(--text-muted, #8a7f68); font-style: italic; line-height: 1.7; margin: 1rem 0 1.5rem; padding: 0.75rem 1rem; background: var(--bg, #fafaf7); border-left: 3px solid var(--accent, #C09947); border-radius: 0 8px 8px 0; }
+    .next-part-btn { display: block; margin: 2.5rem 0 1rem; background: var(--bg-card, var(--gri-surface, #fff)); border: 1px solid var(--teal, #2C5856); color: var(--teal, #2C5856); padding: 0.9rem 1.5rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; font-size: 1rem; border-radius: 8px; transition: background 0.15s, color 0.15s; }
     .next-part-btn:hover { background: var(--teal, #2C5856); color: #fff; }
 
-    .question-group { margin: 2rem 0; padding-top: 1.25rem; border-top: 1px dashed #ddd; }
+    .question-group { margin: 2rem 0; padding-top: 1.25rem; border-top: 1px dashed var(--gri-line, #d8d2c4); }
     .question-group:first-of-type { border-top: none; padding-top: 0; }
     .group-header { margin-bottom: 1rem; }
     .group-header .q-range { font-family: Georgia, serif; font-size: 1.15rem; font-weight: 700; color: var(--teal, #2C5856); margin-bottom: 0.4rem; }
-    .group-header .instructions { font-style: italic; color: #555; font-size: 0.95rem; line-height: 1.5; }
+    .group-header .instructions { font-style: italic; color: var(--text-muted, #8a7f68); font-size: 0.95rem; line-height: 1.6; }
 
-    .form-completion { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #fff; }
+    .form-completion { border-collapse: collapse; width: 100%; margin: 1rem 0; background: var(--bg-card, var(--gri-surface, #fff)); }
     .form-completion caption { font-weight: 700; letter-spacing: 0.08em; padding: 0.75rem; background: var(--teal, #2C5856); color: #fff; text-align: left; text-transform: uppercase; font-size: 0.85rem; }
     .form-completion td { border: 1px solid var(--gri-line, #d8d2c4); padding: 0.75rem 1rem; font-size: 0.95rem; }
-    .form-completion td:first-child { width: 40%; color: #444; }
+    .form-completion td:first-child { width: 40%; color: var(--text, #241c12); }
 
     .q-input { border: none; border-bottom: 2px solid var(--teal, #2C5856); background: transparent; padding: 0.25rem 0.5rem; font-size: 1rem; font-family: inherit; min-width: 160px; }
     .q-input:focus { outline: none; border-bottom-color: var(--accent, #C09947); background: #fffae5; }
@@ -103,7 +105,7 @@
     .notes-box .notes-body { padding: 1rem 1.25rem; }
     .notes-box .section-heading { font-weight: 700; font-size: 0.95rem; letter-spacing: 0.05em; margin: 1rem 0 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--gri-line, #d8d2c4); color: var(--teal, #2C5856); }
     .notes-box .section-heading:first-child { margin-top: 0; }
-    .notes-box .note-line { margin: 0.6rem 0; line-height: 1.7; font-size: 0.95rem; }
+    .notes-box .note-line { margin: 0.6rem 0; line-height: 1.75; font-size: 0.95rem; }
 
     .chart-block { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center; margin: 1rem 0; padding: 1rem; background: var(--bg, #fafaf7); border: 1px solid var(--gri-line, #d8d2c4); }
     @media (max-width: 600px) { .chart-block { grid-template-columns: 1fr; } }
@@ -116,10 +118,10 @@
     .modal-overlay.show { display: flex; }
     .modal { background: var(--bg-card, var(--gri-surface, #fff)); padding: 2rem; max-width: 480px; width: 90%; border-radius: 4px; }
     .modal h3 { font-family: Georgia, serif; margin-top: 0; color: var(--teal, #2C5856); }
-    .modal p { color: #555; line-height: 1.5; }
+    .modal p { color: var(--text-muted, #8a7f68); line-height: 1.6; }
     .modal .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
     .modal button { flex: 1; padding: 0.7rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .modal .btn-cancel { background: #f0ede5; color: #444; }
+    .modal .btn-cancel { background: var(--teal-soft, #f0ede5); color: var(--text, #241c12); }
     .modal .btn-confirm { background: var(--teal, #2C5856); color: #fff; }
 
     /* ============ START SCREEN ============ */
@@ -137,7 +139,7 @@
       font-size: 0.7rem;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: #999;
+      color: var(--text-muted, #8a7f68);
       text-align: center;
       margin-bottom: 0.9rem;
       font-weight: 500;
@@ -154,7 +156,7 @@
     .start-overview {
       font-family: Georgia, serif;
       font-size: 1.02rem;
-      color: #666;
+      color: var(--text-muted, #8a7f68);
       text-align: center;
       margin: 0 0 2rem;
       font-style: italic;
@@ -191,7 +193,7 @@
     }
     .start-card .meta {
       font-size: 0.82rem;
-      color: #666;
+      color: var(--text-muted, #8a7f68);
       line-height: 1.55;
     }
     .start-notes {
@@ -221,7 +223,7 @@
       padding-left: 1.4rem;
       margin: 0.35rem 0;
       font-size: 0.88rem;
-      color: #444;
+      color: var(--text, #241c12);
       line-height: 1.55;
     }
     .start-notes li::before {
@@ -256,7 +258,7 @@
       .start-screen { margin: 1.5rem auto; padding: 1.75rem 1.4rem; }
       .start-screen h1 { font-size: 2rem; }
     }
-    .loading { text-align: center; padding: 4rem 2rem; color: #888; }
+    .loading { text-align: center; padding: 4rem 2rem; color: var(--text-muted, #8a7f68); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/auth-gate.js" defer></script>
@@ -315,6 +317,7 @@
   <script src="assets/gri-sozluk.js?v=5" defer></script>
 </head>
 <body>
+  <div class="launch-banner" data-site-banner></div>
 <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

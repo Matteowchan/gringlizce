@@ -759,7 +759,38 @@
   }
 
   function mainDetailHtml(d) {
-    var items = d.items || []; var total = d.total || 0, correct = d.correct || 0; var acc = total ? Math.round(correct * 100 / total) : 0;
+    var items = d.items || [];
+
+    // Writing ödevi: öğrencinin yazdığı metin + AI/öğretmen değerlendirmesi
+    if (d.type === 'writing') {
+      var wItems = d.items || [];
+      var promptHtml = d.prompt ? '<div class="gma-sub" style="white-space:pre-wrap;margin:2px 0 6px;padding:6px 8px;background:rgba(44,88,86,.06);border-left:3px solid var(--teal,#2C5856);border-radius:4px">' + esc(String(d.prompt)) + '</div>' : '';
+      if (!wItems.length) return promptHtml + '<div class="dock-empty" style="padding:6px 0">Bu öğrenci bu yazma ödevini henüz teslim etmemiş.</div>';
+      var wList = wItems.map(function (w, idx) {
+        var bits = [];
+        if (w.total_score != null && w.total_max != null) bits.push('Puan ' + w.total_score + '/' + w.total_max);
+        if (w.word_count != null) bits.push(w.word_count + ' kelime');
+        var label = wItems.length > 1 ? ('Taslak ' + (wItems.length - idx)) : 'Teslim';
+        var ai = w.ai_feedback ? '<div class="gma-qmeta" style="margin-top:3px"><b>AI:</b> ' + esc(String(w.ai_feedback)) + '</div>' : '';
+        var teacher = (w.teacher_band != null || w.teacher_feedback)
+          ? '<div class="gma-qmeta" style="margin-top:3px"><b>Öğretmen:</b> ' + (w.teacher_band != null ? ('Band ' + esc(String(w.teacher_band)) + '. ') : '') + (w.teacher_feedback ? esc(String(w.teacher_feedback)) : '') + '</div>'
+          : '';
+        return '<div class="gma-qitem ok" style="flex-direction:column;align-items:stretch">'
+          + '<div class="gma-q" style="display:flex;justify-content:space-between;gap:6px"><b>' + esc(label) + '</b><span class="gma-qmeta">' + esc(bits.join(' · ')) + '</span></div>'
+          + '<div class="gma-sub" style="white-space:pre-wrap;margin-top:4px">' + esc(String(w.text || '')) + '</div>'
+          + ai + teacher + '</div>';
+      }).join('');
+      return promptHtml + '<div class="gma-qlist">' + wList + '</div>';
+    }
+
+    // Materyal ödevi: tamamlama durumu
+    if (d.type === 'material') {
+      var mDone = !!d.completed;
+      return '<div class="gma-sub" style="margin:2px 0 4px"><span class="gma-pill ' + (mDone ? 'ok' : 'pending') + '">' + (mDone ? 'Tamamlandı' : 'Başlamadı') + '</span></div>'
+        + '<div class="dock-empty" style="padding:6px 0;text-align:left">' + (mDone ? 'Öğrenci bu materyali tamamladı olarak işaretledi.' : 'Öğrenci bu materyali henüz tamamlamadı.') + '</div>';
+    }
+
+    var total = d.total || 0, correct = d.correct || 0; var acc = total ? Math.round(correct * 100 / total) : 0;
     var head = '<div class="gma-sub" style="margin:2px 0 4px"><b>' + total + '</b> soru · ' + correct + ' doğru · %' + acc + '</div>';
     if (!items.length) return head + '<div class="dock-empty" style="padding:6px 0">Bu kapsamda çözülmüş soru kaydı yok.</div>';
     return head + '<div class="gma-qlist">' + items.map(function (it) {

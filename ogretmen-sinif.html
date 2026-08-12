@@ -3413,6 +3413,57 @@
       }
       function renderInspectDetail(d, sid, aid) {
         var items = d.items || [];
+
+        // Writing ödevi: öğrencinin yazdığı metin + AI/öğretmen değerlendirmesi
+        if (d.type === 'writing') {
+          var wItems = d.items || [];
+          var promptHtml = d.prompt
+            ? '<div class="qd-writing" style="margin-bottom:.6rem;"><div class="qd-writing-label">Soru / Konu</div><div class="qd-writing-text">' + esc(String(d.prompt)) + '</div></div>'
+            : '';
+          if (!wItems.length) {
+            return promptHtml + '<p class="qd-empty">Bu öğrenci bu yazma ödevini henüz teslim etmemiş.</p>';
+          }
+          var wList = wItems.map(function (w, idx) {
+            var score = (w.total_score != null && w.total_max != null) ? ('Puan ' + w.total_score + ' / ' + w.total_max) : '';
+            var wc = (w.word_count != null) ? (w.word_count + ' kelime') : '';
+            var when = w.created_at ? fmtRelative(w.created_at) : '';
+            var metaBits = [score, wc, when].filter(Boolean).join(' · ');
+            var draftLabel = wItems.length > 1 ? ('Taslak ' + (wItems.length - idx)) : 'Teslim';
+            var ai = w.ai_feedback ? '<div class="qd-exp"><b>AI değerlendirme:</b> ' + esc(String(w.ai_feedback)) + '</div>' : '';
+            var teacher = '';
+            if (w.teacher_band != null || w.teacher_feedback) {
+              teacher = '<div class="qd-exp" style="background:rgba(44,88,86,.08);border-left-color:var(--teal,#2C5856);"><b>Öğretmen:</b> '
+                + (w.teacher_band != null ? ('Band ' + esc(String(w.teacher_band)) + '. ') : '')
+                + (w.teacher_feedback ? esc(String(w.teacher_feedback)) : '') + '</div>';
+            }
+            return '<div class="qd-item ok" style="flex-direction:column;align-items:stretch;">'
+              + '<div class="qd-writing-label" style="display:flex;justify-content:space-between;gap:.5rem;">'
+                + '<span>' + esc(draftLabel) + '</span>'
+                + (metaBits ? '<span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--text-muted);">' + esc(metaBits) + '</span>' : '')
+              + '</div>'
+              + '<div class="qd-writing-text">' + esc(String(w.text || '')) + '</div>'
+              + ai + teacher
+              + '</div>';
+          }).join('');
+          var wHead = '<div class="qd-summary"><span><b>' + wItems.length + '</b> teslim</span></div>';
+          return wHead + promptHtml + '<div class="qd-list">' + wList + '</div>';
+        }
+
+        // Materyal ödevi (izlenebilir soru kaydı yok): tamamlama durumu
+        if (d.type === 'material') {
+          var mDone = !!d.completed;
+          var mWhen = d.completed_at ? fmtRelative(d.completed_at) : '';
+          var openLinkM = d.url ? '<a href="' + esc(String(d.url)) + '" target="_blank" rel="noopener" class="qd-open">Materyali aç →</a>' : '';
+          return '<div class="qd-summary">'
+            + '<span class="ad-status-pill status-' + (mDone ? 'completed' : 'pending') + '">' + (mDone ? 'Tamamlandı' : 'Başlamadı') + '</span>'
+            + (mWhen ? '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(mWhen) + '</span>' : '')
+            + openLinkM
+            + '</div>'
+            + '<p class="qd-empty" style="text-align:left;">' + (mDone
+                ? 'Öğrenci bu materyali tamamladı olarak işaretledi. Bu materyal tipinde soru-soru dökümü tutulmaz.'
+                : 'Öğrenci bu materyali henüz tamamlamadı.') + '</p>';
+        }
+
         var total = d.total || 0, correct = d.correct || 0;
         var acc = total ? Math.round(correct * 100 / total) : 0;
         var pageUrl = (d.url && sid && aid) ? buildReviewUrl(String(d.url), sid, aid) : (d.url ? String(d.url) : '');

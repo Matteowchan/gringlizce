@@ -22,6 +22,18 @@
     auth: { persistSession: true, autoRefreshToken: true }
   });
 
+  /* Premium yetki kontrolü (gri-premium.js yüklü olmayabilir → false döner) */
+  function griIsPremium() {
+    try {
+      if (window.GriPremium && typeof window.GriPremium.isActive === 'function') {
+        return !!window.GriPremium.isActive();
+      }
+      return !!(window.GRI_PREMIUM && window.GRI_PREMIUM.active);
+    } catch (e) {
+      return false;
+    }
+  }
+
   /* ===== CSS injection ===== */
   var css = [
     '.q-grid.show-gri:not(.show-explanation) { grid-template-columns: 1fr 1fr 1fr; }',
@@ -263,6 +275,7 @@
     if (el) el.textContent = text;
   }
   function formatQuota(q) {
+    if (griIsPremium()) return 'Premium · sınırsız';
     if (!q) return '';
     var d = q.daily_remaining || 0;
     var b = q.bonus_remaining || 0;
@@ -328,11 +341,14 @@
     setQuotaText(formatQuota(quota));
     var turnsLeft = TURN_LIMIT - (turnsSoFar || 0);
     var prevHtml = (prevTurns && prevTurns.length) ? renderTurnsHtml(prevTurns) : '';
+    var quotaNote = griIsPremium()
+      ? 'Premium üyeliğinle soru bankası AI hakların sınırsız.'
+      : 'Günlük 10 hakkın var, paket alırsan üstüne bonus eklenir.';
     setBody([
       prevHtml,
       '<div class="gri-prompt-area">',
       '  <textarea id="gri-prompt-input" placeholder="Bu soru hakkında ne sormak istersin? Örnek: B seçeneği neden yanlış?" maxlength="1000"></textarea>',
-      '  <p class="gri-prompt-hint">Bu soru için Gri\'ye ' + turnsLeft + ' kez ' + (turnsSoFar ? 'daha ' : '') + 'danışabilirsin. Günlük 10 hakkın var, paket alırsan üstüne bonus eklenir.</p>',
+      '  <p class="gri-prompt-hint">Bu soru için Gri\'ye ' + turnsLeft + ' kez ' + (turnsSoFar ? 'daha ' : '') + 'danışabilirsin. ' + quotaNote + '</p>',
       '  <button class="gri-send" id="gri-send">Gri\'ye Sor</button>',
       '</div>'
     ].join(''));
@@ -361,7 +377,8 @@
     var quota = data.quota || { daily_remaining: 0, bonus_remaining: 0, daily_limit: 10, total_remaining: 0 };
     setQuotaText(formatQuota(quota));
     var turns = data.turns || [];
-    var canAskMore = data.can_ask_more && quota.total_remaining > 0;
+    var premium = griIsPremium();
+    var canAskMore = data.can_ask_more && (quota.total_remaining > 0 || premium);
     var pieces = [];
 
     pieces.push(renderTurnsHtml(turns));
@@ -522,7 +539,7 @@
 
       // 1 tur var
       if (turns.length > 0) {
-        if (quota.total_remaining <= 0) {
+        if (quota.total_remaining <= 0 && !griIsPremium()) {
           renderResponseState({ turns: turns, quota: quota, can_ask_more: false });
           return;
         }
@@ -530,8 +547,8 @@
         return;
       }
 
-      // Tur yok
-      if (quota.total_remaining <= 0) {
+      // Tur yok — premium kullanıcıda yerel paywall ATLANIR (sunucu sınırsız verir)
+      if (quota.total_remaining <= 0 && !griIsPremium()) {
         renderPaywallState([
           { name: '10 Soru Paketi', price: 100, url: 'https://www.shopier.com/SATquestionBank/47230429' },
           { name: '25 Soru Paketi', price: 225, url: 'https://www.shopier.com/SATquestionBank/47230479' },

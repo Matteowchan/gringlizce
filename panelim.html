@@ -2603,6 +2603,7 @@
   <script src="/assets/pwa-install.js" defer></script>
   <script src="assets/curriculum.js?v=25"></script>
   <script src="assets/nav.js?v=29"></script>
+  <script src="assets/gri-premium.js?v=1" defer></script>
   <script src="assets/track.js?v=2" defer></script>
   <script src="assets/grimeet-schedule.js?v=22" defer></script>
 </head>
@@ -2630,6 +2631,7 @@
           <span class="eyebrow">Çalışma Masam</span>
           <h1 class="welcome">Merhaba, <span class="uname" id="uname">—</span></h1>
           <p class="sub">Çalışmaların, yanlışların, kelimelerin, ödevlerin. Her şey burada birikir.</p>
+          <div id="premium-status" class="premium-status" aria-live="polite"></div>
         </div>
         <div class="panel-actions">
           <button class="btn-action" id="btn-reset-progress">İlerlememi Sıfırla</button>
@@ -2639,6 +2641,44 @@
         </div>
       </div>
     </section>
+
+    <style>
+      .premium-status{margin-top:.7rem;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .premium-status .premium-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.32rem .8rem;border-radius:100px;background:linear-gradient(135deg,var(--gri-accent,#2C5856),var(--teal-deep,#1E4E4B));color:#fff;font-size:.78rem;font-weight:700;letter-spacing:.04em}
+      .premium-status .premium-badge .pb-until{font-weight:500;opacity:.9;letter-spacing:.02em}
+      .premium-status .premium-upsell{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--text-muted);text-decoration:none;border-bottom:1px solid var(--line,#d9d2c4);padding-bottom:1px}
+      .premium-status .premium-upsell:hover{color:var(--teal,#2C5856);border-color:var(--teal,#2C5856)}
+    </style>
+    <script>
+      (function(){
+        function fmtDate(v){
+          try{
+            var d=new Date(v);
+            if(isNaN(d.getTime()))return '';
+            return d.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+          }catch(e){return '';}
+        }
+        function renderPremiumStatus(st){
+          var el=document.getElementById('premium-status');
+          if(!el)return;
+          var active=!!(st&&st.active);
+          if(active){
+            var until=st.until?fmtDate(st.until):'';
+            var untilHtml=until?'<span class="pb-until">'+until+' tarihine kadar</span>':'';
+            el.innerHTML='<span class="premium-badge">Premium'+(untilHtml?' · ':'')+untilHtml+'</span>';
+          }else{
+            el.innerHTML='<a class="premium-upsell" href="premium">Premium’a geç</a>';
+          }
+        }
+        // gri-premium.js yayınladığı durumla güncelle
+        window.addEventListener('gri-premium', function(e){ renderPremiumStatus(e.detail); });
+        function init(){
+          renderPremiumStatus(window.GRI_PREMIUM || { active:false, until:null });
+        }
+        if(document.readyState!=='loading')init();
+        else document.addEventListener('DOMContentLoaded', init);
+      })();
+    </script>
 
     <!-- Hızlı erişim barı -->
     <style>

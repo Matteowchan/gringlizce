@@ -710,6 +710,7 @@ function onData(payload,p){
       loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
+  else if(msg.t==='pdf-hl'){ if(!STATE.isHost&&fromHost) PDFHL.applyRemote(msg.items); }
   else if(msg.t==='mat-zoom'){ if(!STATE.isHost&&fromHost){ var _z=+msg.z; if(_z>=0.4&&_z<=2.5){ STATE.matZoom=_z; applyZoom(); } } }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
@@ -735,8 +736,8 @@ function onData(payload,p){
   else if(msg.t==='anno'){ ANNO.applyRemote(msg); }
   else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
-function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,docState:DOC.getState(),wbLock:!!STATE.wbLocked,docLock:!!STATE.docLocked}); }
-function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.docState) DOC.applyFullState(msg.docState); if(!STATE.isHost){ if(msg.wbLock) STATE.wbLocked=true; if(msg.docLock){ STATE.docLocked=true; DOC.setLocked(true); } } if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
+function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,docState:DOC.getState(),wbLock:!!STATE.wbLocked,docLock:!!STATE.docLocked,pdfhl:PDFHL.items()}); }
+function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.docState) DOC.applyFullState(msg.docState); if(!STATE.isHost){ if(msg.wbLock) STATE.wbLocked=true; if(msg.docLock){ STATE.docLocked=true; DOC.setLocked(true); } } if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ if(msg.pdfhl&&msg.pdfhl.length) STATE._pendPdfHl=msg.pdfhl; loadMaterial(msg.material,true); setMode('materials',{remote:true}); if(msg.pdfhl){ try{ PDFHL.applyRemote(msg.pdfhl); }catch(e){} } } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
 
 /* ================= CHAT / PEOPLE ================= */
 var chatUnread=0;
@@ -1130,7 +1131,7 @@ function bindMaterials(){
   $('#mat-zoom-out').addEventListener('click',zout);
   var zfi=$('#mat-zoom-fab-in'); if(zfi)zfi.addEventListener('click',zin);
   var zfo=$('#mat-zoom-fab-out'); if(zfo)zfo.addEventListener('click',zout);
-  var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); });
+  var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); try{ PDFHL.syncActive(); }catch(e){} });
   var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (senkron).':'Sayfa kontrolü sende.'); });
   bindFileUpload();
 }
@@ -1162,7 +1163,7 @@ function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   STATE.matScrollEl=null;
-  ANNO.reset(!remote);
+  ANNO.reset(!remote); try{ PDFHL.reset(!remote); }catch(e){}
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } matTab('youtube'); ensureYtPlayer(id); }
   else if(m.kind==='file'){ matTab('file'); var ff=$('#mat-file-frame'); if(ff){ var ex=(m.ext||'').toLowerCase(); var st=$('#mat-file-status'); if(st&&m.name)st.textContent=m.name;
     if(ex==='pdf'){ ff.innerHTML='<div id="mat-file-scroll" class="pdf-scroll"><div class="mat-empty">PDF hazırlanıyor…</div></div>'; var sc=$('#mat-file-scroll'); applyZoom();
@@ -1222,9 +1223,58 @@ async function renderPdf(url,container){
     for(var i=1;i<=pdf.numPages;i++){ var page=await pdf.getPage(i); var vp=page.getViewport({scale:scale});
       var cv=document.createElement('canvas'); cv.className='pdf-page'; cv.width=vp.width; cv.height=vp.height; container.appendChild(cv);
       await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise; }
+    // Fosforlu katmanı: sayfalarla aynı scroll kabı içinde → PDF ile birlikte kayar.
+    var hl=document.createElement('canvas'); hl.id='pdf-hl-canvas'; container.appendChild(hl); PDFHL.mount(hl,container);
     return true;
   }catch(e){ return false; }
 }
+/* ===== PDF Fosforlu (highlighter) — içerik-hizalı, scroll ile kayan AYRI katman. ANNO'ya dokunmaz.
+   Yalnız 'Üstüne Çiz' AÇIK ve ANNO aracı 'highlighter' iken pointer yakalar; diğer araçlar #anno-canvas'ta kalır.
+   Koordinatlar SAYFA-BAZLI normalize (0-1 + sayfa index) → çözünürlük/genişlik/margin bağımsız hizalama.
+   Tek büyük canvas'ın belleği/boyut sınırı: backing store MAXDIM/MAXAREA ile ölçeklenir (görsel içerik boyu korunur). */
+var PDFHL=(function(){
+  var cv=null,ctx=null,cont=null,rects=[],cw=1,ch=1,bs=1,items=[],drawing=false,cur=null;
+  var MAXDIM=8192,MAXAREA=16e6,PAD=14,_roT=null; // iOS Safari canvas alan sınırı (~16.7M px) altında kal
+  function mounted(){ return !!(cv&&cv.isConnected&&ctx); }
+  function acol(){ try{ return ANNO.currentColor(); }catch(e){ return '#ffe14d'; } }
+  function asize(){ try{ return Math.max(10,(ANNO.currentSize()||6)*3); }catch(e){ return 18; } }
+  function curTool(){ try{ return ANNO.currentTool(); }catch(e){ return ''; } }
+  // İçerik ölçümünü zoom'dan bağımsız yap: zoom'u geçici sıfırla, yerel px oku, geri koy (canvas zoom'u kaptan miras alır).
+  function measure(){
+    if(!cv||!cont)return; var pages=Array.prototype.slice.call(cont.querySelectorAll('canvas.pdf-page')); if(!pages.length)return;
+    var z=cont.style.zoom, un=(z&&z!==''&&z!=='1'); if(un) cont.style.zoom='';
+    cw=cont.clientWidth||1; rects=pages.map(function(p){ return {left:p.offsetLeft,top:p.offsetTop,w:p.offsetWidth,h:p.offsetHeight}; });
+    var last=pages[pages.length-1]; ch=(last.offsetTop+last.offsetHeight+PAD)||cont.scrollHeight||1;
+    if(un) cont.style.zoom=z;
+    cv.style.width=cw+'px'; cv.style.height=ch+'px';
+    bs=Math.min(1, MAXDIM/cw, MAXDIM/ch, Math.sqrt(MAXAREA/(cw*ch))); if(!(bs>0))bs=1;
+    cv.width=Math.max(1,Math.round(cw*bs)); cv.height=Math.max(1,Math.round(ch*bs)); ctx=cv.getContext('2d'); redraw();
+  }
+  function ro(){ clearTimeout(_roT); _roT=setTimeout(measure,120); }
+  function pageAt(px,py){ var bi=0,bd=Infinity; for(var i=0;i<rects.length;i++){ var r=rects[i]; if(px>=r.left&&px<=r.left+r.w&&py>=r.top&&py<=r.top+r.h)return i; var cy=Math.max(r.top,Math.min(py,r.top+r.h)); var d=Math.abs(py-cy); if(d<bd){bd=d;bi=i;} } return bi; }
+  function ptFromEvent(e){ var r=cv.getBoundingClientRect(); var px=(e.clientX-r.left)/r.width*cw, py=(e.clientY-r.top)/r.height*ch; var pi=pageAt(px,py); var pr=rects[pi]||{left:0,top:0,w:cw,h:ch}; return {p:pi,x:(px-pr.left)/(pr.w||1),y:(py-pr.top)/(pr.h||1)}; }
+  var bcast=throttle(function(){ sendData({t:'pdf-hl',items:items}); },160);
+  function down(e){ if(!mounted()||!rects.length)return; e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+    drawing=true; cur={c:acol(),a:0.4,w:asize()/((rects[0]&&rects[0].w)||cw),pts:[ptFromEvent(e)]}; items.push(cur); redraw(); }
+  function move(e){ if(!drawing||!cur)return; e.preventDefault(); cur.pts.push(ptFromEvent(e)); redraw(); bcast(); }
+  function up(){ if(!drawing)return; drawing=false; cur=null; sendData({t:'pdf-hl',items:items}); }
+  function drawStroke(it){ if(!it||!it.pts||!it.pts.length)return; var r0=rects[it.pts[0].p]||rects[0]; if(!r0)return;
+    ctx.save(); ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=it.a||0.4; ctx.strokeStyle=it.c||'#ffe14d'; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.lineWidth=Math.max(4,(it.w||0.02)*(r0.w||cw));
+    ctx.beginPath(); it.pts.forEach(function(q,i){ var r=rects[q.p]||r0; var x=r.left+q.x*r.w, y=r.top+q.y*r.h; i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); ctx.restore(); }
+  function redraw(){ if(!ctx)return; ctx.setTransform(bs,0,0,bs,0,0); ctx.clearRect(0,0,cw,ch); items.forEach(drawStroke); }
+  function syncActive(){ var m=document.getElementById('gmr-materials'); if(!m)return;
+    var on=m.classList.contains('annotating') && curTool()==='highlighter' && !!(STATE.currentMaterial&&STATE.currentMaterial.kind==='file'); m.classList.toggle('hl-pdf',on); }
+  function mount(canvas,container){ cv=canvas; cont=container; ctx=cv.getContext('2d');
+    if(!cv.__gmHL){ cv.__gmHL=1; cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+      if(window.ResizeObserver){ try{ new ResizeObserver(ro).observe(container); }catch(e){} } window.addEventListener('resize',ro); }
+    if(STATE._pendPdfHl){ items=STATE._pendPdfHl||[]; STATE._pendPdfHl=null; }
+    measure(); syncActive();
+  }
+  function applyRemote(list){ items=Array.isArray(list)?list:((list&&list.items)||[]); if(mounted())redraw(); else STATE._pendPdfHl=items; }
+  function reset(bc){ items=[]; cur=null; drawing=false; if(mounted())redraw(); if(bc)sendData({t:'pdf-hl',items:[]}); }
+  return {mount:mount,applyRemote:applyRemote,reset:reset,syncActive:syncActive,items:function(){return items;}};
+})();
 function attachFileScrollSync(el){ if(!el)return; STATE.matScrollEl=el; var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; var max=(el.scrollHeight-el.clientHeight)||1; sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,el.scrollTop/max))}); },140); el.addEventListener('scroll',bc,{passive:true}); }
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
 function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared&&!STATE.matPaused)||(!STATE.isHost&&STATE.matControl); }
@@ -1519,12 +1569,12 @@ var ANNO=(function(){
     cv=$('#anno-canvas'); if(!cv)return; ctx=cv.getContext('2d'); wrap=cv.parentElement;
     var cc=$('#anno-colors'); if(cc){ COLORS.forEach(function(c,i){ var b=document.createElement('button'); b.style.background=c; if(i===0)b.classList.add('on'); b.dataset.color=c; cc.appendChild(b); });
       cc.addEventListener('click',function(e){ var b=e.target.closest('[data-color]'); if(!b)return; color=b.dataset.color; $$('#anno-colors button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); }); }
-    $$('.anno-tool[data-atool]').forEach(function(b){ b.addEventListener('click',function(){ tool=b.dataset.atool; $$('.anno-tool[data-atool]').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); cv.style.cursor=(tool==='select')?'move':((tool==='text'||tool==='bullet')?'text':'crosshair'); }); });
+    $$('.anno-tool[data-atool]').forEach(function(b){ b.addEventListener('click',function(){ tool=b.dataset.atool; $$('.anno-tool[data-atool]').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); cv.style.cursor=(tool==='select')?'move':((tool==='text'||tool==='bullet')?'text':'crosshair'); try{ PDFHL.syncActive(); }catch(e){} }); });
     var sz=$('#anno-size'); if(sz)sz.addEventListener('input',function(){ size=parseInt(this.value,10); });
     var fd=$('#anno-font-dec'); if(fd)fd.addEventListener('click',function(){ bumpFont(-1); });
     var fi=$('#anno-font-inc'); if(fi)fi.addEventListener('click',function(){ bumpFont(1); });
     var un=$('#anno-undo'); if(un)un.addEventListener('click',function(){ items.pop(); sel=null; redraw(); broadcast(); });
-    var cl=$('#anno-clear'); if(cl)cl.addEventListener('click',function(){ items=[]; sel=null; redraw(); broadcast(); });
+    var cl=$('#anno-clear'); if(cl)cl.addEventListener('click',function(){ items=[]; sel=null; redraw(); broadcast(); try{ if(STATE.currentMaterial&&STATE.currentMaterial.kind==='file') PDFHL.reset(true); }catch(e){} });
     cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
     cv.addEventListener('dblclick',function(e){ var p=pxpos(e); var i=hit(p); if(i>=0&&items[i]&&items[i].type==='text') editText(i); });
     bindBarDrag();
@@ -1604,7 +1654,7 @@ var ANNO=(function(){
   function broadcast(){ sendData({t:'anno',items:items}); }
   function applyRemote(msg){ var it=(msg&&msg.items)?msg.items:(Array.isArray(msg)?msg:(msg&&msg.strokes)); if(!it)return; items=it; resize(); }
   function reset(bc){ items=[]; sel=null; redraw(); if(bc)broadcast(); }
-  return {init:init,resize:resize,applyRemote:applyRemote,reset:reset};
+  return {init:init,resize:resize,applyRemote:applyRemote,reset:reset,currentTool:function(){return tool;},currentColor:function(){return color;},currentSize:function(){return size;}};
 })();
 
 /* ================= REACTIONS ================= */

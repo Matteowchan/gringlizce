@@ -375,7 +375,7 @@ function isScreen(pub){ return pub&&(pub.source===LK.Track.Source.ScreenShare); 
 function onParticipant(p){ ensureTile(p.identity,{name:p.name||'Öğrenci',host:isHostMeta(p)}); recordAttend(p.identity,p.name||'Öğrenci'); refreshPeople(); updateGridCount(); p.trackPublications.forEach(function(pub){ if(pub.isSubscribed&&pub.track) attachTrack(pub.track,pub,p); }); }
 var promotedHosts=new Set();
 function isHostMeta(p){ try{ if(p&&p.identity&&promotedHosts.has(p.identity))return true; return (p.metadata&&JSON.parse(p.metadata).host)===true; }catch(e){ return false; } }
-function becomeHost(){ if(STATE.isHost)return; STATE.isHost=true; var app=$('#gm-app'); if(app){ app.classList.remove('is-student'); app.classList.add('is-host'); } var rn=$('#gmr-room-name'); if(rn)rn.textContent='Ders Odası (Öğretmen)'; toast('Öğretmen sana ders yönetimi yetkisi verdi.'); refreshPeople(); }
+function becomeHost(){ if(STATE.isHost)return; STATE.isHost=true; var app=$('#gm-app'); if(app){ app.classList.remove('is-student'); app.classList.add('is-host'); } var rn=$('#gmr-room-name'); if(rn)rn.textContent='Ders Odası (Öğretmen)'; toast('Öğretmen sana ders yönetimi yetkisi verdi.'); try{ DOC.startSnapshots(); }catch(e){} refreshPeople(); }
 
 function attachTrack(track,pub,p){
   if(isScreen(pub)){ try{ if(pub.setVideoQuality&&LK.VideoQuality) pub.setVideoQuality(LK.VideoQuality.HIGH); }catch(e){} attachScreen(track,false); return; }
@@ -753,6 +753,8 @@ var DOC=(function(){
   function mkEditor(pane,sel,ph){
     var host=document.querySelector(sel); if(!host)return null;
     var q=new Quill(host,{ theme:'snow', placeholder:ph, modules:{ toolbar:{ container:TOOLBAR, handlers:{ image:imgHandler(pane) } } } });
+    // M1: web'den kopyalanan base64 (data:) gorselleri yapistirmayi ENGELLE — dev delta senkronu bozar
+    try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)) return new (Quill.import('delta'))(); }catch(_){} return delta; }); }catch(e){}
     q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
     return q;
   }
@@ -773,7 +775,7 @@ var DOC=(function(){
     function end(e){ if(!dragging)return; dragging=false; try{g.releasePointerCapture(e.pointerId);}catch(_){} }
     g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);
   }
-  function sendSnapshot(){ if(!ready||!STATE.connected)return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && s.length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
+  function sendSnapshot(){ if(!ready||!STATE.connected)return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && encd.encode(s).length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
   function combinedText(){ var out=[]; try{ if(Q.L&&isOpen('L')){ var l=Q.L.getText().trim(); if(l)out.push('=== SOL SAYFA ===\n'+l); } if(Q.C)out.push(Q.C.getText().trim()); if(Q.R&&isOpen('R')){ var r=Q.R.getText().trim(); if(r)out.push('=== SAĞ SAYFA ===\n'+r); } }catch(e){} return out.join('\n\n'); }
   function init(){
     if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C'))return;
@@ -808,13 +810,15 @@ var DOC=(function(){
     if(!st)return;
     if(!ready){ STATE._docPendingState=st; return; }
     try{
-      ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q&&st[p]&&!q.hasFocus()) q.setContents({ops:st[p]},'silent'); });
+      // m2: yetkili resync — odaklı panede BILE uygula (drift onarimi), imleci koru
+      ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q||!st[p])return; var sel=q.hasFocus()?q.getSelection():null; q.setContents({ops:st[p]},'silent'); if(sel){ try{ q.setSelection(Math.min(sel.index,Math.max(0,q.getLength()-1)),0,'silent'); }catch(_){}} });
       if(st.layL&&!isOpen('L')) togglePane('L',true);
       if(st.layR&&!isOpen('R')) togglePane('R',true);
       wc();
     }catch(e){}
   }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, getState:getState, applyFullState:applyFullState };
+  function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

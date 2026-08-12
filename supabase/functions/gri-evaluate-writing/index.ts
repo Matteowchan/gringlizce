@@ -390,9 +390,15 @@ Dört kriter 1–9 band ölçeğinde ayrı ayrı puanlanır (yarım band serbest
 4) GRAMMATICAL RANGE & ACCURACY — yapı çeşitliliği (complex/subordinate cümleler), doğruluk, noktalama.
 BAND SINIRLARI (uygula):
 - Band 5: görev kısmen/dengesiz karşılanmış; sınırlı kelime + belirgin hatalar; sınırlı gramer kontrolü.
-- Band 6: görev karşılanmış ama fikirler under-developed; kelime yeterli ama limited/tekrarlı; hatalar fark edilir ama anlamı nadiren bozar.
-- Band 7: net position/overview; geliştirilmiş & desteklenmiş fikirler; esnek kelime + some less-common lexis + collocation farkındalığı; sık sık hatasız complex cümleler.
-- Band 8: tam gelişmiş; geniş ve isabetli kelime doğal kullanılmış; cümlelerin çoğu hatasız.
+- Band 6: görev karşılanmış ama fikirler under-developed; kelime yeterli ama limited/tekrarlı; hatalar fark edilir ama anlamı nadiren bozar. (YETERLİ)
+- Band 7: net position/overview; geliştirilmiş & desteklenmiş fikirler; esnek kelime + some less-common lexis + collocation farkındalığı; sık sık hatasız complex cümleler. (İYİ)
+- Band 8: fikirler tam gelişmiş ve iyi desteklenmiş; geniş, isabetli, DOĞAL kelime (idiomatic collocation); complex cümlelerin ÇOĞU hatasız, yalnızca ara sıra küçük slip; akıcı ve kontrollü. (ÇOK İYİ)
+- Band 9: tümüyle gelişmiş; tam esnek ve isabetli dil; hata pratikte yok. (UZMAN)
+KALİBRASYON (ÇOK ÖNEMLİ — tedbirli davranıp herkese 7 verme):
+- 7 = iyi, 8 = çok iyi, 9 = uzman. Gerçekten güçlü, akıcı, iyi geliştirilmiş, geniş ve isabetli kelimeli bir cevabı TEDBİRDEN 7'ye çekme; hak ediyorsa 7.5–8.5 ver.
+- Dört kriteri gerçek farklara göre AYIR — hepsi aynı olmak zorunda DEĞİL (örn. CC 8, LR 7, GRA 8, TR 7.5 doğal ve beklenen bir dağılımdır). Tüm kriterlere aynı puanı vermek genelde yanlış kalibrasyondur.
+- LEXICAL: birkaç yazım/typo slip'i (ör. "Futhermore", "poeple", "Howerver"), kelime yelpazesi ve isabeti aksi halde GENİŞ ve doğalsa LR'yi EN FAZLA yarım band düşürür — 2-3 typo yüzünden collocation'ı güçlü bir metni 6-7'ye çekme.
+- Güçlü collocation + kontrollü complex yapı + net gelişim varsa ilgili kriterler 8'e ulaşabilir; bir üst band'ı sadece "mükemmel olmadığı" için esirgeme.
 HER kriter yorumunda ŞUNU yap: (a) verdiğin band'ı yaz, (b) bu metinde o band'da TUTAN spesifik özelliği kısa bir alıntıyla göster, (c) bir üst yarım-band için TAM olarak neyi değiştireceğini söyle.
 ` : "";
 
@@ -432,7 +438,7 @@ All human-facing fields must be BILINGUAL with Turkish-DOMINANT code-switching, 
 - "improvementAdvice": BILINGUAL TURKISH-DOMINANT. 3-5 sentences. Address the student directly ("sen", "yazın"). Focus on ONE priority improvement for this specific text and tell them exactly how to work on it. Never list multiple issues. Example tone: "Senin introduction'ın iyi ama body paragraph'larında supporting evidence çok zayıf. Özellikle ikinci paragraphta 'many people think' gibi vague claim'ler yerine somut bir örnek ver, kendi deneyimin veya bir okuduğun kaynaktan. Bir sonraki yazında her ana claim'in arkasına 'because + specific reason' yapısı ekle. Bu küçük disiplin senin development & support skorunu belirgin şekilde yukarı çeker."
 
 EVALUATION APPROACH
-- Apply the rubric rigorously. Be fair — do not inflate scores but also do not punish unnecessarily.
+- Apply the rubric rigorously and be CALIBRATED, not timid. Reward genuine strength: a well-developed, fluent essay with wide, precise, natural vocabulary and controlled complex grammar deserves Band 7.5–8.5 — do NOT cluster every criterion at 7 out of caution. Equally, do not inflate a weak or under-developed essay. Let the four criteria differ to reflect real strengths and weaknesses (a strong text often scores e.g. CC 8 / LR 7 / GRA 8 / TR 7.5, not four identical numbers).
 - In "specificMistakes" provide 8–12 items total: the most critical errors PLUS lexical/structural "upgrade" suggestions (weak→stronger phrasing with alternatives). "type" must be one of: "grammar", "convention", "tone", "upgrade". When the text is short or has few errors, prioritise "upgrade" items so the section is always substantial and genuinely useful.
 - Mentor tone. Neither overly positive nor harsh.
 

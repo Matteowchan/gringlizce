@@ -706,8 +706,10 @@
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
     const params = new URLSearchParams(window.location.search);
     const TEST_SLUG = params.get('test') || 'ielts-mock-1';
-    // Gri Meet senkron modu: otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
-    const GMSYNC = params.has('gmsync');
+    // Gri Meet senkron modu: bir iframe'e gömülüyse (Gri Meet materyali — öğretmen iç-navigasyonla
+    // varsa da) VEYA gmsync=1 ile. Otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
+    // Normal sınavda bu runner iframe'e gömülü değildir (parent===window) → köprü inert, davranış aynı.
+    const GMSYNC = (window.parent !== window) || params.has('gmsync');
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let state = {
@@ -933,6 +935,23 @@
         else if (n > 0) tabCount.classList.add('low');
       }
     }
+
+    // Gri Meet essay senkronu (yalnız gmsync=1): essay'leri oku/uygula. O AN LOKALDE ODAKLI
+    // textarea'nın üzerine YAZMA (caret savaşını önle) — sıra-tabanlı birlikte yazma. Köprü enhance.js'te.
+    if (GMSYNC) window.__gmSync = {
+      get: function () { return { answers: state.essays }; },
+      apply: function (d) {
+        if (!d || !d.answers) return;
+        Object.keys(d.answers).forEach(function (k) {
+          var ta = document.getElementById('editor-' + k);
+          if (ta && ta === document.activeElement) return; // lokal yazıyor: dokunma
+          var val = d.answers[k] || '';
+          state.essays[k] = val;
+          if (ta && ta.value !== val) { ta.value = val; if (typeof updateWordCount === 'function') updateWordCount(k); if (typeof autoGrowTextarea === 'function') autoGrowTextarea(ta); }
+        });
+        if (typeof saveLocal === 'function') saveLocal();
+      }
+    };
 
     function saveLocal() {
       localStorage.setItem('ielts_writing_' + TEST_SLUG, JSON.stringify({

@@ -425,8 +425,10 @@
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
     const params = new URLSearchParams(window.location.search);
     const TEST_SLUG = params.get('test') || 'ielts-mock-1';
-    // Gri Meet senkron modu: otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
-    const GMSYNC = params.has('gmsync');
+    // Gri Meet senkron modu: bir iframe'e gömülüyse (Gri Meet materyali — öğretmen iç-navigasyonla
+    // varsa da) VEYA gmsync=1 ile. Otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
+    // Normal sınavda bu runner iframe'e gömülü değildir (parent===window) → köprü inert, davranış aynı.
+    const GMSYNC = (window.parent !== window) || params.has('gmsync');
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let state = {
@@ -761,6 +763,22 @@
       }
       updateTabProgress();
     }
+
+    // Gri Meet cevap senkronu (yalnız gmsync=1): cevapları oku/uygula. Odaklı metin alanının
+    // üzerine YAZMA (caret savaşını önle) — köprü enhance.js'te.
+    if (GMSYNC) window.__gmSync = {
+      get: function () { return { answers: state.answers }; },
+      apply: function (d) {
+        if (!d || !d.answers) return;
+        var ae = document.activeElement, keep = null, ss = null, se = null;
+        if (ae && ae.classList && ae.classList.contains('q-input') && ae.tagName === 'INPUT' && ae.type === 'text') { keep = ae; try { ss = ae.selectionStart; se = ae.selectionEnd; } catch (e) {} }
+        var kv = keep ? keep.value : null;
+        state.answers = d.answers;
+        restoreAnswers();
+        if (keep && document.contains(keep)) { keep.value = kv; try { if (ss != null) keep.setSelectionRange(ss, se); } catch (e) {} }
+        saveLocal();
+      }
+    };
 
     function saveLocal() {
       localStorage.setItem('ielts_listening_' + TEST_SLUG, JSON.stringify({

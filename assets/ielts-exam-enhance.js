@@ -87,19 +87,41 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 
-/* ===== Gri Meet senkron köprüsü — YALNIZ gmsync=1 embed'inde aktif =====
-   Amaç: öğretmen (host) ile öğrenci aynı ekranı görsün. Runner, "Sınava Başla" ve
-   passage/task geçişlerinde durumu parent'a (grimeet) postMessage'lar; grimeet host
-   ise bunu odaya yayınlar, öğrenci grimeet'i öğrencinin runner iframe'ine apply eder.
-   gmsync=1 YOKKEN (normal sınav) bu blok tamamen atlanır — davranış birebir eskisi gibi. */
+/* ===== Gri Meet senkron köprüsü — iframe'e gömülüyken (veya gmsync=1) aktif =====
+   Amaç: öğretmen (host) ile öğrenci aynı ekranı görsün ve aynı soru/essay üzerinde birlikte
+   çalışsın. Runner "Sınava Başla", passage/task geçişi ve cevap/essay değişiminde durumu
+   parent'a (grimeet) postMessage'lar; grimeet karşı tarafa yayınlar, o da runner iframe'ine
+   apply eder. Gömülü DEĞİLKEN (normal sınav, üst pencere) bu blok tamamen atlanır — davranış
+   birebir eskisi gibi. Aktivasyon iframe'e gömülü olmaya bağlı çünkü öğretmen runner'a Gri Meet
+   içinde iç-navigasyonla (loadMaterial'dan geçmeden) varabilir; URL bayrağı o yolda eklenmez. */
 (function(){
-  var GMSYNC=false;
-  try{ GMSYNC=new URLSearchParams(location.search).has('gmsync'); }catch(e){}
-  if(!GMSYNC || window.parent===window) return; // normal sınav / üst pencere: köprü kapalı
+  // Aktivasyon: bir iframe'e gömülüyse (Gri Meet materyali) VEYA gmsync=1 bayrağıyla.
+  // Gömülü DEĞİL ve gmsync yoksa (normal sınav, üst pencere) köprü tamamen kapalı — davranış eskisi gibi.
+  var hasFlag=false; try{ hasFlag=new URLSearchParams(location.search).has('gmsync'); }catch(e){}
+  if(window.parent===window && !hasFlag) return;
 
   var applying=false; // apply sırasında yeniden-post'u engelle (sonsuz döngü koruması)
   function post(st){ try{ window.parent.postMessage({__gmex:1, state:st}, '*'); }catch(e){} }
   function okOrigin(o){ if(!o||o==='null') return true; try{ var h=new URL(o).hostname; return h===location.hostname || /(^|\.)gringlizce\.com$/.test(h); }catch(e){ return false; } }
+
+  // Cevap/essay yayını — runner'ın __gmSync.get() ile mevcut cevaplarını oku, debounce'la yolla.
+  var ansTimer=null;
+  function scheduleAnswers(){
+    if(applying) return;
+    clearTimeout(ansTimer);
+    ansTimer=setTimeout(function(){
+      if(applying) return;
+      if(window.__gmSync && typeof window.__gmSync.get==='function'){
+        try{ var g=window.__gmSync.get(); if(g && g.answers) post({answers:g.answers}); }catch(e){}
+      }
+    },350);
+  }
+  function onAnswerEvent(e){
+    if(applying) return;
+    var t=e.target; if(!t||!t.matches) return;
+    // reading/listening cevap kontrolleri (.q-input, data-q) veya writing essay textarea'sı
+    if(t.matches('.q-input,[data-q],.editor-textarea,textarea[data-task]')) scheduleAnswers();
+  }
 
   // Global part/task yöneticisini sar: her çağrıda (apply değilse) parent'a yayınla.
   // reading/listening → setActivePart(n); writing → setActiveTask(n). Klasik script'te
@@ -118,6 +140,9 @@
     if(!wrapPart('setActivePart')) wrapPart('setActiveTask');
     var sb=document.getElementById('startBtn');
     if(sb) sb.addEventListener('click', function(){ if(!applying) setTimeout(function(){ post({started:true}); },0); });
+    // Cevap/essay değişimlerini yakala (capture ile, runner'ın kendi handler'ından bağımsız).
+    document.addEventListener('input', onAnswerEvent, true);
+    document.addEventListener('change', onAnswerEvent, true);
   }
 
   window.addEventListener('message', function(e){
@@ -127,6 +152,8 @@
     try{
       if(s.started){ var ss=document.getElementById('startScreen'); if(ss && ss.style.display!=='none' && typeof window.startTest==='function') window.startTest(); }
       if(typeof s.part==='number'){ if(typeof window.setActivePart==='function') window.setActivePart(s.part); else if(typeof window.setActiveTask==='function') window.setActiveTask(s.part); }
+      // Cevap/essay senkronu: odak guard'ı runner'ın __gmSync.apply'ında (caret savaşı yok).
+      if(s.answers && window.__gmSync && typeof window.__gmSync.apply==='function'){ window.__gmSync.apply({answers:s.answers}); }
     }catch(err){}
     applying=false;
   });

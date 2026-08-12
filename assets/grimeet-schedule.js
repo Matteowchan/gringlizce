@@ -55,17 +55,17 @@
     + '.gsch-btn.ghost{background:transparent;color:#6a6250;border:1px solid #d8d2c4;}'
     + '.gsch-btn.danger{background:transparent;color:#b3402f;border:1px solid #e3b6ae;}'
     + '.gsch-btn:disabled{opacity:.5;cursor:default;}'
-    + '.gsch-list{display:flex;flex-direction:column;gap:10px;}'
-    + '.gsch-item{display:block;background:#fff;border:1px solid #e5ddcd;border-radius:14px;padding:12px 13px;}'
+    + '.gsch-list{display:flex;flex-direction:column;gap:8px;}'
+    + '.gsch-item{display:block;background:#fff;border:1px solid #e5ddcd;border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(30,25,20,.05);}'
     + '.gsch-item.soon{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.12);}'
-    + '.gsch-item-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}'
-    + '.gsch-daypill{flex:0 0 auto;font:800 11px/1 inherit;color:#2C5856;background:#e7f0ee;border-radius:20px;padding:5px 9px;}'
+    + '.gsch-item-head{display:flex;align-items:center;gap:7px;margin-bottom:4px;}'
+    + '.gsch-daypill{flex:0 0 auto;font:700 10.5px/1 inherit;color:#2C5856;background:#e7f0ee;border-radius:20px;padding:3px 7px;}'
     + '.gsch-item.soon .gsch-daypill{background:#2C5856;color:#fff;}'
-    + '.gsch-item-title{font-weight:700;font-size:15px;color:#2a2a2a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}'
-    + '.gsch-item-sub{font-size:12.5px;color:#8a8172;line-height:1.5;}'
+    + '.gsch-item-title{font-weight:700;font-size:14px;color:#2a2a2a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}'
+    + '.gsch-item-sub{font-size:12px;color:#8a8172;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.gsch-item-note{font-size:12px;color:#a89a78;margin-top:3px;font-style:italic;}'
-    + '.gsch-item-actions{margin-top:9px;display:flex;gap:6px;}'
-    + '.gsch-item-actions .gsch-btn{flex:1;text-align:center;}'
+    + '.gsch-item-actions{margin-top:7px;display:flex;gap:6px;}'
+    + '.gsch-item-actions .gsch-btn{flex:1;text-align:center;padding:6px 10px;font-size:12.5px;}'
     + '.gsch-empty{text-align:center;color:#8a8172;font-size:14px;padding:26px;background:#faf7f0;border-radius:12px;}'
     + '.gsch-cal{background:#fff;border:1px solid #e5ddcd;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(30,25,20,.04);}'
     + '.gsch-cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}'
@@ -121,6 +121,26 @@
     + '.gsch-item{transition:box-shadow .15s,border-color .15s,transform .1s;}'
     + '.gsch-item:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(30,25,20,.10);}'
     + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
+    /* ── Ders İstatistiği (açılır-kapanır yan panel) ── */
+    + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;}'
+    + '.gsch-main{flex:1 1 auto;min-width:0;}'
+    + '.gsch-stats{display:none;flex:0 0 300px;max-width:300px;background:#faf7f0;border:1px solid #e5ddcd;border-radius:14px;padding:12px 13px;}'
+    + '.gsch-shell.stats-on .gsch-stats{display:block;}'
+    + '.gsch-stats-h{font-size:13px;font-weight:800;color:#2a2a2a;margin-bottom:10px;letter-spacing:.01em;}'
+    + '.gsch-stats-body{display:flex;flex-direction:column;gap:14px;max-height:520px;overflow-y:auto;overflow-x:hidden;}'
+    + '.gsch-stats-empty{font-size:12.5px;color:#8a8172;text-align:center;padding:18px 8px;}'
+    + '.gsch-stats-clsname{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#2a2a2a;margin-bottom:7px;}'
+    + '.gsch-stats-dot{flex:0 0 auto;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.08);}'
+    + '.gsch-stats-wk{margin:0 0 8px 3px;padding-left:9px;border-left:2px solid #e5ddcd;}'
+    + '.gsch-stats-wk-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px;}'
+    + '.gsch-stats-wk-range{font-size:12px;font-weight:700;color:#6a6250;}'
+    + '.gsch-stats-wk-count{flex:0 0 auto;font-size:11px;font-weight:700;color:#2C5856;background:#e7f0ee;border-radius:20px;padding:2px 8px;}'
+    + '.gsch-stats-wk-list{display:flex;flex-direction:column;gap:2px;}'
+    + '.gsch-stats-ln{font-size:11.5px;color:#8a8172;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.gsch-stats-body::-webkit-scrollbar{width:8px;}'
+    + '.gsch-stats-body::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
+    + '.gsch-stats-body::-webkit-scrollbar-track{background:transparent;}'
+    + '@media(max-width:900px){.gsch-shell{flex-direction:column;}.gsch-stats{flex-basis:auto;max-width:none;width:100%;}.gsch-stats-body{max-height:340px;}}'
     + '@media(max-width:760px){.gsch-split{flex-direction:column;}.gsch-col-list{position:static;}.gsch-col-list-inner{position:static;max-height:320px;}}'
     + '@media(max-width:480px){'
     + '.gsch-cal{padding:8px;}'
@@ -176,6 +196,16 @@
     + ':root[data-theme="dark"] .gsch-modal .m-url{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-sub{color:#bfe0da;border-color:#2f4e4b;}'
     + ':root[data-theme="dark"] .gsch-sub:hover{background:#22403e;}'
+    + ':root[data-theme="dark"] .gsch-stats{background:#1f1b14;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-stats-h{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-stats-clsname{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-stats-dot{box-shadow:0 0 0 1px rgba(255,255,255,.12);}'
+    + ':root[data-theme="dark"] .gsch-stats-wk{border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-stats-wk-range{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-stats-wk-count{background:#22403e;color:#bfe0da;}'
+    + ':root[data-theme="dark"] .gsch-stats-ln{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-stats-empty{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-stats-body::-webkit-scrollbar-thumb{background:#3a3428;}'
     + '';
 
   function injectCSS(){ if(document.getElementById('gsch-css'))return; var s=document.createElement('style'); s.id='gsch-css'; s.textContent=CSS; document.head.appendChild(s); }
@@ -203,6 +233,8 @@
     var manageOwn=!!opts.manageOwn;               // öğrenci sayfasında da SAHİBİ olduğun dersi düzenle
     var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
     var _savedView='list'; try{ var _v=localStorage.getItem('gsch-view'); if(_v==='cal'||_v==='list') _savedView=_v; }catch(e){}
+    var statsOpen=false; try{ statsOpen=localStorage.getItem('gsch-stats-open')==='1'; }catch(e){}
+    var statsData=null; // Ders İstatistiği için gruplanmış geçmiş dersler (null=henüz yüklenmedi)
     var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null };
 
     var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
@@ -212,6 +244,7 @@
       '<div class="gsch">'
       + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
         + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Takvim Renkleri</button>' : '')
+        + '<button class="gsch-sub gsch-stats-btn" type="button">Ders İstatistiği '+(statsOpen?'▾':'▸')+'</button>'
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + ((role==='teacher'||manageOwn) ?
@@ -264,8 +297,16 @@
       try{ var res=await sb.functions.invoke('ext-calendar',{body:{action:'sync'}}); if(res && !res.error) load(); }catch(_e){}
     }
 
-    var _subBtn=cont.querySelector('.gsch-sub:not(.gsch-colors)'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
+    var _subBtn=cont.querySelector('.gsch-sub:not(.gsch-colors):not(.gsch-stats-btn)'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
     var _colBtn=cont.querySelector('.gsch-colors'); if(_colBtn) _colBtn.addEventListener('click', openColorsModal);
+    var _statsBtn=cont.querySelector('.gsch-stats-btn');
+    if(_statsBtn) _statsBtn.addEventListener('click', function(){
+      statsOpen=!statsOpen;
+      try{ localStorage.setItem('gsch-stats-open', statsOpen?'1':'0'); }catch(e){}
+      _statsBtn.textContent='Ders İstatistiği '+(statsOpen?'▾':'▸');
+      var shell=cont.querySelector('.gsch-shell'); if(shell) shell.classList.toggle('stats-on', statsOpen);
+      if(statsOpen && statsData==null) loadStats();
+    });
 
     async function openColorsModal(){
       var btn=cont.querySelector('.gsch-colors'); var oldt=btn?btn.textContent:'';
@@ -470,6 +511,7 @@
           }catch(_e){}
         }
         render();
+        if(statsOpen) loadStats();
         maybeSyncExternal();
         if(opts.onLoad) try{ opts.onLoad(state.rows.length); }catch(_e){}
       }catch(e){ body.innerHTML='<div class="gsch-empty">Program yüklenemedi.</div>'; if(opts.onLoad) try{ opts.onLoad(0); }catch(_e){} }
@@ -583,11 +625,78 @@
       });
     }
 
+    // ── Ders İstatistiği: geçmiş dersleri sınıf + ISO-hafta bazında grupla ──
+    function isoMonday(d){
+      var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      var wd=(x.getDay()+6)%7; // Pzt=0
+      x.setDate(x.getDate()-wd);
+      return x;
+    }
+    function weekRange(mon){
+      var sun=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+6);
+      if(mon.getMonth()===sun.getMonth()) return mon.getDate()+'–'+sun.getDate()+' '+MONTHS[mon.getMonth()];
+      return mon.getDate()+' '+MONTHS[mon.getMonth()]+'–'+sun.getDate()+' '+MONTHS[sun.getMonth()];
+    }
+    function groupStats(rows){
+      var byClass={}, order=[];
+      rows.forEach(function(x){
+        var d=new Date(x.starts_at);
+        if(isNaN(d.getTime())) return;
+        var cname=(x.classes&&x.classes.name)?x.classes.name:'Genel';
+        var cid=x.class_id||('_'+cname);
+        if(!byClass[cid]){ byClass[cid]={name:cname,color:(x.classes&&x.classes.color)||(x.class_id?autoColor(x.class_id):'#2C5856'),weeks:{},wkOrder:[]}; order.push(cid); }
+        var g=byClass[cid], mon=isoMonday(d);
+        var wkey=mon.getFullYear()+'-'+two(mon.getMonth()+1)+'-'+two(mon.getDate());
+        if(!g.weeks[wkey]){ g.weeks[wkey]={mon:mon,items:[]}; g.wkOrder.push(wkey); }
+        g.weeks[wkey].items.push({d:d,title:x.title});
+      });
+      return order.map(function(cid){
+        var g=byClass[cid];
+        var weeks=g.wkOrder.map(function(k){return g.weeks[k];});
+        weeks.sort(function(a,b){ return b.mon.getTime()-a.mon.getTime(); });          // haftalar: en yeni önce
+        weeks.forEach(function(w){ w.items.sort(function(a,b){ return a.d.getTime()-b.d.getTime(); }); }); // hafta içi kronolojik
+        return { name:g.name, color:g.color, weeks:weeks };
+      });
+    }
+    function paintStats(){
+      var el=cont.querySelector('.gsch-stats-body'); if(!el) return;
+      if(statsData==null){ el.innerHTML='<div class="gsch-stats-empty">Yükleniyor…</div>'; return; }
+      if(!statsData.length){ el.innerHTML='<div class="gsch-stats-empty">Bu dönemde geçmiş ders yok.</div>'; return; }
+      el.innerHTML=statsData.map(function(g){
+        return '<div class="gsch-stats-cls"><div class="gsch-stats-clsname"><span class="gsch-stats-dot" style="background:'+g.color+'"></span>'+esc(g.name)+'</div>'
+          + g.weeks.map(function(w){
+              return '<div class="gsch-stats-wk"><div class="gsch-stats-wk-h"><span class="gsch-stats-wk-range">'+weekRange(w.mon)+'</span><span class="gsch-stats-wk-count">'+w.items.length+' ders</span></div>'
+                + '<div class="gsch-stats-wk-list">'+w.items.map(function(it){ return '<div class="gsch-stats-ln">'+WD[(it.d.getDay()+6)%7]+' '+it.d.getDate()+' · '+hhmm(it.d)+' · '+esc(it.title)+'</div>'; }).join('')+'</div></div>';
+            }).join('')
+          + '</div>';
+      }).join('');
+    }
+    async function loadStats(){
+      try{
+        var q=sb.from('grimeet_schedule').select('id,title,starts_at,duration_min,class_id,teacher_id,classes(name,color)')
+          .lt('starts_at', new Date().toISOString())
+          .gte('starts_at', new Date(Date.now()-95*24*3600*1000).toISOString())
+          .neq('status','cancelled')
+          .order('starts_at',{ascending:false});
+        if(role==='teacher'){ if(aggregate) q=q.eq('teacher_id',opts.userId); else q=q.eq('class_id',opts.classId); }
+        var r=await q;
+        if(r.error) throw r.error;
+        statsData=groupStats(r.data||[]);
+        paintStats();
+      }catch(e){ statsData=[]; paintStats(); } // hata: ana takvimi etkileme, panel sessizce boş
+    }
+
     function render(){
-      if(!state.rows.length){ body.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'; return; }
-      body.innerHTML='<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
-      renderCal(body.querySelector('.gsch-col-cal'));
-      renderListInner(body.querySelector('.gsch-col-list-inner'));
+      var mainHTML = !state.rows.length
+        ? '<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'
+        : '<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
+      body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
+        + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
+      if(state.rows.length){
+        renderCal(body.querySelector('.gsch-col-cal'));
+        renderListInner(body.querySelector('.gsch-col-list-inner'));
+      }
+      paintStats();
     }
 
     load();

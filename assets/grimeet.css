@@ -53,10 +53,25 @@ h1,h2,h3{font-family:'Lora',serif;}
 .gmr-theme-btn{width:auto;padding:0 11px;gap:7px;font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.01em;}
 .gmr-theme-btn .gmr-theme-lbl{white-space:nowrap;}
 @media(max-width:600px){.gmr-theme-btn{width:34px;padding:0;}.gmr-theme-btn .gmr-theme-lbl{display:none;}}
-/* Konuşmacı görünümü (speaker view) */
-#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-videos{display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;padding:14px;}
-#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-videos .vtile{width:150px;flex:none;aspect-ratio:1.42;}
-#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-videos .vtile.featured{order:-1;width:100%;flex:1 0 100%;height:calc(100% - 168px);min-height:220px;aspect-ratio:auto;}
+/* Konuşmacı / sabitleme görünümü — odak SOL yarıda dikey (resize edilebilir), diğerleri SAĞ galeri şeridinde.
+   (id #gmr-videos ile yüksek özgüllük: yukarıdaki data-n grid kurallarını ezer.) */
+#gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos{
+  display:grid;grid-template-columns:var(--gm-spot-w,46vw) minmax(150px,1fr);
+  grid-auto-rows:max-content;row-gap:0;column-gap:12px;
+  align-content:start;justify-content:stretch;padding:16px;overflow-y:auto;overflow-x:hidden;}
+#gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile{grid-column:2;width:auto;flex:none;aspect-ratio:1.42;margin-bottom:12px;}
+#gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile.featured{
+  grid-column:1;grid-row:1 / span 30;order:-1;position:sticky;top:0;margin-bottom:0;
+  height:var(--gm-spot-h,calc(100dvh - 54px - 76px - 32px));min-height:240px;width:auto;aspect-ratio:auto;align-self:start;}
+#gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile.featured video{object-fit:contain;background:var(--gm-tile-bg);}
+/* Odak/galeri ayırıcısı (yalnızca lokal görünüm — yayınlanmaz) */
+.gmr-spot-resize{display:none;}
+#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-spot-resize{
+  display:block;position:absolute;top:0;bottom:0;width:14px;
+  left:calc(16px + var(--gm-spot-w,46vw) + 6px);transform:translateX(-7px);
+  cursor:col-resize;z-index:6;touch-action:none;}
+#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-spot-resize::before{content:"";position:absolute;left:5px;top:50%;transform:translateY(-50%);width:3px;height:52px;border-radius:3px;background:var(--gm-line);transition:.15s;}
+#gm-app[data-mode="grid"][data-layout="speaker"] .gmr-spot-resize:hover::before{background:var(--gm-teal);height:80px;}
 .vtile.pinned::after{content:"Sabit";position:absolute;left:8px;top:8px;background:var(--gm-teal-deep);color:#fff;font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:20px;}
 .vtile.host.pinned::after{background:var(--gm-gold);color:#1b1b1b;}
 .gmr-top-right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;color:var(--gm-ink-soft);}
@@ -169,7 +184,7 @@ video:picture-in-picture{transform:none!important;}
 /* Screen + spotlight (big content) */
 .gmr-screen,.gmr-spotlight{flex:1;display:none;align-items:center;justify-content:center;background:radial-gradient(120% 120% at 50% 40%,#211d17,#141109);position:relative;padding:10px;}
 .gmr-screen video,.gmr-spotlight video{width:100%;height:100%;object-fit:contain;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.45);background:#000;}
-.gmr-spotlight video{object-fit:cover;width:100%;height:100%;}
+.gmr-spotlight video{object-fit:contain;width:100%;height:100%;background:var(--gm-tile-bg);}
 .scr-label{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.6);color:#fff;font-size:12.5px;padding:5px 12px;border-radius:20px;z-index:2;}
 
 /* Whiteboard */
@@ -549,6 +564,18 @@ video:picture-in-picture{transform:none!important;}
     gap:10px;height:66px;padding:0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gmr-controls::-webkit-scrollbar{display:none;}
   .gmr-ctrl{flex:0 0 auto;}
+}
+/* Konuşmacı görünümü — dar ekran: odak üstte, galeri altta (dikey yığın, tek sütun) */
+@media(max-width:760px){
+  #gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos{
+    display:flex;flex-direction:column;flex-wrap:nowrap;
+    grid-template-columns:none;padding:12px;gap:10px;row-gap:10px;
+    overflow-y:auto;overflow-x:hidden;align-content:stretch;}
+  #gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile{grid-column:auto;width:100%;flex:0 0 auto;margin-bottom:0;aspect-ratio:1.42;}
+  #gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile.featured{
+    position:static;grid-row:auto;grid-column:auto;order:-1;width:100%;height:auto;min-height:0;aspect-ratio:1.42;margin-bottom:0;}
+  #gm-app[data-mode="grid"][data-layout="speaker"] #gmr-videos .vtile.featured video{object-fit:cover;}
+  #gm-app[data-mode="grid"][data-layout="speaker"] .gmr-spot-resize{display:none;}
 }
 
 /* ===== Faz 7 mobil: üst bar taşması + araç barları + "Ayrıl" erişimi ===== */

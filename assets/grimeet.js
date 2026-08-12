@@ -517,7 +517,11 @@ function applySpotlightVideo(){
 }
 
 /* ===== Layout: Galeri / Konuşmacı + Pin + Tam ekran ===== */
-function setLayout(l){ STATE.layout=l; $('#gm-app').setAttribute('data-layout',l); var b=$('#gmr-layout'); if(b)b.classList.toggle('on',l==='speaker'); updateFeatured(); toast(l==='speaker'?'Konuşmacı görünümü':'Galeri görünümü'); }
+function setLayout(l){ STATE.layout=l; $('#gm-app').setAttribute('data-layout',l); var b=$('#gmr-layout'); if(b)b.classList.toggle('on',l==='speaker'); updateFeatured(); if(l==='speaker') initSpotW(true); toast(l==='speaker'?'Konuşmacı görünümü':'Galeri görünümü'); }
+/* Konuşmacı/sabitleme görünümü: odak (SOL) genişliği — lokal, --gm-spot-w px olarak tutulur (yayınlanmaz) */
+function spotVideosW(){ var v=$('#gmr-videos'); return v?Math.max(0,v.clientWidth-32):0; }
+function clampSpotW(px){ var vw=spotVideosW(); if(vw<=0)return Math.round(px); return Math.max(Math.round(vw*0.30),Math.min(Math.round(vw*0.75),Math.round(px))); }
+function initSpotW(reset){ if(STATE.layout!=='speaker')return; var v=$('#gmr-videos'); if(!v)return; var vw=Math.max(0,v.clientWidth-32); if(vw<=0)return; var cur=parseInt((getComputedStyle(document.documentElement).getPropertyValue('--gm-spot-w')||''),10); var px=(reset||!cur||isNaN(cur))?Math.round(vw*0.5):cur; document.documentElement.style.setProperty('--gm-spot-w',clampSpotW(px)+'px'); document.documentElement.style.setProperty('--gm-spot-h',Math.max(240,v.clientHeight-32)+'px'); }
 function updateFeatured(){
   Object.keys(STATE.tiles).forEach(function(id){ STATE.tiles[id].classList.remove('featured'); STATE.tiles[id].classList.toggle('pinned',STATE.pinned===id); });
   if(STATE.layout!=='speaker')return;
@@ -562,7 +566,7 @@ function bindControls(){
   $('#gmr-fs').addEventListener('click',toggleFullscreen);
   $('#gmr-videos').addEventListener('dblclick',function(e){ var t=e.target.closest('.vtile'); if(t) togglePin(t.dataset.id); });
   document.addEventListener('fullscreenchange',function(){ var b=$('#gmr-fs'); if(b)b.classList.toggle('on',!!document.fullscreenElement); });
-  bindSplit(); bindDockResize();
+  bindSplit(); bindDockResize(); bindSpotResize();
 }
 function bindDockResize(){
   var h=$('#dock-resize'), dock=$('#gmr-dock'), dragging=false;
@@ -640,6 +644,14 @@ function bindSplit(){
   split.addEventListener('pointerdown',function(e){ dragging=true; split.setPointerCapture(e.pointerId); e.preventDefault(); });
   split.addEventListener('pointermove',function(e){ if(!dragging)return; var dock=$('#gmr-dock'); var right=dock.classList.contains('hidden')?window.innerWidth:dock.getBoundingClientRect().left; var w=right-e.clientX; w=Math.max(120,Math.min(620,w)); document.documentElement.style.setProperty('--strip',w+'px'); });
   split.addEventListener('pointerup',function(e){ dragging=false; try{split.releasePointerCapture(e.pointerId);}catch(_){} });
+}
+/* Konuşmacı görünümü odak/galeri ayırıcısı — sol odağın genişliğini sürükleyerek ayarla (lokal) */
+function bindSpotResize(){
+  var h=$('#gmr-spot-resize'); if(!h)return; var dragging=false;
+  h.addEventListener('pointerdown',function(e){ dragging=true; h.setPointerCapture(e.pointerId); e.preventDefault(); });
+  h.addEventListener('pointermove',function(e){ if(!dragging)return; var v=$('#gmr-videos'); if(!v)return; var r=v.getBoundingClientRect(); document.documentElement.style.setProperty('--gm-spot-w',clampSpotW(e.clientX-r.left-16)+'px'); });
+  h.addEventListener('pointerup',function(e){ dragging=false; try{h.releasePointerCapture(e.pointerId);}catch(_){} });
+  window.addEventListener('resize',function(){ if(STATE.layout==='speaker') initSpotW(false); });
 }
 
 /* ================= HOST ACTIONS ================= */

@@ -19,7 +19,7 @@ var STATE={
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
   _leaving:false, _reconnecting:false, _reconnectTries:0, _reconnectTimer:null,
   mirror:true, _bgApplied:false, bgFlip:false,
-  bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matZoom:1, scrZoom:1, matControl:false, _matScrollLock:false,
+  bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matPaused:false, matZoom:1, scrZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
@@ -1100,9 +1100,18 @@ function bindMaterials(){
   var sh=$('#mat-share'); if(sh) sh.addEventListener('click',function(){
     if(!STATE.currentMaterial){ toast('Önce bir materyal aç.'); return; }
     if(!STATE.matShared){ broadcastMat(STATE.currentMaterial.kind,STATE.currentMaterial.value,STATE.currentMaterial.ext,false); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
-    else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
+    else { sendData({t:'mat-stop'}); STATE.matShared=false; STATE.matPaused=false; var pz0=$('#mat-pause'); if(pz0){ pz0.classList.remove('on'); pz0.textContent='Duraksat'; } sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
-  function zBroadcast(){ if(STATE.isHost&&STATE.matShared) sendData({t:'mat-zoom',z:STATE.matZoom}); }
+  // Duraksat (#12): öğrenci seni takip etmeyi bıraksın, sen dosya/sayfa hazırla; Devam Et'te öğrenci
+  // şu anki görünümüne çekilir. Duraksatınca nav/scroll/zoom yayınları bastırılır (currentMaterial
+  // yine takip edilir, resume'de o yayınlanır).
+  var pz=$('#mat-pause'); if(pz) pz.addEventListener('click',function(){
+    if(!STATE.matShared){ toast('Önce paylaş, sonra duraksatabilirsin.'); return; }
+    STATE.matPaused=!STATE.matPaused; pz.classList.toggle('on',STATE.matPaused); pz.textContent=STATE.matPaused?'Devam Et':'Duraksat';
+    if(STATE.matPaused){ toast('Paylaşım duraksatıldı — öğrenci seni takip etmiyor, hazırlığını yapabilirsin.'); }
+    else { if(STATE.currentMaterial){ broadcastMat(STATE.currentMaterial.kind,STATE.currentMaterial.value,STATE.currentMaterial.ext,false); if(STATE.matZoom!==1) sendData({t:'mat-zoom',z:STATE.matZoom}); } toast('Paylaşım devam ediyor — öğrenci seninle.'); }
+  });
+  function zBroadcast(){ if(STATE.isHost&&STATE.matShared&&!STATE.matPaused) sendData({t:'mat-zoom',z:STATE.matZoom}); }
   function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); zBroadcast(); }
   function zout(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); zBroadcast(); }
   $('#mat-zoom-in').addEventListener('click',zin);
@@ -1187,7 +1196,7 @@ function loadMaterial(m,remote){
     }
   }
   applyZoom();
-  if(!remote&&STATE.matShared){ broadcastMat(m.kind,m.value,m.ext,false); if(STATE.matZoom!==1) sendData({t:'mat-zoom',z:STATE.matZoom}); }
+  if(!remote&&STATE.matShared&&!STATE.matPaused){ broadcastMat(m.kind,m.value,m.ext,false); if(STATE.matZoom!==1) sendData({t:'mat-zoom',z:STATE.matZoom}); }
 }
 function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var fs=document.getElementById('mat-file-scroll'); if(fs){ try{ fs.style.zoom=STATE.matZoom; }catch(e){} } var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
@@ -1206,7 +1215,7 @@ async function renderPdf(url,container){
 }
 function attachFileScrollSync(el){ if(!el)return; STATE.matScrollEl=el; var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; var max=(el.scrollHeight-el.clientHeight)||1; sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,el.scrollTop/max))}); },140); el.addEventListener('scroll',bc,{passive:true}); }
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
-function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared)||(!STATE.isHost&&STATE.matControl); }
+function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared&&!STATE.matPaused)||(!STATE.isHost&&STATE.matControl); }
 function attachMatScrollSync(itf){ if(!itf)return;
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;
     // Sayfa-içi gezinme takibi (sadece öğretmen): materyal içinde başka sayfaya/drill'e giderse öğrencileri de taşı.
@@ -1233,7 +1242,8 @@ function scheduleNavBroadcast(itf){
       // "senkron kaskad olarak kırılıyor" fırtınasının köküydü (last-wins reload döngüsü).
       if(curPath && curPath===path){ if(STATE.currentMaterial) STATE.currentMaterial.value=rel; return; }
       STATE.currentMaterial={kind:'unit',value:rel};
-      broadcastMat('unit',rel,undefined,true);
+      // Duraksatıldıysa currentMaterial takip edilir ama öğrenciye yayınlanmaz (#12).
+      if(!STATE.matPaused) broadcastMat('unit',rel,undefined,true);
     }catch(e){}
   },250);
 }

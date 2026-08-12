@@ -433,7 +433,9 @@
   };
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function sbc(){ return (window.STATE && window.STATE.supabase) || (window.__gmaSb || (window.supabase && (window.__gmaSb = window.supabase.createClient('https://vazbvbqgvtlaqkytfsbi.supabase.co','sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g')))) || null; }
-  function isHost(){ return !!(window.STATE && window.STATE.isHost); }
+  // is-host CSS sınıfı Ödevler sekmesini görünür kılan gate; STATE.isHost geç set olursa panel yanlışlıkla
+  // öğrenci görünümüne ("Bu sınıfta ödev yok") düşmesin diye ikisini birlikte kontrol et (#107).
+  function isHost(){ var a=document.getElementById('gm-app'); return !!((window.STATE && window.STATE.isHost) || (a && a.classList.contains('is-host'))); }
 
   var CSS = '#gm-assign-root{font-size:13px}'
     + '.gma-h{font-weight:700;font-size:12px;letter-spacing:.04em;color:var(--gm-ink,#e9edf5);margin:2px 0 8px;display:flex;justify-content:space-between;align-items:center}'
@@ -580,14 +582,30 @@
       + '<button class="gma-btn" id="gma-assign-btn">Sınıfa Ata</button>'
       + '<p class="gma-note" id="gma-assign-msg"></p></div>';
     var r = await sb.rpc('list_class_assignments', { p_class_id: CLASS_ID });
+    var main = (r.error ? [] : (r.data || [])).map(function (a) { a._pool = false; return a; });
+    // GE havuz ödevleri (class_assignments -> ge_assignments) list_class_assignments'ta YOK; ayrıca çek+birleştir,
+    // yoksa öğretmen havuzdan ödev atadığında "Sınıf Ödevleri" boş görünür (#107).
+    var pool = [];
+    try {
+      var gc = await sb.from('class_assignments').select('assignment_id,due_date,assigned_at').eq('class_id', CLASS_ID);
+      var prows = (gc && gc.data) || [];
+      if (prows.length) {
+        var pids = prows.map(function (x) { return x.assignment_id; });
+        var pmeta = await sb.from('ge_assignments').select('id,title').in('id', pids);
+        var pmm = {}; (((pmeta && pmeta.data)) || []).forEach(function (m) { pmm[m.id] = m; });
+        pool = prows.map(function (x) { var m = pmm[x.assignment_id] || {}; return { title: m.title || 'Genel İngilizce Ödevi', type: 'ge', _pool: true }; });
+      }
+    } catch (e) {}
+    var allA = main.concat(pool);
     var listHtml = '';
-    if (r.error) listHtml = '<div class="dock-empty">Liste yüklenemedi.</div>';
-    else if (!(r.data||[]).length) listHtml = '<div class="dock-empty" style="padding:6px 0">Henüz ödev yok.</div>';
-    else listHtml = (r.data||[]).map(function (a) {
-      var tot = Number(a.total_students||0), done = Number(a.completed_count||0);
+    if (r.error && !allA.length) listHtml = '<div class="dock-empty">Liste yüklenemedi.</div>';
+    else if (!allA.length) listHtml = '<div class="dock-empty" style="padding:6px 0">Henüz ödev yok.</div>';
+    else listHtml = allA.map(function (a) {
+      var lbl = a._pool ? 'Genel İngilizce' : (TYPE_LABELS[a.type] || a.type);
+      var meta = a._pool ? '<span class="gma-sub">havuz ödevi</span>'
+        : ('<span class="gma-sub">' + Number(a.completed_count||0) + '/' + Number(a.total_students||0) + ' tamamladı</span>');
       return '<div class="gma-card"><div class="t">' + esc(a.title) + '</div>'
-        + '<div class="gma-meta"><span class="gma-pill">' + esc(TYPE_LABELS[a.type]||a.type) + '</span>'
-        + '<span class="gma-sub">' + done + '/' + tot + ' tamamladı</span></div></div>';
+        + '<div class="gma-meta"><span class="gma-pill">' + esc(lbl) + '</span>' + meta + '</div></div>';
     }).join('');
     pane.innerHTML = head + form + '<div class="gma-h" style="margin-top:4px">Sınıf Ödevleri</div>' + listHtml;
     wireTeacherForm();

@@ -8,7 +8,7 @@
 
   var FEED_BASE='https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/calendar-feed';
   // Sınıf rengi paleti — nav.js tema accent renkleri
-  var PALETTE=['#2E6E6A','#0ABAB5','#A47864','#C8303E','#D2662F','#8DA01F','#8A4A63','#3E6B4A','#2E5E8A','#6E5AA0','#B0567A','#A9772E'];
+  var PALETTE=['#3B7A75','#8A4A63','#3E6B4A','#2E5E8A','#B0567A','#8E3B4C','#6E5AA0','#0B8C86','#8A5A44','#B02A37','#BC5A2E','#6F7D1C','#5B8C4E','#E24E9C','#2E52C8','#E0705A','#C07A34','#1FA98C','#C64BB0','#2E86C6','#77803A','#D06A82','#4B3B8F','#7B3FA0','#D9824A','#26426B','#B05C36','#5C6673','#C7A24A','#6FB6AF']; /* 30 tema rengi */
   function clsHash(s){ s=String(s||''); var h=0; for(var i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return Math.abs(h); }
   function autoColor(classId){ return PALETTE[clsHash(classId)%PALETTE.length]; }
 
@@ -91,7 +91,7 @@
     + '.gsch-cell.drop-ok{border-color:#2C5856;background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.30);}'
     + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
     + '.gsch-modal-ov{position:fixed;inset:0;background:rgba(20,16,12,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;}'
-    + '.gsch-modal{background:#fff;border-radius:16px;padding:18px;max-width:340px;width:100%;box-shadow:0 18px 50px rgba(20,16,12,.3);font-family:inherit;}'
+    + '.gsch-modal{background:#fff;border-radius:16px;padding:20px 22px;max-width:480px;width:100%;box-shadow:0 18px 50px rgba(20,16,12,.3);font-family:inherit;}'
     + '.gsch-modal h4{margin:0 0 6px;font-size:16px;font-weight:700;color:#2a2a2a;}'
     + '.gsch-modal p{margin:0 0 14px;font-size:13px;color:#6a6250;line-height:1.5;}'
     + '.gsch-modal .mrow{display:flex;align-items:center;gap:8px;margin-bottom:16px;}'

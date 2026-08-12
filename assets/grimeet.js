@@ -713,7 +713,7 @@ function onData(payload,p){
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='pdf-hl'){ if(!STATE.isHost&&fromHost) PDFHL.applyRemote(msg.items); }
   else if(msg.t==='mat-zoom'){ if((!STATE.isHost&&fromHost)||(STATE.isHost&&STATE.matControl&&!fromHost)){ var _z=+msg.z; if(_z>=0.4&&_z<=2.5){ STATE.matZoom=_z; applyZoom(); } } }
-  else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; STATE._appliedMatSeq=0; STATE._lastNavRel=null; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
+  else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; STATE._appliedMatSeq=0; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
   else if(msg.t==='exstate'){ if((!STATE.isHost&&fromHost)||(STATE.isHost&&STATE.matControl&&!fromHost)){ var _exif=document.getElementById('mat-uni-if'); if(_exif&&_exif.contentWindow){ try{ _exif.contentWindow.postMessage({__gmex:1, apply:msg.s}, '*'); }catch(e){} } } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
   else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
@@ -1148,7 +1148,7 @@ function bindMaterials(){
   var zfi=$('#mat-zoom-fab-in'); if(zfi)zfi.addEventListener('click',zin);
   var zfo=$('#mat-zoom-fab-out'); if(zfo)zfo.addEventListener('click',zout);
   var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); try{ PDFHL.syncActive(); }catch(e){} });
-  var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; STATE._appliedMatSeq=0; STATE._lastNavRel=null; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); applyMatLock(); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (iki yönlü senkron).':'Sayfa kontrolü sende.'); });
+  var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; STATE._appliedMatSeq=0; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); applyMatLock(); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (iki yönlü senkron).':'Sayfa kontrolü sende.'); });
   bindFileUpload();
 }
 function bindFileUpload(){

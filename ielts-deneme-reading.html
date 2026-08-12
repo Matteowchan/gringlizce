@@ -493,6 +493,8 @@
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
     const params = new URLSearchParams(window.location.search);
     const TEST_SLUG = params.get('test') || 'ielts-mock-1';
+    // Gri Meet senkron modu: otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
+    const GMSYNC = params.has('gmsync');
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let state = {
@@ -540,7 +542,7 @@
 
       document.getElementById('loading').style.display = 'none';
       document.getElementById('startTestName').textContent = test.name;
-      if (state.startedAt) startTest();
+      if (!GMSYNC && state.startedAt) startTest();
       else document.getElementById('startScreen').style.display = 'block';
     }
 

@@ -713,6 +713,7 @@ function onData(payload,p){
   else if(msg.t==='pdf-hl'){ if(!STATE.isHost&&fromHost) PDFHL.applyRemote(msg.items); }
   else if(msg.t==='mat-zoom'){ if(!STATE.isHost&&fromHost){ var _z=+msg.z; if(_z>=0.4&&_z<=2.5){ STATE.matZoom=_z; applyZoom(); } } }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
+  else if(msg.t==='exstate'){ if(!STATE.isHost&&fromHost){ var _exif=document.getElementById('mat-uni-if'); if(_exif&&_exif.contentWindow){ try{ _exif.contentWindow.postMessage({__gmex:1, apply:msg.s}, '*'); }catch(e){} } } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
   else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
@@ -738,6 +739,20 @@ function onData(payload,p){
 }
 function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,docState:DOC.getState(),wbLock:!!STATE.wbLocked,docLock:!!STATE.docLocked,pdfhl:PDFHL.items()}); }
 function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.docState) DOC.applyFullState(msg.docState); if(!STATE.isHost){ if(msg.wbLock) STATE.wbLocked=true; if(msg.docLock){ STATE.docLocked=true; DOC.setLocked(true); } } if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ if(msg.pdfhl&&msg.pdfhl.length) STATE._pendPdfHl=msg.pdfhl; loadMaterial(msg.material,true); setMode('materials',{remote:true}); if(msg.pdfhl){ try{ PDFHL.applyRemote(msg.pdfhl); }catch(e){} } } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
+
+/* ===== IELTS deneme runner senkron köprüsü (gmsync) =====
+   Materyal iframe'i (mat-uni-if) bir IELTS deneme runner'ıysa, runner "Sınava Başla" ve
+   passage/task geçişlerinde {__gmex:1, state:{...}} postMessage'lar. HOST bu durumu odaya
+   yayınlar (exstate); öğrenci grimeet'i onu kendi runner iframe'ine apply eder (onData). */
+function _gmExOriginOk(o){ if(!o||o==='null') return true; try{ var h=new URL(o).hostname; return h===location.hostname||/(^|\.)gringlizce\.com$/.test(h); }catch(e){ return false; } }
+window.addEventListener('message', function(e){
+  var d=e.data; if(!d||d.__gmex!==1||!d.state) return;
+  if(!_gmExOriginOk(e.origin)) return;
+  var itf=document.getElementById('mat-uni-if');
+  if(!itf||e.source!==itf.contentWindow) return; // yalnız materyal iframe'inden gelen durumu kabul et
+  // Yalnız host yayınlar (öğrenci kendi iframe'inin durumunu yaymaz). Paylaşım aktif değilse sessiz.
+  if(STATE.isHost && STATE.matShared && !STATE.matPaused) sendData({t:'exstate', s:d.state});
+});
 
 /* ================= CHAT / PEOPLE ================= */
 var chatUnread=0;
@@ -1160,6 +1175,9 @@ function bindFileUpload(){
   });
 }
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
+// IELTS deneme runner'ları (reading/writing/listening) interaktif — start ekranı + passage/task
+// geçişi URL değiştirmez, bu yüzden gmsync=1 bayrağıyla runner'ın postMessage köprüsünü açarız.
+function isExamRunner(v){ return /ielts-deneme-(reading|writing|listening)/i.test(String(v||'')); }
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   STATE.matScrollEl=null;
@@ -1189,7 +1207,7 @@ function loadMaterial(m,remote){
         if(fr) fr.addEventListener('load',function(){ if(stale())return; done=true; clearTimeout(STATE._matLoadTmr); clearOv(); });
         STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },10000);
         // present=1: öğrenci atanmamış olsa bile sunum modunda salt-okunur görebilsin (odev.html iframe+present kontrolü yapar)
-        try{ var _pu=new URL(m.value,'https://gringlizce.com/'); _pu.searchParams.set('present','1'); fr.src=_pu.href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
+        try{ var _pu=new URL(m.value,'https://gringlizce.com/'); _pu.searchParams.set('present','1'); if(isExamRunner(m.value)) _pu.searchParams.set('gmsync','1'); fr.src=_pu.href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
       } else {
         // Statik içerik sayfası: proxy ile çek, srcdoc'a bas (öğrencinin erişimi olmasa da içerik görünür).
         if(fr) fr.addEventListener('load',function(){ if(fr.getAttribute('srcdoc')) clearOv(); });
@@ -1207,7 +1225,7 @@ function loadMaterial(m,remote){
       // iframe yüklenince (ilk yük ve sayfa-içi gezinme) örtüyü kaldır; yeni nav gelirse hStale iptal eder.
       if(hf) hf.addEventListener('load',function(){ if(hStale())return; hDone=true; clearTimeout(STATE._matLoadTmr); hClear(); });
       STATE._matLoadTmr=setTimeout(function(){ hFail(); },10000);
-      try{ hf.src=new URL(m.value,'https://gringlizce.com/').href; }catch(e){ clearTimeout(STATE._matLoadTmr); hFail(); }
+      try{ var _hu=new URL(m.value,'https://gringlizce.com/'); if(isExamRunner(m.value)) _hu.searchParams.set('gmsync','1'); hf.src=_hu.href; }catch(e){ clearTimeout(STATE._matLoadTmr); hFail(); }
     }
   }
   applyZoom();
@@ -1300,6 +1318,9 @@ function navRel(itf){
     if(!path||path==='blank'||path==='srcdoc') return null;
     if(/(^|\/)(login|giris|ogretmen|ogretmen-sinif|ogretmen-yazi-degerlendirme|panelim|admin)(\.html)?($|\/)/i.test(path)) return null;
     if(/\.(css|js|png|jpe?g|svg|gif|webp|ico|json|mp3|mp4|pdf|woff2?)(\?|#|$)/i.test(path)) return null;
+    // Temiz URL (uzantısız) → .html ekle: öğrenci tarafı srcdoc-proxy .html bekliyor (ilk paylaşım da .html ile
+    // çalışıyor). Uzantısız 'ielts-soru-bankasi' öğrencide "Sayfa yüklenemedi" veriyordu.
+    var _seg=path.split('/').pop(); if(_seg && _seg.indexOf('.')<0) path=path+'.html';
     return path+(loc.search||'')+(loc.hash||'');
   }catch(e){ return null; }
 }

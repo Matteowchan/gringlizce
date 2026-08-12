@@ -86,3 +86,50 @@
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
+
+/* ===== Gri Meet senkron köprüsü — YALNIZ gmsync=1 embed'inde aktif =====
+   Amaç: öğretmen (host) ile öğrenci aynı ekranı görsün. Runner, "Sınava Başla" ve
+   passage/task geçişlerinde durumu parent'a (grimeet) postMessage'lar; grimeet host
+   ise bunu odaya yayınlar, öğrenci grimeet'i öğrencinin runner iframe'ine apply eder.
+   gmsync=1 YOKKEN (normal sınav) bu blok tamamen atlanır — davranış birebir eskisi gibi. */
+(function(){
+  var GMSYNC=false;
+  try{ GMSYNC=new URLSearchParams(location.search).has('gmsync'); }catch(e){}
+  if(!GMSYNC || window.parent===window) return; // normal sınav / üst pencere: köprü kapalı
+
+  var applying=false; // apply sırasında yeniden-post'u engelle (sonsuz döngü koruması)
+  function post(st){ try{ window.parent.postMessage({__gmex:1, state:st}, '*'); }catch(e){} }
+  function okOrigin(o){ if(!o||o==='null') return true; try{ var h=new URL(o).hostname; return h===location.hostname || /(^|\.)gringlizce\.com$/.test(h); }catch(e){ return false; } }
+
+  // Global part/task yöneticisini sar: her çağrıda (apply değilse) parent'a yayınla.
+  // reading/listening → setActivePart(n); writing → setActiveTask(n). Klasik script'te
+  // top-level function bildirimleri window property'sidir; sarma bare çağrılarda da geçerli.
+  function wrapPart(name){
+    var orig=window[name];
+    if(typeof orig!=='function') return false;
+    window[name]=function(){
+      var r=orig.apply(this,arguments);
+      if(!applying && typeof arguments[0]==='number') post({started:true, part:arguments[0]});
+      return r;
+    };
+    return true;
+  }
+  function setup(){
+    if(!wrapPart('setActivePart')) wrapPart('setActiveTask');
+    var sb=document.getElementById('startBtn');
+    if(sb) sb.addEventListener('click', function(){ if(!applying) setTimeout(function(){ post({started:true}); },0); });
+  }
+
+  window.addEventListener('message', function(e){
+    var d=e.data; if(!d||d.__gmex!==1||!d.apply) return;
+    if(!okOrigin(e.origin)) return;
+    var s=d.apply; applying=true;
+    try{
+      if(s.started){ var ss=document.getElementById('startScreen'); if(ss && ss.style.display!=='none' && typeof window.startTest==='function') window.startTest(); }
+      if(typeof s.part==='number'){ if(typeof window.setActivePart==='function') window.setActivePart(s.part); else if(typeof window.setActiveTask==='function') window.setActiveTask(s.part); }
+    }catch(err){}
+    applying=false;
+  });
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', setup); else setup();
+})();

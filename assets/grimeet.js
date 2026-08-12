@@ -705,7 +705,7 @@ function onData(payload,p){
   else if(msg.t==='chat-lock'){ if(!STATE.isHost&&fromHost){ STATE.chatLocked=msg.on; applyChatLock(); } }
   else if(msg.t==='quizset'){ if(!STATE.isHost&&fromHost) openQuizSet(msg.list,msg.dur); }
   else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizSet){ var vi=msg.idx||0; var vv=STATE.quizSet.votes[vi]=STATE.quizSet.votes[vi]||{}; vv[msg.a]=(vv[msg.a]||0)+1; renderQuizSetTally(); addPoint(id,msg.name||from,2); } }
-  else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); }
+  else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyYtSync(msg); }
   else if(msg.t==='doc'){ DOC.applyRemote(msg); }
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
@@ -1219,13 +1219,19 @@ function scheduleNavBroadcast(itf){
   clearTimeout(STATE._navTmr);
   STATE._navTmr=setTimeout(function(){
     try{ var w=itf.contentWindow; if(!w)return; var loc=w.location;
-      var rel=(loc.pathname.replace(/^\/+/,'')+(loc.search||''));
-      if(rel&&/\.html/i.test(rel)&&STATE.matShared){
-        if(!STATE.currentMaterial||STATE.currentMaterial.value!==rel){
-          STATE.currentMaterial={kind:'unit',value:rel};
-          broadcastMat('unit',rel,undefined,true);
-        }
-      }
+      var path=loc.pathname.replace(/^\/+/,'');
+      if(!path||!/\.html$/i.test(path)||!STATE.matShared) return;
+      // Öğretmenin kendi oturum/araç sayfalarını (giriş, öğretmen paneli, admin) öğrenciye yayınlama:
+      // bunlar auth-duvarına takılır / yönlendirir ve senkronu kırar.
+      if(/(^|\/)(login|giris|ogretmen|ogretmen-sinif|ogretmen-yazi-degerlendirme|panelim|admin)/i.test(path)) return;
+      var rel=(path+(loc.search||''));
+      var curPath=String((STATE.currentMaterial&&STATE.currentMaterial.value)||'').split('?')[0].split('#')[0];
+      // Yalnız GERÇEK sayfa (pathname) değişiminde yayın yap. Aynı interaktif sayfa içinde
+      // query/task değişimi (ör. ?bolum=writing&task=2) öğrenciyi yeniden yükletmesin — bu,
+      // "senkron kaskad olarak kırılıyor" fırtınasının köküydü (last-wins reload döngüsü).
+      if(curPath && curPath===path){ if(STATE.currentMaterial) STATE.currentMaterial.value=rel; return; }
+      STATE.currentMaterial={kind:'unit',value:rel};
+      broadcastMat('unit',rel,undefined,true);
     }catch(e){}
   },250);
 }
@@ -1241,8 +1247,8 @@ function ensureYtPlayer(id){
     if(STATE.ytPlayer&&STATE.ytPlayer.destroy){ try{STATE.ytPlayer.destroy();}catch(e){} }
     STATE.ytPlayer=new YT.Player('yt-player',{ videoId:id, playerVars:{rel:0,modestbranding:1,enablejsapi:1,origin:location.origin}, events:{
       onReady:function(){ applyZoom(); if(STATE._ytPending){ applyYtSync(STATE._ytPending); STATE._ytPending=null; }
-        if(STATE.isHost){ STATE._ytHb=setInterval(function(){ if(!STATE.matShared||!STATE.ytPlayer||!STATE.ytPlayer.getPlayerState)return; try{ var st=STATE.ytPlayer.getPlayerState(); if(st===1) sendData({t:'yt-sync',state:1,time:STATE.ytPlayer.getCurrentTime(),id:id}); }catch(e){} },4000); } },
-      onStateChange:function(e){ if(STATE.isHost&&STATE.matShared){ try{ sendData({t:'yt-sync',state:e.data,time:STATE.ytPlayer.getCurrentTime(),id:id}); }catch(er){} } }
+        if(STATE.isHost){ STATE._ytHb=setInterval(function(){ if(!STATE.matShared||STATE.matControl||!STATE.ytPlayer||!STATE.ytPlayer.getPlayerState)return; try{ var st=STATE.ytPlayer.getPlayerState(); if(st===1) sendData({t:'yt-sync',state:1,time:STATE.ytPlayer.getCurrentTime(),id:id}); }catch(e){} },4000); } },
+      onStateChange:function(e){ if((STATE.isHost&&STATE.matShared)||(!STATE.isHost&&STATE.matControl)){ try{ sendData({t:'yt-sync',state:e.data,time:STATE.ytPlayer.getCurrentTime(),id:id}); }catch(er){} } }
     }});
   });
 }
@@ -1253,13 +1259,15 @@ function buildPresets(){ var el=$('#mat-presets'); if(!el)return; var P=[
   {l:'IELTS Writing',p:'ielts-bolum-calisma.html?bolum=writing'},{l:'IELTS Deneme',p:'ielts-deneme.html'},
   {l:'TOEFL',p:'toefl-ogren.html'},{l:'YDS',p:'yds-ogren.html'},{l:'YDT',p:'ydt-ogren.html'},
   {l:'SAT Öğren',p:'sat-ogren.html'},{l:'Seviye Testi',p:'seviye-belirleme.html'},
-  {l:'Soru Bankası',p:'soru-bankasi.html'},{l:'Kelime Bankası',p:'kelime-bankasi.html'},
-  {l:'Sınıfım / Ödevler',p:'ogretmen-sinif.html'},{l:'Yazı Değerlendirme',p:'ogretmen-yazi-degerlendirme.html'}
+  {l:'Soru Bankası',p:'soru-bankasi.html'},{l:'Kelime Bankası',p:'kelime-bankasi.html'}
 ];
+  // Not: Öğretmen-panel/auth sayfaları (Sınıfım/Ödevler, Yazı Değerlendirme) preset'ten çıkarıldı —
+  // bunlar öğretmenin kendi araçları; materyal olarak paylaşılınca öğrenci ekranında auth-duvarı +
+  // nav yeniden-yayın döngüsü yaratıp senkronu kırıyordu. Ortak yazı için Yazı Tahtası kullanılır.
   P.forEach(function(x){ var b=document.createElement('button'); b.textContent=x.l; b.addEventListener('click',function(){ var u=$('#mat-page-url'); if(u)u.value=x.p; loadMaterial({kind:'unit',value:x.p},false); }); el.appendChild(b); }); }
 function matTab(which){ $$('.mat-tab').forEach(function(x){x.classList.toggle('active',x.dataset.mat===which);}); $$('.mat-pane').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-mat-pane')!==which);}); applyMatLock(); }
 function activeMatTab(){ var a=$('.mat-tab.active'); return a?a.dataset.mat:''; }
-function applyMatLock(){ var lk=$('#mat-lock'); if(!lk)return; lk.classList.toggle('on', activeMatTab()==='unite' && !STATE.matControl); }
+function applyMatLock(){ var app=$('#gm-app'); if(app) app.classList.toggle('mat-controlled', !!STATE.matControl); var lk=$('#mat-lock'); if(!lk)return; lk.classList.toggle('on', activeMatTab()==='unite' && !STATE.matControl); }
 function buildUnitSelectors(){
   var tracks=[{v:'',t:'Adult'},{v:'teen-',t:'Teen'},{v:'junior-',t:'Junior'}], levels=['a1','a2','b1','b2','c1','c2'];
   var tSel=$('#mat-track'),lSel=$('#mat-level'),uSel=$('#mat-unit');

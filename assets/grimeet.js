@@ -698,6 +698,7 @@ function onData(payload,p){
       loadMaterial(msg,true); setMode('materials',{remote:true}); if(!msg.nav)sysChat('Öğretmen bir materyal paylaştı.'); } }
   else if(msg.t==='mat-stop'){ if(!STATE.isHost&&fromHost&&STATE.mode==='materials') setMode('grid',{remote:true}); }
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
+  else if(msg.t==='mat-zoom'){ if(!STATE.isHost&&fromHost){ var _z=+msg.z; if(_z>=0.4&&_z<=2.5){ STATE.matZoom=_z; applyZoom(); } } }
   else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
   else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
@@ -1101,8 +1102,9 @@ function bindMaterials(){
     if(!STATE.matShared){ broadcastMat(STATE.currentMaterial.kind,STATE.currentMaterial.value,STATE.currentMaterial.ext,false); STATE.matShared=true; sh.textContent='Paylaşımı Durdur'; sh.classList.add('stop'); toast('Öğrencilere paylaşıldı.'); }
     else { sendData({t:'mat-stop'}); STATE.matShared=false; sh.textContent='Öğrencilerle Paylaş'; sh.classList.remove('stop'); toast('Paylaşım durduruldu.'); }
   });
-  function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); }
-  function zout(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); }
+  function zBroadcast(){ if(STATE.isHost&&STATE.matShared) sendData({t:'mat-zoom',z:STATE.matZoom}); }
+  function zin(){ STATE.matZoom=Math.min(2.5,Math.round((STATE.matZoom+0.15)*100)/100); applyZoom(); zBroadcast(); }
+  function zout(){ STATE.matZoom=Math.max(0.4,Math.round((STATE.matZoom-0.15)*100)/100); applyZoom(); zBroadcast(); }
   $('#mat-zoom-in').addEventListener('click',zin);
   $('#mat-zoom-out').addEventListener('click',zout);
   var zfi=$('#mat-zoom-fab-in'); if(zfi)zfi.addEventListener('click',zin);
@@ -1185,7 +1187,7 @@ function loadMaterial(m,remote){
     }
   }
   applyZoom();
-  if(!remote&&STATE.matShared){ broadcastMat(m.kind,m.value,m.ext,false); }
+  if(!remote&&STATE.matShared){ broadcastMat(m.kind,m.value,m.ext,false); if(STATE.matZoom!==1) sendData({t:'mat-zoom',z:STATE.matZoom}); }
 }
 function applyZoom(){ $$('.mat-frame iframe').forEach(function(f){ try{ f.style.zoom=STATE.matZoom; }catch(e){} }); var fs=document.getElementById('mat-file-scroll'); if(fs){ try{ fs.style.zoom=STATE.matZoom; }catch(e){} } var pct=Math.round(STATE.matZoom*100)+'%'; var v=$('#mat-zoom-val'); if(v)v.textContent=pct; var vf=$('#mat-zoom-fab-val'); if(vf)vf.textContent=pct; }
 function materialProxy(f){ return SUPABASE_URL+'/functions/v1/grimeet-material?f='+encodeURIComponent(f); }
@@ -1429,10 +1431,15 @@ var WB=(function(){
     ta.style.left=(OX+x*S)+'px'; ta.style.top=(OY+(y-fs*0.9)*S)+'px'; ta.style.color=color; ta.style.fontSize=(fs*S)+'px'; ta.style.width=(boxW*S)+'px'; ta.style.fontFamily='Inter,sans-serif'; ta.style.fontWeight='600'; ta.style.whiteSpace='pre-wrap'; ta.rows=1;
     ta.placeholder=bullet?'Madde yaz · Enter bitirir · Shift+Enter alt madde':'Metin · kutuya sığar, sağ kenardan boyutlandır · Enter bitirir';
     wrap.appendChild(ta); ta.focus();
-    function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ var lines=v.split('\n'); if(bullet)lines=lines.map(function(l){return l.trim()?'•  '+l:l;}); items.push({type:'text',x:x,y:y,lines:lines,color:color,size:fs,w:boxW}); sel=null; redraw(); broadcast(); } ta.remove(); }
+    // Canlı taslak: öğrenci Enter'ı beklemeden, sen yazdıkça görsün (#5)
+    var di={type:'text',x:x,y:y,lines:[''],color:color,size:fs,w:boxW,_draft:true};
+    items.push(di); var liveBc=throttle(broadcast,150);
+    function parse(){ var lines=(ta.value||'').split('\n'); if(bullet)lines=lines.map(function(l){return l.trim()?'•  '+l:l;}); return lines; }
+    function dropDraft(){ var ix=items.indexOf(di); if(ix>=0)items.splice(ix,1); }
+    function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ delete di._draft; di.lines=parse(); sel=null; } else { dropDraft(); } redraw(); broadcast(); ta.remove(); }
     ta.addEventListener('blur',commit);
-    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
-    ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.value=''; ta.blur(); } else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ta.blur(); } });
+    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; di.lines=parse(); redraw(); liveBc(); });
+    ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.removeEventListener('blur',commit); dropDraft(); redraw(); broadcast(); ta.remove(); } else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ta.blur(); } });
   }
   function editText(idx){
     var it=items[idx]; if(!it||it.type!=='text')return;
@@ -1443,9 +1450,12 @@ var WB=(function(){
     var isBullet=lines.some(function(l){return /^•\s/.test(l);});
     ta.value=lines.map(function(l){return l.replace(/^•\s+/,'');}).join('\n');
     wrap.appendChild(ta); ta.focus(); ta.select(); ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px';
-    function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ var ls=v.split('\n'); if(isBullet)ls=ls.map(function(l){return l.trim()?'•  '+l:l;}); items[idx].lines=ls; items[idx].w=boxW; delete items[idx].text; } else { items.splice(idx,1); sel=null; } redraw(); broadcast(); ta.remove(); }
+    var liveBc=throttle(broadcast,150);
+    function parse(){ var ls=(ta.value||'').split('\n'); if(isBullet)ls=ls.map(function(l){return l.trim()?'•  '+l:l;}); return ls; }
+    function commit(){ var v=(ta.value||'').replace(/\s+$/,''); if(v){ items[idx].lines=parse(); items[idx].w=boxW; delete items[idx].text; } else { items.splice(idx,1); sel=null; } redraw(); broadcast(); ta.remove(); }
     ta.addEventListener('blur',commit);
-    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
+    // Canlı düzenleme: değişiklik öğrenciye anında yansısın (#5)
+    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; if(items[idx]){ items[idx].lines=parse(); items[idx].w=boxW; delete items[idx].text; redraw(); liveBc(); } });
     ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.removeEventListener('blur',commit); ta.remove(); } else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ta.blur(); } });
   }
   function onImage(e){ var f=e.target.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){ var mw=Math.min(340,img.width),ratio=img.height/img.width; items.push({type:'img',x:W/2-mw/2,y:H/2-mw*ratio/2,w:mw,h:mw*ratio,src:rd.result,_img:img}); redraw(); broadcast(); }; img.src=rd.result; }; rd.readAsDataURL(f); e.target.value=''; }
@@ -1495,10 +1505,21 @@ var ANNO=(function(){
     var cl=$('#anno-clear'); if(cl)cl.addEventListener('click',function(){ items=[]; sel=null; redraw(); broadcast(); });
     cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
     cv.addEventListener('dblclick',function(e){ var p=pxpos(e); var i=hit(p); if(i>=0&&items[i]&&items[i].type==='text') editText(i); });
+    bindBarDrag();
     if(window.ResizeObserver){ try{ new ResizeObserver(function(){ resize(); }).observe(wrap||cv); }catch(e){} }
     window.addEventListener('resize',resize); resize();
   }
   function bumpFont(dir){ fontPx=Math.min(FONT_MAX,Math.max(FONT_MIN,fontPx+dir*FONT_STEP)); var el=$('#anno-fontpx'); if(el)el.textContent=fontPx; }
+  // Araç çubuğunu sürükle: video/materyalin üstünü kapatmasın (#7). Konum host'a özel (UI), yayınlanmaz.
+  function bindBarDrag(){ var bar=$('#anno-bar'), grip=$('#anno-drag'), host=wrap||cv.parentElement; if(!bar||!grip||!host)return;
+    var dragging=false,sx=0,sy=0,bl=0,bt=0;
+    function clamp(){ var hr=host.getBoundingClientRect(),br=bar.getBoundingClientRect(); var maxL=Math.max(0,hr.width-br.width),maxT=Math.max(0,hr.height-br.height); bl=Math.min(maxL,Math.max(0,bl)); bt=Math.min(maxT,Math.max(0,bt)); bar.style.left=bl+'px'; bar.style.top=bt+'px'; }
+    grip.addEventListener('pointerdown',function(e){ e.preventDefault(); var hr=host.getBoundingClientRect(),br=bar.getBoundingClientRect(); bl=br.left-hr.left; bt=br.top-hr.top; bar.classList.add('moved','dragging'); bar.style.left=bl+'px'; bar.style.top=bt+'px'; dragging=true; sx=e.clientX; sy=e.clientY; try{grip.setPointerCapture(e.pointerId);}catch(_){} });
+    grip.addEventListener('pointermove',function(e){ if(!dragging)return; bl+=(e.clientX-sx); bt+=(e.clientY-sy); sx=e.clientX; sy=e.clientY; clamp(); });
+    grip.addEventListener('pointerup',function(e){ if(!dragging)return; dragging=false; bar.classList.remove('dragging'); try{grip.releasePointerCapture(e.pointerId);}catch(_){} });
+    // Çift tıkla: köşeye topla (sağ-üst)
+    grip.addEventListener('dblclick',function(){ bar.classList.add('moved'); var hr=host.getBoundingClientRect(),br=bar.getBoundingClientRect(); bl=hr.width-br.width-12; bt=12; clamp(); });
+  }
   function resize(){ if(!cv)return; var host=wrap||cv.parentElement; if(!host)return; var w=Math.max(0,host.clientWidth-28), h=Math.max(0,host.clientHeight-28); if(!w||!h)return; dpr=window.devicePixelRatio||1; cv.style.width=w+'px'; cv.style.height=h+'px'; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); W=w;H=h; ctx.setTransform(dpr,0,0,dpr,0,0); redraw(); }
   /* normalize (0-1) <-> piksel */
   function pos(e){ var r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width, y:(e.clientY-r.top)/r.height}; }

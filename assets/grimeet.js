@@ -1300,6 +1300,8 @@ function downloadBlob(blob){ var url=URL.createObjectURL(blob),a=document.create
 var WB=(function(){
   var cv,ctx,wrap,W=0,H=0,dpr=1,tool='pen',color='#1b1b1b',size=4,fontPx=32;
   var BW=1280,BH=720,S=1,OX=0,OY=0; /* paylasilan mantiksal tahta (herkes ayni gorur, contain-fit) */
+  var BOARD_BG='#fbfaf6'; /* tahta kagit rengi (silgi de bunu kullanir; yazim icin acik kalir) */
+  function lbColor(){ try{ var v=(getComputedStyle(document.documentElement).getPropertyValue('--gm-stage')||'').trim(); return v||'#e6e0d2'; }catch(e){ return '#e6e0d2'; } } /* tahta etrafi (letterbox) tema-bagli */
   var FONT_MIN=12,FONT_MAX=120,FONT_STEP=6;
   var items=[],drawing=false,cur=null,startPt=null,sel=null,dragOff=null,clip=null,guides=[],resizing=false;
   var SNAP=6;
@@ -1391,7 +1393,7 @@ var WB=(function(){
       sel=hit(p); if(sel>=0){ dragOff={x:p.x,y:p.y,orig:JSON.parse(JSON.stringify(strip(items[sel])))}; try{cv.setPointerCapture(e.pointerId);}catch(_){} } redraw(); return; }
     if(tool==='text'||tool==='bullet'){ placeText(p.x,p.y,tool==='bullet'); return; }
     drawing=true; startPt=p;
-    if(tool==='pen'||tool==='highlighter'||tool==='eraser'){ cur={type:tool,color:tool==='eraser'?'#fbfaf6':color,size:tool==='highlighter'?size*3:(tool==='eraser'?size*4:size),points:[p],alpha:tool==='highlighter'?0.35:1}; items.push(cur); }
+    if(tool==='pen'||tool==='highlighter'||tool==='eraser'){ cur={type:tool,color:tool==='eraser'?BOARD_BG:color,size:tool==='highlighter'?size*3:(tool==='eraser'?size*4:size),points:[p],alpha:tool==='highlighter'?0.35:1}; items.push(cur); }
     else { cur={type:tool,x:p.x,y:p.y,w:0,h:0,color:color,size:size}; items.push(cur); }
   }
   function move(e){ var p=pos(e);
@@ -1440,7 +1442,7 @@ var WB=(function(){
     else if(it.type==='img'){ var im=it._img; if(!im){ im=new Image(); im.onload=redraw; im.src=it.src; it._img=im; } if(im.complete)ctx.drawImage(im,it.x,it.y,it.w,it.h); }
     ctx.restore();
   }
-  function redraw(){ if(!ctx)return; ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle='#e6e0d2'; ctx.fillRect(0,0,cv.width/dpr,cv.height/dpr); ctx.setTransform(dpr*S,0,0,dpr*S,dpr*OX,dpr*OY); ctx.fillStyle='#fbfaf6'; ctx.fillRect(0,0,BW,BH); items.forEach(drawItem); if(sel!=null&&sel>=0&&items[sel]){ var b=bbox(items[sel]); ctx.save(); ctx.strokeStyle='#2E6E6A'; ctx.setLineDash([6,4]); ctx.lineWidth=1.5; ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12); if(items[sel].type==='text'){ ctx.setLineDash([]); ctx.fillStyle='#2E6E6A'; ctx.beginPath(); ctx.arc(b.x+b.w+6,b.y+b.h/2,5,0,7); ctx.fill(); } ctx.restore(); }
+  function redraw(){ if(!ctx)return; ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=lbColor(); ctx.fillRect(0,0,cv.width/dpr,cv.height/dpr); ctx.setTransform(dpr*S,0,0,dpr*S,dpr*OX,dpr*OY); ctx.fillStyle=BOARD_BG; ctx.fillRect(0,0,BW,BH); ctx.save(); ctx.strokeStyle='rgba(0,0,0,.10)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,BW-1,BH-1); ctx.restore(); items.forEach(drawItem); if(sel!=null&&sel>=0&&items[sel]){ var b=bbox(items[sel]); ctx.save(); ctx.strokeStyle='#2E6E6A'; ctx.setLineDash([6,4]); ctx.lineWidth=1.5; ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12); if(items[sel].type==='text'){ ctx.setLineDash([]); ctx.fillStyle='#2E6E6A'; ctx.beginPath(); ctx.arc(b.x+b.w+6,b.y+b.h/2,5,0,7); ctx.fill(); } ctx.restore(); }
     if(guides&&guides.length){ ctx.save(); ctx.strokeStyle='#E0567A'; ctx.lineWidth=1; ctx.setLineDash([5,4]); guides.forEach(function(g){ ctx.beginPath(); if(g.o==='v'){ ctx.moveTo(g.pos,0); ctx.lineTo(g.pos,BH); } else { ctx.moveTo(0,g.pos); ctx.lineTo(BW,g.pos); } ctx.stroke(); }); ctx.restore(); }
     fontLabel(); }
   function broadcast(){ sendData({t:'wb',items:items.map(strip)}); }

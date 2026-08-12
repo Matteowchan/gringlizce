@@ -23,7 +23,8 @@
 <meta name="twitter:image" content="https://gringlizce.com/assets/og-default.png">
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/grimeet.css?v=43">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+<link rel="stylesheet" href="assets/grimeet.css?v=44">
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -44,7 +45,7 @@
       <button class="gmr-ico-btn" id="gmr-layout" title="Görünüm: Galeri / Konuşmacı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8"/></svg></button>
       <div class="gmr-tilesize" id="gmr-tilesize" title="Kamera boyutu">
         <button class="gmr-ico-btn" id="gmr-tile-down" title="Kameraları küçült" aria-label="Küçült">−</button>
-        <input type="range" id="gmr-tile-range" min="160" max="520" step="10" value="230" aria-label="Kamera boyutu">
+        <input type="range" id="gmr-tile-range" min="160" max="620" step="10" value="230" aria-label="Kamera boyutu">
         <button class="gmr-ico-btn" id="gmr-tile-up" title="Kameraları büyüt" aria-label="Büyüt">+</button>
       </div>
       <button class="gmr-ico-btn" id="gmr-fs" title="Tam ekran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -169,13 +170,27 @@
       <div class="gmr-doc" id="gmr-doc">
         <div class="gmr-doc-bar">
           <span class="gmr-doc-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/></svg> Ortak Doküman</span>
-          <span class="gmr-doc-hint">Öğretmen ve öğrenci birlikte yazar · anlık senkron</span>
+          <span class="gmr-doc-hint">Zengin metin · birlikte yazın · anlık senkron</span>
           <span class="gmr-doc-count" id="doc-count">0 kelime</span>
+          <button class="gmr-doc-act" id="doc-toggle-left" title="Sol sayfayı aç / kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="12" y="4" width="9" height="16" rx="1" opacity=".4"/></svg><span>Sol Sayfa</span></button>
+          <button class="gmr-doc-act" id="doc-toggle-right" title="Sağ sayfayı aç / kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="9" height="16" rx="1" opacity=".4"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg><span>Sağ Sayfa</span></button>
           <button class="gmr-doc-act" id="doc-download" title="Metni indir (.txt)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>İndir</span></button>
           <button class="gmr-doc-act host-only" id="doc-clear" title="Belgeyi temizle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span>Temizle</span></button>
         </div>
-        <div class="gmr-doc-page">
-          <textarea id="doc-area" class="gmr-doc-area" placeholder="Birlikte yazmaya başlayın… Öğretmen ve öğrenci aynı anda düzenleyebilir; yazdıkça karşı taraf anında görür." spellcheck="false"></textarea>
+        <div class="gmr-doc-workspace" id="doc-workspace">
+          <div class="gmr-doc-col" id="doc-col-L" data-pane="L" hidden>
+            <div class="gmr-doc-col-head">Sol Sayfa</div>
+            <div class="gmr-doc-editor" id="doc-editor-L"></div>
+          </div>
+          <div class="gmr-doc-gutter" id="doc-gutter-L" title="Sürükleyip boyutlandır" hidden></div>
+          <div class="gmr-doc-col gmr-doc-col-main" id="doc-col-C" data-pane="C">
+            <div class="gmr-doc-editor" id="doc-editor-C"></div>
+          </div>
+          <div class="gmr-doc-gutter" id="doc-gutter-R" title="Sürükleyip boyutlandır" hidden></div>
+          <div class="gmr-doc-col" id="doc-col-R" data-pane="R" hidden>
+            <div class="gmr-doc-col-head">Sağ Sayfa</div>
+            <div class="gmr-doc-editor" id="doc-editor-R"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -391,7 +406,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js" defer></script>
-<script src="assets/grimeet.js?v=66" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js" defer></script>
+<script src="assets/grimeet.js?v=67" defer></script>
 <script src="assets/gri-fx.js" defer></script>
 <script>
 /* ===== Gri Meet oda içi Ödevler paneli ===== */

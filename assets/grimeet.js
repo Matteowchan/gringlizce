@@ -496,7 +496,7 @@ function setMode(mode,opts){
   var _cd=$('#ctrl-doc'); if(_cd) _cd.classList.toggle('active',mode==='doc');
   $('#gmr-share-what').textContent=MODE_LBL[mode]||'Kameralar';
   if(mode==='board') setTimeout(WB.resize,40);
-  if(mode==='doc') setTimeout(function(){ var a=$('#doc-area'); if(a)a.focus(); },60);
+  if(mode==='doc') setTimeout(function(){ var a=document.querySelector('#doc-col-C .ql-editor'); if(a)a.focus(); },80);
   if(STATE.isHost&&!opts.remote) sendData({t:'view',mode:mode});
 }
 
@@ -528,7 +528,7 @@ function updateFeatured(){
 function togglePin(id){ if(!id)return; STATE.pinned=(STATE.pinned===id?null:id); if(STATE.pinned&&STATE.layout!=='speaker'){ setLayout('speaker'); } else updateFeatured(); toast(STATE.pinned?'Katılımcı sabitlendi':'Sabitleme kaldırıldı'); }
 function toggleFullscreen(){ try{ if(!document.fullscreenElement){ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el); $('#gmr-fs').classList.add('on'); } else { (document.exitFullscreen||document.webkitExitFullscreen).call(document); $('#gmr-fs').classList.remove('on'); } }catch(e){} }
 /* Resizable galeri: kamera tile min-genişligini ayarla (herkesin kamerasi grid'de) */
-function setTileSize(px,save){ px=Math.max(160,Math.min(520,px|0)); document.documentElement.style.setProperty('--tile-min',px+'px'); var app=$('#gm-app'); if(app)app.setAttribute('data-tilemanual','1'); var r=$('#gmr-tile-range'); if(r&&(+r.value)!==px)r.value=px; if(save!==false){ try{ localStorage.setItem('gm-tilemin',px); }catch(e){} } }
+function setTileSize(px,save){ px=Math.max(160,Math.min(620,px|0)); document.documentElement.style.setProperty('--tile-min',px+'px'); var app=$('#gm-app'); if(app)app.setAttribute('data-tilemanual','1'); var r=$('#gmr-tile-range'); if(r&&(+r.value)!==px)r.value=px; if(save!==false){ try{ localStorage.setItem('gm-tilemin',px); }catch(e){} } }
 
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
@@ -706,7 +706,8 @@ function onData(payload,p){
   else if(msg.t==='quizset'){ if(!STATE.isHost&&fromHost) openQuizSet(msg.list,msg.dur); }
   else if(msg.t==='quiz-vote'){ if(STATE.isHost&&STATE.quizSet){ var vi=msg.idx||0; var vv=STATE.quizSet.votes[vi]=STATE.quizSet.votes[vi]||{}; vv[msg.a]=(vv[msg.a]||0)+1; renderQuizSetTally(); addPoint(id,msg.name||from,2); } }
   else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); }
-  else if(msg.t==='doc'){ DOC.applyRemote(msg.text,msg.seq); }
+  else if(msg.t==='doc'){ DOC.applyRemote(msg); }
+  else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
@@ -719,8 +720,8 @@ function onData(payload,p){
   else if(msg.t==='anno'){ ANNO.applyRemote(msg); }
   else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
-function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,doc:DOC.get(),docSeq:STATE._docSeq||0}); }
-function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(typeof msg.doc==='string') DOC.applyRemote(msg.doc,msg.docSeq); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
+function sendState(){ sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),chatLock:STATE.chatLocked,docState:DOC.getState()}); }
+function applyState(msg){ if(msg.wb) WB.applyRemote({items:msg.wb}); if(msg.docState) DOC.applyFullState(msg.docState); if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ loadMaterial(msg.material,true); setMode('materials',{remote:true}); } else if(msg.mode&&msg.mode!=='grid'){ setMode(msg.mode,{remote:true}); } }
 
 /* ================= CHAT / PEOPLE ================= */
 var chatUnread=0;
@@ -731,31 +732,89 @@ function sysChat(text){ chatEmpty(); var log=$('#chat-log'); var d=document.crea
 function applyChatLock(){ var i=$('#chat-text'),b=$('#chat-send'); var locked=STATE.chatLocked&&!STATE.isHost; i.disabled=locked; b.disabled=locked; i.placeholder=locked?'Sohbet öğretmen tarafından kapatıldı':'Mesaj yaz…'; }
 function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return; var i=$('#chat-text'); var t=(i.value||'').trim(); if(!t)return; addChat(STATE.name+' (Sen)',t); sendData({t:'chat',text:t}); i.value=''; } $('#chat-send').addEventListener('click',send); $('#chat-text').addEventListener('keydown',function(e){ if(e.key==='Enter')send(); }); }
 
-/* ===== Ortak Doküman (collaborative writing — Google Doc benzeri) ===== */
+/* ===== Ortak Doküman (Google Docs benzeri: Quill zengin editör + 3 sayfa, canlı senkron) ===== */
 var DOC=(function(){
-  var el,last='',tmr=null,applying=false;
-  function count(){ var t=el?el.value:''; var w=(t.trim().match(/\S+/g)||[]).length; var c=$('#doc-count'); if(c)c.textContent=w+' kelime'; }
-  function push(){ if(!el)return; var v=el.value; if(v===last)return; last=v; sendData({t:'doc',text:v}); }
-  function schedule(){ count(); if(tmr)clearTimeout(tmr); tmr=setTimeout(push,180); }
-  function applyRemote(text){
-    if(typeof text!=='string')return;
-    if(!el){ STATE._docPending=text; return; }
-    if(el.value===text){ last=text; count(); return; }
-    var focused=(document.activeElement===el), s=el.selectionStart, e=el.selectionEnd, atEnd=(s===el.value.length);
-    applying=true; el.value=text; last=text; applying=false;
-    if(focused){ var len=text.length; if(atEnd){ el.selectionStart=el.selectionEnd=len; } else { el.selectionStart=Math.min(s,len); el.selectionEnd=Math.min(e,len); } }
-    count();
+  var Q={}, ready=false, snapTimer=null, lastSnap={C:'',L:'',R:''};
+  var TOOLBAR=[
+    [{'font':[]},{'size':['12px','14px',false,'18px','24px','32px']}],
+    [{'header':[1,2,3,false]}],
+    ['bold','italic','underline','strike'],
+    [{'color':[]},{'background':[]}],
+    [{'script':'sub'},{'script':'super'}],
+    [{'list':'ordered'},{'list':'bullet'},{'indent':'-1'},{'indent':'+1'}],
+    [{'align':[]}],
+    ['blockquote','code-block','link','image'],
+    ['clean']
+  ];
+  function colEl(pane){ return document.getElementById('doc-col-'+pane); }
+  function isOpen(pane){ var c=colEl(pane); return c && !c.hasAttribute('hidden'); }
+  function wc(){ try{ var t=(Q.C?Q.C.getText():''); var w=(t.trim().match(/\S+/g)||[]).length; var c=$('#doc-count'); if(c)c.textContent=w+' kelime'; }catch(e){} }
+  function imgHandler(pane){ return function(){ var q=Q[pane]; if(!q)return; var url=window.prompt('Görsel URL adresi (https://…):'); if(url){ var r=q.getSelection(true); q.insertEmbed((r?r.index:q.getLength()),'image',url,'user'); } }; }
+  function mkEditor(pane,sel,ph){
+    var host=document.querySelector(sel); if(!host)return null;
+    var q=new Quill(host,{ theme:'snow', placeholder:ph, modules:{ toolbar:{ container:TOOLBAR, handlers:{ image:imgHandler(pane) } } } });
+    q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
+    return q;
   }
-  function get(){ return el?el.value:(STATE._docPending||''); }
+  function togglePane(pane,remote){
+    var col=colEl(pane); if(!col)return;
+    var g=document.getElementById('doc-gutter-'+pane);
+    var willOpen=col.hasAttribute('hidden');
+    if(willOpen){ col.removeAttribute('hidden'); if(g)g.removeAttribute('hidden'); } else { col.setAttribute('hidden',''); if(g)g.setAttribute('hidden',''); }
+    var btn=document.getElementById('doc-toggle-'+(pane==='L'?'left':'right')); if(btn)btn.classList.toggle('active',willOpen);
+    if(!remote && STATE.connected) sendData({t:'doc-layout',pane:pane,open:willOpen});
+  }
+  function applyLayout(msg){ if(!msg||!msg.pane)return; if(!!msg.open!==isOpen(msg.pane)) togglePane(msg.pane,true); }
+  function bindGutter(pane){
+    var g=document.getElementById('doc-gutter-'+pane), col=colEl(pane); if(!g||!col)return;
+    var dragging=false,startX=0,startW=0;
+    g.addEventListener('pointerdown',function(e){ dragging=true; startX=e.clientX; startW=col.offsetWidth; try{g.setPointerCapture(e.pointerId);}catch(_){} e.preventDefault(); });
+    g.addEventListener('pointermove',function(e){ if(!dragging)return; var dx=e.clientX-startX; var w=(pane==='L')?(startW+dx):(startW-dx); w=Math.max(180,Math.min(680,w)); col.style.flex='0 0 '+w+'px'; col.style.width=w+'px'; });
+    function end(e){ if(!dragging)return; dragging=false; try{g.releasePointerCapture(e.pointerId);}catch(_){} }
+    g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);
+  }
+  function sendSnapshot(){ if(!ready||!STATE.connected)return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && s.length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
+  function combinedText(){ var out=[]; try{ if(Q.L&&isOpen('L')){ var l=Q.L.getText().trim(); if(l)out.push('=== SOL SAYFA ===\n'+l); } if(Q.C)out.push(Q.C.getText().trim()); if(Q.R&&isOpen('R')){ var r=Q.R.getText().trim(); if(r)out.push('=== SAĞ SAYFA ===\n'+r); } }catch(e){} return out.join('\n\n'); }
   function init(){
-    el=$('#doc-area'); if(!el)return;
-    if(STATE._docPending!=null){ el.value=STATE._docPending; last=STATE._docPending; STATE._docPending=null; }
-    el.addEventListener('input',function(){ if(applying)return; schedule(); });
-    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=new Blob([get()],{type:'text/plain;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(_){} },1000);}catch(e){} });
-    var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge temizlensin mi?'))return; el.value=''; last=''; push(); count(); });
-    count();
+    if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C'))return;
+    try{ var Size=Quill.import('attributors/style/size'); Size.whitelist=['12px','14px','18px','24px','32px']; Quill.register(Size,true); }catch(e){}
+    Q.C=mkEditor('C','#doc-editor-C','Birlikte yazmaya başlayın… Öğretmen ve öğrenci aynı anda düzenleyebilir.');
+    Q.L=mkEditor('L','#doc-editor-L','Sol sayfa — notlar, plan…');
+    Q.R=mkEditor('R','#doc-editor-R','Sağ sayfa — öğrenci taslağı…');
+    ready=true;
+    if(STATE._docPendingState){ applyFullState(STATE._docPendingState); STATE._docPendingState=null; }
+    var tl=$('#doc-toggle-left'); if(tl)tl.addEventListener('click',function(){ togglePane('L'); });
+    var tr=$('#doc-toggle-right'); if(tr)tr.addEventListener('click',function(){ togglePane('R'); });
+    bindGutter('L'); bindGutter('R');
+    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=new Blob([combinedText()],{type:'text/plain;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1000);}catch(e){} });
+    var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (görünen sayfalar) temizlensin mi?'))return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; q.setText(''); sendData({t:'doc',pane:p,full:q.getContents().ops}); }); wc(); });
+    if(STATE.isHost) snapTimer=setInterval(sendSnapshot,5000);
+    wc();
   }
-  return { init:init, applyRemote:applyRemote, get:get };
+  function applyRemote(msg){
+    if(!msg||!ready)return;
+    var q=Q[msg.pane||'C']; if(!q)return;
+    try{
+      if(msg.d){ q.updateContents({ops:msg.d},'silent'); }
+      else if(msg.full){ if(!q.hasFocus()) q.setContents({ops:msg.full},'silent'); }
+      if((msg.pane||'C')==='C') wc();
+    }catch(e){}
+  }
+  function getState(){ if(!ready)return null; try{ return {
+    C:Q.C?Q.C.getContents().ops:null, L:Q.L?Q.L.getContents().ops:null, R:Q.R?Q.R.getContents().ops:null,
+    layL:isOpen('L'), layR:isOpen('R')
+  }; }catch(e){ return null; } }
+  function applyFullState(st){
+    if(!st)return;
+    if(!ready){ STATE._docPendingState=st; return; }
+    try{
+      ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q&&st[p]&&!q.hasFocus()) q.setContents({ops:st[p]},'silent'); });
+      if(st.layL&&!isOpen('L')) togglePane('L',true);
+      if(st.layR&&!isOpen('R')) togglePane('R',true);
+      wc();
+    }catch(e){}
+  }
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, getState:getState, applyFullState:applyFullState };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){
@@ -1573,7 +1632,7 @@ function boot(){
   try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
   try{ var _r=localStorage.getItem('gm-res'); if(_r&&RES_MAP[_r]) STATE.camRes=_r; }catch(e){}
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
-  try{ var _tm=parseInt(localStorage.getItem('gm-tilemin'),10); if(_tm>=160&&_tm<=520){ setTileSize(_tm,false); } }catch(e){}
+  try{ var _tm=parseInt(localStorage.getItem('gm-tilemin'),10); if(_tm>=160&&_tm<=620){ setTileSize(_tm,false); } }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindDoc(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
   buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();

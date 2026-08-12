@@ -1163,6 +1163,8 @@ function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   STATE.matScrollEl=null;
+  // Nav-izleyiciyi yeni materyale göre sıfırla (yt/file'a geçince de durdur).
+  STATE._lastNavRel=(m.kind==='unit')?String(m.value):null; clearInterval(STATE._navWatch);
   ANNO.reset(!remote); try{ PDFHL.reset(!remote); }catch(e){}
   if(m.kind==='yt'){ var id=ytId(m.value); if(!id){ if(!remote)toast('Geçerli YouTube bağlantısı değil.'); return; } matTab('youtube'); ensureYtPlayer(id); }
   else if(m.kind==='file'){ matTab('file'); var ff=$('#mat-file-frame'); if(ff){ var ex=(m.ext||'').toLowerCase(); var st=$('#mat-file-status'); if(st&&m.name)st.textContent=m.name;
@@ -1279,35 +1281,37 @@ function attachFileScrollSync(el){ if(!el)return; STATE.matScrollEl=el; var bc=t
 function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date.now(),wait=ms-(now-last); if(wait<=0){ last=now; fn(); } else { clearTimeout(timer); timer=setTimeout(function(){ last=Date.now(); fn(); },wait); } }; }
 function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared&&!STATE.matPaused)||(!STATE.isHost&&STATE.matControl); }
 function attachMatScrollSync(itf){ if(!itf)return;
+  clearInterval(STATE._navWatch);
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;
-    // Sayfa-içi gezinme takibi (sadece öğretmen): materyal içinde başka sayfaya/drill'e giderse öğrencileri de taşı.
-    // Debounce: hızlı geçişte yalnız EN SON URL yayınlanır (last-wins).
-    if(STATE.isHost&&STATE.matShared) scheduleNavBroadcast(itf);
+    if(STATE.isHost&&STATE.matShared) navBroadcastNow(itf); // tam-sayfa geçişte hemen yayınla
     var bc=throttle(function(){ if(STATE._matScrollLock||!canBroadcastScroll())return; try{ var d=w.document.documentElement||w.document.body; var max=(d.scrollHeight-w.innerHeight)||1; var y=(w.scrollY||w.pageYOffset||0); sendData({t:'mat-scroll',frac:Math.max(0,Math.min(1,y/max))}); }catch(e){} },140);
     w.addEventListener('scroll',bc,{passive:true});
   }catch(e){} });
+  // URL izleyici: iframe içindeki HER navigasyonu yakala — tam-sayfa geçiş (soru bankası → ielts-soru-bankasi),
+  // hash/replaceState/pushState (öğren drilleri, seviye testi, alt-görünümler). 'load' bu SPA geçişlerinde
+  // tetiklenmediği için periyodik izleme şart. Değişim yoksa yayın yok (exact-dedup), fırtına olmaz.
+  STATE._navWatch=setInterval(function(){ if(STATE.isHost&&STATE.matShared&&!STATE.matPaused) navBroadcastNow(itf); },500);
 }
-// Öğretmen materyal iframe'inde gezinince ~250ms debounce ile gerçek URL'i okuyup tek güncel yayın gönderir.
-function scheduleNavBroadcast(itf){
-  clearTimeout(STATE._navTmr);
-  STATE._navTmr=setTimeout(function(){
-    try{ var w=itf.contentWindow; if(!w)return; var loc=w.location;
-      var path=loc.pathname.replace(/^\/+/,'');
-      if(!path||!/\.html$/i.test(path)||!STATE.matShared) return;
-      // Öğretmenin kendi oturum/araç sayfalarını (giriş, öğretmen paneli, admin) öğrenciye yayınlama:
-      // bunlar auth-duvarına takılır / yönlendirir ve senkronu kırar.
-      if(/(^|\/)(login|giris|ogretmen|ogretmen-sinif|ogretmen-yazi-degerlendirme|panelim|admin)/i.test(path)) return;
-      var rel=(path+(loc.search||''));
-      var curPath=String((STATE.currentMaterial&&STATE.currentMaterial.value)||'').split('?')[0].split('#')[0];
-      // Yalnız GERÇEK sayfa (pathname) değişiminde yayın yap. Aynı interaktif sayfa içinde
-      // query/task değişimi (ör. ?bolum=writing&task=2) öğrenciyi yeniden yükletmesin — bu,
-      // "senkron kaskad olarak kırılıyor" fırtınasının köküydü (last-wins reload döngüsü).
-      if(curPath && curPath===path){ if(STATE.currentMaterial) STATE.currentMaterial.value=rel; return; }
-      STATE.currentMaterial={kind:'unit',value:rel};
-      // Duraksatıldıysa currentMaterial takip edilir ama öğrenciye yayınlanmaz (#12).
-      if(!STATE.matPaused) broadcastMat('unit',rel,undefined,true);
-    }catch(e){}
-  },250);
+// Materyal iframe'inin GÜNCEL URL'ini oku (temiz URL veya .html; hash + query dahil). Yayınlanmaması gereken
+// yolları (auth/öğretmen paneli, statik asset, boş/srcdoc) ele.
+function navRel(itf){
+  try{ var w=itf.contentWindow; if(!w)return null; var loc=w.location;
+    var path=String(loc.pathname||'').replace(/^\/+/,'');
+    if(!path||path==='blank'||path==='srcdoc') return null;
+    if(/(^|\/)(login|giris|ogretmen|ogretmen-sinif|ogretmen-yazi-degerlendirme|panelim|admin)(\.html)?($|\/)/i.test(path)) return null;
+    if(/\.(css|js|png|jpe?g|svg|gif|webp|ico|json|mp3|mp4|pdf|woff2?)(\?|#|$)/i.test(path)) return null;
+    return path+(loc.search||'')+(loc.hash||'');
+  }catch(e){ return null; }
+}
+function navBroadcastNow(itf){
+  var rel=navRel(itf); if(!rel||!STATE.matShared||STATE.matPaused) return;
+  if(rel===STATE._lastNavRel) return;         // exact-dedup → fırtına yok
+  STATE._lastNavRel=rel;
+  STATE.currentMaterial={kind:'unit',value:rel};
+  broadcastMat('unit',rel,undefined,true);
+}
+// Geriye uyumluluk: eski çağrı adı korunur.
+function scheduleNavBroadcast(itf){ navBroadcastNow(itf);
 }
 function applyMatScroll(frac){ try{
   if(STATE.currentMaterial&&STATE.currentMaterial.kind==='file'){ var el=STATE.matScrollEl; if(!el||!el.isConnected){ STATE._pendFileScroll=frac; return; } var mx=(el.scrollHeight-el.clientHeight)||1; STATE._matScrollLock=true; el.scrollTop=frac*mx; clearTimeout(STATE._matScrollTmr); STATE._matScrollTmr=setTimeout(function(){ STATE._matScrollLock=false; },280); return; }

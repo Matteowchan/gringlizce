@@ -1303,9 +1303,10 @@ var WB=(function(){
   var BOARD_BG='#fbfaf6'; /* tahta kagit rengi (silgi de bunu kullanir; yazim icin acik kalir) */
   function lbColor(){ try{ var v=(getComputedStyle(document.documentElement).getPropertyValue('--gm-stage')||'').trim(); return v||'#e6e0d2'; }catch(e){ return '#e6e0d2'; } } /* tahta etrafi (letterbox) tema-bagli */
   var FONT_MIN=12,FONT_MAX=120,FONT_STEP=6;
-  var items=[],drawing=false,cur=null,startPt=null,sel=null,dragOff=null,clip=null,guides=[],resizing=false;
+  var items=[],drawing=false,cur=null,startPt=null,sel=null,dragOff=null,clip=null,guides=[],resizing=false,fillOn=false;
   var SNAP=6;
   function wbFont(sz){ return '600 '+(sz||24)+'px Inter,sans-serif'; }
+  function shapeFill(it){ if(it&&it.fill){ ctx.save(); ctx.globalAlpha=(it.alpha||1)*0.2; ctx.fillStyle=it.color; ctx.fill(); ctx.restore(); } }
   // Metni kutu genisligine (it.w px) gore satirlara sar; it.w yoksa eski davranis (kaydirma yok)
   function textLines(it){
     var src=it.lines||[it.text||''];
@@ -1330,7 +1331,7 @@ var WB=(function(){
     });
     it._dl=out.length?out:['']; it._dlKey=key; return it._dl;
   }
-  var COLORS=['#1b1b1b','#d64545','#2E6E6A','#2E5E8A','#B78A2E','#7E3A56','#3E6B4A','#ffffff'];
+  var COLORS=['#1b1b1b','#5b5b5b','#d64545','#c0392b','#e8833a','#e0a91b','#B78A2E','#3E6B4A','#2E6E6A','#3fa7d6','#2E5E8A','#1b3a6b','#7E3A56','#b5179e','#8b5e3c','#ffffff'];
   function canEdit(){ return true; }
   function init(){
     cv=$('#gmr-canvas'); if(!cv)return; ctx=cv.getContext('2d'); wrap=$('#gmr-board-canvaswrap');
@@ -1348,6 +1349,11 @@ var WB=(function(){
     $('#wb-paste').addEventListener('click',function(){ if(clip){ var it=JSON.parse(JSON.stringify(clip)); shift(it,26,26); items.push(it); sel=items.length-1; redraw(); broadcast(); } });
     $('#wb-undo').addEventListener('click',function(){ items.pop(); sel=null; redraw(); broadcast(); });
     $('#wb-clear').addEventListener('click',function(){ if(confirm('Tahta temizlensin mi?')){ items=[]; sel=null; redraw(); broadcast(); } });
+    var _cp=$('#wb-color-custom'); if(_cp)_cp.addEventListener('input',function(){ color=this.value; $$('#wb-colors button').forEach(function(x){x.classList.remove('on');}); if(sel!=null&&sel>=0&&items[sel]){ items[sel].color=color; redraw(); broadcast(); } });
+    var _fl=$('#wb-fill'); if(_fl)_fl.addEventListener('click',function(){ var it=(sel!=null&&sel>=0)?items[sel]:null; var shp=it&&!it.points&&it.type!=='text'; if(shp){ it.fill=!it.fill; this.classList.toggle('on',!!it.fill); redraw(); broadcast(); } else { fillOn=!fillOn; this.classList.toggle('on',fillOn); toast(fillOn?'Dolgu açık — yeni şekiller dolu çizilir':'Dolgu kapalı'); } });
+    var _dup=$('#wb-dup'); if(_dup)_dup.addEventListener('click',function(){ if(sel!=null&&sel>=0&&items[sel]){ var d=JSON.parse(JSON.stringify(strip(items[sel]))); shift(d,26,26); items.push(d); sel=items.length-1; redraw(); broadcast(); } });
+    var _fr=$('#wb-front'); if(_fr)_fr.addEventListener('click',function(){ if(sel!=null&&sel>=0&&items[sel]){ var it=items.splice(sel,1)[0]; items.push(it); sel=items.length-1; redraw(); broadcast(); } });
+    var _bk=$('#wb-back'); if(_bk)_bk.addEventListener('click',function(){ if(sel!=null&&sel>=0&&items[sel]){ var it=items.splice(sel,1)[0]; items.unshift(it); sel=0; redraw(); broadcast(); } });
     cv.addEventListener('pointerdown',down); cv.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
     cv.addEventListener('dblclick',function(e){ var p=pos(e); var i=hit(p); if(i>=0&&items[i]&&items[i].type==='text') editText(i); });
     window.addEventListener('resize',resize);
@@ -1394,7 +1400,7 @@ var WB=(function(){
     if(tool==='text'||tool==='bullet'){ placeText(p.x,p.y,tool==='bullet'); return; }
     drawing=true; startPt=p;
     if(tool==='pen'||tool==='highlighter'||tool==='eraser'){ cur={type:tool,color:tool==='eraser'?BOARD_BG:color,size:tool==='highlighter'?size*3:(tool==='eraser'?size*4:size),points:[p],alpha:tool==='highlighter'?0.35:1}; items.push(cur); }
-    else { cur={type:tool,x:p.x,y:p.y,w:0,h:0,color:color,size:size}; items.push(cur); }
+    else { cur={type:tool,x:p.x,y:p.y,w:0,h:0,color:color,size:size,fill:fillOn}; items.push(cur); }
   }
   function move(e){ var p=pos(e);
     if(tool==='select'&&resizing&&sel!=null&&sel>=0&&items[sel]){ var rt=items[sel]; rt.w=Math.max(80,Math.min((W||1200)-rt.x-8,p.x-rt.x)); redraw(); return; }
@@ -1436,8 +1442,11 @@ var WB=(function(){
     else if(it.type==='line'){ ctx.beginPath(); ctx.moveTo(it.x,it.y); ctx.lineTo(it.x+it.w,it.y+it.h); ctx.stroke(); }
     else if(it.type==='arrow'){ var ang=Math.atan2(it.h,it.w),hl=(9+(it.size||3)*2.4)*0.72; ctx.beginPath(); ctx.moveTo(it.x,it.y); ctx.lineTo(it.x+it.w-hl*Math.cos(ang),it.y+it.h-hl*Math.sin(ang)); ctx.stroke(); arrowHead(it.x+it.w,it.y+it.h,ang,it.size); }
     else if(it.type==='carrow'){ var ex=it.x+it.w,ey=it.y+it.h,mx=it.x+it.w/2,my=it.y+it.h/2,len=Math.max(1,Math.sqrt(it.w*it.w+it.h*it.h)),bs=(it.bend==null?0.3:it.bend),px=-it.h/len,py=it.w/len,cx=mx+px*len*bs,cy=my+py*len*bs; var a2=Math.atan2(ey-cy,ex-cx),hl2=(9+(it.size||3)*2.4)*0.72; ctx.beginPath(); ctx.moveTo(it.x,it.y); ctx.quadraticCurveTo(cx,cy,ex-hl2*Math.cos(a2),ey-hl2*Math.sin(a2)); ctx.stroke(); arrowHead(ex,ey,a2,it.size); }
-    else if(it.type==='rect'){ ctx.strokeRect(it.x,it.y,it.w,it.h); }
-    else if(it.type==='ellipse'){ ctx.beginPath(); ctx.ellipse(it.x+it.w/2,it.y+it.h/2,Math.abs(it.w/2),Math.abs(it.h/2),0,0,7); ctx.stroke(); }
+    else if(it.type==='rect'){ ctx.beginPath(); ctx.rect(it.x,it.y,it.w,it.h); shapeFill(it); ctx.stroke(); }
+    else if(it.type==='ellipse'){ ctx.beginPath(); ctx.ellipse(it.x+it.w/2,it.y+it.h/2,Math.abs(it.w/2),Math.abs(it.h/2),0,0,7); shapeFill(it); ctx.stroke(); }
+    else if(it.type==='triangle'){ ctx.beginPath(); ctx.moveTo(it.x+it.w/2,it.y); ctx.lineTo(it.x,it.y+it.h); ctx.lineTo(it.x+it.w,it.y+it.h); ctx.closePath(); shapeFill(it); ctx.stroke(); }
+    else if(it.type==='diamond'){ ctx.beginPath(); ctx.moveTo(it.x+it.w/2,it.y); ctx.lineTo(it.x+it.w,it.y+it.h/2); ctx.lineTo(it.x+it.w/2,it.y+it.h); ctx.lineTo(it.x,it.y+it.h/2); ctx.closePath(); shapeFill(it); ctx.stroke(); }
+    else if(it.type==='star'){ var scx=it.x+it.w/2,scy=it.y+it.h/2,srx=Math.abs(it.w/2),sry=Math.abs(it.h/2); ctx.beginPath(); for(var si=0;si<10;si++){ var sa=-Math.PI/2+si*Math.PI/5,rr=(si%2===0)?1:0.42,spx=scx+Math.cos(sa)*srx*rr,spy=scy+Math.sin(sa)*sry*rr; si?ctx.lineTo(spx,spy):ctx.moveTo(spx,spy); } ctx.closePath(); shapeFill(it); ctx.stroke(); }
     else if(it.type==='text'){ ctx.font=wbFont(it.size); ctx.textBaseline='alphabetic'; var dl=textLines(it); dl.forEach(function(l,i){ ctx.fillText(l,it.x,it.y+i*it.size*1.25); }); }
     else if(it.type==='img'){ var im=it._img; if(!im){ im=new Image(); im.onload=redraw; im.src=it.src; it._img=im; } if(im.complete)ctx.drawImage(im,it.x,it.y,it.w,it.h); }
     ctx.restore();

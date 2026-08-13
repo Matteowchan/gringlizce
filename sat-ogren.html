@@ -279,33 +279,37 @@ function wire(){
     box.querySelectorAll('label').forEach(x=>x.classList.remove('pick'));l.classList.add('pick');}));
   app.querySelectorAll('.mcheck').forEach(btn=>btn.onclick=()=>{
     let ok=0,tot=0;
-    app.querySelectorAll('.mcq').forEach(q=>{tot++;q.classList.add('done');
+    app.querySelectorAll('.mcq').forEach(q=>{q.classList.add('done');
       const want=q.getAttribute('data-ans');const pick=q.querySelector('.opts label.pick');const val=pick?pick.getAttribute('data-k'):'';
-      const good=val===want;if(good)ok++;q.classList.add(good?'correct':'incorrect');
       const stem=q.querySelector('.mstem')?q.querySelector('.mstem').textContent:'';
       const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
       const ansTxt=want+(ct?'. '+ct.textContent:'');
+      const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
+      const fb=q.querySelector('.mfb');fb.style.display='block';
+      if(!val){q.classList.add('blank');fb.className='mfb no';fb.innerHTML=`Boş bırakıldı. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;return;}
+      tot++;const good=val===want;if(good)ok++;q.classList.add(good?'correct':'incorrect');
       if(good)clearErr(stem);else logErr(stem,ansTxt);
       recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
-      const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
-      const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
-      fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
+      fb.className='mfb '+(good?'ok':'no');
+      fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val)}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
     });
     btn.disabled=true;const sc=btn.nextElementSibling;if(sc&&sc.classList.contains('qscore')){sc.style.display='block';sc.textContent=`Doğru: ${ok} / ${tot}`;}
   });
   app.querySelectorAll('.qzcheck').forEach(btn=>btn.onclick=()=>{
     let ok=0,tot=0;
-    app.querySelectorAll('.qz').forEach(q=>{tot++;
+    app.querySelectorAll('.qz').forEach(q=>{
       const want=q.getAttribute('data-ans');const alt=(q.getAttribute('data-alt')||'').split('|').filter(Boolean);
       const inp=q.querySelector('input');const val=inp.value||'';
-      const good=norm(val)===norm(want)||alt.some(a=>norm(a)===norm(val));
-      inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
+      const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
+      const fb=q.querySelector('.qzfb');fb.style.display='block';
+      if(!val.trim()){inp.disabled=true;q.classList.add('blank');fb.className='qzfb no';fb.innerHTML=`Boş bırakıldı. Doğru: <b>${esc(want)}</b>.`+(why?' '+esc(why):'');return;}
+      tot++;const good=norm(val)===norm(want)||alt.some(a=>norm(a)===norm(val));
+      inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       if(good)clearErr(qtext);else logErr(qtext,want);
       recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
-      const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
-      const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
-      fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');
+      fb.className='qzfb '+(good?'ok':'no');
+      fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val)}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');
     });
     btn.disabled=true;const sc=btn.nextElementSibling;if(sc&&sc.classList.contains('qscore')){sc.style.display='block';sc.textContent=`Doğru: ${ok} / ${tot}`;}
   });

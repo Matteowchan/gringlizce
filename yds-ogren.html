@@ -289,8 +289,8 @@ function wire(){
       const stem=q.querySelector('.mstem')?q.querySelector('.mstem').textContent:'';
       const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
       const ansTxt=want+(ct?'. '+ct.textContent:'');
-      if(good)clearErr(stem);else logErr(stem,ansTxt);
-      recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(good)clearErr(stem);else if(val)logErr(stem,ansTxt);
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
       const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
       const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
       fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
@@ -305,8 +305,8 @@ function wire(){
       const good=norm(val)===norm(want)||alt.some(a=>norm(a)===norm(val));
       inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
-      if(good)clearErr(qtext);else logErr(qtext,want);
-      recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(good)clearErr(qtext);else if(val)logErr(qtext,want);
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
       const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
       const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
       fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');

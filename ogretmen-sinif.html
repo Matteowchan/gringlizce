@@ -3497,8 +3497,10 @@
             return;
           }
           var students = d.students || [];
-          var header = '<div class="gepool-head"><a href="sat-deneme" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
-            + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.label || d.deneme_slug || '') + '</span></div>';
+          var _cfgMeta = (window.__adMeta || {})[assignmentId] || {};
+          var _dslug = d.deneme_slug || (_cfgMeta.config && _cfgMeta.config.deneme_slug) || '';
+          var header = '<div class="gepool-head"><a href="sat-deneme?d=' + encodeURIComponent(_dslug) + '" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
+            + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.label || _dslug) + '</span></div>';
           if (!students.length) { adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
           var html = header + '<ul class="ad-list">' + students.map(function (st) {
             var email = st.email || '(e-posta yok)';

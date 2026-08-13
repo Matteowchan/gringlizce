@@ -2271,16 +2271,53 @@
         <!-- Deneme (tam / bölüm) config -->
         <div class="t-config-block" data-config="ielts_mock">
           <div class="t-config-eyebrow">Deneme Ödevi</div>
-          <label>Bölüm</label>
-          <div class="ca-seg" id="ca-im-seg">
-            <button type="button" data-sec="full" class="on">Tam Deneme</button>
-            <button type="button" data-sec="reading">Reading</button>
-            <button type="button" data-sec="listening">Listening</button>
-            <button type="button" data-sec="writing">Writing</button>
+          <label>Sınav</label>
+          <div class="ca-seg" id="ca-im-fam">
+            <button type="button" data-fam="ielts" class="on">IELTS</button>
+            <button type="button" data-fam="sat">SAT</button>
           </div>
-          <label for="ca-im-test">Deneme seç</label>
-          <select id="ca-im-test"><option value="">— Yükleniyor… —</option></select>
-          <p class="t-config-note" id="ca-im-note">Tam deneme: Listening + Reading + Writing tek denemede. Öğrenci panelinden başlatır; sonuç çalışma geçmişine işlenir.</p>
+
+          <div id="ca-im-ielts">
+            <label style="margin-top:.7rem;">Bölüm</label>
+            <div class="ca-seg" id="ca-im-seg">
+              <button type="button" data-sec="full" class="on">Tam Deneme</button>
+              <button type="button" data-sec="reading">Reading</button>
+              <button type="button" data-sec="listening">Listening</button>
+              <button type="button" data-sec="writing">Writing</button>
+            </div>
+            <label for="ca-im-test">Deneme seç</label>
+            <select id="ca-im-test"><option value="">— Yükleniyor… —</option></select>
+            <p class="t-config-note" id="ca-im-note">Tam deneme: Listening + Reading + Writing tek denemede. Öğrenci panelinden başlatır; sonuç çalışma geçmişine işlenir.</p>
+          </div>
+
+          <div id="ca-im-sat" style="display:none;">
+            <label for="ca-im-sat-sel" style="margin-top:.7rem;">Deneme seç</label>
+            <select id="ca-im-sat-sel">
+              <option value="">— Deneme seç —</option>
+              <optgroup label="R&amp;W Denemeleri (İngilizce)">
+                <option value="rw-1" data-name="SAT R&amp;W Deneme 1">SAT R&amp;W Deneme 1</option>
+                <option value="rw-2" data-name="SAT R&amp;W Deneme 2">SAT R&amp;W Deneme 2</option>
+                <option value="rw-3" data-name="SAT R&amp;W Deneme 3">SAT R&amp;W Deneme 3</option>
+                <option value="rw-4" data-name="SAT R&amp;W Deneme 4">SAT R&amp;W Deneme 4</option>
+                <option value="rw-5" data-name="SAT R&amp;W Deneme 5">SAT R&amp;W Deneme 5</option>
+              </optgroup>
+              <optgroup label="Math Denemeleri">
+                <option value="math-1" data-name="SAT Math Deneme 1">SAT Math Deneme 1</option>
+                <option value="math-2" data-name="SAT Math Deneme 2">SAT Math Deneme 2</option>
+                <option value="math-3" data-name="SAT Math Deneme 3">SAT Math Deneme 3</option>
+                <option value="math-4" data-name="SAT Math Deneme 4">SAT Math Deneme 4</option>
+                <option value="math-5" data-name="SAT Math Deneme 5">SAT Math Deneme 5</option>
+              </optgroup>
+              <optgroup label="Tam SAT Denemeleri (R&amp;W + Math)">
+                <option value="full-1" data-name="SAT Tam Deneme 1">SAT Tam Deneme 1</option>
+                <option value="full-2" data-name="SAT Tam Deneme 2">SAT Tam Deneme 2</option>
+                <option value="full-3" data-name="SAT Tam Deneme 3">SAT Tam Deneme 3</option>
+                <option value="full-4" data-name="SAT Tam Deneme 4">SAT Tam Deneme 4</option>
+                <option value="full-5" data-name="SAT Tam Deneme 5">SAT Tam Deneme 5</option>
+              </optgroup>
+            </select>
+            <p class="t-config-note">SAT adaptif deneme: Modül 1 → başarıya göre zor/kolay Modül 2 → tahmini puan (R&amp;W/Math 200-800, tam 400-1600). İlerleme <strong>otomatik</strong> takip edilir; öğrenci denemeyi tamamlayınca ödev tamamlanmış sayılır. Sonuç, öğrencinin Analiz panelinde de görünür.</p>
+          </div>
         </div>
 
         <!-- Üniversite Hazırlık Atlama config -->
@@ -4537,7 +4574,7 @@
               meta.push('Flashcard');
             } else if (a.type === 'module' && a.config) {
               if (a.config.label) meta.push(a.config.label);
-              meta.push(['sat_unit','ogren_spa','drill','vocab_flash'].indexOf(a.config.kind) !== -1 ? 'Otomatik takip' : 'Aç · işaretle');
+              meta.push(['sat_unit','ogren_spa','drill','vocab_flash','sat_deneme'].indexOf(a.config.kind) !== -1 ? 'Otomatik takip' : 'Aç · işaretle');
             } else if (a.type === 'gepool' && a.config) {
               if (a.config.level) meta.push(a.config.level + (a.config.unit ? ' · Ünite ' + a.config.unit : ''));
               if (a.config.skill) meta.push(GE_SKILL_TR[a.config.skill] || a.config.skill);
@@ -4820,13 +4857,14 @@
         var meta = (window.__adMeta || {})[assignmentId] || {};
         var type = meta.type, cfg = meta.config || {};
         var kind = cfg.kind || null;
-        var AUTO = ['vocab_flash', 'drill', 'ogren_spa', 'sat_unit'];
+        var AUTO = ['vocab_flash', 'drill', 'ogren_spa', 'sat_unit', 'sat_deneme'];
         var isAuto = (type === 'module' && AUTO.indexOf(kind) !== -1) || type === 'questions';
         var label;
         if (type === 'module' && kind === 'vocab_flash') label = 'Kelime Bankası — Flashcard';
         else if (type === 'module' && kind === 'drill') label = 'Alıştırma Serisi';
         else if (type === 'module' && kind === 'ogren_spa') label = 'Öğren Modülü';
         else if (type === 'module' && kind === 'sat_unit') label = 'SAT Ünitesi';
+        else if (type === 'module' && kind === 'sat_deneme') label = 'SAT Deneme';
         else if (type === 'module') label = 'Modül';
         else if (type === 'questions') label = 'Soru Bankası';
         else if (type === 'reading') label = 'Okuma / Materyal';
@@ -5500,7 +5538,17 @@
           renderIeltsMocks();
         } catch (e) { sel.innerHTML = '<option value="">Yüklenemedi</option>'; }
       }
+      var _denemeFam = 'ielts';   // 'ielts' | 'sat'
       (function () {
+        var fam = document.getElementById('ca-im-fam');
+        if (fam) fam.addEventListener('click', function (e) {
+          var btn = e.target.closest('button[data-fam]'); if (!btn) return;
+          _denemeFam = btn.getAttribute('data-fam');
+          fam.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b === btn); });
+          var iel = document.getElementById('ca-im-ielts'), sat = document.getElementById('ca-im-sat');
+          if (iel) iel.style.display = (_denemeFam === 'ielts') ? '' : 'none';
+          if (sat) sat.style.display = (_denemeFam === 'sat') ? '' : 'none';
+        });
         var seg = document.getElementById('ca-im-seg');
         if (seg) seg.addEventListener('click', function (e) {
           var btn = e.target.closest('button[data-sec]'); if (!btn) return;
@@ -5515,6 +5563,14 @@
           if (titleEl && !titleEl.value.trim() && opt && opt.getAttribute('data-name')) {
             var secLabel = { full: '', reading: ' — Reading', listening: ' — Listening', writing: ' — Writing' }[_ieltsSection] || '';
             titleEl.value = opt.getAttribute('data-name') + secLabel;
+          }
+        });
+        var satSel = document.getElementById('ca-im-sat-sel');
+        if (satSel) satSel.addEventListener('change', function () {
+          var titleEl = document.getElementById('ca-title');
+          var opt = satSel.selectedOptions && satSel.selectedOptions[0];
+          if (titleEl && !titleEl.value.trim() && opt && opt.getAttribute('data-name')) {
+            titleEl.value = opt.getAttribute('data-name');
           }
         });
       })();
@@ -5879,13 +5935,28 @@
           var followup = document.getElementById('ca-r-followup').value.trim();
           if (followup) config.follow_up_note = followup;
         } else if (caCurrentType === 'ielts_mock') {
-          var imSel = document.getElementById('ca-im-test');
-          var imSlug = imSel ? imSel.value : '';
-          if (!imSlug) { caErr.textContent = 'Bir deneme seç.'; return; }
-          config.test_slug = imSlug;
-          config.section = _ieltsSection || 'full';
-          var imOpt = imSel.selectedOptions && imSel.selectedOptions[0];
-          config.test_name = imOpt ? (imOpt.getAttribute('data-name') || '') : '';
+          if (_denemeFam === 'sat') {
+            var satSel = document.getElementById('ca-im-sat-sel');
+            var satSlug = satSel ? satSel.value : '';
+            if (!satSlug) { caErr.textContent = 'Bir SAT denemesi seç.'; return; }
+            var satOpt = satSel.selectedOptions && satSel.selectedOptions[0];
+            var satName = satOpt ? (satOpt.getAttribute('data-name') || 'SAT Deneme') : 'SAT Deneme';
+            // module tipi + sat_deneme config: sat_deneme_attempts ile otomatik takip
+            config.kind = 'sat_deneme';
+            config.deneme_slug = satSlug;
+            config.url = 'sat-deneme?d=' + encodeURIComponent(satSlug);
+            config.label = satName;
+            config._sat_deneme = true; // dispatch: module RPC'sine yönlendir
+            if (!title) title = satName;
+          } else {
+            var imSel = document.getElementById('ca-im-test');
+            var imSlug = imSel ? imSel.value : '';
+            if (!imSlug) { caErr.textContent = 'Bir deneme seç.'; return; }
+            config.test_slug = imSlug;
+            config.section = _ieltsSection || 'full';
+            var imOpt = imSel.selectedOptions && imSel.selectedOptions[0];
+            config.test_name = imOpt ? (imOpt.getAttribute('data-name') || '') : '';
+          }
         } else if (caCurrentType === 'hazirlik') {
           var haSelect = document.getElementById('haSelect');
           if (!haSelect || !haSelect.value) { caErr.textContent = 'Bir sınav seç.'; return; }
@@ -5974,6 +6045,17 @@
               p_title: title,
               p_description: desc || null,
               p_config: vbConfig,
+              p_due_date: dueIso
+            });
+          } else if (caCurrentType === 'ielts_mock' && config._sat_deneme) {
+            // SAT adaptif deneme: module tipi + sat_deneme config (sat_deneme_attempts ile otomatik takip)
+            var sdConfig = { kind: config.kind, deneme_slug: config.deneme_slug, url: config.url, label: config.label };
+            r = await sb.rpc('create_assignment', {
+              p_class_id: classId,
+              p_type: 'module',
+              p_title: title,
+              p_description: desc || null,
+              p_config: sdConfig,
               p_due_date: dueIso
             });
           } else if (caCurrentType === 'writing' && secondConfig) {

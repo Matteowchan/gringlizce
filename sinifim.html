@@ -3383,14 +3383,17 @@
               } else if (a.type === 'module') {
                 var modUrl = cfg.url || '#';
                 if (cfg.label) meta.push(humanizeMA(cfg.exam || '') + (cfg.exam ? ' · ' : '') + cfg.label);
-                if (cfg.kind === 'sat_unit' || cfg.kind === 'ogren_spa' || cfg.kind === 'drill' || cfg.kind === 'vocab_flash') {
+                if (cfg.kind === 'sat_unit' || cfg.kind === 'ogren_spa' || cfg.kind === 'drill' || cfg.kind === 'vocab_flash' || cfg.kind === 'sat_deneme') {
                   // Otomatik takipli: ilerleme çubuğu, self-mark yok
                   var unitWord = (cfg.kind === 'drill') ? 'soru' : (cfg.kind === 'vocab_flash') ? 'kelime' : 'ders';
-                  var openLbl = (cfg.kind === 'sat_unit') ? 'Üniteyi Aç →' : (cfg.kind === 'drill') ? 'Drili Aç →' : (cfg.kind === 'vocab_flash') ? 'Kelime Bankasını Aç →' : 'Modülü Aç →';
+                  var openLbl = (cfg.kind === 'sat_unit') ? 'Üniteyi Aç →' : (cfg.kind === 'drill') ? 'Drili Aç →' : (cfg.kind === 'vocab_flash') ? 'Kelime Bankasını Aç →' : (cfg.kind === 'sat_deneme') ? 'Denemeyi Aç →' : 'Modülü Aç →';
+                  var progText = (cfg.kind === 'sat_deneme')
+                    ? (isCompleted ? 'Tamamlandı' : 'Henüz çözülmedi')
+                    : (a.progress_current + ' / ' + a.progress_target + ' ' + unitWord);
                   bodyHtml = ''
                     + '<div class="my-assign-progress">'
                     + '<div class="my-assign-progress-bar"><div class="my-assign-progress-fill ' + (isCompleted ? 'completed' : '') + '" style="width:' + Math.min(pct, 100) + '%"></div></div>'
-                    + '<div class="my-assign-progress-text">' + a.progress_current + ' / ' + a.progress_target + ' ' + unitWord + '</div>'
+                    + '<div class="my-assign-progress-text">' + progText + '</div>'
                     + '</div>';
                   if (!isCompleted) {
                     actionsHtml = '<a href="' + escMA(modUrl) + '" class="my-assign-btn">' + openLbl + '</a>';

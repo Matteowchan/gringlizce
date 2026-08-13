@@ -17,8 +17,12 @@
   var SUPABASE_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
 
+  // Banner ve site-config'i supabase-js OLMADAN da REST ile yükle:
+  // blog silosu gibi supabase-js içermeyen sayfalarda da banner görünsün.
+  loadConfigRest();
+
   if (!window.supabase || !window.supabase.createClient) {
-    console.warn('[SiteConfig] supabase-js yok, runtime atlanıyor.');
+    console.warn('[SiteConfig] supabase-js yok; banner/config REST ile yüklendi, auth/presence atlanıyor.');
     return;
   }
 
@@ -76,6 +80,22 @@
         el.style.display = 'none';
       }
     });
+  }
+
+  // supabase-js gerektirmeyen hafif config yükleyici (REST). Banner her sayfada çalışsın diye.
+  async function loadConfigRest() {
+    try {
+      var res = await fetch(SUPABASE_URL + '/rest/v1/site_config?select=key,value', {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      if (!res.ok) return;
+      var rows = await res.json();
+      var cfg = {};
+      (rows || []).forEach(function (row) { cfg[row.key] = row.value; });
+      applyBanner(cfg);
+      if (!window.GriSiteConfig) { window.GriSiteConfig = { config: cfg }; }
+      document.dispatchEvent(new CustomEvent('gri-site-config-loaded'));
+    } catch (e) { console.warn('[SiteConfig] REST config yüklenemedi:', e); }
   }
 
   async function init() {

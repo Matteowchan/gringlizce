@@ -440,6 +440,30 @@
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ===== Gri Meet sonuç senkronu: öğretmen öğrencinin (özel) attempt'ini kendi hesabıyla açamaz.
+    // Sahip (öğrenci) sonucu köprüye yayınlar; öğretmen (gömülü) veriyi köprüden alıp test+parts'ı
+    // kendi çekip aynı sonucu çizer. Yalnız iframe'e gömülüyken aktif. =====
+    const EMBED = window.parent !== window;
+    function _okOrigin(o){ if(!o||o==='null')return true; try{ return new URL(o).hostname===location.hostname||/(^|\.)gringlizce\.com$/.test(new URL(o).hostname); }catch(e){ return false; } }
+    async function _fetchTP(test_id, sectionName){
+      const { data: test } = await sb.from('ielts_tests').select('*').eq('id',test_id).single();
+      const { data: section } = await sb.from('ielts_sections').select('*').eq('test_id',test_id).eq('section',sectionName).single();
+      const { data: parts } = await sb.from('ielts_parts').select('*, question_groups:ielts_question_groups(*, questions:ielts_questions(*))').eq('section_id',section.id).order('part_number');
+      (parts||[]).forEach(p=>{ p.question_groups.sort((a,b)=>a.group_order-b.group_order); p.question_groups.forEach(g=>g.questions.sort((a,b)=>a.question_number-b.question_number)); });
+      return { test, parts };
+    }
+    function _shareResult(payload){ if(!EMBED)return; function p(){ try{ window.parent.postMessage({__gmex:1, state:{result:payload}}, '*'); }catch(e){} } p(); setInterval(p, 1500); }
+    function _waitSharedResult(){
+      document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Öğrencinin sonucu bekleniyor…</h4><p>Öğrenci denemeyi bitirdiğinde sonuç burada görünecek.</p></div>';
+      var shown=false;
+      window.addEventListener('message', async function(e){
+        if(shown)return; var d=e.data; if(!d||d.__gmex!==1||!d.apply||!d.apply.result)return; if(!_okOrigin(e.origin))return;
+        shown=true; var r=d.apply.result;
+        try{ var tp=await _fetchTP(r.test_id, r.section); renderResult({section:r.section, test_id:r.test_id, raw_score:r.raw_score, total_questions:r.total_questions, band:r.band, answers:r.answers||{}}, tp.test, tp.parts); }
+        catch(err){ document.getElementById('loading').innerHTML='<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Sonuç yüklenemedi</h4></div>'; }
+      });
+    }
+
     const SECTION_LABELS = {
       listening: 'Listening',
       reading: 'Reading',
@@ -466,6 +490,7 @@
         .single();
 
       if (error || !attempt) {
+        if (EMBED) { _waitSharedResult(); return; } // öğretmen: öğrencinin sonucunu köprüden bekle
         document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Sonuç bulunamadı</h4><p>Bu deneme sonucu görüntülenemedi. Denemeyi tekrar çözebilir ya da başka bir denemeye geçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme">Denemelere Dön →</a></div>';
         return;
       }
@@ -497,6 +522,8 @@
       });
 
       renderResult(attempt, test, parts);
+      // Gri Meet: sonucu köprüye yayınla (öğretmen öğrencinin sonucunu görsün)
+      _shareResult({ test_id: attempt.test_id, section: attempt.section, raw_score: attempt.raw_score, total_questions: attempt.total_questions, band: attempt.band, answers: attempt.answers });
     }
 
     function renderResult(attempt, test, parts) {

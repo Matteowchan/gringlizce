@@ -1920,8 +1920,30 @@
           <label style="display:block; margin-bottom:0.4rem;">Metin</label>
           <input type="text" id="banner-text" placeholder="Örn. UDSP yaklaşıyor, soruları çöz" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
           <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.4rem; line-height:1.6;">
-            Biçimlendirme: <code>**kalın**</code>, <code>*italik*</code>, <code>__altı çizili__</code>, <code>[yazı](link)</code>. Örnek: UDSP yaklaşıyor, [denemeyi çöz](udsp-soru-bankasi.html).
+            Biçimlendirme: <code>**kalın**</code>, <code>*italik*</code>, <code>__altı çizili__</code>, <code>[yazı](link)</code>.<br>
+            <b>İstediğin kadar link ekleyebilirsin</b> — her biri ayrı tıklanır. Örnek:<br>
+            <code>SAT'a 2 hafta kaldı — [R&amp;W](https://gringlizce.com/blog-sat-rw-son-2-hafta) ve [Math](https://gringlizce.com/blog-sat-math-son-2-hafta) planına bak.</code>
           </div>
+          <div style="margin-top:0.55rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            <button type="button" id="banner-add-link" style="font-size:0.72rem; padding:0.32rem 0.7rem; border:1px solid var(--teal,#2C5856); color:var(--teal,#2C5856); background:transparent; border-radius:7px; cursor:pointer; font-family:var(--font-ui);">＋ Bağlantı ekle</button>
+            <span style="font-size:0.68rem; color:var(--text-muted);">İmlecin olduğu yere <code>[metin](https://…)</code> ekler</span>
+          </div>
+          <script>
+          (function(){
+            var b=document.getElementById('banner-add-link');
+            if(!b)return;
+            b.addEventListener('click',function(){
+              var el=document.getElementById('banner-text'); if(!el)return;
+              var ins='[metin](https://gringlizce.com/)';
+              var s=(el.selectionStart!=null)?el.selectionStart:el.value.length;
+              var e=(el.selectionEnd!=null)?el.selectionEnd:el.value.length;
+              el.value=el.value.slice(0,s)+ins+el.value.slice(e);
+              el.focus();
+              try{ el.setSelectionRange(s+1,s+6); }catch(_){}
+              el.dispatchEvent(new Event('input',{bubbles:true}));
+            });
+          })();
+          </script>
         </div>
 
         <div class="field-row" style="flex-wrap:wrap; gap:1.4rem; align-items:center;">
@@ -1993,8 +2015,9 @@
         </div>
 
         <div class="field-row" style="display:block;">
-          <label style="display:block; margin-bottom:0.4rem;">Link (opsiyonel)</label>
+          <label style="display:block; margin-bottom:0.4rem;">Link (opsiyonel) — tüm banner tek link</label>
           <input type="text" id="banner-link" placeholder="Örn. udsp-soru-bankasi.html" style="width:100%; padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:var(--font-ui); background:var(--bg-card); color:var(--text);">
+          <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.35rem; line-height:1.5;">Bu alan tüm banner'ı tek bağlantı yapar. <b>Metinde <code>[..](..)</code> linki varsa bu alan yok sayılır</b> — 2 ayrı link için yukarıdaki metne <code>[R&amp;W](…)</code> ve <code>[Math](…)</code> yaz.</div>
         </div>
 
         <div class="field-row" style="display:block;">

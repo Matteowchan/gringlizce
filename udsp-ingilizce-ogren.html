@@ -197,7 +197,7 @@ const escEn=s=>esc(s).replace(/\b(collocation|restatement|cloze|phrasal verb|pre
 const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'\u2019\u2018\u00b4\u02bc\u0060]/g,'').replace(/\s+/g,' ').trim();
 function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
 function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
-function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
+function recAns(slug,status,sel){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,selected_letter:(sel||null),answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
 const S={id:D.lessons[0].id,done:{}};
 function _griSlugsOf(node,out){if(!node||typeof node!=='object')return;if(Array.isArray(node)){for(var i=0;i<node.length;i++)_griSlugsOf(node[i],out);return;}for(var k in node){if(!Object.prototype.hasOwnProperty.call(node,k))continue;var v=node[k];if(k==='slug'&&typeof v==='string'&&v)out.push(v);else if(v&&typeof v==='object')_griSlugsOf(v,out);}}
 async function loadProgress(){try{if(!window.GRI_SB||!window.GRI_UID)return;var map={},pre=null,n=0;D.lessons.forEach(function(l){var s=[];_griSlugsOf(l.blocks||[],s);s.forEach(function(sl){map[sl]=l.id;n++;pre=(pre===null)?sl:(function(a,b){var m=Math.min(a.length,b.length),i=0;while(i<m&&a[i]===b[i])i++;return a.slice(0,i);})(pre,sl);});});if(!n)return;var q=window.GRI_SB.from('user_answers').select('question_slug').eq('user_id',window.GRI_UID);if(pre&&pre.length>=6)q=q.like('question_slug',pre+'%');var r=await q;if(r&&r.data&&r.data.length){var hit=false;r.data.forEach(function(row){var lid=map[row.question_slug];if(lid){S.done[lid]=true;hit=true;}});if(hit)renderRail();}}catch(e){}}
@@ -289,7 +289,7 @@ function wire(){
       const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
       const ansTxt=want+(ct?'. '+ct.textContent:'');
       if(good)clearErr(stem);else if(val)logErr(stem,ansTxt);
-      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect',val);
       const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
       const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
       fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
@@ -305,7 +305,7 @@ function wire(){
       inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
       if(good)clearErr(qtext);else if(val)logErr(qtext,want);
-      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect',val);
       const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
       const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
       fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');

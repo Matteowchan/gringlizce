@@ -188,7 +188,7 @@ const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]
 const norm=s=>(s||'').toLowerCase().replace(/[.,;:!?"'\u2019\u2018\u00b4\u02bc\u0060]/g,'').replace(/\s+/g,' ').trim();
 function logErr(q,a){try{const k='gri_errors';const cur=JSON.parse(localStorage.getItem(k)||'[]');const key=(D.title||'')+'|'+q;if(!cur.some(e=>e.key===key)){cur.push({key:key,m:D.title||'',q:q,a:a,t:Date.now()});localStorage.setItem(k,JSON.stringify(cur.slice(-800)));}}catch(e){}}
 function clearErr(q){try{const k='gri_errors';const key=(D.title||'')+'|'+q;const cur=JSON.parse(localStorage.getItem(k)||'[]').filter(e=>e.key!==key);localStorage.setItem(k,JSON.stringify(cur));}catch(e){}}
-function recAns(slug,status){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
+function recAns(slug,status,sel){try{if(!slug||!window.GRI_SB||!window.GRI_UID)return;window.GRI_SB.from('user_answers').upsert({user_id:window.GRI_UID,question_slug:slug,status:status,selected_letter:(sel||null),answered_at:new Date().toISOString()},{onConflict:'user_id,question_slug'}).then(function(){},function(){});if(typeof window.triggerBadgeCheck==='function'){try{window.triggerBadgeCheck();}catch(e){}}}catch(e){}}
 const S={id:D.lessons[0].id};
 function renderRail(){
   const groups=D.groups.map(g=>{
@@ -278,7 +278,7 @@ function wire(){
       const ct=q.querySelector('.opts label[data-k="'+want+'"] span:last-child');
       const ansTxt=want+(ct?'. '+ct.textContent:'');
       if(good)clearErr(stem);else if(val)logErr(stem,ansTxt);
-      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect',val);
       const why=q.querySelector('.mwhy')?q.querySelector('.mwhy').textContent:'';
       const fb=q.querySelector('.mfb');fb.style.display='block';fb.className='mfb '+(good?'ok':'no');
       fb.innerHTML=good?`Doğru. <b>${esc(want)}</b>. ${esc(why)}`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>. ${esc(why)}`;
@@ -294,7 +294,7 @@ function wire(){
       inp.disabled=true;q.classList.add(good?'correct':'incorrect');if(good)ok++;
       const qtext=q.querySelector('.qzq')?q.querySelector('.qzq').textContent:'';
       if(good)clearErr(qtext);else if(val)logErr(qtext,want);
-      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect');
+      if(val)recAns(q.getAttribute('data-slug'),good?'correct':'incorrect',val);
       const why=q.querySelector('.qzwhy')?q.querySelector('.qzwhy').textContent:'';
       const fb=q.querySelector('.qzfb');fb.style.display='block';fb.className='qzfb '+(good?'ok':'no');
       fb.innerHTML=(good?`Doğru. <b>${esc(want)}</b>.`:`Yanlış. Senin: ${esc(val||'—')}. Doğru: <b>${esc(want)}</b>.`)+(why?' '+esc(why):'');

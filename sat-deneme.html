@@ -82,6 +82,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .st-loading{text-align:center;color:var(--st-muted);padding:3rem 0;font-style:italic;}
   .st-review-head{font-family:Georgia,serif;font-size:1.4rem;margin:1.6rem 0 .3rem;border-top:1px solid var(--st-line);padding-top:1.4rem;}
   .st-sectlabel{font:600 12px Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--st-gold);margin:1.2rem 0 .5rem;}
+  /* Deneme-içi sözlük: sade "Kelimeyi Kaydet" (anlam GÖSTERİLMEZ) */
+  #stv-save{position:absolute;z-index:9998;display:none;align-items:center;gap:5px;background:var(--st-accent);color:#fff;border:none;border-radius:100px;padding:6px 13px;font:600 13px/1 Inter,system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;}
+  #stv-save.show{display:inline-flex;}
+  #stv-save.done{background:var(--st-gold);}
+  #stv-save:disabled{opacity:.75;cursor:default;}
+  #stv-save svg{width:14px;height:14px;}
+  /* Sonuç ekranı: Kaydettiğin Kelimeler */
+  .stv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:.6rem 0 1rem;}
+  .stv-card{background:var(--st-card);border:1px solid var(--st-line);border-radius:12px;padding:.85rem 1rem;}
+  .stv-w{font-family:Georgia,serif;font-size:1.12rem;font-weight:700;color:var(--st-ink);}
+  .stv-lvl{font:700 10px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--st-accent);border:1px solid var(--st-line);border-radius:100px;padding:2px 8px;margin-left:6px;vertical-align:middle;}
+  .stv-mean{font-size:.92rem;color:var(--st-ink);font-weight:600;margin:.35rem 0;}
+  .stv-mean.stv-muted{color:var(--st-muted);font-weight:500;font-style:italic;}
+  .stv-ex{font-size:.82rem;color:var(--st-muted);line-height:1.5;margin:.2rem 0;}
+  .stv-tr{font-size:.82rem;color:var(--st-muted);font-style:italic;line-height:1.5;}
+  .stv-ctx{font-size:.78rem;color:var(--st-muted);margin-top:.4rem;border-top:1px dashed var(--st-line);padding-top:.35rem;}
 </style>
 
 <div class="launch-banner" data-site-banner></div>
@@ -248,6 +264,142 @@ function recAns(slug, ok){
   }catch(e){}
 }
 
+/* ================= Deneme-içi sözlük =================
+   Kural: deneme SIRASINDA öğrenci kelime seçip KAYDEDEBİLİR (user_vocab),
+   ama ANLAM GÖSTERİLMEZ (spoiler/dikkat dağıtma yok). gri-sozluk.js bu
+   yüzden test sırasında YÜKLENMEZ; sadece sade "Kelimeyi Kaydet" butonu.
+   Deneme BİTİNCE (finishDeneme) gri-sozluk.js yüklenir (normal anlam-popup
+   serbest) + "Kaydettiğin Kelimeler" anlamlarıyla listelenir. */
+let TOKEN = null, TESTING = false, GS_LOADED = false, vBtn = null, vLast = null, vHideT = null;
+const VOCAB_FN = window.SUPABASE_URL + '/functions/v1/vocab-lookup';
+function vocabKey(){ return 'sat-den-vocab-' + (DEN ? DEN.slug : ''); }
+function loadSavedVocab(){ try{ const s=localStorage.getItem(vocabKey()); return s?JSON.parse(s):[]; }catch(e){ return []; } }
+function pushSavedVocab(item){ try{ const a=loadSavedVocab(); if(!a.some(x=>x.vid===item.vid)){ a.push(item); localStorage.setItem(vocabKey(), JSON.stringify(a)); } }catch(e){} }
+
+function vEnsureBtn(){
+  if (vBtn) return;
+  vBtn = document.createElement('button'); vBtn.id='stv-save'; vBtn.type='button';
+  vBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Kelimeyi Kaydet';
+  vBtn.addEventListener('mousedown', function(e){ e.preventDefault(); });   // seçim dağılmasın
+  vBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); vSaveWord(); });
+  document.body.appendChild(vBtn);
+}
+function vHideBtn(){ if(vBtn){ vBtn.classList.remove('show'); } }
+function vResetBtn(){ if(vBtn){ vBtn.disabled=false; vBtn.classList.remove('done'); vBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Kelimeyi Kaydet'; } }
+
+function vSelWord(){
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  const t = sel.toString().trim();
+  if (!t) return null;
+  if (!/^[A-Za-z][A-Za-z'’\-]*$/.test(t)) return null;   // tek İngilizce kelime
+  const node = sel.anchorNode; const el = node && (node.nodeType===1 ? node : node.parentElement);
+  if (!el || !el.closest) return null;
+  if (!el.closest('.st-passage, .st-stem')) return null;  // yalnızca pasaj/soru metni
+  if (el.closest('input,textarea')) return null;
+  return { text:t, range: sel.getRangeAt(0) };
+}
+function vContext(range){
+  try{
+    const node = range.startContainer;
+    let host = node.nodeType===1 ? node : node.parentElement;
+    host = (host && host.closest) ? (host.closest('.st-passage, .st-stem') || host) : host;
+    const full = ((host && host.textContent) || range.toString() || '').replace(/\s+/g,' ').trim();
+    const word = (range.toString()||'').trim().toLowerCase();
+    let ctx = full;
+    if (word){
+      const parts = full.split(/(?<=[.!?])\s+/);
+      const hit = parts.find(function(s){ return s.toLowerCase().indexOf(word)!==-1; });
+      if (hit) ctx = hit.trim();
+    }
+    if (ctx.length>240) ctx = ctx.slice(0,240)+'…';
+    return ctx;
+  }catch(e){ return ''; }
+}
+function vShowBtn(range){
+  vEnsureBtn(); vResetBtn();
+  const r = range.getBoundingClientRect();
+  if (!r || (!r.width && !r.height)) return;
+  vBtn.classList.add('show');
+  const bw = vBtn.offsetWidth || 150, bh = vBtn.offsetHeight || 30;
+  let top = r.top + window.scrollY - bh - 8;
+  if (top < window.scrollY + 4) top = r.bottom + window.scrollY + 8;
+  let left = r.left + window.scrollX + (r.width/2) - (bw/2);
+  left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - bw - 8));
+  vBtn.style.top = top + 'px'; vBtn.style.left = left + 'px';
+}
+function vOnSelection(e){
+  if (!TESTING || !UID) return;
+  if (e && e.target && vBtn && (e.target===vBtn || vBtn.contains(e.target))) return;
+  if (vHideT){ clearTimeout(vHideT); vHideT=null; }
+  setTimeout(function(){
+    const w = vSelWord();
+    if (!w){ vHideBtn(); return; }
+    vLast = w; vShowBtn(w.range);
+  }, 10);
+}
+function vOnDocDown(e){
+  if (vBtn && (e.target===vBtn || vBtn.contains(e.target))) return;
+  if (!window.getSelection || !window.getSelection().toString().trim()) vHideBtn();
+}
+async function vSaveWord(){
+  if (!vLast || !UID) return;
+  const text = vLast.text, ctx = vContext(vLast.range);
+  vEnsureBtn(); vBtn.disabled = true; vBtn.innerHTML = 'Kaydediliyor...';
+  try{
+    let token = TOKEN;
+    try{ const s = await sb.auth.getSession(); if (s && s.data && s.data.session){ token=s.data.session.access_token; UID=s.data.session.user.id; } }catch(_){}
+    const headers = { 'Content-Type':'application/json', 'apikey': window.SUPABASE_KEY };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch(VOCAB_FN, { method:'POST', headers: headers, body: JSON.stringify({ word: text }) });
+    const d = await r.json();
+    if (!d || !d.ok || !d.vocabulary_id){ vBtn.innerHTML='Kaydedilemedi'; setTimeout(vHideBtn,1400); return; }
+    const ins = await sb.from('user_vocab').insert({ user_id:UID, vocabulary_id:d.vocabulary_id, custom_note: ctx || null });
+    if (ins.error && !(ins.error.code==='23505' || (ins.error.message||'').toLowerCase().indexOf('duplicate')!==-1)){ vBtn.innerHTML='Hata'; setTimeout(vHideBtn,1400); return; }
+    pushSavedVocab({ word:text, vid:d.vocabulary_id });
+    vBtn.classList.add('done'); vBtn.innerHTML = ins.error ? 'Zaten listende ✓' : 'Kaydedildi ✓';
+    try{ window.getSelection().removeAllRanges(); }catch(_){}
+    setTimeout(vHideBtn, 1100);
+  }catch(e){ vBtn.innerHTML='Hata'; setTimeout(vHideBtn,1400); }
+}
+function loadGriSozluk(){
+  if (GS_LOADED) return; GS_LOADED = true;
+  try{ window.GRI_SB = sb; window.GRI_UID = UID; }catch(e){}
+  const s = document.createElement('script'); s.src = 'assets/gri-sozluk.js?v=5'; s.defer = true;
+  document.body.appendChild(s);
+}
+async function savedVocabHtml(){
+  if (!UID) return '';
+  const saved = loadSavedVocab();
+  if (!saved.length) return '';
+  const ids = [...new Set(saved.map(x=>x.vid).filter(Boolean))];
+  const map = {};
+  if (ids.length){
+    try{
+      const { data } = await sb.from('user_vocab')
+        .select('vocabulary_id, custom_note, vocabulary:vocabulary_id(word_display, definition_json)')
+        .eq('user_id', UID).in('vocabulary_id', ids);
+      (data||[]).forEach(function(r){ map[r.vocabulary_id]=r; });
+    }catch(e){}
+  }
+  const cards = saved.map(function(s){
+    const r = map[s.vid] || {}; const v = r.vocabulary || {}; const def = v.definition_json || {};
+    const word = v.word_display || s.word || '';
+    const meanings = (Array.isArray(def.meanings) && def.meanings.length) ? def.meanings.join(', ') : (def.translation||'');
+    const level = def.level||'', example = def.example||'', translation = def.translation||'', note = r.custom_note||'';
+    return '<div class="stv-card">'+
+      '<div class="stv-w">'+esc(word)+(level?'<span class="stv-lvl">'+esc(level)+'</span>':'')+'</div>'+
+      (meanings ? '<div class="stv-mean">'+esc(meanings)+'</div>' : '<div class="stv-mean stv-muted">Anlam bulunamadı</div>')+
+      (example ? '<div class="stv-ex">'+esc(example)+'</div>' : '')+
+      (example && translation ? '<div class="stv-tr">'+esc(translation)+'</div>' : '')+
+      (note ? '<div class="stv-ctx">Bağlam: '+esc(note)+'</div>' : '')+
+    '</div>';
+  }).join('');
+  return '<div class="stv-sec"><div class="st-review-head" style="margin-top:1.6rem">Kaydettiğin Kelimeler</div>'+
+    '<p class="st-sub">Deneme sırasında işaretlediğin kelimeler — artık anlamlarıyla birlikte. Hepsi <strong>Çalışma Masam</strong>&apos;daki kelime listene de eklendi. Aşağıdaki incelemede herhangi bir kelimeye çift tıklayarak da anlamına bakabilirsin.</p>'+
+    '<div class="stv-grid">'+cards+'</div></div>';
+}
+
 /* ================= Zamanlayıcı ================= */
 function startTimer(mins){
   stopTimer();
@@ -338,6 +490,7 @@ function renderModule(sec, cfg, modKey, slot, passages){
   });
   document.getElementById('st-submit').addEventListener('click', ()=>submitModule(sec, cfg, modKey, slot));
   startTimer(cfg.mins);
+  TESTING = true; vHideBtn();   // sözlük: kaydet-butonu aktif, anlam yok
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -356,6 +509,7 @@ function gradeModule(slot){
 
 function submitModule(sec, cfg, modKey, slot){
   stopTimer();
+  TESTING = false; vHideBtn();
   const correct = gradeModule(slot);
   slot.raw = correct;
   persist();
@@ -448,6 +602,7 @@ function reviewQuestionHtml(q, given, passages, cfg){
 
 async function finishDeneme(){
   stopTimer();
+  TESTING = false; vHideBtn();
   saveAttempt();
   app.innerHTML = '<div class="st-loading">Sonuçların ve detaylı inceleme hazırlanıyor...</div>';
   // Sonuç kartı
@@ -489,8 +644,10 @@ async function finishDeneme(){
   }
   const foot = '<div class="st-actions"><a class="st-btn ghost" href="'+(DEN.kind==='math'?'sat-denemeler-math':'sat-denemeler-rw')+'">Diğer Denemeler</a>'+
     '<a class="st-btn" href="panelim">Çalışma Masam</a></div>';
-  app.innerHTML = res + rev + foot;
+  const vocabBlock = await savedVocabHtml();   // Kaydettiğin Kelimeler (anlamlarıyla)
+  app.innerHTML = res + vocabBlock + rev + foot;
   clearSave();
+  loadGriSozluk();   // inceleme ekranında normal anlam-popup artık serbest
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -589,9 +746,15 @@ async function init(){
   document.title = (DEN.kind==='full'?'Tam SAT':(DEN.kind==='rw'?'SAT R&W':'SAT Math'))+' Denemesi '+DEN.n+' | Gri English';
   try{
     const s = await sb.auth.getSession();
-    if (s && s.data && s.data.session){ UID = s.data.session.user.id; window.GRI_SB=sb; window.GRI_UID=UID; }
+    if (s && s.data && s.data.session){ UID = s.data.session.user.id; TOKEN = s.data.session.access_token; window.GRI_SB=sb; window.GRI_UID=UID; }
   }catch(e){}
   if (!UID){ showAuthGate(); return; }
+  // Deneme-içi sözlük: yalnızca giriş yapılınca (UID yoksa sessizce devre dışı)
+  document.addEventListener('mouseup', vOnSelection);
+  document.addEventListener('touchend', vOnSelection);
+  document.addEventListener('dblclick', vOnSelection);
+  document.addEventListener('mousedown', vOnDocDown, true);
+  window.addEventListener('scroll', vHideBtn, { passive:true });
   showStart(!!loadSave());
 }
 init();

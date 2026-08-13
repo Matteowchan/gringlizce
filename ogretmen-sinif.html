@@ -3437,6 +3437,124 @@
         }
       }
 
+      // ============================================================
+      // SAT Deneme (adaptif) ödevi çekmecesi — öğrenci bazlı skor + soru/cevap dökümü
+      // sat_deneme_attempts + teacher_sat_deneme_detail RPC
+      // ============================================================
+      async function openSatDenemeDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'SAT Deneme Ödevi';
+        adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
+        var SEC_LABEL = { rw: 'Reading & Writing', math: 'Matematik' };
+        var MOD_LABEL = { m1: 'Modül 1', m2: 'Modül 2' };
+        // Skor rozeti: rw/math bölüm başına 200-800, full toplam 400-1600
+        function scoreChip(scaled, kind) {
+          var n = parseInt(scaled);
+          var max = (kind === 'full') ? 1600 : 800, min = (kind === 'full') ? 400 : 200;
+          var color = '#2C5856';
+          if (!isNaN(n)) {
+            var ratio = (n - min) / (max - min);
+            color = ratio >= 0.6 ? '#1FA971' : (ratio >= 0.35 ? '#B78A2E' : '#c0392b');
+          }
+          return '<span style="display:inline-block;padding:1px 9px;border-radius:20px;background:' + color + ';color:#fff;font-size:.74rem;font-weight:700;">'
+            + (isNaN(n) ? '—' : n) + (isNaN(n) ? '' : ' / ' + max) + '</span>';
+        }
+        function itemRows(items) {
+          if (!items || !items.length) return '<p class="qd-empty">Soru dökümü bulunamadı.</p>';
+          var lastMod = null;
+          return '<div class="qd-list geq-scroll">' + items.map(function (q) {
+            var ok = q.ok === true;
+            var cls = ok ? 'ok' : 'no';
+            var mark = ok ? '✓' : '✗';
+            var meta;
+            if (ok) {
+              meta = 'Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span>';
+            } else {
+              meta = 'Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span> · Öğrenci: '
+                + (q.given ? '<span class="qd-ans-wrong">' + esc(q.given) + '</span>' : '<span class="qd-ans-wrong">— boş —</span>');
+            }
+            var qtext = q.q ? esc(String(q.q)) : ('Soru ' + esc(String(q.n)));
+            var expHtml = (q.exp && String(q.exp).trim()) ? '<div class="qd-exp"><b>Neden:</b> ' + esc(String(q.exp)) + '</div>' : '';
+            var modHdr = '';
+            if (q.module && q.module !== lastMod) {
+              lastMod = q.module;
+              modHdr = '<div class="qd-q" style="font-weight:600;margin:10px 0 2px;color:var(--text-muted);font-size:.78rem;">' + esc(MOD_LABEL[q.module] || q.module) + '</div>';
+            }
+            return modHdr + '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
+              + '<div class="qd-body"><div class="qd-q">' + esc(String(q.n)) + '. ' + qtext + '</div>'
+              + '<div class="qd-meta">' + meta + '</div>' + expHtml + '</div></div>';
+          }).join('') + '</div>';
+        }
+        try {
+          var r = await withTimeout(sb.rpc('teacher_sat_deneme_detail', { p_assignment_id: assignmentId }), 15000, 'Deneme detayı');
+          if (r.error) throw r.error;
+          var d = r.data || {};
+          if (d.error) {
+            var msg = d.error === 'forbidden'
+              ? 'Bu sınıfı görüntüleme yetkin yok veya oturumun düşmüş görünüyor. Sağ üstten <b>çıkış yapıp tekrar giriş</b> yapıp tekrar dene.'
+              : (d.error === 'assignment_not_found' ? 'Ödev bulunamadı.' : rpcErrMsg(d.error));
+            adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + msg + '</p>';
+            return;
+          }
+          var students = d.students || [];
+          var header = '<div class="gepool-head"><a href="sat-deneme" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
+            + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.label || d.deneme_slug || '') + '</span></div>';
+          if (!students.length) { adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
+          var html = header + '<ul class="ad-list">' + students.map(function (st) {
+            var email = st.email || '(e-posta yok)';
+            var at = st.attempt;
+            var didAny = !!at;
+            var detailInner, summ = '';
+            if (!didAny) {
+              detailInner = '<div class="ad-detail-inner"><p class="qd-empty">Bu öğrenci bu denemeyi henüz yapmadı.</p></div>';
+            } else {
+              var k = at.kind;
+              if (k === 'full') {
+                summ = 'Toplam ' + (at.total_scaled != null ? at.total_scaled : '—')
+                  + (at.rw_scaled != null ? ' · R&W ' + at.rw_scaled : '')
+                  + (at.math_scaled != null ? ' · Mat ' + at.math_scaled : '');
+              } else if (k === 'math') {
+                summ = 'Matematik ' + (at.math_scaled != null ? at.math_scaled : '—');
+              } else {
+                summ = 'R&W ' + (at.rw_scaled != null ? at.rw_scaled : '—');
+              }
+              var secs = at.sections || [];
+              var body = secs.map(function (s) {
+                var scaled = s.key === 'math' ? at.math_scaled : (s.key === 'rw' ? at.rw_scaled : at.total_scaled);
+                return '<div style="margin-top:8px;"><div class="qd-q" style="font-weight:600;">'
+                  + esc(SEC_LABEL[s.key] || s.key || 'Bölüm') + ' ' + scoreChip(scaled, 'section')
+                  + '</div>' + itemRows(s.items) + '</div>';
+              }).join('');
+              if (!body) body = '<p class="qd-empty">Cevap dökümü bulunamadı.</p>';
+              detailInner = '<div class="ad-detail-inner"><div class="qd-summary"><span>' + esc(summ) + '</span>'
+                + '<span style="color:var(--text-muted);font-size:.74rem">' + (at.completed_at ? fmtRelative(at.completed_at) : '') + '</span></div>' + body + '</div>';
+            }
+            var mainScore = didAny
+              ? (at.kind === 'full' ? scoreChip(at.total_scaled, 'full')
+                : scoreChip(at.kind === 'math' ? at.math_scaled : at.rw_scaled, 'section'))
+              : '';
+            var pill = didAny ? '<span class="ad-status-pill status-completed">Yaptı</span>' : '<span class="ad-status-pill status-pending">Yapmadı</span>';
+            return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
+              + '<div class="ad-progress ' + (didAny ? 'progress-completed' : 'progress-pending') + '">' + (didAny ? mainScore : '—') + '</div>'
+              + pill
+              + '<div class="ad-actions"><button type="button" class="ad-inspect-btn sat-deneme-inspect">İncele</button></div></li>'
+              + '<li class="ad-detail-row" hidden>' + detailInner + '</li>';
+          }).join('') + '</ul>';
+          adBody.innerHTML = html;
+          adBody.querySelectorAll('.sat-deneme-inspect').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var row = btn.closest('.ad-row').nextElementSibling;
+              if (row && row.classList.contains('ad-detail-row')) {
+                row.hidden = !row.hidden; btn.textContent = row.hidden ? 'İncele' : 'Gizle'; btn.classList.toggle('open', !row.hidden);
+              }
+            });
+          });
+          if (students.length === 1) { var b0 = adBody.querySelector('.sat-deneme-inspect'); if (b0) b0.click(); }
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
+        }
+      }
+
       function slugLabel(slug) {
         if (!slug) return 'Soru';
         var m = String(slug).match(/(\d+)\s*$/);
@@ -4619,6 +4737,8 @@
                 openVocabAssignDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.kind === 'gepool') {
                 openGePoolDrawer(card.dataset.id, card.dataset.title);
+              } else if (card.dataset.type === 'module' && (((window.__adMeta || {})[card.dataset.id] || {}).config || {}).kind === 'sat_deneme') {
+                openSatDenemeDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'ielts_mock') {
                 openIeltsMockDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'writing') {

@@ -11,7 +11,7 @@
 (function () {
   if (window.GriAnalysis) return;
 
-  var EXAM_META = { sat: { label: 'SAT' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' }, ielts: { label: 'IELTS (Deneme)' }, vocab: { label: 'Kelime Bilgisi' } };
+  var EXAM_META = { sat: { label: 'SAT' }, sat_deneme: { label: 'SAT Denemeleri' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' }, ielts: { label: 'IELTS (Deneme)' }, vocab: { label: 'Kelime Bilgisi' } };
   var SECTION_LABEL = { reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking', genel: 'Genel' };
   function num1(x) { var n = parseFloat(x); return isNaN(n) ? null : n; }
   var SAT_MATH_CATS = { advanced_math: 1, algebra: 1, geometry_and_trigonometry: 1, problem_solving_and_data_analysis: 1 };
@@ -413,6 +413,103 @@
     return html;
   }
 
+  // ===== SAT adaptif denemeler =====
+  function satKindLabel(k) { return k === 'rw' ? 'Reading & Writing' : (k === 'math' ? 'Matematik' : (k === 'full' ? 'Tam SAT' : (k || 'Deneme'))); }
+  function satScoreColor(scaled, max) { var p = max ? Math.round(100 * scaled / max) : 0; return p >= 75 ? '#1FA971' : (p >= 55 ? '#B78A2E' : '#c0392b'); }
+  function satDenemeName(slug) { return String(slug == null ? 'Deneme' : slug).replace(/[-_]/g, ' ').replace(/\b\w/g, function (m) { return m.toUpperCase(); }); }
+  function satAttemptBlock(a) {
+    var when = fmtDate(a.completed_at);
+    var kind = a.kind;
+    var chipTxt, chipColor;
+    if (kind === 'full') { chipTxt = (a.total_scaled != null ? a.total_scaled + ' /1600' : '—'); chipColor = a.total_scaled != null ? satScoreColor(a.total_scaled, 1600) : 'var(--teal,#2C5856)'; }
+    else if (kind === 'math') { chipTxt = (a.math_scaled != null ? a.math_scaled + ' /800' : '—'); chipColor = a.math_scaled != null ? satScoreColor(a.math_scaled, 800) : 'var(--teal,#2C5856)'; }
+    else { chipTxt = (a.rw_scaled != null ? a.rw_scaled + ' /800' : '—'); chipColor = a.rw_scaled != null ? satScoreColor(a.rw_scaled, 800) : 'var(--teal,#2C5856)'; }
+    var head = '<summary><span class="ga-secname">' + esc(satDenemeName(a.deneme_slug)) + '</span>'
+      + ' <span class="ga-when">' + esc(satKindLabel(kind)) + (when ? ' · ' + esc(when) : '') + '</span>'
+      + '<span class="ga-bchip" style="background:' + chipColor + '">' + esc(chipTxt) + '</span></summary>';
+    var lines = '';
+    if (a.kind !== 'math' && (a.rw_answered || a.rw_scaled != null)) {
+      var rp = pctOf(a.rw_answered, a.rw_correct);
+      lines += '<div class="ga-row"><span class="n">R&amp;W</span>' + bar(rp, accColor(rp))
+        + '<span class="p">' + (a.rw_scaled != null ? a.rw_scaled + '/800 · ' : '') + a.rw_correct + '/' + a.rw_answered + '</span></div>';
+    }
+    if (a.kind !== 'rw' && (a.math_answered || a.math_scaled != null)) {
+      var mp = pctOf(a.math_answered, a.math_correct);
+      lines += '<div class="ga-row"><span class="n">Matematik</span>' + bar(mp, accColor(mp))
+        + '<span class="p">' + (a.math_scaled != null ? a.math_scaled + '/800 · ' : '') + a.math_correct + '/' + a.math_answered + '</span></div>';
+    }
+    var tp = pctOf(a.answered, a.correct);
+    lines += '<div class="ga-row"><span class="n">Toplam doğruluk</span>' + bar(tp, accColor(tp)) + '<span class="p">%' + tp + ' (' + (a.correct || 0) + '/' + (a.answered || 0) + ')</span></div>';
+    return '<details class="ga-att">' + head + '<div class="ga-qs">' + lines + '</div></details>';
+  }
+
+  function buildSatDeneme(d) {
+    var att = d.attempts || 0;
+    var detail = d.attempts_detail || [];
+    if (!att) return '<div class="ga-empty">SAT deneme verisi yok.</div>';
+    var cats = d.categories || [];
+    var bestRw = d.best_rw, bestMath = d.best_math, bestTotal = d.best_total;
+    var estTotal = (bestTotal != null) ? bestTotal : ((bestRw != null && bestMath != null) ? (bestRw + bestMath) : null);
+
+    var html = '<div class="ga-cards">';
+    html += card('En iyi R&W', bestRw != null ? bestRw : null, '/800', att);
+    html += card('En iyi Matematik', bestMath != null ? bestMath : null, '/800', att);
+    if (estTotal != null) html += card('En iyi Toplam' + (bestTotal == null ? ' (tahmini)' : ''), estTotal, '/1600', att, true);
+    html += '</div>';
+    html += '<div class="ga-note">Skorlar deneme motorunun ölçekli puanıdır (R&W / Matematik 200-800, Tam SAT 400-1600) · ' + att + ' deneme çözülmüş.</div>';
+
+    // Hedefle karşılaştırma (1600 üzerinden)
+    var goal = goalNum(d.goal);
+    if (goal != null && estTotal != null) {
+      var gap = goal - estTotal;
+      var gColor = gap <= 0 ? '#1FA971' : (gap <= 120 ? '#B78A2E' : '#c0392b');
+      var gapTxt = gap <= 0 ? 'hedefin üzerinde ▲' : ('hedefe ' + gap + ' puan var');
+      html += '<div class="ga-goal">🎯 Hedef: <b>' + esc(String(d.goal)) + '</b>/1600 · En iyi: <b>' + estTotal + '</b>/1600 · <b style="color:' + gColor + '">' + gapTxt + '</b></div>';
+    } else if (d.goal) {
+      html += '<div class="ga-goal">🎯 Hedef: <b>' + esc(String(d.goal)) + '</b>/1600 <span style="color:var(--text-muted,#6b6862);">(karşılaştırma için tam deneme gerek)</span></div>';
+    }
+
+    // Denemeler (soru/skor dökümü)
+    html += '<div class="ga-grp">Denemeler (' + detail.length + ')</div>';
+    html += detail.map(satAttemptBlock).join('');
+
+    // Güçlü / Zayıf konular (RW domain + Math konu)
+    if (cats.length) {
+      var sig = cats.filter(function (x) { return x.answered >= 3; });
+      var pool = sig.length ? sig : cats;
+      var byAcc = pool.slice().sort(function (a, b) { return pctOf(b.answered, b.correct) - pctOf(a.answered, a.correct); });
+      var strong = byAcc.slice(0, 3);
+      var weak = byAcc.slice().reverse().slice(0, 3).filter(function (x) { return pctOf(x.answered, x.correct) < 100; });
+      html += '<div class="ga-2col">';
+      html += '<div><div class="ga-grp" style="color:#1FA971;">Güçlü Konular</div>' + (strong.length ? strong.map(function (x) { return catRow(x, false); }).join('') : '<div class="ga-empty" style="font-size:0.8rem;">—</div>') + '</div>';
+      html += '<div><div class="ga-grp" style="color:#c0392b;">Zayıf Konular</div>' + (weak.length ? weak.map(function (x) { return catRow(x, false); }).join('') : '<div class="ga-empty" style="font-size:0.8rem;">Belirgin zayıf konu yok.</div>') + '</div>';
+      html += '</div>';
+      html += '<div class="ga-grp">Konu Doğruluğu (' + cats.length + ')</div>';
+      html += cats.map(function (x) { return catRow(x, false); }).join('');
+    }
+
+    // Zorluk kırılımı
+    var diffs = d.difficulties || [];
+    if (diffs.length) {
+      var order = { easy: 0, medium: 1, hard: 2 }, dl = { easy: 'Kolay', medium: 'Orta', hard: 'Zor' };
+      diffs.sort(function (a, b) { return (order[a.difficulty] == null ? 9 : order[a.difficulty]) - (order[b.difficulty] == null ? 9 : order[b.difficulty]); });
+      html += '<div class="ga-grp" style="margin-top:0.8rem;">Zorluk Kırılımı</div>';
+      html += diffs.map(function (x) { var p = pctOf(x.answered, x.correct); return '<div class="ga-row"><span class="n" style="flex:0 0 3.5rem;">' + (dl[x.difficulty] || x.difficulty) + '</span>' + bar(p, accColor(p)) + '<span class="p">%' + p + ' (' + x.correct + '/' + x.answered + ')</span></div>'; }).join('');
+    }
+
+    // Değerlendirme
+    var v = '<b>SAT Denemeleri</b>: ' + att + ' deneme çözülmüş. ';
+    if (estTotal != null) v += 'En iyi toplam <b>' + estTotal + '</b>/1600' + (bestTotal == null ? ' (R&W + Matematik en iyileri)' : '') + '. ';
+    if (cats.length) {
+      var sc = cats.slice().sort(function (a, b) { return pctOf(b.answered, b.correct) - pctOf(a.answered, a.correct); });
+      v += 'En güçlü: ' + esc(catLabel(sc[0].category)) + ' (%' + pctOf(sc[0].answered, sc[0].correct) + '). ';
+      var wc = sc[sc.length - 1];
+      if (pctOf(wc.answered, wc.correct) < 100) v += 'En zayıf: <b>' + esc(catLabel(wc.category)) + '</b> (%' + pctOf(wc.answered, wc.correct) + ') — bu konuya ağırlık verilmeli.';
+    }
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+
   function printAnalysis(sel, body, studentLabel) {
     var win = window.open('', '_blank', 'width=820,height=940');
     if (!win) { alert('PDF için açılır pencereye izin ver.'); return; }
@@ -446,6 +543,7 @@
       var rpc, arg;
       if (exam === 'ielts') { rpc = 'admin_user_ielts_analysis'; arg = { p_user_id: userId }; }
       else if (exam === 'vocab') { rpc = 'admin_user_vocab_analysis'; arg = { p_user_id: userId }; }
+      else if (exam === 'sat_deneme') { rpc = 'admin_user_sat_deneme_analysis'; arg = { p_user_id: userId }; }
       else { rpc = 'admin_user_exam_analysis'; arg = { p_user_id: userId, p_exam: exam }; }
       sb.rpc(rpc, arg).then(function (r) {
         if (r.error) throw r.error;
@@ -453,6 +551,7 @@
         var d = r.data || {};
         if (exam === 'ielts') { body.innerHTML = buildIelts(d); attachGriHandlers(body); }
         else if (exam === 'vocab') { body.innerHTML = buildVocab(d); }
+        else if (exam === 'sat_deneme') { body.innerHTML = buildSatDeneme(d); }
         else {
           body.innerHTML = build(exam, d, !!onAssign, opts.assignLabel);
           if (onAssign) { body.querySelectorAll('[data-assign-cat]').forEach(function (b) { b.addEventListener('click', function () { onAssign(exam, b.dataset.assignCat, b.dataset.assignLabel); }); }); }

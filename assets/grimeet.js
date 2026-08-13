@@ -1716,7 +1716,7 @@ var ANNO=(function(){
 })();
 
 /* ================= REACTIONS ================= */
-var REACTS=['👍','👏','❤️','😄','🎉','🙌','😮','❓'];
+var REACTS=['👍','👎','👏','❤️','😄','😂','🤔','😮','😠','🔥','🎉','🙌','❓'];
 function bindReactions(){
   var bar=$('#gmr-react-bar'); if(!bar)return;
   REACTS.forEach(function(e){ var b=document.createElement('button'); b.textContent=e; b.addEventListener('click',function(ev){ ev.stopPropagation(); floatReact(e); sendData({t:'react',e:e}); }); bar.appendChild(b); });

@@ -1325,7 +1325,11 @@ function navRel(itf){
     // Temiz URL (uzantısız) → .html ekle: öğrenci tarafı srcdoc-proxy .html bekliyor (ilk paylaşım da .html ile
     // çalışıyor). Uzantısız 'ielts-soru-bankasi' öğrencide "Sayfa yüklenemedi" veriyordu.
     var _seg=path.split('/').pop(); if(_seg && _seg.indexOf('.')<0) path=path+'.html';
-    return path+(loc.search||'')+(loc.hash||'');
+    // grimeet'in eklediği teknik parametreleri (gmsync/present) AYIKLA: yoksa canlı URL yayınlanan
+    // değerden farklı görünür, dedup kırılır ve kontrol verilince runner spuriously yeniden yayınlanıp
+    // öğretmeni reload eder (başlangıç ekranına döner). Bu ayıklama dedup'ı doğru tutar.
+    var _qs=''; try{ var _sp=new URLSearchParams(loc.search||''); _sp.delete('gmsync'); _sp.delete('present'); var _s=_sp.toString(); _qs=_s?('?'+_s):''; }catch(e){ _qs=loc.search||''; }
+    return path+_qs+(loc.hash||'');
   }catch(e){ return null; }
 }
 function navBroadcastNow(itf){

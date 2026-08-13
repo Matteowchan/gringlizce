@@ -4230,5 +4230,132 @@
     loadQuestion();
   </script>
 
+  <!-- ===== Gri Meet şık senkron köprüsü =====
+       Öğretmen (host) ile öğrenci aynı soruda şık seçimini birlikte görsün.
+       SADECE bir iframe'e gömülüyken (Gri Meet materyali) aktif; üst pencerede
+       (normal soru bankası kullanımı) tamamen inert — hiçbir davranış değişmez.
+       Soru geçişi (?q=) grimeet nav-sync ile zaten senkron; bu köprü yalnızca
+       şık seçimi / cevap kontrolü / reveal durumunu post/apply eder. grimeet.js
+       sürücü (kontrolü elinde tutan taraf) state'ini karşı tarafa apply'lar. -->
+  <script>
+  (function () {
+    // Aktivasyon: yalnız iframe'e gömülüyken. Üst pencerede köprü kapalı.
+    if (window.parent === window) return;
+
+    var applying = false;   // apply sırasında yeniden-post'u engelle (döngü koruması)
+    var lastSel = null;     // en son tıklanan şık harfi (echo/faithful seçim için)
+
+    function curSlug() {
+      try { return (window.GriCurrentQuestion && window.GriCurrentQuestion.slug) || null; }
+      catch (e) { return null; }
+    }
+    function okOrigin(o) {
+      if (!o || o === 'null') return true;
+      try { var h = new URL(o).hostname; return h === location.hostname || /(^|\.)gringlizce\.com$/.test(h); }
+      catch (e) { return false; }
+    }
+
+    // Mevcut seçim + reveal durumunu DOM'dan oku (MCQ ve SPR).
+    function readState() {
+      var box = document.getElementById('qOptions');
+      if (!box) return null;
+      if (box.dataset.spr === '1') {
+        var inp = document.getElementById('qSprInput');
+        if (!inp) return null;
+        var v = inp.value;
+        if (v == null || v === '') return null;
+        var rev = !!(inp.disabled && (inp.classList.contains('correct') || inp.classList.contains('incorrect')));
+        return { q: curSlug(), sel: v, revealed: rev };
+      }
+      var sel = lastSel;
+      if (sel == null) { var c = box.querySelector('.q-option input:checked'); sel = c ? c.value : null; }
+      if (sel == null) return null;
+      var revealed = !!box.querySelector('.q-option.correct, .q-option.incorrect');
+      return { q: curSlug(), sel: sel, revealed: revealed };
+    }
+
+    var postTimer = null;
+    function schedulePost() {
+      if (applying) return;
+      clearTimeout(postTimer);
+      postTimer = setTimeout(function () {
+        if (applying) return;
+        var st = readState();
+        if (st && st.q) { try { window.parent.postMessage({ __gmex: 1, state: st }, '*'); } catch (e) {} }
+      }, 250);
+    }
+
+    // Öğrencinin seçtiği şıkkı (yanlış olsa bile) + reveal ise doğru cevabı uygula.
+    function applySel(sel, revealed) {
+      var box = document.getElementById('qOptions');
+      if (!box) return;
+      if (box.dataset.spr === '1') {
+        var inp = document.getElementById('qSprInput'), chk = document.getElementById('qSprCheck');
+        if (inp && !inp.disabled) { inp.value = sel; if (revealed && chk && !chk.disabled) chk.click(); }
+        return;
+      }
+      var correct = box.dataset.correct;
+      var opts = box.querySelectorAll('.q-option');
+      if (!revealed) {
+        opts.forEach(function (o) {
+          var i = o.querySelector('input'), l = i ? i.value : null;
+          if (l === sel) { o.classList.add('selected'); if (i) i.checked = true; }
+          else { o.classList.remove('selected'); }
+        });
+        return;
+      }
+      // Reveal: öğretmen hem öğrencinin gerçek cevabını hem doğrusunu görsün.
+      opts.forEach(function (o) {
+        var i = o.querySelector('input'), l = i ? i.value : null;
+        o.classList.remove('selected');
+        if (l === correct) o.classList.add('answered', 'correct');
+        if (l === sel && sel !== correct) { o.classList.add('answered', 'incorrect'); if (i) i.checked = true; }
+        if (l === sel && i) i.checked = true;
+      });
+      box.classList.add('locked');
+    }
+
+    // === Seçim / kontrol olaylarını yakala (capture; sayfanın kendi handler'ından
+    //     bağımsız ve her renderQuestion sonrası yeniden bağlanmaya gerek yok). ===
+    document.addEventListener('click', function (e) {
+      if (applying) return;
+      var t = e.target; if (!t || !t.closest) return;
+      var optEl = t.closest('#qOptions .q-option');
+      if (optEl) { var inp = optEl.querySelector('input'); lastSel = inp ? inp.value : lastSel; schedulePost(); return; }
+      if (t.closest('#qSprCheck')) schedulePost();
+    }, true);
+    document.addEventListener('change', function (e) {
+      if (applying) return;
+      var t = e.target; if (t && t.closest && t.closest('#qOptions')) schedulePost();
+    }, true);
+
+    // Soru değişince seçimi sıfırla; sürücü yeni soruda (cevaplıysa) durumu yeniden yayınlasın.
+    window.addEventListener('gri-question-change', function () {
+      lastSel = null;
+      clearTimeout(postTimer);
+      postTimer = setTimeout(function () {
+        if (applying) return;
+        var st = readState();
+        if (st && st.q) { try { window.parent.postMessage({ __gmex: 1, state: st }, '*'); } catch (e) {} }
+      }, 350);
+    });
+
+    // === Gelen apply: {q, sel, revealed} ===
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || d.__gmex !== 1 || !d.apply) return;
+      if (!okOrigin(e.origin)) return;
+      var s = d.apply;
+      if (!s || typeof s.sel === 'undefined' || s.sel === null) return;
+      // Farklı soruysa yok say (nav-sync ayrı çalışır; yanlış soruya işaret koymayalım).
+      var cs = curSlug();
+      if (s.q && cs && s.q !== cs) return;
+      applying = true;
+      try { applySel(s.sel, !!s.revealed); } catch (err) {}
+      applying = false;
+    });
+  })();
+  </script>
+
 </body>
 </html>

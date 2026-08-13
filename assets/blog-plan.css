@@ -73,24 +73,33 @@
 
 @media (max-width:520px){ .day-chip{min-width:60px;} .plan-tbl{font-size:.8rem;} .plan-tbl .f{display:block;} }
 
-/* yazdirma: sade, plan-odakli, SAYFA BOLUNMESI YOK */
+/* detayli hata-listesi worksheet (yatay sayfa) */
+.log-legend{font-size:.82rem;color:var(--text-muted);margin:.2rem 0 .6rem;}
+.log-legend span{white-space:nowrap;}
+.log-wide{table-layout:fixed;}
+.log-wide th{font-size:.74rem;}
+.log-wide td.n{text-align:center;color:var(--text-muted);font-weight:700;width:2.2rem;}
+.log-wide tbody td{height:2rem;}
+
+/* yazdirma: SADECE 14 gunluk plan (dikey) + Hata Listesi (ayri sayfa, yatay) */
+@page{ size:A4 portrait; margin:14mm; }
+@page logland{ size:A4 landscape; margin:10mm; }
 @media print{
-  nav,header,footer,.blog-cta,.teacher-cta,.faq,.launch-banner,.print-btn,.plan-toolbar,.breadcrumb,.blog-nav,.related{display:none!important;}
   body{background:#fff!important;color:#000!important;}
-  .prose{max-width:100%!important;}
-  .plan-roadmap{overflow:visible!important;}
-  .plan-roadmap,.checklist li,.cheat-card,.worked,.plan-tbl th,.plan-tbl td,.log-tpl th,.log-tpl td,.vs-tbl th,.vs-tbl td{border-color:#999!important;}
-  .checklist li::before,.plan-tbl .chk::before{border-color:#000!important;}
-  a{color:#000!important;text-decoration:none;}
-  /* blok/satir asla iki sayfaya bolunmesin */
-  .plan-band,.plan-day,.worked,.cheat-card,.callout,.checklist li,
-  .plan-tbl tr,.log-tpl tr,.vs-tbl tr,.teacher-cta,figure,img{
-    break-inside:avoid!important;page-break-inside:avoid!important;}
-  /* baslik sayfa sonunda yalniz kalmasin */
-  h2,h3,h4,.plan-tbl thead,.log-tpl thead,.vs-tbl thead{
-    break-after:avoid!important;page-break-after:avoid!important;}
-  /* uzun tablolar her sayfada baslik tekrarlasin */
+  nav,header,footer,.breadcrumb,.launch-banner,.blog-cta,.faq,.teacher-cta,.blog-nav,.related,.plan-toolbar{display:none!important;}
+  /* yalnizca isaretli bloklar basilir */
+  .prose > *{display:none!important;}
+  .prose > .print-keep{display:block!important;}
+  .prose{max-width:100%!important;margin:0!important;padding:0!important;}
+  /* Hata Listesi: yeni sayfada + yatay yonelim (planin arkasi) */
+  #print-log{page:logland;break-before:page;}
+  /* satir asla bolunmesin, baslik yalniz kalmasin */
+  .plan-tbl tr,.log-tpl tr{break-inside:avoid!important;page-break-inside:avoid!important;}
+  h2,.plan-tbl thead,.log-tpl thead{break-after:avoid!important;page-break-after:avoid!important;}
   thead{display:table-header-group;}
-  .prose p{orphans:3;widows:3;}
-  .plan-tbl thead th,.plan-tbl .wksep td{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  a{color:#000!important;text-decoration:none;}
+  .plan-tbl th,.plan-tbl td,.log-tpl th,.log-tpl td{border-color:#333!important;}
+  .plan-tbl thead th,.plan-tbl .wksep td,.log-wide thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .log-wide{font-size:.72rem;width:100%;}
+  .log-wide td{height:1.7rem;}
 }

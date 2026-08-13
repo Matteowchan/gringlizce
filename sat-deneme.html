@@ -178,6 +178,18 @@ async function fetchPassages(ids){
   const { data } = await sb.from('passages').select('id,texts').in('id', uniq);
   const m = {}; (data||[]).forEach(p=>{ m[p.id]=p.texts; }); return m;
 }
+function formatMath(s){
+  // s zaten esc'lenmis olmali; matematik gosterimini guzellestir
+  return String(s)
+    .replace(/\^\(([^)]+)\)/g,'<sup>$1</sup>')
+    .replace(/\^(-?\d+(?:\.\d+)?)/g,'<sup>$1</sup>')
+    .replace(/\^([A-Za-z])/g,'<sup>$1</sup>')
+    .replace(/\bsqrt\s*\(/g,'√(')
+    .replace(/\bpi\b/g,'π')
+    .replace(/&lt;=/g,'≤').replace(/&gt;=/g,'≥').replace(/!=/g,'≠')
+    .replace(/(\d)\s*\*\s*(\d)/g,'$1·$2');
+}
+function mtext(s, isMath){ return isMath ? formatMath(esc(s)) : esc(s); }
 function mdTableHtml(block){
   var rows = block.map(function(line){ return line.split('|').map(function(c){ return c.trim(); }); });
   if (!rows.length) return '';
@@ -484,17 +496,18 @@ function renderModule(sec, cfg, modKey, slot, passages){
   let h = moduleHeaderRule(sec, cfg, modKey);
   h += '<div class="st-warn" id="st-warn">Süre doldu. Cevaplarını gözden geçir ve hazır olduğunda <strong>Bitir</strong>&apos;e bas — otomatik gönderim yoktur.</div>';
   h += '<div class="st-bar"><span>'+esc(cfg.label)+' · Modül '+modNo+' / 2</span><span class="st-timer" id="st-timer"></span></div>';
+  const isM = (cfg.db==='math');
   slot.q.forEach((q,i)=>{
     const pass = (cfg.db==='rw' && q.passage_id && passages[q.passage_id]) ? passageHtml(passages[q.passage_id]) : '';
     h += '<div class="st-q" data-qi="'+i+'"><span class="st-q-num">'+(i+1)+'</span>'+pass+
-      '<div class="st-stem">'+esc(q.question_text)+'</div>';
+      '<div class="st-stem">'+mtext(q.question_text, isM)+'</div>';
     if (isSpr(q)){
       h += '<div class="st-spr"><input type="text" data-qi="'+i+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ör. 7 · 1.5 · 3/4" value="'+esc(slot.a[i]||'')+'"><div class="note">Tam sayı, ondalık veya kesir. 1/2, 0.5 ve .5 aynı kabul edilir.</div></div>';
     } else {
       const opts = Array.isArray(q.options)?q.options:[];
       opts.forEach(o=>{
         const selCls = slot.a[i]===o.letter ? ' sel' : '';
-        h += '<label class="st-opt'+selCls+'" data-letter="'+esc(o.letter)+'"><input type="radio" name="q'+i+'" value="'+esc(o.letter)+'"'+(slot.a[i]===o.letter?' checked':'')+'><span class="st-oletter">'+esc(o.letter)+'</span>'+esc(o.text)+'</label>';
+        h += '<label class="st-opt'+selCls+'" data-letter="'+esc(o.letter)+'"><input type="radio" name="q'+i+'" value="'+esc(o.letter)+'"'+(slot.a[i]===o.letter?' checked':'')+'><span class="st-oletter">'+esc(o.letter)+'</span>'+mtext(o.text, isM)+'</label>';
       });
     }
     h += '</div>';

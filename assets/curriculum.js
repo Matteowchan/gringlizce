@@ -295,7 +295,9 @@ var EXAMS=[
       { label: "SAT", href: "sat", children: [
         { label: "Reading & Writing", href: "sat-soru-bankasi-rw" },
         { label: "Math", href: "sat-soru-bankasi-math" },
-        { label: "Soru Bankası", href: "sat-soru-bankasi" } ] },
+        { label: "Soru Bankası", href: "sat-soru-bankasi" },
+        { label: "R&W Denemeleri", href: "sat-denemeler-rw" },
+        { label: "Math Denemeleri", href: "sat-denemeler-math" } ] },
       { label: "IELTS", href: "ielts", children: [
         { label: "Tam Deneme", href: "ielts-deneme" },
         { label: "Bölüm Bazlı", href: "ielts-bolum-calisma" },

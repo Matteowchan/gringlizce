@@ -101,10 +101,13 @@
   if(window.parent===window && !hasFlag) return;
 
   var applying=false; // apply sırasında yeniden-post'u engelle (sonsuz döngü koruması)
+  var audioSuppressUntil=0; // remote ses uygulanırken doğan play/pause/seeked olaylarını yok say (echo yok)
+  var pendingAudio=null;    // ses elemanı henüz hazır değilken gelen komut
   function post(st){ try{ window.parent.postMessage({__gmex:1, state:st}, '*'); }catch(e){} }
   function okOrigin(o){ if(!o||o==='null') return true; try{ var h=new URL(o).hostname; return h===location.hostname || /(^|\.)gringlizce\.com$/.test(h); }catch(e){ return false; } }
 
   // Cevap/essay yayını — runner'ın __gmSync.get() ile mevcut cevaplarını oku, debounce'la yolla.
+  // Debounce 220ms: "çok geç" olmadan, tuş-başına-paket fırtınası da yapmadan makul akış.
   var ansTimer=null;
   function scheduleAnswers(){
     if(applying) return;
@@ -114,13 +117,47 @@
       if(window.__gmSync && typeof window.__gmSync.get==='function'){
         try{ var g=window.__gmSync.get(); if(g && g.answers) post({answers:g.answers}); }catch(e){}
       }
-    },350);
+    },220);
   }
   function onAnswerEvent(e){
     if(applying) return;
     var t=e.target; if(!t||!t.matches) return;
     // reading/listening cevap kontrolleri (.q-input, data-q) veya writing essay textarea'sı
     if(t.matches('.q-input,[data-q],.editor-textarea,textarea[data-task]')) scheduleAnswers();
+  }
+
+  // ===== Ses (listening) senkronu — sürücü play/pause/seek yapınca karşı taraf uygular =====
+  function audioEl(){ return document.getElementById('audio') || document.querySelector('audio'); }
+  function postAudio(action){ var a=audioEl(); if(!a) return; post({audio:{action:action, time:a.currentTime||0, paused:a.paused}}); }
+  function onAudioEvt(action){ return function(){ if(applying) return; if(Date.now()<audioSuppressUntil) return; postAudio(action); }; }
+  var _audioWired=false;
+  function wireAudio(){
+    var a=audioEl(); if(!a || a.__gmWired) return; a.__gmWired=1; _audioWired=true;
+    a.addEventListener('play', onAudioEvt('play'));
+    a.addEventListener('pause', onAudioEvt('pause'));
+    a.addEventListener('seeked', onAudioEvt('seek'));
+  }
+  // Tarayıcı autoplay politikası: öğrenci tarafında kullanıcı etkileşimi olmadan play() reddedilebilir.
+  // Zarif fallback: "dokun" bandı; dokununca doğru konumdan oynatır.
+  function fallbackBanner(a, target){
+    var id='gm-audio-tap'; if(document.getElementById(id)) return;
+    var b=document.createElement('div'); b.id=id;
+    b.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;background:#2C5856;color:#fff;padding:10px 16px;border-radius:10px;font:600 14px/1.3 system-ui,-apple-system,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:90%;text-align:center';
+    b.textContent='Öğretmen sesi başlattı — oynatmak için dokun';
+    b.addEventListener('click',function(){ audioSuppressUntil=Date.now()+900; try{ if(typeof target==='number') a.currentTime=target; }catch(e){} var pr=a.play(); if(pr&&pr.catch)pr.catch(function(){}); b.remove(); });
+    document.body.appendChild(b);
+  }
+  function applyAudio(au, tries){
+    var a=audioEl();
+    if(!a || !a.src){ pendingAudio=au; if((tries||0)<20) setTimeout(function(){ applyAudio(au,(tries||0)+1); }, 250); return; }
+    pendingAudio=null; audioSuppressUntil=Date.now()+900;
+    try{ if(typeof au.time==='number' && Math.abs((a.currentTime||0)-au.time)>0.8) a.currentTime=au.time; }catch(e){}
+    if(au.action==='play' || au.paused===false){
+      var p=a.play();
+      if(p && p.catch) p.catch(function(){ fallbackBanner(a, au.time); });
+    } else if(au.action==='pause' || au.paused===true){
+      try{ a.pause(); }catch(e){}
+    }
   }
 
   // Global part/task yöneticisini sar: her çağrıda (apply değilse) parent'a yayınla.
@@ -136,18 +173,39 @@
     };
     return true;
   }
+  function currentPart(){
+    var at=document.querySelector('.tab-btn.active'); if(at&&at.dataset&&at.dataset.part){ var n=parseInt(at.dataset.part,10); if(!isNaN(n)) return n; }
+    return null;
+  }
+  function isStarted(){ var ss=document.getElementById('startScreen'); return !ss || ss.style.display==='none'; }
+  // Anlık tam durum (paylaşım başında / kontrol devrinde / geç yüklenen runner için tek seferlik senkron):
+  // başlatıldı mı + aktif part + cevaplar + ses konumu tek pakette. Alan tarafı sırayla uygular.
+  function emitFullState(){
+    var out={};
+    if(window.__gmSync && typeof window.__gmSync.get==='function'){ try{ var g=window.__gmSync.get(); if(g&&g.answers) out.answers=g.answers; }catch(e){} }
+    if(isStarted()) out.started=true;
+    var cp=currentPart(); if(cp!=null) out.part=cp;
+    var a=audioEl(); if(a && a.src){ out.audio={action:a.paused?'pause':'play', time:a.currentTime||0, paused:a.paused}; }
+    if(out.answers || out.started || out.audio) post(out);
+  }
+
   function setup(){
     if(!wrapPart('setActivePart')) wrapPart('setActiveTask');
     var sb=document.getElementById('startBtn');
-    if(sb) sb.addEventListener('click', function(){ if(!applying) setTimeout(function(){ post({started:true}); },0); });
+    if(sb) sb.addEventListener('click', function(){ if(!applying) setTimeout(function(){ var cp=currentPart(); post(cp!=null?{started:true, part:cp}:{started:true}); },0); });
     // Cevap/essay değişimlerini yakala (capture ile, runner'ın kendi handler'ından bağımsız).
     document.addEventListener('input', onAnswerEvent, true);
     document.addEventListener('change', onAnswerEvent, true);
+    wireAudio();
+    // Ses elemanı "Sınava Başla" sonrası kurulabilir (src o an set edilir) → DOM/attr değişimini gözle.
+    try{ var mo=new MutationObserver(function(){ if(!_audioWired) wireAudio(); }); mo.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']}); }catch(e){}
   }
 
   window.addEventListener('message', function(e){
-    var d=e.data; if(!d||d.__gmex!==1||!d.apply) return;
+    var d=e.data; if(!d||d.__gmex!==1) return;
     if(!okOrigin(e.origin)) return;
+    if(d.requestState){ emitFullState(); return; } // parent (grimeet) tam durumu istiyor → tek seferlik yayınla
+    if(!d.apply) return;
     var s=d.apply; applying=true;
     try{
       if(s.started){ var ss=document.getElementById('startScreen'); if(ss && ss.style.display!=='none' && typeof window.startTest==='function') window.startTest(); }
@@ -156,6 +214,8 @@
       if(s.answers && window.__gmSync && typeof window.__gmSync.apply==='function'){ window.__gmSync.apply({answers:s.answers}); }
     }catch(err){}
     applying=false;
+    // Ses uygula: async play() + kendi suppress penceresi (applying guard'ından bağımsız).
+    if(s.audio){ try{ applyAudio(s.audio,0); }catch(err2){} }
   });
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', setup); else setup();

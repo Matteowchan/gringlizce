@@ -713,8 +713,17 @@ function onData(payload,p){
   else if(msg.t==='mat-scroll'){ if(!STATE.isHost&&fromHost) applyMatScroll(msg.frac); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyMatScroll(msg.frac); }
   else if(msg.t==='pdf-hl'){ if(!STATE.isHost&&fromHost) PDFHL.applyRemote(msg.items); }
   else if(msg.t==='mat-zoom'){ if((!STATE.isHost&&fromHost)||(STATE.isHost&&STATE.matControl&&!fromHost)){ var _z=+msg.z; if(_z>=0.4&&_z<=2.5){ STATE.matZoom=_z; applyZoom(); } } }
-  else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; STATE._appliedMatSeq=0; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.'); } }
-  else if(msg.t==='exstate'){ if((!STATE.isHost&&fromHost)||(STATE.isHost&&STATE.matControl&&!fromHost)){ var _exif=document.getElementById('mat-uni-if'); if(_exif&&_exif.contentWindow){ try{ _exif.contentWindow.postMessage({__gmex:1, apply:msg.s}, '*'); }catch(e){} } } }
+  else if(msg.t==='mat-control'){ if(!STATE.isHost&&fromHost){ STATE.matControl=!!msg.on; STATE._appliedMatSeq=0; applyMatLock(); toast(msg.on?'Öğretmen sayfada gezinme iznini verdi — kaydırıp tıklayabilirsin.':'Sayfa kontrolü öğretmene geri alındı.');
+      // Kontrol öğrenciye geçtiyse köprü KOPMAZ; yeni sürücü mevcut nav/durumunu hemen yayınlasın (iframe reload YOK).
+      if(STATE.matControl){ STATE._lastNavRel=null; setTimeout(function(){ var f=document.getElementById('mat-uni-if'); if(f){ try{ navBroadcastNow(f); }catch(e){} } requestRunnerState(); },200); } } }
+  else if(msg.t==='exstate'){
+      // Cevap/essay: sürücüden bağımsız iki yönlü (paylaşım aktif + duraksatılmamışsa). Diğer durum (nav/ses): sürücü kuralı.
+      var _isAns=!!(msg.s&&msg.s.answers);
+      var _accept=_isAns
+        ? ((!STATE.isHost&&fromHost&&!!STATE.currentMaterial&&!STATE.matPaused)||(STATE.isHost&&STATE.matShared&&!STATE.matPaused&&!fromHost))
+        : ((!STATE.isHost&&fromHost)||(STATE.isHost&&STATE.matControl&&!fromHost));
+      if(_accept){ var _exif=document.getElementById('mat-uni-if'); if(_exif&&_exif.contentWindow){ try{ _exif.contentWindow.postMessage({__gmex:1, apply:msg.s}, '*'); }catch(e){} } } }
+  else if(msg.t==='exreq'){ if(STATE.isHost&&STATE.matShared&&!STATE.matPaused) requestRunnerState(); } // öğrenci runner'ı yüklendi → tam durumu iste
   else if(msg.t==='force-mute'){ if((msg.target==='*'||msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE.micOn=false; $('#ctrl-mic').setAttribute('data-on','0'); if(STATE.lkRoom)STATE.lkRoom.localParticipant.setMicrophoneEnabled(false); toast('Öğretmen mikrofonunu kapattı.'); } }
   else if(msg.t==='kick'){ if((msg.target==='self'||(STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity))&&!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen seni çıkardı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='lower-hands'){ if(!STATE.isHost){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); } }
@@ -726,7 +735,7 @@ function onData(payload,p){
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
-  else if(msg.t==='req-state'){ if(STATE.isHost) sendState(); }
+  else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(); if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
   else if(msg.t==='breakout-end'){ if(!STATE.isHost&&fromHost) clearBreakout(); }
@@ -751,8 +760,11 @@ window.addEventListener('message', function(e){
   if(!_gmExOriginOk(e.origin)) return;
   var itf=document.getElementById('mat-uni-if');
   if(!itf||e.source!==itf.contentWindow) return; // yalnız materyal iframe'inden gelen durumu kabul et
-  // İki yönlü: host paylaşırken HER ZAMAN; öğrenci ise YALNIZ kontrol verilmişken (mat-scroll deseni).
-  if(canBroadcastScroll()) sendData({t:'exstate', s:d.state});
+  // Cevap/essay durumu (writing metni dahil) DRIVER modelinden BAĞIMSIZ iki yönlü akar: paylaşım
+  // aktif oldukça (duraksatılmadıkça) hem öğretmen hem öğrenci kendi yazdığını karşıya yollar
+  // (caret savaşı runner apply'ında engelli). Nav/scroll/zoom/ses ise sürücü kuralına (canBroadcastScroll) bağlı.
+  var isAns=!!(d.state.answers);
+  if(isAns ? canSyncAnswers() : canBroadcastScroll()) sendData({t:'exstate', s:d.state});
 });
 
 /* ================= CHAT / PEOPLE ================= */
@@ -1148,7 +1160,9 @@ function bindMaterials(){
   var zfi=$('#mat-zoom-fab-in'); if(zfi)zfi.addEventListener('click',zin);
   var zfo=$('#mat-zoom-fab-out'); if(zfo)zfo.addEventListener('click',zout);
   var at=$('#mat-anno-toggle'); if(at) at.addEventListener('click',function(){ var on=$('#gmr-materials').classList.toggle('annotating'); at.classList.toggle('on',on); if(on) setTimeout(ANNO.resize,30); try{ PDFHL.syncActive(); }catch(e){} });
-  var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; STATE._appliedMatSeq=0; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); applyMatLock(); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (iki yönlü senkron).':'Sayfa kontrolü sende.'); });
+  var gc=$('#mat-give-control'); if(gc) gc.addEventListener('click',function(){ STATE.matControl=!STATE.matControl; STATE._appliedMatSeq=0; gc.classList.toggle('on',STATE.matControl); gc.textContent=STATE.matControl?'Kontrolü Al':'Kontrolü Ver'; sendData({t:'mat-control',on:STATE.matControl}); applyMatLock(); toast(STATE.matControl?'Öğrenci artık sayfayı kaydırıp tıklayabilir (iki yönlü senkron).':'Sayfa kontrolü sende.');
+    // Kontrolü GERİ ALINCA öğretmen yeniden sürücü — mevcut nav/durumu hemen yayınla ki öğrenci kopmadan takip etsin (iframe reload YOK).
+    if(!STATE.matControl){ STATE._lastNavRel=null; setTimeout(function(){ var f=document.getElementById('mat-uni-if'); if(f){ try{ navBroadcastNow(f); }catch(e){} } requestRunnerState(); },150); } });
   bindFileUpload();
 }
 function bindFileUpload(){
@@ -1205,7 +1219,9 @@ function loadMaterial(m,remote){
       // öğrencinin kendi oturumu + URL parametreleri korunur (host tarafıyla aynı yol).
       var _isApp = /[?#]/.test(m.value) || /(^|\/)(odev|sinifim|ogretmen-sinif|panelim)\.html/i.test(m.value);
       if(_isApp){
-        if(fr) fr.addEventListener('load',function(){ if(stale())return; done=true; clearTimeout(STATE._matLoadTmr); clearOv(); });
+        if(fr) fr.addEventListener('load',function(){ if(stale())return; done=true; clearTimeout(STATE._matLoadTmr); clearOv();
+          // Exam runner ise: yüklenince öğretmenden tam durumu iste (paylaşım başında mevcut essay/cevap/başladı-part tek seferde gelsin).
+          if(!STATE.isHost && isExamRunner(m.value)) setTimeout(function(){ sendData({t:'exreq'}); },400); });
         STATE._matLoadTmr=setTimeout(function(){ if(!done&&!stale()) failOv(); },10000);
         // present=1: öğrenci atanmamış olsa bile sunum modunda salt-okunur görebilsin (odev.html iframe+present kontrolü yapar)
         try{ var _pu=new URL(m.value,'https://gringlizce.com/'); _pu.searchParams.set('present','1'); if(isExamRunner(m.value)) _pu.searchParams.set('gmsync','1'); fr.src=_pu.href; }catch(e){ clearTimeout(STATE._matLoadTmr); failOv(); }
@@ -1301,6 +1317,10 @@ function throttle(fn,ms){ var last=0,timer=null; return function(){ var now=Date
 // "Sürücü" kim? Materyal senkronunun kaynağı: paylaşan öğretmen (kontrol vermemişken) VEYA kontrol verilen
 // öğrenci. Nav + scroll + zoom + exstate hepsi bu tek kurala göre yayınlanır → tam iki yönlü, kontrol verilse de.
 function canBroadcastScroll(){ return (STATE.isHost&&STATE.matShared&&!STATE.matPaused&&!STATE.matControl)||(!STATE.isHost&&STATE.matControl); }
+// Cevap/essay senkronu sürücüden bağımsız: paylaşım aktif + duraksatılmamış oldukça iki yönlü.
+function canSyncAnswers(){ if(STATE.matPaused) return false; if(STATE.isHost) return !!STATE.matShared; return !!STATE.currentMaterial; }
+// Materyal iframe'indeki exam runner'dan tam durumu (started/part/answers/audio) tek seferlik iste → köprü yayınlar.
+function requestRunnerState(){ var f=document.getElementById('mat-uni-if'); if(f&&f.contentWindow){ try{ f.contentWindow.postMessage({__gmex:1, requestState:1}, '*'); }catch(e){} } }
 function attachMatScrollSync(itf){ if(!itf)return;
   clearInterval(STATE._navWatch);
   itf.addEventListener('load',function(){ try{ var w=itf.contentWindow;

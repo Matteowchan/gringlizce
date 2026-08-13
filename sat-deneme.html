@@ -47,6 +47,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .st-opt.sel{border-color:var(--st-accent);background:rgba(46,110,106,.06);}
   .st-opt.correct{border-color:var(--st-good);background:rgba(31,169,113,.1);}
   .st-opt.wrong{border-color:var(--st-bad);background:rgba(192,57,43,.08);}
+  .st-oletter{display:inline-block;font-weight:700;margin-right:.5rem;color:var(--st-accent);min-width:1.1em;}
+  .st-table{overflow-x:auto;margin:.6rem 0;}
+  .st-dtable{border-collapse:collapse;width:100%;font-size:.86rem;}
+  .st-dtable th,.st-dtable td{border:1px solid var(--st-line);padding:.35rem .6rem;text-align:left;vertical-align:top;}
+  .st-dtable th{background:rgba(46,110,106,.08);font-weight:700;}
   .st-oletter{font-weight:700;color:var(--st-accent);margin-right:.35rem;}
   .st-spr{margin:.5rem 0;}
   .st-spr input{width:100%;max-width:280px;padding:.6rem .8rem;border:1px solid var(--st-line);border-radius:9px;background:var(--st-bg);color:var(--st-ink);font-size:1rem;}
@@ -173,13 +178,34 @@ async function fetchPassages(ids){
   const { data } = await sb.from('passages').select('id,texts').in('id', uniq);
   const m = {}; (data||[]).forEach(p=>{ m[p.id]=p.texts; }); return m;
 }
+function mdTableHtml(block){
+  var rows = block.map(function(line){ return line.split('|').map(function(c){ return c.trim(); }); });
+  if (!rows.length) return '';
+  var head = rows[0], body = rows.slice(1);
+  var h = '<table class="st-dtable"><thead><tr>'+head.map(function(c){ return '<th>'+esc(c)+'</th>'; }).join('')+'</tr></thead><tbody>';
+  body.forEach(function(r){ h += '<tr>'+r.map(function(c){ return '<td>'+esc(c)+'</td>'; }).join('')+'</tr>'; });
+  return h+'</tbody></table>';
+}
 function passageHtml(texts){
   if (!Array.isArray(texts)) return '';
   return texts.map(t=>{
     const lbl = (t && t.label && texts.length>1) ? '<strong>'+esc(t.label)+'</strong><br>' : '';
-    const tbl = (t && t.table_html) ? '<div class="st-table">'+t.table_html+'</div>' : '';
+    let tbl = (t && t.table_html) ? '<div class="st-table">'+t.table_html+'</div>' : '';
     var cnt = String((t && t.content) || '')
       .replace(/<\s*\/?\s*(ul|ol)\s*>/gi,'').replace(/<\s*li\s*>/gi,'\n• ').replace(/<\s*\/\s*li\s*>/gi,'');
+    // Duz-metin boru (|) tablosunu gercek HTML tabloya cevir (CoE-Quant)
+    if (!tbl && cnt.indexOf('|') >= 0){
+      var lines = cnt.split('\n'), start=-1, end=-1;
+      for (var i=0;i<lines.length;i++){
+        if (lines[i].split('|').length >= 3){ if(start<0) start=i; end=i; }
+        else if (start>=0){ break; }
+      }
+      if (start>=0 && end>start){
+        tbl = '<div class="st-table">'+mdTableHtml(lines.slice(start,end+1))+'</div>';
+        lines.splice(start, end-start+1);
+        cnt = lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+      }
+    }
     return '<div class="st-passage" style="white-space:pre-line">'+lbl+tbl+esc(cnt)+'</div>';
   }).join('');
 }

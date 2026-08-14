@@ -446,12 +446,30 @@
   function buildSatDeneme(d) {
     var att = d.attempts || 0;
     var detail = d.attempts_detail || [];
-    if (!att) return '<div class="ga-empty">Bu öğrenci henüz bir SAT denemesi çözmemiş. Atadığın denemeler öğrenci tamamlayınca R&amp;W / Matematik / Toplam ölçekli skorlarıyla burada görünür.</div>';
+    var assigned = d.assigned || [];
+    var html = '';
+    // Atanan denemeler: her biri çözüldü mü + skoru
+    if (assigned.length) {
+      html += '<div class="ga-grp">Atanan Denemeler (' + assigned.length + ')</div>';
+      html += assigned.map(function (x) {
+        var name = esc(satDenemeName(x.deneme_slug));
+        if (x.solved) {
+          var sc = (x.total_scaled != null) ? (x.total_scaled + '/1600')
+                 : ((x.rw_scaled != null ? x.rw_scaled : '—') + ' R&amp;W · ' + (x.math_scaled != null ? x.math_scaled : '—') + ' Mat');
+          return '<div class="ga-row"><span class="n" style="flex:1;">' + name + '</span><span style="color:#1FA971;font-weight:700;white-space:nowrap;">✓ Çözüldü · ' + sc + '</span></div>';
+        }
+        return '<div class="ga-row"><span class="n" style="flex:1;">' + name + '</span><span style="color:#c0392b;font-weight:600;white-space:nowrap;">✗ Çözülmedi</span></div>';
+      }).join('');
+    }
+    if (!att) {
+      if (assigned.length) return html + '<div class="ga-note">Henüz çözülen deneme yok — öğrenci çözünce R&amp;W / Matematik / Toplam ölçekli skorları burada listelenir.</div>';
+      return '<div class="ga-empty">Bu öğrenci henüz bir SAT denemesi çözmemiş. Atadığın denemeler öğrenci tamamlayınca R&amp;W / Matematik / Toplam ölçekli skorlarıyla burada görünür.</div>';
+    }
     var cats = d.categories || [];
     var bestRw = d.best_rw, bestMath = d.best_math, bestTotal = d.best_total;
     var estTotal = (bestTotal != null) ? bestTotal : ((bestRw != null && bestMath != null) ? (bestRw + bestMath) : null);
 
-    var html = '<div class="ga-cards">';
+    html += '<div class="ga-cards">';
     html += card('En iyi R&W', bestRw != null ? bestRw : null, '/800', att);
     html += card('En iyi Matematik', bestMath != null ? bestMath : null, '/800', att);
     if (estTotal != null) html += card('En iyi Toplam' + (bestTotal == null ? ' (tahmini)' : ''), estTotal, '/1600', att, true);

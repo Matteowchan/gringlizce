@@ -446,7 +446,7 @@
   function buildSatDeneme(d) {
     var att = d.attempts || 0;
     var detail = d.attempts_detail || [];
-    if (!att) return '<div class="ga-empty">SAT deneme verisi yok.</div>';
+    if (!att) return '<div class="ga-empty">Bu öğrenci henüz bir SAT denemesi çözmemiş. Atadığın denemeler öğrenci tamamlayınca R&amp;W / Matematik / Toplam ölçekli skorlarıyla burada görünür.</div>';
     var cats = d.categories || [];
     var bestRw = d.best_rw, bestMath = d.best_math, bestTotal = d.best_total;
     var estTotal = (bestTotal != null) ? bestTotal : ((bestRw != null && bestMath != null) ? (bestRw + bestMath) : null);
@@ -562,8 +562,12 @@
     sb.rpc('admin_user_exams', { p_user_id: userId }).then(function (r) {
       if (r.error) throw r.error;
       var exams = r.data || [];
+      // SAT öğrencisiyse "SAT Denemeleri"ni her zaman göster (0 olsa bile): atanan deneme çözüldü mü + skor takibi
+      var hasSat = exams.some(function (e) { return e.exam === 'sat'; });
+      var hasDen = exams.some(function (e) { return e.exam === 'sat_deneme'; });
+      if (hasSat && !hasDen) { exams.push({ exam: 'sat_deneme', answered: 0 }); }
       if (!exams.length) { sel.style.display = 'none'; if (printBtn) { printBtn.style.display = 'none'; } body.className = 'ga-body ga-empty'; body.textContent = 'Bu öğrenci soru bankası, IELTS denemesi ya da kelime çalışması yapmamış — analiz için henüz veri yok.'; return; }
-      sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; return '<option value="' + esc(e.exam) + '">' + esc(m.label) + ' (' + e.answered + ' soru)</option>'; }).join('');
+      sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; var unit = (e.exam === 'sat_deneme') ? ' deneme' : ' soru'; return '<option value="' + esc(e.exam) + '">' + esc(m.label) + ' (' + e.answered + unit + ')</option>'; }).join('');
       sel.addEventListener('change', function () { render(sel.value); });
       render(exams[0].exam);
     }).catch(function () { sel.style.display = 'none'; body.className = 'ga-body ga-empty'; body.textContent = 'Analiz yüklenemedi.'; });

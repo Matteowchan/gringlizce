@@ -2085,6 +2085,34 @@
       }
       return arr;
     }
+    // Sunum sırası: ÖNCE görülmemiş (yeni) sorular, SONRA görülenler (tekrar için).
+    // "Görülmüş" = sessionStorage 'gri.answer.<slug>' (login kullanıcıda DB'den preload edilir).
+    // Her grup KENDİ İÇİNDE varsayılan olarak KARIŞTIRILIR (aynı sıra tekrar etmesin).
+    // İstisna: sirala=kolay → zorluk sırası; sirala=yeni → created_at DESC (yeniden eskiye).
+    // Şık pozisyon debias'ı ayrı katmanda kurulur; bu sıralamadan etkilenmez.
+    function orderUnseenFirst(slugs, opts) {
+      opts = opts || {};
+      const createdMap = opts.created || {};
+      const unseenList = [], seenList = [];
+      slugs.forEach(function (s) {
+        if (sessionStorage.getItem('gri.answer.' + s)) seenList.push(s);
+        else unseenList.push(s);
+      });
+      function orderGroup(grp) {
+        if (opts.sirala === 'kolay') return grp;            // zorluk sırası (deterministik, açık tercih)
+        if (opts.sirala === 'yeni') {                        // en yeniden eskiye (deterministik)
+          return grp.slice().sort(function (a, b) {          // created_at DESC
+            const ca = createdMap[a] || '', cb = createdMap[b] || '';
+            if (ca !== cb) return ca < cb ? 1 : -1;
+            return a < b ? 1 : -1;                           // tie-break: slug DESC
+          });
+        }
+        // Varsayılan: grubu karıştır — her girişte sıra değişsin (aynı sıra tekrar etmesin).
+        shuffleInPlace(grp);
+        return grp;
+      }
+      return orderGroup(unseenList).concat(orderGroup(seenList));
+    }
     function getAnswerStatus(slug) {
       return sessionStorage.getItem('gri.answer.' + slug); // 'correct' | 'incorrect' | null
     }
@@ -2266,7 +2294,7 @@
         if (!setSlugs || setSlugs.length === 0) {
           const { data: list, error } = await supabase
             .from('questions')
-            .select('slug,difficulty')
+            .select('slug,difficulty,created_at')
             .eq('active', true)
             .in('subcategory', subcatList)
             .order('slug');
@@ -2278,6 +2306,8 @@
           if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
           if (rows.length === 0) { showError('Bu zorlukta soru yok. Farklı bir zorluk seç.'); return; }
           rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
+          const CREATED_MAP = {};
+          rows.forEach(r => { CREATED_MAP[r.slug] = r.created_at || ''; });
           if (sirala === 'kolay') {
             const _RANK = { easy: 1, medium: 2, hard: 3 };
             rows = rows.slice().sort((a, b) => {
@@ -2285,12 +2315,11 @@
               return ra !== rb ? ra - rb : (a.slug < b.slug ? -1 : 1);
             });
           }
-          setSlugs = rows.map(r => r.slug);
-          // Çözülmüş soruları setten çıkar — öğrenci tekrar aynı soruyu çözmesin.
-          // (Hepsi çözülmüşse tümünü göster ki set boş kalmasın.)
-          const _unsolved = setSlugs.filter(s => !sessionStorage.getItem('gri.answer.' + s));
-          if (_unsolved.length > 0) setSlugs = _unsolved;
-          if (shuffleParam && sirala !== 'kolay') shuffleInPlace(setSlugs);
+          // Sunum sırası: önce görülmemiş (yeni) sorular, sonra görülenler (tekrar);
+          // her grup kendi içinde karıştırılır (shuffle) veya created_at DESC. Çözülmüş
+          // sorular artık setten atılmaz — tekrar için sona alınır (öğrenci istemeden gördüğü
+          // yeniyi bir daha görmez, ama gördüklerini gözden geçirebilir).
+          setSlugs = orderUnseenFirst(rows.map(r => r.slug), { shuffle: shuffleParam, sirala: sirala, created: CREATED_MAP });
           if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
 
           // No q in URL → taze başlangıç; çözülen işaretler KORUNUR (artık silinmiyor).
@@ -2343,13 +2372,15 @@
       if (!setSlugs || setSlugs.length === 0) {
         const { data: list } = await supabase
           .from('questions')
-          .select('slug,difficulty')
+          .select('slug,difficulty,created_at')
           .eq('active', true)
           .eq('subcategory', currentQuestion.subcategory)
           .order('slug');
         let rows = (list || []);
         if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
         rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
+        const CREATED_MAP2 = {};
+        rows.forEach(r => { CREATED_MAP2[r.slug] = r.created_at || ''; });
         if (sirala === 'kolay') {
           const _RANK = { easy: 1, medium: 2, hard: 3 };
           rows = rows.slice().sort((a, b) => {
@@ -2357,7 +2388,8 @@
             return ra !== rb ? ra - rb : (a.slug < b.slug ? -1 : 1);
           });
         }
-        setSlugs = rows.map(r => r.slug);
+        // Doğrudan ?q= ile gelişte de görülmemiş-önce sırası (implicit set — SET_KEY yok).
+        setSlugs = orderUnseenFirst(rows.map(r => r.slug), { shuffle: shuffleParam, sirala: sirala, created: CREATED_MAP2 });
         // Implicit set — no SET_KEY persistence
       }
 

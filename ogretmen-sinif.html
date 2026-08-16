@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/grimeet-schedule.js?v=22" defer></script>
-  <script src="assets/student-analysis.js?v=9" defer></script>
+  <script src="assets/student-analysis.js?v=10" defer></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/gri-cat.js"></script>
@@ -751,6 +751,22 @@
     .qd-item.no .qd-exp b { color: #b33a3a; }
     :root[data-theme="dark"] .qd-exp b { color: #D8B25A; }
     :root[data-theme="dark"] .qd-item.no .qd-exp b { color: #e5837b; }
+    .qd-passage { white-space: pre-line; font-size: 0.8rem; line-height: 1.5; color: var(--text, #2b2b2b); background: rgba(44,88,86,0.05); border: 1px solid var(--line, #D9D2C4); border-left: 3px solid var(--teal, #2C5856); border-radius: 4px; padding: 0.4rem 0.6rem; margin-bottom: 0.4rem; overflow-wrap: break-word; }
+    .qd-passage u { text-decoration: underline; }
+    .qd-dtable { border-collapse: collapse; width: 100%; margin: 0.35rem 0; font-size: 0.78rem; }
+    .qd-dtable th, .qd-dtable td { border: 1px solid var(--line, #D9D2C4); padding: 3px 7px; text-align: left; }
+    .qd-dtable th { background: rgba(44,88,86,0.08); font-weight: 600; }
+    .qd-opts { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.35rem 0 0.1rem; }
+    .qd-opt { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.8rem; line-height: 1.4; padding: 0.28rem 0.45rem; border: 1px solid var(--line, #D9D2C4); border-radius: 6px; background: var(--bg, #fff); }
+    .qd-opt-l { flex-shrink: 0; font-weight: 700; width: 1.2rem; color: var(--text-muted); }
+    .qd-opt-t { flex: 1; min-width: 0; overflow-wrap: break-word; }
+    .qd-opt.opt-correct { background: rgba(46,139,87,0.12); border-color: #2e8b57; }
+    .qd-opt.opt-correct .qd-opt-l { color: #2e8b57; }
+    .qd-opt.opt-wrong { background: rgba(192,69,59,0.10); border-color: #c0453b; }
+    .qd-opt.opt-wrong .qd-opt-l { color: #c0453b; }
+    .qd-opt-tag { flex-shrink: 0; font-size: 0.66rem; font-weight: 700; padding: 1px 7px; border-radius: 20px; align-self: center; white-space: nowrap; }
+    .qd-opt-tag.ok { background: #2e8b57; color: #fff; }
+    .qd-opt-tag.no { background: #c0453b; color: #fff; }
     .qd-writing { margin-top: 0.35rem; }
     .qd-writing-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal, #2C5856); margin-bottom: 0.28rem; }
     .qd-writing-text { white-space: pre-wrap; font-size: 0.86rem; line-height: 1.5; color: var(--text, #2b2b2b); background: rgba(44,88,86,0.05); border: 1px solid var(--line, #D9D2C4); border-left: 3px solid var(--teal, #2C5856); border-radius: 4px; padding: 0.5rem 0.7rem; }
@@ -3459,6 +3475,54 @@
           return '<span style="display:inline-block;padding:1px 9px;border-radius:20px;background:' + color + ';color:#fff;font-size:.74rem;font-weight:700;">'
             + (isNaN(n) ? '—' : n) + (isNaN(n) ? '' : ' / ' + max) + '</span>';
         }
+        // Escape + yalnizca alti-cizili (<u>) etiketine izin ver (WiC / "underlined" soru referanslari)
+        function satSafe(s) {
+          return esc(String(s == null ? '' : s)).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
+        }
+        function satMdTable(lines) {
+          var rows = lines.map(function (l) { return l.split('|').map(function (c) { return c.trim(); }); });
+          if (!rows.length) return '';
+          var head = rows[0], body = rows.slice(1);
+          var h = '<table class="qd-dtable"><thead><tr>' + head.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+          body.forEach(function (r) { h += '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; });
+          return h + '</tbody></table>';
+        }
+        // Pasaj: guvenli escape (<u> izinli) + duz-metin boru (|) tablosunu gercek tabloya cevir
+        function satPassageHtml(txt) {
+          if (!txt || !String(txt).trim()) return '';
+          var cnt = String(txt), tbl = '';
+          if (cnt.indexOf('|') >= 0) {
+            var lines = cnt.split('\n'), start = -1, end = -1;
+            for (var i = 0; i < lines.length; i++) {
+              if (lines[i].split('|').length >= 3) { if (start < 0) start = i; end = i; }
+              else if (start >= 0) { break; }
+            }
+            if (start >= 0 && end > start) {
+              tbl = satMdTable(lines.slice(start, end + 1));
+              lines.splice(start, end - start + 1);
+              cnt = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+            }
+          }
+          return '<div class="qd-passage">' + satSafe(cnt) + tbl + '</div>';
+        }
+        // Dort sik: dogru=yesil, ogrencinin yanlisi=kirmizi vurgulu
+        function satOptionRows(q) {
+          if (!q.options || !q.options.length) return '';
+          var given = q.given == null ? '' : String(q.given).trim();
+          var correct = q.correct == null ? '' : String(q.correct).trim();
+          return '<div class="qd-opts">' + q.options.map(function (o) {
+            var letter = o.letter == null ? '' : String(o.letter).trim();
+            var isCorrect = letter !== '' && letter === correct;
+            var isGiven = letter !== '' && letter === given;
+            var cl = 'qd-opt' + (isCorrect ? ' opt-correct' : (isGiven ? ' opt-wrong' : ''));
+            var tag = '';
+            if (isCorrect && isGiven) tag = '<span class="qd-opt-tag ok">Öğrenci · Doğru</span>';
+            else if (isCorrect) tag = '<span class="qd-opt-tag ok">Doğru</span>';
+            else if (isGiven) tag = '<span class="qd-opt-tag no">Öğrenci</span>';
+            return '<div class="' + cl + '"><span class="qd-opt-l">' + esc(letter) + '</span>'
+              + '<span class="qd-opt-t">' + satSafe(o.text) + '</span>' + tag + '</div>';
+          }).join('') + '</div>';
+        }
         function itemRows(items) {
           if (!items || !items.length) return '<p class="qd-empty">Soru dökümü bulunamadı.</p>';
           var lastMod = null;
@@ -3473,7 +3537,9 @@
               meta = 'Doğru: <span class="qd-ans-right">' + esc(q.correct || '') + '</span> · Öğrenci: '
                 + (q.given ? '<span class="qd-ans-wrong">' + esc(q.given) + '</span>' : '<span class="qd-ans-wrong">— boş —</span>');
             }
-            var qtext = q.q ? esc(String(q.q)) : ('Soru ' + esc(String(q.n)));
+            var qtext = q.q ? satSafe(q.q) : ('Soru ' + esc(String(q.n)));
+            var passageHtml = satPassageHtml(q.passage);
+            var optsHtml = satOptionRows(q);
             var expHtml = (q.exp && String(q.exp).trim()) ? '<div class="qd-exp"><b>Neden:</b> ' + esc(String(q.exp)) + '</div>' : '';
             var modHdr = '';
             if (q.module && q.module !== lastMod) {
@@ -3481,7 +3547,9 @@
               modHdr = '<div class="qd-q" style="font-weight:600;margin:10px 0 2px;color:var(--text-muted);font-size:.78rem;">' + esc(MOD_LABEL[q.module] || q.module) + '</div>';
             }
             return modHdr + '<div class="qd-item ' + cls + '"><span class="qd-mark">' + mark + '</span>'
-              + '<div class="qd-body"><div class="qd-q">' + esc(String(q.n)) + '. ' + qtext + '</div>'
+              + '<div class="qd-body">' + passageHtml
+              + '<div class="qd-q">' + esc(String(q.n)) + '. ' + qtext + '</div>'
+              + optsHtml
               + '<div class="qd-meta">' + meta + '</div>' + expHtml + '</div></div>';
           }).join('') + '</div>';
         }
@@ -3571,6 +3639,61 @@
       function renderInspectDetail(d, sid, aid) {
         var items = d.items || [];
 
+        // Escape + yalnizca alti-cizili (<u>) etiketine izin ver (soru/pasaj referanslari)
+        function inspSafe(s) {
+          return esc(String(s == null ? '' : s)).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
+        }
+        // Sik dokumu: dogru=yesil, ogrencinin (yanlis) secimi=kirmizi vurgulu. Sik dizisi [{letter,text}] veya ["..."]
+        function inspOpts(it) {
+          var opts = it && it.options;
+          if (!Array.isArray(opts) || !opts.length) return '';
+          var given = it.chosen == null ? '' : String(it.chosen).trim();
+          var correct = it.correct == null ? '' : String(it.correct).trim();
+          return '<div class="qd-opts">' + opts.map(function (o, idx) {
+            var letter = (o && o.letter != null && String(o.letter).trim() !== '')
+              ? String(o.letter).trim()
+              : String.fromCharCode(65 + idx);
+            var text = (o && typeof o === 'object') ? (o.text != null ? o.text : '') : o;
+            var isCorrect = letter !== '' && letter === correct;
+            var isGiven = letter !== '' && letter === given;
+            var cl = 'qd-opt' + (isCorrect ? ' opt-correct' : (isGiven ? ' opt-wrong' : ''));
+            var tag = '';
+            if (isCorrect && isGiven) tag = '<span class="qd-opt-tag ok">Öğrenci · Doğru</span>';
+            else if (isCorrect) tag = '<span class="qd-opt-tag ok">Doğru</span>';
+            else if (isGiven) tag = '<span class="qd-opt-tag no">Öğrenci</span>';
+            return '<div class="' + cl + '"><span class="qd-opt-l">' + esc(letter) + '</span>'
+              + '<span class="qd-opt-t">' + inspSafe(text) + '</span>' + tag + '</div>';
+          }).join('') + '</div>';
+        }
+        // Aciklama: string ya da per-sik {A:{steps:[{body}]},...} objesi. Dogru sikkin + (yanlissa) ogrencinin sikkinin gerekcesi.
+        function inspStepText(node) {
+          if (!node) return '';
+          if (typeof node === 'string') return node;
+          if (Array.isArray(node.steps)) return node.steps.map(function (s) { return s && s.body ? s.body : ''; }).filter(Boolean).join(' ');
+          if (node.body) return node.body;
+          return '';
+        }
+        function inspExp(it) {
+          var e = it && it.explanation;
+          if (!e) return '';
+          if (typeof e === 'string') { var t = e.trim(); return t ? '<div class="qd-exp"><b>Neden:</b> ' + esc(t) + '</div>' : ''; }
+          if (typeof e !== 'object') return '';
+          var correct = it.correct == null ? '' : String(it.correct).trim();
+          var chosen = it.chosen == null ? '' : String(it.chosen).trim();
+          var out = '';
+          var cTxt = correct && e[correct] ? inspStepText(e[correct]) : '';
+          if (cTxt) out += '<div class="qd-exp"><b>Doğru (' + esc(correct) + '):</b> ' + esc(cTxt) + '</div>';
+          if (chosen && chosen !== correct && e[chosen]) {
+            var sTxt = inspStepText(e[chosen]);
+            if (sTxt) out += '<div class="qd-exp"><b>Öğrencinin şıkkı (' + esc(chosen) + '):</b> ' + esc(sTxt) + '</div>';
+          }
+          if (!out) {
+            var ov = e.overall || e.explanation || e.genel || '';
+            if (ov && typeof ov === 'string') out = '<div class="qd-exp"><b>Neden:</b> ' + esc(ov) + '</div>';
+          }
+          return out;
+        }
+
         // Writing ödevi: öğrencinin yazdığı metin + AI/öğretmen değerlendirmesi
         if (d.type === 'writing') {
           var wItems = d.items || [];
@@ -3621,6 +3744,48 @@
                 : 'Öğrenci bu materyali henüz tamamlamadı.') + '</p>';
         }
 
+        // GE sınav materyali (genel-<lvl>-midterm/final): skor + bölüm bölüm soru doğru/yanlış dökümü.
+        // Not: Bu sınav tipinde öğrencinin işaretlediği şık kaydedilmez (yalnızca doğru/yanlış), soru metni de DB'de değil sayfadadır.
+        if (d.type === 'ge_exam') {
+          var geItems = d.items || [];
+          var geTotal = d.total || 0, geCorrect = d.correct || 0;
+          var geAcc = geTotal ? Math.round(geCorrect * 100 / geTotal) : 0;
+          var geUrl = d.url ? String(d.url) : '';
+          var geOpen = geUrl ? '<a href="' + esc(geUrl) + '" target="_blank" rel="noopener" class="qd-open">Sınavı aç →</a>' : '';
+          var geHead = '<div class="qd-summary"><span><b>' + geCorrect + '</b> / ' + geTotal + ' doğru</span>'
+            + '<span class="qd-acc">%' + geAcc + '</span>' + geOpen + '</div>';
+          if (!geItems.length) {
+            return geHead + '<p class="qd-empty">Bu öğrenci bu sınavı henüz tamamlamamış (kayıtlı cevap yok).</p>';
+          }
+          var GE_SEC = { l: 'Dinleme', r: 'Okuma', g: 'Dil Bilgisi', u: 'Dil Kullanımı', uoe: 'Dil Kullanımı', v: 'Kelime', w: 'Yazma', s: 'Konuşma' };
+          var GE_ORD = { l: 1, r: 2, g: 3, u: 4, uoe: 4, v: 5, w: 6, s: 7 };
+          function geSec(slug) { var m = String(slug || '').match(/-(?:mid|fin)-([a-z]+)-\d+$/i); return m ? m[1].toLowerCase() : ''; }
+          function geNum(slug) { var m = String(slug || '').match(/(\d+)\s*$/); return m ? m[1] : ''; }
+          var geSorted = geItems.slice().sort(function (a, b) {
+            var oa = GE_ORD[geSec(a.slug)] || 9, ob = GE_ORD[geSec(b.slug)] || 9;
+            if (oa !== ob) return oa - ob;
+            return (parseInt(geNum(a.slug)) || 0) - (parseInt(geNum(b.slug)) || 0);
+          });
+          var geLastSec = null;
+          var geRows = geSorted.map(function (it) {
+            var sec = geSec(it.slug);
+            var hdr = '';
+            if (sec !== geLastSec) {
+              geLastSec = sec;
+              hdr = '<div class="qd-q" style="font-weight:600;margin:10px 0 2px;color:var(--text-muted);font-size:.78rem;">' + esc(GE_SEC[sec] || sec || 'Bölüm') + '</div>';
+            }
+            var ok = !!it.is_correct;
+            var chosen = (it.chosen != null && String(it.chosen).trim() !== '') ? String(it.chosen).trim() : '';
+            var geMeta = chosen
+              ? '<div class="qd-meta">İşaretlediği: <span class="' + (ok ? 'qd-ans-right' : 'qd-ans-wrong') + '">' + esc(chosen) + '</span></div>'
+              : '';
+            return hdr + '<div class="qd-item ' + (ok ? 'ok' : 'no') + '"><span class="qd-mark">' + (ok ? '✓' : '✗') + '</span>'
+              + '<div class="qd-body"><div class="qd-q">' + esc(GE_SEC[sec] || 'Soru') + ' ' + esc(geNum(it.slug)) + '</div>' + geMeta + '</div></div>';
+          }).join('');
+          var geNote = '<p class="qd-empty" style="text-align:left;margin-top:.5rem;">Bu sınav tipinde her soru için doğru/yanlış (ve varsa işaretlenen şık) tutulur. Soru metni, şık metinleri ve cevap anahtarı için yukarıdaki bağlantıdan sınavı açabilirsin.</p>';
+          return geHead + '<div class="qd-list">' + geRows + '</div>' + geNote;
+        }
+
         var total = d.total || 0, correct = d.correct || 0;
         var acc = total ? Math.round(correct * 100 / total) : 0;
         var pageUrl = (d.url && sid && aid) ? buildReviewUrl(String(d.url), sid, aid) : (d.url ? String(d.url) : '');
@@ -3634,24 +3799,33 @@
         if (!items.length) {
           return head + '<p class="qd-empty">Bu öğrenci bu kapsamda henüz soru çözmemiş. (Materyal/okuma ödeviyse öğrenci sayfayı açıp çalışır; çözülmüş soru kaydı yoksa burada görünmez.)</p>';
         }
+        var lastPassage = null;
         var list = '<div class="qd-list">' + items.map(function (it) {
           var ok = !!it.is_correct;
-          var qtext = it.question ? esc(String(it.question).slice(0, 170)) : esc(slugLabel(it.slug));
+          var qtext = it.question ? inspSafe(String(it.question)) : esc(slugLabel(it.slug));
+          // Pasaj: ard arda ayni pasaji tekrarlamamak icin sadece degistiginde goster
+          var passageHtml = '';
+          if (it.passage && String(it.passage).trim()) {
+            var pStr = String(it.passage);
+            if (pStr !== lastPassage) { passageHtml = '<div class="qd-passage">' + inspSafe(pStr) + '</div>'; lastPassage = pStr; }
+          }
+          var optsHtml = inspOpts(it);
           var meta = '';
-          if (it.question && !ok && (it.chosen || it.correct)) {
-            meta = 'Öğrenci: <span class="qd-ans-wrong">' + esc(it.chosen || '—') + '</span> · Doğru: <span class="qd-ans-right">' + esc(it.correct || '—') + '</span>';
-          } else if (it.question && ok && it.correct) {
+          if (!ok && (it.chosen || it.correct)) {
+            meta = 'Öğrenci: <span class="qd-ans-wrong">' + esc(it.chosen || '— boş —') + '</span> · Doğru: <span class="qd-ans-right">' + esc(it.correct || '—') + '</span>';
+          } else if (ok && it.correct) {
             meta = '<span class="qd-ans-right">Doğru: ' + esc(it.correct) + '</span>';
           }
           var when = it.answered_at ? fmtRelative(it.answered_at) : '';
           var metaLine = (meta ? meta + (when ? ' · ' : '') : '') + when;
-          var tag = pageUrl ? 'a' : 'div';
-          var href = pageUrl ? ' href="' + esc(pageUrl) + '" target="_blank" rel="noopener"' : '';
-          return '<' + tag + ' class="qd-item ' + (ok ? 'ok' : 'no') + (pageUrl ? ' qd-link' : '') + '"' + href + '>'
+          var expHtml = inspExp(it);
+          return '<div class="qd-item ' + (ok ? 'ok' : 'no') + '">'
             + '<span class="qd-mark">' + (ok ? '✓' : '✗') + '</span>'
-            + '<div class="qd-body"><div class="qd-q">' + qtext + '</div>'
+            + '<div class="qd-body">' + passageHtml + '<div class="qd-q">' + qtext + '</div>'
+            + optsHtml
             + (metaLine ? '<div class="qd-meta">' + metaLine + '</div>' : '')
-            + '</div></' + tag + '>';
+            + expHtml
+            + '</div></div>';
         }).join('') + '</div>';
         return head + list;
       }

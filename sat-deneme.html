@@ -218,7 +218,9 @@ function passageHtml(texts){
         cnt = lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
       }
     }
-    return '<div class="st-passage" style="white-space:pre-line">'+lbl+tbl+esc(cnt)+'</div>';
+    // Icerik XSS'e karsi escape edilir; yalnizca alti-cizili (<u>) etiketine izin verilir (soru koku "underlined sentence" referanslari icin)
+    var safe = esc(cnt).replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+    return '<div class="st-passage" style="white-space:pre-line">'+lbl+tbl+safe+'</div>';
   }).join('');
 }
 
@@ -403,7 +405,7 @@ async function vSaveWord(){
 function loadGriSozluk(){
   if (GS_LOADED) return; GS_LOADED = true;
   try{ window.GRI_SB = sb; window.GRI_UID = UID; }catch(e){}
-  const s = document.createElement('script'); s.src = 'assets/gri-sozluk.js?v=6'; s.defer = true;
+  const s = document.createElement('script'); s.src = 'assets/gri-sozluk.js?v=7'; s.defer = true;
   document.body.appendChild(s);
 }
 async function savedVocabHtml(){

@@ -167,7 +167,8 @@
     var armed=null;
     b.addEventListener('mousedown', function(){ armed = selWord(); });
     b.addEventListener('touchstart', function(){ armed = selWord(); }, { passive:true });
-    b.addEventListener('click', function(e){ e.preventDefault(); var w = armed || selWord(); armed=null; if (w){ lastWord=w.text; popAnchor=w.range; lookup(w.text); } else { popAnchor=null; renderSearchBox(); } });
+    // FAB'a basınca panel HER ZAMAN butonun hemen üstünde açılır (seçili kelime olsa da uzak range'e değil FAB'a çıpalanır)
+    b.addEventListener('click', function(e){ e.preventDefault(); var w = armed || selWord(); armed=null; popAnchor=null; if (w){ lastWord=w.text; lookup(w.text); } else { renderSearchBox(); } });
     document.body.appendChild(b);
   }
   function renderMsgAt(html){ ensureEls(); pop.classList.add('show'); renderMsg(html); }

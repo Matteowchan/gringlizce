@@ -192,13 +192,21 @@
   }
 
   function positionPop(){
-    var pw = pop.offsetWidth||300, ph = pop.offsetHeight||160, top, left, r = null;
+    var pw = pop.offsetWidth||300, ph = pop.offsetHeight||160, top, left, r = null, isFab = false;
     if (popAnchor && popAnchor.getBoundingClientRect) { var rr = popAnchor.getBoundingClientRect(); if (rr && (rr.width||rr.height)) r = rr; }
     if (!r) { var tbtn = document.getElementById('gs-tool'); if (tbtn) r = tbtn.getBoundingClientRect(); }
+    if (!r) { var fab = document.getElementById('gs-fab'); if (fab) { r = fab.getBoundingClientRect(); isFab = true; } }
     if (r) {
-      top = r.bottom + window.scrollY + 8;
-      if (top + ph > window.scrollY + window.innerHeight - 8) top = Math.max(window.scrollY + 8, r.top + window.scrollY - ph - 8);
-      left = r.left + window.scrollX;
+      if (isFab) {
+        // Kelime seçili değilse: paneli "Sözlük" FAB'ının hemen ÜSTÜNDE, sağ kenarı hizalı göster
+        top = r.top + window.scrollY - ph - 10;
+        if (top < window.scrollY + 8) top = window.scrollY + 8;
+        left = r.right + window.scrollX - pw;
+      } else {
+        top = r.bottom + window.scrollY + 8;
+        if (top + ph > window.scrollY + window.innerHeight - 8) top = Math.max(window.scrollY + 8, r.top + window.scrollY - ph - 8);
+        left = r.left + window.scrollX;
+      }
     } else {
       top = (parseFloat(btn.style.top)||window.scrollY+80) + 34;
       left = parseFloat(btn.style.left)||window.scrollX+20;

@@ -41,6 +41,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .st-table th,.st-table td{border:1px solid var(--st-line);padding:.32rem .6rem;text-align:left;vertical-align:top;}
   .st-table thead th{background:rgba(0,0,0,.04);font-weight:600;}
   .st-stem{font-weight:600;margin:.5rem 0 .7rem;line-height:1.5;}
+  .st-fig{margin:.6rem 0;overflow-x:auto;}
+  .st-fig svg{max-width:100%;height:auto;background:#fff;border:1px solid var(--st-line);border-radius:8px;padding:6px;}
   .st-opt{display:block;border:1px solid var(--st-line);border-radius:9px;padding:.6rem .8rem;margin:.4rem 0;cursor:pointer;transition:border-color .12s,background .12s;font-size:.92rem;}
   .st-opt:hover{border-color:var(--st-accent);}
   .st-opt input{margin-right:.5rem;}
@@ -189,7 +191,15 @@ function formatMath(s){
     .replace(/&lt;=/g,'≤').replace(/&gt;=/g,'≥').replace(/!=/g,'≠')
     .replace(/(\d)\s*\*\s*(\d)/g,'$1·$2');
 }
-function mtext(s, isMath){ return isMath ? formatMath(esc(s)) : esc(s); }
+function mtext(s, isMath){
+  s = String(s==null?'':s);
+  // Inline <svg>...</svg> bloklari (guvenilir, kendi uretimimiz) ham birakilir; geri kalan metin escape/format edilir. <u> etiketine de izin ver.
+  return s.split(/(<svg[\s\S]*?<\/svg>)/i).map(function(part, i){
+    if (i % 2 === 1) return '<div class="st-fig">'+part+'</div>';
+    var t = isMath ? formatMath(esc(part)) : esc(part);
+    return t.replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+  }).join('');
+}
 function mdTableHtml(block){
   var rows = block.map(function(line){ return line.split('|').map(function(c){ return c.trim(); }); });
   if (!rows.length) return '';
@@ -621,7 +631,7 @@ function reviewQuestionHtml(q, given, passages, cfg){
   const numCls = blank ? 'blank' : (ok ? '' : 'wrong');
   const pass = (cfg.db==='rw' && q.passage_id && passages[q.passage_id]) ? passageHtml(passages[q.passage_id]) : '';
   let h = '<div class="st-q"><span class="st-q-num '+numCls+'">'+(ok?'✓':(blank?'—':'✗'))+'</span>'+pass+
-    '<div class="st-stem">'+esc(q.question_text)+'</div>';
+    '<div class="st-stem">'+mtext(q.question_text, cfg.db==='math')+'</div>';
   if (isSpr(q)){
     const gd = blank ? '(boş)' : esc(given);
     h += '<div class="st-ansline"><span class="chip '+(ok?'good':(blank?'neu':'bad'))+'">Senin cevabın</span>'+gd+'</div>';

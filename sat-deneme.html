@@ -658,13 +658,17 @@ async function finishDeneme(){
         '<div class="st-scorecell"><b>~'+rw.scaled+'</b><span>Reading &amp; Writing<br>Ham '+rw.rawTotal+'/54 · '+(rw.secondHard?'zor':'kolay')+' yol</span></div>'+
         '<div class="st-scorecell"><b>~'+m.scaled+'</b><span>Math<br>Ham '+m.rawTotal+'/44 · '+(m.secondHard?'zor':'kolay')+' yol</span></div>'+
       '</div>'+
-      '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir. Gerçek Digital SAT her forma göre eşitlenir.</p></div>';
+      '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir. Gerçek Digital SAT her forma göre eşitlenir.</p>'+
+      (((rw.rawTotal||0)+(m.rawTotal||0) < 12) ? '<p class="st-note" style="margin-top:.7rem;border-left:3px solid var(--st-gold);padding:.4rem .7rem;text-align:left">Çok az soru doğru yanıtlandı. Gösterilen puan ölçeğin <strong>taban puanıdır</strong> (her bölüm en az 200; toplam 400) ve gerçek performansı yansıtmaz — denemeyi baştan sona çözünce puanın anlamlı olur.</p>' : '')+
+      '</div>';
   } else {
     const s = STATE.sections[0];
     res = '<div class="st-result"><div class="st-eyebrow">'+esc(s.cfg.label)+' Denemesi · '+(s.secondHard?'Zor yol (tavan 800)':'Kolay yol')+'</div>'+
       '<div class="st-score big">~'+s.scaled+'</div><div class="st-note">200-800 tahmini</div>'+
       '<div class="st-pill pass">Ham: '+s.rawTotal+' / '+s.cfg.rawMax+' (M1 '+s.m1.raw+' + M2 '+s.m2.raw+')</div>'+
-      '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir.</p></div>';
+      '<p class="st-note">Bu bir <strong>tahmindir</strong>, resmi puan değildir.</p>'+
+      ((s.rawTotal < s.cfg.rawMax*0.12) ? '<p class="st-note" style="margin-top:.7rem;border-left:3px solid var(--st-gold);padding:.4rem .7rem;text-align:left">Çok az soru doğru yanıtlandı. Gösterilen puan <strong>taban puandır</strong> (en az 200) ve gerçek performansı yansıtmaz — denemeyi baştan sona çözünce puanın anlamlı olur.</p>' : '')+
+      '</div>';
   }
   // İnceleme
   let rev = '<div class="st-review-head">Soru Soru İnceleme</div>'+

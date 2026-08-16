@@ -1748,7 +1748,7 @@
     <div class="q-tags-bar" id="qTagsBar"></div>
 
     <button class="q-nav-pill" type="button" id="navPill" aria-expanded="false">
-      <span class="np-count"><strong id="npCurrent">1</strong> / <span id="npTotal">1</span></span>
+      <span class="np-count">Soru <strong id="npCurrent">1</strong></span>
       <svg class="np-caret" viewBox="0 0 12 12" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M2 8l4-4 4 4z"/></svg>
     </button>
 
@@ -2433,13 +2433,38 @@
       window.location.href = 'soru.html?q=' + encodeURIComponent(slug) + SET_URL_PARAMS;
     }
 
+    // === Progresif harita: yalnızca öğrencinin ULAŞTIĞI sorular gösterilir ===
+    // Ulaşılan en yüksek index sessionStorage'da tutulur (her soru ayrı sayfa yüklemesi
+    // olduğu için kalıcı olmalı). Harita ileriyi ifşa etmez; toplam soru sayısı gizli.
+    function reachedStoreKey() {
+      return 'gri.reached.' + (SET_KEY || ('q' + SET_URL_PARAMS));
+    }
+    function getReached() {
+      try {
+        const v = parseInt(sessionStorage.getItem(reachedStoreKey()) || '0', 10);
+        return isNaN(v) ? 0 : v;
+      } catch (e) { return 0; }
+    }
+    function bumpReached(idx) {
+      try {
+        if (idx > getReached()) sessionStorage.setItem(reachedStoreKey(), String(idx));
+      } catch (e) {}
+    }
+    function resetReached() {
+      try { sessionStorage.removeItem(reachedStoreKey()); } catch (e) {}
+    }
+
     function renderNavigator() {
       const total = SUBCATEGORY_LIST.length;
+      // İlerleme göstergesi: yalnızca sıra numarası, toplam YOK.
       document.getElementById('npCurrent').textContent = String(CURRENT_INDEX + 1);
-      document.getElementById('npTotal').textContent = String(total);
+
+      // Ulaşılan yüksek noktayı güncelle ve haritayı o noktaya kadar çiz.
+      bumpReached(CURRENT_INDEX);
+      const reachedCount = Math.min(total, Math.max(CURRENT_INDEX, getReached()) + 1);
 
       const gridEl = document.getElementById('npGrid');
-      gridEl.innerHTML = SUBCATEGORY_LIST.map((item, idx) => {
+      gridEl.innerHTML = SUBCATEGORY_LIST.slice(0, reachedCount).map((item, idx) => {
         const num = idx + 1;
         const isCurrent = idx === CURRENT_INDEX;
         const classes = ['nav-sq', `diff-${item.difficulty || 'medium'}`];
@@ -2583,6 +2608,7 @@
 
       document.getElementById('restartSetBtn').addEventListener('click', () => {
         clearAnswersForSet(SUBCATEGORY_LIST.map(i => i.slug));
+        resetReached();
         if (SET_KEY) {
           if (SET_URL_PARAMS.includes('shuffle=1')) {
             const slugsOnly = SUBCATEGORY_LIST.map(i => i.slug);
@@ -3195,6 +3221,8 @@
         const slugs = SUBCATEGORY_LIST.map(i => i.slug);
         shuffleInPlace(slugs);
         if (SET_KEY) sessionStorage.setItem(SET_KEY, JSON.stringify(slugs));
+        // Yeni sıra → harita ilerlemesini sıfırla (yeniden progresif açılsın)
+        resetReached();
 
         // Update local list with new order (preserve difficulty info)
         const diffByOldSlug = new Map(SUBCATEGORY_LIST.map(i => [i.slug, i.difficulty]));

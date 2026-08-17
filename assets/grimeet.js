@@ -778,6 +778,7 @@ function handleMsg(msg,p){
   else if(msg.t==='doc'){ DOC.applyRemote(msg); }
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='doc-clear'){ DOC.applyClear(); }
+  else if(msg.t==='doc-timer'){ if(!STATE.isHost&&fromHost) DOC.applyTimer(msg); }
   else if(msg.t==='doc-page-add'){ if(!STATE.isHost&&fromHost) DOC.applyAddPane(msg.id,msg.side); }
   else if(msg.t==='doc-page-del'){ if(!STATE.isHost&&fromHost) DOC.applyRemovePane(msg.id); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; applyWbLock(); toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
@@ -839,6 +840,20 @@ var DOC=(function(){
   var Q={}, ready=false, snapTimer=null, lastSnap={C:'',L:'',R:''};
   var EXTRA=[]; /* dinamik ek sayfalar: [{id,side}] — 'C','L','R' sabit; ek'ler L2..L5 / R2..R5 */
   function panes(){ return ['C','L','R'].concat(EXTRA.map(function(e){ return e.id; })); }
+  /* Yazım denetimi (kırmızı çizgiler) aç/kapa — YERELdir (senkronlanmaz); varsayılan KAPALI, tercih localStorage'da.
+     Öğretmen spelling çalışması yapacağında açar; normalde kapalı tutarak kırmızı çizgi kalabalığını engeller. */
+  var SPELL=false; try{ SPELL=(localStorage.getItem('gm-doc-spell')==='1'); }catch(e){}
+  function applySpell(){ panes().forEach(function(p){ var q=Q[p]; if(q&&q.root){ try{ q.root.spellcheck=SPELL; q.root.setAttribute('spellcheck',SPELL?'true':'false'); }catch(e){} } }); var b=document.getElementById('doc-spell'); if(b){ b.classList.toggle('on',SPELL); b.title=SPELL?'Yazım denetimi AÇIK — yanlış yazımlar kırmızı ile işaretlenir (spelling çalışması). Kapatmak için tıkla.':'Yazım denetimi kapalı — kırmızı çizgi yok. Spelling çalışması için tıkla.'; } }
+  function toggleSpell(){ SPELL=!SPELL; try{ localStorage.setItem('gm-doc-spell',SPELL?'1':'0'); }catch(e){} applySpell(); try{ toast(SPELL?'Yazım denetimi açıldı — yanlış yazımlar kırmızı ile işaretlenir':'Yazım denetimi kapatıldı — kırmızı çizgi yok'); }catch(e){} }
+  /* Süreli yazı çalışması geri sayımı — host başlatır, herkeste senkron gösterilir. */
+  var TMR=null,tmrLeft=0;
+  function tmrFmt(s){ s=Math.max(0,s|0); var m=Math.floor(s/60),ss=s%60; return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss; }
+  function tmrBtn(on){ var b=document.getElementById('doc-timer-btn'); if(b){ b.classList.toggle('on',!!on); var s=b.querySelector('span'); if(s)s.textContent=on?'Durdur':'Süre'; } }
+  function tmrPaint(){ var c=document.getElementById('doc-timer-chip'); if(!c)return; if(tmrLeft<=0&&!TMR){ c.setAttribute('hidden',''); return; } c.removeAttribute('hidden'); c.textContent='⏱ '+tmrFmt(tmrLeft); c.classList.toggle('warn',tmrLeft<=30); }
+  function tmrStop(silent){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=0; tmrPaint(); tmrBtn(false); if(!silent&&STATE.isHost) sendData({t:'doc-timer',op:'stop'}); }
+  function tmrRun(sec){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=Math.max(0,sec|0); tmrPaint(); tmrBtn(true); TMR=setInterval(function(){ tmrLeft--; if(tmrLeft<=0){ clearInterval(TMR); TMR=null; tmrPaint(); tmrBtn(false); try{ toast('Süre doldu — yazma süresi bitti.'); beep(); }catch(e){} return; } tmrPaint(); },1000); }
+  function tmrStart(){ if(!STATE.isHost)return; if(TMR){ tmrStop(); return; } var v=window.prompt('Kaç dakikalık yazma süresi? (örn. 15)','15'); if(v==null)return; var mins=parseFloat(String(v).replace(',','.')); if(!(mins>0)){ toast('Geçerli bir süre gir.'); return; } var sec=Math.round(mins*60); tmrRun(sec); sendData({t:'doc-timer',op:'start',sec:sec}); toast(mins+' dakikalık yazma süresi başladı.'); }
+  function applyTimer(msg){ if(STATE.isHost||!msg)return; if(msg.op==='start') tmrRun(msg.sec||0); else if(msg.op==='stop') tmrStop(true); }
   var TOOLBAR=[
     [{'font':[]},{'size':['12px','14px',false,'18px','24px','32px']}],
     [{'header':[1,2,3,false]}],
@@ -883,6 +898,7 @@ var DOC=(function(){
     // Yapıştırılan base64 (data:) görseli ham gömme (dev delta senkronu bozar); yerine Storage'a yükleyip URL göm → öğrencide de görünür.
     try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)){ uploadDataImage(q, src); return new (Quill.import('delta'))(); } }catch(_){} return delta; }); }catch(e){}
     q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
+    try{ q.root.spellcheck=SPELL; q.root.setAttribute('spellcheck',SPELL?'true':'false'); }catch(e){}
     return q;
   }
   function togglePane(pane,remote){
@@ -924,7 +940,10 @@ var DOC=(function(){
     var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=docxFromText(combinedText()); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1000);}catch(e){} });
     var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (tüm sayfalar) temizlensin mi?'))return; clearAll(); sendData({t:'doc-clear'}); });
     var lk=$('#doc-lock'); if(lk)lk.addEventListener('click',function(){ if(!STATE.isHost)return; STATE.docLocked=!STATE.docLocked; this.classList.toggle('on',STATE.docLocked); var s=this.querySelector('span'); if(s)s.textContent=STATE.docLocked?'Kilitli':'Kilitle'; sendData({t:'doc-lock',on:STATE.docLocked}); toast(STATE.docLocked?'Yazı tahtası kilitlendi — öğrenciler yazamaz':'Kilit açıldı'); });
+    var sp=$('#doc-spell'); if(sp)sp.addEventListener('click',toggleSpell);
+    var tb=$('#doc-timer-btn'); if(tb)tb.addEventListener('click',tmrStart);
     setLocked(STATE.docLocked);
+    applySpell();
     if(STATE.isHost) snapTimer=setInterval(sendSnapshot,5000);
     wc();
   }
@@ -1001,7 +1020,7 @@ var DOC=(function(){
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
   function setLocked(on){ try{ panes().forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane };
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane, applyTimer:applyTimer };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

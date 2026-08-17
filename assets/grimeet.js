@@ -755,6 +755,7 @@ function onData(payload,p){
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='doc-clear'){ DOC.applyClear(); }
   else if(msg.t==='doc-page-add'){ if(!STATE.isHost&&fromHost) DOC.applyAddPane(msg.id,msg.side); }
+  else if(msg.t==='doc-page-del'){ if(!STATE.isHost&&fromHost) DOC.applyRemovePane(msg.id); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
   else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(); try{ WB.broadcastAllPages(); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
@@ -893,7 +894,11 @@ var DOC=(function(){
     if(Q[id]) return;
     var ws=document.getElementById('doc-workspace'); if(!ws) return;
     var col=document.createElement('div'); col.className='gmr-doc-col'; col.id='doc-col-'+id; col.setAttribute('data-pane',id);
-    var head=document.createElement('div'); head.className='gmr-doc-col-head'; head.textContent=(side==='L'?'Sol Sayfa ':'Sağ Sayfa ')+id.slice(1); col.appendChild(head);
+    var head=document.createElement('div'); head.className='gmr-doc-col-head'; head.textContent=(side==='L'?'Sol Sayfa ':'Sağ Sayfa ')+id.slice(1);
+    var del=document.createElement('button'); del.type='button'; del.className='host-only'; del.title='Bu ek sayfayı sil'; del.textContent='×';
+    del.style.cssText='float:right;border:none;background:transparent;color:#c0563e;font-size:1.15rem;line-height:1;cursor:pointer;padding:0 2px;font-weight:800';
+    del.addEventListener('click',function(ev){ ev.stopPropagation(); if(STATE.isHost) removePane(id); });
+    head.appendChild(del); col.appendChild(head);
     var ed=document.createElement('div'); ed.className='gmr-doc-editor'; ed.id='doc-editor-'+id; col.appendChild(ed);
     var gut=document.createElement('div'); gut.className='gmr-doc-gutter'; gut.id='doc-gutter-'+id; gut.title='Sürükleyip boyutlandır';
     if(side==='L'){ ws.insertBefore(gut, ws.firstChild); ws.insertBefore(col, gut); }
@@ -905,6 +910,17 @@ var DOC=(function(){
     if(!remote && STATE.isHost && STATE.connected) sendData({t:'doc-page-add', id:id, side:side});
   }
   function applyAddPane(id, side){ if(!id||Q[id])return; addPane(side, id, true); }
+  function removePane(id, remote){
+    if(!id) return; var found=false;
+    EXTRA=EXTRA.filter(function(x){ if(x.id===id){ found=true; return false; } return true; });
+    if(!found && !Q[id]) return;
+    try{ delete Q[id]; }catch(_){ Q[id]=null; }
+    try{ delete lastSnap[id]; }catch(_){}
+    var col=document.getElementById('doc-col-'+id); if(col)col.remove();
+    var gut=document.getElementById('doc-gutter-'+id); if(gut)gut.remove();
+    if(!remote && STATE.isHost && STATE.connected) sendData({t:'doc-page-del', id:id});
+  }
+  function applyRemovePane(id){ removePane(id, true); }
   /* Temizle: TÜM panelleri koşulsuz boşalt (öğrenci odakta olsa bile) — 'full' snapshot skip-if-focused sorununu aşar. */
   function clearAll(){ try{ panes().forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} wc(); }
   function colR(p){ var c=colEl(p); var ww=wsW(); if(!c||c.hasAttribute('hidden')||!ww)return 0; return c.offsetWidth/ww; }
@@ -929,7 +945,7 @@ var DOC=(function(){
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
   function setLocked(on){ try{ panes().forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane };
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

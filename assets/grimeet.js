@@ -1468,7 +1468,7 @@ function attachMatScrollSync(itf){ if(!itf)return;
   // URL izleyici: iframe içindeki HER navigasyonu yakala — tam-sayfa geçiş (soru bankası → ielts-soru-bankasi),
   // hash/replaceState/pushState (öğren drilleri, seviye testi, alt-görünümler). 'load' bu SPA geçişlerinde
   // tetiklenmediği için periyodik izleme şart. Değişim yoksa yayın yok (exact-dedup), fırtına olmaz.
-  STATE._navWatch=setInterval(function(){ if(canBroadcastScroll()) navBroadcastNow(itf); },500);
+  STATE._navWatch=setInterval(function(){ if(canBroadcastScroll()) navBroadcastNow(itf); },1500); /* Faz2.3: idle yoklama 500→1500ms; anlık geçiş zaten 'load' olayıyla yayılır, dedup'lu */
 }
 // Materyal iframe'inin GÜNCEL URL'ini oku (temiz URL veya .html; hash + query dahil). Yayınlanmaması gereken
 // yolları (auth/öğretmen paneli, statik asset, boş/srcdoc) ele.

@@ -555,7 +555,7 @@ function bindControls(){
   $('#ctrl-people').addEventListener('click',function(){ toggleDock('people'); });
   $('#ctrl-chat').addEventListener('click',function(){ toggleDock('chat'); });
   $('#ctrl-leave').addEventListener('click',leaveRoom);
-  $('#gmr-code').addEventListener('click',function(){ try{navigator.clipboard.writeText(STATE.room);toast('Oda kodu kopyalandı: '+STATE.room);}catch(e){} });
+  $('#gmr-code').addEventListener('click',function(){ var code=STATE.room||''; var link=location.origin+location.pathname+'?room='+encodeURIComponent(code); try{ navigator.clipboard.writeText(link); toast('Davet linki kopyalandı — öğrencilere gönder, tıklayınca odaya katılırlar.'); }catch(e){ try{ navigator.clipboard.writeText(code); toast('Oda kodu kopyalandı: '+code); }catch(_){} } });
   $('#gmr-videos').addEventListener('click',function(e){ var b=e.target.closest('[data-act]'); if(!b)return; var id=b.closest('.vtile').dataset.id;
     if(b.dataset.act==='pin'){ togglePin(id); return; }
     if(!STATE.isHost)return;

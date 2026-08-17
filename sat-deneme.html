@@ -658,8 +658,9 @@ function openReport(slug, btn){
     send.disabled=true; send.textContent='Gönderiliyor…';
     const note=((pop.querySelector('#st-rp-note')||{}).value||'').trim();
     const fb=pop.querySelector('#st-rp-fb');
+    const RSL={answer:'Yanlış/tartışmalı cevap',typo:'Yazım/dilbilgisi hatası',unclear:'Soru belirsiz/eksik',visual:'Görsel/tablo sorunu',other:'Diğer'};
     try{
-      const { error } = await sb.from('question_reports').insert({ question_slug:slug, user_id:UID, reason:reason, note:note||null, page:location.pathname });
+      const { error } = await sb.from('soru_bildirimleri').insert({ kategori:(RSL[reason]||reason), detay:(note||RSL[reason]||'Bildirim'), soru_slug:slug, soru_url:location.href, user_agent:navigator.userAgent, user_id:UID });
       if(error) throw error;
       if(btn) btn.classList.add('on');
       fb.textContent='Teşekkürler! Bildirimin alındı, en kısa sürede inceleyeceğiz.'; fb.className='fb ok';

@@ -123,32 +123,32 @@
           +qPreview(qmap[x.question_slug])
           +'<div class="qk-act"><button class="done" data-act="resolved">Çözüldü</button><button class="dismiss" data-act="dismissed">Yoksay</button></div></div>';
       }).join('');
-      bindActions('question_audit');
+      bindActions('question_audit','status');
     } else {
-      var q2=sb.from('question_reports').select('*').order('created_at',{ascending:false}).limit(400);
-      if(status) q2=q2.eq('status',status);
+      var q2=sb.from('soru_bildirimleri').select('*').order('created_at',{ascending:false}).limit(400);
+      if(status) q2=q2.eq('durum',status);
       var r2=await q2; var rows2=(r2.error?[]:(r2.data||[]));
       cnt.textContent=rows2.length+' rapor';
       if(!rows2.length){ list.innerHTML='<div class="qk-empty">Bu filtrede öğrenci raporu yok.</div>'; return; }
-      var qmap2=await fetchQuestions(rows2.map(function(x){return x.question_slug;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+      var qmap2=await fetchQuestions(rows2.map(function(x){return x.soru_slug;}).filter(function(v){return !!v;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
       list.innerHTML=rows2.map(function(x){
         return '<div class="qk-card sev-medium" data-id="'+esc(x.id)+'">'
-          +'<div class="qk-meta"><span class="qk-pill medium">'+esc(RSN_L[x.reason]||x.reason||'rapor')+'</span>'
+          +'<div class="qk-meta"><span class="qk-pill medium">'+esc(x.kategori||'rapor')+'</span>'
           +'<span class="qk-pill exam">'+esc((x.created_at||'').slice(0,10))+'</span></div>'
-          +(x.note?'<div class="qk-note">"'+esc(x.note)+'"</div>':'<div class="qk-sug">Öğrenci not eklememiş.</div>')
-          +qPreview(qmap2[x.question_slug])
+          +(x.detay?'<div class="qk-note">"'+esc(x.detay)+'"</div>':'')
+          +(x.soru_slug?qPreview(qmap2[x.soru_slug]):'<div class="qk-sug">Soru: '+esc(x.soru_url||'—')+'</div>')
           +'<div class="qk-act"><button class="done" data-act="resolved">Çözüldü</button><button class="dismiss" data-act="dismissed">Yoksay</button></div></div>';
       }).join('');
-      bindActions('question_reports');
+      bindActions('soru_bildirimleri','durum');
     }
   }
-  function bindActions(table){
+  function bindActions(table,col){
     document.querySelectorAll('.qk-card').forEach(function(card){
       card.querySelectorAll('.qk-act button').forEach(function(b){
         b.addEventListener('click',async function(){
-          var id=card.dataset.id, act=b.dataset.act;
+          var id=card.dataset.id, act=b.dataset.act; var patch={}; patch[col]=act;
           b.disabled=true; b.textContent='...';
-          try{ var r=await sb.from(table).update({status:act}).eq('id',id); if(r.error) throw r.error; card.style.opacity='.4'; card.querySelector('.qk-act').innerHTML='<span class="qk-sug">'+(act==='resolved'?'Çözüldü olarak işaretlendi.':'Yoksayıldı.')+'</span>'; }
+          try{ var r=await sb.from(table).update(patch).eq('id',id); if(r.error) throw r.error; card.style.opacity='.4'; card.querySelector('.qk-act').innerHTML='<span class="qk-sug">'+(act==='resolved'?'Çözüldü olarak işaretlendi.':'Yoksayıldı.')+'</span>'; }
           catch(e){ b.disabled=false; b.textContent=(act==='resolved'?'Çözüldü':'Yoksay'); }
         });
       });

@@ -705,11 +705,35 @@ function showShareReq(id,who){
 
 /* ================= DATA ================= */
 var encd=new TextEncoder(),decd=new TextDecoder();
-function sendData(obj){ if(!STATE.lkRoom||!STATE.connected)return; try{ STATE.lkRoom.localParticipant.publishData(encd.encode(JSON.stringify(obj)),{reliable:true}); }catch(e){ try{ toast('Senkron paketi gönderilemedi (görsel çok büyük olabilir).'); }catch(_){} } }
+/* Faz0 0.3: LiveKit reliable publishData ~15KB'de sessizce düşürür → senkron kırılmasının kök nedeni.
+   Büyük yükleri string olarak parçala (__chunk); karşıda birleştir. opts.to=[identity,...] → yalnız o kimliklere yolla. */
+var CHUNK_MAX=8000; /* JSON string char/parça (çoğu yük ASCII: koordinat/base64 kalıntısı → ~byte); güvenli üst sınır */
+var _chunkOut=0, _chunkIn={};
+function _rawSend(bytes,pubOpts){ STATE.lkRoom.localParticipant.publishData(bytes,pubOpts); }
+function sendData(obj,opts){ if(!STATE.lkRoom||!STATE.connected)return;
+  var pubOpts={reliable:true}; if(opts&&opts.to&&opts.to.length) pubOpts.destinationIdentities=opts.to;
+  try{
+    var str=JSON.stringify(obj);
+    if(str.length<=CHUNK_MAX){ _rawSend(encd.encode(str),pubOpts); return; }
+    var self=(STATE.lkRoom&&STATE.lkRoom.localParticipant&&STATE.lkRoom.localParticipant.identity)||'x';
+    var id=(++_chunkOut)+'_'+self, n=Math.ceil(str.length/CHUNK_MAX);
+    for(var i=0;i<n;i++){ _rawSend(encd.encode(JSON.stringify({t:'__chunk',id:id,i:i,n:n,s:str.substr(i*CHUNK_MAX,CHUNK_MAX)})),pubOpts); }
+  }catch(e){ try{ toast('Senkron paketi gönderilemedi (görsel çok büyük olabilir).'); }catch(_){} }
+}
 // Materyal paylaşımını artan seq ile yayınla (öğrencide last-wins: eski nav yok sayılır).
 function broadcastMat(kind,value,ext,nav){ STATE._matSeq=(STATE._matSeq||0)+1; sendData({t:'mat',kind:kind,value:value,ext:ext,nav:nav?1:0,seq:STATE._matSeq}); }
 function onData(payload,p){
   var msg; try{ msg=JSON.parse(decd.decode(payload)); }catch(e){ return; }
+  if(msg&&msg.t==='__chunk'){ _onChunk(msg,p); return; }
+  handleMsg(msg,p);
+}
+function _onChunk(msg,p){ if(!msg.id||!msg.n)return;
+  var b=_chunkIn[msg.id]; if(!b){ b=_chunkIn[msg.id]={n:msg.n,parts:new Array(msg.n),got:0,ts:Date.now()}; }
+  if(b.parts[msg.i]==null){ b.parts[msg.i]=msg.s; b.got++; }
+  if(b.got>=b.n){ delete _chunkIn[msg.id]; var full; try{ full=JSON.parse(b.parts.join('')); }catch(e){ return; } handleMsg(full,p); }
+  var now=Date.now(); for(var k in _chunkIn){ if(_chunkIn[k].ts&&now-_chunkIn[k].ts>30000) delete _chunkIn[k]; } /* yarım kalan parçaları temizle */
+}
+function handleMsg(msg,p){
   var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;
   if(msg.t==='chat'){ addChat(from,msg.text); if(STATE.isHost&&id)addPoint(id,from,1); }
   else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); if(STATE.isHost)addPoint(id,from,1); } else handQueueRemove(id); } }
@@ -758,7 +782,7 @@ function onData(payload,p){
   else if(msg.t==='doc-page-del'){ if(!STATE.isHost&&fromHost) DOC.applyRemovePane(msg.id); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
-  else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(); try{ WB.broadcastAllPages(); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
+  else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(id); try{ WB.broadcastAllPages(id); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
   else if(msg.t==='breakout-end'){ if(!STATE.isHost&&fromHost) clearBreakout(); }
@@ -774,9 +798,9 @@ function onData(payload,p){
   else if(msg.t==='layout'){ if(!STATE.isHost&&fromHost) applyPaneLayout(msg); }
   else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
-function sendState(){ var _anno=[]; try{ _anno=ANNO.items()||[]; }catch(e){}
+function sendState(to){ var _anno=[]; try{ _anno=ANNO.items()||[]; }catch(e){}
   var _lay=null; try{ var cs=getComputedStyle(document.documentElement); var sp=parseInt(cs.getPropertyValue('--strip'),10); var stripR=(sp>0)?(sp/(window.innerWidth||1)):null; var sw=parseInt(cs.getPropertyValue('--gm-spot-w'),10); var vw=spotVideosW(); var spotR=(sw>0&&vw>0)?(sw/vw):null; if(stripR||spotR) _lay={strip:stripR,spot:spotR}; }catch(e){}
-  sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),wbix:WB.pageIndex(),wbnp:WB.pageCount(),chatLock:STATE.chatLocked,docState:DOC.getState(),wbLock:!!STATE.wbLocked,docLock:!!STATE.docLocked,pdfhl:PDFHL.items(),anno:((STATE.matShared&&_anno.length)?_anno:null),layout:_lay}); }
+  sendData({t:'state',mode:(STATE.mode==='spotlight'||STATE.mode==='screen')?'grid':STATE.mode,material:(STATE.matShared?STATE.currentMaterial:null),wb:WB.items(),wbix:WB.pageIndex(),wbnp:WB.pageCount(),chatLock:STATE.chatLocked,docState:DOC.getState(),wbLock:!!STATE.wbLocked,docLock:!!STATE.docLocked,pdfhl:PDFHL.items(),anno:((STATE.matShared&&_anno.length)?_anno:null),layout:_lay}, to?{to:[to]}:null); }
 function applyState(msg){ if(msg.layout){ if(msg.layout.strip>0) applyPaneLayout({pane:'strip',r:msg.layout.strip}); if(msg.layout.spot>0) applyPaneLayout({pane:'spot',r:msg.layout.spot}); } if(msg.wb) WB.applyRemote({items:msg.wb,page:(typeof msg.wbix==='number'?msg.wbix:0),np:msg.wbnp}); if(msg.docState) DOC.applyFullState(msg.docState); if(!STATE.isHost){ if(msg.wbLock) STATE.wbLocked=true; if(msg.docLock){ STATE.docLocked=true; DOC.setLocked(true); } } if(msg.chatLock){ STATE.chatLocked=true; applyChatLock(); } if(msg.material){ if(msg.pdfhl&&msg.pdfhl.length) STATE._pendPdfHl=msg.pdfhl; var _sameMat=STATE.matShared&&STATE.currentMaterial&&STATE.currentMaterial.kind===msg.material.kind&&STATE.currentMaterial.value===msg.material.value; if(!_sameMat) loadMaterial(msg.material,true); /* Faz0: materyal aynıysa iframe'i YENİDEN YÜKLEME — scroll/zoom/sınav cevapları korunur (reload fırtınası fix) */ setMode('materials',{remote:true}); if(msg.pdfhl){ try{ PDFHL.applyRemote(msg.pdfhl); }catch(e){} }
     // Materyal üstündeki çizimleri (Üstüne Çiz) geç-katılımda da uygula — loadMaterial ANNO'yu sıfırladığı
     // için MUTLAKA materyal yüklendikten SONRA gelir (#108). Boş/eski durumda dokunma.
@@ -1691,7 +1715,7 @@ var WB=(function(){
     else if(msg.op==='goto'){ ensurePages(msg.np||1); pageIx=Math.max(0,Math.min(pages.length-1,(typeof msg.ix==='number'?msg.ix:0))); items=pages[pageIx]; sel=null; redraw(); updatePageUI(); }
   }
   /* Katılan öğrenciye tüm sayfaları gönder (her sayfa ayrı wb mesajı → tek büyük paket riski yok). */
-  function broadcastAllPages(){ pages.forEach(function(pg,ix){ sendData({t:'wb',items:pg.map(strip),page:ix,np:pages.length}); }); sendData({t:'wb-nav',op:'goto',ix:pageIx,np:pages.length}); }
+  function broadcastAllPages(to){ var o=to?{to:[to]}:null; pages.forEach(function(pg,ix){ sendData({t:'wb',items:pg.map(strip),page:ix,np:pages.length},o); }); sendData({t:'wb-nav',op:'goto',ix:pageIx,np:pages.length},o); }
   function selTextSize(){ return (sel!=null&&sel>=0&&items[sel]&&items[sel].type==='text')?(items[sel].size||fontPx):null; }
   function fontLabel(){ var el=$('#wb-fontpx'); if(el){ if(editingItem){ el.textContent=(editingItem.size||fontPx); return; } var s=selTextSize(); el.textContent=(s!=null?s:fontPx); } }
   function syncUlBtn(){ var b=$('#wb-underline'); if(!b)return; var on=(sel!=null&&sel>=0&&items[sel]&&items[sel].type==='text')?!!items[sel].u:underlineOn; b.classList.toggle('on',on); }

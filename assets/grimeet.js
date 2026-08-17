@@ -825,12 +825,35 @@ var DOC=(function(){
   function colEl(pane){ return document.getElementById('doc-col-'+pane); }
   function isOpen(pane){ var c=colEl(pane); return c && !c.hasAttribute('hidden'); }
   function wc(){ try{ var t=(Q.C?Q.C.getText():''); var w=(t.trim().match(/\S+/g)||[]).length; var c=$('#doc-count'); if(c)c.textContent=w+' kelime'; }catch(e){} }
-  function imgHandler(pane){ return function(){ var q=Q[pane]; if(!q)return; var url=window.prompt('Görsel URL adresi (https://…):'); if(url){ var r=q.getSelection(true); q.insertEmbed((r?r.index:q.getLength()),'image',url,'user'); } }; }
+  // Base64 (data:) görseli Supabase Storage'a yükle, public URL olarak göm — büyük delta yerine küçük URL → öğrencide de senkron + kalıcı.
+  function uploadDataImage(q, dataUrl){
+    try{
+      if(!STATE.supabase){ toast('Görsel eklemek için giriş yapmış olmalısın.'); return; }
+      var m=/^data:([^;,]+);base64,(.*)$/i.exec(dataUrl||''); if(!m){ toast('Görsel biçimi desteklenmiyor.'); return; }
+      var mime=m[1]||'image/png', b64=m[2]||''; var bin=atob(b64); var nn=bin.length; var arr=new Uint8Array(nn);
+      for(var i=0;i<nn;i++) arr[i]=bin.charCodeAt(i);
+      var ext=((mime.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')||'png');
+      var path='doc/'+Date.now()+'-'+Math.floor(Math.random()*1e9)+'.'+ext;
+      var sel=q.getSelection(true); var idx=sel?sel.index:q.getLength();
+      toast('Görsel yükleniyor…');
+      STATE.supabase.storage.from('grimeet-files').upload(path,new Blob([arr],{type:mime}),{upsert:false,contentType:mime}).then(function(res){
+        if(res&&res.error){ toast('Görsel yüklenemedi.'); return; }
+        var pub=STATE.supabase.storage.from('grimeet-files').getPublicUrl(path);
+        var url=pub&&pub.data&&pub.data.publicUrl; if(!url){ toast('Görsel URL alınamadı.'); return; }
+        q.insertEmbed(idx,'image',url,'user'); /* source=user → delta ile öğrenciye senkron */
+      }).catch(function(){ toast('Görsel yüklenemedi.'); });
+    }catch(e){ toast('Görsel eklenemedi.'); }
+  }
+  function imgHandler(pane){ return function(){ var q=Q[pane]; if(!q)return;
+    var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+    inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ uploadDataImage(q, String(rd.result||'')); }; rd.readAsDataURL(f); };
+    inp.click();
+  }; }
   function mkEditor(pane,sel,ph){
     var host=document.querySelector(sel); if(!host)return null;
     var q=new Quill(host,{ theme:'snow', placeholder:ph, modules:{ toolbar:{ container:TOOLBAR, handlers:{ image:imgHandler(pane) } } } });
-    // M1: web'den kopyalanan base64 (data:) gorselleri yapistirmayi ENGELLE — dev delta senkronu bozar
-    try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)) return new (Quill.import('delta'))(); }catch(_){} return delta; }); }catch(e){}
+    // Yapıştırılan base64 (data:) görseli ham gömme (dev delta senkronu bozar); yerine Storage'a yükleyip URL göm → öğrencide de görünür.
+    try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)){ uploadDataImage(q, src); return new (Quill.import('delta'))(); } }catch(_){} return delta; }); }catch(e){}
     q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
     return q;
   }

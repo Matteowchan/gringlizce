@@ -754,6 +754,7 @@ function onData(payload,p){
   else if(msg.t==='doc'){ DOC.applyRemote(msg); }
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
   else if(msg.t==='doc-clear'){ DOC.applyClear(); }
+  else if(msg.t==='doc-page-add'){ if(!STATE.isHost&&fromHost) DOC.applyAddPane(msg.id,msg.side); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
   else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(); try{ WB.broadcastAllPages(); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
@@ -807,6 +808,8 @@ function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return;
 /* ===== Ortak Doküman (Google Docs benzeri: Quill zengin editör + 3 sayfa, canlı senkron) ===== */
 var DOC=(function(){
   var Q={}, ready=false, snapTimer=null, lastSnap={C:'',L:'',R:''};
+  var EXTRA=[]; /* dinamik ek sayfalar: [{id,side}] — 'C','L','R' sabit; ek'ler L2..L5 / R2..R5 */
+  function panes(){ return ['C','L','R'].concat(EXTRA.map(function(e){ return e.id; })); }
   var TOOLBAR=[
     [{'font':[]},{'size':['12px','14px',false,'18px','24px','32px']}],
     [{'header':[1,2,3,false]}],
@@ -851,7 +854,7 @@ var DOC=(function(){
     function end(e){ if(!dragging)return; dragging=false; try{g.releasePointerCapture(e.pointerId);}catch(_){} if(STATE.isHost&&_r>0) sendData({t:'layout',pane:'doc'+pane,r:_r}); }
     g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);
   }
-  function sendSnapshot(){ if(!ready||!STATE.connected)return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && encd.encode(s).length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
+  function sendSnapshot(){ if(!ready||!STATE.connected)return; panes().forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && encd.encode(s).length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
   function combinedText(){ var out=[]; try{ if(Q.L&&isOpen('L')){ var l=Q.L.getText().trim(); if(l)out.push('=== SOL SAYFA ===\n'+l); } if(Q.C)out.push(Q.C.getText().trim()); if(Q.R&&isOpen('R')){ var r=Q.R.getText().trim(); if(r)out.push('=== SAĞ SAYFA ===\n'+r); } }catch(e){} return out.join('\n\n'); }
   function init(){
     if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C'))return;
@@ -863,6 +866,8 @@ var DOC=(function(){
     if(STATE._docPendingState){ applyFullState(STATE._docPendingState); STATE._docPendingState=null; }
     var tl=$('#doc-toggle-left'); if(tl)tl.addEventListener('click',function(){ togglePane('L'); });
     var tr=$('#doc-toggle-right'); if(tr)tr.addEventListener('click',function(){ togglePane('R'); });
+    var al=$('#doc-addleft'); if(al)al.addEventListener('click',function(){ if(STATE.isHost) addPane('L'); });
+    var ar=$('#doc-addright'); if(ar)ar.addEventListener('click',function(){ if(STATE.isHost) addPane('R'); });
     bindGutter('L'); bindGutter('R');
     var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=docxFromText(combinedText()); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1000);}catch(e){} });
     var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (tüm sayfalar) temizlensin mi?'))return; clearAll(); sendData({t:'doc-clear'}); });
@@ -880,12 +885,33 @@ var DOC=(function(){
       if((msg.pane||'C')==='C') wc();
     }catch(e){}
   }
+  /* Ekstra sayfa ekleme (#114): host "+ Sol"/"+ Sağ" → dinamik Quill paneli oluştur, öğrenciye yayınla, geç-katılımda yeniden kur. */
+  function nextId(side){ return side+(2+EXTRA.filter(function(e){ return e.side===side; }).length); }
+  function addPane(side, id, remote){
+    if(side!=='L'&&side!=='R'||!ready) return;
+    if(!id){ if(EXTRA.filter(function(e){ return e.side===side; }).length>=4){ toast('En fazla 4 ek '+(side==='L'?'sol':'sağ')+' sayfa.'); return; } id=nextId(side); }
+    if(Q[id]) return;
+    var ws=document.getElementById('doc-workspace'); if(!ws) return;
+    var col=document.createElement('div'); col.className='gmr-doc-col'; col.id='doc-col-'+id; col.setAttribute('data-pane',id);
+    var head=document.createElement('div'); head.className='gmr-doc-col-head'; head.textContent=(side==='L'?'Sol Sayfa ':'Sağ Sayfa ')+id.slice(1); col.appendChild(head);
+    var ed=document.createElement('div'); ed.className='gmr-doc-editor'; ed.id='doc-editor-'+id; col.appendChild(ed);
+    var gut=document.createElement('div'); gut.className='gmr-doc-gutter'; gut.id='doc-gutter-'+id; gut.title='Sürükleyip boyutlandır';
+    if(side==='L'){ ws.insertBefore(gut, ws.firstChild); ws.insertBefore(col, gut); }
+    else { ws.appendChild(gut); ws.appendChild(col); }
+    EXTRA.push({id:id, side:side});
+    Q[id]=mkEditor(id, '#doc-editor-'+id, side==='L'?'Ek sol sayfa…':'Ek sağ sayfa…');
+    try{ bindGutter(id); }catch(_){}
+    try{ if(Q[id]) Q[id].enable(STATE.isHost?true:!STATE.docLocked); }catch(_){}
+    if(!remote && STATE.isHost && STATE.connected) sendData({t:'doc-page-add', id:id, side:side});
+  }
+  function applyAddPane(id, side){ if(!id||Q[id])return; addPane(side, id, true); }
   /* Temizle: TÜM panelleri koşulsuz boşalt (öğrenci odakta olsa bile) — 'full' snapshot skip-if-focused sorununu aşar. */
-  function clearAll(){ try{ ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} wc(); }
+  function clearAll(){ try{ panes().forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} wc(); }
   function colR(p){ var c=colEl(p); var ww=wsW(); if(!c||c.hasAttribute('hidden')||!ww)return 0; return c.offsetWidth/ww; }
   function getState(){ if(!ready)return null; try{ return {
     C:Q.C?Q.C.getContents().ops:null, L:Q.L?Q.L.getContents().ops:null, R:Q.R?Q.R.getContents().ops:null,
-    layL:isOpen('L'), layR:isOpen('R'), rL:colR('L'), rR:colR('R')
+    layL:isOpen('L'), layR:isOpen('R'), rL:colR('L'), rR:colR('R'),
+    ex:EXTRA.map(function(e){ var q=Q[e.id]; return { id:e.id, side:e.side, ops:(q?q.getContents().ops:null), r:colR(e.id) }; })
   }; }catch(e){ return null; } }
   function applyFullState(st){
     if(!st)return;
@@ -897,12 +923,13 @@ var DOC=(function(){
       if(st.layR&&!isOpen('R')) togglePane('R',true);
       if(st.rL>0&&isOpen('L')) applyGutter('L',st.rL);
       if(st.rR>0&&isOpen('R')) applyGutter('R',st.rR);
+      if(Array.isArray(st.ex)){ st.ex.forEach(function(e){ if(!e||!e.id)return; if(!Q[e.id]) addPane(e.side,e.id,true); var q=Q[e.id]; if(q&&e.ops){ var s2=q.hasFocus()?q.getSelection():null; q.setContents({ops:e.ops},'silent'); if(s2){ try{ q.setSelection(Math.min(s2.index,Math.max(0,q.getLength()-1)),0,'silent'); }catch(_){}} } if(e.r>0) applyGutter(e.id,e.r); }); }
       wc();
     }catch(e){}
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
-  function setLocked(on){ try{ ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll };
+  function setLocked(on){ try{ panes().forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

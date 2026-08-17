@@ -2304,7 +2304,7 @@
         if (!setSlugs || setSlugs.length === 0) {
           const { data: list, error } = await supabase
             .from('questions')
-            .select('slug,difficulty,created_at')
+            .select('slug,difficulty,created_at,tags')
             .eq('active', true)
             .in('subcategory', subcatList)
             .order('slug');
@@ -2312,7 +2312,9 @@
             showError('Bu kategoride henüz soru yok.');
             return;
           }
-          let rows = list;
+          // Deneme (adaptif tam test) sorularını topic drill'inden DIŞLA — deneme içeriği pratik ekranında önceden ifşa olmasın.
+          let rows = list.filter(r => !(r.tags || []).some(t => typeof t === 'string' && t.indexOf('deneme:') === 0));
+          if (rows.length === 0) { showError('Bu kategoride henüz soru yok.'); return; }
           if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
           if (rows.length === 0) { showError('Bu zorlukta soru yok. Farklı bir zorluk seç.'); return; }
           rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
@@ -2382,11 +2384,12 @@
       if (!setSlugs || setSlugs.length === 0) {
         const { data: list } = await supabase
           .from('questions')
-          .select('slug,difficulty,created_at')
+          .select('slug,difficulty,created_at,tags')
           .eq('active', true)
           .eq('subcategory', currentQuestion.subcategory)
           .order('slug');
-        let rows = (list || []);
+        // Deneme sorularını topic drill'inden dışla (sızıntı önleme).
+        let rows = (list || []).filter(r => !(r.tags || []).some(t => typeof t === 'string' && t.indexOf('deneme:') === 0));
         if (zorluk) rows = rows.filter(r => r.difficulty === zorluk);
         rows.forEach(r => { DIFF_MAP[r.slug] = r.difficulty || 'medium'; });
         const CREATED_MAP2 = {};

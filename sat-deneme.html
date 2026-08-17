@@ -532,6 +532,7 @@ let HL_MODE = false, TOOLS_WIRED = false;
 const IC_BM   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 const IC_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
 const IC_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+const IC_REPORT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 const IC_HL   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M4 20l3-1 9.5-9.5a2 2 0 0 0 0-2.8l-.2-.2a2 2 0 0 0-2.8 0L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
 
 function curSlot(){ if(!STATE) return null; const sec=STATE.sections[STATE.si]; return sec?sec[STATE.mod]:null; }
@@ -544,6 +545,7 @@ function qToolsHtml(q, i, slot){
   if (slug) h += '<button type="button" class="st-tool bm" data-qi="'+i+'" data-slug="'+esc(slug)+'" aria-label="Yer imi" title="Yer imi"> '+IC_BM+'</button>';
   h += '<button type="button" class="st-tool mk'+onMark+'" data-qi="'+i+'" aria-label="Sonra bak" title="Sonra bak için işaretle">'+IC_FLAG+'</button>';
   if (slug) h += '<button type="button" class="st-tool nt" data-qi="'+i+'" data-slug="'+esc(slug)+'" aria-label="Not" title="Not al">'+IC_NOTE+'</button>';
+  if (slug) h += '<button type="button" class="st-tool rp" data-qi="'+i+'" data-slug="'+esc(slug)+'" aria-label="Soruyu bildir" title="Soruda hata bildir">'+IC_REPORT+'</button>';
   h += '</div>';
   return h;
 }
@@ -611,6 +613,60 @@ async function toggleBookmark(slug, btn){
     if (typeof window.triggerBadgeCheck === 'function') window.triggerBadgeCheck();
   }catch(e){ console.warn('[bm] toggle failed', e); }
   btn.disabled = false;
+}
+
+/* ---- Soruda hata bildir (report) ---- */
+let _rpPop=null, _rpCssDone=false;
+function _rpCss(){ if(_rpCssDone)return; _rpCssDone=true; const s=document.createElement('style'); s.textContent=
+  '.st-report-pop{position:absolute;z-index:9999;width:290px;max-width:calc(100vw - 24px);background:var(--bg-card,#FBF6EC);border:1px solid var(--line,#e3d8c3);border-radius:14px;box-shadow:0 16px 44px rgba(0,0,0,.24);padding:14px 15px;font-family:Inter,system-ui,sans-serif;color:var(--text,#241E17);}'+
+  '.st-report-pop h4{margin:0 0 4px;font:800 14px Inter,sans-serif;}'+
+  '.st-report-pop .sub{font-size:11.5px;color:var(--text-soft,#6E6353);margin:0 0 9px;line-height:1.4;}'+
+  '.st-report-pop .rsn{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}'+
+  '.st-report-pop .rsn button{text-align:left;background:var(--bg-soft,#f1ead9);border:1px solid var(--line,#e3d8c3);border-radius:9px;padding:8px 11px;font:600 12.5px Inter,sans-serif;color:var(--text,#241E17);cursor:pointer;}'+
+  '.st-report-pop .rsn button.on{background:var(--teal,#2C5856);border-color:var(--teal,#2C5856);color:#fff;}'+
+  '.st-report-pop textarea{width:100%;box-sizing:border-box;min-height:52px;resize:vertical;border:1px solid var(--line,#e3d8c3);border-radius:9px;padding:8px 10px;font:500 12.5px Inter,sans-serif;background:var(--bg-soft,#f1ead9);color:var(--text,#241E17);margin-bottom:9px;}'+
+  '.st-report-pop .act{display:flex;gap:8px;align-items:center;}'+
+  '.st-report-pop .send{flex:1;background:var(--teal,#2C5856);color:#fff;border:none;border-radius:9px;padding:9px;font:800 13px Inter,sans-serif;cursor:pointer;}'+
+  '.st-report-pop .send:disabled{opacity:.55;cursor:default;}'+
+  '.st-report-pop .x{background:none;border:none;color:var(--text-muted,#8a8073);font:700 13px Inter,sans-serif;cursor:pointer;padding:6px 8px;}'+
+  '.st-report-pop .fb{font-size:12px;margin-top:8px;line-height:1.4;}'+
+  '.st-report-pop .fb.ok{color:#2e7d5b;}.st-report-pop .fb.err{color:#c0563e;}';
+  document.head.appendChild(s); }
+function _rpClose(){ if(_rpPop){ _rpPop.remove(); _rpPop=null; } }
+function openReport(slug, btn){
+  if(!slug) return;
+  _rpCss(); _rpClose();
+  const pop=document.createElement('div'); pop.className='st-report-pop'; _rpPop=pop;
+  if(!UID){
+    pop.innerHTML='<h4>Soruda hata bildir</h4><p class="sub">Bildirim göndermek için giriş yapmalısın.</p><div class="act"><a class="send" style="text-align:center;text-decoration:none;line-height:1.4" href="giris?return='+encodeURIComponent(location.pathname+location.search)+'">Giriş yap</a><button class="x">Kapat</button></div>';
+  } else {
+    const RS=[['answer','Yanlış / tartışmalı cevap'],['typo','Yazım / dilbilgisi hatası'],['unclear','Soru belirsiz / eksik'],['visual','Görsel / tablo sorunu'],['other','Diğer']];
+    pop.innerHTML='<h4>Soruda hata bildir</h4><p class="sub">Bu soruda bir sorun mu var? Bildir, inceleyip düzeltelim.</p><div class="rsn">'+RS.map(function(r){return '<button type="button" data-r="'+r[0]+'">'+r[1]+'</button>';}).join('')+'</div><textarea id="st-rp-note" placeholder="İstersen kısaca açıkla (opsiyonel)…" maxlength="500"></textarea><div class="act"><button class="send" id="st-rp-send" disabled>Gönder</button><button class="x">Kapat</button></div><div class="fb" id="st-rp-fb"></div>';
+  }
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect(), pw=pop.offsetWidth||290;
+  let left=Math.max(8, r.right+window.scrollX-pw);
+  let top=r.bottom+window.scrollY+8;
+  if(top+pop.offsetHeight>window.scrollY+window.innerHeight-8) top=Math.max(window.scrollY+8, r.top+window.scrollY-pop.offsetHeight-8);
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+  const xb=pop.querySelector('.x'); if(xb) xb.addEventListener('click', _rpClose);
+  let reason=null;
+  pop.querySelectorAll('.rsn button').forEach(function(b){ b.addEventListener('click',function(){ reason=b.dataset.r; pop.querySelectorAll('.rsn button').forEach(function(x){x.classList.toggle('on',x===b);}); const s=pop.querySelector('#st-rp-send'); if(s)s.disabled=false; }); });
+  const send=pop.querySelector('#st-rp-send');
+  if(send) send.addEventListener('click', async function(){
+    if(!reason) return;
+    send.disabled=true; send.textContent='Gönderiliyor…';
+    const note=((pop.querySelector('#st-rp-note')||{}).value||'').trim();
+    const fb=pop.querySelector('#st-rp-fb');
+    try{
+      const { error } = await sb.from('question_reports').insert({ question_slug:slug, user_id:UID, reason:reason, note:note||null, page:location.pathname });
+      if(error) throw error;
+      if(btn) btn.classList.add('on');
+      fb.textContent='Teşekkürler! Bildirimin alındı, en kısa sürede inceleyeceğiz.'; fb.className='fb ok';
+      setTimeout(_rpClose, 1500);
+    }catch(err){ fb.textContent='Gönderilemedi: '+((err&&err.message)||'hata'); fb.className='fb err'; send.disabled=false; send.textContent='Gönder'; }
+  });
+  setTimeout(function(){ document.addEventListener('mousedown', function oo(e){ if(pop&&!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){ _rpClose(); document.removeEventListener('mousedown',oo); } }); },10);
 }
 
 /* ---- Not (DB) ---- */
@@ -807,6 +863,7 @@ function wireTools(){
     if(tool.classList.contains('bm')) toggleBookmark(tool.dataset.slug, tool);
     else if(tool.classList.contains('mk')) toggleMark(parseInt(tool.dataset.qi,10), tool);
     else if(tool.classList.contains('nt')) openNote(tool.dataset.slug, tool);
+    else if(tool.classList.contains('rp')) openReport(tool.dataset.slug, tool);
   });
   // Şık eleme — sağ tık
   app.addEventListener('contextmenu', e=>{

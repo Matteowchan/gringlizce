@@ -565,7 +565,9 @@
   }
 
   // Öğretmen görünümü: üstte "Ödev Ata" / "Ödevleri Gör" segmenti.
-  var _vClasses = null, _vClassId = null, _vLoaded = false;
+  var _vClasses = null, _vClassId = null, _vLoaded = false, _aClassId = null;
+  // Ödev Ata için etkin sınıf: oda bir sınıfa bağlıysa o, değilse öğretmenin seçtiği sınıf.
+  function aCid(){ return CLASS_ID || _aClassId || ''; }
 
   async function renderTeacher() {
     var sb = sbc(); if (!sb) { root.innerHTML = '<div class="dock-empty">Bağlantı yok.</div>'; return; }
@@ -594,10 +596,19 @@
   async function renderAssignPane() {
     var pane = document.getElementById('gma-pane-assign'); if (!pane) return;
     var sb = sbc();
-    if (!CLASS_ID) { pane.innerHTML = '<div class="dock-empty" style="padding:8px 0">Bu oda bir sınıfa bağlı değil. Ödev atamak için sınıf panelinden “Canlı Ders Başlat” ile aç. Yandaki <b>Ödevleri Gör</b> ile tüm sınıflarını inceleyebilirsin.</div>'; return; }
-    pane.innerHTML = '<div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
+    var classSel = '';
+    if (!CLASS_ID) {
+      // Oda bir sınıfa bağlı değil → öğretmen buradan sınıf seçip ödev atabilsin (çıkmaz mesaj yerine).
+      if (!_vClasses) { pane.innerHTML = '<div class="dock-empty" style="padding:8px 0">Sınıflar yükleniyor…</div>'; try { var rc0 = await sb.rpc('list_my_classes'); _vClasses = rc0.error ? [] : (rc0.data || []); } catch(e){ _vClasses = []; } }
+      if (!_vClasses.length) { pane.innerHTML = '<div class="dock-empty" style="padding:8px 0">Henüz sınıfın yok. Ödev atamak için önce bir sınıf oluştur (Sınıf paneli).</div>'; return; }
+      if (!_aClassId || !_vClasses.some(function (c) { return c.class_id === _aClassId; })) _aClassId = _vClasses[0].class_id;
+      var aopts = _vClasses.map(function (c) { return '<option value="' + esc(c.class_id) + '"' + (c.class_id === _aClassId ? ' selected' : '') + '>' + esc(c.name) + ' (' + (c.member_count || 0) + ')</option>'; }).join('');
+      classSel = '<div class="gma-form" style="margin-bottom:8px"><label>Ödevi atanacak sınıf</label><select id="gma-aclass" style="margin-bottom:0">' + aopts + '</select></div>';
+    }
+    var cid = aCid();
+    pane.innerHTML = classSel + '<div class="dock-empty" style="padding:8px 0">Yükleniyor…</div>';
     var curPage = ''; try { var mp = document.getElementById('mat-page-url'); if (mp && mp.value) curPage = mp.value.trim(); } catch(e){}
-    var head = '<div class="gma-h">Ödev Ata <a class="gma-h" style="border:none;padding:0" href="ogretmen-sinif.html?id=' + encodeURIComponent(CLASS_ID) + '" target="_blank" rel="noopener"><button>Tam editör →</button></a></div>';
+    var head = '<div class="gma-h">Ödev Ata <a class="gma-h" style="border:none;padding:0" href="ogretmen-sinif.html?id=' + encodeURIComponent(cid) + '" target="_blank" rel="noopener"><button>Tam editör →</button></a></div>';
     var form = '<div class="gma-form">'
       + '<div class="gma-seg" id="gma-seg"><button data-t="material" class="on">Materyal</button><button data-t="ielts_mock">Deneme</button><button data-t="questions">Soru Bankası</button></div>'
       + '<label>Başlık</label><input id="gma-title" maxlength="120" placeholder="Ödev başlığı">'
@@ -606,13 +617,13 @@
       + '<div id="gma-cfg-questions" style="display:none"><label>Sınav</label><select id="gma-q-exam"><option value="ydt">YDT</option><option value="yds">YDS</option><option value="udsp">UDSP</option><option value="ielts">IELTS</option><option value="toefl">TOEFL</option><option value="sat-rw">SAT R&W</option><option value="sat-math">SAT Math</option></select><label>Hedef soru sayısı</label><input id="gma-q-count" type="number" min="1" max="100" value="10"></div>'
       + '<button class="gma-btn" id="gma-assign-btn">Sınıfa Ata</button>'
       + '<p class="gma-note" id="gma-assign-msg"></p></div>';
-    var r = await sb.rpc('list_class_assignments', { p_class_id: CLASS_ID });
+    var r = await sb.rpc('list_class_assignments', { p_class_id: cid });
     var main = (r.error ? [] : (r.data || [])).map(function (a) { a._pool = false; return a; });
     // GE havuz ödevleri (class_assignments -> ge_assignments) list_class_assignments'ta YOK; ayrıca çek+birleştir,
     // yoksa öğretmen havuzdan ödev atadığında "Sınıf Ödevleri" boş görünür (#107).
     var pool = [];
     try {
-      var gc = await sb.from('class_assignments').select('assignment_id,due_date,assigned_at').eq('class_id', CLASS_ID);
+      var gc = await sb.from('class_assignments').select('assignment_id,due_date,assigned_at').eq('class_id', cid);
       var prows = (gc && gc.data) || [];
       if (prows.length) {
         var pids = prows.map(function (x) { return x.assignment_id; });
@@ -632,7 +643,9 @@
       return '<div class="gma-card"><div class="t">' + esc(a.title) + '</div>'
         + '<div class="gma-meta"><span class="gma-pill">' + esc(lbl) + '</span>' + meta + '</div></div>';
     }).join('');
-    pane.innerHTML = head + form + '<div class="gma-h" style="margin-top:4px">Sınıf Ödevleri</div>' + listHtml;
+    pane.innerHTML = classSel + head + form + '<div class="gma-h" style="margin-top:4px">Sınıf Ödevleri</div>' + listHtml;
+    var acs = document.getElementById('gma-aclass');
+    if (acs) acs.addEventListener('change', function () { _aClassId = this.value; renderAssignPane(); });
     wireTeacherForm();
   }
 
@@ -869,9 +882,10 @@
       config.count = parseInt(document.getElementById('gma-q-count').value,10) || 10;
       if (!title) title = 'Soru Bankası (' + config.count + ')';
     }
+    var cid = aCid(); if (!cid) { msg.textContent = 'Önce sınıf seç.'; return; }
     var b = document.getElementById('gma-assign-btn'); b.disabled = true; b.textContent = 'Atanıyor…';
     try {
-      var r = await sb.rpc('create_assignment', { p_class_id: CLASS_ID, p_type: type, p_title: title, p_description: null, p_config: config, p_due_date: null });
+      var r = await sb.rpc('create_assignment', { p_class_id: cid, p_type: type, p_title: title, p_description: null, p_config: config, p_due_date: null });
       if (r.error) throw r.error;
       var aid = r.data && (r.data.assignment_id || r.data.id);
       if (aid) sb.functions.invoke('notify-class-assignment', { body:{ kind:'assignment', assignment_id: aid } }).catch(function(){});

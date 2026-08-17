@@ -939,7 +939,12 @@ var DOC=(function(){
       if(st.layR&&!isOpen('R')) togglePane('R',true);
       if(st.rL>0&&isOpen('L')) applyGutter('L',st.rL);
       if(st.rR>0&&isOpen('R')) applyGutter('R',st.rR);
-      if(Array.isArray(st.ex)){ st.ex.forEach(function(e){ if(!e||!e.id)return; if(!Q[e.id]) addPane(e.side,e.id,true); var q=Q[e.id]; if(q&&e.ops){ var s2=q.hasFocus()?q.getSelection():null; q.setContents({ops:e.ops},'silent'); if(s2){ try{ q.setSelection(Math.min(s2.index,Math.max(0,q.getLength()-1)),0,'silent'); }catch(_){}} } if(e.r>0) applyGutter(e.id,e.r); }); }
+      if(Array.isArray(st.ex)){
+        st.ex.forEach(function(e){ if(!e||!e.id)return; if(!Q[e.id]) addPane(e.side,e.id,true); var q=Q[e.id]; if(q&&e.ops){ var s2=q.hasFocus()?q.getSelection():null; q.setContents({ops:e.ops},'silent'); if(s2){ try{ q.setSelection(Math.min(s2.index,Math.max(0,q.getLength()-1)),0,'silent'); }catch(_){}} } if(e.r>0) applyGutter(e.id,e.r); });
+        // Host yetkili uzlaştırma: host'un state'inde OLMAYAN yerel ek sayfaları kaldır (host yeniden yüklenince öğrencide de temizlenir).
+        var keep={}; st.ex.forEach(function(e){ if(e&&e.id) keep[e.id]=1; });
+        EXTRA.slice().forEach(function(x){ if(!keep[x.id]) removePane(x.id,true); });
+      }
       wc();
     }catch(e){}
   }

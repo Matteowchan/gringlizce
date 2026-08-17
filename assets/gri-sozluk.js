@@ -280,8 +280,20 @@
     if (!window.getSelection || !window.getSelection().toString().trim()) hideBtn();
   }
 
+  // Dışa açık API — manuel mod (ör. Gri Meet) yalnızca butonla açar
+  window.GriSozluk = {
+    openSearch: function(anchorEl, prefill){ ensureEls(); loadSession(); if(!document.querySelector('style[data-gri-sozluk]')) injectCss(); popAnchor = (anchorEl&&anchorEl.getBoundingClientRect)?anchorEl:null; renderSearchBox(prefill); },
+    lookup: function(w, anchorEl){ ensureEls(); loadSession(); if(!document.querySelector('style[data-gri-sozluk]')) injectCss(); popAnchor = (anchorEl&&anchorEl.getBoundingClientRect)?anchorEl:null; if(w){ lastWord=w; lookup(w); } else renderSearchBox(); },
+    close: hidePop
+  };
   function boot(){
     injectCss(); ensureEls(); loadSession();
+    if (window.GRI_SOZLUK_MANUAL){
+      // Manuel mod: otomatik çift-tık / seçim-popup / FAB / toolbar butonu YOK. Yalnız GriSozluk.openSearch() ile açılır.
+      document.addEventListener('mousedown', onDocDown, true);
+      window.addEventListener('scroll', function(){ hideBtn(); }, { passive:true });
+      return;
+    }
     // Highlight (.hl-group) olan sayfalarda seçim-popup'ı kapat (çakışma önle); çift-tık + toolbar butonu her yerde çalışır
     FLOAT_ON = !document.querySelector('.hl-group');
     document.addEventListener('mouseup', onDblMouseUp, true);  // capture: highlight'tan önce çift-tık'ı yakala

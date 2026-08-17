@@ -753,6 +753,7 @@ function onData(payload,p){
   else if(msg.t==='yt-sync'){ if(!STATE.isHost&&fromHost) applyYtSync(msg); else if(STATE.isHost&&STATE.matControl&&!fromHost) applyYtSync(msg); }
   else if(msg.t==='doc'){ DOC.applyRemote(msg); }
   else if(msg.t==='doc-layout'){ DOC.applyLayout(msg); }
+  else if(msg.t==='doc-clear'){ DOC.applyClear(); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
   else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(); try{ WB.broadcastAllPages(); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
@@ -864,7 +865,7 @@ var DOC=(function(){
     var tr=$('#doc-toggle-right'); if(tr)tr.addEventListener('click',function(){ togglePane('R'); });
     bindGutter('L'); bindGutter('R');
     var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=docxFromText(combinedText()); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1000);}catch(e){} });
-    var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (görünen sayfalar) temizlensin mi?'))return; ['C','L','R'].forEach(function(p){ var q=Q[p]; if(!q)return; q.setText(''); sendData({t:'doc',pane:p,full:q.getContents().ops}); }); wc(); });
+    var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (tüm sayfalar) temizlensin mi?'))return; clearAll(); sendData({t:'doc-clear'}); });
     var lk=$('#doc-lock'); if(lk)lk.addEventListener('click',function(){ if(!STATE.isHost)return; STATE.docLocked=!STATE.docLocked; this.classList.toggle('on',STATE.docLocked); var s=this.querySelector('span'); if(s)s.textContent=STATE.docLocked?'Kilitli':'Kilitle'; sendData({t:'doc-lock',on:STATE.docLocked}); toast(STATE.docLocked?'Yazı tahtası kilitlendi — öğrenciler yazamaz':'Kilit açıldı'); });
     setLocked(STATE.docLocked);
     if(STATE.isHost) snapTimer=setInterval(sendSnapshot,5000);
@@ -879,6 +880,8 @@ var DOC=(function(){
       if((msg.pane||'C')==='C') wc();
     }catch(e){}
   }
+  /* Temizle: TÜM panelleri koşulsuz boşalt (öğrenci odakta olsa bile) — 'full' snapshot skip-if-focused sorununu aşar. */
+  function clearAll(){ try{ ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} wc(); }
   function colR(p){ var c=colEl(p); var ww=wsW(); if(!c||c.hasAttribute('hidden')||!ww)return 0; return c.offsetWidth/ww; }
   function getState(){ if(!ready)return null; try{ return {
     C:Q.C?Q.C.getContents().ops:null, L:Q.L?Q.L.getContents().ops:null, R:Q.R?Q.R.getContents().ops:null,
@@ -899,7 +902,7 @@ var DOC=(function(){
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
   function setLocked(on){ try{ ['C','L','R'].forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked };
+  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

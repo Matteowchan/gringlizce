@@ -846,14 +846,41 @@ var DOC=(function(){
   function applySpell(){ panes().forEach(function(p){ var q=Q[p]; if(q&&q.root){ try{ q.root.spellcheck=SPELL; q.root.setAttribute('spellcheck',SPELL?'true':'false'); }catch(e){} } }); var b=document.getElementById('doc-spell'); if(b){ b.classList.toggle('on',SPELL); b.title=SPELL?'Yazım denetimi AÇIK — yanlış yazımlar kırmızı ile işaretlenir (spelling çalışması). Kapatmak için tıkla.':'Yazım denetimi kapalı — kırmızı çizgi yok. Spelling çalışması için tıkla.'; } }
   function toggleSpell(){ SPELL=!SPELL; try{ localStorage.setItem('gm-doc-spell',SPELL?'1':'0'); }catch(e){} applySpell(); try{ toast(SPELL?'Yazım denetimi açıldı — yanlış yazımlar kırmızı ile işaretlenir':'Yazım denetimi kapatıldı — kırmızı çizgi yok'); }catch(e){} }
   /* Süreli yazı çalışması geri sayımı — host başlatır, herkeste senkron gösterilir. */
-  var TMR=null,tmrLeft=0;
+  var TMR=null,tmrLeft=0,tmrPaused=false;
   function tmrFmt(s){ s=Math.max(0,s|0); var m=Math.floor(s/60),ss=s%60; return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss; }
-  function tmrBtn(on){ var b=document.getElementById('doc-timer-btn'); if(b){ b.classList.toggle('on',!!on); var s=b.querySelector('span'); if(s)s.textContent=on?'Durdur':'Süre'; } }
-  function tmrPaint(){ var c=document.getElementById('doc-timer-chip'); if(!c)return; if(tmrLeft<=0&&!TMR){ c.setAttribute('hidden',''); return; } c.removeAttribute('hidden'); c.textContent='⏱ '+tmrFmt(tmrLeft); c.classList.toggle('warn',tmrLeft<=30); }
-  function tmrStop(silent){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=0; tmrPaint(); tmrBtn(false); if(!silent&&STATE.isHost) sendData({t:'doc-timer',op:'stop'}); }
-  function tmrRun(sec){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=Math.max(0,sec|0); tmrPaint(); tmrBtn(true); TMR=setInterval(function(){ tmrLeft--; if(tmrLeft<=0){ clearInterval(TMR); TMR=null; tmrPaint(); tmrBtn(false); try{ toast('Süre doldu — yazma süresi bitti.'); beep(); }catch(e){} return; } tmrPaint(); },1000); }
-  function tmrStart(){ if(!STATE.isHost)return; if(TMR){ tmrStop(); return; } var v=window.prompt('Kaç dakikalık yazma süresi? (örn. 15)','15'); if(v==null)return; var mins=parseFloat(String(v).replace(',','.')); if(!(mins>0)){ toast('Geçerli bir süre gir.'); return; } var sec=Math.round(mins*60); tmrRun(sec); sendData({t:'doc-timer',op:'start',sec:sec}); toast(mins+' dakikalık yazma süresi başladı.'); }
-  function applyTimer(msg){ if(STATE.isHost||!msg)return; if(msg.op==='start') tmrRun(msg.sec||0); else if(msg.op==='stop') tmrStop(true); }
+  function tmrBtn(){ var b=document.getElementById('doc-timer-btn'); if(!b)return; var active=(TMR||tmrPaused); b.classList.toggle('on',!!active); var s=b.querySelector('span'); if(s)s.textContent='Süre'; }
+  function tmrPaint(){ var c=document.getElementById('doc-timer-chip'); if(!c)return; if(tmrLeft<=0&&!TMR&&!tmrPaused){ c.setAttribute('hidden',''); return; } c.removeAttribute('hidden'); c.textContent=(tmrPaused?'⏸ ':'⏱ ')+tmrFmt(tmrLeft); c.classList.toggle('warn',tmrLeft<=30&&!tmrPaused); }
+  function tmrTick(){ TMR=setInterval(function(){ tmrLeft--; if(tmrLeft<=0){ clearInterval(TMR); TMR=null; tmrPaused=false; tmrPaint(); tmrBtn(); try{ toast('Süre doldu — yazma süresi bitti.'); beep(); }catch(e){} return; } tmrPaint(); },1000); }
+  function tmrRun(sec){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=Math.max(0,sec|0); tmrPaused=false; tmrPaint(); tmrBtn(); if(tmrLeft>0) tmrTick(); }
+  function tmrPause(remote){ if(!TMR)return; clearInterval(TMR); TMR=null; tmrPaused=true; tmrPaint(); tmrBtn(); if(!remote&&STATE.isHost) sendData({t:'doc-timer',op:'pause'}); }
+  function tmrResume(remote){ if(!tmrPaused||tmrLeft<=0)return; tmrPaused=false; tmrPaint(); tmrBtn(); tmrTick(); if(!remote&&STATE.isHost) sendData({t:'doc-timer',op:'resume'}); }
+  function tmrStop(silent){ if(TMR){ clearInterval(TMR); TMR=null; } tmrLeft=0; tmrPaused=false; tmrPaint(); tmrBtn(); if(!silent&&STATE.isHost) sendData({t:'doc-timer',op:'stop'}); }
+  function tmrBegin(mins){ if(!(mins>0))return; var sec=Math.round(mins*60); tmrRun(sec); sendData({t:'doc-timer',op:'start',sec:sec}); try{ toast(mins+' dakikalık yazma süresi başladı.'); }catch(e){} }
+  function timerPopup(){
+    var ex=document.getElementById('doc-timer-pop'); if(ex){ ex.remove(); return; } /* toggle kapat */
+    var btn=document.getElementById('doc-timer-btn'); if(!btn)return;
+    var pop=document.createElement('div'); pop.id='doc-timer-pop'; pop.className='gmr-timer-pop';
+    var active=(TMR||tmrPaused), h='';
+    if(active){ h+='<div class="tctrl">'; if(TMR) h+='<button class="pausebtn" id="tmr-pause">⏸ Duraklat</button>'; else h+='<button class="resumebtn" id="tmr-resume">▶ Devam Et</button>'; h+='<button class="stopbtn" id="tmr-stop-btn">■ Durdur</button></div><div class="tsep"></div>'; }
+    h+='<h5>'+(active?'Yeni süre başlat (dk)':'Yazma süresi (dk)')+'</h5><div class="row">';
+    [5,10,15,20].forEach(function(m){ h+='<button class="preset" data-m="'+m+'">'+m+'</button>'; });
+    h+='</div><div class="custom"><input id="tmr-custom" type="number" min="1" max="240" placeholder="Özel dk" inputmode="numeric"><button id="tmr-custom-go">Başlat</button></div>';
+    pop.innerHTML=h; document.body.appendChild(pop);
+    var r=btn.getBoundingClientRect(), pw=pop.offsetWidth||230;
+    pop.style.left=Math.max(8,Math.min(r.left, (window.innerWidth||800)-pw-10))+'px'; pop.style.top=(r.bottom+6)+'px';
+    function go(m){ tmrBegin(m); pop.remove(); }
+    pop.querySelectorAll('.preset').forEach(function(b){ b.addEventListener('click',function(){ go(parseInt(b.dataset.m,10)); }); });
+    var ci=pop.querySelector('#tmr-custom'), cg=pop.querySelector('#tmr-custom-go');
+    function customGo(){ var v=parseFloat(String(ci.value||'').replace(',','.')); if(!(v>0)){ ci.focus(); return; } go(v); }
+    if(cg)cg.addEventListener('click',customGo);
+    if(ci)ci.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); customGo(); } else if(e.key==='Escape'){ pop.remove(); } });
+    var pb=pop.querySelector('#tmr-pause'); if(pb)pb.addEventListener('click',function(){ tmrPause(); pop.remove(); timerPopup(); });
+    var rb=pop.querySelector('#tmr-resume'); if(rb)rb.addEventListener('click',function(){ tmrResume(); pop.remove(); timerPopup(); });
+    var sb=pop.querySelector('#tmr-stop-btn'); if(sb)sb.addEventListener('click',function(){ tmrStop(); pop.remove(); });
+    setTimeout(function(){ document.addEventListener('mousedown',function onOut(e){ if(!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){ try{pop.remove();}catch(_){}; document.removeEventListener('mousedown',onOut); } }); },10);
+  }
+  function tmrStart(){ if(!STATE.isHost)return; timerPopup(); }
+  function applyTimer(msg){ if(STATE.isHost||!msg)return; if(msg.op==='start') tmrRun(msg.sec||0); else if(msg.op==='pause') tmrPause(true); else if(msg.op==='resume') tmrResume(true); else if(msg.op==='stop') tmrStop(true); }
   var TOOLBAR=[
     [{'font':[]},{'size':['12px','14px',false,'18px','24px','32px']}],
     [{'header':[1,2,3,false]}],

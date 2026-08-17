@@ -770,6 +770,7 @@ function onData(payload,p){
   else if(msg.t==='wb-live'){ WB.applyLive(msg); }
   else if(msg.t==='wb-nav'){ WB.applyNav(msg); }
   else if(msg.t==='anno'){ ANNO.applyRemote(msg); }
+  else if(msg.t==='anno-live'){ ANNO.applyLive(msg); }
   else if(msg.t==='layout'){ if(!STATE.isHost&&fromHost) applyPaneLayout(msg); }
   else if(msg.t==='caption'){ var cwho=msg.name||from||'Katılımcı'; if(msg.fin){ pushTranscript(cwho,msg.text||''); _rememberRemoteCap(msg.text||''); } if(STATE.captionsOn) showCaption(cwho,msg.text||'',!!msg.fin); }
 }
@@ -1830,6 +1831,8 @@ var ANNO=(function(){
   var FONT_MIN=12,FONT_MAX=120,FONT_STEP=6;
   var items=[],drawing=false,cur=null,startPt=null,sel=null,dragOff=null;
   var liveBc=throttle(broadcast,50); /* #4 materyal-üstü çizim de mid-stroke canlı senkronlanır (up()'ta kesin gönderim) */
+  /* Faz0: mid-stroke'ta tüm diziyi değil YALNIZ aktif öğeyi yolla (paket sabit/küçük; 15KB aşımı+jank çözümü). */
+  var liveOne=throttle(function(it,idx){ if(!it)return; try{ sendData({t:'anno-live',item:it,idx:idx}); }catch(_){} },50);
   var COLORS=['#d64545','#2E6E6A','#2E5E8A','#B78A2E','#7E3A56','#1b1b1b','#ffffff'];
   function init(){
     cv=$('#anno-canvas'); if(!cv)return; ctx=cv.getContext('2d'); wrap=cv.parentElement;
@@ -1875,8 +1878,8 @@ var ANNO=(function(){
     else { cur={type:tool,x:p.x,y:p.y,w:0,h:0,color:color,size:size}; items.push(cur); }
   }
   function move(e){ var p=pos(e),pp=P(p);
-    if(tool==='select'&&sel!=null&&sel>=0&&dragOff){ items[sel]=JSON.parse(JSON.stringify(dragOff.orig)); shift(items[sel],pp.x-dragOff.x,pp.y-dragOff.y); redraw(); liveBc(); return; }
-    if(!drawing||!cur)return; if(cur.points)cur.points.push(p); else{ cur.w=p.x-startPt.x; cur.h=p.y-startPt.y; } redraw(); liveBc();
+    if(tool==='select'&&sel!=null&&sel>=0&&dragOff){ items[sel]=JSON.parse(JSON.stringify(dragOff.orig)); shift(items[sel],pp.x-dragOff.x,pp.y-dragOff.y); redraw(); liveOne(items[sel],sel); return; }
+    if(!drawing||!cur)return; if(cur.points){ var lp=cur.points[cur.points.length-1]; if(!lp||Math.hypot((p.x-lp.x)*W,(p.y-lp.y)*H)>=2) cur.points.push(p); } else{ cur.w=p.x-startPt.x; cur.h=p.y-startPt.y; } redraw(); liveOne(cur, items.indexOf(cur));
   }
   function up(){ if(tool==='select'&&dragOff){ dragOff=null; broadcast(); redraw(); } if(drawing){ drawing=false; cur=null; broadcast(); } }
   function placeText(p,bullet){
@@ -1923,8 +1926,10 @@ var ANNO=(function(){
     // W/H=0 kalır ve çizim boş görünür. Bir sonraki karede yeniden ölçüp çiz → öğrencide anında belirir (#108).
     if(!W||!H){ try{ requestAnimationFrame(function(){ resize(); }); }catch(e){ setTimeout(resize,60); } }
     else redraw(); }
+  /* Faz0: mid-stroke tek-öğe canlı güncelleme — idx'e upsert; tam 'anno' broadcast (up) sonra reconcile eder. */
+  function applyLive(msg){ if(!msg||!msg.item)return; var idx=(typeof msg.idx==='number'&&msg.idx>=0)?msg.idx:items.length; items[idx]=msg.item; if(!W||!H){ try{ requestAnimationFrame(function(){ resize(); }); }catch(e){} } else redraw(); }
   function reset(bc){ items=[]; sel=null; redraw(); if(bc)broadcast(); }
-  return {init:init,resize:resize,applyRemote:applyRemote,reset:reset,items:function(){return items;},broadcast:broadcast,currentTool:function(){return tool;},currentColor:function(){return color;},currentSize:function(){return size;}};
+  return {init:init,resize:resize,applyRemote:applyRemote,applyLive:applyLive,reset:reset,items:function(){return items;},broadcast:broadcast,currentTool:function(){return tool;},currentColor:function(){return color;},currentSize:function(){return size;}};
 })();
 
 /* ================= REACTIONS ================= */

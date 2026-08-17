@@ -321,6 +321,15 @@
       white-space: pre-line;
     }
 
+    /* Soru kökü içi figür (SVG) ve veri tablosu (data-analysis / command of evidence) */
+    .st-fig { margin: .7rem 0; overflow-x: auto; }
+    .st-fig svg { max-width: 100%; height: auto; background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; padding: 6px; }
+    .st-table { overflow-x: auto; margin: .7rem 0; white-space: normal; }
+    .st-table table, .st-dtable { border-collapse: collapse; font-size: .92rem; width: auto; min-width: min(100%, 320px); font-family: var(--font-ui, Inter, system-ui, sans-serif); }
+    .st-table caption { font-weight: 600; text-align: left; margin-bottom: .35rem; color: var(--text); }
+    .st-table th, .st-table td, .st-dtable th, .st-dtable td { border: 1px solid var(--border, #e5e7eb); padding: .35rem .6rem; text-align: left; vertical-align: top; }
+    .st-table th, .st-dtable th { background: rgba(0,0,0,.05); font-weight: 600; }
+
     .q-options { display: flex; flex-direction: column; gap: 0.7rem; }
 
     .q-option {
@@ -1996,33 +2005,34 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Whitelist-based HTML — allows basic format tags only
+    // Whitelist-based HTML — allows basic format tags, plus raw <svg> figures and <table> data tables (our own generated content)
     function safeHtml(s) {
       if (s == null) return '';
       var str = String(s);
-      // First, fully escape everything
-      var escaped = str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-      // Then selectively un-escape allowed tags
-      var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'caption'];
-      allowed.forEach(function (tag) {
-        var openRe = new RegExp('&lt;' + tag + '&gt;', 'gi');
-        var closeRe = new RegExp('&lt;/' + tag + '&gt;', 'gi');
-        var selfRe = new RegExp('&lt;' + tag + '\\s*/&gt;', 'gi');
-        escaped = escaped.replace(openRe, '<' + tag + '>')
-                         .replace(closeRe, '</' + tag + '>')
-                         .replace(selfRe, '<' + tag + '/>');
-      });
-      // Allow safe class-only attributes on div, p (whitelist of class names only)
-      var safeClassRe = /&lt;(div|p)\s+class=&quot;([a-zA-Z][a-zA-Z0-9_\- ]{0,80})&quot;&gt;/g;
-      escaped = escaped.replace(safeClassRe, function (m, tag, cls) {
-        return '<' + tag + ' class="' + cls + '">';
-      });
-      return escaped;
+      // <svg>…</svg> figür ve <table>…</table> tablo bloklarını HAM bırak (kendi ürettiğimiz güvenli içerik, class/attribute korunur); geri kalanı whitelist'le.
+      return str.split(/(<svg[\s\S]*?<\/svg>|<table[\s\S]*?<\/table>)/i).map(function (part, i) {
+        if (i % 2 === 1) {
+          return /^<table/i.test(part) ? '<div class="st-table">' + part + '</div>' : '<div class="st-fig">' + part + '</div>';
+        }
+        var escaped = part
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+        // İzinli inline/blok etiketler (attribute'suz)
+        var allowed = ['u', 'b', 'i', 'em', 'strong', 'sub', 'sup', 'br', 'p', 'div', 'ul', 'ol', 'li'];
+        allowed.forEach(function (tag) {
+          escaped = escaped.replace(new RegExp('&lt;' + tag + '&gt;', 'gi'), '<' + tag + '>')
+                           .replace(new RegExp('&lt;/' + tag + '&gt;', 'gi'), '</' + tag + '>')
+                           .replace(new RegExp('&lt;' + tag + '\\s*/&gt;', 'gi'), '<' + tag + '/>');
+        });
+        // div/p için yalnız class attribute'una izin ver
+        escaped = escaped.replace(/&lt;(div|p)\s+class=&quot;([a-zA-Z][a-zA-Z0-9_\- ]{0,80})&quot;&gt;/g, function (m, tag, cls) {
+          return '<' + tag + ' class="' + cls + '">';
+        });
+        return escaped;
+      }).join('');
     }
 
     function showError(message) {

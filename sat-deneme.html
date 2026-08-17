@@ -260,11 +260,14 @@ function formatMath(s){
 }
 function mtext(s, isMath){
   s = String(s==null?'':s);
-  // Inline <svg>...</svg> bloklari (guvenilir, kendi uretimimiz) ham birakilir; geri kalan metin escape/format edilir. <u> etiketine de izin ver.
-  return s.split(/(<svg[\s\S]*?<\/svg>)/i).map(function(part, i){
-    if (i % 2 === 1) return '<div class="st-fig">'+part+'</div>';
+  // Ham birakilan bloklar (guvenilir, kendi uretimimiz): <svg> figur + <table> veri tablosu. Geri kalan metin escape/format edilir.
+  return s.split(/(<svg[\s\S]*?<\/svg>|<table[\s\S]*?<\/table>)/i).map(function(part, i){
+    if (i % 2 === 1){
+      return /^<table/i.test(part) ? '<div class="st-table">'+part+'</div>' : '<div class="st-fig">'+part+'</div>';
+    }
     var t = isMath ? formatMath(esc(part)) : esc(part);
-    return t.replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+    // Izinli inline bicimlendirme: alti-cizili (u), kalin (b/strong), italik (i/em) — SAT soru kokleri icin.
+    return t.replace(/&lt;(\/?)(u|b|strong|i|em)&gt;/gi, '<$1$2>');
   }).join('');
 }
 function mdTableHtml(block){

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Soru Kalite Paneli | Gri English</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js?v=2" defer></script>
+  <style>
+    .qk-wrap{max-width:1000px;margin:0 auto;padding:1.4rem 20px 4rem;}
+    .qk-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+    .qk-top h1{font-family:var(--font-display,'Playfair Display'),serif;font-size:clamp(1.5rem,3.5vw,2rem);margin:0;}
+    .qk-back{font-size:.9rem;color:var(--teal,#2C5856);text-decoration:none;}
+    .qk-gate{background:var(--bg-card,#fff);border:1px solid var(--gri-line,rgba(0,0,0,.1));border-radius:14px;padding:1.4rem;text-align:center;color:var(--text,#241c12);}
+    .qk-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+    .qk-tab{background:var(--bg-soft,#f1ead9);border:1px solid var(--gri-line,rgba(0,0,0,.12));border-radius:9px;padding:8px 14px;font-weight:700;font-size:.9rem;color:var(--text,#241c12);cursor:pointer;}
+    .qk-tab.on{background:var(--teal,#2C5856);border-color:var(--teal,#2C5856);color:#fff;}
+    .qk-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+    .qk-filters select{background:var(--bg-card,#fff);border:1px solid var(--gri-line,rgba(0,0,0,.14));border-radius:8px;padding:7px 9px;font:600 13px inherit;color:var(--text,#241c12);}
+    .qk-count{font-size:.85rem;color:var(--text-muted,#8a8073);margin-left:auto;}
+    .qk-card{background:var(--bg-card,#fff);border:1px solid var(--gri-line,rgba(0,0,0,.1));border-left-width:4px;border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+    .qk-card.sev-high{border-left-color:#c0563e;} .qk-card.sev-medium{border-left-color:#c99a2e;} .qk-card.sev-low{border-left-color:#6b7488;}
+    .qk-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:7px;}
+    .qk-pill{font-size:10.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:20px;}
+    .qk-pill.high{background:rgba(192,86,62,.16);color:#c0563e;} .qk-pill.medium{background:rgba(201,154,46,.18);color:#a9791b;} .qk-pill.low{background:rgba(107,116,136,.16);color:#5c6478;}
+    .qk-pill.cat{background:color-mix(in srgb,var(--teal,#2C5856) 14%,transparent);color:var(--teal,#2C5856);}
+    .qk-pill.exam{background:var(--bg-soft,#f1ead9);color:var(--text-soft,#6E6353);}
+    .qk-find{font-size:.95rem;line-height:1.5;color:var(--text,#241c12);margin:2px 0 8px;}
+    .qk-sug{font-size:.85rem;color:var(--text-soft,#6E6353);line-height:1.5;margin:0 0 8px;}
+    .qk-q{background:var(--bg-soft,#f1ead9);border-radius:9px;padding:9px 11px;margin:6px 0;font-size:.88rem;line-height:1.5;color:var(--text,#241c12);}
+    .qk-q .qtext{font-weight:600;margin-bottom:5px;display:block;}
+    .qk-q ul{margin:4px 0 0;padding-left:1.1rem;} .qk-q li{margin:1px 0;} .qk-q li.correct{color:#2e7d5b;font-weight:700;}
+    .qk-q .slug{font-size:11px;color:var(--text-muted,#8a8073);font-family:ui-monospace,monospace;}
+    .qk-act{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+    .qk-act button{border:1px solid var(--gri-line,rgba(0,0,0,.14));background:var(--bg-soft,#f1ead9);color:var(--text,#241c12);border-radius:8px;padding:6px 12px;font:700 12.5px inherit;cursor:pointer;}
+    .qk-act button.done{background:#2e7d5b;border-color:#2e7d5b;color:#fff;} .qk-act button.dismiss{color:#c0563e;}
+    .qk-empty{text-align:center;color:var(--text-muted,#8a8073);padding:2rem 0;}
+    .qk-note{font-size:.85rem;color:var(--text-soft,#6E6353);background:var(--bg-soft,#f1ead9);border-radius:8px;padding:7px 10px;margin:6px 0;}
+  </style>
+</head>
+<body>
+  <div class="qk-wrap">
+    <div class="qk-top">
+      <h1>Soru Kalite Paneli</h1>
+      <a class="qk-back" href="/">← Ana sayfa</a>
+    </div>
+    <div id="qk-gate" class="qk-gate">Yükleniyor…</div>
+    <div id="qk-app" hidden>
+      <div class="qk-tabs">
+        <button class="qk-tab on" data-tab="audit">Audit Bulguları</button>
+        <button class="qk-tab" data-tab="reports">Öğrenci Raporları</button>
+      </div>
+      <div class="qk-filters">
+        <select id="qk-status"><option value="open">Açık</option><option value="resolved">Çözüldü</option><option value="dismissed">Yoksayıldı</option><option value="">Tümü</option></select>
+        <select id="qk-exam"><option value="">Tüm dersler</option><option value="sat">SAT</option><option value="yds">YDS</option><option value="ydt">YDT</option><option value="udsp">UDSP</option><option value="toefl">TOEFL</option></select>
+        <select id="qk-sev" data-audit><option value="">Tüm önem</option><option value="high">Yüksek</option><option value="medium">Orta</option><option value="low">Düşük</option></select>
+        <span class="qk-count" id="qk-count"></span>
+      </div>
+      <div id="qk-list"></div>
+    </div>
+  </div>
+<script>
+(function(){
+  var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co', SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+  var TAB='audit';
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var EXAM_L={sat:'SAT',yds:'YDS/YÖKDİL',ydt:'YDT',udsp:'UDSP',toefl:'TOEFL',ielts:'IELTS'};
+  var CAT_L={wrong_answer:'Yanlış cevap',ambiguous:'Belirsiz/çift doğru',weak_distractor:'Zayıf çeldirici',longest_correct_bias:'En-uzun-doğru',generic_template:'Generic kalıp',explanation_gap:'Açıklama eksik',difficulty_mislabel:'Zorluk etiketi',visual_broken:'Görsel bozuk',language_error:'Dil/yazım',duplicate_explanation:'Tekrar açıklama',duplicate_question:'Tekrar soru'};
+  var RSN_L={answer:'Yanlış/tartışmalı cevap',typo:'Yazım/dilbilgisi',unclear:'Belirsiz/eksik',visual:'Görsel/tablo',other:'Diğer'};
+
+  async function boot(){
+    var g=document.getElementById('qk-gate');
+    var s; try{ s=(await sb.auth.getSession()).data.session; }catch(e){}
+    if(!s){ g.innerHTML='Bu panel için <a href="giris?return='+encodeURIComponent(location.pathname)+'">giriş</a> yapmalısın.'; return; }
+    var pr; try{ pr=await sb.from('profiles').select('role').eq('id',s.user.id).maybeSingle(); }catch(e){}
+    var role=pr&&pr.data&&pr.data.role;
+    if(role!=='admin'&&role!=='teacher'){ g.innerHTML='Bu sayfa yalnız öğretmen/yönetici içindir.'; return; }
+    g.hidden=true; document.getElementById('qk-app').hidden=false;
+    document.querySelectorAll('.qk-tab').forEach(function(b){ b.addEventListener('click',function(){ TAB=b.dataset.tab; document.querySelectorAll('.qk-tab').forEach(function(x){x.classList.toggle('on',x===b);}); document.querySelector('#qk-sev').style.display=(TAB==='audit')?'':'none'; load(); }); });
+    ['qk-status','qk-exam','qk-sev'].forEach(function(id){ document.getElementById(id).addEventListener('change',load); });
+    load();
+  }
+
+  async function fetchQuestions(slugs){
+    var map={}; if(!slugs.length) return map;
+    try{ var r=await sb.from('questions').select('slug,question_text,options,correct_answer,section,subcategory,difficulty').in('slug',slugs);
+      (r.data||[]).forEach(function(q){ map[q.slug]=q; }); }catch(e){}
+    return map;
+  }
+  function qPreview(q){
+    if(!q) return '<div class="qk-q"><span class="slug">soru bulunamadı</span></div>';
+    var opts=Array.isArray(q.options)?q.options:[];
+    var ol=opts.length?('<ul>'+opts.map(function(o){ var isC=q.correct_answer&&String(o.letter).toUpperCase()===String(q.correct_answer).toUpperCase(); return '<li class="'+(isC?'correct':'')+'"><b>'+esc(o.letter)+'.</b> '+esc(o.text)+(isC?' ✓':'')+'</li>'; }).join('')+'</ul>'):('<div>Cevap: <b>'+esc(q.correct_answer||'—')+'</b></div>');
+    return '<div class="qk-q"><span class="qtext">'+esc((q.question_text||'').slice(0,600))+'</span>'+ol+'<span class="slug">'+esc(q.slug)+' · '+esc(q.section||'')+'/'+esc(q.subcategory||'')+' · '+esc(q.difficulty||'')+'</span></div>';
+  }
+
+  async function load(){
+    var list=document.getElementById('qk-list'), cnt=document.getElementById('qk-count');
+    list.innerHTML='<div class="qk-empty">Yükleniyor…</div>';
+    var status=document.getElementById('qk-status').value, exam=document.getElementById('qk-exam').value, sev=document.getElementById('qk-sev').value;
+    if(TAB==='audit'){
+      var q=sb.from('question_audit').select('*').order('severity',{ascending:true}).order('created_at',{ascending:false}).limit(400);
+      if(status) q=q.eq('status',status); if(exam) q=q.eq('exam_type',exam); if(sev) q=q.eq('severity',sev);
+      var r=await q; var rows=(r.error?[]:(r.data||[]));
+      cnt.textContent=rows.length+' bulgu';
+      if(!rows.length){ list.innerHTML='<div class="qk-empty">Bu filtrede audit bulgusu yok.</div>'; return; }
+      var qmap=await fetchQuestions(rows.map(function(x){return x.question_slug;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+      list.innerHTML=rows.map(function(x){
+        return '<div class="qk-card sev-'+esc(x.severity)+'" data-id="'+esc(x.id)+'">'
+          +'<div class="qk-meta"><span class="qk-pill '+esc(x.severity)+'">'+esc(x.severity)+'</span>'
+          +'<span class="qk-pill cat">'+esc(CAT_L[x.category]||x.category)+'</span>'
+          +'<span class="qk-pill exam">'+esc(EXAM_L[x.exam_type]||x.exam_type||'')+'</span>'
+          +(x.source==='auto'?'<span class="qk-pill exam">otomatik</span>':'')+'</div>'
+          +'<div class="qk-find">'+esc(x.finding)+'</div>'
+          +(x.suggestion?'<div class="qk-sug">Öneri: '+esc(x.suggestion)+'</div>':'')
+          +qPreview(qmap[x.question_slug])
+          +'<div class="qk-act"><button class="done" data-act="resolved">Çözüldü</button><button class="dismiss" data-act="dismissed">Yoksay</button></div></div>';
+      }).join('');
+      bindActions('question_audit');
+    } else {
+      var q2=sb.from('question_reports').select('*').order('created_at',{ascending:false}).limit(400);
+      if(status) q2=q2.eq('status',status);
+      var r2=await q2; var rows2=(r2.error?[]:(r2.data||[]));
+      cnt.textContent=rows2.length+' rapor';
+      if(!rows2.length){ list.innerHTML='<div class="qk-empty">Bu filtrede öğrenci raporu yok.</div>'; return; }
+      var qmap2=await fetchQuestions(rows2.map(function(x){return x.question_slug;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+      list.innerHTML=rows2.map(function(x){
+        return '<div class="qk-card sev-medium" data-id="'+esc(x.id)+'">'
+          +'<div class="qk-meta"><span class="qk-pill medium">'+esc(RSN_L[x.reason]||x.reason||'rapor')+'</span>'
+          +'<span class="qk-pill exam">'+esc((x.created_at||'').slice(0,10))+'</span></div>'
+          +(x.note?'<div class="qk-note">"'+esc(x.note)+'"</div>':'<div class="qk-sug">Öğrenci not eklememiş.</div>')
+          +qPreview(qmap2[x.question_slug])
+          +'<div class="qk-act"><button class="done" data-act="resolved">Çözüldü</button><button class="dismiss" data-act="dismissed">Yoksay</button></div></div>';
+      }).join('');
+      bindActions('question_reports');
+    }
+  }
+  function bindActions(table){
+    document.querySelectorAll('.qk-card').forEach(function(card){
+      card.querySelectorAll('.qk-act button').forEach(function(b){
+        b.addEventListener('click',async function(){
+          var id=card.dataset.id, act=b.dataset.act;
+          b.disabled=true; b.textContent='...';
+          try{ var r=await sb.from(table).update({status:act}).eq('id',id); if(r.error) throw r.error; card.style.opacity='.4'; card.querySelector('.qk-act').innerHTML='<span class="qk-sug">'+(act==='resolved'?'Çözüldü olarak işaretlendi.':'Yoksayıldı.')+'</span>'; }
+          catch(e){ b.disabled=false; b.textContent=(act==='resolved'?'Çözüldü':'Yoksay'); }
+        });
+      });
+    });
+  }
+  if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);
+})();
+</script>
+</body>
+</html>

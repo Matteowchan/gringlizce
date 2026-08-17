@@ -1621,6 +1621,12 @@ var WB=(function(){
   var FONT_MIN=12,FONT_MAX=120,FONT_STEP=6;
   var pages=[[]],pageIx=0,items=pages[0],editingItem=null;
   var drawing=false,cur=null,startPt=null,sel=null,dragOff=null,clip=null,guides=[],resizing=false,fillOn=false,underlineOn=false;
+  /* Faz3: gerçek Geri Al — items.pop() değil, eylem-öncesi anlık görüntü yığını (per-sayfa). Sayfa/uzak değişiminde sıfırlanır. */
+  var _hist=[],_redo=[],_committed=null,_restoring=false;
+  function wbSnap(){ return JSON.stringify(items.map(strip)); }
+  function wbResetHist(){ _hist.length=0; _redo.length=0; try{ _committed=wbSnap(); }catch(e){ _committed=null; } }
+  function wbUndo(){ if(!_hist.length){ toast('Geri alınacak adım yok.'); return; } _redo.push(_committed!=null?_committed:wbSnap()); var prev=_hist.pop(); setItems(JSON.parse(prev)); rehydrate(items); sel=null; _committed=prev; _restoring=true; redraw(); sendData({t:'wb',items:items.map(strip),page:pageIx,np:pages.length}); _restoring=false; }
+  function wbRedo(){ if(!_redo.length)return; _hist.push(_committed!=null?_committed:wbSnap()); var nx=_redo.pop(); setItems(JSON.parse(nx)); rehydrate(items); sel=null; _committed=nx; _restoring=true; redraw(); sendData({t:'wb',items:items.map(strip),page:pageIx,np:pages.length}); _restoring=false; }
   var liveBc=throttle(broadcast,50); /* #4 mid-stroke canlı senkron: çizerken/taşırken öğrencide ~50ms'de görünür (up()'ta kesin gönderim) */
   /* Faz0: mid-stroke'ta tüm diziyi değil YALNIZ aktif öğeyi yolla — paket sabit/küçük kalır (15KB aşımı+jank çözümü). up()'ta tam broadcast reconcile eder. */
   var liveOne=throttle(function(it,idx){ if(!it)return; try{ sendData({t:'wb-live',item:strip(it),idx:idx,page:pageIx,np:pages.length}); }catch(_){} },50);
@@ -1673,7 +1679,7 @@ var WB=(function(){
     $('#wb-copy').addEventListener('click',function(){ if(sel!=null){ clip=JSON.parse(JSON.stringify(strip(items[sel]))); toast('Kopyalandı.'); } });
     $('#wb-cut').addEventListener('click',function(){ if(sel!=null){ clip=JSON.parse(JSON.stringify(strip(items[sel]))); items.splice(sel,1); sel=null; redraw(); broadcast(); } });
     $('#wb-paste').addEventListener('click',function(){ if(clip){ var it=JSON.parse(JSON.stringify(clip)); shift(it,26,26); items.push(it); sel=items.length-1; redraw(); broadcast(); } });
-    $('#wb-undo').addEventListener('click',function(){ items.pop(); sel=null; redraw(); broadcast(); });
+    $('#wb-undo').addEventListener('click',function(){ wbUndo(); });
     var _clr=$('#wb-clear'); if(_clr){ _clr.title='Seçili öğeyi sil / tümünü temizle'; _clr.addEventListener('click',function(){ if(sel!=null&&sel>=0&&items[sel]){ items.splice(sel,1); sel=null; redraw(); broadcast(); return; } if(confirm('Bu sayfa temizlensin mi?')){ setItems([]); sel=null; redraw(); broadcast(); } }); }
     var _cp=$('#wb-color-custom'); if(_cp)_cp.addEventListener('input',function(){ color=this.value; $$('#wb-colors button').forEach(function(x){x.classList.remove('on');}); if(sel!=null&&sel>=0&&items[sel]){ items[sel].color=color; redraw(); broadcast(); } });
     var _fl=$('#wb-fill'); if(_fl)_fl.addEventListener('click',function(){ var it=(sel!=null&&sel>=0)?items[sel]:null; var shp=it&&!it.points&&it.type!=='text'; if(shp){ it.fill=!it.fill; this.classList.toggle('on',!!it.fill); redraw(); broadcast(); } else { fillOn=!fillOn; this.classList.toggle('on',fillOn); toast(fillOn?'Dolgu açık — yeni şekiller dolu çizilir':'Dolgu kapalı'); } });
@@ -1685,9 +1691,9 @@ var WB=(function(){
     cv.addEventListener('dblclick',function(e){ if(STATE.wbLocked&&!STATE.isHost)return; var p=pos(e); var i=hit(p); if(i>=0&&items[i]&&items[i].type==='text') editText(i); });
     var _lk=$('#wb-lock'); if(_lk)_lk.addEventListener('click',function(){ if(!STATE.isHost)return; STATE.wbLocked=!STATE.wbLocked; this.classList.toggle('on',STATE.wbLocked); this.title=STATE.wbLocked?'Kilit açık — öğrenci çizemez':'Öğrenci çizimini kilitle'; sendData({t:'wb-lock',on:STATE.wbLocked}); toast(STATE.wbLocked?'Tahta kilitlendi — öğrenciler çizemez':'Tahta kilidi açıldı'); });
     window.addEventListener('resize',resize);
-    document.addEventListener('keydown',function(e){ if(STATE.mode!=='board')return; var _t=e.target,_tg=_t&&_t.tagName; if(_tg==='TEXTAREA'||_tg==='INPUT'||(_t&&_t.isContentEditable))return; var m=(e.ctrlKey||e.metaKey); if(m&&e.key==='c')$('#wb-copy').click(); else if(m&&e.key==='x')$('#wb-cut').click(); else if(m&&e.key==='v')$('#wb-paste').click(); else if(m&&e.key==='z')$('#wb-undo').click(); else if(e.key==='Delete'&&sel!=null){ items.splice(sel,1);sel=null;redraw();broadcast(); } });
+    document.addEventListener('keydown',function(e){ if(STATE.mode!=='board')return; var _t=e.target,_tg=_t&&_t.tagName; if(_tg==='TEXTAREA'||_tg==='INPUT'||(_t&&_t.isContentEditable))return; var m=(e.ctrlKey||e.metaKey); if(m&&e.key==='c')$('#wb-copy').click(); else if(m&&e.key==='x')$('#wb-cut').click(); else if(m&&e.key==='v')$('#wb-paste').click(); else if(m&&(e.key==='y'||(e.shiftKey&&(e.key==='z'||e.key==='Z')))){ e.preventDefault(); wbRedo(); } else if(m&&e.key==='z'){ e.preventDefault(); wbUndo(); } else if(e.key==='Delete'&&sel!=null){ items.splice(sel,1);sel=null;redraw();broadcast(); } });
     if(window.ResizeObserver){ try{ new ResizeObserver(function(){ resize(); }).observe(wrap); }catch(e){} }
-    resize();
+    resize(); wbResetHist();
   }
   function strip(it){ var c=Object.assign({},it); delete c._img; delete c._dl; delete c._dlKey; return c; }
   /* ---- Çok sayfalı tahta (#114) ---- items her zaman pages[pageIx]'e referanstır; yeniden atamada setItems kullan. */
@@ -1700,19 +1706,19 @@ var WB=(function(){
   function updatePageUI(){ var ind=$('#wb-page-ind'); if(ind) ind.textContent=(pageIx+1)+' / '+pages.length; var pv=$('#wb-page-prev'); if(pv) pv.disabled=(pageIx<=0); var nx=$('#wb-page-next'); if(nx) nx.disabled=(pageIx>=pages.length-1); }
   function closeTextarea(){ var ta=$('#gmr-wb-textarea'); if(ta){ ta.remove(); } editingItem=null; }
   function canModifyPages(){ return STATE.isHost || !STATE.wbLocked; }
-  function gotoPage(ix,remote){ if(!remote && !canModifyPages()){ toast('Tahta kilitli — sayfayı öğretmen değiştirir.'); return; } ix=Math.max(0,Math.min(pages.length-1,ix)); closeTextarea(); pageIx=ix; items=pages[pageIx]; sel=null; redraw(); updatePageUI(); if(!remote) sendData({t:'wb-nav',op:'goto',ix:pageIx,np:pages.length}); }
+  function gotoPage(ix,remote){ if(!remote && !canModifyPages()){ toast('Tahta kilitli — sayfayı öğretmen değiştirir.'); return; } ix=Math.max(0,Math.min(pages.length-1,ix)); closeTextarea(); pageIx=ix; items=pages[pageIx]; sel=null; wbResetHist(); redraw(); updatePageUI(); if(!remote) sendData({t:'wb-nav',op:'goto',ix:pageIx,np:pages.length}); }
   function addPage(side,remote){
     if(!remote && !canModifyPages()){ toast('Tahta kilitli — sayfa ekleyemezsin.'); return; }
     var at=(side==='left')?pageIx:(pageIx+1);
     if(at<0)at=0; if(at>pages.length)at=pages.length;
-    closeTextarea(); pages.splice(at,0,[]); pageIx=at; items=pages[pageIx]; sel=null; redraw(); updatePageUI();
+    closeTextarea(); pages.splice(at,0,[]); pageIx=at; items=pages[pageIx]; sel=null; wbResetHist(); redraw(); updatePageUI();
     if(!remote){ sendData({t:'wb-nav',op:'add',at:at,ix:pageIx,np:pages.length}); toast(side==='left'?'Sola yeni sayfa eklendi.':'Sağa yeni sayfa eklendi.'); }
   }
   /* Uzaktan gelen sayfa yapısı değişimi — index'ler iki tarafta AYNI konuma eklenerek hizalı kalır (#114). */
   function applyNav(msg){
     if(!msg)return; closeTextarea();
-    if(msg.op==='add'){ var at=(typeof msg.at==='number')?msg.at:pages.length; if(at<0)at=0; if(at>pages.length)at=pages.length; pages.splice(at,0,[]); ensurePages(msg.np||pages.length); pageIx=(typeof msg.ix==='number')?Math.max(0,Math.min(pages.length-1,msg.ix)):pageIx; items=pages[pageIx]||(pages[pageIx]=[]); sel=null; redraw(); updatePageUI(); }
-    else if(msg.op==='goto'){ ensurePages(msg.np||1); pageIx=Math.max(0,Math.min(pages.length-1,(typeof msg.ix==='number'?msg.ix:0))); items=pages[pageIx]; sel=null; redraw(); updatePageUI(); }
+    if(msg.op==='add'){ var at=(typeof msg.at==='number')?msg.at:pages.length; if(at<0)at=0; if(at>pages.length)at=pages.length; pages.splice(at,0,[]); ensurePages(msg.np||pages.length); pageIx=(typeof msg.ix==='number')?Math.max(0,Math.min(pages.length-1,msg.ix)):pageIx; items=pages[pageIx]||(pages[pageIx]=[]); sel=null; wbResetHist(); redraw(); updatePageUI(); }
+    else if(msg.op==='goto'){ ensurePages(msg.np||1); pageIx=Math.max(0,Math.min(pages.length-1,(typeof msg.ix==='number'?msg.ix:0))); items=pages[pageIx]; sel=null; wbResetHist(); redraw(); updatePageUI(); }
   }
   /* Katılan öğrenciye tüm sayfaları gönder (her sayfa ayrı wb mesajı → tek büyük paket riski yok). */
   function broadcastAllPages(to){ var o=to?{to:[to]}:null; pages.forEach(function(pg,ix){ sendData({t:'wb',items:pg.map(strip),page:ix,np:pages.length},o); }); sendData({t:'wb-nav',op:'goto',ix:pageIx,np:pages.length},o); }
@@ -1838,8 +1844,8 @@ var WB=(function(){
   function redraw(){ if(!ctx)return; ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=lbColor(); ctx.fillRect(0,0,cv.width/dpr,cv.height/dpr); ctx.setTransform(dpr*S,0,0,dpr*S,dpr*OX,dpr*OY); ctx.fillStyle=BOARD_BG; ctx.fillRect(0,0,BW,BH); ctx.save(); ctx.strokeStyle='rgba(0,0,0,.10)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,BW-1,BH-1); ctx.restore(); items.forEach(drawItem); if(sel!=null&&sel>=0&&items[sel]){ var b=bbox(items[sel]); ctx.save(); ctx.strokeStyle='#2E6E6A'; ctx.setLineDash([6,4]); ctx.lineWidth=1.5; ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12); if(items[sel].type==='text'){ ctx.setLineDash([]); ctx.fillStyle='#2E6E6A'; ctx.beginPath(); ctx.arc(b.x+b.w+6,b.y+b.h/2,5,0,7); ctx.fill(); } ctx.restore(); }
     if(guides&&guides.length){ ctx.save(); ctx.strokeStyle='#E0567A'; ctx.lineWidth=1; ctx.setLineDash([5,4]); guides.forEach(function(g){ ctx.beginPath(); if(g.o==='v'){ ctx.moveTo(g.pos,0); ctx.lineTo(g.pos,BH); } else { ctx.moveTo(0,g.pos); ctx.lineTo(BW,g.pos); } ctx.stroke(); }); ctx.restore(); }
     fontLabel(); updateWordCount(); syncUlBtn(); }
-  function broadcast(){ sendData({t:'wb',items:items.map(strip),page:pageIx,np:pages.length}); }
-  function applyRemote(msg){ if(!msg.items)return; var pg=(typeof msg.page==='number')?msg.page:pageIx; if(msg.np) ensurePages(msg.np); ensurePages(pg+1); pages[pg]=msg.items; rehydrate(pages[pg]); if(pg===pageIx){ items=pages[pageIx]; redraw(); } updatePageUI(); }
+  function broadcast(){ if(!_restoring){ var s=wbSnap(); if(_committed!=null&&_committed!==s){ _hist.push(_committed); if(_hist.length>60)_hist.shift(); _redo.length=0; } _committed=s; } sendData({t:'wb',items:items.map(strip),page:pageIx,np:pages.length}); }
+  function applyRemote(msg){ if(!msg.items)return; var pg=(typeof msg.page==='number')?msg.page:pageIx; if(msg.np) ensurePages(msg.np); ensurePages(pg+1); pages[pg]=msg.items; rehydrate(pages[pg]); if(pg===pageIx){ items=pages[pageIx]; wbResetHist(); redraw(); } updatePageUI(); }
   /* Faz0: mid-stroke tek-öğe canlı güncelleme — idx'e upsert; tam 'wb' broadcast (up) sonra kesin reconcile eder. */
   function applyLive(msg){ if(!msg||!msg.item)return; var pg=(typeof msg.page==='number')?msg.page:pageIx; if(msg.np) ensurePages(msg.np); ensurePages(pg+1); var arr=pages[pg]; var idx=(typeof msg.idx==='number'&&msg.idx>=0)?msg.idx:arr.length; arr[idx]=msg.item; if(msg.item.type==='img') rehydrate([arr[idx]]); if(pg===pageIx){ items=pages[pageIx]; redraw(); } }
   return {init:init,resize:resize,applyRemote:applyRemote,applyLive:applyLive,applyNav:applyNav,broadcastAllPages:broadcastAllPages,pageIndex:function(){return pageIx;},pageCount:function(){return pages.length;},getCanvas:function(){return cv;},items:function(){return items.map(strip);}};

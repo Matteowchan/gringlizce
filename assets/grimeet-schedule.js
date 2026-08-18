@@ -522,12 +522,13 @@
       var start=row._d, dur=row.duration_min||60;
       var openFrom=start.getTime()-15*60000, openTo=start.getTime()+ (dur+30)*60000;
       var now=Date.now(), live=now>=openFrom&&now<=openTo;
+      var clsQ = row.class_id ? ('&class='+encodeURIComponent(row.class_id)) : '';  // #107: panel dogru sinifa kilitlensin
       if(canManage(row)){
-        return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'&host=1">'+(live?'Şimdi Başlat':'Başlat')+'</a>'
+        return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'&host=1'+clsQ+'">'+(live?'Şimdi Başlat':'Başlat')+'</a>'
              + '<button class="gsch-btn ghost" data-edit="'+row.id+'">Düzenle</button>'
              + '<button class="gsch-btn danger" data-cancel="'+row.id+'">İptal</button>';
       }
-      if(live) return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+'">Katıl</a>';
+      if(live) return '<a class="gsch-btn" href="grimeet-oda.html?room='+encodeURIComponent(row.room_code)+clsQ+'">Katıl</a>';
       return '<button class="gsch-btn" disabled>'+relLabel(start)+'</button>';
     }
 

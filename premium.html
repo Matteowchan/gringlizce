@@ -11,7 +11,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gri Premium — Sınırsız Çalış, Reklamsız | Gri English</title>
-  <meta name="description" content="Gri Premium ile sınırsız soru bankası, aylık 50 AI writing değerlendirmesi, tüm denemeler ve reklamsız deneyim. Aylık 150₺, yıllık 999₺.">
+  <meta name="description" content="Gri Premium ile sınırsız soru bankası, aylık 50 AI writing değerlendirmesi, tüm denemeler ve reklamsız deneyim. Aylık 1000₺, yıllık 8500₺.">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -99,7 +99,41 @@
   <script src="assets/curriculum.js?v=26"></script>
   <script src="assets/nav.js?v=29"></script>
   <script src="assets/track.js?v=2" defer></script>
-  <script src="assets/gri-premium.js?v=1" defer></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script>
+  /* Premium fiyatları DB'den oku (products.base_price) — admin Ürünler sekmesinden
+     düzenlenince otomatik yansır. Fetch başarısızsa HTML'deki güncel değerler kalır. */
+  (function () {
+    var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+    function fmt(n) { return Math.round(n).toLocaleString('tr-TR'); }
+    var tries = 0;
+    (function run() {
+      if (!(window.supabase && window.supabase.createClient)) {
+        if (tries++ > 40) return; return void setTimeout(run, 150);
+      }
+      var sb = window.supabase.createClient(SB_URL, SB_KEY);
+      sb.from('products').select('slug,base_price,premium_days').eq('product_type', 'premium').eq('active', true)
+        .then(function (r) {
+          if (!r || !r.data || !r.data.length) return;
+          var map = {}; r.data.forEach(function (p) { map[p.slug] = p; });
+          var monthly = map['premium-monthly'] ? Number(map['premium-monthly'].base_price) : null;
+          r.data.forEach(function (p) {
+            var price = Number(p.base_price), days = Number(p.premium_days) || 30;
+            var amtEl = document.querySelector('[data-pm-amt="' + p.slug + '"]');
+            if (amtEl) amtEl.textContent = fmt(price) + '₺';
+            var effEl = document.querySelector('[data-pm-eff="' + p.slug + '"]');
+            if (effEl && monthly && days > 31) {
+              var months = days / 30;
+              var perMonth = price / months;
+              var savePct = Math.round((1 - (price / (monthly * months))) * 100);
+              effEl.innerHTML = 'Ayda ~' + fmt(perMonth) + '₺' + (savePct > 0 ? ' <span class="pm-save">%' + savePct + ' tasarruf</span>' : '');
+            }
+          });
+        });
+    })();
+  })();
+  </script>
 </head>
 <body data-cat="premium">
   <!-- Google Tag Manager (noscript) -->
@@ -119,8 +153,8 @@
     <div class="pm-plan">
       <h3>Aylık</h3>
       <p class="pm-sub">Kısa vadeli, düşük taahhüt</p>
-      <div class="pm-price"><span class="amt">150₺</span><span class="per">/ ay</span></div>
-      <div class="pm-eff">Hemen başla, istediğinde bırak</div>
+      <div class="pm-price"><span class="amt" data-pm-amt="premium-monthly">1000₺</span><span class="per">/ ay</span></div>
+      <div class="pm-eff" data-pm-eff="premium-monthly">Hemen başla, istediğinde bırak</div>
       <ul class="pm-list">
         <li>Sınırsız soru bankası</li>
         <li>Aylık 50 AI writing değerlendirmesi</li>
@@ -134,8 +168,8 @@
       <span class="pm-badge">En avantajlı</span>
       <h3>Yıllık</h3>
       <p class="pm-sub">Tüm sınav dönemi boyunca</p>
-      <div class="pm-price"><span class="amt">999₺</span><span class="per">/ yıl</span></div>
-      <div class="pm-eff">Ayda ~83₺ <span class="pm-save">%45 tasarruf</span></div>
+      <div class="pm-price"><span class="amt" data-pm-amt="premium-yearly">8500₺</span><span class="per">/ yıl</span></div>
+      <div class="pm-eff" data-pm-eff="premium-yearly">Ayda ~708₺ <span class="pm-save">%29 tasarruf</span></div>
       <ul class="pm-list">
         <li>Sınırsız soru bankası</li>
         <li>Aylık 50 AI writing değerlendirmesi</li>
@@ -149,8 +183,8 @@
     <div class="pm-plan">
       <h3>3 Aylık</h3>
       <p class="pm-sub">Sınava sayılı ay kala</p>
-      <div class="pm-price"><span class="amt">350₺</span><span class="per">/ 3 ay</span></div>
-      <div class="pm-eff">Ayda ~116₺ <span class="pm-save">%22 tasarruf</span></div>
+      <div class="pm-price"><span class="amt" data-pm-amt="premium-3month">2250₺</span><span class="per">/ 3 ay</span></div>
+      <div class="pm-eff" data-pm-eff="premium-3month">Ayda ~750₺ <span class="pm-save">%25 tasarruf</span></div>
       <ul class="pm-list">
         <li>Sınırsız soru bankası</li>
         <li>Aylık 50 AI writing değerlendirmesi</li>

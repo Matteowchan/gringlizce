@@ -180,6 +180,23 @@ serve(async (req) => {
     const userEmail = userData.user.email || null;
     const isAdmin = ADMIN_EMAILS.includes(userEmail || "");
 
+    // Premium: aylık adil-kullanım tavanı (günlük ücretsiz limit + token maliyetinden muaf)
+    const PREMIUM_MONTHLY_CAP = 50;
+    let isPremium = false;
+    let premiumMonthlyUsed = 0;
+    try {
+      const { data: prof } = await supabase.from("profiles").select("premium_until").eq("id", userId).maybeSingle();
+      isPremium = !!(prof?.premium_until && new Date(prof.premium_until).getTime() > Date.now());
+    } catch (_) { /* premium okunamadı → ücretsiz akışa düş */ }
+    if (isPremium && !isAdmin) {
+      const monthStart = new Date();
+      monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+      const { count } = await supabase.from("writing_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId).gte("created_at", monthStart.toISOString());
+      premiumMonthlyUsed = count || 0;
+    }
+
     // ===== 2) Request body =====
     let body: any;
     try {
@@ -238,8 +255,16 @@ serve(async (req) => {
 
     const quota = computeWritingQuota(quotaRow);
 
-    // Admin'de kota check'i atlanır
-    if (!isAdmin && quota.total_remaining <= 0) {
+    // Premium: aylık adil-kullanım tavanı dolduysa engelle
+    if (isPremium && !isAdmin && premiumMonthlyUsed >= PREMIUM_MONTHLY_CAP) {
+      return err(
+        `Bu ay Premium yazı değerlendirme hakkın (${PREMIUM_MONTHLY_CAP}) doldu. Gelecek ay başında sıfırlanır.`,
+        429,
+        "premium_monthly_cap"
+      );
+    }
+    // Admin ve Premium'da günlük/token kotası atlanır
+    if (!isAdmin && !isPremium && quota.total_remaining <= 0) {
       return err(
         "Günlük yazı değerlendirme hakkın bitti. Yeni hak için 24 saat bekle veya Gri Token satın al.",
         402,
@@ -248,8 +273,8 @@ serve(async (req) => {
     }
 
     const useDailyFree = quota.daily_remaining > 0;
-    const costQuota = isAdmin ? 0 : WRITING_COST;
-    const costSource = isAdmin ? "admin" : (useDailyFree ? "daily" : "bonus");
+    const costQuota = (isAdmin || isPremium) ? 0 : WRITING_COST;
+    const costSource = isAdmin ? "admin" : isPremium ? "premium" : (useDailyFree ? "daily" : "bonus");
 
     // ===== 5) OpenAI çağrısı (logged) =====
     let evaluation: any;
@@ -294,8 +319,8 @@ serve(async (req) => {
       throw e;
     }
 
-    // ===== 6) Quota düşür — yazı için 5 Gri Token, ORTAK günlük havuzdan (RPC atomik). Admin'de atla =====
-    if (!isAdmin) {
+    // ===== 6) Quota düşür — yazı için 5 Gri Token, ORTAK günlük havuzdan (RPC atomik). Admin ve Premium'da atla =====
+    if (!isAdmin && !isPremium) {
       const { error: consumeErr } = await supabase.rpc("consume_ai_quota_n", { p_user_id: userId, p_amount: WRITING_COST });
       if (consumeErr) console.error("consume_ai_quota_n failed:", consumeErr);
     }

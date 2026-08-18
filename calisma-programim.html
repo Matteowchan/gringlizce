@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çalışma Programım · Gri English</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/main.css">
+<link rel="stylesheet" href="assets/site-overrides.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/theme.js?v=2" defer></script>
+<script src="assets/nav.js?v=29"></script>
+<style>
+  :root{--sp:#3a6ea5;--li:#7a4fa3;--re:#2f8f6b;--wr:#c0672a;--gr:#4a6b8a;--vo:#9a7b1f;--dn:#a33b3b;--tk:#8a7420;--dg:#6f6a58;}
+  .pg{max-width:1060px;margin:0 auto;padding:22px 18px 90px}
+  .cols{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+  @media(max-width:840px){.cols{grid-template-columns:1fr}}
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--bg-card,#fff);border:1px solid var(--gri-line,#e5ddc9);border-radius:13px}
+  .card-b{padding:15px 17px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700}
+  h1{font-family:var(--font-display,Georgia),serif;font-size:1.55rem;margin:.2rem 0 .3rem}
+  .meta{color:var(--text-muted,#6f6a58);font-size:.9rem}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:100px;font-weight:700;font-size:.86rem;padding:9px 18px;cursor:pointer;border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text,#23291f);text-decoration:none}
+  .btn.primary{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856)}
+  .kick{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;margin:22px 0 9px}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:100px;color:#fff}
+  /* timeline */
+  .tl{position:relative;padding-left:24px}
+  .tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--gri-line,#e5ddc9)}
+  .tli{position:relative;padding:11px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
+  .tli:last-child{border-bottom:0}
+  .tli::before{content:"";position:absolute;left:-21px;top:15px;width:11px;height:11px;border-radius:50%;background:var(--bg-card,#fff);border:2px solid var(--gri-line,#e5ddc9)}
+  .tli.done::before{background:var(--re);border-color:var(--re)}
+  .tli.today::before{background:var(--gri-gold,#C89A3C);border-color:var(--gri-gold,#C89A3C);box-shadow:0 0 0 4px var(--gri-gold-soft,#f5ecd4)}
+  .tli-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+  .tli-top .num{font-family:var(--font-display,Georgia),serif;font-weight:700;color:var(--gri-gold,#C89A3C)}
+  .tli-top .dt{font-size:.77rem;color:var(--text-muted,#6f6a58)}
+  .tli h3{font-size:.95rem;margin:2px 0;font-weight:700}
+  .tli p{font-size:.85rem;color:var(--text-muted,#6f6a58);margin:0}
+  .tli a.golink{font-size:.8rem;color:var(--gri-accent,#2C5856);font-weight:600;text-decoration:none}
+  .tbadge{font-size:.64rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gri-gold,#C89A3C);background:var(--gri-gold-soft,#f5ecd4);border-radius:100px;padding:1px 8px}
+  /* homework check */
+  .ck{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
+  .ck:last-child{border-bottom:0}
+  .ck .box{width:19px;height:19px;border-radius:5px;border:2px solid var(--gri-line,#e5ddc9);flex:0 0 auto;margin-top:1px;cursor:pointer}
+  .ck.done .box{background:var(--re);border-color:var(--re);position:relative}
+  .ck.done .box::after{content:"✓";color:#fff;font-size:12px;font-weight:800;position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .ck-body{flex:1}
+  .ck-t .dt{color:var(--text-muted,#6f6a58);font-size:.76rem;margin-right:6px}
+  .ck.done .ck-t{color:var(--text-muted,#6f6a58);text-decoration:line-through}
+  .rec{margin-top:8px;background:var(--bg,#faf7ee);border:1px solid var(--gri-line,#e5ddc9);border-radius:9px;padding:9px 11px}
+  .rec .rc-h{font-size:.74rem;font-weight:700;color:var(--wr);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .rec button{font-size:.8rem;border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:600}
+  .rec .rec-on{color:#a33b3b;border-color:#a33b3b}
+  .rec audio{width:100%;margin-top:7px;height:34px}
+  .rec .small{font-size:.72rem;color:var(--text-muted,#6f6a58);margin-top:5px}
+  .rgrp{margin-bottom:11px}
+  .rgrp h4{margin:0 0 5px;font-size:.82rem;font-weight:700}
+  .rgrp a,.rgrp span{display:block;font-size:.82rem;color:var(--gri-accent,#2C5856);text-decoration:none;padding:3px 0;word-break:break-all}
+  /* calendar */
+  .cal{background:var(--bg-card,#fff);border:1px solid var(--gri-line,#e5ddc9);border-radius:13px;padding:13px}
+  .cal .m{font-family:var(--font-display,Georgia),serif;font-weight:700;font-size:1rem;margin-bottom:8px}
+  .cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .dw{font-size:9px;text-transform:uppercase;color:var(--text-muted);text-align:center;font-weight:700}
+  .dy{aspect-ratio:1/1;border-radius:7px;background:var(--bg,#faf7ee);padding:3px;font-size:.7rem;display:flex;flex-direction:column}
+  .dy.empty{background:transparent}
+  .dy.today{outline:2px solid var(--gri-gold,#C89A3C);outline-offset:-1px}
+  .dy .n{color:var(--text-muted);font-weight:600}
+  .dy .dots{margin-top:auto;display:flex;gap:2px;flex-wrap:wrap}
+  .dy .dots i{width:6px;height:6px;border-radius:50%}
+  .loading{padding:60px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
+  .empty-b{padding:40px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
+  @media print{
+    nav,.site-nav,.btnrow,.cal,#calNav,.rec button,.gri-nav,header{display:none!important}
+    .cols{grid-template-columns:1fr}
+    body{background:#fff}
+    .card{border-color:#ccc;box-shadow:none}
+  }
+</style>
+</head>
+<body data-cat="student">
+<div class="pg">
+  <div class="loading" id="loading">Yükleniyor…</div>
+  <div id="app" style="display:none">
+    <div class="card"><div class="card-b" id="head"></div></div>
+    <div class="cols" style="margin-top:16px">
+      <div class="stack">
+        <div class="kick">Ders akışı</div>
+        <div class="card"><div class="card-b"><div class="tl" id="lessons"></div></div></div>
+        <div class="kick">Ödevlerim</div>
+        <div class="card"><div class="card-b" id="homework"></div></div>
+      </div>
+      <div class="stack" style="position:sticky;top:14px">
+        <div class="cal"><div class="m" id="calMonth"></div><div class="cg" id="calGrid"></div>
+          <div style="display:flex;gap:6px;margin-top:9px" id="calNav">
+            <button class="btn" style="padding:5px 12px;font-size:.8rem" id="calPrev">‹</button>
+            <button class="btn" style="padding:5px 12px;font-size:.8rem" id="calNext">›</button>
+          </div>
+        </div>
+        <div class="card"><div class="card-b"><div class="kick" style="margin:0 0 8px">Kaynaklar</div><div id="resources"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="empty" style="display:none"><div class="card"><div class="empty-b">
+    <h3 style="font-family:Georgia,serif">Henüz bir çalışma programın yok</h3>
+    <p>Öğretmenin sana bir program yayınladığında burada görünecek.</p>
+  </div></div></div>
+</div>
+
+<script>
+(async function(){
+  var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function ready(){return window.supabase&&window.supabase.createClient;}
+  var tries=0;while(!ready()&&tries<40){await new Promise(r=>setTimeout(r,120));tries++;}
+  if(!ready()){document.getElementById('loading').textContent='Bağlantı kurulamadı.';return;}
+  var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+
+  var sess=await sb.auth.getSession();
+  if(!sess||!sess.data||!sess.data.session){location.href='giris?return='+encodeURIComponent('/calisma-programim');return;}
+  var me=sess.data.session.user;
+
+  var MONTHS=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var MShort=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fmtD(s){if(!s)return'';var d=new Date(s);return d.getDate()+' '+MShort[d.getMonth()];}
+  function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+  var SKILLS={speaking:['Speaking','sp'],listening:['Listening','li'],reading:['Reading','re'],writing:['Writing','wr'],grammar:['Grammar','gr'],vocabulary:['Vocabulary','vo'],deneme:['Deneme','dn'],tekrar:['Tekrar','tk'],other:['Diğer','dg']};
+
+  var r=await sb.from('student_programs').select('*').eq('student_id',me.id).eq('status','published').order('created_at',{ascending:false}).limit(1);
+  var prog=(r.data&&r.data[0])||null;
+  document.getElementById('loading').style.display='none';
+  if(!prog){document.getElementById('empty').style.display='';return;}
+  document.getElementById('app').style.display='';
+
+  var content=prog.content||{};
+  var lessons=(content.lessons||[]).slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+  var homework=(content.homework||[]).slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+  var resources=content.resources||[];
+  var today=new Date();
+
+  // progress
+  var prog2=await sb.from('student_program_progress').select('item_key,done').eq('program_id',prog.id).eq('student_id',me.id);
+  var doneSet={};(prog2.data||[]).forEach(function(x){if(x.done)doneSet[x.item_key]=true;});
+  async function setDone(key,val){
+    doneSet[key]=val;
+    await sb.from('student_program_progress').upsert({program_id:prog.id,student_id:me.id,item_key:key,done:val,done_at:new Date().toISOString()},{onConflict:'program_id,item_key'});
+  }
+
+  // header
+  var dr=(prog.start_date?fmtD(prog.start_date):'')+(prog.end_date?(' – '+fmtD(prog.end_date)):'');
+  document.getElementById('head').innerHTML=
+    '<div class="eyebrow">Öğretmeninden</div>'+
+    '<h1>'+esc(prog.title)+'</h1>'+
+    '<div class="meta">'+esc(dr)+(prog.note?(' · '+esc(prog.note)):'')+'</div>'+
+    '<div class="btnrow"><button class="btn primary" onclick="window.print()">⤓ PDF indir / yazdır</button></div>';
+
+  // lessons timeline
+  var lbox=document.getElementById('lessons');
+  lessons.forEach(function(L,i){
+    var sk=SKILLS[L.skill]||SKILLS.other;
+    var d=L.date?new Date(L.date):null;
+    var isToday=d&&isSameDay(d,today);
+    var isPast=d&&d<today&&!isToday;
+    var el=document.createElement('div');
+    el.className='tli'+(isToday?' today':(isPast?' done':''));
+    var link=L.url?(' · <a class="golink" href="'+esc(L.url)+'">Aç →</a>'):'';
+    el.innerHTML='<div class="tli-top"><span class="num">'+(i+1)+'</span>'+
+      '<span class="chip" style="background:var(--'+sk[1]+')">'+sk[0]+'</span>'+
+      '<span class="dt">'+esc(L.date?(new Date(L.date).getDate()+' '+MONTHS[new Date(L.date).getMonth()]):'')+'</span>'+
+      (isToday?'<span class="tbadge">Bugün</span>':'')+'</div>'+
+      '<h3>'+esc(L.title||'')+'</h3>'+
+      (L.detail?('<p>'+esc(L.detail)+link+'</p>'):(link?('<p>'+link+'</p>'):''));
+    lbox.appendChild(el);
+  });
+  if(!lessons.length)lbox.innerHTML='<p class="meta">Henüz ders eklenmemiş.</p>';
+
+  // homework with optional audio upload
+  var hbox=document.getElementById('homework');
+  homework.forEach(function(H,i){
+    var key='hw:'+i+':'+(H.date||'');
+    var done=!!doneSet[key];
+    var el=document.createElement('div');el.className='ck'+(done?' done':'');
+    var link=H.url?(' <a class="golink" href="'+esc(H.url)+'" style="font-size:.8rem">↗</a>'):'';
+    el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
+      '<div class="ck-body"><div class="ck-t"><span class="dt">'+esc(fmtD(H.date))+'</span>'+esc(H.task||'')+link+'</div></div>';
+    var box=el.querySelector('.box');
+    box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);});
+    if(H.audio){
+      var rec=document.createElement('div');rec.className='rec';
+      rec.innerHTML='<div class="rc-h">Ses kaydı</div>'+
+        '<button data-act="rec">● Kaydet</button> <button data-act="file">Dosya yükle</button>'+
+        '<input type="file" accept="audio/*" style="display:none">'+
+        '<div class="small" data-role="st"></div><div data-role="list"></div>';
+      el.querySelector('.ck-body').appendChild(rec);
+      wireAudio(rec,i);
+    }
+    hbox.appendChild(el);
+  });
+  if(!homework.length)hbox.innerHTML='<p class="meta">Henüz ödev eklenmemiş.</p>';
+
+  // resources
+  var rbox=document.getElementById('resources');
+  var groups={};resources.forEach(function(R){(groups[R.group||'Kaynaklar']=groups[R.group||'Kaynaklar']||[]).push(R.url||'');});
+  Object.keys(groups).forEach(function(g){
+    var div=document.createElement('div');div.className='rgrp';
+    var links=groups[g].map(function(u){
+      if(/^https?:\/\//.test(u))return '<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>';
+      return '<span>'+esc(u)+'</span>';
+    }).join('');
+    div.innerHTML='<h4>'+esc(g)+'</h4>'+links;rbox.appendChild(div);
+  });
+  if(!resources.length)rbox.innerHTML='<p class="meta">Kaynak eklenmemiş.</p>';
+
+  // ---- audio recording/upload ----
+  function wireAudio(rec,idx){
+    var stEl=rec.querySelector('[data-role="st"]');
+    var listEl=rec.querySelector('[data-role="list"]');
+    var fileInp=rec.querySelector('input[type=file]');
+    var recBtn=rec.querySelector('[data-act="rec"]');
+    var fileBtn=rec.querySelector('[data-act="file"]');
+    var mediaRec=null,chunks=[],timer=null;
+    var MAX_MS=12*60*1000,MAX_BYTES=10*1024*1024;
+
+    function folder(){return me.id+'/'+prog.id+'/hw'+idx;}
+    async function refreshList(){
+      var l=await sb.storage.from('speaking-submissions').list(folder(),{limit:20,sortBy:{column:'created_at',order:'desc'}});
+      listEl.innerHTML='';
+      (l.data||[]).forEach(function(f){
+        var path=folder()+'/'+f.name;
+        var row=document.createElement('div');row.style.marginTop='6px';
+        sb.storage.from('speaking-submissions').createSignedUrl(path,3600).then(function(s){
+          if(s.data&&s.data.signedUrl){row.innerHTML='<audio controls src="'+s.data.signedUrl+'"></audio>';}
+        });
+        listEl.appendChild(row);
+      });
+    }
+    async function upload(blob,ext){
+      if(blob.size>MAX_BYTES){stEl.textContent='Kayıt çok büyük (>10MB). Daha kısa kaydet.';return;}
+      stEl.textContent='Yükleniyor…';
+      var name='kayit-'+Date.now()+'.'+ext;
+      var res=await sb.storage.from('speaking-submissions').upload(folder()+'/'+name,blob,{contentType:blob.type||'audio/webm',upsert:false});
+      if(res.error){stEl.textContent='Yüklenemedi: '+res.error.message;return;}
+      stEl.textContent='Yüklendi ('+(blob.size/1024/1024).toFixed(1)+' MB). Öğretmenin dinleyebilir.';
+      var key='hw:'+idx+':audio';setDone(key,true);
+      refreshList();
+    }
+    recBtn.addEventListener('click',async function(){
+      if(mediaRec&&mediaRec.state==='recording'){mediaRec.stop();return;}
+      try{
+        var stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        var opts={audioBitsPerSecond:48000};
+        try{opts.mimeType='audio/webm;codecs=opus';}catch(e){}
+        mediaRec=new MediaRecorder(stream,opts);chunks=[];
+        mediaRec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data);};
+        mediaRec.onstop=function(){clearTimeout(timer);recBtn.textContent='● Kaydet';recBtn.classList.remove('rec-on');stream.getTracks().forEach(function(t){t.stop();});var blob=new Blob(chunks,{type:'audio/webm'});upload(blob,'webm');};
+        mediaRec.start();recBtn.textContent='■ Durdur';recBtn.classList.add('rec-on');stEl.textContent='Kaydediliyor… (en fazla 12 dk)';
+        timer=setTimeout(function(){if(mediaRec&&mediaRec.state==='recording')mediaRec.stop();},MAX_MS);
+      }catch(e){stEl.textContent='Mikrofon izni gerekli.';}
+    });
+    fileBtn.addEventListener('click',function(){fileInp.click();});
+    fileInp.addEventListener('change',function(){if(fileInp.files[0]){var f=fileInp.files[0];var ext=(f.name.split('.').pop()||'webm').toLowerCase();upload(f,ext);}});
+    refreshList();
+  }
+
+  // ---- calendar ----
+  var calRef=null;
+  function drawCal(){
+    if(!calRef){var f=prog.start_date||(lessons[0]&&lessons[0].date)||today.toISOString().slice(0,10);var dd=new Date(f);calRef=new Date(dd.getFullYear(),dd.getMonth(),1);}
+    var y=calRef.getFullYear(),m=calRef.getMonth();
+    document.getElementById('calMonth').textContent=MONTHS[m]+' '+y;
+    var byDay={};
+    lessons.forEach(function(L){if(L.date){var d=new Date(L.date);if(d.getFullYear()===y&&d.getMonth()===m){var sk=SKILLS[L.skill]||SKILLS.other;(byDay[d.getDate()]=byDay[d.getDate()]||[]).push(sk[1]);}}});
+    homework.forEach(function(H){if(H.date){var d=new Date(H.date);if(d.getFullYear()===y&&d.getMonth()===m)(byDay[d.getDate()]=byDay[d.getDate()]||[]).push('dn');}});
+    var off=(new Date(y,m,1).getDay()+6)%7;var days=new Date(y,m+1,0).getDate();
+    var dw=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+    var h=dw.map(function(x){return '<div class="dw">'+x+'</div>';}).join('');
+    for(var i=0;i<off;i++)h+='<div class="dy empty"></div>';
+    for(var dn=1;dn<=days;dn++){
+      var a=byDay[dn]||[];var isT=isSameDay(new Date(y,m,dn),today);
+      var dots=a.slice(0,4).map(function(x){return '<i style="background:var(--'+x+')"></i>';}).join('');
+      h+='<div class="dy'+(isT?' today':'')+'"><span class="n">'+dn+'</span><span class="dots">'+dots+'</span></div>';
+    }
+    document.getElementById('calGrid').innerHTML=h;
+  }
+  document.getElementById('calPrev').addEventListener('click',function(){calRef=new Date(calRef.getFullYear(),calRef.getMonth()-1,1);drawCal();});
+  document.getElementById('calNext').addEventListener('click',function(){calRef=new Date(calRef.getFullYear(),calRef.getMonth()+1,1);drawCal();});
+  drawCal();
+})();
+</script>
+</body>
+</html>

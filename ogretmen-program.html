@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çalışma Programı Oluştur · Gri English</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/main.css">
+<link rel="stylesheet" href="assets/site-overrides.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/theme.js?v=2" defer></script>
+<script src="assets/nav.js?v=29"></script>
+<style>
+  :root{
+    --sp:#3a6ea5;--li:#7a4fa3;--re:#2f8f6b;--wr:#c0672a;--gr:#4a6b8a;--vo:#9a7b1f;--dn:#a33b3b;--tk:#8a7420;--dg:#6f6a58;
+  }
+  .pg{max-width:1100px;margin:0 auto;padding:22px 18px 90px}
+  .pg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:6px}
+  .pg-h .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gri-gold,#C89A3C);font-weight:700}
+  .pg-h h1{font-family:var(--font-display,Georgia),serif;font-size:1.7rem;margin:.15rem 0 0}
+  .pg-h .who{color:var(--text-muted,#6f6a58);font-size:.92rem;margin-top:.2rem}
+  .prog-pick{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .prog-pick button,.prog-pick select{font-family:var(--font-ui,Inter),sans-serif;font-size:.85rem;border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text,#23291f);border-radius:8px;padding:8px 12px;cursor:pointer}
+  .cols{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin-top:10px}
+  @media(max-width:860px){.cols{grid-template-columns:1fr}}
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--bg-card,#fff);border:1px solid var(--gri-line,#e5ddc9);border-radius:13px}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--gri-line,#e5ddc9)}
+  .card-h h2{font-family:var(--font-display,Georgia),serif;font-size:1.08rem;margin:0}
+  .card-h .cnt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700}
+  .card-b{padding:14px 16px}
+  label.fl{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;margin:0 0 5px}
+  .inp{width:100%;background:var(--bg,#faf7ee);border:1px solid var(--gri-line,#e5ddc9);border-radius:8px;padding:9px 11px;font-family:var(--font-ui,Inter),sans-serif;font-size:.9rem;color:var(--text,#23291f)}
+  .fld{margin-bottom:11px}
+  .r2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  /* editor rows */
+  .erow{display:grid;grid-template-columns:26px 116px 118px 1fr 28px;gap:8px;align-items:start;padding:8px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
+  .erow:last-of-type{border-bottom:0}
+  .erow .num{font-family:var(--font-display,Georgia),serif;font-weight:700;color:var(--gri-gold,#C89A3C);text-align:center;padding-top:8px}
+  .erow .col{display:flex;flex-direction:column;gap:5px}
+  .xb{border:1px solid var(--gri-line,#e5ddc9);background:var(--bg,#faf7ee);color:var(--text-muted,#6f6a58);border-radius:7px;width:26px;height:30px;cursor:pointer;margin-top:2px}
+  .hrow{display:grid;grid-template-columns:118px 1fr 28px;gap:8px;align-items:start;padding:8px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
+  .hrow:last-of-type{border-bottom:0}
+  .rrow{display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
+  .addb{margin-top:11px;border:1px dashed var(--gri-line,#e5ddc9);background:transparent;color:var(--gri-accent,#2C5856);font-weight:700;font-size:.85rem;padding:9px 14px;border-radius:9px;cursor:pointer;width:100%}
+  .ck{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-muted,#6f6a58);cursor:pointer}
+  .save-row{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{border-radius:100px;font-weight:700;font-size:.88rem;padding:10px 20px;cursor:pointer;border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text,#23291f)}
+  .btn.primary{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .cal{background:var(--bg-card,#fff);border:1px solid var(--gri-line,#e5ddc9);border-radius:13px;padding:13px}
+  .cal .m{font-family:var(--font-display,Georgia),serif;font-weight:700;font-size:1rem;margin-bottom:8px}
+  .cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .dw{font-size:9px;text-transform:uppercase;color:var(--text-muted,#6f6a58);text-align:center;font-weight:700}
+  .dy{aspect-ratio:1/1;border-radius:7px;background:var(--bg,#faf7ee);padding:3px;font-size:.7rem;display:flex;flex-direction:column}
+  .dy.empty{background:transparent}
+  .dy .n{color:var(--text-muted,#6f6a58);font-weight:600}
+  .dy .dots{margin-top:auto;display:flex;gap:2px;flex-wrap:wrap}
+  .dy .dots i{width:6px;height:6px;border-radius:50%}
+  .msg{font-size:.85rem;padding:8px 12px;border-radius:8px;margin-top:8px;display:none}
+  .msg.ok{background:#e2f0e4;color:#2f7a44;display:block}
+  .msg.err{background:#f5e0e0;color:#a33b3b;display:block}
+  .loading{padding:60px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
+</style>
+</head>
+<body data-cat="teacher">
+<div class="pg">
+  <div class="loading" id="loading">Yükleniyor…</div>
+  <div id="app" style="display:none">
+    <div class="pg-h">
+      <div>
+        <div class="eyebrow">Öğretmen · Çalışma Programı</div>
+        <h1 id="pgTitle">Program Oluştur</h1>
+        <div class="who" id="pgWho"></div>
+      </div>
+      <a class="btn" id="backBtn" href="#">← Sınıfa dön</a>
+    </div>
+
+    <div class="prog-pick">
+      <select id="progSelect"><option value="">+ Yeni program</option></select>
+      <button id="dupBtn" type="button">Kopyala</button>
+      <button id="delBtn" type="button">Sil</button>
+    </div>
+
+    <div class="cols">
+      <div class="stack">
+        <div class="card">
+          <div class="card-h"><h2>Program bilgileri</h2><span class="cnt" id="statusPill">Taslak</span></div>
+          <div class="card-b">
+            <div class="fld"><label class="fl">Program adı</label><input class="inp" id="fTitle" placeholder="ör. IELTS 8 Haftalık Hazırlık"></div>
+            <div class="r2">
+              <div class="fld"><label class="fl">Başlangıç</label><input class="inp" id="fStart" type="date"></div>
+              <div class="fld"><label class="fl">Bitiş</label><input class="inp" id="fEnd" type="date"></div>
+            </div>
+            <div class="fld"><label class="fl">Not (öğrenciye görünür)</label><input class="inp" id="fNote" placeholder="ör. Her ders öncesi ödevini tamamla."></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Ders akışı</h2><span class="cnt" id="lCnt">0 ders</span></div>
+          <div class="card-b"><div id="lessons"></div><button class="addb" id="addLesson">+ Ders ekle</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Ödevler</h2><span class="cnt" id="hCnt">0 ödev</span></div>
+          <div class="card-b"><div id="homework"></div><button class="addb" id="addHw">+ Ödev ekle</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Kaynaklar</h2><span class="cnt" id="rCnt">0 link</span></div>
+          <div class="card-b"><div id="resources"></div><button class="addb" id="addRes">+ Kaynak ekle</button></div>
+        </div>
+      </div>
+
+      <div class="stack" style="position:sticky;top:14px">
+        <div class="cal"><div class="m" id="calMonth">Takvim</div><div class="cg" id="calGrid"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px 11px;margin-top:10px;padding-top:9px;border-top:1px solid var(--gri-line,#e5ddc9)">
+            <span style="font-size:.7rem;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:var(--sp);display:inline-block"></i>Ders</span>
+            <span style="font-size:.7rem;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:var(--dn);display:inline-block"></i>Ödev</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px" id="calNav">
+            <button class="btn" style="padding:5px 12px;font-size:.8rem" id="calPrev">‹</button>
+            <button class="btn" style="padding:5px 12px;font-size:.8rem" id="calNext">›</button>
+          </div>
+        </div>
+        <div class="card"><div class="card-b">
+          <div class="save-row">
+            <button class="btn primary" id="saveDraft" style="flex:1">Kaydet</button>
+          </div>
+          <div class="save-row" style="margin-top:9px">
+            <button class="btn" id="publishBtn" style="flex:1">Yayınla → öğrenciye gönder</button>
+          </div>
+          <div class="msg" id="msg"></div>
+          <p style="font-size:.76rem;color:var(--text-muted,#6f6a58);margin:10px 0 0">Yayınlandığında öğrenci Çalışma Masası'nda görür ve PDF indirebilir.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function ready(){return window.supabase&&window.supabase.createClient;}
+  var tries=0; while(!ready()&&tries<40){await new Promise(r=>setTimeout(r,120));tries++;}
+  if(!ready()){document.getElementById('loading').textContent='Bağlantı kurulamadı.';return;}
+  var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+
+  var params=new URLSearchParams(location.search);
+  var studentId=params.get('student');
+  var classId=params.get('class')||'';
+  var studentName=params.get('name')?decodeURIComponent(params.get('name')):'Öğrenci';
+
+  var sess=await sb.auth.getSession();
+  if(!sess||!sess.data||!sess.data.session){location.href='giris?return='+encodeURIComponent(location.pathname+location.search);return;}
+  var me=sess.data.session.user;
+  if(!studentId){document.getElementById('loading').textContent='Öğrenci belirtilmedi.';return;}
+
+  var SKILLS=[['speaking','Speaking','sp'],['listening','Listening','li'],['reading','Reading','re'],['writing','Writing','wr'],['grammar','Grammar','gr'],['vocabulary','Vocabulary','vo'],['deneme','Deneme','dn'],['tekrar','Tekrar','tk'],['other','Diğer','dg']];
+  function skillColor(k){var f=SKILLS.find(s=>s[0]===k);return f?('var(--'+f[2]+')'):'var(--dg)';}
+  function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  var state={id:null,status:'draft',lessons:[],homework:[],resources:[]};
+  var calRef=null; // Date first-of-month currently shown
+
+  // ---- builders ----
+  function skillOpts(sel){return SKILLS.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===sel?' selected':'')+'>'+s[1]+'</option>';}).join('');}
+
+  function renderLessons(){
+    var box=document.getElementById('lessons');box.innerHTML='';
+    state.lessons.forEach(function(L,i){
+      var d=document.createElement('div');d.className='erow';
+      d.innerHTML='<div class="num">'+(i+1)+'</div>'+
+        '<div class="col"><input class="inp" type="date" data-k="date" value="'+esc(L.date||'')+'"></div>'+
+        '<div class="col"><select class="inp" data-k="skill">'+skillOpts(L.skill||'speaking')+'</select></div>'+
+        '<div class="col"><input class="inp" data-k="title" placeholder="Başlık" value="'+esc(L.title||'')+'">'+
+          '<input class="inp" data-k="detail" placeholder="Detay (opsiyonel)" value="'+esc(L.detail||'')+'">'+
+          '<input class="inp" data-k="url" placeholder="İçerik linki (opsiyonel) — ör. /soru?deneme=yds-full-1" value="'+esc(L.url||'')+'"></div>'+
+        '<button class="xb" data-x="'+i+'">×</button>';
+      box.appendChild(d);
+      d.querySelectorAll('[data-k]').forEach(function(el){el.addEventListener('input',function(){L[el.dataset.k]=el.value;if(el.dataset.k==='date')drawCal();});});
+      d.querySelector('[data-x]').addEventListener('click',function(){state.lessons.splice(i,1);renderLessons();drawCal();});
+    });
+    document.getElementById('lCnt').textContent=state.lessons.length+' ders';
+  }
+  function renderHw(){
+    var box=document.getElementById('homework');box.innerHTML='';
+    state.homework.forEach(function(H,i){
+      var d=document.createElement('div');d.className='hrow';
+      d.innerHTML='<div class="col"><input class="inp" type="date" data-k="date" value="'+esc(H.date||'')+'"></div>'+
+        '<div class="col"><input class="inp" data-k="task" placeholder="Ödev" value="'+esc(H.task||'')+'">'+
+          '<input class="inp" data-k="url" placeholder="Link (opsiyonel)" value="'+esc(H.url||'')+'">'+
+          '<label class="ck"><input type="checkbox" data-k="audio" '+(H.audio?'checked':'')+'> Ses kaydı iste</label></div>'+
+        '<button class="xb" data-x="'+i+'">×</button>';
+      box.appendChild(d);
+      d.querySelectorAll('[data-k]').forEach(function(el){el.addEventListener('input',function(){H[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.k==='date')drawCal();});});
+      d.querySelector('[data-x]').addEventListener('click',function(){state.homework.splice(i,1);renderHw();drawCal();});
+    });
+    document.getElementById('hCnt').textContent=state.homework.length+' ödev';
+  }
+  function renderRes(){
+    var box=document.getElementById('resources');box.innerHTML='';
+    state.resources.forEach(function(R,i){
+      var d=document.createElement('div');d.className='rrow';
+      d.innerHTML='<input class="inp" data-k="group" placeholder="Grup (ör. Speaking Videoları)" value="'+esc(R.group||'')+'">'+
+        '<input class="inp" data-k="url" placeholder="Link / açıklama" value="'+esc(R.url||'')+'">'+
+        '<button class="xb" data-x="'+i+'">×</button>';
+      box.appendChild(d);
+      d.querySelectorAll('[data-k]').forEach(function(el){el.addEventListener('input',function(){R[el.dataset.k]=el.value;});});
+      d.querySelector('[data-x]').addEventListener('click',function(){state.resources.splice(i,1);renderRes();});
+    });
+    document.getElementById('rCnt').textContent=state.resources.length+' link';
+  }
+
+  // ---- calendar preview ----
+  function drawCal(){
+    if(!calRef){
+      var f=(document.getElementById('fStart').value)||(state.lessons[0]&&state.lessons[0].date)||new Date().toISOString().slice(0,10);
+      var dd=new Date(f);calRef=new Date(dd.getFullYear(),dd.getMonth(),1);
+    }
+    var y=calRef.getFullYear(),m=calRef.getMonth();
+    var months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    document.getElementById('calMonth').textContent=months[m]+' '+y;
+    var byDay={};
+    state.lessons.forEach(function(L){if(L.date){var d=new Date(L.date);if(d.getFullYear()===y&&d.getMonth()===m)(byDay[d.getDate()]=byDay[d.getDate()]||[]).push('sp');}});
+    state.homework.forEach(function(H){if(H.date){var d=new Date(H.date);if(d.getFullYear()===y&&d.getMonth()===m)(byDay[d.getDate()]=byDay[d.getDate()]||[]).push('dn');}});
+    var first=new Date(y,m,1);var off=(first.getDay()+6)%7; // Monday=0
+    var days=new Date(y,m+1,0).getDate();
+    var dw=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+    var h=dw.map(function(x){return '<div class="dw">'+x+'</div>';}).join('');
+    for(var i=0;i<off;i++)h+='<div class="dy empty"></div>';
+    for(var dnum=1;dnum<=days;dnum++){
+      var a=byDay[dnum]||[];
+      var dots=a.slice(0,4).map(function(x){return '<i style="background:var(--'+x+')"></i>';}).join('');
+      h+='<div class="dy"><span class="n">'+dnum+'</span><span class="dots">'+dots+'</span></div>';
+    }
+    document.getElementById('calGrid').innerHTML=h;
+  }
+  document.getElementById('calPrev').addEventListener('click',function(){calRef=new Date(calRef.getFullYear(),calRef.getMonth()-1,1);drawCal();});
+  document.getElementById('calNext').addEventListener('click',function(){calRef=new Date(calRef.getFullYear(),calRef.getMonth()+1,1);drawCal();});
+
+  // ---- load into form ----
+  function loadState(p){
+    state.id=p?p.id:null;
+    state.status=p?p.status:'draft';
+    var c=(p&&p.content)||{};
+    state.lessons=(c.lessons||[]).map(function(x){return Object.assign({},x);});
+    state.homework=(c.homework||[]).map(function(x){return Object.assign({},x);});
+    state.resources=(c.resources||[]).map(function(x){return Object.assign({},x);});
+    document.getElementById('fTitle').value=p?p.title:'';
+    document.getElementById('fNote').value=p?(p.note||''):'';
+    document.getElementById('fStart').value=p?(p.start_date||''):'';
+    document.getElementById('fEnd').value=p?(p.end_date||''):'';
+    document.getElementById('statusPill').textContent=state.status==='published'?'Yayında':'Taslak';
+    document.getElementById('publishBtn').textContent=state.status==='published'?'Yayından kaldır':'Yayınla → öğrenciye gönder';
+    calRef=null;renderLessons();renderHw();renderRes();drawCal();
+  }
+
+  var allPrograms=[];
+  function refreshSelect(){
+    var sel=document.getElementById('progSelect');
+    sel.innerHTML='<option value="">+ Yeni program</option>'+allPrograms.map(function(p){return '<option value="'+p.id+'">'+esc(p.title)+(p.status==='published'?' (yayında)':' (taslak)')+'</option>';}).join('');
+    sel.value=state.id||'';
+  }
+
+  async function loadPrograms(selectId){
+    var r=await sb.from('student_programs').select('*').eq('student_id',studentId).eq('teacher_id',me.id).order('created_at',{ascending:false});
+    allPrograms=r.data||[];
+    var pick=selectId?allPrograms.find(function(p){return p.id===selectId;}):null;
+    loadState(pick||null);refreshSelect();
+  }
+
+  function collect(){
+    return {
+      teacher_id:me.id, student_id:studentId, class_id:classId||null,
+      title:document.getElementById('fTitle').value.trim()||'Çalışma Programı',
+      note:document.getElementById('fNote').value.trim()||null,
+      start_date:document.getElementById('fStart').value||null,
+      end_date:document.getElementById('fEnd').value||null,
+      content:{lessons:state.lessons,homework:state.homework,resources:state.resources},
+      updated_at:new Date().toISOString()
+    };
+  }
+  function showMsg(t,ok){var m=document.getElementById('msg');m.textContent=t;m.className='msg '+(ok?'ok':'err');setTimeout(function(){m.className='msg';},3500);}
+
+  async function save(publishState){
+    var row=collect();
+    if(publishState!=null)row.status=publishState;
+    var res;
+    if(state.id){res=await sb.from('student_programs').update(row).eq('id',state.id).select().single();}
+    else{res=await sb.from('student_programs').insert(row).select().single();}
+    if(res.error){showMsg('Kaydedilemedi: '+res.error.message,false);return;}
+    state.id=res.data.id;state.status=res.data.status;
+    document.getElementById('statusPill').textContent=state.status==='published'?'Yayında':'Taslak';
+    document.getElementById('publishBtn').textContent=state.status==='published'?'Yayından kaldır':'Yayınla → öğrenciye gönder';
+    await loadPrograms(state.id);
+    showMsg(publishState==='published'?'Yayınlandı, öğrenci görebilir.':(publishState==='draft'?'Yayından kaldırıldı.':'Kaydedildi.'),true);
+  }
+
+  document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',task:'',url:'',audio:false});renderHw();});
+  document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
+  document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
+  document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});
+  document.getElementById('fStart').addEventListener('input',function(){calRef=null;drawCal();});
+  document.getElementById('progSelect').addEventListener('change',function(e){loadPrograms(e.target.value||null);});
+  document.getElementById('dupBtn').addEventListener('click',function(){state.id=null;state.status='draft';document.getElementById('fTitle').value=(document.getElementById('fTitle').value||'Program')+' (kopya)';document.getElementById('statusPill').textContent='Taslak';showMsg('Kopya taslağı — Kaydet ile yeni program oluşturulur.',true);refreshSelect();});
+  document.getElementById('delBtn').addEventListener('click',async function(){
+    if(!state.id){showMsg('Silinecek kayıtlı program yok.',false);return;}
+    if(!confirm('Bu programı silmek istediğine emin misin?'))return;
+    var r=await sb.from('student_programs').delete().eq('id',state.id);
+    if(r.error){showMsg('Silinemedi: '+r.error.message,false);return;}
+    await loadPrograms(null);showMsg('Silindi.',true);
+  });
+
+  // header + back
+  document.getElementById('pgWho').textContent=studentName+' için program';
+  var back=document.getElementById('backBtn');
+  back.href=classId?('ogretmen-sinif?id='+classId):'ogretmen';
+
+  await loadPrograms(params.get('id')||null);
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='';
+})();
+</script>
+</body>
+</html>

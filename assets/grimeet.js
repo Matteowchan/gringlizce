@@ -1383,9 +1383,10 @@ function bindFileUpload(){
   });
 }
 function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(String(u).length===11?u:null); }
-// IELTS deneme runner'ları (reading/writing/listening) interaktif — start ekranı + passage/task
-// geçişi URL değiştirmez, bu yüzden gmsync=1 bayrağıyla runner'ın postMessage köprüsünü açarız.
-function isExamRunner(v){ return /ielts-deneme-(reading|writing|listening)/i.test(String(v||'')); }
+// Canlı yazı-senkronu runner'ları: IELTS deneme (reading/writing/listening) + odev (ödev).
+// Bu sayfalar interaktif (input/essay) — geçiş URL değiştirmez, gmsync=1 bayrağıyla
+// runner'ın postMessage köprüsünü açarız (öğretmen yazınca öğrenci görsün / iki yönlü). #108
+function isExamRunner(v){ v=String(v||''); return /ielts-deneme-(reading|writing|listening)/i.test(v) || /(^|\/)odev(\.html)?([?#]|$)/i.test(v); }
 function loadMaterial(m,remote){
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   STATE.matScrollEl=null;

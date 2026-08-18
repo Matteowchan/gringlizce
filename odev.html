@@ -966,6 +966,35 @@ window.odSubmit=function(){
 
 /* start */
 boot();
+
+/* ===== Gri Meet canlı senkron köprüsü (#108) — YALNIZ ?gmsync=1 + iframe içinde aktif =====
+   Normal ödev kullanımında (gmsync yok) tamamen inert. Cevaplar (ST.a: mcq/gap/writing)
+   iki yönlü aynalanır; odaktaki yazı alanı ezilmez, caret korunur. */
+(function(){
+  try{
+    if(qparam('gmsync')!=='1' || window.top===window.self) return;
+    var _applying=false, _t=null;
+    function send(){ if(_applying) return; try{ parent.postMessage({__gmex:1, state:{answers:ST.a}}, '*'); }catch(e){} }
+    function schedule(){ if(_applying) return; clearTimeout(_t); _t=setTimeout(send, 220); }
+    document.addEventListener('input', schedule, true);
+    document.addEventListener('click', function(e){ var el=e.target; if(el&&el.getAttribute&&el.getAttribute('data-key')) setTimeout(schedule,30); }, true);
+    window.addEventListener('message', function(e){
+      var d=e.data; if(!d||d.__gmex!==1||!d.apply||!d.apply.answers) return;
+      _applying=true;
+      try{
+        var f=document.activeElement, fk=(f&&f.getAttribute)?f.getAttribute('data-key'):null;
+        var fStart=(f&&'selectionStart'in f)?f.selectionStart:null, fEnd=(f&&'selectionEnd'in f)?f.selectionEnd:null;
+        var inc=d.apply.answers||{};
+        if(fk && ST.a[fk]!=null) inc[fk]=ST.a[fk]; // yazmakta olduğun cevabı ezme
+        ST.a=inc;
+        if(typeof restoreState==='function') restoreState();
+        if(f && document.body.contains(f) && f.setSelectionRange && fStart!=null){ try{ f.focus(); f.setSelectionRange(fStart,fEnd); }catch(_e){} }
+      }catch(err){}
+      setTimeout(function(){ _applying=false; }, 60);
+    });
+    setTimeout(send, 600); // ilk durumu bir kez paylaş
+  }catch(e){}
+})();
 })();
 </script>
 

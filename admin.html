@@ -133,7 +133,7 @@
       display: flex; flex-wrap: wrap; gap: 0.5rem;
       margin-bottom: 1rem; align-items: center;
     }
-    .filter-chip {
+    .filter-chip, .pstatus-chip {
       padding: 0.35rem 0.8rem;
       background: var(--bg); border: 1px solid var(--line);
       font-family: var(--font-ui); font-size: 11px;
@@ -141,6 +141,7 @@
       cursor: pointer; color: var(--text-soft);
     }
     .filter-chip.active { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+    .pstatus-chip.active { background: var(--teal); color: var(--bg); border-color: var(--teal); }
 
     .variants-block {
       background: var(--bg);
@@ -2077,6 +2078,13 @@
           <button class="filter-chip" data-filter="yds">YDS/YÖKDİL</button>
         </div>
 
+        <div class="filter-row" id="status-filter-row" style="margin-top: 0.4rem;">
+          <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-right: 0.5rem;">Durum:</span>
+          <button class="pstatus-chip active" data-pstatus="all">Hepsi</button>
+          <button class="pstatus-chip" data-pstatus="active">Aktif (satışta)</button>
+          <button class="pstatus-chip" data-pstatus="inactive">Pasif</button>
+        </div>
+
         <div class="table-wrap"><table class="products-table" id="products-table">
           <thead>
             <tr>
@@ -2700,6 +2708,7 @@
       products: [],
       cfg: {},
       currentFilter: 'all',
+      currentStatus: 'all',
       usersLoaded: false
     };
 
@@ -2999,7 +3008,11 @@
       var tbody = $('products-tbody');
       tbody.innerHTML = '';
       var filtered = state.products.filter(function (p) {
-        return state.currentFilter === 'all' || p.exam_type === state.currentFilter;
+        var examOk = state.currentFilter === 'all' || p.exam_type === state.currentFilter;
+        var statusOk = state.currentStatus === 'all'
+          || (state.currentStatus === 'active' && p.active)
+          || (state.currentStatus === 'inactive' && !p.active);
+        return examOk && statusOk;
       });
       filtered.forEach(function (p) { tbody.appendChild(buildProductRow(p)); });
     }
@@ -3176,6 +3189,14 @@
         document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
         chip.classList.add('active');
         state.currentFilter = chip.dataset.filter;
+        renderProducts();
+        return;
+      }
+      var schip = ev.target.closest('.pstatus-chip');
+      if (schip) {
+        document.querySelectorAll('.pstatus-chip').forEach(function (c) { c.classList.remove('active'); });
+        schip.classList.add('active');
+        state.currentStatus = schip.dataset.pstatus;
         renderProducts();
       }
     });

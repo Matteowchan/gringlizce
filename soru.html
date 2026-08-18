@@ -2239,14 +2239,19 @@
       try { var m = examGetAll(); m[slug] = letter; sessionStorage.setItem(examStoreKey(), JSON.stringify(m)); }
       catch (e) {}
     }
-    // Sonuç kesinleşince (bitir): review navigatörü + panelim tutarlılığı için hafif kayıt.
-    // NOT: setAnswerStatus'un aksine günlük limiti ARTIRMAZ (deneme limitten muaf) ve SRS'e dokunmaz.
+    // Sonuç kesinleşince (bitir): deneme cevabını KALICI kaydeder.
+    // user_answers'a yazar → panelim'in "yanlış sorular" listesi + kategori ilerlemesi görür.
+    // NOT: setAnswerStatus'un aksine günlük ücretsiz limiti ARTIRMAZ (deneme muaf) ve SRS'e dokunmaz.
+    // Payload, çalışan setAnswerStatus yazımıyla birebir (şema uyumu için time_spent_ms dahil).
     function examPersistResult(slug, status) {
       try { sessionStorage.setItem('gri.answer.' + slug, status); } catch (e) {}
       if (GRI_USER_ID) {
         supabase.from('user_answers').upsert({
-          user_id: GRI_USER_ID, question_slug: slug, status: status,
-          answered_at: new Date().toISOString()
+          user_id: GRI_USER_ID,
+          question_slug: slug,
+          status: status,
+          answered_at: new Date().toISOString(),
+          time_spent_ms: null
         }, { onConflict: 'user_id,question_slug' }).then(function (r) {
           if (r && r.error) console.warn('[deneme] persist failed:', r.error.message);
         });

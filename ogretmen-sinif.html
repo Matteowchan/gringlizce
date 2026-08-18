@@ -4795,11 +4795,15 @@
             var geClass = (geClassRes && geClassRes.data) || [];
             if (geClass.length) {
               var geIds2 = geClass.map(function (x) { return x.assignment_id; });
-              var memberCount2 = parseInt((document.getElementById('ks-member-count') || {}).textContent, 10) || 0;
+              // Tamamlanma YALNIZ mevcut sınıf üyeleri sayılır — aksi halde başka sınıfa da atanmış aynı
+              // havuz ödevi / ayrılmış öğrenci / öğretmen test gönderimi sayılıp "2/1", "3/1" gibi total'ı aşan sayı çıkar.
+              var memRes2 = await sb.from('class_members').select('student_id').eq('class_id', classId);
+              var memSet2 = {}; var memberCount2 = 0; ((memRes2 && memRes2.data) || []).forEach(function (r) { memSet2[r.student_id] = 1; memberCount2++; });
+              if (!memberCount2) memberCount2 = parseInt((document.getElementById('ks-member-count') || {}).textContent, 10) || 0;
               var geMetaRes2 = await sb.from('ge_assignments').select('id,title,skill,level,unit').in('id', geIds2);
               var geMetaMap2 = {}; ((geMetaRes2 && geMetaRes2.data) || []).forEach(function (m) { geMetaMap2[m.id] = m; });
               var geSubRes2 = await sb.from('ge_submissions').select('assignment_id,user_id').eq('task_type', 'assignment').in('assignment_id', geIds2);
-              var geDone2 = {}; ((geSubRes2 && geSubRes2.data) || []).forEach(function (s) { (geDone2[s.assignment_id] = geDone2[s.assignment_id] || {})[s.user_id] = 1; });
+              var geDone2 = {}; ((geSubRes2 && geSubRes2.data) || []).forEach(function (s) { if (memSet2[s.user_id]) (geDone2[s.assignment_id] = geDone2[s.assignment_id] || {})[s.user_id] = 1; });
               gePoolAssignments = geClass.map(function (x) {
                 var m = geMetaMap2[x.assignment_id] || {};
                 return {
@@ -4807,7 +4811,7 @@
                   type: 'gepool', config: { skill: m.skill, level: m.level, unit: m.unit },
                   due_date: x.due_date, created_at: x.assigned_at,
                   total_students: memberCount2,
-                  completed_count: geDone2[x.assignment_id] ? Object.keys(geDone2[x.assignment_id]).length : 0,
+                  completed_count: Math.min(geDone2[x.assignment_id] ? Object.keys(geDone2[x.assignment_id]).length : 0, memberCount2),
                   _kind: 'gepool'
                 };
               });
@@ -4846,6 +4850,7 @@
             window.__adMeta[a.assignment_id] = { type: a.type, config: a.config || {}, title: a.title };
             var total = parseInt(a.total_students) || 0;
             var completed = parseInt(a.completed_count) || 0;
+            if (total > 0 && completed > total) completed = total; // güvenlik: tamamlanan toplam öğrenciyi aşamaz (2/1, 3/1 önlemi)
             var pct = total > 0 ? Math.round(100 * completed / total) : 0;
             var isOverdue = a.due_date && new Date(a.due_date) < new Date();
 

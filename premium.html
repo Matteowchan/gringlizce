@@ -47,6 +47,8 @@
     .pm-price .amt{font-size:2.1rem;font-weight:800;letter-spacing:-.02em}
     .pm-price .per{font-size:.9rem;opacity:.7}
     .pm-eff{font-size:.82rem;opacity:.7;min-height:1.1rem;margin-bottom:1rem}
+    .pm-old{text-decoration:line-through;opacity:.45;font-size:1.15rem;font-weight:600}
+    .pm-disc{display:inline-block;background:#b4463c;color:#fff;font-weight:700;font-size:.7rem;padding:.08rem .4rem;border-radius:4px;letter-spacing:.02em;opacity:1;vertical-align:middle}
     .pm-save{display:inline-block;font-size:.75rem;font-weight:700;color:#2e7d32;background:rgba(46,125,50,.1);border-radius:6px;padding:.15rem .5rem;margin-left:.4rem}
     .pm-plan .btn{margin-top:auto;width:100%;text-align:center}
     .pm-list{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.5rem}
@@ -113,21 +115,41 @@
         if (tries++ > 40) return; return void setTimeout(run, 150);
       }
       var sb = window.supabase.createClient(SB_URL, SB_KEY);
-      sb.from('products').select('slug,base_price,premium_days').eq('product_type', 'premium').eq('active', true)
-        .then(function (r) {
+      Promise.all([
+        sb.from('products').select('slug,base_price,premium_days,has_discount').eq('product_type', 'premium').eq('active', true),
+        sb.from('site_config').select('value').eq('key', 'discount').maybeSingle()
+      ]).then(function (res) {
+          var r = res[0];
           if (!r || !r.data || !r.data.length) return;
+          // Global indirim: enabled + yüzde>0 ise, has_discount işaretli ürünlere uygula.
+          var dc = (res[1] && res[1].data && res[1].data.value) || null;
+          var disc = (dc && dc.enabled && Number(dc.percentage) > 0) ? Number(dc.percentage) : 0;
+          function effOf(p) {
+            return (disc && p.has_discount) ? Number(p.base_price) * (1 - disc / 100) : Number(p.base_price);
+          }
           var map = {}; r.data.forEach(function (p) { map[p.slug] = p; });
-          var monthly = map['premium-monthly'] ? Number(map['premium-monthly'].base_price) : null;
+          var monthlyEff = map['premium-monthly'] ? effOf(map['premium-monthly']) : null;
           r.data.forEach(function (p) {
-            var price = Number(p.base_price), days = Number(p.premium_days) || 30;
+            var base = Number(p.base_price), eff = effOf(p), days = Number(p.premium_days) || 30;
+            var discounted = eff < base - 0.5;
             var amtEl = document.querySelector('[data-pm-amt="' + p.slug + '"]');
-            if (amtEl) amtEl.textContent = fmt(price) + '₺';
+            if (amtEl) {
+              amtEl.textContent = fmt(eff) + '₺';
+              var box = amtEl.parentNode, old = box.querySelector('.pm-old');
+              if (discounted) {
+                if (!old) { old = document.createElement('span'); old.className = 'pm-old'; box.insertBefore(old, amtEl); }
+                old.textContent = fmt(base) + '₺';
+              } else if (old) { old.remove(); }
+            }
             var effEl = document.querySelector('[data-pm-eff="' + p.slug + '"]');
-            if (effEl && monthly && days > 31) {
+            if (effEl && monthlyEff && days > 31) {
               var months = days / 30;
-              var perMonth = price / months;
-              var savePct = Math.round((1 - (price / (monthly * months))) * 100);
+              var perMonth = eff / months;
+              var savePct = Math.round((1 - (eff / (monthlyEff * months))) * 100);
               effEl.innerHTML = 'Ayda ~' + fmt(perMonth) + '₺' + (savePct > 0 ? ' <span class="pm-save">%' + savePct + ' tasarruf</span>' : '');
+            }
+            if (effEl && discounted && !effEl.querySelector('.pm-disc')) {
+              effEl.insertAdjacentHTML('afterbegin', '<span class="pm-disc">%' + disc + ' indirim</span> ');
             }
           });
         });

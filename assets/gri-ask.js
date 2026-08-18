@@ -214,7 +214,10 @@
     '  font-family: var(--font-display); font-size: 1.2rem; margin: 0.5rem 0;',
     '}',
     '.gri-paywall p { color: var(--text-muted); margin: 0 0 1rem; font-size: 0.9rem; }',
-    '.gri-packs { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }',
+    '.gri-premium-cta { display:block; background:var(--teal,#2C5856); color:#fff; text-decoration:none; font-weight:700; padding:11px 12px; border-radius:10px; margin:0 0 0.5rem; font-size:0.92rem; }',
+    '.gri-premium-cta:hover { filter:brightness(1.08); }',
+    '.gri-paywall-or { color: var(--text-muted); font-size:0.8rem; margin:0.4rem 0; }',
+    '.gri-packs { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.4rem; }',
     '.gri-pack {',
     '  display: flex; justify-content: space-between; align-items: center;',
     '  padding: 0.75rem 0.9rem;',
@@ -425,7 +428,9 @@
     setBody([
       '<div class="gri-paywall">',
       '  <h4>Hakkın doldu</h4>',
-      '  <p>Günlük 10 hakkın bugün doldu. Yarın yenilenir veya paketle bonus hak ekleyebilirsin (bonus zaman sınırı yok).</p>',
+      '  <p>Günlük 10 hakkın bugün doldu. Premium ile sınırsız sor, ya da yarın yenilenmesini bekle.</p>',
+      '  <a href="/premium" class="gri-premium-cta">Premium ile sınırsız sor</a>',
+      '  <div class="gri-paywall-or">veya tek seferlik paket:</div>',
       '  <div class="gri-packs">', packHtml, '</div>',
       '</div>'
     ].join(''));

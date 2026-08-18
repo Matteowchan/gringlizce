@@ -420,6 +420,13 @@ Deno.serve(async (req) => {
   const userId = userData.user.id;
   const userEmail = userData.user.email || null;
 
+  // Premium: mentor kotasından muaf (sınırsız soru sorma)
+  let isPremium = false;
+  try {
+    const { data: prof } = await supabase.from("profiles").select("premium_until").eq("id", userId).maybeSingle();
+    isPremium = !!(prof?.premium_until && new Date(prof.premium_until).getTime() > Date.now());
+  } catch (_) { /* okunamazsa ücretsiz akış */ }
+
   // 2. Body parse
   let body: {
     question_id?: string;
@@ -495,8 +502,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 5. Quota check (modern kolonlar)
-  if (quota.total_remaining <= 0) {
+  // 5. Quota check (modern kolonlar) — Premium'da atlanır (sınırsız)
+  if (!isPremium && quota.total_remaining <= 0) {
     return json({
       ok: false,
       error: "quota_exhausted",
@@ -611,7 +618,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 9. Quota harca (RPC her çağrıda 1 düşürür, daily biterse bonus'a geçer)
+  // 9. Quota harca (RPC her çağrıda 1 düşürür, daily biterse bonus'a geçer) — Premium'da atlanır
+  if (!isPremium) {
   const { data: consumeResult, error: consumeError } = await supabase.rpc("consume_ai_quota", {
     p_user_id: userId,
   });
@@ -636,6 +644,7 @@ Deno.serve(async (req) => {
       quota = { ...quota, bonus_remaining: quota.bonus_remaining - 1, total_remaining: quota.total_remaining - 1 };
     }
   }
+  } // /if !isPremium
 
   return json({
     ok: true,

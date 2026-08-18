@@ -14,7 +14,7 @@
   <script src="assets/site-config.js?v=7" defer></script>
   <script src="assets/auth-gate.js" defer></script>
   <script src="assets/gri-premium.js?v=1" defer></script>
-  <script src="assets/gri-ask.js?v=3" defer></script>
+  <script src="assets/gri-ask.js?v=4" defer></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soru | Gri English</title>
@@ -529,6 +529,23 @@
       border-radius: 12px; cursor: pointer; margin-bottom: 10px;
     }
     .exr-exit { display: block; color: var(--text-muted, #8A7F6E); text-decoration: none; font-size: 13px; }
+    /* Bitir onay modalı (native confirm yerine) */
+    .exr-confirm .exr-confirm-msg {
+      font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.55;
+      color: var(--text, #1A2230); margin: 16px 0 22px;
+    }
+    .exr-confirm-actions { display: flex; gap: 10px; }
+    .exr-confirm-actions button {
+      flex: 1; border-radius: 12px; font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-weight: 700; font-size: 14px; padding: 13px; cursor: pointer;
+    }
+    .exr-btn-ghost {
+      background: transparent; color: var(--text, #1A2230);
+      border: 1.5px solid var(--line, #E3D8C5);
+    }
+    .exr-btn-ghost:hover { background: var(--bg-soft, rgba(0,0,0,.04)); }
+    .exr-btn-primary { background: var(--teal, #2C5856); color: #fff; border: none; }
+    .exr-btn-primary:hover { filter: brightness(1.06); }
 
     .q-option-text {
       flex: 1;
@@ -2822,8 +2839,30 @@
     // Tüm bu fonksiyonlar YALNIZCA GRI_DENEME_MODE true iken çağrılır.
     // ==========================================================================
 
-    // "Denemeyi Bitir" — doğru cevapları TEK sorguda çek, puanla, sonucu göster.
-    async function finishExam() {
+    // Site temalı onay modalı (çirkin native confirm yerine).
+    function showExamConfirm(msg, onConfirm) {
+      if (document.getElementById('gri-exam-confirm')) return;
+      const ov = document.createElement('div');
+      ov.id = 'gri-exam-confirm';
+      ov.className = 'gri-exam-overlay';
+      ov.innerHTML = `
+        <div class="exr-card exr-confirm">
+          <div class="exr-badge">DENEMEYİ BİTİR</div>
+          <p class="exr-confirm-msg">${esc(msg)}</p>
+          <div class="exr-confirm-actions">
+            <button type="button" class="exr-btn-ghost" id="examConfirmCancel">Vazgeç</button>
+            <button type="button" class="exr-btn-primary" id="examConfirmOk">Denemeyi Bitir</button>
+          </div>
+        </div>`;
+      document.body.appendChild(ov);
+      const close = function () { ov.remove(); };
+      document.getElementById('examConfirmCancel').addEventListener('click', close);
+      ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+      document.getElementById('examConfirmOk').addEventListener('click', function () { close(); onConfirm(); });
+    }
+
+    // "Denemeyi Bitir" — önce temalı onay modalı, onaylanınca puanla.
+    function finishExam() {
       if (!GRI_DENEME_MODE || GRI_EXAM_REVIEW || !GRI_DENEME_PARAM) return;
       const answers = examGetAll();
       const total = SUBCATEGORY_LIST.length;
@@ -2831,8 +2870,11 @@
       const unanswered = total - answeredCount;
       let msg = 'Denemeyi bitirmek istediğine emin misin? Bitirdikten sonra cevaplarını değiştiremezsin.';
       if (unanswered > 0) msg = unanswered + ' soruyu boş bıraktın. Yine de denemeyi bitirmek istiyor musun?';
-      if (!window.confirm(msg)) return;
+      showExamConfirm(msg, function () { runFinishExam(answers); });
+    }
 
+    // Doğru cevapları TEK sorguda çek, puanla, panelim'e yaz, sonucu göster.
+    async function runFinishExam(answers) {
       const finishBtn = document.getElementById('examFinishBtn');
       if (finishBtn) { finishBtn.disabled = true; finishBtn.textContent = 'Hesaplanıyor…'; }
 
@@ -3520,7 +3562,11 @@
         grid.classList.add('show-explanation');
         explainBtn.classList.add('active');
         const checked = document.querySelector('.q-option input:checked');
-        if (checked) showExpPanel(checked.value);
+        // Yalnızca per-option (data-opt'lu) panel varsa seçili şıkka göre panel değiştir.
+        // Single-format açıklamada (YDS: {answer:{steps}}) tek panel data-opt'suz ve zaten
+        // 'active'; showExpPanel'i çağırmak onu kapatıp açıklamayı boş gösterirdi.
+        const hasPerOptPanels = !!document.querySelector('#expContent .exp-panel[data-opt]');
+        if (checked && hasPerOptPanels) showExpPanel(checked.value);
         if (window.innerWidth <= 1000) {
           setTimeout(() => {
             document.getElementById('qExplanation').scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -428,10 +428,8 @@
     setBody([
       '<div class="gri-paywall">',
       '  <h4>Hakkın doldu</h4>',
-      '  <p>Günlük 10 hakkın bugün doldu. Premium ile sınırsız sor, ya da yarın yenilenmesini bekle.</p>',
+      '  <p>Günlük hakkın bugün doldu. Premium ile sınırsız sor, ya da yarın yenilenmesini bekle.</p>',
       '  <a href="/premium" class="gri-premium-cta">Premium ile sınırsız sor</a>',
-      '  <div class="gri-paywall-or">veya tek seferlik paket:</div>',
-      '  <div class="gri-packs">', packHtml, '</div>',
       '</div>'
     ].join(''));
   }

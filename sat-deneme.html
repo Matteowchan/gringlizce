@@ -1268,6 +1268,22 @@ function showAuthGate(){
     '<div class="st-actions"><a class="st-btn gold" href="giris?return='+ret+'">Giriş Yap</a><a class="st-btn ghost" href="giris#signup">Ücretsiz Hesap Aç</a></div>';
 }
 
+function showPremiumGate(){
+  const ret = encodeURIComponent('sat-deneme?d='+(DEN?DEN.slug:''));
+  app.innerHTML =
+    '<div class="st-eyebrow">Digital SAT · Adaptif Deneme</div>'+
+    '<h1 class="st-h1">Bu deneme Premium&apos;a özel</h1>'+
+    '<p class="st-sub">İlk deneme herkese ücretsiz. Diğer tam denemelerin kilidini açmak için <strong>Gri Premium</strong> gerekir. Premium ile tüm SAT denemeleri, soru bankası ve reklamsız çalışma açılır.</p>'+
+    '<div class="st-actions"><a class="st-btn gold" href="premium">Premium&apos;a Göz At</a><a class="st-btn ghost" href="sat-denemeler-rw">Ücretsiz Denemeye Dön</a></div>';
+}
+
+async function requirePremium(){
+  try{
+    const { data } = await sb.from('profiles').select('premium_until').eq('id', UID).maybeSingle();
+    return !!(data && data.premium_until && new Date(data.premium_until).getTime() > Date.now());
+  }catch(e){ return false; }
+}
+
 async function init(){
   DEN = parseDeneme(param('d'));
   if (!DEN){
@@ -1281,6 +1297,8 @@ async function init(){
     if (s && s.data && s.data.session){ UID = s.data.session.user.id; TOKEN = s.data.session.access_token; window.GRI_SB=sb; window.GRI_UID=UID; }
   }catch(e){}
   if (!UID){ showAuthGate(); return; }
+  // Premium kilidi: ilk deneme (n=1) ücretsiz, gerisi Premium
+  if (DEN.n !== 1 && !(await requirePremium())){ showPremiumGate(); return; }
   // Deneme-içi sözlük: yalnızca giriş yapılınca (UID yoksa sessizce devre dışı)
   document.addEventListener('mouseup', vOnSelection);
   document.addEventListener('touchend', vOnSelection);

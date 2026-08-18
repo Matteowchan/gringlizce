@@ -100,6 +100,23 @@
       box-shadow: 0 12px 30px rgba(26,34,48,0.1);
     }
     .deneme-card.completed { background: var(--bg-soft); }
+    .deneme-card.locked { opacity: 0.86; }
+    .deneme-card .lock-badge {
+      position: absolute;
+      top: 1.15rem;
+      right: 1.15rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: #7A3B3B;
+      color: #fff;
+      padding: 0.22rem 0.5rem;
+      border-radius: 100px;
+    }
 
     .deneme-card .eyebrow {
       color: var(--text-muted);
@@ -351,6 +368,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="assets/site-config.js?v=7" defer></script>
 <script src="assets/auth-gate.js" defer></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
@@ -634,30 +652,63 @@
         user = data && data.user ? data.user : null;
       } catch (e) { /* sessiz */ }
 
+      // Premium durumu
+      let prem = false;
+      try {
+        if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); }
+      } catch (e) { /* sessiz */ }
+
+      // İlk deneme ücretsiz; ücretsiz slug = listenin ilki
+      const denemeler = denemeList(allTests || []);
+      const freeSlug = denemeler.length ? denemeler[0].slug : null;
+
       // State'e karar ver
       const selectedTest = requestedSlug && allTests ? allTests.find(function (t) { return t.slug === requestedSlug; }) : null;
 
+      // Runner-tarafı kilit: ücretsiz olmayan denemeye premium'suz doğrudan gelinirse premium'a yönlendir
+      if (selectedTest && freeSlug && selectedTest.slug !== freeSlug && !prem) {
+        location.replace('premium');
+        return;
+      }
+
       document.getElementById('loading').style.display = 'none';
+
+      // Premium canlı güncelleme (state1 görünürken)
+      window.__ieltsCtx = { sb: sb, user: user, tests: allTests || [], freeSlug: freeSlug };
+      window.addEventListener('gri-premium', function () {
+        try {
+          if (document.getElementById('state1').style.display === 'block') {
+            var c = window.__ieltsCtx;
+            renderState1(c.sb, c.user, c.tests, window.GriPremium.isActive(), c.freeSlug);
+          }
+        } catch (e) {}
+      });
 
       if (selectedTest) {
         await renderState2(sb, user, selectedTest);
       } else {
-        await renderState1(sb, user, allTests || []);
+        await renderState1(sb, user, allTests || [], prem, freeSlug);
       }
     });
+
+    // Bu sayfada listelenen TAM denemeler (bölüm-bazlı girişler hariç)
+    function denemeList(tests) {
+      return (tests || []).filter(function (t) {
+        var s = (t.slug || '').toLowerCase();
+        return s.indexOf('ielts-mock-') === 0 || s.indexOf('gri-deneme-') === 0;
+      });
+    }
 
     // ====================================================================
     // STATE 1 — Grid of deneme cards
     // ====================================================================
-    async function renderState1(sb, user, tests) {
+    async function renderState1(sb, user, tests, prem, freeSlug) {
       document.getElementById('state1').style.display = 'block';
       const grid = document.getElementById('denemeGrid');
 
       // Bu sayfa yalnızca TAM denemeleri listeler; bölüm-bazlı (reading/listening/writing) girişler hariç
-      tests = (tests || []).filter(function (t) {
-        var s = (t.slug || '').toLowerCase();
-        return s.indexOf('ielts-mock-') === 0 || s.indexOf('gri-deneme-') === 0;
-      });
+      tests = denemeList(tests);
+      if (freeSlug == null && tests.length) freeSlug = tests[0].slug;
 
       if (!tests.length) {
         grid.innerHTML = '<div class="gri-empty" style="grid-column:1/-1"><div class="gri-empty-ic">🐱</div><h4>Henüz yayında deneme yok</h4><p>Yeni denemeler yayına alındıkça burada görünür. O zamana kadar soru bankasıyla çalışabilirsin.</p><a class="gri-empty-cta" href="soru-bankasi">Soru Bankasına Git →</a></div>';
@@ -715,6 +766,16 @@
         const topics = Array.isArray(t.topic_tags) && t.topic_tags.length
           ? '<div class="topics">' + t.topic_tags.map(escapeHtml).join(' · ') + '</div>'
           : '';
+        const locked = !prem && freeSlug && t.slug !== freeSlug;
+        if (locked) {
+          return '<a class="deneme-card locked" href="premium">'
+               + '<span class="lock-badge">🔒 Premium</span>'
+               + '<div class="eyebrow">' + escapeHtml(date) + '</div>'
+               + '<div class="name">' + escapeHtml(t.name) + '</div>'
+               + topics
+               + '<div class="detail"><span>Premium ile kilidi aç</span><span class="arrow">→</span></div>'
+               + '</a>';
+        }
         return '<a class="deneme-card' + cardClass + '" href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
              + dotHtml
              + '<div class="eyebrow">' + escapeHtml(date) + '</div>'

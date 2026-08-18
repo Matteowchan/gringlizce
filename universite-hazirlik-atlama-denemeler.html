@@ -28,6 +28,8 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js?v=2" defer></script>
   <script src="assets/site-config.js?v=7" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"ItemList","name":"Üniversite Hazırlık Atlama Denemeleri","itemListElement":[
     {"@type":"ListItem","position":1,"name":"Deneme 1","url":"https://gringlizce.com/universite-hazirlik-atlama"},
@@ -73,6 +75,8 @@
     .hz-card:hover .hz-go::after{transform:translateX(3px)}
     .hz-note{max-width:720px;margin:1rem auto 2.4rem;padding:0 1.1rem;text-align:center;font-size:.9rem;opacity:.8;line-height:1.65}
     .hz-note a{color:var(--teal,#2C5856);font-weight:700}
+    .hz-card.locked{opacity:.84}
+    .hz-lock{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;gap:.28rem;font-size:.64rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#7A3B3B;color:#fff;padding:.22rem .5rem;border-radius:100px}
     @media(max-width:520px){.hz-hero h1{font-size:1.6rem}}
   </style>
 </head>
@@ -285,5 +289,36 @@
   </footer>
   <script src="assets/curriculum.js?v=26"></script>
   <script src="assets/nav.js?v=29"></script>
+  <script>
+    /* İlk deneme ücretsiz, gerisi Premium — kilit katmanı */
+    (function () {
+      var LOCK = '<span class="hz-lock">🔒 Premium</span>';
+      function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
+      function apply(){
+        var prem = isPrem();
+        var cards = document.querySelectorAll('.hz-grid .hz-card');
+        cards.forEach(function (card, i) {
+          if (i === 0) return; // ilk deneme ücretsiz
+          if (!card.dataset.href) card.dataset.href = card.getAttribute('href');
+          var go = card.querySelector('.hz-go');
+          var lock = card.querySelector('.hz-lock');
+          if (prem) {
+            card.setAttribute('href', card.dataset.href);
+            card.classList.remove('locked');
+            if (lock) lock.remove();
+            if (go) go.textContent = 'Denemeyi başlat';
+          } else {
+            card.setAttribute('href', 'premium');
+            card.classList.add('locked');
+            if (!lock) card.insertAdjacentHTML('afterbegin', LOCK);
+            if (go) go.textContent = 'Premium ile aç';
+          }
+        });
+      }
+      apply();
+      window.addEventListener('gri-premium', apply);
+      document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
 </body>
 </html>

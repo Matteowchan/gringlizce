@@ -128,6 +128,8 @@
   <script src="assets/curriculum.js?v=26"></script>
   <script src="assets/nav.js?v=29"></script>
   <script src="assets/track.js?v=2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
 </head>
 <body data-cat="udsp">
   <!-- Google Tag Manager (noscript) -->
@@ -530,5 +532,40 @@
   </script>
 
   <script src="assets/site-config.js?v=7" defer></script>
+  <script>
+    /* İlk deneme (Deneme 1) ücretsiz, Deneme 2-3 Premium — kilit katmanı */
+    (function () {
+      var LOCK = '<span class="udsp-lock" style="position:absolute;top:.7rem;right:.7rem;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#7A3B3B;color:#fff;padding:.2rem .5rem;border-radius:100px;">🔒 Premium</span>';
+      function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
+      function apply(){
+        var prem = isPrem();
+        var cards = document.querySelectorAll('a[href^="udsp-deneme-"]');
+        cards.forEach(function (card) {
+          var orig = card.dataset.href || card.getAttribute('href');
+          card.dataset.href = orig;
+          var m = /udsp-deneme-(\d+)/.exec(orig);
+          var n = m ? parseInt(m[1], 10) : 1;
+          var cta = card.lastElementChild;
+          if (cta && cta.dataset.orig == null) cta.dataset.orig = cta.textContent;
+          var lock = card.querySelector('.udsp-lock');
+          if (n === 1 || prem) {
+            card.setAttribute('href', orig);
+            card.style.opacity = '';
+            if (lock) lock.remove();
+            if (cta && cta.dataset.orig != null) cta.textContent = cta.dataset.orig;
+          } else {
+            card.setAttribute('href', 'premium');
+            card.style.position = 'relative';
+            card.style.opacity = '.86';
+            if (!lock) card.insertAdjacentHTML('afterbegin', LOCK);
+            if (cta) cta.textContent = 'Premium ile aç';
+          }
+        });
+      }
+      apply();
+      window.addEventListener('gri-premium', apply);
+      document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
 </body>
 </html>

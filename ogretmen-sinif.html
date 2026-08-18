@@ -482,11 +482,28 @@
       right: 0;
       bottom: 0;
       width: 100%;
-      max-width: 620px;
+      max-width: var(--ks-drawer-w, 620px);
+      min-width: 380px;
       background: var(--bg, #F4EFE3);
       border-left: 1px solid var(--line);
       overflow-y: auto;
       box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+    }
+    /* Sürükleyerek genişlet — panelin sol kenarında tutamak (genişlik kalıcı) */
+    .ks-drawer-resizer {
+      position: absolute; top: 0; bottom: 0;
+      right: var(--ks-drawer-w, 620px);
+      width: 12px; margin-right: -6px;
+      cursor: ew-resize; z-index: 1001; touch-action: none;
+    }
+    .ks-drawer-resizer::before {
+      content: ""; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px; height: 54px; border-radius: 3px;
+      background: var(--line, #d8d2c4); transition: background .15s, height .15s;
+    }
+    .ks-drawer-resizer:hover::before, .ks-drawer-resizer.dragging::before {
+      background: var(--teal, #2C5856); height: 90px;
     }
     .ks-drawer-header {
       display: flex;
@@ -2082,6 +2099,7 @@
   <!-- Student detail drawer -->
   <div class="ks-drawer" id="student-drawer">
     <div class="ks-drawer-backdrop" id="sd-backdrop"></div>
+    <div class="ks-drawer-resizer" title="Sürükleyerek genişlet"></div>
     <div class="ks-drawer-panel">
       <div class="ks-drawer-header">
         <div class="ks-drawer-header-titles">
@@ -2099,6 +2117,7 @@
   <!-- Assignment progress drawer -->
   <div class="ks-drawer" id="assign-drawer">
     <div class="ks-drawer-backdrop" id="ad-backdrop"></div>
+    <div class="ks-drawer-resizer" title="Sürükleyerek genişlet"></div>
     <div class="ks-drawer-panel">
       <div class="ks-drawer-header">
         <div class="ks-drawer-header-titles">
@@ -6475,5 +6494,40 @@
 </script>
 <script src="assets/breadcrumb.js?v=3" defer></script>
 <script src="assets/gri-fx.js" defer></script>
+  <script>
+  /* Öğrenci/Ödev drawer'ını sürükleyerek genişlet — genişlik localStorage'da kalıcı */
+  (function () {
+    var KEY = 'gri.ksDrawerW';
+    try {
+      var saved = parseInt(localStorage.getItem(KEY) || '', 10);
+      if (saved && saved >= 380) document.documentElement.style.setProperty('--ks-drawer-w', saved + 'px');
+    } catch (e) {}
+    function wire(rz) {
+      rz.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        var startX = e.clientX;
+        var panel = rz.parentElement.querySelector('.ks-drawer-panel');
+        var startW = panel ? panel.getBoundingClientRect().width : 620;
+        rz.classList.add('dragging');
+        try { rz.setPointerCapture(e.pointerId); } catch (_) {}
+        function move(ev) {
+          var w = startW + (startX - ev.clientX); // sola sürükle → genişler
+          w = Math.max(380, Math.min(window.innerWidth * 0.96, w));
+          document.documentElement.style.setProperty('--ks-drawer-w', w + 'px');
+        }
+        function up() {
+          rz.classList.remove('dragging');
+          rz.removeEventListener('pointermove', move);
+          rz.removeEventListener('pointerup', up);
+          var cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ks-drawer-w'), 10);
+          if (cur) { try { localStorage.setItem(KEY, String(cur)); } catch (_) {} }
+        }
+        rz.addEventListener('pointermove', move);
+        rz.addEventListener('pointerup', up);
+      });
+    }
+    document.querySelectorAll('.ks-drawer-resizer').forEach(wire);
+  })();
+  </script>
 </body>
 </html>

@@ -954,6 +954,8 @@ var DOC=(function(){
   }
   function sendSnapshot(){ if(!ready||!STATE.connected)return; panes().forEach(function(p){ var q=Q[p]; if(!q)return; try{ var ops=q.getContents().ops; var s=JSON.stringify(ops); if(s!==lastSnap[p] && encd.encode(s).length<13000){ lastSnap[p]=s; sendData({t:'doc',pane:p,full:ops}); } }catch(e){} }); }
   function combinedText(){ var out=[]; try{ if(Q.L&&isOpen('L')){ var l=Q.L.getText().trim(); if(l)out.push('=== SOL SAYFA ===\n'+l); } if(Q.C)out.push(Q.C.getText().trim()); if(Q.R&&isOpen('R')){ var r=Q.R.getText().trim(); if(r)out.push('=== SAĞ SAYFA ===\n'+r); } }catch(e){} return out.join('\n\n'); }
+  /* İndirme için: tüm sayfaların (ek sayfalar dahil) zengin HTML'i — biçim + görsel korunur. */
+  function combinedHtml(){ var parts=[]; try{ panes().forEach(function(p){ var q=Q[p]; if(!q||!q.root)return; var plain=(q.getText()||'').trim(); var html=q.root.innerHTML||''; if(!plain && !/<img/i.test(html))return; var label=(p==='C')?'':(p==='L'?'Sol Sayfa':p==='R'?'Sağ Sayfa':'Ek Sayfa'); parts.push((label?'<h3 style="font-family:Georgia,serif">'+label+'</h3>':'')+'<div>'+html+'</div>'); }); }catch(e){} return parts.join('<hr style="margin:18px 0;border:none;border-top:1px solid #ccc">'); }
   function init(){
     if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C'))return;
     try{ var Size=Quill.import('attributors/style/size'); Size.whitelist=['12px','14px','18px','24px','32px']; Quill.register(Size,true); }catch(e){}
@@ -967,7 +969,13 @@ var DOC=(function(){
     var al=$('#doc-addleft'); if(al)al.addEventListener('click',function(){ if(STATE.isHost) addPane('L'); });
     var ar=$('#doc-addright'); if(ar)ar.addEventListener('click',function(){ if(STATE.isHost) addPane('R'); });
     bindGutter('L'); bindGutter('R');
-    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{ var blob=docxFromText(combinedText()); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-dokuman.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1000);}catch(e){} });
+    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{
+      var body=combinedHtml(); if(!body || !body.replace(/<[^>]*>/g,'').trim() && !/<img/i.test(body)){ try{ toast('Yazı tahtası boş — indirilecek içerik yok.'); }catch(_){} return; }
+      var html='<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Gri Meet — Yazı Tahtası</title><style>body{font-family:Georgia,\'Times New Roman\',serif;font-size:12pt;line-height:1.5;color:#111;margin:2.2cm} img{max-width:100%}</style></head><body>'+body+'</body></html>';
+      var blob=new Blob(['﻿'+html],{type:'application/msword'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-yazitahtasi.doc'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1500);
+      try{ toast('Word belgesi indirildi.'); }catch(_){}
+    }catch(e){ try{ toast('İndirilemedi.'); }catch(_){} } });
     var cl=$('#doc-clear'); if(cl)cl.addEventListener('click',function(){ if(!STATE.isHost)return; if(!window.confirm('Ortak belge (tüm sayfalar) temizlensin mi?'))return; clearAll(); sendData({t:'doc-clear'}); });
     var lk=$('#doc-lock'); if(lk)lk.addEventListener('click',function(){ if(!STATE.isHost)return; STATE.docLocked=!STATE.docLocked; this.classList.toggle('on',STATE.docLocked); var s=this.querySelector('span'); if(s)s.textContent=STATE.docLocked?'Kilitli':'Kilitle'; sendData({t:'doc-lock',on:STATE.docLocked}); toast(STATE.docLocked?'Yazı tahtası kilitlendi — öğrenciler yazamaz':'Kilit açıldı'); });
     var sp=$('#doc-spell'); if(sp)sp.addEventListener('click',toggleSpell);

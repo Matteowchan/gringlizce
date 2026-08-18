@@ -479,6 +479,12 @@
       box-shadow: 0 8px 24px rgba(20, 15, 10, .28);
     }
     .gri-exam-finish:hover { filter: brightness(1.06); }
+    /* Alt çubuğa gömülü "Denemeyi Bitir" (floating değil — Sonraki'yi kapatmasın) */
+    .q-btn.q-btn-finish {
+      background: var(--teal, #2C5856); color: #fff; border-color: var(--teal, #2C5856);
+      font-weight: 700;
+    }
+    .q-btn.q-btn-finish:hover { filter: brightness(1.06); background: var(--teal, #2C5856); color: #fff; }
     /* İnceleme modu çubuğu */
     .gri-exam-reviewbar {
       position: fixed; right: 18px; bottom: 18px; z-index: 8000;
@@ -2946,17 +2952,25 @@
       });
     }
 
-    // "Denemeyi Bitir" sabit butonu (yalnızca sınav sırasında, inceleme değil).
+    // "Denemeyi Bitir" butonu (yalnızca sınav sırasında, inceleme değil).
+    // Alt aksiyon çubuğuna "Sonraki"nin yanına inline eklenir; floating buton
+    // "Sonraki"yi kapatıyordu. Çubuk yoksa sabit-konumlu fallback.
     function setupExamFinishButton() {
       if (!GRI_DENEME_MODE || GRI_EXAM_REVIEW) return;
       if (document.getElementById('examFinishBtn')) return;
       const btn = document.createElement('button');
       btn.id = 'examFinishBtn';
       btn.type = 'button';
-      btn.className = 'gri-exam-finish';
       btn.textContent = 'Denemeyi Bitir';
       btn.addEventListener('click', finishExam);
-      document.body.appendChild(btn);
+      const actions = document.querySelector('#qActionbar .q-actions');
+      if (actions) {
+        btn.className = 'q-btn q-btn-finish';
+        actions.appendChild(btn);
+      } else {
+        btn.className = 'gri-exam-finish';
+        document.body.appendChild(btn);
+      }
     }
 
     // İnceleme modu çubuğu + çıkış.

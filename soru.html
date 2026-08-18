@@ -452,6 +452,84 @@
     .q-option.correct .icon-check { display: inline; }
     .q-option.incorrect .icon-x { display: inline; }
 
+    /* ===== DENEME (sınav) modu ===== */
+    /* Nötr seçim — doğru/yanlış rengi DEĞİL, sadece "seçtim" işareti (teal) */
+    .q-option.sel {
+      border-color: var(--teal, #2C5856);
+      background: rgba(44, 88, 86, 0.10);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+    .q-option.sel .q-letter {
+      background: var(--teal, #2C5856);
+      color: #fff;
+      border-color: var(--teal, #2C5856);
+    }
+    /* Navigator: cevaplandı (nötr) işareti — doğru/yanlış BELLİ ETMEZ */
+    .nav-sq .sq-status.answered-neutral {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--teal, #2C5856); display: inline-block;
+    }
+    /* "Denemeyi Bitir" sabit buton */
+    .gri-exam-finish {
+      position: fixed; right: 18px; bottom: 18px; z-index: 8000;
+      background: var(--teal, #2C5856); color: #fff; border: none;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-weight: 700; font-size: 14px; padding: 13px 20px;
+      border-radius: 100px; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(20, 15, 10, .28);
+    }
+    .gri-exam-finish:hover { filter: brightness(1.06); }
+    /* İnceleme modu çubuğu */
+    .gri-exam-reviewbar {
+      position: fixed; right: 18px; bottom: 18px; z-index: 8000;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface, #fff); border: 1px solid var(--line, #E3D8C5);
+      border-radius: 100px; padding: 8px 8px 8px 16px;
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+      font-size: 13px; font-weight: 600; color: var(--text, #1A2230);
+      box-shadow: 0 8px 24px rgba(20, 15, 10, .18);
+    }
+    .gri-exam-reviewbar button {
+      background: var(--teal, #2C5856); color: #fff; border: none;
+      font-weight: 700; font-size: 13px; padding: 7px 14px;
+      border-radius: 100px; cursor: pointer;
+    }
+    /* Sonuç overlay */
+    .gri-exam-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      background: rgba(20, 15, 10, .55); backdrop-filter: blur(4px);
+      font-family: var(--font-ui, Inter, system-ui, sans-serif);
+    }
+    .gri-exam-overlay .exr-card {
+      max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto;
+      background: var(--surface, #fff); border: 1px solid var(--line, #E3D8C5);
+      border-radius: 20px; box-shadow: 0 24px 70px rgba(20, 15, 10, .34);
+      padding: 30px 26px; text-align: center;
+    }
+    .exr-badge {
+      display: inline-block; background: var(--teal, #2C5856); color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      padding: 5px 12px; border-radius: 100px;
+    }
+    .exr-score { margin: 18px 0 2px; }
+    .exr-score-num { font-family: Georgia, serif; font-size: 3.2rem; font-weight: 700; color: var(--text, #1A2230); }
+    .exr-score-den { font-size: 1.4rem; color: var(--text-muted, #8A7F6E); margin-left: 6px; }
+    .exr-pct { font-size: 15px; color: var(--text-muted, #8A7F6E); margin-bottom: 20px; }
+    .exr-breakdown { text-align: left; border-top: 1px solid var(--line, #E3D8C5); margin-bottom: 20px; }
+    .exr-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 2px; border-bottom: 1px solid var(--line, #E3D8C5);
+      font-size: 14px; color: var(--text, #1A2230);
+    }
+    .exr-row .exr-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .exr-review-btn {
+      display: block; width: 100%; background: var(--teal, #2C5856); color: #fff;
+      border: none; font-weight: 700; font-size: 14px; padding: 13px;
+      border-radius: 12px; cursor: pointer; margin-bottom: 10px;
+    }
+    .exr-exit { display: block; color: var(--text-muted, #8A7F6E); text-decoration: none; font-size: 13px; }
+
     .q-option-text {
       flex: 1;
       font-family: Georgia, "Times New Roman", serif;
@@ -2129,6 +2207,34 @@
     // === Freemium: günlük ücretsiz soru limiti (premium = sınırsız) ===
     var GRI_DAILY_LIMIT = 20;
     var GRI_DENEME_MODE = false; // deneme (tam test) modunda günlük limit uygulanmaz
+    // === Gerçek SINAV-MODU (yalnızca ?deneme= URL'lerinde) ===
+    // GRI_DENEME_PARAM: deneme tag paramı (bitir sorgusu + sessionStorage anahtarı)
+    // GRI_EXAM_REVIEW : deneme bitince true → inceleme (cevap+doğru+açıklama) modu
+    var GRI_DENEME_PARAM = null;
+    var GRI_EXAM_REVIEW = false;
+    function examStoreKey() { return 'gri.exam.' + (GRI_DENEME_PARAM || ''); }
+    function examGetAll() {
+      try { return JSON.parse(sessionStorage.getItem(examStoreKey()) || '{}') || {}; }
+      catch (e) { return {}; }
+    }
+    function examGet(slug) { var m = examGetAll(); return m[slug] || null; }
+    function examSet(slug, letter) {
+      try { var m = examGetAll(); m[slug] = letter; sessionStorage.setItem(examStoreKey(), JSON.stringify(m)); }
+      catch (e) {}
+    }
+    // Sonuç kesinleşince (bitir): review navigatörü + panelim tutarlılığı için hafif kayıt.
+    // NOT: setAnswerStatus'un aksine günlük limiti ARTIRMAZ (deneme limitten muaf) ve SRS'e dokunmaz.
+    function examPersistResult(slug, status) {
+      try { sessionStorage.setItem('gri.answer.' + slug, status); } catch (e) {}
+      if (GRI_USER_ID) {
+        supabase.from('user_answers').upsert({
+          user_id: GRI_USER_ID, question_slug: slug, status: status,
+          answered_at: new Date().toISOString()
+        }, { onConflict: 'user_id,question_slug' }).then(function (r) {
+          if (r && r.error) console.warn('[deneme] persist failed:', r.error.message);
+        });
+      }
+    }
     function griTodayKey() { var d = new Date(); return 'gri.daily.' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
     function griDailyCount() { return parseInt(localStorage.getItem(griTodayKey()) || '0', 10) || 0; }
     function griDailyInc() { try { localStorage.setItem(griTodayKey(), String(griDailyCount() + 1)); } catch (e) {} }
@@ -2295,6 +2401,13 @@
       const denemeParam = params.get('deneme');
       if (denemeParam) SET_URL_PARAMS += '&deneme=' + encodeURIComponent(denemeParam);
       GRI_DENEME_MODE = !!denemeParam;
+      GRI_DENEME_PARAM = denemeParam || null;
+      // İnceleme modu tam sayfa yeniden yüklemelerinde (Sonraki/Önceki/harita) korunur.
+      if (denemeParam) {
+        try { GRI_EXAM_REVIEW = sessionStorage.getItem('gri.exam.review.' + denemeParam) === '1'; } catch (e) { GRI_EXAM_REVIEW = false; }
+      } else {
+        GRI_EXAM_REVIEW = false;
+      }
 
       // SET_KEY identifies this set in sessionStorage
       SET_KEY = denemeParam
@@ -2550,7 +2663,12 @@
         // Status badge from sessionStorage
         const ans = getAnswerStatus(item.slug);
         let badge = '';
-        if (ans === 'correct') {
+        if (GRI_DENEME_MODE && !GRI_EXAM_REVIEW) {
+          // SINAV: doğru/yanlış GÖSTERME — yalnızca "cevaplandı" (nötr) işareti
+          if (examGet(item.slug)) {
+            badge = `<span class="sq-status answered-neutral" aria-label="Cevaplandı"></span>`;
+          }
+        } else if (ans === 'correct') {
           badge = `<span class="sq-status correct" aria-label="Doğru"><svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></span>`;
         } else if (ans === 'incorrect') {
           badge = `<span class="sq-status incorrect" aria-label="Yanlış"><svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg></span>`;
@@ -2696,6 +2814,116 @@
           }
         }
         gotoSlug(SUBCATEGORY_LIST[0].slug);
+      });
+    }
+
+    // ==========================================================================
+    // === DENEME (gerçek sınav) — Bitir akışı + sonuç ekranı + inceleme barı ===
+    // Tüm bu fonksiyonlar YALNIZCA GRI_DENEME_MODE true iken çağrılır.
+    // ==========================================================================
+
+    // "Denemeyi Bitir" — doğru cevapları TEK sorguda çek, puanla, sonucu göster.
+    async function finishExam() {
+      if (!GRI_DENEME_MODE || GRI_EXAM_REVIEW || !GRI_DENEME_PARAM) return;
+      const answers = examGetAll();
+      const total = SUBCATEGORY_LIST.length;
+      const answeredCount = SUBCATEGORY_LIST.reduce((a, i) => a + (answers[i.slug] ? 1 : 0), 0);
+      const unanswered = total - answeredCount;
+      let msg = 'Denemeyi bitirmek istediğine emin misin? Bitirdikten sonra cevaplarını değiştiremezsin.';
+      if (unanswered > 0) msg = unanswered + ' soruyu boş bıraktın. Yine de denemeyi bitirmek istiyor musun?';
+      if (!window.confirm(msg)) return;
+
+      const finishBtn = document.getElementById('examFinishBtn');
+      if (finishBtn) { finishBtn.disabled = true; finishBtn.textContent = 'Hesaplanıyor…'; }
+
+      const tag = 'deneme:' + GRI_DENEME_PARAM;
+      let data = null, error = null;
+      try {
+        const res = await supabase.from('questions')
+          .select('slug,correct_answer,subcategory')
+          .eq('active', true).contains('tags', [tag]);
+        data = res.data; error = res.error;
+      } catch (e) { error = e; }
+
+      if (error || !data || data.length === 0) {
+        if (finishBtn) { finishBtn.disabled = false; finishBtn.textContent = 'Denemeyi Bitir'; }
+        alert('Sonuç hesaplanamadı. İnternet bağlantını kontrol edip tekrar dene.');
+        return;
+      }
+
+      let correct = 0;
+      const bySub = {};
+      data.forEach(row => {
+        const sub = row.subcategory || 'diğer';
+        if (!bySub[sub]) bySub[sub] = { correct: 0, total: 0 };
+        bySub[sub].total++;
+        const chosen = answers[row.slug];
+        const ok = !!chosen && chosen === row.correct_answer;
+        if (ok) { correct++; bySub[sub].correct++; }
+        // İnceleme navigatörü + panelim tutarlılığı: yalnızca cevaplananları işaretle.
+        if (chosen) examPersistResult(row.slug, ok ? 'correct' : 'incorrect');
+      });
+
+      const totalQ = data.length;
+      const pct = totalQ > 0 ? Math.round((correct / totalQ) * 100) : 0;
+      showExamResult({ correct: correct, total: totalQ, pct: pct, bySub: bySub });
+    }
+
+    // Sonuç overlay'i: büyük skor + subcategory dökümü + "Yanıtları İncele".
+    function showExamResult(res) {
+      if (document.getElementById('gri-exam-result')) return;
+      const rows = Object.keys(res.bySub).sort().map(sub => {
+        const s = res.bySub[sub];
+        const label = SUBCATEGORY_LABELS[sub] || humanize(sub);
+        return `<div class="exr-row"><span class="exr-sub">${esc(label)}</span><span class="exr-val">${s.correct} / ${s.total}</span></div>`;
+      }).join('');
+      const ov = document.createElement('div');
+      ov.id = 'gri-exam-result';
+      ov.className = 'gri-exam-overlay';
+      ov.innerHTML = `
+        <div class="exr-card">
+          <div class="exr-badge">DENEME SONUCU</div>
+          <div class="exr-score"><span class="exr-score-num">${res.correct}</span><span class="exr-score-den">/ ${res.total}</span></div>
+          <div class="exr-pct">%${res.pct} doğru</div>
+          <div class="exr-breakdown">${rows}</div>
+          <button type="button" class="exr-review-btn" id="examReviewBtn">Yanıtları İncele</button>
+          <a class="exr-exit" href="panelim">Çalışma Masama Dön</a>
+        </div>`;
+      document.body.appendChild(ov);
+      const finishBtn = document.getElementById('examFinishBtn');
+      if (finishBtn) finishBtn.style.display = 'none';
+      document.getElementById('examReviewBtn').addEventListener('click', () => {
+        try { sessionStorage.setItem('gri.exam.review.' + GRI_DENEME_PARAM, '1'); } catch (e) {}
+        GRI_EXAM_REVIEW = true;
+        if (SUBCATEGORY_LIST.length > 0) gotoSlug(SUBCATEGORY_LIST[0].slug);
+      });
+    }
+
+    // "Denemeyi Bitir" sabit butonu (yalnızca sınav sırasında, inceleme değil).
+    function setupExamFinishButton() {
+      if (!GRI_DENEME_MODE || GRI_EXAM_REVIEW) return;
+      if (document.getElementById('examFinishBtn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'examFinishBtn';
+      btn.type = 'button';
+      btn.className = 'gri-exam-finish';
+      btn.textContent = 'Denemeyi Bitir';
+      btn.addEventListener('click', finishExam);
+      document.body.appendChild(btn);
+    }
+
+    // İnceleme modu çubuğu + çıkış.
+    function setupExamReviewBar() {
+      if (!(GRI_DENEME_MODE && GRI_EXAM_REVIEW)) return;
+      if (document.getElementById('examReviewBar')) return;
+      const bar = document.createElement('div');
+      bar.id = 'examReviewBar';
+      bar.className = 'gri-exam-reviewbar';
+      bar.innerHTML = '<span>İnceleme modu</span><button type="button" id="examReviewExit">Çıkış</button>';
+      document.body.appendChild(bar);
+      document.getElementById('examReviewExit').addEventListener('click', () => {
+        try { sessionStorage.removeItem('gri.exam.review.' + GRI_DENEME_PARAM); } catch (e) {}
+        location.href = 'panelim';
       });
     }
 
@@ -3130,8 +3358,40 @@
         });
       }
 
+      // === DENEME (sınav) modu geri-yükleme çatalı ===
+      // Sınav: nötr seçim göster (reveal YOK). İnceleme: kullanıcı cevabı + doğru + kilit.
+      if (GRI_DENEME_MODE && !isSpr) {
+        const examChosen = currentSlug ? examGet(currentSlug) : null;
+        if (GRI_EXAM_REVIEW) {
+          // İnceleme: doğru şıkı yeşil işaretle; kullanıcı yanlış seçtiyse onu kırmızı işaretle.
+          options.forEach(o => {
+            const letter = o.querySelector('input')?.value;
+            const inp = o.querySelector('input');
+            if (letter === correctLetter) o.classList.add('answered', 'correct');
+            if (examChosen && letter === examChosen) {
+              if (inp) inp.checked = true;
+              if (letter !== correctLetter) o.classList.add('answered', 'incorrect');
+            }
+          });
+          optionsContainer.classList.add('locked');
+        } else {
+          // Sınav sırasında: yalnızca nötr seçim işareti (doğru/yanlış BELLİ ETMEZ).
+          if (examChosen) {
+            options.forEach(o => {
+              const letter = o.querySelector('input')?.value;
+              if (letter === examChosen) {
+                o.classList.add('sel');
+                const inp = o.querySelector('input');
+                if (inp) inp.checked = true;
+              }
+            });
+          }
+        }
+      }
+
       // Restore visual state if question was previously answered (any revisit)
-      if (!isSpr && priorAnswer) {
+      // NOT: Deneme modunda bu blok ATLANIR — yukarıdaki sınav çatalı devreye girer.
+      if (!isSpr && priorAnswer && !GRI_DENEME_MODE) {
         options.forEach(o => {
           const letter = o.querySelector('input')?.value;
           if (letter === correctLetter) {
@@ -3145,6 +3405,20 @@
 
       options.forEach(opt => {
         opt.addEventListener('click', () => {
+          // === DENEME (sınav) modu: anında feedback YOK — nötr seç + sakla ===
+          if (GRI_DENEME_MODE) {
+            if (GRI_EXAM_REVIEW) return; // inceleme: seçim değiştirilemez
+            const inputEx = opt.querySelector('input');
+            const chosenLetter = inputEx ? inputEx.value : null;
+            if (!chosenLetter) return;
+            opt.classList.remove('eliminated');
+            options.forEach(o => o.classList.remove('sel'));
+            opt.classList.add('sel');
+            inputEx.checked = true;
+            if (currentSlug) { examSet(currentSlug, chosenLetter); renderNavigator(); }
+            return;
+          }
+
           // Skip already-answered options (could be tried-wrong or set-correct)
           if (opt.classList.contains('answered')) return;
           // Skip everything if container is locked (correct already found)
@@ -3230,6 +3504,18 @@
       const explainBtn = document.getElementById('explainBtn');
       const expClose = document.getElementById('expClose');
 
+      // SINAV sırasında (inceleme değil) açıklama butonunu gizle — cevap sızmasın.
+      // İnceleme modunda ve normal soru bankasında görünür kalır.
+      if (explainBtn) {
+        explainBtn.style.display = (GRI_DENEME_MODE && !GRI_EXAM_REVIEW) ? 'none' : '';
+      }
+
+      // Deneme (sınav) yardımcı UI'ları — yalnızca deneme modunda.
+      if (GRI_DENEME_MODE) {
+        setupExamFinishButton();
+        setupExamReviewBar();
+      }
+
       function openExplanation() {
         grid.classList.add('show-explanation');
         explainBtn.classList.add('active');
@@ -3295,7 +3581,11 @@
         gotoSlug(SUBCATEGORY_LIST[prevIdx].slug);
       });
 
+      // DENEME modunda sıra sabittir → Karıştır butonunu gizle (yeniden sıralama yok).
+      const _remixBtn = document.getElementById('remixBtn');
+      if (_remixBtn && GRI_DENEME_MODE) _remixBtn.style.display = 'none';
       document.getElementById('remixBtn').addEventListener('click', () => {
+        if (GRI_DENEME_MODE) return; // deneme: sıra sabit, karıştırma yok
         if (SUBCATEGORY_LIST.length <= 1) {
           alert('Bu sette başka soru yok.');
           return;
@@ -3324,6 +3614,14 @@
 
       document.getElementById('nextBtn').addEventListener('click', () => {
         if (SUBCATEGORY_LIST.length === 0) return;
+
+        // DENEME (sınav/inceleme): sıralı ilerle (cevaplananları atlama, tamamlama ekranı yok).
+        if (GRI_DENEME_MODE) {
+          if (SUBCATEGORY_LIST.length === 1) return;
+          const nextIdx = (CURRENT_INDEX + 1) % SUBCATEGORY_LIST.length;
+          gotoSlug(SUBCATEGORY_LIST[nextIdx].slug);
+          return;
+        }
 
         // Find next UNANSWERED slug starting after current position (wrap around)
         let nextSlug = null;

@@ -243,7 +243,7 @@
     var meanings = (d.meanings && d.meanings.length) ? d.meanings.join(', ') : (d.translation || '');
     var syn = (d.synonyms && d.synonyms.length) ? '<div class="gs-syn">' + d.synonyms.map(function(s){return '<span>'+esc(s)+'</span>';}).join('') + '</div>' : '';
     var ex = d.example ? '<p class="gs-ex"><b>Örnek:</b> ' + esc(d.example) + '</p>' + (d.translation ? '<p class="gs-tr">' + esc(d.translation) + '</p>' : '') : '';
-    var lvl = d.level ? '<span class="gs-lvl">' + esc(d.level) + '</span>' : '';
+    var lvl = d.level ? '<span class="gs-lvl" lang="en">' + esc(d.level) + '</span>' : '';
     var save = UID
       ? '<button class="gs-save" data-vid="' + esc(d.vocabulary_id) + '">Listeme Ekle</button>'
       : '<a class="gs-save" href="giris?return=' + encodeURIComponent(location.pathname+location.search) + '" style="text-decoration:none;text-align:center;line-height:1.4">Kaydetmek için giriş yap</a>';

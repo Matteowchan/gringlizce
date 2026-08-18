@@ -26,7 +26,12 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const RESEND_FROM_EMAIL =
   Deno.env.get('RESEND_FROM_EMAIL') ||
   Deno.env.get('SENDER_EMAIL') ||
-  'onboarding@resend.dev';
+  'Gri English <iletisim@gringlizce.com>';
+// Yanıtlar bildirim/rapor adresine düşsün
+const REPLY_TO_EMAIL = Deno.env.get('REPLY_TO_EMAIL') || 'atasal@gringlizce.com';
+// Manuel/duyuru kampanyalarında admin'e kopya (BCC). Otomatik lifecycle mailleri hariç (sel önlemi).
+const BCC_EMAIL = Deno.env.get('BCC_EMAIL') || 'mertatasal@gmail.com';
+const NO_BCC_CATS = ['welcome', 'reactivation'];
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -119,7 +124,7 @@ serve(async (req) => {
         // 4. Template'i çek
         const { data: template, error: tplErr } = await supabase
           .from('email_templates')
-          .select('id, subject, body_html')
+          .select('id, subject, body_html, category')
           .eq('id', campaign.template_id)
           .maybeSingle();
 
@@ -142,12 +147,16 @@ serve(async (req) => {
           const html = substituteVars(templateBody, vars);
 
           try {
-            const resendPayload = {
+            const resendPayload: Record<string, unknown> = {
               from: RESEND_FROM_EMAIL,
               to: [recipient.email],
               subject: subject,
               html: html,
+              reply_to: REPLY_TO_EMAIL,
             };
+            if (BCC_EMAIL && !NO_BCC_CATS.includes(template.category)) {
+              resendPayload.bcc = [BCC_EMAIL];
+            }
 
             console.log(`[send] To: ${recipient.email}, From: ${RESEND_FROM_EMAIL}, Subject: ${subject}`);
 

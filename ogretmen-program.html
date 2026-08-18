@@ -44,6 +44,13 @@
   .rrow{display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--gri-line,#e5ddc9)}
   .addb{margin-top:11px;border:1px dashed var(--gri-line,#e5ddc9);background:transparent;color:var(--gri-accent,#2C5856);font-weight:700;font-size:.85rem;padding:9px 14px;border-radius:9px;cursor:pointer;width:100%}
   .ck{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-muted,#6f6a58);cursor:pointer}
+  .trec{margin:2px 0 10px;padding:9px 11px;background:var(--gri-gold-soft,#f5ecd4);border:1px solid var(--gri-line,#e5ddc9);border-radius:9px}
+  .trec-h{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--wr);margin-bottom:6px}
+  .trec-row{display:flex;flex-direction:column;gap:4px;padding:5px 0;border-top:1px dashed var(--gri-line,#e5ddc9)}
+  .trec-row:first-child{border-top:0}
+  .trec-name{font-size:.76rem;color:var(--text-muted,#6f6a58)}
+  .trec-row audio{width:100%;height:34px}
+  .trec-empty{font-size:.78rem;color:var(--text-muted,#6f6a58);font-style:italic}
   .save-row{display:flex;gap:10px;flex-wrap:wrap}
   .btn{border-radius:100px;font-weight:700;font-size:.88rem;padding:10px 20px;cursor:pointer;border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text,#23291f)}
   .btn.primary{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856)}
@@ -194,10 +201,39 @@
           '<label class="ck"><input type="checkbox" data-k="audio" '+(H.audio?'checked':'')+'> Ses kaydı iste</label></div>'+
         '<button class="xb" data-x="'+i+'">×</button>';
       box.appendChild(d);
-      d.querySelectorAll('[data-k]').forEach(function(el){el.addEventListener('input',function(){H[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.k==='date')drawCal();});});
+      d.querySelectorAll('[data-k]').forEach(function(el){
+        var ev=el.type==='checkbox'?'change':'input';
+        el.addEventListener(ev,function(){
+          H[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;
+          if(el.dataset.k==='date')drawCal();
+          if(el.dataset.k==='audio')renderHw(); // kayıt alanını göster/gizle
+        });
+      });
       d.querySelector('[data-x]').addEventListener('click',function(){state.homework.splice(i,1);renderHw();drawCal();});
+      // Öğrencinin yüklediği ses kayıtları (program kaydedilmişse)
+      if(H.audio && state.id){
+        var rc=document.createElement('div');rc.className='trec';
+        rc.innerHTML='<div class="trec-h">Öğrencinin ses kayıtları</div><div class="trec-list" data-role="tl">Yükleniyor…</div>';
+        box.appendChild(rc);
+        loadTeacherRecordings(i,rc.querySelector('[data-role="tl"]'));
+      }
     });
     document.getElementById('hCnt').textContent=state.homework.length+' ödev';
+  }
+  async function loadTeacherRecordings(idx,listEl){
+    var folder=studentId+'/'+state.id+'/hw'+idx;
+    var l=await sb.storage.from('speaking-submissions').list(folder,{limit:20,sortBy:{column:'created_at',order:'desc'}});
+    if(l.error||!l.data||!l.data.length){listEl.innerHTML='<span class="trec-empty">Henüz kayıt yüklenmedi.</span>';return;}
+    listEl.innerHTML='';
+    l.data.forEach(function(f){
+      var path=folder+'/'+f.name;
+      var row=document.createElement('div');row.className='trec-row';
+      row.innerHTML='<span class="trec-name">'+esc(f.name)+'</span>';
+      sb.storage.from('speaking-submissions').createSignedUrl(path,3600).then(function(s){
+        if(s.data&&s.data.signedUrl){var a=document.createElement('audio');a.controls=true;a.src=s.data.signedUrl;row.appendChild(a);}
+      });
+      listEl.appendChild(row);
+    });
   }
   function renderRes(){
     var box=document.getElementById('resources');box.innerHTML='';

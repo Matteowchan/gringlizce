@@ -6116,22 +6116,22 @@
         if (!groups.length) return '<div class="gr-note">Bu sınav için soru bankası yakında eklenecek.</div>';
         var tot = 0, sol = 0;
         groups.forEach(function (gr) { tot += gr.total; sol += gr.solved; });
-        var sub = tot ? ('Kalan <b>' + (tot - sol) + '</b> soru. Bir kategori seç, çözmeye başla — ilerlemen otomatik işlenir.') : '';
+        var sub = tot ? ('Bir kategori seç, çözmeye başla — ilerlemen otomatik işlenir.') : '';
         var html = '<div class="gr-prog">' + ringSvg(sol, tot)
-          + '<div class="gr-prog-txt"><b>' + sol + ' / ' + tot + ' soru çözüldü</b><span>' + sub + '</span></div></div>'
+          + '<div class="gr-prog-txt"><b>' + sol + ' soru çözüldü</b><span>' + sub + '</span></div></div>'
           + '<div class="gr-plan-h">Kategori kategori çöz, ilerlemeni takip et</div>';
         groups.forEach(function (gr) {
           var gpct = gr.total ? Math.round(gr.solved / gr.total * 100) : 0;
           html += '<details class="gr-sec"' + (groups.length === 1 ? ' open' : '') + '>'
             + '<summary><span class="gr-sec-name">' + esc(gr.label) + '</span>'
-            + '<span class="gr-sec-meta">' + gr.solved + ' / ' + gr.total + ' soru · %' + gpct + '</span></summary>'
+            + '<span class="gr-sec-meta">' + gr.solved + ' çözüldü</span></summary>'
             + '<div class="gr-sec-body">';
           gr.cats.forEach(function (c) {
             var done = c.total > 0 && c.solved >= c.total;
             html += '<div class="gr-cat' + (done ? ' done' : '') + '">'
               + '<div class="gr-cat-top"><span class="gr-cat-name">' + esc(humanize(c.sub)) + (done ? ' ✓' : '') + '</span>'
               + '<a class="gr-cat-go" href="soru.html?subcategory=' + encodeURIComponent(c.sub) + '">' + (c.solved > 0 ? (done ? 'Tekrar' : 'Devam et') : 'Çöz') + ' →</a></div>'
-              + '<div class="gr-cat-bar">' + barHtml(c.solved, c.total) + '<span class="gr-cat-num">' + c.solved + ' / ' + c.total + '</span></div>'
+              + '<div class="gr-cat-bar">' + barHtml(c.solved, c.total) + '<span class="gr-cat-num">' + c.solved + '</span></div>'
               + '</div>';
           });
           html += '</div></details>';

@@ -2589,6 +2589,18 @@
           </div>
 
           <div class="user-modal-section">
+            <h4>Premium</h4>
+            <div id="um-premium-status" style="margin-bottom: 0.6rem; font-size: 0.9rem;"></div>
+            <div class="um-action-row">
+              <button class="btn-admin-action" id="um-premium-1">+1 Ay</button>
+              <button class="btn-admin-action" id="um-premium-3">+3 Ay</button>
+              <button class="btn-admin-action" id="um-premium-12">+12 Ay</button>
+              <button class="btn-admin-action danger" id="um-premium-clear">Kaldır</button>
+            </div>
+            <div class="um-msg" id="um-premium-msg"></div>
+          </div>
+
+          <div class="user-modal-section">
             <h4>Veri Sıfırlama</h4>
             <div class="um-action-row">
               <select id="um-reset-what" style="max-width: 200px;">
@@ -4446,7 +4458,10 @@
         // Writing kredilerini yükle ve göster
         await loadUserWritingCredits(u.user_id);
 
-        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg', 'um-delete-msg', 'um-writing-msg'].forEach(function (id) {
+        // Premium durumu
+        await renderPremiumStatus(u.user_id);
+
+        ['um-mat-msg', 'um-quota-msg', 'um-reset-msg', 'um-account-msg', 'um-delete-msg', 'um-writing-msg', 'um-premium-msg'].forEach(function (id) {
           var el = $(id);
           if (el) { el.classList.remove('show', 'success', 'error'); el.textContent = ''; }
         });
@@ -4659,6 +4674,32 @@
       }
     }
 
+    async function renderPremiumStatus(userId) {
+      var el = $('um-premium-status');
+      if (!el) return;
+      try {
+        var r = await sb.from('profiles').select('premium_until').eq('id', userId).maybeSingle();
+        var until = r && r.data ? r.data.premium_until : null;
+        var active = until && new Date(until).getTime() > Date.now();
+        el.innerHTML = active
+          ? 'Durum: <strong style="color:#2C5856">Premium aktif</strong> · bitiş: <strong>' + fmtDate(until) + '</strong>'
+          : (until ? 'Durum: <strong style="color:#b45046">Süresi dolmuş</strong> (' + fmtDate(until) + ')' : 'Durum: <strong>Premium değil</strong>');
+      } catch (e) { el.textContent = 'Durum okunamadı'; }
+    }
+
+    async function setPremium(months, clear) {
+      if (!currentUserDetail) return;
+      if (clear && !confirm('Bu kullanıcının Premium erişimini kaldır?')) return;
+      try {
+        var r = await callEdgeAction('set_premium', clear ? { clear: true } : { months: months });
+        umMsg('um-premium-msg', clear ? 'Premium kaldırıldı' : 'Premium verildi · bitiş: ' + fmtDate(r.premium_until), 'ok');
+        await renderPremiumStatus(currentUserDetail.user_id);
+        loadUsers();
+      } catch (e) {
+        umMsg('um-premium-msg', 'Hata: ' + (e.message || e), 'err');
+      }
+    }
+
     async function deleteUser() {
       if (!currentUserDetail) return;
       var email = currentUserDetail.email;
@@ -4714,6 +4755,10 @@
       $('um-set-pass-btn').addEventListener('click', setNewPassword);
       $('um-ban-btn').addEventListener('click', function () { setBan(true); });
       $('um-unban-btn').addEventListener('click', function () { setBan(false); });
+      $('um-premium-1').addEventListener('click', function () { setPremium(1, false); });
+      $('um-premium-3').addEventListener('click', function () { setPremium(3, false); });
+      $('um-premium-12').addEventListener('click', function () { setPremium(12, false); });
+      $('um-premium-clear').addEventListener('click', function () { setPremium(0, true); });
       $('um-delete-btn').addEventListener('click', deleteUser);
     }
 

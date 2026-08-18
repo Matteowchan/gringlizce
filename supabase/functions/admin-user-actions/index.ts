@@ -90,6 +90,24 @@ Deno.serve(async (req) => {
       return json({ success: true, banned });
     }
 
+    if (action === 'set_premium') {
+      const clear = Boolean(body.clear);
+      let until: string | null = null;
+      if (!clear) {
+        const months = Number(body.months || 1) || 1;
+        const { data: prof } = await adminClient.from('profiles').select('premium_until').eq('id', user_id).maybeSingle();
+        const now = Date.now();
+        const cur = prof?.premium_until ? new Date(prof.premium_until).getTime() : 0;
+        const base = cur > now ? cur : now; // aktifse üstüne ekle, değilse şimdiden başlat
+        const d = new Date(base);
+        d.setMonth(d.getMonth() + months);
+        until = d.toISOString();
+      }
+      const { error } = await adminClient.from('profiles').update({ premium_until: until }).eq('id', user_id);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true, premium_until: until });
+    }
+
     if (action === 'delete_user') {
       // Self-delete + diğer admin'i silme guard
       if (targetUser.email && ADMIN_EMAILS.includes(targetUser.email)) {

@@ -2126,8 +2126,45 @@
     function getAnswerStatus(slug) {
       return sessionStorage.getItem('gri.answer.' + slug); // 'correct' | 'incorrect' | null
     }
+    // === Freemium: günlük ücretsiz soru limiti (premium = sınırsız) ===
+    var GRI_DAILY_LIMIT = 20;
+    function griTodayKey() { var d = new Date(); return 'gri.daily.' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+    function griDailyCount() { return parseInt(localStorage.getItem(griTodayKey()) || '0', 10) || 0; }
+    function griDailyInc() { try { localStorage.setItem(griTodayKey(), String(griDailyCount() + 1)); } catch (e) {} }
+    function griIsPremiumNow() { try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
+    function griLimitReached() { return !griIsPremiumNow() && griDailyCount() >= GRI_DAILY_LIMIT; }
+    // Login kullanıcıda bugünkü DB cevap sayısını al, yerel sayaca tohum at (cihazlar arası tutarlılık)
+    async function griSeedDailyFromDb() {
+      if (!GRI_USER_ID) return;
+      try {
+        var d = new Date();
+        var start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+        var res = await supabase.from('user_answers')
+          .select('question_slug', { count: 'exact', head: true })
+          .eq('user_id', GRI_USER_ID).gte('answered_at', start);
+        if (res && typeof res.count === 'number' && res.count > griDailyCount()) {
+          localStorage.setItem(griTodayKey(), String(res.count));
+        }
+      } catch (e) {}
+    }
+    function griShowPaywall() {
+      if (document.getElementById('gri-paywall')) return;
+      var ov = document.createElement('div');
+      ov.id = 'gri-paywall';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,15,10,.55);backdrop-filter:blur(4px)';
+      ov.innerHTML = '<div style="max-width:420px;width:100%;background:var(--surface,#fff);border:1px solid var(--line,#E3D8C5);border-radius:18px;box-shadow:0 20px 60px rgba(20,15,10,.28);padding:30px 26px;text-align:center;font-family:Inter,system-ui,sans-serif">' +
+        '<div style="display:inline-block;background:#7A3B3B;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 12px;border-radius:100px">GÜNLÜK HAK DOLDU</div>' +
+        '<h3 style="font-family:Georgia,serif;font-size:1.4rem;margin:16px 0 8px;color:var(--text,#1A2230)">Bugünlük bu kadar!</h3>' +
+        '<p style="color:var(--text-muted,#8A7F6E);font-size:14.5px;line-height:1.6;margin:0 0 20px">Ücretsiz planla günde ' + GRI_DAILY_LIMIT + ' soru çözebilirsin. Hakkın yarın sıfırlanır. Sınırsız çözmek ve reklamsız çalışmak için Premium\'a geçebilirsin.</p>' +
+        '<a href="premium" style="display:block;background:var(--teal,#2C5856);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px;border-radius:12px;margin-bottom:10px">Premium ile sınırsız çöz</a>' +
+        '<a href="panelim" style="display:block;color:var(--text-muted,#8A7F6E);text-decoration:none;font-size:13px">Çalışma Masama dön</a>' +
+        '</div>';
+      document.body.appendChild(ov);
+    }
     function setAnswerStatus(slug, status) {
+      var wasNew = !sessionStorage.getItem('gri.answer.' + slug);
       sessionStorage.setItem('gri.answer.' + slug, status);
+      if (wasNew && !griIsPremiumNow()) griDailyInc();
       // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
       if (GRI_USER_ID) {
         supabase.from('user_answers').upsert({
@@ -2202,9 +2239,12 @@
           if (sessRes && sessRes.data && sessRes.data.session) {
             GRI_USER_ID = sessRes.data.session.user.id;
             await preloadAnswersFromDb();
+            await griSeedDailyFromDb();
           }
         } catch (e) { console.warn('[auth] init failed:', e); }
       }
+      // Premium durumunu netleştir (limit yanlış tetiklenmesin)
+      try { if (window.GriPremium && typeof window.GriPremium.refresh === 'function') await window.GriPremium.refresh(); } catch (e) {}
 
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('q');
@@ -2677,6 +2717,13 @@
     }
 
     function renderQuestion(q) {
+      // Freemium gate: görülmemiş yeni soru + günlük ücretsiz hak dolduysa → paywall
+      try {
+        if (q && q.slug && !getAnswerStatus(q.slug) && griLimitReached()) {
+          griShowPaywall();
+          return;
+        }
+      } catch (e) {}
       // Body data-cat for color theming
       document.body.setAttribute('data-cat', q.exam_type);
 

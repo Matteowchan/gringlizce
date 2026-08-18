@@ -2128,6 +2128,7 @@
     }
     // === Freemium: günlük ücretsiz soru limiti (premium = sınırsız) ===
     var GRI_DAILY_LIMIT = 20;
+    var GRI_DENEME_MODE = false; // deneme (tam test) modunda günlük limit uygulanmaz
     function griTodayKey() { var d = new Date(); return 'gri.daily.' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
     function griDailyCount() { return parseInt(localStorage.getItem(griTodayKey()) || '0', 10) || 0; }
     function griDailyInc() { try { localStorage.setItem(griTodayKey(), String(griDailyCount() + 1)); } catch (e) {} }
@@ -2289,8 +2290,16 @@
       const bmMode = params.get('bm') === '1';
       if (bmMode) SET_URL_PARAMS += '&bm=1';
 
+      // Deneme (tam test) modu: ?deneme=yds-full-1 → deneme:yds-full-1 tag'li tüm sorular, sabit sırada.
+      // Günlük soru limitinden MUAF (deneme tek oturuşta çözülür).
+      const denemeParam = params.get('deneme');
+      if (denemeParam) SET_URL_PARAMS += '&deneme=' + encodeURIComponent(denemeParam);
+      GRI_DENEME_MODE = !!denemeParam;
+
       // SET_KEY identifies this set in sessionStorage
-      SET_KEY = srsMode
+      SET_KEY = denemeParam
+        ? 'gri.set.deneme.' + denemeParam
+        : srsMode
         ? 'gri.set.srs'
         : bmMode
           ? 'gri.set.bookmarks'
@@ -2305,7 +2314,22 @@
       let isFreshEntry = false;  // user just clicked Başla / Karışık Başla
 
       // === Resolve set order ===
-      if (srsMode) {
+      if (denemeParam) {
+        if (slug && SET_KEY) {
+          const stored = sessionStorage.getItem(SET_KEY);
+          if (stored) { try { setSlugs = JSON.parse(stored); } catch (e) { setSlugs = null; } }
+        }
+        if (!setSlugs || setSlugs.length === 0) {
+          const tag = 'deneme:' + denemeParam;
+          const { data: list, error } = await supabase
+            .from('questions').select('slug')
+            .eq('active', true).contains('tags', [tag]).order('slug');
+          if (error || !list || list.length === 0) { showError('Deneme yüklenemedi.'); return; }
+          setSlugs = list.map(r => r.slug);   // sabit deneme sırası (slug: ...-01..-80)
+          sessionStorage.setItem(SET_KEY, JSON.stringify(setSlugs));
+          if (!slug) isFreshEntry = true;
+        }
+      } else if (srsMode) {
         if (slug && SET_KEY) {
           const stored = sessionStorage.getItem(SET_KEY);
           if (stored) { try { setSlugs = JSON.parse(stored); } catch (e) { setSlugs = null; } }
@@ -2719,7 +2743,7 @@
     function renderQuestion(q) {
       // Freemium gate: görülmemiş yeni soru + günlük ücretsiz hak dolduysa → paywall
       try {
-        if (q && q.slug && !getAnswerStatus(q.slug) && griLimitReached()) {
+        if (q && q.slug && !GRI_DENEME_MODE && !getAnswerStatus(q.slug) && griLimitReached()) {
           griShowPaywall();
           return;
         }

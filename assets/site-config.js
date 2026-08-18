@@ -343,7 +343,13 @@
         'padding:8px 11px;border-radius:8px;font-family:Inter,system-ui,sans-serif;font-size:13px;' +
         'color:var(--text,#1A2230);text-decoration:none;background:none;border:none;cursor:pointer}' +
       '.nav-user-menu a:hover,.nav-user-menu .nav-user-logout:hover{background:var(--teal-soft,#DDEBE9)}' +
-      '.nav-user-logout{color:#A8382F}';
+      '.nav-user-logout{color:#A8382F}' +
+      /* Premium rozeti: avatarın sağ-alt köşesinde küçük yıldız */
+      '.nav-user.nav-premium::after{content:"\\2605";position:absolute;right:-3px;bottom:-3px;width:15px;height:15px;border-radius:50%;' +
+        'background:linear-gradient(135deg,#9a5252,#6d2f2f);color:#fff;font-family:Inter,system-ui,sans-serif;font-size:8.5px;font-weight:700;' +
+        'line-height:15px;text-align:center;box-shadow:0 0 0 2px var(--surface,#fff),0 1px 3px rgba(20,15,10,.35);pointer-events:none}' +
+      '.nav-premium-tag{display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:2px 8px;border-radius:100px;' +
+        'background:linear-gradient(135deg,#9a5252,#6d2f2f);color:#fff;font-family:Inter,system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em}';
     document.head.appendChild(css);
   })();
   function renderUserAvatar(mount, user) {
@@ -381,6 +387,25 @@
     wrap.appendChild(btn);
     wrap.appendChild(menu);
     mount.appendChild(wrap);
+
+    // Premium rozeti — profiles.premium_until aktifse avatara yıldız + menüye etiket
+    (async function markPremium() {
+      try {
+        if (!sb || !user || !user.id) return;
+        var r = await sb.from('profiles').select('premium_until').eq('id', user.id).maybeSingle();
+        var until = r && r.data ? r.data.premium_until : null;
+        if (!until || new Date(until).getTime() <= Date.now()) return;
+        wrap.classList.add('nav-premium');
+        btn.setAttribute('title', displayName + ' · Premium');
+        var head = menu.querySelector('.nav-user-head');
+        if (head && !head.querySelector('.nav-premium-tag')) {
+          var tag = document.createElement('span');
+          tag.className = 'nav-premium-tag';
+          tag.textContent = '★ Premium';
+          head.appendChild(tag);
+        }
+      } catch (e) {}
+    })();
 
     function open() { menu.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
     function close() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }

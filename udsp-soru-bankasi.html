@@ -535,11 +535,13 @@
   <script>
     /* İlk deneme (Deneme 1) ücretsiz, Deneme 2-3 Premium — kilit katmanı */
     (function () {
-      var LOCK = '<span class="udsp-lock" style="position:absolute;top:.7rem;right:.7rem;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#7A3B3B;color:#fff;padding:.2rem .5rem;border-radius:100px;">🔒 Premium</span>';
+      var badgeCss = 'position:absolute;top:.7rem;right:.7rem;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;padding:.2rem .5rem;border-radius:100px;';
+      var LOCK = '<span class="udsp-lock" style="' + badgeCss + 'background:#7A3B3B;">🔒 Premium</span>';       // kilitli (premium değil)
+      var OPEN = '<span class="udsp-lock" style="' + badgeCss + 'background:#2f8f6b;">🔓 Premium</span>';       // premium — açık, farklı renk
       function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
       function apply(){
         var prem = isPrem();
-        var cards = document.querySelectorAll('a[href^="udsp-deneme-"]');
+        var cards = document.querySelectorAll('a[href^="udsp-deneme-"], a[data-href^="udsp-deneme-"]');
         cards.forEach(function (card) {
           var orig = card.dataset.href || card.getAttribute('href');
           card.dataset.href = orig;
@@ -547,24 +549,26 @@
           var n = m ? parseInt(m[1], 10) : 1;
           var cta = card.lastElementChild;
           if (cta && cta.dataset.orig == null) cta.dataset.orig = cta.textContent;
-          var lock = card.querySelector('.udsp-lock');
-          if (n === 1 || prem) {
-            card.setAttribute('href', orig);
-            card.style.opacity = '';
-            if (lock) lock.remove();
+          var lock = card.querySelector('.udsp-lock'); if (lock) lock.remove();
+          if (n === 1) {                                   // ücretsiz deneme — rozet yok, açık
+            card.setAttribute('href', orig); card.style.opacity = '';
             if (cta && cta.dataset.orig != null) cta.textContent = cta.dataset.orig;
-          } else {
-            card.setAttribute('href', 'premium');
-            card.style.position = 'relative';
-            card.style.opacity = '.86';
-            if (!lock) card.insertAdjacentHTML('afterbegin', LOCK);
+          } else if (prem) {                               // premium kullanıcı — AÇIK, yeşil 🔓 rozet
+            card.setAttribute('href', orig); card.style.position = 'relative'; card.style.opacity = '';
+            card.insertAdjacentHTML('afterbegin', OPEN);
+            if (cta && cta.dataset.orig != null) cta.textContent = cta.dataset.orig;
+          } else {                                         // premium yok — kilitli
+            card.setAttribute('href', 'premium'); card.style.position = 'relative'; card.style.opacity = '.86';
+            card.insertAdjacentHTML('afterbegin', LOCK);
             if (cta) cta.textContent = 'Premium ile aç';
           }
         });
       }
-      apply();
+      // GriPremium yüklendikten SONRA yeniden uygula (async; ilk apply'da premium henüz false olabilir).
+      function run(){ apply(); try { if (window.GriPremium && window.GriPremium.refresh) window.GriPremium.refresh().then(apply); } catch (e) {} }
+      var t = 0; (function wait(){ if (window.GriPremium) { run(); } else if (t++ < 40) { setTimeout(wait, 150); } else { apply(); } })();
       window.addEventListener('gri-premium', apply);
-      document.addEventListener('DOMContentLoaded', apply);
+      document.addEventListener('DOMContentLoaded', run);
     })();
   </script>
 </body>

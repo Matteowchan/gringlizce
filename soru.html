@@ -650,6 +650,28 @@
     @media (max-width: 1000px) {
       .q-explanation { padding: 1.3rem 1.4rem; }
     }
+    /* Remediation bandı — yanlış cevapta ilgili konu anlatımı yönlendirmesi */
+    .q-remediation {
+      margin-top: 1.2rem; padding: .85rem 1rem;
+      border: 1px solid color-mix(in srgb, var(--teal, #2C5856) 30%, transparent);
+      border-left: 4px solid var(--teal, #2C5856);
+      border-radius: 0 10px 10px 0;
+      background: color-mix(in srgb, var(--teal, #2C5856) 7%, transparent);
+    }
+    .q-rem-lbl {
+      display: block; font-family: var(--font-ui, Inter), sans-serif;
+      font-size: .7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--teal, #2C5856); margin-bottom: .5rem;
+    }
+    .q-rem-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .q-rem-chip {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-family: var(--font-ui, Inter), sans-serif; font-size: .86rem; font-weight: 600;
+      text-decoration: none; color: #fff; background: var(--teal, #2C5856);
+      border-radius: 999px; padding: .4rem .9rem; transition: filter .15s;
+    }
+    .q-rem-chip::before { content: "→"; opacity: .7; font-weight: 700; }
+    .q-rem-chip:hover { filter: brightness(1.08); }
 
     .exp-head {
       display: flex; align-items: center; justify-content: space-between;
@@ -2106,6 +2128,53 @@
     };
     const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
+    // === Remediation: yanlış cevapta ilgili konu anlatımına yönlendirme (invasive değil) ===
+    const REMEDIATION_SUB = {
+      words_in_context:{u:'sat-rw-words-in-context',t:'Words in Context'},
+      cross_text_connections:{u:'sat-rw-cross-text-connections',t:'Cross-Text Connections'},
+      command_of_evidence:{u:'sat-rw-command-of-evidence',t:'Command of Evidence'},
+      rhetorical_synthesis:{u:'sat-rw-rhetorical-synthesis',t:'Rhetorical Synthesis'},
+      transitions:{u:'gramer-linking-words',t:'Linking Words'},
+      boundaries:{u:'konu-sentence-structure',t:'Cümle Yapısı'},
+      form_structure_sense:{u:'konu-sentence-structure',t:'Cümle Yapısı'},
+      grammar:{u:'konu-anlatimi',t:'Dilbilgisi'},
+      vocabulary:{u:'kelime-bankasi',t:'Kelime'}
+    };
+    const REMEDIATION_CAT = {
+      craft_and_structure:{u:'sat-rw-words-in-context',t:'Craft and Structure'},
+      information_and_ideas:{u:'sat-rw-command-of-evidence',t:'Information and Ideas'},
+      expression_of_ideas:{u:'sat-rw-rhetorical-synthesis',t:'Expression of Ideas'},
+      standard_english_conventions:{u:'konu-sentence-structure',t:'Cümle Yapısı ve Kurallar'},
+      algebra:{u:'sat-math-heart-of-algebra',t:'Algebra'},
+      advanced_math:{u:'sat-math-advanced-math',t:'Advanced Math'},
+      problem_solving_and_data_analysis:{u:'sat-math-problem-solving-data',t:'Problem-Solving and Data'},
+      geometry_and_trigonometry:{u:'sat-math-geometry-trigonometry',t:'Geometry and Trigonometry'},
+      grammar:{u:'konu-anlatimi',t:'Dilbilgisi'},
+      vocabulary:{u:'kelime-bankasi',t:'Kelime'},
+      reading_comprehension:{u:'konu-anlatimi',t:'Okuma Stratejileri'}
+    };
+    const REMEDIATION_EXAM = {
+      ielts:{u:'konu-ielts-genel-bakis',t:'IELTS Konu Anlatımı'},
+      sat:{u:'konu-anlatimi',t:'Konu Anlatımı'},
+      yds:{u:'konu-anlatimi',t:'Konu Anlatımı'},
+      ydt:{u:'konu-anlatimi',t:'Konu Anlatımı'},
+      udsp:{u:'konu-anlatimi',t:'Konu Anlatımı'},
+      toefl:{u:'konu-anlatimi',t:'Konu Anlatımı'},
+      ib:{u:'konu-anlatimi',t:'Konu Anlatımı'}
+    };
+    function remediationHTML(q) {
+      const chips = [];
+      const m = (q.subcategory && REMEDIATION_SUB[q.subcategory]) || (q.category && REMEDIATION_CAT[q.category]) || null;
+      const enLbl = s => !/[çğıöşüİÇĞÖŞÜ]/.test(s);
+      if (m) chips.push(`<a class="q-rem-chip" href="${m.u}"${enLbl(m.t) ? ' lang="en"' : ''}>${esc(m.t)}</a>`);
+      const isVocab = q.subcategory === 'vocabulary' || q.category === 'vocabulary' || q.subcategory === 'words_in_context';
+      if (isVocab && q.exam_type) chips.push(`<a class="q-rem-chip" href="kelime.html?exam=${esc(q.exam_type)}">Kelime kartları</a>`);
+      if (!chips.length) { const ex = REMEDIATION_EXAM[q.exam_type]; if (ex) chips.push(`<a class="q-rem-chip" href="${ex.u}">${esc(ex.t)}</a>`); }
+      if (!chips.length) return '';
+      return `<div class="q-remediation"><span class="q-rem-lbl">Bunu kaçırdın — bu konuyu pekiştir</span><div class="q-rem-chips">${chips.join('')}</div></div>`;
+    }
+    var CURRENT_REM_HTML = ''; // aktif sorunun remediation bandı (render'da hesaplanır)
+
     function esc(s) {
       if (s == null) return '';
       return String(s)
@@ -3347,6 +3416,20 @@
         `;
       }
 
+      // Remediation: yanlış cevaplanan soruda ilgili konu anlatımına yönlendirme.
+      // Açıklama cevaptan ÖNCE kurulur; bandı burada (revisit için) + openExplanation'da (taze yanlış için) ekleriz.
+      try {
+        CURRENT_REM_HTML = remediationHTML(q) || '';
+        // Yanlış tespiti: normal modda getAnswerStatus, deneme inceleme modunda exam-store
+        let _wrong = q.slug && getAnswerStatus(q.slug) === 'incorrect';
+        if (!_wrong && GRI_EXAM_REVIEW && q.slug) {
+          try { _wrong = examGetAll()[q.slug] === 'incorrect'; } catch (e) {}
+        }
+        if (CURRENT_REM_HTML && _wrong && contentEl && !contentEl.querySelector('.q-remediation')) {
+          contentEl.insertAdjacentHTML('beforeend', CURRENT_REM_HTML);
+        }
+      } catch (_remErr) { /* remediation opsiyonel */ }
+
       // Tags chip bar (category + subcategory only; difficulty shown via grid colors)
       const tagsBarEl = document.getElementById('qTagsBar');
       const tagsHtml = [];
@@ -3526,6 +3609,13 @@
             stopTimer();
           } else {
             opt.classList.add('incorrect');
+            // Remediation: yanlış cevapta ilgili konu anlatımı bandını açıklamaya ekle
+            try {
+              if (CURRENT_REM_HTML) {
+                const _ce = document.getElementById('expContent');
+                if (_ce && !_ce.querySelector('.q-remediation')) _ce.insertAdjacentHTML('beforeend', CURRENT_REM_HTML);
+              }
+            } catch (_e) { /* opsiyonel */ }
           }
 
           input.checked = true;
@@ -3605,6 +3695,14 @@
         // 'active'; showExpPanel'i çağırmak onu kapatıp açıklamayı boş gösterirdi.
         const hasPerOptPanels = !!document.querySelector('#expContent .exp-panel[data-opt]');
         if (checked && hasPerOptPanels) showExpPanel(checked.value);
+        // Remediation bandı: taze yanlış cevapta (render'da status null olduğu için) burada ekle
+        try {
+          const _remSlug = SUBCATEGORY_LIST[CURRENT_INDEX] && SUBCATEGORY_LIST[CURRENT_INDEX].slug;
+          if (_remSlug && getAnswerStatus(_remSlug) === 'incorrect' && CURRENT_REM_HTML) {
+            const _ce = document.getElementById('expContent');
+            if (_ce && !_ce.querySelector('.q-remediation')) _ce.insertAdjacentHTML('beforeend', CURRENT_REM_HTML);
+          }
+        } catch (_e) { /* opsiyonel */ }
         if (window.innerWidth <= 1000) {
           setTimeout(() => {
             document.getElementById('qExplanation').scrollIntoView({ behavior: 'smooth', block: 'start' });

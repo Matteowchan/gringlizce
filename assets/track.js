@@ -72,6 +72,8 @@
     if (document.getElementById("geTrackLock")) return;
     var msg = reason === "track"
       ? ("Seviye belirleme sinavinda <b>" + trackName(rec.track) + "</b> kategorisini sectin. Bu ders <b>" + trackName(pageTrack) + "</b> kategorisine ait, o yuzden sana kapali.")
+      : reason === "classlevel"
+      ? ("Ogretmenin seni <b>" + rec.level + "</b> seviyesine kadar acti. <b>" + pageLevel + "</b> seviyesi henuz acik degil — yukselince ogretmenin acacak.")
       : ("Seviye belirleme sinavinda <b>" + rec.level + "</b> seviyesine yerlestin. <b>" + pageLevel + "</b> seviyesi henuz acik degil.");
     var ov = document.createElement("div");
     ov.id = "geTrackLock";
@@ -103,7 +105,15 @@
     try {
       sb.rpc("ge_student_class_state").then(function (res) {
         var st = res && res.data;
-        if (st && st.in_class) return;             // sinifli ogrenci -> ogretmen kilidi gecerli
+        if (st && st.in_class) {
+          // Sinifli ogrenci: atanan seviye UST SINIR — A1..assigned_level acik, ustu kilitli.
+          // FAIL-OPEN: seviye atanmamissa (null) hicbir sey kilitlenmez.
+          var al = st.assigned_level;
+          if (al && LVLORD[id.level] && LVLORD[al] && LVLORD[id.level] > LVLORD[al]) {
+            showTrackLock({ track: id.track, level: al }, id.track, id.level, "classlevel");
+          }
+          return;
+        }
         checkPlacement(sb, uid, id);
       }, function () { checkPlacement(sb, uid, id); });
     } catch (e) { checkPlacement(sb, uid, id); }

@@ -65,6 +65,7 @@
     .dn-card.locked{opacity:.92;cursor:pointer;}
     .dn-card.locked:hover{transform:translateY(-3px);box-shadow:var(--shadow-md,0 8px 24px rgba(0,0,0,.12));border-color:var(--cat-accent);}
     .dn-badge.locked{background:#7A3B3B;}
+    .dn-badge.open{background:#2f8f6b;}
     .dn-lock-note{margin-top:auto;font-family:var(--font-ui);font-size:.74rem;letter-spacing:.04em;color:#7A3B3B;font-weight:600;}
     .dn-authnote{margin:1.2rem 0 0;padding:.9rem 1.1rem;border:1px solid var(--line);border-left:4px solid var(--cat-accent);border-radius:10px;background:var(--bg-card);font-size:.9rem;line-height:1.5;display:none;}
     .dn-authnote a{color:var(--cat-accent);font-weight:600;}
@@ -159,17 +160,17 @@
 
     function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch(e){ return false; } }
 
-    function card(slug, title, desc, tags, ready, locked){
+    function card(slug, title, desc, tags, ready, locked, premOpen){
       if (locked){
         return '<a class="dn-card locked" href="premium">'+
-          '<span class="dn-badge locked">Premium</span>'+
+          '<span class="dn-badge locked">🔒 Premium</span>'+
           '<span class="dn-eyebrow">Adaptif Deneme</span><h3>'+title+'</h3><p>'+desc+'</p>'+
           '<div class="dn-meta">'+tags.map(t=>'<span class="dn-tag">'+t.t+'</span>').join('')+'</div>'+
           '<span class="dn-lock-note">🔒 Premium ile kilidi aç</span></a>';
       }
       if (ready){
         return '<a class="dn-card ready" href="sat-deneme?d='+slug+'">'+
-          '<span class="dn-badge">Hazır</span>'+
+          (premOpen ? '<span class="dn-badge open">🔓 Premium</span>' : '<span class="dn-badge">Hazır</span>')+
           '<span class="dn-eyebrow">Adaptif Deneme</span><h3>'+title+'</h3><p>'+desc+'</p>'+
           '<div class="dn-meta">'+tags.map(t=>'<span class="dn-tag'+(t.a?' accent':'')+'">'+t.t+'</span>').join('')+'</div>'+
           '<span class="dn-go">Denemeye Başla &rarr;</span></a>';
@@ -187,14 +188,16 @@
       for (let n=1;n<=N;n++){
         const ready = READY.has('rw-'+n);
         const locked = ready && n>1 && !prem;
+        const premOpen = ready && n>1 && prem;
         rw += card('rw-'+n, 'R&W Deneme '+n, 'Reading & Writing bölümü. 2 adaptif modül (27+27 soru), tahmini R&W puanı.',
-          [{t:'2 modül · adaptif',a:true},{t:'~64 dk'},{t:'200-800'}], ready, locked);
+          [{t:'2 modül · adaptif',a:true},{t:'~64 dk'},{t:'200-800'}], ready, locked, premOpen);
       }
       for (let n=1;n<=N_FULL;n++){
         const ready = READY.has('full-'+n);
         const locked = ready && n>1 && !prem;
+        const premOpen = ready && n>1 && prem;
         full += card('full-'+n, 'Tam SAT Deneme '+n, 'R&W ve Math birlikte. 4 adaptif modül, tahmini toplam 400-1600 + bölüm puanları.',
-          [{t:'4 modül · adaptif',a:true},{t:'~134 dk'},{t:'400-1600'}], ready, locked);
+          [{t:'4 modül · adaptif',a:true},{t:'~134 dk'},{t:'400-1600'}], ready, locked, premOpen);
       }
       rwGrid.innerHTML = rw; fullGrid.innerHTML = full;
     }
@@ -219,6 +222,8 @@
       READY = await detectReady();       // hazır olanları işaretle
       render();
       window.addEventListener('gri-premium', render);
+      // GriPremium hazır olana kadar bekle; hazır olunca render + refresh sonrası yeniden render.
+      (function(){ var t=0; (function wait(){ if (window.GriPremium){ render(); try{ if (window.GriPremium.refresh) window.GriPremium.refresh().then(render); }catch(e){} } else if (t++<40){ setTimeout(wait,150); } })(); })();
       try{ const s = await sb.auth.getSession();
         if (!(s&&s.data&&s.data.session)) document.getElementById('authNote').style.display='block';
       }catch(e){ document.getElementById('authNote').style.display='block'; }

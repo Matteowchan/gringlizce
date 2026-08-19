@@ -48,6 +48,7 @@
     .dn-tag{flex:none;font-size:11px;font-weight:700;letter-spacing:.4px;padding:4px 10px;border-radius:100px;}
     .dn-tag.free{background:var(--teal,#2C5856);color:#fff;}
     .dn-tag.pro{background:#7A3B3B;color:#fff;}
+    .dn-tag.open{background:#2f8f6b;color:#fff;}
     .dn-card.locked{opacity:.72;}
     .dn-card.locked .dn-num{background:rgba(122,59,59,.12);color:#7A3B3B;}
     .dn-lock-ico{flex:none;color:#7A3B3B;}
@@ -163,7 +164,7 @@
           var unlocked = d.free || prem;
           var href = unlocked ? ('soru?deneme=' + d.tag) : 'premium';
           var tag = d.free ? '<span class="dn-tag free">Ücretsiz</span>'
-            : (prem ? '<span class="dn-tag pro">Premium</span>' : LOCK_SVG);
+            : (prem ? '<span class="dn-tag open">🔓 Premium</span>' : LOCK_SVG);
           var sub = unlocked ? '80 soru · ~180 dk · Türkçe açıklamalı'
             : 'Premium\'a özel · kilidi açmak için tıkla';
           return '<a href="' + href + '" class="dn-card' + (unlocked ? '' : ' locked') + '">' +
@@ -172,9 +173,11 @@
             tag + '</a>';
         }).join('');
       }
-      render();
+      // GriPremium hazır olana kadar bekle; hazır olunca render + refresh sonrası yeniden render.
+      function run(){ render(); try { if (window.GriPremium && window.GriPremium.refresh) window.GriPremium.refresh().then(render); } catch (e) {} }
+      var t = 0; (function wait(){ if (window.GriPremium) { run(); } else if (t++ < 40) { setTimeout(wait, 150); } else { render(); } })();
       window.addEventListener('gri-premium', render);
-      document.addEventListener('DOMContentLoaded', render);
+      document.addEventListener('DOMContentLoaded', run);
     })();
   </script>
 </body>

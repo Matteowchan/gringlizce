@@ -292,32 +292,36 @@
   <script>
     /* İlk deneme ücretsiz, gerisi Premium — kilit katmanı */
     (function () {
-      var LOCK = '<span class="hz-lock">🔒 Premium</span>';
+      var LOCK = '<span class="hz-lock">🔒 Premium</span>';                                   // kilitli (premium değil)
+      var OPEN = '<span class="hz-lock hz-open" style="background:#2f8f6b;">🔓 Premium</span>'; // premium — açık, yeşil
       function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
       function apply(){
         var prem = isPrem();
         var cards = document.querySelectorAll('.hz-grid .hz-card');
         cards.forEach(function (card, i) {
-          if (i === 0) return; // ilk deneme ücretsiz
+          if (i === 0) return; // ilk deneme ücretsiz — rozet yok
           if (!card.dataset.href) card.dataset.href = card.getAttribute('href');
           var go = card.querySelector('.hz-go');
           var lock = card.querySelector('.hz-lock');
-          if (prem) {
+          if (lock) lock.remove();
+          if (prem) {                                    // premium — AÇIK, yeşil 🔓 rozet
             card.setAttribute('href', card.dataset.href);
             card.classList.remove('locked');
-            if (lock) lock.remove();
+            card.insertAdjacentHTML('afterbegin', OPEN);
             if (go) go.textContent = 'Denemeyi başlat';
-          } else {
+          } else {                                       // premium yok — kilitli, kırmızı 🔒
             card.setAttribute('href', 'premium');
             card.classList.add('locked');
-            if (!lock) card.insertAdjacentHTML('afterbegin', LOCK);
+            card.insertAdjacentHTML('afterbegin', LOCK);
             if (go) go.textContent = 'Premium ile aç';
           }
         });
       }
-      apply();
+      // GriPremium hazır olana kadar bekle; hazır olunca apply + refresh sonrası yeniden apply.
+      function run(){ apply(); try { if (window.GriPremium && window.GriPremium.refresh) window.GriPremium.refresh().then(apply); } catch (e) {} }
+      var t = 0; (function wait(){ if (window.GriPremium) { run(); } else if (t++ < 40) { setTimeout(wait, 150); } else { apply(); } })();
       window.addEventListener('gri-premium', apply);
-      document.addEventListener('DOMContentLoaded', apply);
+      document.addEventListener('DOMContentLoaded', run);
     })();
   </script>
 </body>

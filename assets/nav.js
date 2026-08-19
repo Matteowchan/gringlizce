@@ -252,7 +252,7 @@
     var tOpts = themeOptsHtml();
 
     var xl = xlateData();
-    var xlDD = xl ? ('<div class="gri-rdd gri-xlate-dd"><button type="button" data-dd>' + (xl.on ? "Dil" : "Çevir") + CVDOWN + '</button><div class="gri-rdd-menu">'
+    var xlDD = xl ? ('<div class="gri-rdd gri-xlate-dd"><button type="button" data-dd>Dil' + CVDOWN + '</button><div class="gri-rdd-menu">'
       + '<div class="gri-th-lbl" style="padding-top:2px">Dil / Language</div>'
       + '<a href="' + esc(xl.tr) + '"' + (xl.on ? "" : ' class="here"') + '>Türkçe <span style="opacity:.55">· orijinal</span></a>'
       + '<a href="' + esc(xl.en) + '" lang="en" rel="nofollow">English</a>'
@@ -273,11 +273,11 @@
       '<a href="/" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
-      xlDD +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
       "<button class='gri-ico' id='gri-dark' title='Gece modu'><svg viewBox='0 0 20 20' width='16' height='16' fill='currentColor'><path d='M13 2a8 8 0 105 14A7 7 0 0113 2z'/></svg></button>" +
       '<div id="navUserMount" class="gri-user-mount"></div>' +
+      xlDD +
       "<button class='gri-burger' id='gri-burger' aria-label='Menü' aria-expanded='false' aria-controls='gri-mmenu'><svg viewBox='0 0 24 24' fill='none' aria-hidden='true'><path d='M4 7h16M4 12h16M4 17h16' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg></button>" +
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +

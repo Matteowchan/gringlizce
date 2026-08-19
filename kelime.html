@@ -301,7 +301,7 @@ const SVG = {
 
 // META display
 function updateMeta(){
-  const catLabel = CATEGORY ? (CAT_LABELS[CATEGORY] || CATEGORY) : 'Karma · Tüm kategoriler';
+  const catLabel = [EXAM?EXAM.toUpperCase():null, TIER?({'1':'İlk 1000','3':'3000','5':'5000'}[TIER]):null, CATEGORY?(CAT_LABELS[CATEGORY]||CATEGORY):null].filter(Boolean).join(' · ') || 'Karma · Tüm kategoriler';
   document.getElementById('kbMeta').textContent =
     `${catLabel} · ${seenIds.size + 1} / ${totalInPool}`;
   const score = correctIds.size;
@@ -348,7 +348,7 @@ async function fetchNextWord(){
 }
 
 function showCompletion(){
-  const catLabel = CATEGORY ? CAT_LABELS[CATEGORY] : 'tüm kelimeler';
+  const catLabel = [EXAM?EXAM.toUpperCase():null, TIER?({'1':'İlk 1000','3':'3000','5':'5000'}[TIER]):null, CATEGORY?(CAT_LABELS[CATEGORY]||CATEGORY):null].filter(Boolean).join(' · ') || 'tüm kelimeler';
   document.getElementById('kbContent').innerHTML = `
     <div class="kb-state">
       <h2>Tebrikler!</h2>

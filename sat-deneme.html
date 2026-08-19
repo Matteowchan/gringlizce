@@ -32,6 +32,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .st-warn.show{display:block;}
   .st-q{background:var(--st-card);border:1px solid var(--st-line);border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1rem;}
   .st-q-num{display:inline-block;background:var(--st-accent);color:#fff;border-radius:6px;font:600 12px Inter,system-ui,sans-serif;padding:.15rem .5rem;margin-bottom:.6rem;}
+  .st-rem{margin-top:.9rem;padding:.75rem .9rem;border:1px solid color-mix(in srgb,var(--st-accent) 32%,transparent);border-left:4px solid var(--st-accent);border-radius:0 9px 9px 0;background:color-mix(in srgb,var(--st-accent) 8%,transparent);}
+  .st-rem-l{display:block;font:800 .68rem Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--st-accent);margin-bottom:.45rem;}
+  .st-rem-c{display:inline-flex;align-items:center;gap:.3rem;font:700 .88rem Inter,system-ui,sans-serif;text-decoration:none;color:#fff;background:var(--st-accent);border-radius:999px;padding:.4rem .9rem;}
+  .st-rem-c:hover{filter:brightness(1.08);}
   .st-q-num.wrong{background:var(--st-bad);}
   .st-q-num.blank{background:var(--st-muted);}
   .st-passage{font-size:.92rem;line-height:1.6;color:var(--st-ink);border-left:2px solid var(--st-line);padding-left:.8rem;margin:.4rem 0 .8rem;}
@@ -234,7 +238,7 @@ function parseDeneme(d){
    Bankadan alınan sorular gri-den-* slug taşımayabilir; sadece etiketle gelir. */
 async function fetchModule(tags, db){
   const { data, error } = await sb.from('questions')
-    .select('id,slug,section,difficulty,question_text,options,correct_answer,explanations,passage_id,created_at')
+    .select('id,slug,section,difficulty,question_text,options,correct_answer,explanations,passage_id,category,subcategory,created_at')
     .eq('active',true).eq('exam_type','sat').eq('section',db)
     .contains('tags', tags)
     .order('slug', { ascending:true }).order('created_at', { ascending:true }).range(0,299);
@@ -1102,6 +1106,14 @@ function saveAttempt(){
   try{ sb.from('sat_deneme_attempts').insert(row).then(function(){},function(e){ console.warn('attempt save failed', e); }); }catch(e){}
 }
 
+/* Remediation: yanlış soruda ilgili konu anlatımına yönlendirme */
+function satRemediationHtml(q){
+  const SUB={words_in_context:['sat-rw-words-in-context','Words in Context'],cross_text_connections:['sat-rw-cross-text-connections','Cross-Text Connections'],command_of_evidence:['sat-rw-command-of-evidence','Command of Evidence'],rhetorical_synthesis:['sat-rw-rhetorical-synthesis','Rhetorical Synthesis'],transitions:['gramer-linking-words','Linking Words'],boundaries:['konu-sentence-structure','Cümle Yapısı'],form_structure_sense:['konu-sentence-structure','Cümle Yapısı']};
+  const CAT={craft_and_structure:['sat-rw-words-in-context','Craft and Structure'],information_and_ideas:['sat-rw-command-of-evidence','Information and Ideas'],expression_of_ideas:['sat-rw-rhetorical-synthesis','Expression of Ideas'],standard_english_conventions:['konu-sentence-structure','Cümle Yapısı ve Kurallar'],algebra:['sat-math-heart-of-algebra','Algebra'],advanced_math:['sat-math-advanced-math','Advanced Math'],problem_solving_and_data_analysis:['sat-math-problem-solving-data','Problem-Solving and Data'],geometry_and_trigonometry:['sat-math-geometry-trigonometry','Geometry and Trigonometry']};
+  const m=(q.subcategory&&SUB[q.subcategory])||(q.category&&CAT[q.category])||['konu-anlatimi','Konu Anlatımı'];
+  const en=!/[çğıöşüİÇĞÖŞÜ]/.test(m[1]);
+  return '<div class="st-rem"><span class="st-rem-l">Bunu kaçırdın — bu konuyu pekiştir</span><a class="st-rem-c"'+(en?' lang="en"':'')+' href="'+m[0]+'">'+esc(m[1])+' &rarr;</a></div>';
+}
 function reviewQuestionHtml(q, given, passages, cfg){
   const ok = isSpr(q) ? sprCorrect(given,q.correct_answer) : (given===q.correct_answer);
   const blank = given==null || given==='';
@@ -1124,7 +1136,9 @@ function reviewQuestionHtml(q, given, passages, cfg){
     h += '<div class="st-ansline"><span class="chip '+(ok?'good':(blank?'neu':'bad'))+'">Senin cevabın</span>'+(blank?'(boş)':esc(given))+
          ' &nbsp; <span class="chip good">Doğru</span>'+esc(q.correct_answer)+'</div>';
   }
-  h += '<div class="st-expl">'+explHtml(q)+'</div></div>';
+  h += '<div class="st-expl">'+explHtml(q)+'</div>';
+  if (!ok && !blank) h += satRemediationHtml(q);
+  h += '</div>';
   return h;
 }
 

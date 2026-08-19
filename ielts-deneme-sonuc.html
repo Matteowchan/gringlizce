@@ -144,6 +144,24 @@
       margin-top: 0.25rem;
     }
 
+    .remedy-band {
+      display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem;
+      background: color-mix(in srgb, var(--accent, #C09947) 9%, #fff);
+      border: 1px solid color-mix(in srgb, var(--accent, #C09947) 32%, transparent);
+      border-left: 4px solid var(--accent, #C09947);
+      border-radius: 0 12px 12px 0; padding: .95rem 1.2rem; margin-bottom: 1.4rem;
+    }
+    .remedy-band .remedy-l {
+      font: 800 .7rem Inter, system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--accent, #C09947);
+    }
+    .remedy-band .remedy-c {
+      margin-left: auto; display: inline-flex; align-items: center;
+      font: 700 .92rem Inter, system-ui, sans-serif; text-decoration: none; color: #fff;
+      background: var(--accent, #C09947); border-radius: 999px; padding: .5rem 1.1rem;
+    }
+    .remedy-band .remedy-c:hover { filter: brightness(1.08); }
+    @media (max-width: 520px){ .remedy-band .remedy-c { margin-left: 0; } }
     .feedback-section {
       background: #fff;
       border: 1px solid #d8d2c4;
@@ -350,6 +368,11 @@
         <!-- Filled by JS -->
       </div>
 
+      <div class="remedy-band" id="remedyBand" style="display:none">
+        <span class="remedy-l">Bu bölümü pekiştir</span>
+        <a class="remedy-c" id="remedyLink" href="#">—</a>
+      </div>
+
       <div class="feedback-section">
         <h2>Soru Bazlı Geri Bildirim</h2>
         <div class="breakdown-info">
@@ -551,6 +574,14 @@
                        <div class="title">Deneme Sayfası</div>
                      </a>`;
       actionsBar.innerHTML = actionsHtml;
+
+      // Remediation: bu bölümü pekiştir → ilgili konu anlatımı
+      const REMEDY = { reading: ['konu-ielts-reading', 'IELTS Reading Stratejileri'], listening: ['konu-ielts-listening', 'IELTS Listening Stratejileri'], writing: ['konu-ielts-writing-task2', 'IELTS Writing · Task 2'] };
+      const rm = REMEDY[attempt.section];
+      if (rm) {
+        const rb = document.getElementById('remedyBand'), rl = document.getElementById('remedyLink');
+        if (rb && rl) { rl.href = rm[0]; rl.textContent = rm[1] + ' →'; rb.style.display = ''; }
+      }
 
       // Per-question feedback
       const tbody = document.getElementById('feedbackTbody');

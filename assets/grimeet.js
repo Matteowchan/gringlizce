@@ -969,8 +969,24 @@ var DOC=(function(){
     var al=$('#doc-addleft'); if(al)al.addEventListener('click',function(){ if(STATE.isHost) addPane('L'); });
     var ar=$('#doc-addright'); if(ar)ar.addEventListener('click',function(){ if(STATE.isHost) addPane('R'); });
     bindGutter('L'); bindGutter('R');
-    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',function(){ try{
-      var body=combinedHtml(); if(!body || !body.replace(/<[^>]*>/g,'').trim() && !/<img/i.test(body)){ try{ toast('Yazı tahtası boş — indirilecek içerik yok.'); }catch(_){} return; }
+    // Uzak (Storage) görsel URL'lerini data: URI olarak gömer — indirilen .doc'ta görsel görünsün.
+    function _imgToDataUrl(url){ return new Promise(function(res){
+      if(!url || /^data:/i.test(url)){ res(url); return; }
+      try{ var img=new Image(); img.crossOrigin='anonymous';
+        img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth||img.width; c.height=img.naturalHeight||img.height; c.getContext('2d').drawImage(img,0,0); res(c.toDataURL('image/png')); }catch(e){ res(url); } };
+        img.onerror=function(){ res(url); }; img.src=url;
+      }catch(e){ res(url); }
+    }); }
+    var dl=$('#doc-download'); if(dl)dl.addEventListener('click',async function(){ try{
+      var body=combinedHtml(); if(!body || (!body.replace(/<[^>]*>/g,'').trim() && !/<img/i.test(body))){ try{ toast('Yazı tahtası boş — indirilecek içerik yok.'); }catch(_){} return; }
+      // Görselleri gövdeye göm (uzak URL indirilen dosyada yüklenmez)
+      try{
+        var _tmp=document.createElement('div'); _tmp.innerHTML=body;
+        var _imgs=Array.prototype.slice.call(_tmp.querySelectorAll('img'));
+        if(_imgs.length){ try{ toast('Görseller hazırlanıyor…'); }catch(_){} }
+        for(var _i=0;_i<_imgs.length;_i++){ var _s=_imgs[_i].getAttribute('src')||''; if(_s && !/^data:/i.test(_s)){ var _d=await _imgToDataUrl(_s); if(_d) _imgs[_i].setAttribute('src',_d); } }
+        body=_tmp.innerHTML;
+      }catch(_e){}
       var html='<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Gri Meet — Yazı Tahtası</title><style>body{font-family:Georgia,\'Times New Roman\',serif;font-size:12pt;line-height:1.5;color:#111;margin:2.2cm} img{max-width:100%}</style></head><body>'+body+'</body></html>';
       var blob=new Blob(['﻿'+html],{type:'application/msword'});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gri-meet-yazitahtasi.doc'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(_){}} ,1500);

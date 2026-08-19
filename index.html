@@ -3492,45 +3492,114 @@
 </section>
 
 <!-- ===================================================================
-     BUGÜN NE YAPMAK İSTERSİN — işlev paneli (tüm fonksiyonlar)
+     BUGÜN NE YAPMAK İSTERSİN — çarkıfelek fonksiyon başlatıcı
      =================================================================== -->
 <style>
-  .gp-sec{border-top:1px solid var(--line,#E3D9C7);background:var(--bg-soft,#F4EFE3);padding:4rem 0 4.5rem}
-  .gp-inner{max-width:1120px;margin:0 auto;padding:0 1.2rem;text-align:center}
-  .gp-eyebrow{font-family:var(--font-ui,Inter),sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--gri-gold,#B78A2E);margin-bottom:.6rem}
-  .gp-title{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:clamp(1.7rem,4vw,2.4rem);color:var(--text,#241c12);margin:.1rem 0 .5rem}
-  .gp-sub{font-size:1rem;color:var(--text-soft,#6b6250);max-width:560px;margin:0 auto 2.4rem;line-height:1.6}
-  .gp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:1rem;text-align:left}
-  .gp-card{position:relative;display:flex;flex-direction:column;gap:.35rem;background:var(--bg-card,#fff);border:1px solid var(--line,#E3D9C7);border-radius:16px;padding:1.15rem 1.2rem 1.05rem 1.35rem;text-decoration:none;color:inherit;overflow:hidden;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-  .gp-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--seg)}
-  .gp-card:hover{transform:translateY(-4px);border-color:var(--seg);box-shadow:0 12px 26px rgba(40,30,20,.13)}
-  .gp-v{font-family:var(--font-ui,Inter),sans-serif;font-size:.64rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--seg)}
-  .gp-n{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:1.18rem;font-weight:700;color:var(--text,#241c12);line-height:1.15}
-  .gp-d{font-family:var(--font-ui,Inter),sans-serif;font-size:.86rem;line-height:1.5;color:var(--text-soft,#6b6250)}
-  .gp-go{margin-top:.35rem;font-family:var(--font-ui,Inter),sans-serif;font-size:.82rem;font-weight:700;color:var(--seg);opacity:0;transform:translateX(-4px);transition:opacity .18s,transform .18s}
-  .gp-card:hover .gp-go{opacity:1;transform:none}
-  @media (max-width:520px){.gp-grid{grid-template-columns:1fr 1fr;gap:.7rem}.gp-card{padding:.9rem .85rem .85rem 1rem}.gp-n{font-size:1.02rem}.gp-d{font-size:.78rem}}
+  .gw-sec{border-top:1px solid var(--line,#E3D9C7);background:var(--bg-soft,#F4EFE3);padding:4rem 0 4.8rem;overflow:hidden}
+  .gw-inner{max-width:1000px;margin:0 auto;padding:0 1.2rem;text-align:center}
+  .gw-eyebrow{font-family:var(--font-ui,Inter),sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--gri-gold,#B78A2E);margin-bottom:.6rem}
+  .gw-title{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:clamp(1.7rem,4vw,2.5rem);color:var(--text,#241c12);margin:.1rem 0 .5rem}
+  .gw-sub{font-size:1rem;color:var(--text-soft,#6b6250);max-width:540px;margin:0 auto 2.6rem;line-height:1.6}
+  .gw-stage{position:relative;width:min(480px,90vw);height:min(480px,90vw);margin:0 auto}
+  /* nefes alan hale */
+  .gw-stage::before{content:"";position:absolute;inset:2%;border-radius:50%;z-index:0;pointer-events:none;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--gri-gold,#B78A2E) 26%,transparent),transparent 72%);
+    filter:blur(14px);animation:gw-halo 5.5s ease-in-out infinite}
+  @keyframes gw-halo{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.95;transform:scale(1.06)}}
+  .gw-disc{position:absolute;inset:12%;border-radius:50%;z-index:1;
+    background:conic-gradient(#17857A 0deg 45deg,#C9922B 45deg 90deg,#5F9440 90deg 135deg,#C06A34 135deg 180deg,#7E52B0 180deg 225deg,#C05684 225deg 270deg,#2E7BB8 270deg 315deg,#4E8C5E 315deg 360deg);
+    box-shadow:0 20px 50px rgba(40,30,20,.26),inset 0 0 0 8px rgba(255,255,255,.72),inset 0 0 40px rgba(0,0,0,.12)}
+  /* beyaz ışınlar (dilim ayıraçları) */
+  .gw-disc::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.6) 0deg .7deg,transparent .7deg 45deg)}
+  /* üst parlaklık */
+  .gw-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 36%,rgba(255,255,255,.24),transparent 60%)}
+  .gw-needle{position:absolute;left:50%;top:50%;width:9px;height:43%;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);transition:transform 4.2s cubic-bezier(.15,.86,.22,1);z-index:4;pointer-events:none}
+  .gw-needle::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:30px solid var(--gri-gold,#B78A2E);filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+  .gw-needle::after{content:"";position:absolute;left:50%;top:24px;bottom:8px;width:5px;transform:translateX(-50%);border-radius:3px;background:linear-gradient(var(--gri-gold,#B78A2E),rgba(120,86,20,.4))}
+  .gw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:26%;height:26%;border-radius:50%;border:none;cursor:pointer;
+    background:radial-gradient(circle at 50% 38%,#fff,#F6EFDF);color:var(--text,#241c12);font-family:var(--font-ui,Inter),sans-serif;font-weight:800;font-size:clamp(.85rem,2.6vw,1.08rem);letter-spacing:.03em;
+    box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E);z-index:6;animation:gw-invite 2.6s ease-in-out infinite;transition:transform .15s}
+  @keyframes gw-invite{0%,100%{box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E)}50%{box-shadow:0 8px 30px rgba(183,138,46,.6),inset 0 0 0 4px var(--gri-gold,#B78A2E)}}
+  .gw-hub:hover{transform:translate(-50%,-50%) scale(1.07)}
+  .gw-hub:active{transform:translate(-50%,-50%) scale(.95)}
+  .gw-hub.spinning{animation:gw-invite .8s ease-in-out infinite}
+  .gw-label{position:absolute;inset:0;transform:rotate(var(--a));pointer-events:none;z-index:5}
+  .gw-label .pill{position:absolute;left:50%;top:1.5%;transform:translate(-50%,-50%) rotate(calc(-1 * var(--a)));pointer-events:auto;text-decoration:none;
+    display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg-card,#fff);border:1.5px solid var(--line,#E3D9C7);border-radius:13px;padding:.36rem .66rem;
+    box-shadow:0 4px 13px rgba(40,30,20,.14);transition:transform .18s,box-shadow .18s,border-color .18s}
+  .gw-label .v{font-family:var(--font-ui,Inter),sans-serif;font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--seg)}
+  .gw-label .n{font-family:var(--font-ui,Inter),sans-serif;font-size:.8rem;font-weight:700;color:var(--text,#241c12);line-height:1.1;white-space:nowrap}
+  .gw-label .pill:hover{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.1);border-color:var(--seg);box-shadow:0 7px 18px rgba(40,30,20,.2)}
+  .gw-label.win .pill{border-color:var(--seg);box-shadow:0 0 0 4px color-mix(in srgb,var(--seg) 40%,transparent),0 10px 24px rgba(40,30,20,.24);animation:gw-pop .6s}
+  @keyframes gw-pop{0%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1)}45%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.28)}100%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.12)}}
+  .gw-result{margin:2.2rem auto 0;min-height:1px;max-width:460px}
+  .gw-result.show{animation:gw-rise .42s}
+  @keyframes gw-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .gw-result .lead{display:block;font-size:.96rem;color:var(--text-soft,#6b6250);margin-bottom:.75rem}
+  .gw-result a{display:inline-flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-family:var(--font-ui,Inter),sans-serif;font-weight:700;font-size:1.02rem;border-radius:999px;padding:.75rem 1.6rem;box-shadow:0 10px 24px rgba(40,30,20,.22)}
+  @media (prefers-reduced-motion:reduce){.gw-stage::before,.gw-hub,.gw-needle{animation:none}}
+  @media (max-width:560px){
+    .gw-stage{width:min(360px,94vw);height:min(360px,94vw)}
+    .gw-label .pill{top:10%;padding:.24rem .44rem;border-radius:11px}
+    .gw-label .n{font-size:.62rem}.gw-label .v{font-size:.5rem;letter-spacing:.06em}
+    .gw-disc{inset:17%}
+  }
 </style>
-<section class="gp-sec" id="bugun-ne-yapsam" aria-label="Bugün ne yapmak istersin">
-  <div class="gp-inner">
-    <div class="gp-eyebrow">Nereden başlasam?</div>
-    <h2 class="gp-title">Bugün ne yapmak istersin?</h2>
-    <p class="gp-sub">Sitedeki tüm çalışma yolları burada — birine dokun, doğrudan başla.</p>
-    <div class="gp-grid">
-      <a class="gp-card" style="--seg:#2C7A6B" href="soru-bankasi"><span class="gp-v">Çöz</span><span class="gp-n">Soru Bankası</span><span class="gp-d">Türkçe açıklamalı, sınav formatında sorular; yanlışların ayrı birikir.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#C08A2E" href="konu-anlatimi"><span class="gp-v">Öğren</span><span class="gp-n">Konu Anlatımı</span><span class="gp-d">Gramerden akademik yazıya, konu konu kapsamlı rehberler.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#6E8B4A" href="ogrenme-haritasi"><span class="gp-v">Keşfet</span><span class="gp-n">Öğrenme Haritası</span><span class="gp-d">Tüm sınavlar ve modüller tek haritada; nereden gideceğini gör.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#B0653B" href="kelime-bankasi"><span class="gp-v">Ezberle</span><span class="gp-n">Kelime Bankası</span><span class="gp-d">Tematik flashcard ile kelime çalış, tekrarla kalıcı kıl.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#B0567A" href="yazi-pratigi"><span class="gp-v">Yaz</span><span class="gp-n">Yazı Pratiği</span><span class="gp-d">Gerçek rubric ile kriter bazlı geri bildirim + Gri AI yorumu.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#7B5AA0" href="oyunlar"><span class="gp-v">Oyna</span><span class="gp-n">Oyunlar</span><span class="gp-d">Wordle, Kelime Yolu ve daha fazlası — öğrenirken eğlen.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#2E6E9E" href="seviye-belirleme"><span class="gp-v">Ölç</span><span class="gp-n">Seviye Belirleme</span><span class="gp-d">Ücretsiz seviye testi + kişiye özel çalışma önerisi.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#0F6E56" href="grimeet"><span class="gp-v">Katıl</span><span class="gp-n">Gri Meet · Canlı Ders</span><span class="gp-d">Tarayıcıda görüntülü sınıf: beyaz tahta, senkron materyal, quiz.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#4E7C59" href="sinifim"><span class="gp-v">Sınıf</span><span class="gp-n">Sınıfım</span><span class="gp-d">Öğretmeninin ödevleri, canlı dersleri ve ilerlemen tek yerde.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#8E3B4C" href="panelim"><span class="gp-v">Devam</span><span class="gp-n">Çalışma Masam</span><span class="gp-d">Yanlışların, kelimelerin, yazıların, ödevlerin — kaldığın yer.</span><span class="gp-go">Başla →</span></a>
-      <a class="gp-card" style="--seg:#5C6673" href="blog"><span class="gp-v">Oku</span><span class="gp-n">Blog · Rehber</span><span class="gp-d">Sınav stratejileri, çalışma taktikleri ve rehber yazıları.</span><span class="gp-go">Başla →</span></a>
+<section class="gw-sec" id="bugun-ne-yapsam" aria-label="Bugün ne yapmak istersin">
+  <div class="gw-inner">
+    <div class="gw-eyebrow">Nereden başlasam?</div>
+    <h2 class="gw-title">Bugün ne yapmak istersin?</h2>
+    <p class="gw-sub">Kararsızsan çarkı çevir, Gri senin için bir başlangıç seçsin — ya da doğrudan bir dilime dokun.</p>
+    <div class="gw-stage">
+      <div class="gw-disc" aria-hidden="true"></div>
+      <div class="gw-needle" id="gwNeedle" aria-hidden="true"></div>
+      <button class="gw-hub" id="gwSpin" type="button">Çevir</button>
+      <div class="gw-label" style="--a:22.5deg;--seg:#17857A"><a class="pill" href="soru-bankasi"><span class="v">Çöz</span><span class="n">Soru Bankası</span></a></div>
+      <div class="gw-label" style="--a:67.5deg;--seg:#C9922B"><a class="pill" href="konu-anlatimi"><span class="v">Öğren</span><span class="n">Konu Anlatımı</span></a></div>
+      <div class="gw-label" style="--a:112.5deg;--seg:#5F9440"><a class="pill" href="ogrenme-haritasi"><span class="v">Keşfet</span><span class="n">Öğrenme Haritası</span></a></div>
+      <div class="gw-label" style="--a:157.5deg;--seg:#C06A34"><a class="pill" href="kelime-bankasi"><span class="v">Kelime</span><span class="n">Kelime Bankası</span></a></div>
+      <div class="gw-label" style="--a:202.5deg;--seg:#7E52B0"><a class="pill" href="oyunlar"><span class="v">Oyna</span><span class="n">Oyunlar</span></a></div>
+      <div class="gw-label" style="--a:247.5deg;--seg:#C05684"><a class="pill" href="yazi-pratigi"><span class="v">Yaz</span><span class="n">Yazı Pratiği</span></a></div>
+      <div class="gw-label" style="--a:292.5deg;--seg:#2E7BB8"><a class="pill" href="seviye-belirleme"><span class="v">Ölç</span><span class="n">Seviye Belirleme</span></a></div>
+      <div class="gw-label" style="--a:337.5deg;--seg:#4E8C5E"><a class="pill" href="panelim"><span class="v">Devam</span><span class="n">Çalışma Masam</span></a></div>
     </div>
+    <div class="gw-result" id="gwResult" aria-live="polite"></div>
   </div>
 </section>
+<script>
+(function(){
+  var FUNCS=[
+    {v:'Çöz',n:'Soru Bankası',u:'soru-bankasi',c:'#17857A'},
+    {v:'Öğren',n:'Konu Anlatımı',u:'konu-anlatimi',c:'#C9922B'},
+    {v:'Keşfet',n:'Öğrenme Haritası',u:'ogrenme-haritasi',c:'#5F9440'},
+    {v:'Kelime',n:'Kelime Bankası',u:'kelime-bankasi',c:'#C06A34'},
+    {v:'Oyna',n:'Oyunlar',u:'oyunlar',c:'#7E52B0'},
+    {v:'Yaz',n:'Yazı Pratiği',u:'yazi-pratigi',c:'#C05684'},
+    {v:'Ölç',n:'Seviye Belirleme',u:'seviye-belirleme',c:'#2E7BB8'},
+    {v:'Devam',n:'Çalışma Masam',u:'panelim',c:'#4E8C5E'}
+  ];
+  var needle=document.getElementById('gwNeedle'), spin=document.getElementById('gwSpin'),
+      result=document.getElementById('gwResult'),
+      labels=[].slice.call(document.querySelectorAll('.gw-sec .gw-label'));
+  if(!needle||!spin) return;
+  var acc=0, busy=false;
+  function land(i){
+    labels.forEach(function(l){l.classList.remove('win');});
+    if(labels[i]) labels[i].classList.add('win');
+    var f=FUNCS[i];
+    result.innerHTML='<span class="lead">Bugün: <b>'+f.n+'</b></span><a href="'+f.u+'" style="background:'+f.c+'">'+f.v+' · Hadi başla →</a>';
+    result.classList.remove('show'); void result.offsetWidth; result.classList.add('show');
+  }
+  spin.addEventListener('click',function(){
+    if(busy) return; busy=true; spin.classList.add('spinning');
+    var s=Math.floor(Math.random()*8);
+    var turns=5+Math.floor(Math.random()*3);
+    acc += turns*360 + (s*45+22.5) - (((acc%360)+360)%360);
+    needle.style.transform='translate(-50%,-100%) rotate('+acc+'deg)';
+    setTimeout(function(){busy=false;spin.classList.remove('spinning');land(s);},4300);
+  });
+})();
+</script>
 
 <!-- ===================================================================
      ÖNE ÇIKANLAR — Hero altı özellik kartı şeridi

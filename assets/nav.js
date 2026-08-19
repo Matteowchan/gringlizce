@@ -92,6 +92,10 @@
     ".gri-msub a:active{background:var(--gri-surface-2);color:var(--gri-accent)}",
     ".gri-msub a.here{color:var(--gri-accent);font-weight:600}",
     ".gri-mgrp-h{font-family:Inter,sans-serif;font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--gri-accent);padding:16px 2px 6px}",
+    ".gri-mxlate{border-top:1px solid var(--gri-line);margin-top:16px;padding-top:6px}",
+    ".gri-mxrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:6px 0 8px}",
+    ".gri-mxrow a{display:flex;align-items:center;justify-content:center;padding:13px 6px;border:1px solid var(--gri-line);background:var(--gri-surface);border-radius:12px;text-decoration:none;color:var(--gri-ink-soft);font-family:Inter,sans-serif;font-size:13.5px;font-weight:600}",
+    ".gri-mxrow a.on{border-color:var(--gri-accent);color:var(--gri-accent);background:var(--gri-accent-soft)}",
     ".gri-mtheme{border-top:1px solid var(--gri-line);margin-top:16px;padding-top:4px}",
     ".gri-mtheme-h{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:16px 2px;font-family:'Crimson Pro',Georgia,serif;font-size:16.5px;font-weight:600;color:var(--gri-ink)}",
     ".gri-mtheme-h .cv{width:13px;height:13px;opacity:.6;transition:transform .2s}.gri-mtheme.open .gri-mtheme-h .cv{transform:rotate(180deg)}",
@@ -161,6 +165,31 @@
 
   function hrefsOf(item, acc) { if (item.href) acc.push(item.href.toLowerCase().split("/").pop()); if (item.children) item.children.forEach(function (c) { hrefsOf(c, acc); }); return acc; }
 
+  // Çeviri: Google translate.goog proxy'si (fonksiyon/i18n değil, salt bağlantı).
+  // Yalnız canlı gringlizce.com'da (veya zaten çevrilmiş translate.goog sayfasında) görünür.
+  function xlateData() {
+    var h = location.hostname;
+    var isGoog = /\.translate\.goog$/i.test(h);
+    var ok = isGoog || /(^|\.)gringlizce\.com$/i.test(h);
+    if (!ok) return null;
+    var host, path;
+    if (isGoog) {
+      var sub = h.replace(/\.translate\.goog$/i, "");
+      host = sub.replace(/--/g, " ").replace(/-/g, ".").replace(/ /g, "-");
+      try {
+        var u = new URL(location.href);
+        ["_x_tr_sl", "_x_tr_tl", "_x_tr_hl", "_x_tr_pto", "_x_tr_hist"].forEach(function (k) { u.searchParams.delete(k); });
+        path = u.pathname + (u.search || "");
+      } catch (e) { path = location.pathname; }
+    } else { host = h; path = location.pathname + location.search; }
+    function goog(tl) {
+      var th = host.replace(/-/g, "--").replace(/\./g, "-") + ".translate.goog";
+      var sep = path.indexOf("?") === -1 ? "?" : "&";
+      return "https://" + th + path + sep + "_x_tr_sl=tr&_x_tr_tl=" + tl + "&_x_tr_hl=" + tl + "&_x_tr_pto=wapp";
+    }
+    return { tr: "https://" + host + path, en: goog("en"), de: goog("de"), on: isGoog };
+  }
+
   function build() {
     if (document.querySelector(".gri-nav")) return;
     var _segs = location.pathname.split("/").filter(Boolean);
@@ -222,6 +251,19 @@
 
     var tOpts = themeOptsHtml();
 
+    var xl = xlateData();
+    var xlDD = xl ? ('<div class="gri-rdd gri-xlate-dd"><button type="button" data-dd>' + (xl.on ? "Dil" : "Çevir") + CVDOWN + '</button><div class="gri-rdd-menu">'
+      + '<div class="gri-th-lbl" style="padding-top:2px">Dil / Language</div>'
+      + '<a href="' + esc(xl.tr) + '"' + (xl.on ? "" : ' class="here"') + '>Türkçe <span style="opacity:.55">· orijinal</span></a>'
+      + '<a href="' + esc(xl.en) + '" lang="en" rel="nofollow">English</a>'
+      + '<a href="' + esc(xl.de) + '" lang="de" rel="nofollow">Deutsch</a>'
+      + '</div></div>') : "";
+    var xlM = xl ? ('<div class="gri-mxlate"><div class="gri-th-lbl">Dil / Language</div><div class="gri-mxrow">'
+      + '<a href="' + esc(xl.tr) + '"' + (xl.on ? "" : ' class="on"') + '>Türkçe</a>'
+      + '<a href="' + esc(xl.en) + '" lang="en" rel="nofollow">English</a>'
+      + '<a href="' + esc(xl.de) + '" lang="de" rel="nofollow">Deutsch</a>'
+      + '</div></div>') : "";
+
     var frag = document.createElement("div");
     frag.insertAdjacentHTML("beforeend", SPRITE);
 
@@ -231,6 +273,7 @@
       '<a href="/" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
+      xlDD +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
       "<button class='gri-ico' id='gri-dark' title='Gece modu'><svg viewBox='0 0 20 20' width='16' height='16' fill='currentColor'><path d='M13 2a8 8 0 105 14A7 7 0 0113 2z'/></svg></button>" +
@@ -242,6 +285,7 @@
       mquick +
       '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard' + (here === "panelim" ? " here" : "") + '" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
+      xlM +
       '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h">Tema' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");

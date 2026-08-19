@@ -3094,6 +3094,19 @@
     line-height: 1;
     letter-spacing: -0.01em;
   }
+
+  /* App-hero günlük karşılama (giriş yapmış öğrenci) */
+  .ah-daily {
+    margin: .55rem 0 0;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 1.02rem; line-height: 1.5;
+    color: var(--text-soft, #6b6250);
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem;
+  }
+  .ah-daily b { color: var(--text, #241c12); font-weight: 700; }
+  .ah-daily .ah-daily-tip { opacity: .82; }
+  .ah-daily-link { font-weight: 700; color: var(--teal, #2C5856); text-decoration: none; white-space: nowrap; }
+  .ah-daily-link:hover { text-decoration: underline; }
 </style>
 
 <!-- ===================================================================
@@ -3113,7 +3126,20 @@
           <span id="ah-streak-num">0</span> günlük streak
         </span>
       </div>
+      <p class="ah-daily" id="ahDaily" style="display:none"><span id="ahDailyText"></span> <a href="#bugun-ne-yapsam" class="ah-daily-link">Bugüne başla →</a></p>
     </div>
+    <script>
+    (function(){
+      var el=document.getElementById('ahDaily'), t=document.getElementById('ahDailyText');
+      if(!el||!t) return;
+      var now=new Date(), h=now.getHours();
+      var g = h<6?'İyi geceler':h<11?'Günaydın':h<18?'İyi günler':'İyi akşamlar';
+      var tips=['Küçük bir adım bugünü kurtarır.','Bir konu, birkaç soru — yeter.','Dünün yanlışları bugünün dersidir.','Süreklilik hızdan önemlidir.','Bir kelime, bir soru, bir adım.','Bugünün on beş dakikası yarına kalır.','Nereden başlayacağını Gri seçebilir.'];
+      var idx=(now.getFullYear()*372 + now.getMonth()*31 + now.getDate()) % tips.length;
+      t.innerHTML = g + ' — <b>bugün ne yapmak istersin?</b> <span class="ah-daily-tip">'+tips[idx]+'</span>';
+      el.style.display='';
+    })();
+    </script>
 
     <a href="#" class="ah-continue" id="ah-continue" style="display:none">
       <div class="ah-continue-eyebrow">Devam Et</div>

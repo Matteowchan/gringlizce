@@ -782,6 +782,7 @@ function handleMsg(msg,p){
   else if(msg.t==='doc-clear'){ DOC.applyClear(); }
   else if(msg.t==='doc-timer'){ if(!STATE.isHost&&fromHost) DOC.applyTimer(msg); }
   else if(msg.t==='doc-draw'){ DOCDRAW.applyRemote(msg); }
+  else if(msg.t==='doc-sel'){ if(!STATE.isHost&&fromHost) DOC.applyRemoteSel(msg); }
   else if(msg.t==='doc-page-add'){ if(!STATE.isHost&&fromHost) DOC.applyAddPane(msg.id,msg.side); }
   else if(msg.t==='doc-page-del'){ if(!STATE.isHost&&fromHost) DOC.applyRemovePane(msg.id); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; applyWbLock(); toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
@@ -928,6 +929,8 @@ var DOC=(function(){
     // Yapıştırılan base64 (data:) görseli ham gömme (dev delta senkronu bozar); yerine Storage'a yükleyip URL göm → öğrencide de görünür.
     try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)){ uploadDataImage(q, src); return new (Quill.import('delta'))(); } }catch(_){} return delta; }); }catch(e){}
     q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
+    // Öğretmenin metin seçimi/işaretlemesi öğrencide highlight olarak görünsün (selection presence).
+    q.on('selection-change',function(range,old,source){ if(!STATE.connected||!STATE.isHost)return; if(range&&range.length>0) sendData({t:'doc-sel',pane:pane,index:range.index,length:range.length}); else sendData({t:'doc-sel',pane:pane,clear:1}); });
     try{ q.root.spellcheck=SPELL; q.root.setAttribute('spellcheck',SPELL?'true':'false'); }catch(e){}
     return q;
   }
@@ -1010,6 +1013,20 @@ var DOC=(function(){
       if((msg.pane||'C')==='C') wc();
     }catch(e){}
   }
+  // Öğretmenin metin seçimini öğrencide highlight overlay olarak göster (içeriğe DOKUNMAZ).
+  function applyRemoteSel(msg){
+    try{
+      if(!msg||!ready||STATE.isHost)return;
+      var q=Q[msg.pane||'C']; if(!q)return;
+      var cont=q.root&&q.root.parentElement; if(!cont)return;
+      var ov=cont.querySelector('.doc-hostsel');
+      if(msg.clear||!msg.length){ if(ov)ov.remove(); return; }
+      if(!ov){ ov=document.createElement('div'); ov.className='doc-hostsel'; ov.setAttribute('contenteditable','false'); ov.style.cssText='position:absolute;pointer-events:none;background:rgba(255,213,74,.42);border-radius:2px;z-index:1'; try{ if(getComputedStyle(cont).position==='static') cont.style.position='relative'; }catch(_){}
+        cont.appendChild(ov); }
+      var b=q.getBounds(msg.index,msg.length); if(!b){ ov.remove(); return; }
+      ov.style.left=b.left+'px'; ov.style.top=b.top+'px'; ov.style.width=Math.max(3,b.width)+'px'; ov.style.height=b.height+'px';
+    }catch(e){}
+  }
   /* Ekstra sayfa ekleme (#114): host "+ Sol"/"+ Sağ" → dinamik Quill paneli oluştur, öğrenciye yayınla, geç-katılımda yeniden kur. */
   function nextId(side){ return side+(2+EXTRA.filter(function(e){ return e.side===side; }).length); }
   function addPane(side, id, remote){
@@ -1074,7 +1091,7 @@ var DOC=(function(){
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
   function setLocked(on){ try{ panes().forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane, applyTimer:applyTimer };
+  return { init:init, applyRemote:applyRemote, applyRemoteSel:applyRemoteSel, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane, applyTimer:applyTimer };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

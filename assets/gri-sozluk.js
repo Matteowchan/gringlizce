@@ -180,7 +180,7 @@
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.5rem">' +
         '<div class="gs-w" style="font-size:1rem">Sözlükte ara</div>' +
         '<button class="gs-x" title="Kapat">&times;</button></div>' +
-      '<div class="gs-search"><input type="text" id="gs-q" placeholder="İngilizce kelime yaz…" autocomplete="off" spellcheck="false" value="' + esc(prefill||'') + '">' +
+      '<div class="gs-search"><input type="text" id="gs-q" placeholder="Kelime yaz…" autocomplete="off" spellcheck="false" value="' + esc(prefill||'') + '">' +
         '<button type="button" id="gs-go">Ara</button></div>' +
       '<div class="gs-hint">Bir kelimeye çift tıklayarak da arayabilirsin.</div>';
     pop.querySelector('.gs-x').addEventListener('click', hidePop);

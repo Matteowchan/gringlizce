@@ -3427,7 +3427,11 @@
             return;
           }
           var students = d.students || [];
-          var header = '<div class="gepool-head"><a href="ielts-deneme" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
+          // "Denemeyi aç" spesifik denemeye gitsin (hub'a değil): section->runner + ?test=<slug>
+          var _SECRUN = { full: 'ielts-deneme.html', reading: 'ielts-deneme-reading.html', listening: 'ielts-deneme-listening.html', writing: 'ielts-deneme-writing.html' };
+          var _runPage = _SECRUN[d.section] || 'ielts-deneme.html';
+          var _denemeHref = d.test_slug ? (_runPage + '?test=' + encodeURIComponent(d.test_slug)) : 'ielts-deneme';
+          var header = '<div class="gepool-head"><a href="' + esc(_denemeHref) + '" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
             + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.test_name || '') + ' · ' + esc(SECL[d.section] || d.section || '') + '</span></div>';
           if (d.test_found === false) header += '<p class="qd-empty">Bu deneme testi (' + esc(d.test_slug || '') + ') sistemde bulunamadı; öğrenci cevapları eşleştirilemedi.</p>';
           if (!students.length) { adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
@@ -6494,7 +6498,7 @@
   })();
 </script>
 <script src="assets/breadcrumb.js?v=3" defer></script>
-<script src="assets/gri-fx.js" defer></script>
+<script src="assets/gri-fx.js?v=1" defer></script>
   <script>
   /* Öğrenci/Ödev drawer'ını sürükleyerek genişlet — genişlik localStorage'da kalıcı */
   (function () {

@@ -3468,6 +3468,101 @@
 </section>
 
 <!-- ===================================================================
+     BUGÜN NE YAPMAK İSTERSİN — çarkıfelek fonksiyon başlatıcı
+     =================================================================== -->
+<style>
+  .gw-sec{border-top:1px solid var(--line,#E3D9C7);background:var(--bg-soft,#F4EFE3);padding:4rem 0 4.5rem}
+  .gw-inner{max-width:1000px;margin:0 auto;padding:0 1.2rem;text-align:center}
+  .gw-eyebrow{font-family:var(--font-ui,Inter),sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--gri-gold,#B78A2E);margin-bottom:.6rem}
+  .gw-title{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:clamp(1.7rem,4vw,2.4rem);color:var(--text,#241c12);margin:.1rem 0 .5rem}
+  .gw-sub{font-size:1rem;color:var(--text-soft,#6b6250);max-width:540px;margin:0 auto 2.4rem;line-height:1.6}
+  .gw-stage{position:relative;width:min(440px,88vw);height:min(440px,88vw);margin:0 auto}
+  .gw-disc{position:absolute;inset:13%;border-radius:50%;
+    background:conic-gradient(#2C7A6B 0deg 45deg,#C08A2E 45deg 90deg,#6E8B4A 90deg 135deg,#B0653B 135deg 180deg,#7B5AA0 180deg 225deg,#B0567A 225deg 270deg,#2E6E9E 270deg 315deg,#4E7C59 315deg 360deg);
+    box-shadow:0 18px 46px rgba(40,30,20,.22),inset 0 0 0 7px rgba(255,255,255,.6)}
+  .gw-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.20),transparent 62%)}
+  .gw-needle{position:absolute;left:50%;top:50%;width:8px;height:42%;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);transition:transform 4.1s cubic-bezier(.15,.86,.22,1);z-index:4;pointer-events:none}
+  .gw-needle::before{content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:28px solid var(--text,#241c12);filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
+  .gw-needle::after{content:"";position:absolute;left:50%;top:22px;bottom:6px;width:5px;transform:translateX(-50%);border-radius:3px;background:linear-gradient(var(--text,#241c12),rgba(36,28,18,.35))}
+  .gw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:25%;height:25%;border-radius:50%;border:none;cursor:pointer;
+    background:var(--bg-card,#fff);color:var(--text,#241c12);font-family:var(--font-ui,Inter),sans-serif;font-weight:800;font-size:clamp(.82rem,2.4vw,1.02rem);letter-spacing:.02em;
+    box-shadow:0 7px 20px rgba(40,30,20,.24),inset 0 0 0 3px var(--gri-gold,#B78A2E);z-index:6;transition:transform .15s}
+  .gw-hub:hover{transform:translate(-50%,-50%) scale(1.06)}
+  .gw-hub:active{transform:translate(-50%,-50%) scale(.96)}
+  .gw-hub.spinning{animation:gw-pulse 1s infinite}
+  @keyframes gw-pulse{0%,100%{box-shadow:0 7px 20px rgba(40,30,20,.24),inset 0 0 0 3px var(--gri-gold,#B78A2E)}50%{box-shadow:0 7px 26px rgba(183,138,46,.55),inset 0 0 0 3px var(--gri-gold,#B78A2E)}}
+  .gw-label{position:absolute;inset:0;transform:rotate(var(--a));pointer-events:none;z-index:5}
+  .gw-label .pill{position:absolute;left:50%;top:3%;transform:translate(-50%,-50%) rotate(calc(-1 * var(--a)));pointer-events:auto;text-decoration:none;
+    display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg-card,#fff);border:1.5px solid var(--line,#E3D9C7);border-radius:12px;padding:.34rem .62rem;
+    box-shadow:0 3px 11px rgba(40,30,20,.11);transition:transform .18s,box-shadow .18s,border-color .18s}
+  .gw-label .v{font-family:var(--font-ui,Inter),sans-serif;font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--seg)}
+  .gw-label .n{font-family:var(--font-ui,Inter),sans-serif;font-size:.79rem;font-weight:700;color:var(--text,#241c12);line-height:1.1;white-space:nowrap}
+  .gw-label .pill:hover{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.09);border-color:var(--seg);box-shadow:0 6px 17px rgba(40,30,20,.17)}
+  .gw-label.win .pill{border-color:var(--seg);box-shadow:0 0 0 3px color-mix(in srgb,var(--seg) 35%,transparent),0 8px 20px rgba(40,30,20,.2)}
+  .gw-result{margin:2.1rem auto 0;min-height:1px;max-width:460px}
+  .gw-result.show{animation:gw-rise .42s}
+  @keyframes gw-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .gw-result .lead{display:block;font-size:.94rem;color:var(--text-soft,#6b6250);margin-bottom:.7rem}
+  .gw-result a{display:inline-flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-family:var(--font-ui,Inter),sans-serif;font-weight:700;font-size:1rem;border-radius:999px;padding:.72rem 1.5rem;box-shadow:0 8px 20px rgba(40,30,20,.2)}
+  @media(max-width:560px){.gw-label .n{font-size:.68rem}.gw-label .pill{padding:.26rem .5rem}.gw-label .v{font-size:.54rem}}
+</style>
+<section class="gw-sec" id="bugun-ne-yapsam" aria-label="Bugün ne yapmak istersin">
+  <div class="gw-inner">
+    <div class="gw-eyebrow">Nereden başlasam?</div>
+    <h2 class="gw-title">Bugün ne yapmak istersin?</h2>
+    <p class="gw-sub">Kararsızsan çarkı çevir, Gri senin için bir başlangıç seçsin — ya da doğrudan bir dilime dokun.</p>
+    <div class="gw-stage">
+      <div class="gw-disc" aria-hidden="true"></div>
+      <div class="gw-needle" id="gwNeedle" aria-hidden="true"></div>
+      <button class="gw-hub" id="gwSpin" type="button">Çevir</button>
+      <div class="gw-label" style="--a:22.5deg;--seg:#2C7A6B"><a class="pill" href="soru-bankasi"><span class="v">Çöz</span><span class="n">Soru Bankası</span></a></div>
+      <div class="gw-label" style="--a:67.5deg;--seg:#C08A2E"><a class="pill" href="konu-anlatimi"><span class="v">Öğren</span><span class="n">Konu Anlatımı</span></a></div>
+      <div class="gw-label" style="--a:112.5deg;--seg:#6E8B4A"><a class="pill" href="ogrenme-haritasi"><span class="v">Keşfet</span><span class="n">Öğrenme Haritası</span></a></div>
+      <div class="gw-label" style="--a:157.5deg;--seg:#B0653B"><a class="pill" href="kelime-bankasi"><span class="v">Kelime</span><span class="n">Kelime Bankası</span></a></div>
+      <div class="gw-label" style="--a:202.5deg;--seg:#7B5AA0"><a class="pill" href="oyunlar"><span class="v">Oyna</span><span class="n">Oyunlar</span></a></div>
+      <div class="gw-label" style="--a:247.5deg;--seg:#B0567A"><a class="pill" href="yazi-pratigi"><span class="v">Yaz</span><span class="n">Yazı Pratiği</span></a></div>
+      <div class="gw-label" style="--a:292.5deg;--seg:#2E6E9E"><a class="pill" href="seviye-belirleme"><span class="v">Ölç</span><span class="n">Seviye Belirleme</span></a></div>
+      <div class="gw-label" style="--a:337.5deg;--seg:#4E7C59"><a class="pill" href="panelim"><span class="v">Devam</span><span class="n">Çalışma Masam</span></a></div>
+    </div>
+    <div class="gw-result" id="gwResult" aria-live="polite"></div>
+  </div>
+</section>
+<script>
+(function(){
+  var FUNCS=[
+    {v:'Çöz',n:'Soru Bankası',u:'soru-bankasi',c:'#2C7A6B'},
+    {v:'Öğren',n:'Konu Anlatımı',u:'konu-anlatimi',c:'#C08A2E'},
+    {v:'Keşfet',n:'Öğrenme Haritası',u:'ogrenme-haritasi',c:'#6E8B4A'},
+    {v:'Kelime',n:'Kelime Bankası',u:'kelime-bankasi',c:'#B0653B'},
+    {v:'Oyna',n:'Oyunlar',u:'oyunlar',c:'#7B5AA0'},
+    {v:'Yaz',n:'Yazı Pratiği',u:'yazi-pratigi',c:'#B0567A'},
+    {v:'Ölç',n:'Seviye Belirleme',u:'seviye-belirleme',c:'#2E6E9E'},
+    {v:'Devam',n:'Çalışma Masam',u:'panelim',c:'#4E7C59'}
+  ];
+  var needle=document.getElementById('gwNeedle'), spin=document.getElementById('gwSpin'),
+      result=document.getElementById('gwResult'),
+      labels=[].slice.call(document.querySelectorAll('.gw-sec .gw-label'));
+  if(!needle||!spin) return;
+  var acc=0, busy=false;
+  function land(i){
+    labels.forEach(function(l){l.classList.remove('win');});
+    if(labels[i]) labels[i].classList.add('win');
+    var f=FUNCS[i];
+    result.innerHTML='<span class="lead">Bugün: <b>'+f.n+'</b></span><a href="'+f.u+'" style="background:'+f.c+'">'+f.v+' · Hadi başla →</a>';
+    result.classList.remove('show'); void result.offsetWidth; result.classList.add('show');
+  }
+  spin.addEventListener('click',function(){
+    if(busy) return; busy=true; spin.classList.add('spinning');
+    var s=Math.floor(Math.random()*8);
+    var turns=5+Math.floor(Math.random()*3);
+    acc += turns*360 + (s*45+22.5) - (((acc%360)+360)%360);
+    needle.style.transform='translate(-50%,-100%) rotate('+acc+'deg)';
+    setTimeout(function(){busy=false;spin.classList.remove('spinning');land(s);},4200);
+  });
+})();
+</script>
+
+<!-- ===================================================================
      ÖNE ÇIKANLAR — Hero altı özellik kartı şeridi
      =================================================================== -->
 <style>

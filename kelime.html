@@ -117,6 +117,12 @@ body{font-family:'Inter',sans-serif;background:#f0ede6;color:#2a2a2a;min-height:
 .kb-bookmark.active{color:#b88a2e}
 .kb-bookmark.active svg{fill:currentColor}
 .kb-bookmark svg{width:16px;height:16px}
+.kb-act-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kb-savelist{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#2C5856;cursor:pointer;border:1px solid rgba(44,88,86,.35);background:rgba(44,88,86,.06);font-family:'Inter',sans-serif;padding:6px 13px;border-radius:6px;transition:background .15s,color .15s,border-color .15s}
+.kb-savelist:hover{background:#2C5856;color:#faf7ee;border-color:#2C5856}
+.kb-savelist.kb-saved{background:#2C5856;color:#faf7ee;border-color:#2C5856;cursor:default}
+.kb-savelist:disabled{opacity:.7;cursor:default}
+.kb-savelist svg{width:15px;height:15px}
 .kb-next{background:#2C5856;color:#faf7ee;padding:11px 24px;border-radius:8px;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:background .15s,transform .12s}
 .kb-next:hover{background:#1E4D48}
 .kb-next:active{transform:scale(.97)}
@@ -399,9 +405,14 @@ function renderWord(w){
     <div class="kb-expl" id="kbExpl"></div>
 
     <div class="kb-actions">
-      <button class="kb-bookmark ${bookmarks.has(w.id) ? 'active' : ''}" id="kbBookmark" onclick="window.kbToggleBookmark()">
-        ${SVG.bookmark}<span>${bookmarks.has(w.id) ? 'İşaretli' : 'İşaretle'}</span>
-      </button>
+      <div class="kb-act-left">
+        <button class="kb-bookmark ${bookmarks.has(w.id) ? 'active' : ''}" id="kbBookmark" onclick="window.kbToggleBookmark()">
+          ${SVG.bookmark}<span>${bookmarks.has(w.id) ? 'İşaretli' : 'İşaretle'}</span>
+        </button>
+        <button class="kb-savelist" id="kbSaveList" onclick="window.kbSaveToList()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Listeme Ekle</span>
+        </button>
+      </div>
       <button class="kb-next" id="kbNext" onclick="window.kbNext()" disabled>Sonraki kelime ${SVG.arrow}</button>
     </div>`;
 
@@ -524,6 +535,31 @@ window.kbToggleBookmark = function(){
   const btn = document.getElementById('kbBookmark');
   btn.classList.toggle('active', bookmarks.has(currentWord.id));
   btn.querySelector('span').textContent = bookmarks.has(currentWord.id) ? 'İşaretli' : 'İşaretle';
+};
+
+// Kalıcı kişisel listeye ekleme (user_vocab) — sat-deneme/gri-sozluk ile aynı akış (vocab-lookup edge fn)
+const VOCAB_FN = window.SUPABASE_URL + '/functions/v1/vocab-lookup';
+window.kbSaveToList = async function(){
+  if (!currentWord) return;
+  const btn = document.getElementById('kbSaveList');
+  if (!btn || btn.classList.contains('kb-saved')) return;
+  const span = btn.querySelector('span'), orig = span.textContent;
+  btn.disabled = true; span.textContent = 'Ekleniyor...';
+  try {
+    let token = null, uid = null;
+    try { const s = await supabase.auth.getSession(); if (s && s.data && s.data.session){ token = s.data.session.access_token; uid = s.data.session.user.id; } } catch(_){}
+    if (!uid){ span.textContent = 'Giriş gerekli'; setTimeout(function(){ location.href = 'giris?return=' + encodeURIComponent(location.pathname + location.search); }, 750); return; }
+    const headers = { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_KEY };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch(VOCAB_FN, { method: 'POST', headers: headers, body: JSON.stringify({ word: currentWord.word }) });
+    const d = await r.json();
+    if (!d || !d.ok || !d.vocabulary_id){ span.textContent = 'Kaydedilemedi'; btn.disabled = false; setTimeout(function(){ span.textContent = orig; }, 1600); return; }
+    const ins = await supabase.from('user_vocab').insert({ user_id: uid, vocabulary_id: d.vocabulary_id });
+    const dup = ins.error && (ins.error.code === '23505' || (ins.error.message || '').toLowerCase().indexOf('duplicate') !== -1);
+    if (ins.error && !dup){ span.textContent = 'Hata'; btn.disabled = false; setTimeout(function(){ span.textContent = orig; }, 1600); return; }
+    span.textContent = dup ? 'Zaten listende ✓' : 'Listende ✓';
+    btn.classList.add('kb-saved');
+  } catch(e){ span.textContent = 'Hata'; btn.disabled = false; setTimeout(function(){ span.textContent = orig; }, 1600); }
 };
 
 // INIT

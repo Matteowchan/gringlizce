@@ -56,6 +56,8 @@
     + '.gsch-btn.danger{background:transparent;color:#b3402f;border:1px solid #e3b6ae;}'
     + '.gsch-btn:disabled{opacity:.5;cursor:default;}'
     + '.gsch-list{display:flex;flex-direction:column;gap:7px;}'
+    + '.gsch-daygroup{font:800 10.5px/1.2 var(--font-ui,inherit);letter-spacing:.07em;text-transform:uppercase;color:#8a8172;padding:5px 3px 4px;border-bottom:1px solid #ece4d4;}'
+    + '.gsch-daygroup:not(:first-child){margin-top:5px;}'
     + '.gsch-item{display:block;background:#fff;border:1px solid #e5ddcd;border-radius:12px;padding:9px 11px;box-shadow:0 1px 3px rgba(30,25,20,.05);}'
     + '.gsch-item.soon{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.12);}'
     + '.gsch-item-head{display:flex;align-items:center;gap:7px;margin-bottom:4px;}'
@@ -74,7 +76,7 @@
     + '.gsch-cal-h button:hover{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856);}'
     + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}'
     + '.gsch-grid .wd{text-align:center;font-size:10.5px;color:#a89a78;padding:2px 0 6px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}'
-    + '.gsch-cell{min-height:110px;border:1px solid #efe7d6;border-radius:10px;padding:6px;font-size:12px;position:relative;cursor:default;background:#fdfbf7;overflow:hidden;transition:border-color .12s,background .12s,box-shadow .12s;}'
+    + '.gsch-cell{min-height:96px;border:1px solid #efe7d6;border-radius:10px;padding:5px;font-size:12px;position:relative;cursor:default;background:#fdfbf7;overflow:hidden;transition:border-color .12s,background .12s,box-shadow .12s;}'
     + '.gsch-cell.out{opacity:.3;background:transparent;border-color:transparent;}'
     + '.gsch-cell.has{cursor:pointer;background:#fff;border-color:#cbe0dc;}'
     + '.gsch-cell.has:hover{border-color:#2C5856;box-shadow:0 3px 10px rgba(44,88,86,.12);}'
@@ -82,8 +84,8 @@
     + '.gsch-cell.today .num{color:#B0791E;}'
     + '.gsch-cell.sel{background:#e6f1ee;border-color:#2C5856;box-shadow:inset 0 0 0 2px #2C5856;}'
     + '.gsch-cell.sel .num{color:#1f4644;font-weight:800;}'
-    + '.gsch-cell .num{font-weight:700;font-size:14px;color:#6a6250;}'
-    + '.gsch-cell .ev{display:block;font-size:10.5px;line-height:1.3;background:#e7f0ee;color:#2C5856;border-radius:5px;padding:2px 6px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
+    + '.gsch-cell .num{font-weight:700;font-size:13px;color:#6a6250;}'
+    + '.gsch-cell .ev{display:block;font-size:10px;line-height:1.25;background:#e7f0ee;color:#2C5856;border-radius:5px;padding:1px 5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
     + '.gsch-cell .ev b{font-weight:800;}'
     + '.gsch-cell .ev.ev-more{background:transparent;color:#8a8172;padding:0 5px;font-weight:700;}'
     + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
@@ -167,6 +169,7 @@
     + ':root[data-theme="dark"] .gsch-btn.ghost{color:#b5ac98;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-btn.danger{color:#e6796a;border-color:#5a3630;}'
     + ':root[data-theme="dark"] .gsch-item{background:#241f18;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-daygroup{color:#9a917d;border-bottom-color:#332e23;}'
     + ':root[data-theme="dark"] .gsch-daypill{background:#22403e;color:#bfe0da;}'
     + ':root[data-theme="dark"] .gsch-item-title{color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-item-sub{color:#b5ac98;}'
@@ -552,9 +555,26 @@
       scope.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click',function(){ startEdit(b.getAttribute('data-edit')); }); });
     }
 
+    var WD_L=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+    function dayHdr(d){
+      var t=new Date(); t.setHours(0,0,0,0);
+      var dd=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      var diff=Math.round((dd-t)/86400000);
+      var base=d.getDate()+' '+MONTHS_L[d.getMonth()];
+      if(diff===0) return 'Bugün · '+base;
+      if(diff===1) return 'Yarın · '+base;
+      return WD_L[(d.getDay()+6)%7]+' · '+base;
+    }
     function renderListInner(el){
       if(!state.rows.length){ el.innerHTML='<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'; return; }
-      el.innerHTML='<div class="gsch-list">'+state.rows.map(itemHTML).join('')+'</div>';
+      var html='<div class="gsch-list">', lastKey='';
+      state.rows.forEach(function(r){
+        var key=r._d.toDateString();
+        if(key!==lastKey){ html+='<div class="gsch-daygroup">'+esc(dayHdr(r._d))+'</div>'; lastKey=key; }
+        html+=itemHTML(r);
+      });
+      html+='</div>';
+      el.innerHTML=html;
       bindActions(el);
     }
 

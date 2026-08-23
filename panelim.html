@@ -3055,6 +3055,15 @@
       </div>
     </div>
 
+    <div id="examResultsWrap" style="display:none">
+      <div class="zone-head">
+        <span class="zone-eyebrow">Sınavlar</span>
+        <span class="zone-line"></span>
+        <h2>Son Sınavların</h2>
+      </div>
+      <div id="examResultsCard" style="margin-bottom:1.4rem"></div>
+    </div>
+
     <div class="zone-head">
       <span class="zone-eyebrow">Birikim</span>
       <span class="zone-line"></span>
@@ -3690,6 +3699,39 @@
     })();
 
     // Gri quota'sını yükle (bağımsız, auth zaten geçtiyse çalışır)
+    (async function loadExamResults() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) return;
+        var sbCli = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+        var sess = await sbCli.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) return;
+        var r = await sbCli.rpc('my_exam_results');
+        if (r.error || !r.data) return;
+        var d = r.data;
+        function dt(s){ try { return new Date(s).toLocaleDateString('tr-TR'); } catch(e){ return ''; } }
+        function esc2(s){ var e=document.createElement('div'); e.textContent=s==null?'':String(s); return e.innerHTML; }
+        function grp(title, rows, href){
+          if(!rows||!rows.length) return '';
+          var items = rows.slice(0,5).map(function(x){
+            return '<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.45rem .2rem;border-top:1px solid var(--line,#e3d8c3)">'
+              + '<span style="font-weight:600;color:var(--text,#241c12);font-size:.9rem">'+x.name+'</span>'
+              + '<span style="font-weight:700;color:var(--teal,#2C5856);font-size:.86rem">'+x.score+'</span>'
+              + '<span style="margin-left:auto;font-size:.76rem;color:var(--text-soft,#6b6862)">'+dt(x.date)+'</span></div>';
+          }).join('');
+          return '<div style="margin-bottom:1rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">'
+            + '<h3 style="font-size:1rem;margin:0;color:var(--text,#241c12)">'+title+'</h3>'
+            + (href?'<a href="'+href+'" style="font-size:.8rem;color:var(--teal,#2C5856);text-decoration:none;font-weight:600">Tümü →</a>':'')+'</div>'+items+'</div>';
+        }
+        var html='';
+        html += grp('TOEFL Deneme', (d.toefl||[]).map(function(a){ return {name:esc2((a.slug||'').replace('toefl-','Deneme ')), score:a.total+'/'+a.max+' · %'+a.pct, date:a.date}; }), 'toefl-denemeler');
+        html += grp('SAT Deneme', (d.sat||[]).map(function(a){ return {name:esc2((a.slug||'').replace('full-','Tam ')), score:(a.total||'-')+' (RW '+(a.rw||'-')+'/Math '+(a.math||'-')+')', date:a.date}; }), 'sat-denemeler-rw');
+        html += grp('Üniversite Hazırlık', (d.hazirlik||[]).map(function(a){ return {name:esc2(a.set||'Deneme')+(a.passed?' ✓':''), score:(a.total!=null?a.total:'-')+'/100', date:a.date}; }), 'universite-hazirlik-atlama-denemeler');
+        html += grp('Seviye Tespit', (d.placement||[]).map(function(a){ return {name:'CEFR '+esc2(a.cefr||'-'), score:'%'+(a.pct||0), date:a.date}; }), null);
+        html += grp('Genel İngilizce Sınavları', (d.ge_exam||[]).map(function(a){ return {name:esc2((a.level||'')+' · '+(a.exam||''))+(a.passed?' ✓':''), score:'%'+(a.pct!=null?a.pct:0), date:a.date}; }), null);
+        if(html){ var card=document.getElementById('examResultsCard'); var wrap=document.getElementById('examResultsWrap'); if(card&&wrap){ card.innerHTML='<div class="collapse-card" style="padding:1.1rem 1.3rem">'+html+'</div>'; wrap.style.display='block'; } }
+      } catch(e){}
+    })();
+
     (async function loadGriQuota() {
       try {
         if (!window.supabase || !window.supabase.createClient) return;

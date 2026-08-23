@@ -111,7 +111,7 @@ var EXAMS=[
     {name:"Gramer Doğruluğu",desc:"Yedi hata türü, 113 alıştırma",state:"live",lessons:[
       {name:"Yedi hata türü, 113 alıştırma",s:"todo",href:"ielts-gramer"}]}]}]},
  {id:"toefl",name:"TOEFL",mark:"T",desc:"iBT 2026 . adaptive, dört beceri",pct:0,
-  tools:[{ic:"yazi",label:"Ogren",desc:"2026 formatı: Reading, Listening, Speaking (Listen and Repeat, Take an Interview) ve Writing (Email, Academic Discussion). Strateji + puanlı alıştırmalar.",href:"toefl-ogren"}],
+  tools:[{ic:"yazi",label:"Ogren",desc:"2026 formatı: Reading, Listening, Speaking (Listen and Repeat, Take an Interview) ve Writing (Email, Academic Discussion). Strateji + puanlı alıştırmalar.",href:"toefl-ogren"},{ic:"deneme",label:"Deneme",desc:"5 özgün TOEFL odaklı deneme: Grammar, Spelling ve Academic Reading. Zamanlı, puanlı ve Türkçe çözümlü.",href:"toefl-denemeler"}],
   sections:[{label:"Ogren . 2026 Format",units:[
     {name:"Genel . 2026 Yapisi",desc:"Adaptive format, dört bölüm",state:"live",lessons:[
       {name:"2026 Yeni Format",s:"todo",href:"toefl-ogren#yapi"}]},

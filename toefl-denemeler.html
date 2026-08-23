@@ -74,38 +74,46 @@
     </div>
   </main>
 
-  <script src="assets/curriculum.js?v=27"></script>
+  <script src="assets/curriculum.js?v=28"></script>
   <script src="assets/nav.js?v=31"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
   <script>
     (function(){
-      var N=5;
-      var grid=document.getElementById('grid');
-      function card(n, best){
-        var bestHtml = (best!=null) ? '<span class="dn-best">En iyi: '+best+'%</span>' : '<span></span>';
-        return '<a class="dn-card" href="toefl-deneme?test='+n+'">'
+      var N=5, grid=document.getElementById('grid'), BESTS={};
+      function isPrem(){ try{ return !!(window.GriPremium && window.GriPremium.isActive()); }catch(e){ return false; } }
+      function card(n){
+        var free=(n===1), prem=isPrem(), unlocked=free||prem;
+        var href = unlocked ? ('toefl-deneme?test='+n) : 'premium';
+        var lock = free ? '<span class="dn-tag" style="background:#e7f0ee;color:#2C5856;border-color:#bcd8d2">Ücretsiz</span>'
+                        : (prem ? '<span class="dn-tag" style="background:#e7f0ee;color:#2C5856;border-color:#bcd8d2">Premium · Açık</span>'
+                                : '<span class="dn-tag" style="background:#f3e6d8;color:#a5702a;border-color:#e3c79b">🔒 Premium</span>');
+        var best=BESTS['toefl-'+n];
+        var bestHtml = (unlocked && best!=null) ? '<span class="dn-best">En iyi: '+best+'%</span>' : '<span></span>';
+        var go = unlocked ? 'Başla &rarr;' : 'Kilidi Aç &rarr;';
+        return '<a class="dn-card'+(unlocked?'':' locked')+'" href="'+href+'">'
           + '<span class="dn-num">Practice Test 0'+n+'</span>'
           + '<span class="dn-title">TOEFL Deneme '+n+'</span>'
-          + '<span class="dn-meta"><span class="dn-tag">52 soru</span><span class="dn-tag">60 dk</span><span class="dn-tag">3 bölüm</span><span class="dn-tag">B2–C1</span></span>'
-          + '<span class="dn-foot">'+bestHtml+'<span class="dn-go">Başla &rarr;</span></span></a>';
+          + '<span class="dn-meta"><span class="dn-tag">52 soru</span><span class="dn-tag">60 dk</span><span class="dn-tag">3 bölüm</span>'+lock+'</span>'
+          + '<span class="dn-foot">'+bestHtml+'<span class="dn-go">'+go+'</span></span></a>';
       }
-      function render(bests){
-        var h=''; for(var n=1;n<=N;n++){ h+=card(n, bests[('toefl-'+n)]); } grid.innerHTML=h;
-      }
-      render({});
-      // giris yapmissa en iyi skorlari getir
+      function render(){ var h=''; for(var n=1;n<=N;n++){ h+=card(n); } grid.innerHTML=h; }
+      render();
+      window.addEventListener('gri-premium', render);
       try{
         var sb = window.supabase.createClient(window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co', window.SUPABASE_KEY||'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g');
         sb.auth.getSession().then(function(r){
           var u = r && r.data && r.data.session && r.data.session.user; if(!u) return;
           sb.from('toefl_deneme_attempts').select('deneme_slug,percent').eq('user_id',u.id).then(function(res){
             if(res.error||!res.data) return;
-            var bests={}; res.data.forEach(function(a){ if(bests[a.deneme_slug]==null||a.percent>bests[a.deneme_slug]) bests[a.deneme_slug]=a.percent; });
-            render(bests);
+            res.data.forEach(function(a){ if(BESTS[a.deneme_slug]==null||a.percent>BESTS[a.deneme_slug]) BESTS[a.deneme_slug]=a.percent; });
+            render();
           });
         });
+        if (window.GriPremium && window.GriPremium.refresh) window.GriPremium.refresh().then(render);
       }catch(e){}
     })();
   </script>
+  <style>.dn-card.locked{opacity:.9}.dn-card.locked .dn-title{color:var(--text-soft,#6b6250)}</style>
 </body>
 </html>

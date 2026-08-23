@@ -303,6 +303,7 @@ var EXAMS=[
         { label: "Bölüm Bazlı", href: "ielts-bolum-calisma" },
         { label: "Soru Bankası", href: "ielts-soru-bankasi" } ] },
       { label: "TOEFL", href: "toefl", children: [
+        { label: "Denemeler", href: "toefl-denemeler" },
         { label: "Soru Bankası", href: "toefl-soru-bankasi" } ] },
       { label: "YDS / YÖKDİL", href: "yds", children: [
         { label: "YDS", href: "yds-soru-bankasi-yds" },

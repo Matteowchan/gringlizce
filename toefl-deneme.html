@@ -44,7 +44,7 @@
     .td-btn-ghost{background:transparent;color:var(--teal,#2C5856);border:1px solid color-mix(in srgb,var(--teal,#2C5856) 40%,transparent)}
     .td-note{font-size:.86rem;color:var(--text-muted,#8a7f68);margin-top:1rem}
     /* TEST BAR */
-    .td-bar{position:sticky;top:0;z-index:20;background:var(--bg,#F1EAD9);border-bottom:1px solid var(--line,#E3D8C3);display:flex;align-items:center;gap:1rem;padding:.6rem 18px;flex-wrap:wrap}
+    .td-bar{position:static;background:var(--bg-soft,#FBF6EC);border-bottom:1px solid var(--line,#E3D8C3);display:flex;align-items:center;gap:1rem;padding:.6rem 18px;flex-wrap:wrap;max-width:900px;margin:.6rem auto 0;border-radius:12px;border:1px solid var(--line,#E3D8C3)}
     .td-bar .sec{font-family:var(--font-ui,Inter),sans-serif;font-weight:800;font-size:.8rem;letter-spacing:.03em;text-transform:uppercase;color:var(--cat-accent,var(--teal,#2C5856))}
     .td-bar .timer{margin-left:auto;font-family:var(--font-ui,Inter),sans-serif;font-weight:700;font-size:1rem;color:var(--text,#241c12);background:var(--bg-card,#fff);border:1px solid var(--line,#E3D8C3);border-radius:8px;padding:.25rem .7rem}
     .td-bar .timer.low{color:#c0563e;border-color:#c0563e}
@@ -171,7 +171,7 @@
     <div class="td-rev" id="reviewArea"></div>
   </main>
 
-  <script src="assets/curriculum.js?v=27"></script>
+  <script src="assets/curriculum.js?v=28"></script>
   <script src="assets/nav.js?v=31"></script>
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
@@ -188,6 +188,7 @@
     let answers = {};       // slug -> letter
     let cur = 0;
     let timeLeft = DURATION, timerId = null, finished = false;
+    let premiumLocked = false;  // test>1 ve premium degilse true
 
     document.getElementById('crumbName').textContent = 'Deneme ' + TESTN;
     document.getElementById('startTitle').textContent = 'TOEFL Deneme ' + TESTN;
@@ -219,7 +220,21 @@
       }
       QS = data.slice().sort((a,b)=>{ const ka=key(a), kb=key(b); for(let i=0;i<3;i++){ if(ka[i]<kb[i])return -1; if(ka[i]>kb[i])return 1; } return 0; });
       const btn = document.getElementById('startBtn');
-      btn.textContent = 'Denemeye Başla'; btn.disabled = false;
+      // premium gate: ilk deneme herkese ucretsiz, digerleri premium
+      const prem = await checkPremium();
+      if (TESTN !== 1 && !prem){
+        premiumLocked = true;
+        const p = document.querySelector('.td-hero p');
+        if (p) p.innerHTML = 'Bu deneme <b>Premium’a özeldir.</b> İlk deneme (Deneme 1) herkese ücretsizdir; tüm denemelerin kilidini Premium ile açabilirsin.';
+        btn.textContent = 'Premium ile Kilidi Aç';
+      } else {
+        btn.textContent = 'Denemeye Başla';
+      }
+      btn.disabled = false;
+    }
+    async function checkPremium(){
+      try{ if (window.GriPremium){ if (window.GriPremium.refresh) await window.GriPremium.refresh(); return !!window.GriPremium.isActive(); } }catch(e){}
+      return false;
     }
 
     function fmt(t){ const m=Math.floor(t/60), s=t%60; return m+':'+(s<10?'0':'')+s; }
@@ -349,7 +364,7 @@
       rev.innerHTML = html;
     }
 
-    document.getElementById('startBtn').addEventListener('click', startTest);
+    document.getElementById('startBtn').addEventListener('click', function(){ if(premiumLocked){ location.href='premium'; } else { startTest(); } });
     document.getElementById('prevBtn').addEventListener('click', ()=>{ if(cur>0){cur--;render();window.scrollTo(0,0);} });
     document.getElementById('nextBtn').addEventListener('click', ()=>{ if(cur<QS.length-1){cur++;render();window.scrollTo(0,0);} });
     document.getElementById('finishBtn').addEventListener('click', ()=>finish(false));

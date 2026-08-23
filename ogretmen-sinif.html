@@ -1203,6 +1203,23 @@
       padding: 0.5rem 0;
       text-align: center;
     }
+    .se-block{margin-bottom:1rem}
+    .se-row,.se-row-flat{border:1px solid var(--line,#e3d8c3);border-radius:9px;padding:.55rem .8rem;margin-bottom:.4rem;background:var(--bg-card,#fff)}
+    .se-row>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .se-row>summary::-webkit-details-marker{display:none}
+    .se-row>summary::before{content:"▸";color:var(--teal,#2C5856);transition:transform .15s}
+    .se-row[open]>summary::before{transform:rotate(90deg)}
+    .se-row-flat{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .se-name{font-weight:700;color:var(--text,#241c12);font-size:.9rem}
+    .se-score{font-family:var(--font-ui,Inter),sans-serif;font-size:.85rem;color:var(--teal,#2C5856);font-weight:700}
+    .se-date{margin-left:auto;font-size:.78rem;color:var(--text-muted,#8a7f68)}
+    .se-sub{font-size:.8rem;color:var(--text-muted,#8a7f68);margin:.4rem 0 .2rem}
+    .se-detail{margin-top:.5rem}
+    .se-q{border-top:1px solid var(--line,#e3d8c3);padding:.6rem 0;font-size:.9rem;line-height:1.45;color:var(--text,#241c12)}
+    .se-o{padding:.2rem .5rem;border-radius:6px;font-size:.86rem;margin:.15rem 0}
+    .se-o.correct{background:color-mix(in srgb,#3a9e6f 16%,transparent)}
+    .se-o.wrong{background:color-mix(in srgb,#c0563e 14%,transparent)}
+    .se-exp{margin-top:.35rem;background:var(--bg-soft,#FBF6EC);border-radius:7px;padding:.5rem .7rem;font-size:.84rem;line-height:1.5;color:var(--text-soft,#6b6250)}
 
     /* Passage accordion */
     .sd-passage-group {
@@ -2824,6 +2841,60 @@
         if (!window.GriAnalysis) { el.innerHTML = '<p class="sd-tab-loading">Analiz modülü yüklenemedi.</p>'; return; }
         GriAnalysis.mount({ sb: sb, container: el, userId: studentId, assignLabel: '+ Ödev', onAssign: teacherAnalysisAssign, studentLabel: (document.getElementById('sd-title') ? document.getElementById('sd-title').textContent : '') });
       }
+      async function loadStudentExams(studentId) {
+        var el = document.getElementById('sd-panel-denemeler'); if (!el) return;
+        try {
+          var r = await sb.rpc('teacher_student_exams', { p_class_id: classId, p_user_id: studentId });
+          if (r.error) throw r.error;
+          var d = r.data || {};
+          function dt(s){ try { return fmtDateShort(s); } catch(e){ return ''; } }
+          function block(title, rows){ if(!rows||!rows.length) return ''; return '<div class="se-block"><div class="sd-section-title">'+title+'</div>'+rows.join('')+'</div>'; }
+          var html = '';
+          // TOEFL (detay genisletilebilir)
+          html += block('TOEFL Deneme', (d.toefl||[]).map(function(a){
+            return '<details class="se-row" data-slug="'+esc(a.slug)+'"><summary><span class="se-name">'+esc((a.slug||'').replace('toefl-','Deneme '))+'</span>'
+              + '<span class="se-score">'+a.total+'/'+a.max+' · %'+a.pct+'</span><span class="se-date">'+dt(a.date)+'</span></summary>'
+              + '<div class="se-sub">Grammar '+a.grammar+'/18 · Spelling '+a.spelling+'/9 · Reading '+a.reading+'/25</div>'
+              + '<div class="se-detail"><p class="sd-tab-loading">Doğru/yanlış dökümü için aç…</p></div></details>';
+          }));
+          html += block('SAT Deneme', (d.sat||[]).map(function(a){
+            return '<div class="se-row-flat"><span class="se-name">'+esc((a.slug||'').replace('full-','Tam '))+'</span><span class="se-score">'+(a.total||'-')+' (RW '+(a.rw||'-')+' / Math '+(a.math||'-')+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
+          }));
+          html += block('IELTS Deneme', (d.ielts||[]).map(function(a){
+            return '<div class="se-row-flat"><span class="se-name">'+esc(a.section||'full')+'</span><span class="se-score">Band '+(a.band!=null?a.band:'-')+' ('+(a.raw||0)+'/'+(a.tq||0)+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
+          }));
+          html += block('Üniversite Hazırlık Atlama', (d.hazirlik||[]).map(function(a){
+            return '<div class="se-row-flat"><span class="se-name">'+esc(a.set||'')+(a.passed?' <span style="color:#2b7a56">✓</span>':'')+'</span><span class="se-score">'+(a.total!=null?a.total:'-')+'/100 (MC '+(a.mc||0)+' + Essay '+(a.essay||0)+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
+          }));
+          html += block('Seviye Tespit', (d.placement||[]).map(function(a){
+            return '<div class="se-row-flat"><span class="se-name">CEFR <b>'+esc(a.cefr||'-')+'</b></span><span class="se-score">'+(a.score||0)+'/'+(a.total||0)+' · %'+(a.pct||0)+'</span><span class="se-date">'+dt(a.date)+'</span></div>';
+          }));
+          html += block('Genel İngilizce Sınavları', (d.ge_exam||[]).map(function(a){
+            return '<div class="se-row-flat"><span class="se-name">'+esc((a.level||'')+' · '+(a.exam||''))+(a.passed?' <span style="color:#2b7a56">✓</span>':'')+'</span><span class="se-score">'+(a.score||0)+'/'+(a.total||0)+' · %'+(a.pct!=null?a.pct:0)+'</span><span class="se-date">'+dt(a.date)+'</span></div>';
+          }));
+          el.innerHTML = html || '<p class="sd-tab-loading">Bu öğrenci henüz deneme/sınav çözmemiş.</p>';
+          // TOEFL detay lazy-load
+          el.querySelectorAll('details.se-row').forEach(function(det){
+            det.addEventListener('toggle', async function(){
+              if(!det.open || det._loaded) return; det._loaded = true;
+              var box = det.querySelector('.se-detail');
+              try {
+                var dr = await sb.rpc('teacher_toefl_deneme_detail', { p_class_id: classId, p_user_id: studentId, p_slug: det.dataset.slug });
+                if (dr.error) throw dr.error;
+                var items = dr.data || []; if(!items.length){ box.innerHTML='<p class="sd-tab-loading">Detay bulunamadı.</p>'; return; }
+                box.innerHTML = items.map(function(q,i){
+                  var opts = (q.options||[]).map(function(o){
+                    var cls = o.letter===q.correct ? 'se-o correct' : (o.letter===q.given ? 'se-o wrong' : 'se-o');
+                    return '<div class="'+cls+'"><b>'+esc(o.letter)+'</b> <span lang="en">'+esc(o.text)+'</span></div>';
+                  }).join('');
+                  var badge = q.ok ? '<span style="color:#2b7a56">✓</span>' : (q.given ? '<span style="color:#c0563e">✗</span>' : '<span style="color:#a5702a">boş</span>');
+                  return '<div class="se-q">'+badge+' <span lang="en">'+esc(q.stem)+'</span>'+opts+(q.exp?'<div class="se-exp">'+q.exp+'</div>':'')+'</div>';
+                }).join('');
+              } catch(e){ box.innerHTML='<p class="sd-tab-loading">Detay yüklenemedi.</p>'; }
+            });
+          });
+        } catch(e){ el.innerHTML = '<p class="sd-tab-loading">'+rpcErrMsg(e)+'</p>'; }
+      }
       async function openStudentDrawer(studentId, email) {
         sdTitle.textContent = email || 'Öğrenci Detayı';
         sdBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-style:italic;">Yükleniyor...</p>';
@@ -2916,6 +2987,7 @@
             + '<button class="sd-tab-btn" data-tab="vocab" type="button">Kelimeler<span class="sd-tab-count" id="sd-tab-count-vocab">' + vocabCountInit + '</span></button>'
             + '<button class="sd-tab-btn" data-tab="notes" type="button">Notlarım</button>'
             + '<button class="sd-tab-btn" data-tab="analiz" type="button">Analiz</button>'
+            + '<button class="sd-tab-btn" data-tab="denemeler" type="button">Sınavlar</button>'
           + '</div>';
 
         var overviewPanel = ''
@@ -2931,6 +3003,7 @@
         var vocabPanel = '<div class="sd-tab-panel" data-panel="vocab" id="sd-panel-vocab"><p class="sd-tab-loading">Kelimeler yüklenecek...</p></div>';
         var notesPanel = '<div class="sd-tab-panel" data-panel="notes" id="sd-panel-notes"><p class="sd-tab-loading">Notlar yüklenecek...</p></div>';
         var analizPanel = '<div class="sd-tab-panel" data-panel="analiz" id="sd-panel-analiz"><p class="sd-tab-loading">Analiz yüklenecek...</p></div>';
+        var denemelerPanel = '<div class="sd-tab-panel" data-panel="denemeler" id="sd-panel-denemeler"><p class="sd-tab-loading">Sınav sonuçları yüklenecek...</p></div>';
 
         sdBody.innerHTML = ''
           + '<p class="sd-meta">' + meta + '</p>'
@@ -2942,13 +3015,14 @@
           + vocabPanel
           + notesPanel
           + analizPanel
+          + denemelerPanel
           + '<div class="sd-actions">'
             + '<a class="sd-program-btn" href="ogretmen-program?student=' + encodeURIComponent(studentId) + '&class=' + encodeURIComponent(classId || '') + '&name=' + encodeURIComponent(sdTitle.textContent || 'Öğrenci') + '" style="display:inline-block;text-decoration:none;background:var(--teal,#2C5856);color:#fff;font-weight:700;font-size:0.85rem;padding:9px 16px;border-radius:8px;margin-right:8px;">Çalışma Programı Oluştur</a>'
             + '<button class="sd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
           + '</div>';
 
         // Sekme switching
-        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false, analiz: false };
+        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false, analiz: false, denemeler: false };
         sdBody.querySelectorAll('.sd-tab-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var key = btn.dataset.tab;
@@ -2961,6 +3035,7 @@
             else if (key === 'vocab' && !loaded.vocab) { loaded.vocab = true; loadStudentVocab(studentId, 0); }
             else if (key === 'notes' && !loaded.notes) { loaded.notes = true; loadStudentNotes(studentId); }
             else if (key === 'analiz' && !loaded.analiz) { loaded.analiz = true; mountStudentAnalysis(studentId); }
+            else if (key === 'denemeler' && !loaded.denemeler) { loaded.denemeler = true; loadStudentExams(studentId); }
           });
         });
 

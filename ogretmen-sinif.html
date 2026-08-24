@@ -5526,7 +5526,10 @@
         }
         return dbExam;
       }
+      var CAT_LABEL_OVERRIDE = { 'mixed_calisma': 'SAT Mixed Çalışma Soruları' };
+      var CAT_HIDE_COUNT = { 'mixed_calisma': true };
       function prettyCat(cat) {
+        if (CAT_LABEL_OVERRIDE[cat]) return CAT_LABEL_OVERRIDE[cat];
         var c = String(cat || '').replace(/^yds-yds-/, '').replace(/^yds-yokdil-(fen|sosyal|saglik)-/, '');
         return humanize(c);
       }
@@ -5561,7 +5564,7 @@
           .sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
         var html = '<option value="">Tüm kategoriler' + (rows.length ? ' (hepsi)' : '') + '</option>';
         rows.forEach(function (r) {
-          html += '<option value="' + esc(r.category) + '">' + esc(prettyCat(r.category)) + (r.n ? ' (' + r.n + ')' : '') + '</option>';
+          html += '<option value="' + esc(r.category) + '">' + esc(prettyCat(r.category)) + ((r.n && !CAT_HIDE_COUNT[r.category]) ? ' (' + r.n + ')' : '') + '</option>';
         });
         if (!rows.length) html = '<option value="">Bu sınav için hazır kategori yok</option>';
         sel.innerHTML = html;

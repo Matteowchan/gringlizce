@@ -1220,6 +1220,12 @@
     .se-o.correct{background:color-mix(in srgb,#3a9e6f 16%,transparent)}
     .se-o.wrong{background:color-mix(in srgb,#c0563e 14%,transparent)}
     .se-exp{margin-top:.35rem;background:var(--bg-soft,#FBF6EC);border-radius:7px;padding:.5rem .7rem;font-size:.84rem;line-height:1.5;color:var(--text-soft,#6b6250)}
+    .se-sec-head{font-weight:700;color:var(--teal,#2C5856);font-size:.85rem;margin:.7rem 0 .2rem;padding-top:.4rem}
+    .se-passage{background:var(--bg-soft,#FBF6EC);border-left:3px solid var(--line,#e3d8c3);border-radius:0 7px 7px 0;padding:.45rem .7rem;font-size:.84rem;line-height:1.5;color:var(--text-soft,#6b6250);margin:.5rem 0 .1rem;white-space:pre-wrap}
+    .se-ans{font-size:.85rem;margin:.3rem 0}
+    .se-ans .ok{color:#2b7a56;font-weight:700}
+    .se-ans .bad{color:#c0563e;font-weight:700}
+    .se-ans .muted{color:var(--text-muted,#8a7f68)}
 
     /* Passage accordion */
     .sd-passage-group {
@@ -2852,16 +2858,20 @@
           var html = '';
           // TOEFL (detay genisletilebilir)
           html += block('TOEFL Deneme', (d.toefl||[]).map(function(a){
-            return '<details class="se-row" data-slug="'+esc(a.slug)+'"><summary><span class="se-name">'+esc((a.slug||'').replace('toefl-','Deneme '))+'</span>'
+            return '<details class="se-row" data-kind="toefl" data-slug="'+esc(a.slug)+'"><summary><span class="se-name">'+esc((a.slug||'').replace('toefl-','Deneme '))+'</span>'
               + '<span class="se-score">'+a.total+'/'+a.max+' · %'+a.pct+'</span><span class="se-date">'+dt(a.date)+'</span></summary>'
               + '<div class="se-sub">Grammar '+a.grammar+'/18 · Spelling '+a.spelling+'/9 · Reading '+a.reading+'/25</div>'
               + '<div class="se-detail"><p class="sd-tab-loading">Doğru/yanlış dökümü için aç…</p></div></details>';
           }));
           html += block('SAT Deneme', (d.sat||[]).map(function(a){
-            return '<div class="se-row-flat"><span class="se-name">'+esc((a.slug||'').replace('full-','Tam '))+'</span><span class="se-score">'+(a.total||'-')+' (RW '+(a.rw||'-')+' / Math '+(a.math||'-')+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
+            return '<details class="se-row" data-kind="sat" data-slug="'+esc(a.slug)+'"><summary><span class="se-name">'+esc((a.slug||'').replace('full-','Tam ').replace('rw-','RW ').replace('math-','Math '))+'</span>'
+              + '<span class="se-score">'+(a.total||'-')+' (RW '+(a.rw||'-')+' / Math '+(a.math||'-')+')</span><span class="se-date">'+dt(a.date)+'</span></summary>'
+              + '<div class="se-detail"><p class="sd-tab-loading">Soru-soru döküm için aç…</p></div></details>';
           }));
           html += block('IELTS Deneme', (d.ielts||[]).map(function(a){
-            return '<div class="se-row-flat"><span class="se-name">'+esc(a.section||'full')+'</span><span class="se-score">Band '+(a.band!=null?a.band:'-')+' ('+(a.raw||0)+'/'+(a.tq||0)+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
+            return '<details class="se-row" data-kind="ielts" data-test="'+esc(a.test||'')+'" data-section="'+esc(a.section||'')+'"><summary><span class="se-name">'+esc((a.section||'full'))+'</span>'
+              + '<span class="se-score">Band '+(a.band!=null?a.band:'-')+' ('+(a.raw||0)+'/'+(a.tq||0)+')</span><span class="se-date">'+dt(a.date)+'</span></summary>'
+              + '<div class="se-detail"><p class="sd-tab-loading">Soru-soru döküm için aç…</p></div></details>';
           }));
           html += block('Üniversite Hazırlık Atlama', (d.hazirlik||[]).map(function(a){
             return '<div class="se-row-flat"><span class="se-name">'+esc(a.set||'')+(a.passed?' <span style="color:#2b7a56">✓</span>':'')+'</span><span class="se-score">'+(a.total!=null?a.total:'-')+'/100 (MC '+(a.mc||0)+' + Essay '+(a.essay||0)+')</span><span class="se-date">'+dt(a.date)+'</span></div>';
@@ -2873,23 +2883,63 @@
             return '<div class="se-row-flat"><span class="se-name">'+esc((a.level||'')+' · '+(a.exam||''))+(a.passed?' <span style="color:#2b7a56">✓</span>':'')+'</span><span class="se-score">'+(a.score||0)+'/'+(a.total||0)+' · %'+(a.pct!=null?a.pct:0)+'</span><span class="se-date">'+dt(a.date)+'</span></div>';
           }));
           el.innerHTML = html || '<p class="sd-tab-loading">Bu öğrenci henüz deneme/sınav çözmemiş.</p>';
-          // TOEFL detay lazy-load
+          // Deneme detay lazy-load (TOEFL / SAT / IELTS)
+          function badgeFor(ok, hasAns){ return ok ? '<span style="color:#2b7a56">✓</span>' : (hasAns ? '<span style="color:#c0563e">✗</span>' : '<span style="color:#a5702a">boş</span>'); }
+          function optsHtml(options, correct, given){
+            return (options||[]).map(function(o){
+              var cls = o.letter===correct ? 'se-o correct' : (o.letter===given ? 'se-o wrong' : 'se-o');
+              return '<div class="'+cls+'"><b>'+esc(o.letter)+'</b> <span lang="en">'+esc(o.text)+'</span></div>';
+            }).join('');
+          }
           el.querySelectorAll('details.se-row').forEach(function(det){
             det.addEventListener('toggle', async function(){
               if(!det.open || det._loaded) return; det._loaded = true;
               var box = det.querySelector('.se-detail');
+              var kind = det.dataset.kind || 'toefl';
               try {
-                var dr = await sb.rpc('teacher_toefl_deneme_detail', { p_class_id: classId, p_user_id: studentId, p_slug: det.dataset.slug });
-                if (dr.error) throw dr.error;
-                var items = dr.data || []; if(!items.length){ box.innerHTML='<p class="sd-tab-loading">Detay bulunamadı.</p>'; return; }
-                box.innerHTML = items.map(function(q,i){
-                  var opts = (q.options||[]).map(function(o){
-                    var cls = o.letter===q.correct ? 'se-o correct' : (o.letter===q.given ? 'se-o wrong' : 'se-o');
-                    return '<div class="'+cls+'"><b>'+esc(o.letter)+'</b> <span lang="en">'+esc(o.text)+'</span></div>';
+                if (kind === 'sat') {
+                  var sr = await sb.rpc('teacher_sat_deneme_detail', { p_class_id: classId, p_user_id: studentId, p_slug: det.dataset.slug });
+                  if (sr.error) throw sr.error;
+                  var sd = sr.data || {};
+                  var secs = sd.sections || [];
+                  if(!secs.length){ box.innerHTML='<p class="sd-tab-loading">Detay bulunamadı.</p>'; return; }
+                  box.innerHTML = secs.map(function(sec){
+                    var lastPsg = null;
+                    var itemsHtml = (sec.items||[]).map(function(q){
+                      var psg = '';
+                      if(q.passage && q.passage !== lastPsg){ psg = '<div class="se-passage" lang="en">'+esc(q.passage)+'</div>'; lastPsg = q.passage; }
+                      var badge = badgeFor(q.ok, !!q.given);
+                      return '<div class="se-q">'+psg+badge+' <b>'+esc(q.n)+'.</b> <span lang="en">'+esc(q.q||'')+'</span>'
+                        + optsHtml(q.options, q.correct, q.given)
+                        + (q.exp?'<div class="se-exp">'+q.exp+'</div>':'')+'</div>';
+                    }).join('');
+                    return '<div class="se-sec-head" lang="en">'+esc((sec.key||'').toUpperCase())+'</div>'+itemsHtml;
                   }).join('');
-                  var badge = q.ok ? '<span style="color:#2b7a56">✓</span>' : (q.given ? '<span style="color:#c0563e">✗</span>' : '<span style="color:#a5702a">boş</span>');
-                  return '<div class="se-q">'+badge+' <span lang="en">'+esc(q.stem)+'</span>'+opts+(q.exp?'<div class="se-exp">'+q.exp+'</div>':'')+'</div>';
-                }).join('');
+                } else if (kind === 'ielts') {
+                  var ir = await sb.rpc('teacher_ielts_deneme_detail', { p_class_id: classId, p_user_id: studentId, p_slug: det.dataset.test, p_section: det.dataset.section });
+                  if (ir.error) throw ir.error;
+                  var idd = ir.data || {};
+                  var isecs = idd.sections || [];
+                  var allItems = [];
+                  isecs.forEach(function(s){ (s.items||[]).forEach(function(it){ allItems.push(it); }); });
+                  if(!allItems.length){ box.innerHTML='<p class="sd-tab-loading">Detay bulunamadı.</p>'; return; }
+                  box.innerHTML = allItems.map(function(q){
+                    var hasAns = q.user!=null && q.user!=='';
+                    var badge = badgeFor(q.ok, hasAns);
+                    var ans = '<div class="se-ans"><span class="'+(q.ok?'ok':'bad')+'">Cevabı: '+(hasAns?esc(q.user):'<span class="muted">boş</span>')+'</span>'
+                      + ' · <span class="ok">Doğru: '+esc(q.correct||'')+'</span></div>';
+                    var stem = q.q ? '<span lang="en">'+esc(q.q)+'</span>' : '';
+                    return '<div class="se-q">'+badge+' <b>'+esc(q.n)+'.</b> '+stem+ans+(q.exp?'<div class="se-exp">'+q.exp+'</div>':'')+'</div>';
+                  }).join('');
+                } else {
+                  var dr = await sb.rpc('teacher_toefl_deneme_detail', { p_class_id: classId, p_user_id: studentId, p_slug: det.dataset.slug });
+                  if (dr.error) throw dr.error;
+                  var items = dr.data || []; if(!items.length){ box.innerHTML='<p class="sd-tab-loading">Detay bulunamadı.</p>'; return; }
+                  box.innerHTML = items.map(function(q){
+                    var badge = badgeFor(q.ok, !!q.given);
+                    return '<div class="se-q">'+badge+' <span lang="en">'+esc(q.stem)+'</span>'+optsHtml(q.options, q.correct, q.given)+(q.exp?'<div class="se-exp">'+q.exp+'</div>':'')+'</div>';
+                  }).join('');
+                }
               } catch(e){ box.innerHTML='<p class="sd-tab-loading">Detay yüklenemedi.</p>'; }
             });
           });

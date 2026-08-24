@@ -2306,9 +2306,18 @@
             return a < b ? 1 : -1;                           // tie-break: slug DESC
           });
         }
-        // Varsayılan: grubu karıştır — her girişte sıra değişsin (aynı sıra tekrar etmesin).
-        shuffleInPlace(grp);
-        return grp;
+        // Varsayılan: ZORLUK katmanı sırası — hard → medium (zorluğu bilinmeyen dahil) → easy.
+        // Her katman KENDİ içinde karıştırılır (sıra tekrar etmesin). Amaç: pratikte önce zor/orta
+        // sorular gelsin, easy en sona kalsın (büyük bankada easy neredeyse hiç görülmez).
+        var _rank = { hard: 0, medium: 1, easy: 2 };
+        var _tiers = [[], [], []];
+        grp.forEach(function (s) {
+          var d = DIFF_MAP[s] || 'medium';
+          var r = _rank[d]; if (r == null) r = 1;
+          _tiers[r].push(s);
+        });
+        _tiers.forEach(shuffleInPlace);
+        return _tiers[0].concat(_tiers[1], _tiers[2]);
       }
       return orderGroup(unseenList).concat(orderGroup(seenList));
     }

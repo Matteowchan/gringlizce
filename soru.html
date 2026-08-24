@@ -2190,8 +2190,17 @@
       if (s == null) return '';
       var str = String(s);
       // <svg>…</svg> figür ve <table>…</table> tablo bloklarını HAM bırak (kendi ürettiğimiz güvenli içerik, class/attribute korunur); geri kalanı whitelist'le.
-      return str.split(/(<svg[\s\S]*?<\/svg>|<table[\s\S]*?<\/table>)/i).map(function (part, i) {
+      return str.split(/(<svg[\s\S]*?<\/svg>|<table[\s\S]*?<\/table>|<img\b[^>]*>)/i).map(function (part, i) {
         if (i % 2 === 1) {
+          if (/^<img/i.test(part)) {
+            // Yalnız aynı-origin relative 'assets/...' görsellerine izin ver (harici URL / onerror / javascript: engellenir)
+            var msrc = /src\s*=\s*["']([^"']+)["']/i.exec(part);
+            var src = msrc ? msrc[1] : '';
+            if (/^assets\/[A-Za-z0-9_\-./]+\.(png|jpe?g|svg|webp|gif)$/i.test(src)) {
+              return '<div class="st-fig"><img src="' + src + '" alt="" style="max-width:100%;height:auto;"></div>';
+            }
+            return '';
+          }
           return /^<table/i.test(part) ? '<div class="st-table">' + part + '</div>' : '<div class="st-fig">' + part + '</div>';
         }
         var escaped = part

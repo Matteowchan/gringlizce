@@ -130,8 +130,8 @@
       var d = mid.data;
       for (var i = 0, j = 0; i < arr.length; i++, j += 4) {
         var a = 1 - arr[i]; if (a < 0) a = 0; else if (a > 1) a = 1; // kişi = 1 - arka plan (multiclass)
-        var sm = prevArr[i] * 0.6 + a * 0.4; prevArr[i] = sm;       // zamansal yumuşatma (ara-ara sızıntı bastır)
-        var v = (sm - 0.55) * 1.9 + 0.5; if (v < 0) v = 0; else if (v > 1) v = 1; // kontrast + eşik yukarı: sandalye (orta güven) arka plana düşsün
+        var sm = prevArr[i] * 0.72 + a * 0.28; prevArr[i] = sm;     // güçlü zamansal yumuşatma (dalgalı vücut-silme/flicker azalt)
+        var v = (sm - 0.52) * 1.7 + 0.5; if (v < 0) v = 0; else if (v > 1) v = 1; // eşik hafif düşük (vücudu koru) + kontrast (sandalye)
         v = v * v * (3 - 2 * v);                                    // smoothstep: kenar yumuşat
         d[j] = 255; d[j + 1] = 255; d[j + 2] = 255; d[j + 3] = (v * 255) | 0;
       }

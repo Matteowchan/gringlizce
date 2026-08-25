@@ -1302,8 +1302,9 @@ function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classL
 
 /* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;
-// Deneysel yüksek-kalite arka plan (yumuşak maske) — sadece ?hqbg=1 ile açılır.
-var _HQBG=/[?&]hqbg=1/.test(location.search)||(function(){try{return localStorage.getItem('gm-hqbg')==='1';}catch(e){return false;}})();
+// Yüksek-kalite arka plan (yumuşak maske + multiclass) — VARSAYILAN AÇIK.
+// Kapatmak için ?hqbg=0 veya localStorage gm-hqbg='0'. Hata olursa track-processors'a düşer.
+var _HQBG=!(/[?&]hqbg=0/.test(location.search)||(function(){try{return localStorage.getItem('gm-hqbg')==='0';}catch(e){return false;}})());
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
 var _krisp=null,_krispTried=false,_krispOn=false,_nfNoted=false,_nfTries=0;
 // Krisp WASM yüklemesi/başlatması AĞIR — kamera kurulumuyla AYNI anda çalışırsa ana

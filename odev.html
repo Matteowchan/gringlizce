@@ -563,6 +563,11 @@ function renderTasks(tasks){
       if(task.instr)html+='<p class="ge-inst">'+esc(task.instr)+'</p>';
       if(task.audio)html+='<audio class="ge-audio" controls preload="none" src="'+esc(task.audio)+'"></audio>';
       html+='</div>';
+    }else if(task.type==='text'){
+      html+='<div class="ge-card"><h2>'+esc(task.title||'Text')+'</h2>';
+      if(task.instr)html+='<p class="ge-inst">'+esc(task.instr)+'</p>';
+      if(task.body)html+='<div class="ge-passage">'+passageHtml(task.body)+'</div>';
+      html+='</div>';
     }else if(task.type==='mcq'){
       qn++;
       html+='<div class="ge-q" id="q-'+key+'" data-key="'+key+'"><div class="ge-qstem"><span class="qn">'+qn+'</span>'+esc(task.q)+'</div>';
@@ -805,7 +810,7 @@ function restoreState(){
 /* ---------- completion ---------- */
 function taskDone(ti){
   var task=TASKS[ti];
-  if(task&&task.type==='audio')return true;
+  if(task&&(task.type==='audio'||task.type==='text'))return true;
   var a=ST.a[taskKey(ti)];
   if(!a)return false;
   if(task.type==='mcq')return true;

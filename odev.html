@@ -568,6 +568,16 @@ function renderTasks(tasks){
       if(task.instr)html+='<p class="ge-inst">'+esc(task.instr)+'</p>';
       if(task.body)html+='<div class="ge-passage">'+passageHtml(task.body)+'</div>';
       html+='</div>';
+    }else if(task.type==='video'){
+      html+='<div class="ge-card ge-lpart"><h2>'+esc(task.title||'Listening')+'</h2>';
+      if(task.instr)html+='<p class="ge-inst">'+esc(task.instr)+'</p>';
+      var _vp=task.provider,_vr=task.ref;
+      var _vsrc=_vp==='ted'?('https://embed.ted.com/talks/'+_vr)
+              :_vp==='youtube'?('https://www.youtube-nocookie.com/embed/'+_vr)
+              :(task.url||'');
+      html+='<div class="ge-lvideo"><iframe src="'+esc(_vsrc)+'" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="Listening"></iframe></div>';
+      if(task.source)html+='<p class="ge-audiohint" style="opacity:.7">Kaynak: '+esc(task.source)+'</p>';
+      html+='</div>';
     }else if(task.type==='mcq'){
       qn++;
       html+='<div class="ge-q" id="q-'+key+'" data-key="'+key+'"><div class="ge-qstem"><span class="qn">'+qn+'</span>'+esc(task.q)+'</div>';
@@ -810,7 +820,7 @@ function restoreState(){
 /* ---------- completion ---------- */
 function taskDone(ti){
   var task=TASKS[ti];
-  if(task&&(task.type==='audio'||task.type==='text'))return true;
+  if(task&&(task.type==='audio'||task.type==='text'||task.type==='video'))return true;
   var a=ST.a[taskKey(ti)];
   if(!a)return false;
   if(task.type==='mcq')return true;

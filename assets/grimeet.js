@@ -154,6 +154,9 @@ function setupGate(){
     var lbl=$('#gate-bg-hint'); if(lbl&&bg!=='none') lbl.textContent='(uygulanıyor…)';
     try{
       if(bg==='none'){ if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; }
+      else if(_HQBG && window.GriBg){
+        try{ await STATE.preTrack.setProcessor(window.GriBg.create({mode:bg==='blur'?'blur':'image',blurRadius:14,imagePath:bg==='blur'?null:await bgSrc(bg),flip:STATE.bgFlip})); STATE._bgApplied=true; }
+        catch(_hq){ var tpG=await loadTP(); if(tpG){ if(bg==='blur') await STATE.preTrack.setProcessor(tpG.BackgroundBlur(12)); else await STATE.preTrack.setProcessor(tpG.VirtualBackground(await bgSrc(bg))); STATE._bgApplied=true; } else { if(lbl)lbl.textContent='(uygulanamadı)'; return; } } }
       else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(lbl)lbl.textContent='(bu tarayıcıda yok)'; return; }
         if(bg==='blur') await STATE.preTrack.setProcessor(tp.BackgroundBlur(12));
         else await STATE.preTrack.setProcessor(tp.VirtualBackground(await bgSrc(bg)));
@@ -1299,6 +1302,8 @@ function hideBreakoutBanner(){ var bar=$('#gmr-breakout-bar'); if(bar)bar.classL
 
 /* ================= BACKGROUND ================= */
 var TP=null,tpTried=false;
+// Deneysel yüksek-kalite arka plan (yumuşak maske) — sadece ?hqbg=1 ile açılır.
+var _HQBG=/[?&]hqbg=1/.test(location.search)||(function(){try{return localStorage.getItem('gm-hqbg')==='1';}catch(e){return false;}})();
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
 var _krisp=null,_krispTried=false,_krispOn=false,_nfNoted=false,_nfTries=0;
 // Krisp WASM yüklemesi/başlatması AĞIR — kamera kurulumuyla AYNI anda çalışırsa ana
@@ -1347,6 +1352,9 @@ async function applyBackground(bg){
   var note=$('#bg-note'); if(note)note.textContent='Uygulanıyor…';
   try{
     if(bg==='none'){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
+    else if(_HQBG && window.GriBg){
+      try{ await track.setProcessor(window.GriBg.create({mode:bg==='blur'?'blur':'image',blurRadius:14,imagePath:bg==='blur'?null:await bgSrc(bg),flip:STATE.bgFlip})); }
+      catch(_hq){ var tpH=await loadTP(); if(tpH){ if(bg==='blur') await track.setProcessor(tpH.BackgroundBlur(12)); else await track.setProcessor(tpH.VirtualBackground(await bgSrc(bg))); } else { toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; return; } } }
     else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
       if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(12));
       else await track.setProcessor(tp.VirtualBackground(await bgSrc(bg))); }

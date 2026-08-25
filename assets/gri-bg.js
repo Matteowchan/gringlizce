@@ -8,7 +8,9 @@
  */
 (function () {
   var VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18';
-  var MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite';
+  // Çok-sınıflı model: background/hair/body/face/clothes/others → daha keskin sınır.
+  // confidenceMasks[0] = ARKA PLAN güveni; kişi = 1 - background.
+  var MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite';
   var _seg = null, _segLoading = null;
 
   function loadSegmenter() {
@@ -127,7 +129,7 @@
       var mid = mctx.createImageData(mw, mh);
       var d = mid.data;
       for (var i = 0, j = 0; i < arr.length; i++, j += 4) {
-        var a = arr[i]; if (a < 0) a = 0; else if (a > 1) a = 1;
+        var a = 1 - arr[i]; if (a < 0) a = 0; else if (a > 1) a = 1; // kişi = 1 - arka plan
         var sm = prevArr[i] * 0.5 + a * 0.5; prevArr[i] = sm;      // titreme azalt (EMA)
         var v = (sm - 0.5) * 1.55 + 0.5; if (v < 0) v = 0; else if (v > 1) v = 1; // kontrast: sızıntı azalt
         v = v * v * (3 - 2 * v);                                   // smoothstep: kenar yumuşat

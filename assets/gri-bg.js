@@ -42,7 +42,7 @@
     // opts: { mode:'blur'|'image', blurRadius:number, imagePath:string|null, flip:bool }
     opts = opts || {};
     var proc = { name: 'gri-bg-soft' };
-    var video, out, octx, work, wctx, maskC, mctx, bgImg = null, stopped = false, seg = null;
+    var video, out, octx, work, wctx, maskC, mctx, bgImg = null, stopped = false, seg = null, prevArr = null;
 
     async function setup(track) {
       seg = await loadSegmenter();
@@ -121,13 +121,17 @@
       }
       var mw = cm.width, mh = cm.height;
       var arr = cm.getAsFloat32Array();
-      // person confidence -> alpha mask (mask-res)
+      if (!prevArr || prevArr.length !== arr.length) prevArr = new Float32Array(arr);
+      // person confidence -> alpha mask (mask-res), zamansal yumuşatma + kontrast + smoothstep
       maskC.width = mw; maskC.height = mh;
       var mid = mctx.createImageData(mw, mh);
       var d = mid.data;
       for (var i = 0, j = 0; i < arr.length; i++, j += 4) {
         var a = arr[i]; if (a < 0) a = 0; else if (a > 1) a = 1;
-        d[j] = 255; d[j + 1] = 255; d[j + 2] = 255; d[j + 3] = (a * 255) | 0;
+        var sm = prevArr[i] * 0.5 + a * 0.5; prevArr[i] = sm;      // titreme azalt (EMA)
+        var v = (sm - 0.5) * 1.55 + 0.5; if (v < 0) v = 0; else if (v > 1) v = 1; // kontrast: sızıntı azalt
+        v = v * v * (3 - 2 * v);                                   // smoothstep: kenar yumuşat
+        d[j] = 255; d[j + 1] = 255; d[j + 2] = 255; d[j + 3] = (v * 255) | 0;
       }
       mctx.putImageData(mid, 0, 0);
       // person frame on work canvas

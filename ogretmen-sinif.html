@@ -6493,6 +6493,16 @@
           }
         }
 
+        // Başlık elle değiştirilmediyse (autofill '1' → modül "Ünite N" gibi jenerik kalmış olabilir),
+        // seçilen içeriğin gerçek adından türet → ödev listesinde anlamlı başlık.
+        var _ttlEl = document.getElementById('ca-title');
+        if (_ttlEl && _ttlEl.dataset.autofill === '1') {
+          var _derived = config.test_name || config.label || config.group_title
+            || (config.text_type_display ? ((config.exam_type ? config.exam_type.toUpperCase() + ' ' : '') + config.text_type_display + ' Yazma') : '');
+          _derived = String(_derived || '').trim();
+          if (_derived) { title = _derived; firstTitle = _derived; try { _ttlEl.value = _derived; } catch (e) {} }
+        }
+
         var dueIso = dueRaw ? new Date(dueRaw).toISOString() : null;
         var submitBtn = document.getElementById('ca-submit');
         submitBtn.disabled = true;

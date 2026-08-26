@@ -43,7 +43,7 @@ var BGS=[
 ];
 function bgFile(id){ if(id==='custom') return STATE.customBg||''; return new URL('assets/grimeet-bg/'+id+'.jpg',location.href).href; }
 
-var RES_MAP={ '360':{width:640,height:360,frameRate:24}, '540':{width:960,height:540,frameRate:24}, '720':{width:1280,height:720,frameRate:24}, '1080':{width:1920,height:1080,frameRate:24} };
+var RES_MAP={ '360':{width:640,height:360,frameRate:60}, '540':{width:960,height:540,frameRate:60}, '720':{width:1280,height:720,frameRate:60}, '1080':{width:1920,height:1080,frameRate:60} };
 function resObj(){ return RES_MAP[STATE.camRes]||RES_MAP['540']; }
 // Arka plan görselini yatay çevir (flip): canvas'a aynalı çizip dataURL döndür. Hata olursa orijinali döndür.
 var _flipCache={};

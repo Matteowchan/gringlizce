@@ -67,7 +67,7 @@
         bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = opts.imagePath;
         try { await bgImg.decode(); } catch (e) {}
       }
-      proc.processedTrack = out.captureStream(30).getVideoTracks()[0];
+      proc.processedTrack = out.captureStream(60).getVideoTracks()[0];
       stopped = false;
       startLoop();
     }

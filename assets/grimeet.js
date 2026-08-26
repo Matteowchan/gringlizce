@@ -851,7 +851,7 @@ var DOC=(function(){
      Öğretmen spelling çalışması yapacağında açar; normalde kapalı tutarak kırmızı çizgi kalabalığını engeller. */
   var SPELL=false; try{ SPELL=(localStorage.getItem('gm-doc-spell')==='1'); }catch(e){}
   function _applySpell(){ panes().forEach(function(p){ var q=Q[p]; if(q&&q._spell){ try{ q._spell.setEnabled(SPELL); }catch(e){} } }); var b=document.getElementById('doc-spell'); if(b){ b.classList.toggle('on',SPELL); b.title=SPELL?'Yazım denetimi AÇIK — İngilizce + Türkçe yanlış yazımlar kırmızı dalgalı çizgiyle işaretlenir. Kapatmak için tıkla.':'Yazım denetimi kapalı. İngilizce + Türkçe canlı denetim için tıkla.'; } }
-  function applySpell(){ if(SPELL && window.GriSpell && window.GriSpell.load && !(window.GriSpell.ready&&window.GriSpell.ready())){ window.GriSpell.load().then(_applySpell,_applySpell); } _applySpell(); }
+  function applySpell(){ if(SPELL && window.GriSpell && window.GriSpell.load && !(window.GriSpell.ready&&window.GriSpell.ready())){ window.GriSpell.load().then(_applySpell,function(){ _applySpell(); try{ if(SPELL) toast('Yazım sözlüğü yüklenemedi — bağlantını kontrol edip denetimi tekrar aç.'); }catch(e){} }); } _applySpell(); }
   function toggleSpell(){ SPELL=!SPELL; try{ localStorage.setItem('gm-doc-spell',SPELL?'1':'0'); }catch(e){} var firstLoad=(SPELL && window.GriSpell && window.GriSpell.ready && !window.GriSpell.ready()); applySpell(); try{ toast(SPELL?(firstLoad?'Yazım denetimi açılıyor — sözlük yükleniyor (EN+TR)…':'Yazım denetimi açıldı — İngilizce + Türkçe yanlış yazımlar kırmızı dalgalı çizgiyle işaretlenir'):'Yazım denetimi kapatıldı'); }catch(e){} }
   /* Süreli yazı çalışması geri sayımı — host başlatır, herkeste senkron gösterilir. */
   var TMR=null,tmrLeft=0,tmrPaused=false;

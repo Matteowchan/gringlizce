@@ -24,13 +24,17 @@
     if (EN && TR) return Promise.resolve();
     if (loadingP) return loadingP;
     var b = base();
-    loadingP = Promise.all([
-      fetch(b + 'gri-dict-en.txt').then(function (r) { return r.text(); }),
-      fetch(b + 'gri-dict-tr.txt').then(function (r) { return r.text(); })
-    ]).then(function (arr) {
-      EN = new Set(arr[0].split('\n').filter(Boolean));
-      TR = new Set(arr[1].split('\n').filter(Boolean));
-    }).catch(function (e) { loadingP = null; throw e; });
+    function grab(name) {
+      return fetch(b + name).then(function (r) { if (!r.ok) throw new Error(name + ' ' + r.status); return r.text(); });
+    }
+    loadingP = Promise.all([grab('gri-dict-en.txt'), grab('gri-dict-tr.txt')]).then(function (arr) {
+      var en = new Set(arr[0].split(/\r?\n/).filter(Boolean));
+      var tr = new Set(arr[1].split(/\r?\n/).filter(Boolean));
+      // Kısmi/boş yükleme koruması: eksikse HİÇ işaretleme yapma (her şeyi kırmızı yapmaktansa),
+      // EN/TR yalnızca ikisi de gerçekten dolu gelince atanır → ready() true olur.
+      if (en.size < 1000 || tr.size < 1000) throw new Error('dict too small en=' + en.size + ' tr=' + tr.size);
+      EN = en; TR = tr;
+    }).catch(function (e) { EN = null; TR = null; loadingP = null; throw e; });
     return loadingP;
   }
   function ready() { return !!(EN && TR); }

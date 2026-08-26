@@ -305,6 +305,8 @@ var EXAMS=[
       { label: "TOEFL", href: "toefl", children: [
         { label: "Denemeler", href: "toefl-denemeler" },
         { label: "Soru Bankası", href: "toefl-soru-bankasi" } ] },
+      { label: "PET (Cambridge B1)", href: "pet-denemeler", children: [
+        { label: "Denemeler", href: "pet-denemeler" } ] },
       { label: "YDS / YÖKDİL", href: "yds", children: [
         { label: "YDS", href: "yds-soru-bankasi-yds" },
         { label: "YÖKDİL Fen", href: "yds-soru-bankasi-yokdil-fen" },

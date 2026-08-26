@@ -69,7 +69,7 @@
     "sameAs": ["https://www.instagram.com/gringlizce/"]
   }
   </script>
-  <script src="assets/curriculum.js?v=28"></script>
+  <script src="assets/curriculum.js?v=29"></script>
   <script src="assets/nav.js?v=31"></script>
   <script src="assets/track.js?v=3" defer></script>
   <style>
@@ -356,7 +356,8 @@ function loadAll(){
     step();
   },function(){step();});
   sb.from('ge_assignments').select('id,level,unit,title,description,skill,content,audience').eq('active',true).order('level').order('unit').then(function(r){
-    if(r&&r.data)ASGS=r.data;
+    // PET denemeleri artık Sınavlar > PET > Denemeler (pet-denemeler) altında; Alıştırmalar listesinden çıkarılır.
+    if(r&&r.data)ASGS=r.data.filter(function(a){ return !/^\s*PET\s*·\s*Deneme/i.test(a.title||''); });
     step();
   },function(){step();});
   sb.from('ge_submissions').select('assignment_id,teacher_feedback,teacher_grade,created_at').eq('user_id',window.GRI_UID).eq('task_type','assignment').then(function(r){

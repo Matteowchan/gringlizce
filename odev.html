@@ -334,6 +334,7 @@ function qparam(name){
 }
 var AID=qparam('id');
 var PRESENT=(qparam('present')==='1')&&(window.top!==window.self); /* Gri Meet sunum modu: iframe içinde + present=1 → atama kapısı atlanır, salt görüntüleme */
+var DENEME=(qparam('deneme')==='1'); /* Deneme modu (ör. PET): ödev değil sınav olarak çerçevele (başlık/eyebrow/geri linki) */
 var STATE_KEY='ga_'+AID+'_state';
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -440,13 +441,20 @@ function buildPage(){
   SKILL=ASG.skill||content.skill||'';
   document.title=ASG.title+' | Gri English';
   document.getElementById('bcTitle').textContent=ASG.title;
-  document.getElementById('railTitle').textContent=ASG.level+' · Ünite '+ASG.unit+' — '+ASG.title;
+  if(DENEME){
+    document.getElementById('railTitle').textContent=ASG.title;
+    var _rh=document.querySelector('#odRail .ge-rail-head'); if(_rh)_rh.textContent=(content.pet?'PET Preliminary':ASG.level)+' · Deneme';
+    var _rb=document.querySelector('#odRail .ge-rail-back'); if(_rb){ _rb.setAttribute('href','pet-denemeler'); _rb.innerHTML='&lsaquo; Denemelere Dön'; }
+  }else{
+    document.getElementById('railTitle').textContent=ASG.level+' · Ünite '+ASG.unit+' — '+ASG.title;
+  }
 
   /* info bar */
   var info=document.getElementById('odInfo');
   var ih='';
   if(SKILL_TR[SKILL])ih+='<span class="lvl">'+SKILL_TR[SKILL]+'</span>';
-  ih+='<span class="lvl">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+'</span>';
+  if(DENEME)ih+='<span class="lvl">'+esc(content.pet?'PET Preliminary · B1':ASG.level+' · Deneme')+'</span>';
+  else ih+='<span class="lvl">'+esc(ASG.level)+' · Ünite '+esc(ASG.unit)+'</span>';
   if(ASG.description)ih+='<span>'+esc(ASG.description)+'</span>';
   if(IN_CLASS){
     if(DUE){
@@ -458,7 +466,8 @@ function buildPage(){
       }
     }
   }else{
-    ih+='<span><b style="color:inherit">Serbest çalışma</b> — cevap anahtarıyla kendini kontrol edebilirsin; öğretmen değerlendirmesi yapılmaz.</span>';
+    if(DENEME)ih+='<span><b style="color:inherit">Deneme sınavı</b> — bölümleri sırayla tamamla; bitince cevap anahtarıyla kendini kontrol edebilirsin.</span>';
+    else ih+='<span><b style="color:inherit">Serbest çalışma</b> — cevap anahtarıyla kendini kontrol edebilirsin; öğretmen değerlendirmesi yapılmaz.</span>';
   }
   info.innerHTML=ih;
   info.style.display='flex';
@@ -480,7 +489,7 @@ function buildPage(){
     var sec=SECS[i],n=i+1;
     html+='<section class="ge-section" id="ge-sec-'+n+'">';
     html+='<div class="ge-sec-head">';
-    html+='<div class="ge-eyebrow">'+esc(ASG.level)+(content.pet?' · PET Preliminary':' · Ünite '+esc(ASG.unit))+(SKILL_TR[SKILL]?' · '+SKILL_TR[SKILL]:'')+'</div>';
+    html+='<div class="ge-eyebrow">'+esc(ASG.level)+(content.pet?' · PET Preliminary':(DENEME?' · Deneme':' · Ünite '+esc(ASG.unit)))+(SKILL_TR[SKILL]?' · '+SKILL_TR[SKILL]:'')+'</div>';
     html+='<h1>'+esc(sec.label)+'</h1>';
     html+='</div>';
 

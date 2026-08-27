@@ -111,16 +111,21 @@
     + '.gsch-wdrow{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e9e2d2;}'
     + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:1px;background:#e9e2d2;min-height:0;}'
     + '.gsch-cal .wd{text-align:center;font-size:10.5px;color:#9a8f79;padding:8px 0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#f7f2e8;}'
-    + '.gsch-cell{min-height:66px;padding:6px 6px 6px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;}'
+    + '.gsch-cell{min-height:66px;padding:5px 5px 5px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;display:flex;flex-direction:column;}'
+    + '.gsch-cell .gsch-evs{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px;}'
+    + '.gsch-cell .gsch-evs::-webkit-scrollbar{width:5px;}'
+    + '.gsch-cell .gsch-evs::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:5px;}'
+    + '.gsch-cell .gsch-evs::-webkit-scrollbar-track{background:transparent;}'
     + '.gsch-cell.out{background:#f7f2e8;}'
     + '.gsch-cell.has{cursor:pointer;}'
     + '.gsch-cell.has:hover{background:#f1f8f6;}'
     + '.gsch-cell.today{background:#fbf7ee;}'
     + '.gsch-cell.sel{background:#eaf3f1;box-shadow:inset 0 0 0 2px #2C5856;}'
     + '.gsch-cell.sel .num{color:#1f4644;font-weight:800;}'
-    + '.gsch-cell .num{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;padding:0 2px;border-radius:999px;font-weight:700;font-size:12.5px;color:#6a6250;margin-bottom:3px;line-height:1;}'
+    + '.gsch-cell .num{flex:0 0 auto;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 2px;border-radius:999px;font-weight:700;font-size:12.5px;color:#6a6250;margin-bottom:2px;line-height:1;}'
     + '.gsch-cell.today .num{background:#2C5856;color:#fff;font-weight:800;}'
-    + '.gsch-cell .ev{display:block;font-size:11px;line-height:1.4;background:#e7f0ee;color:#2C5856;border-radius:4px;padding:2px 7px 3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
+    + '.gsch-cell .ev{display:block;font-size:10.5px;line-height:1.28;background:#e7f0ee;color:#2C5856;border-radius:4px;padding:1px 6px 2px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
+    + '.gsch-cell .gsch-evs .ev:first-child{margin-top:0;}'
     + '.gsch-cell .ev b{font-weight:800;margin-right:3px;}'
     + '.gsch-cell .ev:hover{filter:brightness(.96);}'
     + '.gsch-cell .ev.ev-more{background:transparent;color:#8a8172;padding:1px 6px 0;font-weight:700;margin-top:2px;}'
@@ -135,7 +140,7 @@
     + '.gsch-cell.we.has:hover{background:#e4eef0;}'
     + '.gsch-cell.holi{background:#fbe0db;}'
     + '.gsch-cell.holi.we{background:#f6dbd8;}'
-    + '.gsch-cell .hol{display:block;font-size:10.5px;line-height:1.35;background:#efc7c0;color:#8c2b24;border-left:3px solid #B23A48;border-radius:4px;padding:2px 7px 3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}'
+    + '.gsch-cell .hol{flex:0 0 auto;display:block;font-size:10.5px;line-height:1.35;background:#efc7c0;color:#8c2b24;border-left:3px solid #B23A48;border-radius:4px;padding:2px 7px 3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}'
     + '.gsch-cell .hol.half{background:#f2dccb;color:#894c22;border-left-color:#C67A34;font-weight:600;}'
     + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
     + '.gsch-modal-ov{position:fixed;inset:0;background:rgba(20,16,12,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;}'
@@ -251,6 +256,7 @@
     + ':root[data-theme="dark"] .gsch-cell .hol{background:#4a251f;color:#efab9f;border-left-color:#c2564d;}'
     + ':root[data-theme="dark"] .gsch-cell .hol.half{background:#3a2a1a;color:#e6b98c;border-left-color:#b5804a;}'
     + ':root[data-theme="dark"] .gsch-col-list-inner::-webkit-scrollbar-thumb{background:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-cell .gsch-evs::-webkit-scrollbar-thumb{background:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-resizer::before{background:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-resizer:hover::before,:root[data-theme="dark"] .gsch-resizer.drag::before{background:#3f7a72;}'
     + ':root[data-theme="dark"] .gsch-modal{background:#241f18;}'
@@ -661,10 +667,10 @@
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(_dd,today), selD=state.sel&&sameDay(_dd,state.sel);
         var holHTML=hol?('<span class="hol'+(hol.half?' half':'')+'" title="'+esc(hol.name)+'">'+esc(hol.name)+'</span>'):'';
-        var evHTML=evs.slice(0,4).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
-        if(evs.length>4) evHTML+='<span class="ev ev-more">+'+(evs.length-4)+' ders</span>';
+        var evHTML=evs.slice(0,10).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        if(evs.length>10) evHTML+='<span class="ev ev-more">+'+(evs.length-10)+' ders</span>';
         var cls='gsch-cell'+(has?' has':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
-        cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+evHTML+'</div>';
+        cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';

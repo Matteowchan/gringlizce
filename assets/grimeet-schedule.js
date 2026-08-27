@@ -72,16 +72,39 @@
     + ':root[data-theme="dark"] .gsch-imp p{color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-imp input{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-imp .imp-item{background:#1f1b14;border-color:#3a3428;color:#f0e9db;}'
-    + '.gsch-form{background:#faf7f0;border:1px solid #e5ddcd;border-radius:12px;padding:14px;margin-bottom:14px;display:none;}'
-    + '.gsch-form.open{display:block;}'
-    + '.gsch-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}'
-    + '.gsch-form label{font-size:12px;color:#6a6250;display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;}'
-    + '.gsch-form input,.gsch-form select{font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;}'
+    + '.gsch-form-ov{position:fixed;inset:0;background:rgba(20,16,12,.5);display:none;align-items:center;justify-content:center;z-index:99998;padding:16px;}'
+    + '.gsch-form-ov.open{display:flex;}'
+    + '.gsch-form{background:#faf7f0;border:1px solid #e5ddcd;border-radius:16px;padding:18px 20px;margin:0;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 18px 50px rgba(20,16,12,.3);}'
+    + '.gsch-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}'
+    + '.gsch-form-title{font-size:16px;font-weight:800;color:#2a2a2a;margin:0;}'
+    + '.gsch-form-x{background:none;border:none;font-size:24px;line-height:1;color:#8a8172;cursor:pointer;padding:0 2px;}'
+    + '.gsch-form-x:hover{color:#2a2a2a;}'
+    + '.gsch-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}'
+    + '.gsch-form label{font-size:12px;color:#6a6250;display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px;}'
+    + '.gsch-form input,.gsch-form select{font:inherit;padding:9px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
     + '.gsch-form .f-when-ctl{display:flex;gap:6px;align-items:center;}'
-    + '.gsch-form .f-when-ctl .f-date{flex:1;min-width:120px;}'
-    + '.gsch-form .f-when-ctl select{padding:8px 6px;}'
+    + '.gsch-form .f-when-ctl .f-datebtn{flex:1;min-width:130px;}'
+    + '.gsch-form .f-when-ctl select{padding:9px 6px;}'
     + '.gsch-form .f-colon{color:#6a6250;font-weight:700;}'
-    + '.gsch-form .acts{display:flex;gap:8px;}'
+    + '.f-datebtn{display:inline-flex;align-items:center;gap:7px;font:inherit;text-align:left;padding:9px 11px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;cursor:pointer;}'
+    + '.f-datebtn:hover{border-color:var(--gri-accent,#2C5856);}'
+    + '.f-datebtn::before{content:"\\1F4C5";font-size:13px;filter:grayscale(1);opacity:.7;}'
+    + '.f-datebtn.empty{color:#a89a78;}'
+    + '.gsch-minical{background:#fff;border:1px solid #e5ddcd;border-radius:14px;padding:12px;box-shadow:0 18px 50px rgba(20,16,12,.32);width:288px;max-width:92vw;}'
+    + '.gsch-minical .mc-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}'
+    + '.gsch-minical .mc-h b{font-size:14px;font-weight:800;color:#2a2a2a;}'
+    + '.gsch-minical .mc-h button{border:1px solid #e4dccb;background:#fff;border-radius:50%;width:28px;height:28px;font-size:15px;line-height:1;color:#6a6250;cursor:pointer;}'
+    + '.gsch-minical .mc-h button:hover{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856);}'
+    + '.gsch-minical .mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}'
+    + '.gsch-minical .mc-wd{text-align:center;font-size:10px;font-weight:800;color:#9a8f79;padding:2px 0 4px;text-transform:uppercase;}'
+    + '.gsch-minical .mc-cell{height:34px;}'
+    + '.gsch-minical .mc-day{width:100%;height:100%;border:none;background:transparent;border-radius:9px;font:inherit;font-size:12.5px;font-weight:600;color:#2a2a2a;cursor:pointer;transition:background .1s;}'
+    + '.gsch-minical .mc-day:hover{background:#eef2f5;}'
+    + '.gsch-minical .mc-day.today{color:#B0791E;font-weight:800;}'
+    + '.gsch-minical .mc-day.sel{background:var(--gri-accent,#2C5856);color:#fff;font-weight:800;}'
+    + '.gsch-minical .mc-day.we{color:#6a7a86;}'
+    + '.gsch-minical .mc-day.sel.we{color:#fff;}'
+    + '.gsch-form .acts{display:flex;gap:8px;margin-top:4px;}'
     + '.gsch-btn{background:var(--gri-accent,#2C5856);color:#fff;border:none;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;}'
     + '.gsch-btn.ghost{background:transparent;color:#6a6250;border:1px solid #d8d2c4;}'
     + '.gsch-btn.danger{background:transparent;color:#b3402f;border:1px solid #e3b6ae;}'
@@ -159,6 +182,22 @@
     + '.gsch-daymodal-list::-webkit-scrollbar{width:7px;}'
     + '.gsch-daymodal-list::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
     + '.gsch-daymodal-list::-webkit-scrollbar-track{background:transparent;}'
+    /* Gün popup — ajanda satırı (saat solda, ders sağda) */
+    + '.gsch-dayrow{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #ece4d4;border-radius:12px;padding:10px 12px 11px;box-shadow:0 1px 3px rgba(30,25,20,.05);}'
+    + '.gsch-dayrow-time{flex:0 0 auto;text-align:right;min-width:46px;padding-top:1px;}'
+    + '.gsch-dayrow-time b{display:block;font-size:15px;font-weight:800;color:#2a2a2a;line-height:1.1;}'
+    + '.gsch-dayrow-time span{display:block;font-size:11px;color:#a89a78;margin-top:2px;}'
+    + '.gsch-dayrow-main{flex:1 1 auto;min-width:0;}'
+    + '.gsch-dayrow-title{font-weight:700;font-size:14px;color:#2a2a2a;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3;}'
+    + '.gsch-dayrow-cls{font-size:11px;font-weight:700;padding:1px 9px;border-radius:100px;white-space:nowrap;}'
+    + '.gsch-dayrow-meta{font-size:12px;color:#8a8172;margin-top:3px;}'
+    + '.gsch-dayrow .gsch-item-actions{margin-top:9px;}'
+    + '.gsch-dayrow.ext{opacity:.92;}'
+    + ':root[data-theme="dark"] .gsch-dayrow{background:#241f18;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-dayrow-time b{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-dayrow-time span{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-dayrow-title{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-dayrow-meta{color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-daymodal-hol{color:#efab9f;background:#3a211d;border-left-color:#c2564d;}'
     + ':root[data-theme="dark"] .gsch-daymodal-hol.half{color:#e6b98c;background:#3a2a1a;border-left-color:#b5804a;}'
     + ':root[data-theme="dark"] .gsch-daymodal-list::-webkit-scrollbar-thumb{background:#3a3428;}'
@@ -232,6 +271,20 @@
     + ':root[data-theme="dark"] .gsch-form label{color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-form input,:root[data-theme="dark"] .gsch-form select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-form .f-colon{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-form-title{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-form-x{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-form-x:hover{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .f-datebtn{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .f-datebtn.empty{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-minical{background:#241f18;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-h b{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-h button{background:#2a2419;border-color:#3a3428;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-h button:hover{background:#2C5856;color:#fff;border-color:#2C5856;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-day{color:#e6ddcb;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-day:hover{background:#20302d;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-day.today{color:#E0B85A;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-day.sel{background:#3f7a72;color:#fff;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-day.we{color:#93a3ad;}'
     + ':root[data-theme="dark"] .gsch-btn.ghost{color:#b5ac98;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-btn.danger{color:#e6796a;border-color:#5a3630;}'
     + ':root[data-theme="dark"] .gsch-item{background:#241f18;border-color:#3a3428;}'
@@ -295,7 +348,10 @@
   var MONTHS=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
   var MONTHS_L=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   var WD=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  var MWD=['Pt','Sa','Ça','Pe','Cu','Ct','Pa'];
   function two(n){return n<10?'0'+n:''+n;}
+  function parseIso(s){ var p=String(s||'').split('-'); if(p.length<3) return null; var d=new Date(+p[0],(+p[1])-1,+p[2]); return isNaN(d.getTime())?null:d; }
+  function fmtDateLong(iso){ var d=parseIso(iso); if(!d) return ''; return d.getDate()+' '+MONTHS_L[d.getMonth()]+' '+d.getFullYear(); }
   function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
   function hhmm(d){ return two(d.getHours())+':'+two(d.getMinutes()); }
   function relLabel(start){
@@ -330,15 +386,16 @@
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + ((role==='teacher'||manageOwn) ?
-          '<div class="gsch-form">'
+          '<div class="gsch-form-ov"><div class="gsch-form">'
+          + '<div class="gsch-form-head"><h4 class="gsch-form-title">Yeni Ders Planla</h4><button type="button" class="gsch-form-x f-cancel" aria-label="Kapat">&times;</button></div>'
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
-          + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
-          + '<label>Tarih & saat<span class="f-when-ctl"><input type="date" class="f-date" lang="tr-TR"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
+          + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label></div>'
+          + '<div class="row"><label>Tarih & saat<span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
           + '<div class="row"><label style="flex:2">Not (opsiyonel)<input type="text" class="f-note" placeholder="Öğrencilere kısa not" maxlength="140"></label></div>'
           + '<div class="acts"><button class="gsch-btn f-save">Planla</button><button class="gsch-btn ghost f-cancel">Vazgeç</button></div>'
-          + '</div>'
+          + '</div></div>'
         : '')
       + '<div class="gsch-body"></div>'
       + '</div>';
@@ -346,23 +403,65 @@
     var body=cont.querySelector('.gsch-body');
     cont.querySelectorAll('.gsch-toggle button').forEach(function(b){ b.addEventListener('click',function(){ state.view=b.dataset.v; try{localStorage.setItem('gsch-view',state.view);}catch(e){} cont.querySelectorAll('.gsch-toggle button').forEach(function(x){x.classList.toggle('on',x===b);}); render(); }); });
 
+    function setFDate(iso){
+      var inp=cont.querySelector('.f-date'), btn=cont.querySelector('.f-datebtn'); if(!inp) return;
+      inp.value=iso||'';
+      if(btn){ if(iso){ btn.textContent=fmtDateLong(iso); btn.classList.remove('empty'); } else { btn.textContent='Tarih seç'; btn.classList.add('empty'); } }
+    }
+    function setFormTitle(t){ var el=cont.querySelector('.gsch-form-title'); if(el) el.textContent=t; }
+    function formOpen(){ var ov=cont.querySelector('.gsch-form-ov'); if(ov) ov.classList.add('open'); }
     function resetForm(){
-      var f=cont.querySelector('.gsch-form'); if(!f) return;
-      f.classList.remove('open'); f.classList.remove('editing');
+      var ov=cont.querySelector('.gsch-form-ov'), f=cont.querySelector('.gsch-form'); if(!f) return;
+      if(ov) ov.classList.remove('open'); f.classList.remove('editing');
       state.editing=null;
       var sv=cont.querySelector('.f-save'); if(sv) sv.textContent='Planla';
-      cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value='';
+      setFormTitle('Yeni Ders Planla');
+      cont.querySelector('.f-title').value=''; cont.querySelector('.f-note').value=''; setFDate('');
+      var fh=cont.querySelector('.f-h'), fm=cont.querySelector('.f-m'); if(fh) fh.value=''; if(fm) fm.value='';
     }
 
     var form=cont.querySelector('.gsch-form');
     if(form){
+      var _formOvEl=cont.querySelector('.gsch-form-ov');
       var newBtn=cont.querySelector('.gsch-new');
       if(newBtn) newBtn.addEventListener('click',function(){
-        if(form.classList.contains('open')){ resetForm(); }
-        else { resetForm(); form.classList.add('open'); }
+        if(_formOvEl && _formOvEl.classList.contains('open')){ resetForm(); }
+        else { resetForm(); formOpen(); var ft=cont.querySelector('.f-title'); if(ft){ try{ ft.focus(); }catch(e){} } }
       });
-      cont.querySelector('.f-cancel').addEventListener('click', resetForm);
+      cont.querySelectorAll('.f-cancel').forEach(function(b){ b.addEventListener('click', resetForm); });
       cont.querySelector('.f-save').addEventListener('click', save);
+      var _dbtn=cont.querySelector('.f-datebtn');
+      if(_dbtn) _dbtn.addEventListener('click',function(){ openDatePicker(cont.querySelector('.f-date').value, function(iso){ setFDate(iso); }); });
+      if(_formOvEl){ _formOvEl.addEventListener('click',function(e){ if(e.target===_formOvEl) resetForm(); }); }
+      document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var ov=cont.querySelector('.gsch-form-ov'); if(ov&&ov.classList.contains('open')) resetForm(); } });
+    }
+
+    // Mini takvim tarih seçici popup
+    function openDatePicker(curIso, onPick){
+      var cur=parseIso(curIso)||new Date();
+      var view=new Date(cur.getFullYear(),cur.getMonth(),1);
+      var ov=document.createElement('div'); ov.className='gsch-modal-ov'; ov.style.zIndex='100001';
+      ov.innerHTML='<div class="gsch-minical"></div>';
+      var box=ov.querySelector('.gsch-minical');
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      function draw(){
+        var y=view.getFullYear(), mo=view.getMonth();
+        var first=new Date(y,mo,1), startWd=(first.getDay()+6)%7, days=new Date(y,mo+1,0).getDate(), today=new Date();
+        var cells='';
+        for(var i=0;i<startWd;i++) cells+='<span class="mc-cell"></span>';
+        for(var d=1;d<=days;d++){
+          var dObj=new Date(y,mo,d), dw=(dObj.getDay()===0||dObj.getDay()===6);
+          var sel=curIso&&sameDay(dObj,parseIso(curIso)), isT=sameDay(dObj,today);
+          cells+='<span class="mc-cell"><button type="button" class="mc-day'+(sel?' sel':'')+(isT?' today':'')+(dw?' we':'')+'" data-d="'+d+'">'+d+'</button></span>';
+        }
+        box.innerHTML='<div class="mc-h"><button type="button" class="mc-prev" aria-label="Önceki ay">‹</button><b>'+MONTHS_L[mo]+' '+y+'</b><button type="button" class="mc-next" aria-label="Sonraki ay">›</button></div>'
+          +'<div class="mc-grid">'+MWD.map(function(w){return '<span class="mc-wd">'+w+'</span>';}).join('')+cells+'</div>';
+        box.querySelector('.mc-prev').onclick=function(){ view=new Date(y,mo-1,1); draw(); };
+        box.querySelector('.mc-next').onclick=function(){ view=new Date(y,mo+1,1); draw(); };
+        box.querySelectorAll('.mc-day').forEach(function(b){ b.onclick=function(){ var dd=parseInt(b.getAttribute('data-d'),10); curIso=y+'-'+two(mo+1)+'-'+two(dd); onPick(curIso); close(); }; });
+      }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      document.body.appendChild(ov); draw();
     }
 
     function canManage(row){ if(row._ext) return false; return role==='teacher' || (!!opts.userId && String(row.teacher_id)===String(opts.userId)); }
@@ -514,14 +613,15 @@
       var d=row._d;
       if(aggregate){ var fc=cont.querySelector('.f-class'); if(fc) fc.value=row.class_id; }
       cont.querySelector('.f-title').value=row.title||'';
-      cont.querySelector('.f-date').value=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
+      setFDate(d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()));
       cont.querySelector('.f-h').value=two(d.getHours());
       cont.querySelector('.f-m').value=two(Math.floor(d.getMinutes()/5)*5);
       cont.querySelector('.f-dur').value=String(row.duration_min||60);
       cont.querySelector('.f-note').value=row.note||'';
-      var f=cont.querySelector('.gsch-form'); f.classList.add('open'); f.classList.add('editing');
+      var f=cont.querySelector('.gsch-form'); f.classList.add('editing');
+      setFormTitle('Dersi Düzenle');
       cont.querySelector('.f-save').textContent='Güncelle';
-      if(f.scrollIntoView) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+      formOpen();
     }
 
     async function reschedule(id, iso){
@@ -629,6 +729,20 @@
         + '</div>';
     }
 
+    // Gün popup için ajanda satırı: tarih tekrarı yok; saat solda, ders sağda
+    function dayItemHTML(row){
+      var d=row._d, dur=row.duration_min||60, col=rowColor(row);
+      var end=new Date(d.getTime()+dur*60000);
+      var cls=(row.classes&&row.classes.name)?row.classes.name:'';
+      return '<div class="gsch-dayrow'+(row._ext?' ext':'')+'" style="border-left:4px solid '+col+'">'
+        + '<div class="gsch-dayrow-time"><b>'+hhmm(d)+'</b><span>'+hhmm(end)+'</span></div>'
+        + '<div class="gsch-dayrow-main">'
+          + '<div class="gsch-dayrow-title">'+esc(row.title)+(cls?' <span class="gsch-dayrow-cls" style="background:'+col+'22;color:'+col+'">'+esc(cls)+'</span>':'')+'</div>'
+          + '<div class="gsch-dayrow-meta">'+dur+' dk'+(row.note?(' · '+esc(row.note)):'')+'</div>'
+          + '<div class="gsch-item-actions">'+actionBtns(row)+'</div>'
+        + '</div></div>';
+    }
+
     function bindActions(scope){
       scope.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click',function(){ cancelLesson(b.getAttribute('data-cancel')); }); });
       scope.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click',function(){ startEdit(b.getAttribute('data-edit')); }); });
@@ -719,10 +833,10 @@
     // Planlama formunu belirli bir günün tarihiyle ön-doldurup aç
     function openNewForm(y,mo,dnum){
       var f=cont.querySelector('.gsch-form'); if(!f) return;
-      resetForm(); f.classList.add('open');
-      var fd=cont.querySelector('.f-date'); if(fd && y!=null) fd.value=y+'-'+two(mo+1)+'-'+two(dnum);
+      resetForm();
+      if(y!=null) setFDate(y+'-'+two(mo+1)+'-'+two(dnum));
+      formOpen();
       var ft=cont.querySelector('.f-title'); if(ft){ try{ ft.focus(); }catch(e){} }
-      if(f.scrollIntoView) f.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
 
     // Bir güne tıklayınca o günün tüm planını gösteren popup (kaç ders olursa olsun)
@@ -732,7 +846,7 @@
       var hol=holidayMap(y)[y+'-'+two(mo+1)+'-'+two(dnum)];
       var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
-      var listHTML=rows.length ? rows.map(itemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
+      var listHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
       var planBtn=(role==='teacher') ? '<button type="button" class="gsch-btn gsch-dayplan">+ Bu güne ders planla</button>' : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
       ov.innerHTML='<div class="gsch-modal gsch-daymodal"><h4>'+esc(head)+'</h4>'+holBadge

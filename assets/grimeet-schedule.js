@@ -136,7 +136,8 @@
     + '.gsch-cal .wd{text-align:center;font-size:10.5px;color:#9a8f79;padding:8px 0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#f7f2e8;}'
     + '.gsch-cell{min-height:66px;padding:5px 5px 5px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;display:flex;flex-direction:column;}'
     + '.gsch-cell .gsch-evs{flex:1 1 auto;min-height:0;overflow:hidden;}'
-    + '.gsch-cell.out{background:#f7f2e8;}'
+    + '.gsch-cell.out{background:#faf7f1;}'
+    + '.gsch-cell.out .num{color:#c6b9a0;font-weight:600;}'
     + '.gsch-cell.has{cursor:pointer;}'
     + '.gsch-cell.has:hover{background:#f1f8f6;}'
     + '.gsch-cell.today{background:#fbf7ee;}'
@@ -179,6 +180,23 @@
     + '.gsch-daymodal-h h4{margin:0;}'
     + '.gsch-daymodal-count{flex:0 0 auto;font-size:11px;font-weight:800;color:#2C5856;background:#e7f0ee;border-radius:100px;padding:3px 10px;white-space:nowrap;}'
     + ':root[data-theme="dark"] .gsch-daymodal-count{color:#bfe0da;background:#22403e;}'
+    + '.gsch-daymodal.has-form{max-width:740px;}'
+    + '.gsch-daymodal-body{display:flex;gap:16px;align-items:flex-start;}'
+    + '.gsch-daymodal-left{flex:1 1 auto;min-width:0;}'
+    + '.gsch-daymodal-form{flex:0 0 252px;background:#fff;border:1px solid #ece4d4;border-radius:12px;padding:13px 14px;}'
+    + '.gsch-daymodal-form .dmf-title{font-size:13px;font-weight:800;color:#2a2a2a;margin-bottom:11px;}'
+    + '.gsch-daymodal-form .dmf-l{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#6a6250;margin-bottom:10px;}'
+    + '.gsch-daymodal-form input,.gsch-daymodal-form select{font:inherit;padding:8px 9px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
+    + '.gsch-daymodal-form .dmf-row{display:flex;gap:9px;}'
+    + '.gsch-daymodal-form .dmf-row .dmf-l{flex:1;}'
+    + '.gsch-daymodal-form .dmf-time{display:flex;align-items:center;gap:5px;}'
+    + '.gsch-daymodal-form .dmf-time select{flex:1;padding:8px 4px;min-width:0;}'
+    + '.gsch-daymodal-form .dmf-save{width:100%;margin-top:2px;}'
+    + '@media(max-width:640px){.gsch-daymodal.has-form{max-width:480px;}.gsch-daymodal-body{flex-direction:column;}.gsch-daymodal-form{flex-basis:auto;width:100%;box-sizing:border-box;}}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form{background:#241f18;border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-title{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-l{color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form input,:root[data-theme="dark"] .gsch-daymodal-form select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-daymodal-hol{font-size:12px;font-weight:700;color:#8c2b24;background:#f4d9d4;border-left:3px solid #B23A48;border-radius:4px;padding:6px 11px;margin:0 0 12px;}'
     + '.gsch-daymodal-hol.half{color:#894c22;background:#f2dccb;border-left-color:#C67A34;}'
     + '.gsch-daymodal-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;}'
@@ -223,6 +241,7 @@
     + '.gsch-resizer::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:46px;border-radius:4px;background:#d8d2c4;transition:background .12s,height .12s;}'
     + '.gsch-resizer:hover::before,.gsch-resizer.drag::before{background:var(--gri-accent,#2C5856);height:64px;}'
     + '.gsch-col-list{flex:0 0 var(--gsch-list-w,400px);position:relative;}'
+    + '.gsch-split.list-off .gsch-col-list,.gsch-split.list-off .gsch-resizer{display:none;}'
     + '.gsch-col-list-inner{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-right:6px;}'
     + '.gsch-col-list-inner::-webkit-scrollbar{width:8px;}'
     + '.gsch-col-list-inner::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
@@ -305,6 +324,7 @@
     + ':root[data-theme="dark"] .gsch-cal .wd{color:#9a917d;background:#221d16;}'
     + ':root[data-theme="dark"] .gsch-cell{background:#1c1813;}'
     + ':root[data-theme="dark"] .gsch-cell.out{background:#181410;}'
+    + ':root[data-theme="dark"] .gsch-cell.out .num{color:#5c5442;}'
     + ':root[data-theme="dark"] .gsch-cell.has:hover{background:#20302d;}'
     + ':root[data-theme="dark"] .gsch-cell.today{background:#231f16;}'
     + ':root[data-theme="dark"] .gsch-cell:not(.sel) .num{color:#b5ac98;}'
@@ -375,6 +395,7 @@
     var classList=opts.classes||[];               // aggregate modda ders planlama için sınıf seçici
     var _savedView='list'; try{ var _v=localStorage.getItem('gsch-view'); if(_v==='cal'||_v==='list') _savedView=_v; }catch(e){}
     var statsOpen=false; try{ statsOpen=localStorage.getItem('gsch-stats-open')==='1'; }catch(e){}
+    var listOpen=true; try{ if(localStorage.getItem('gsch-list-open')==='0') listOpen=false; }catch(e){}
     var statsData=null; // Ders İstatistiği için gruplanmış geçmiş dersler (null=henüz yüklenmedi)
     var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null };
 
@@ -385,6 +406,7 @@
       '<div class="gsch">'
       + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
         + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Takvim Renkleri</button>' : '')
+        + '<button class="gsch-sub gsch-list-btn" type="button">Liste '+(listOpen?'▾':'▸')+'</button>'
         + '<button class="gsch-sub gsch-stats-btn" type="button">Ders İstatistiği '+(statsOpen?'▾':'▸')+'</button>'
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
@@ -394,7 +416,8 @@
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label></div>'
-          + '<div class="row"><label>Tarih & saat<span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
+          + '<div class="row"><label>Tarih<span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button></span></label></div>'
+          + '<div class="row"><label>Saat<span class="f-when-ctl"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
           + '<div class="row"><label style="flex:2">Not (opsiyonel)<input type="text" class="f-note" placeholder="Öğrencilere kısa not" maxlength="140"></label></div>'
           + '<div class="acts"><button class="gsch-btn f-save">Planla</button><button class="gsch-btn ghost f-cancel">Vazgeç</button></div>'
@@ -483,6 +506,15 @@
 
     var _subBtn=cont.querySelector('.gsch-sub:not(.gsch-colors):not(.gsch-stats-btn)'); if(_subBtn) _subBtn.addEventListener('click', openSubscribeModal);
     var _colBtn=cont.querySelector('.gsch-colors'); if(_colBtn) _colBtn.addEventListener('click', openColorsModal);
+    var _listBtn=cont.querySelector('.gsch-list-btn');
+    if(_listBtn) _listBtn.addEventListener('click', function(){
+      listOpen=!listOpen;
+      try{ localStorage.setItem('gsch-list-open', listOpen?'1':'0'); }catch(e){}
+      _listBtn.textContent='Liste '+(listOpen?'▾':'▸');
+      var sp=cont.querySelector('.gsch-split'); if(sp) sp.classList.toggle('list-off', !listOpen);
+      try{ fitDayCells(cont.querySelector('.gsch-gridwrap')); }catch(e){}
+    });
+
     var _statsBtn=cont.querySelector('.gsch-stats-btn');
     if(_statsBtn) _statsBtn.addEventListener('click', function(){
       statsOpen=!statsOpen;
@@ -634,6 +666,15 @@
         sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:id}}).catch(function(){});
         await load();
       }catch(e){ alert('Taşınamadı: '+(e.message||'hata')); }
+    }
+
+    // Ortak ders oluşturma (save + gün-popup hızlı form kullanır)
+    async function createLesson(classId, title, startsAt, dur, note){
+      var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
+      var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
+      if(r.error) throw r.error;
+      if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
+      return r;
     }
 
     async function save(){
@@ -790,16 +831,19 @@
       var today=new Date();
       var holMap=holidayMap(y);
       var cells='';
-      for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"></div>';
+      var prevDays=new Date(y,mo,0).getDate();
+      for(var i=0;i<startWd;i++){ var _pd=prevDays-startWd+1+i; cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"><span class="num">'+_pd+'</span></div>'; }
       for(var dnum=1;dnum<=days;dnum++){
         var _dd=new Date(y,mo,dnum), _dw=_dd.getDay(), we=(_dw===0||_dw===6);
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(_dd,today), selD=state.sel&&sameDay(_dd,state.sel);
         var holHTML=hol?('<span class="hol'+(hol.half?' half':'')+'" title="'+esc(hol.name)+'">'+esc(hol.name)+'</span>'):'';
         var evHTML=evs.map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
-        var cls='gsch-cell'+(has?' has':'')+((has||hol)?' gsch-clk':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
+        var cls='gsch-cell'+(has?' has':'')+((has||hol||role==='teacher')?' gsch-clk':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
+      var _tot=startWd+days, _trail=(7-(_tot%7))%7;
+      for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+'"><span class="num">'+_tj+'</span></div>'; }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
@@ -842,27 +886,64 @@
       var ft=cont.querySelector('.f-title'); if(ft){ try{ ft.focus(); }catch(e){} }
     }
 
-    // Bir güne tıklayınca o günün tüm planını gösteren popup (kaç ders olursa olsun)
+    // Bir güne tıklayınca: solda o günün planı (ajanda), sağda o güne hızlı ders planlama (öğretmen)
     function openDayModal(y,mo,dnum){
       var dObj=new Date(y,mo,dnum);
-      var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
       var hol=holidayMap(y)[y+'-'+two(mo+1)+'-'+two(dnum)];
       var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
-      var listHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
-      var planBtn=(role==='teacher') ? '<button type="button" class="gsch-btn gsch-dayplan">+ Bu güne ders planla</button>' : '';
-      var countHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' ders</span>'):'';
+      var showForm=(role==='teacher');
+      var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('');
+      var formHTML = showForm ? (
+        '<div class="gsch-daymodal-form">'
+        + '<div class="dmf-title">Bu güne ders planla</div>'
+        + (aggregate ? '<label class="dmf-l">Sınıf<select class="dmf-class">'+classOpts+'</select></label>' : '')
+        + '<label class="dmf-l">Başlık<input type="text" class="dmf-t" placeholder="Örn. Speaking pratiği" maxlength="80"></label>'
+        + '<div class="dmf-row"><label class="dmf-l">Saat<span class="dmf-time"><select class="dmf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="dmf-m">'+_mopt+'</select></span></label>'
+        + '<label class="dmf-l">Süre<select class="dmf-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
+        + '<label class="dmf-l">Not<input type="text" class="dmf-n" placeholder="Öğrencilere kısa not" maxlength="140"></label>'
+        + '<button type="button" class="gsch-btn dmf-save">Planla</button>'
+        + '</div>'
+      ) : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal gsch-daymodal"><div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4>'+countHTML+'</div>'+holBadge
-        +'<div class="gsch-daymodal-list">'+listHTML+'</div>'
-        +'<div class="macts" style="margin-top:14px;justify-content:space-between;">'+planBtn+'<button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
+      ov.innerHTML='<div class="gsch-modal gsch-daymodal'+(showForm?' has-form':'')+'">'
+        + '<div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4><span class="gsch-daymodal-count-slot"></span></div>'+holBadge
+        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
+        + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);
+      var listEl=ov.querySelector('.gsch-daymodal-list'), countSlot=ov.querySelector('.gsch-daymodal-count-slot');
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      function renderDay(){
+        var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
+        listEl.innerHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün henüz planlı ders yok.</div>';
+        countSlot.innerHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' ders</span>'):'';
+        bindActions(listEl);
+        listEl.querySelectorAll('[data-edit],[data-cancel]').forEach(function(b){ b.addEventListener('click',close); });
+      }
       ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
       ov.querySelector('.m-close').addEventListener('click',close);
-      var pb=ov.querySelector('.gsch-dayplan'); if(pb) pb.addEventListener('click',function(){ close(); openNewForm(y,mo,dnum); });
-      bindActions(ov);
-      ov.querySelectorAll('[data-edit],[data-cancel]').forEach(function(b){ b.addEventListener('click',close); });
+      renderDay();
+      if(showForm){
+        var sv=ov.querySelector('.dmf-save');
+        sv.addEventListener('click', async function(){
+          var title=(ov.querySelector('.dmf-t').value||'').trim();
+          var h=ov.querySelector('.dmf-h').value, m=ov.querySelector('.dmf-m').value;
+          var dur=parseInt(ov.querySelector('.dmf-dur').value,10)||60;
+          var note=(ov.querySelector('.dmf-n').value||'').trim();
+          var classId=aggregate ? ((ov.querySelector('.dmf-class')||{}).value||'') : opts.classId;
+          if(!title){ alert('Başlık gir.'); return; }
+          if(!h){ alert('Saat seç.'); return; }
+          if(aggregate && !classId){ alert('Sınıf seç.'); return; }
+          var startsAt=new Date(y,mo,dnum,parseInt(h,10),parseInt(m||'0',10),0,0);
+          sv.disabled=true; var ot=sv.textContent; sv.textContent='Kaydediliyor…';
+          try{
+            await createLesson(classId,title,startsAt,dur,note);
+            ov.querySelector('.dmf-t').value=''; ov.querySelector('.dmf-n').value='';
+            await load(); renderDay();
+          }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }
+          finally{ sv.disabled=false; sv.textContent=ot; }
+        });
+      }
     }
 
     // Hücreye sığmayan dersleri gizleyip "+N ders" etiketi ekle (yükseklik değişince yeniden çalışır)
@@ -997,7 +1078,7 @@
     function render(){
       var mainHTML = !state.rows.length
         ? '<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'
-        : '<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
+        : '<div class="gsch-split'+(listOpen?'':' list-off')+'"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
       body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
         + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
       if(state.rows.length){

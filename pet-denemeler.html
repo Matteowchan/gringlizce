@@ -50,8 +50,8 @@
     .hz-go{margin-top:auto;display:inline-flex;align-items:center;gap:.35rem;font-weight:700;font-size:.9rem;color:var(--teal,#2C5856)}
     .hz-go::after{content:"\2192";transition:transform .15s}
     .hz-card:hover .hz-go::after{transform:translateX(3px)}
-    .hz-badge{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;gap:.3rem;font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.24rem .55rem;border-radius:100px}
-    .hz-badge.free{background:var(--teal-soft,rgba(44,88,86,.12));color:var(--teal,#2C5856)}
+    .hz-badge{position:absolute;top:1rem;right:1rem}
+    .hz-card.locked{opacity:.9}
     .hz-note{max-width:720px;margin:1rem auto 3rem;padding:0 1.1rem;text-align:center;font-size:.9rem;opacity:.82;line-height:1.65;color:var(--text-soft,#6b6250)}
     .hz-note b{color:var(--teal-deep,var(--teal,#2C5856))}
     .hz-empty{max-width:720px;margin:2rem auto;text-align:center;color:var(--text-soft,#6b6250)}
@@ -71,24 +71,31 @@
 
   <main class="hz-grid" id="grid"></main>
 
-  <p class="hz-note"><b>Denemeler herkese açık;</b> puanının kaydolması için giriş yapman yeterli. Sorular ve dinleme materyalleri Gri English tarafından özgün olarak hazırlanmıştır. Öğretmenler bu denemeleri sınıflarına ödev olarak da atayabilir.</p>
+  <p class="hz-note"><b>İlk deneme ücretsiz;</b> tüm denemelere erişim için Premium gerekir. Puanının kaydolması için giriş yapman yeterli. Sorular ve dinleme materyalleri Gri English tarafından özgün olarak hazırlanmıştır. Öğretmenler bu denemeleri sınıflarına ödev olarak da atayabilir.</p>
 
   <script src="assets/curriculum.js?v=29"></script>
   <script src="assets/nav.js?v=31"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <script>
     (function(){
       var grid=document.getElementById('grid'), countEl=document.getElementById('hz-count');
       function petNum(t){ var m=String(t||'').match(/Deneme\s*(\d+)/i); return m?parseInt(m[1],10):9999; }
-      function card(a){
+      function pbadge(s){ return (window.GriPremium&&window.GriPremium.badge)?window.GriPremium.badge(s):'<span class="gpb gpb--'+s+'">'+(s==='free'?'Ücretsiz':'Premium')+'</span>'; }
+      function card(a, idx, prem){
         var n=petNum(a.title);
-        return '<a class="hz-card" href="odev?id='+encodeURIComponent(a.id)+'&deneme=1">'
-          + '<span class="hz-badge free">Ücretsiz</span>'
+        var isPrem = idx>0;                 // ilk deneme (idx 0) ücretsiz, gerisi premium
+        var locked = isPrem && !prem;
+        var href = locked ? 'premium' : ('odev?id='+encodeURIComponent(a.id)+'&deneme=1');
+        var badge = !isPrem ? pbadge('free') : (prem ? pbadge('open') : pbadge('lock'));
+        var go = locked ? 'Premium ile kilidi aç' : 'Denemeyi başlat';
+        return '<a class="hz-card'+(locked?' locked':'')+'" href="'+href+'">'
+          + '<span class="hz-badge">'+badge+'</span>'
           + '<span class="hz-num">'+(n===9999?'PET':n)+'</span>'
           + '<h3>PET Deneme '+(n===9999?'':n)+'</h3>'
           + '<div class="hz-meta">Reading · Listening · Writing</div>'
           + '<p>Tam PET formatı deneme; bitince puanın ve varsa açıklamalar gösterilir.</p>'
-          + '<span class="hz-go">Denemeyi başlat</span></a>';
+          + '<span class="hz-go">'+go+'</span></a>';
       }
       try{
         var sb = window.supabase.createClient(window.SUPABASE_URL||'https://vazbvbqgvtlaqkytfsbi.supabase.co', window.SUPABASE_KEY||'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g');
@@ -97,7 +104,13 @@
           rows.sort(function(a,b){ return petNum(a.title)-petNum(b.title); });
           if(!rows.length){ grid.innerHTML='<p class="hz-empty">Denemeler yüklenemedi. Lütfen tekrar deneyin.</p>'; if(countEl)countEl.textContent='—'; return; }
           if(countEl)countEl.textContent=rows.length+' tam deneme';
-          grid.innerHTML=rows.map(card).join('');
+          function render(){
+            var prem=false; try{ prem=!!(window.GriPremium&&window.GriPremium.isActive&&window.GriPremium.isActive()); }catch(e){}
+            grid.innerHTML=rows.map(function(a,i){ return card(a,i,prem); }).join('');
+          }
+          render();
+          window.addEventListener('gri-premium', render);
+          try{ if(window.GriPremium&&window.GriPremium.refresh) window.GriPremium.refresh().then(render); }catch(e){}
         });
       }catch(e){ grid.innerHTML='<p class="hz-empty">Denemeler yüklenemedi.</p>'; }
     })();

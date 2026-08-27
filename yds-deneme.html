@@ -45,13 +45,9 @@
     .dn-body{flex:1;min-width:0;}
     .dn-title{font-family:Georgia,serif;font-size:1.1rem;font-weight:700;margin:0 0 2px;color:var(--text,#1A2230);}
     .dn-sub{font-size:.86rem;color:var(--text-muted,#8A7F6E);}
-    .dn-tag{flex:none;font-size:11px;font-weight:700;letter-spacing:.4px;padding:4px 10px;border-radius:100px;}
-    .dn-tag.free{background:var(--teal,#2C5856);color:#fff;}
-    .dn-tag.pro{background:#7A3B3B;color:#fff;}
-    .dn-tag.open{background:#2f8f6b;color:#fff;}
+    .dn-tag{flex:none;}
     .dn-card.locked{opacity:.72;}
     .dn-card.locked .dn-num{background:rgba(122,59,59,.12);color:#7A3B3B;}
-    .dn-lock-ico{flex:none;color:#7A3B3B;}
   </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -72,7 +68,7 @@
   <script src="assets/nav.js?v=31"></script>
   <script src="assets/track.js?v=3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
 </head><body data-cat="yds">
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="launch-banner" data-site-banner>Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
@@ -147,7 +143,7 @@
   <script src="assets/site-config.js?v=7" defer></script>
   <script>
     (function () {
-      var LOCK_SVG = '<svg class="dn-lock-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+      function pbadge(s){ return (window.GriPremium&&GriPremium.badge)?GriPremium.badge(s):'<span class="gpb gpb--'+s+'">'+(s==='free'?'Ücretsiz':'Premium')+'</span>'; }
       var DENEMELER = [
         { n: 1, tag: 'yds-full-1', free: true },
         { n: 2, tag: 'yds-full-2', free: false },
@@ -163,8 +159,7 @@
         grid.innerHTML = DENEMELER.map(function (d) {
           var unlocked = d.free || prem;
           var href = unlocked ? ('soru?deneme=' + d.tag) : 'premium';
-          var tag = d.free ? '<span class="dn-tag free">Ücretsiz</span>'
-            : (prem ? '<span class="dn-tag open">🔓 Premium</span>' : LOCK_SVG);
+          var tag = '<span class="dn-tag">' + pbadge(d.free ? 'free' : (prem ? 'open' : 'lock')) + '</span>';
           var sub = unlocked ? '80 soru · ~180 dk · Türkçe açıklamalı'
             : 'Premium\'a özel · kilidi açmak için tıkla';
           return '<a href="' + href + '" class="dn-card' + (unlocked ? '' : ' locked') + '">' +

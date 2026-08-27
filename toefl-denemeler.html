@@ -51,10 +51,7 @@
     .hz-go{margin-top:auto;display:inline-flex;align-items:center;gap:.35rem;font-weight:700;font-size:.9rem;color:var(--teal,#2C5856)}
     .hz-go::after{content:"\2192";transition:transform .15s}
     .hz-card:hover .hz-go::after{transform:translateX(3px)}
-    .hz-badge{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;gap:.3rem;font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.24rem .55rem;border-radius:100px}
-    .hz-badge.free{background:var(--teal-soft,rgba(44,88,86,.12));color:var(--teal,#2C5856)}
-    .hz-badge.prem{background:#2b7a56;color:#fff}
-    .hz-badge.lock{background:#2b7a56;color:#fff;opacity:.92}
+    .hz-badge{position:absolute;top:1rem;right:1rem}
     .hz-card.locked{opacity:.9}
     .hz-note{max-width:720px;margin:1rem auto 3rem;padding:0 1.1rem;text-align:center;font-size:.9rem;opacity:.82;line-height:1.65;color:var(--text-soft,#6b6250)}
     .hz-note b{color:var(--teal-deep,var(--teal,#2C5856))}
@@ -79,7 +76,7 @@
   <script src="assets/curriculum.js?v=29"></script>
   <script src="assets/nav.js?v=31"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <script>
     (function(){
       var N=5, grid=document.getElementById('grid'), BESTS={};
@@ -91,12 +88,11 @@
         'Beşinci tam deneme; sınav öncesi son prova için ideal.'
       ];
       function isPrem(){ try{ return !!(window.GriPremium && window.GriPremium.isActive()); }catch(e){ return false; } }
+      function pbadge(s){ return (window.GriPremium&&GriPremium.badge)?GriPremium.badge(s):'<span class="gpb gpb--'+s+'">'+(s==='free'?'Ücretsiz':'Premium')+'</span>'; }
       function card(n){
         var free=(n===1), prem=isPrem(), unlocked=free||prem;
         var href = unlocked ? ('toefl-deneme?test='+n) : 'premium';
-        var badge = free ? '<span class="hz-badge free">Ücretsiz</span>'
-                         : (prem ? '<span class="hz-badge prem">🔓 Premium</span>'
-                                 : '<span class="hz-badge lock">🔒 Premium</span>');
+        var badge = '<span class="hz-badge">' + pbadge(free ? 'free' : (prem ? 'open' : 'lock')) + '</span>';
         var best=BESTS['toefl-'+n];
         var bestHtml = (unlocked && best!=null) ? '<div class="hz-best">En iyi skorun: '+best+'%</div>' : '';
         var go = unlocked ? 'Denemeyi başlat' : 'Premium ile aç';

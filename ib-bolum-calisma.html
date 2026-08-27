@@ -207,6 +207,8 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
+    .deneme-card.locked { opacity: 0.86; }
+    .deneme-card .lock-badge { position: absolute; top: 1rem; right: 1rem; }
 
     .deneme-card .eyebrow {
       color: #888;
@@ -331,6 +333,7 @@
   <script src="assets/curriculum.js?v=29"></script>
   <script src="assets/nav.js?v=31"></script>
   <script src="assets/track.js?v=3" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -690,9 +693,20 @@
         return;
       }
 
+      // Premium: her bölümde (level+paper) ilk deneme ücretsiz, gerisi kilitli
+      let prem = false;
+      try { if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); } } catch (e) {}
+      const freeSlug = tests.length ? tests[0].slug : null;
+      const pbadge = function (s) {
+        if (window.GriPremium && window.GriPremium.badge) return window.GriPremium.badge(s);
+        return '<span class="gpb gpb--' + s + '">' + (s === 'free' ? 'Ücretsiz' : 'Premium') + '</span>';
+      };
+
       const list = document.getElementById('testsList');
       let h = '';
       for (const t of tests) {
+        const isPremTest = freeSlug && t.slug !== freeSlug;
+        const locked = !prem && isPremTest;
         const tags = Array.isArray(t.topic_tags) ? t.topic_tags : [];
         const tagsHtml = tags.length
           ? '<div class="tags">' + tags.map(function (tag) { return '<span class="tag">' + escapeHtml(tag) + '</span>'; }).join('') + '</div>'
@@ -701,10 +715,26 @@
           ? '<div class="card-desc">' + escapeHtml(t.description) + '</div>'
           : '';
         const durText = t.time_minutes ? (t.time_minutes + ' dk') : 'Başla';
+        const eyebrowHtml = '<div class="eyebrow">' + escapeHtml('IB ' + levelLabel + ' · ' + meta.label) + '</div>';
+        const nameHtml = '<div class="name">' + escapeHtml(t.name || 'Deneme') + '</div>';
 
+        if (locked) {
+          h += '<a href="premium" class="deneme-card locked">'
+             + '<span class="lock-badge">' + pbadge('lock') + '</span>'
+             + eyebrowHtml
+             + nameHtml
+             + descHtml
+             + tagsHtml
+             + '<div class="detail"><span>Premium ile kilidi aç</span><span class="arrow">→</span></div>'
+             + '</a>';
+          continue;
+        }
+
+        const openBadge = (prem && isPremTest) ? '<span class="lock-badge">' + pbadge('open') + '</span>' : '';
         h += '<a href="' + escapeHtml(meta.runner) + '?test=' + encodeURIComponent(t.slug) + '" class="deneme-card">'
-           + '<div class="eyebrow">' + escapeHtml('IB ' + levelLabel + ' · ' + meta.label) + '</div>'
-           + '<div class="name">' + escapeHtml(t.name || 'Deneme') + '</div>'
+           + openBadge
+           + eyebrowHtml
+           + nameHtml
            + descHtml
            + tagsHtml
            + '<div class="detail"><span>' + escapeHtml(durText) + '</span><span class="arrow">→</span></div>'

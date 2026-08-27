@@ -137,6 +137,14 @@
     + '.gsch-item-actions{margin-top:6px;display:flex;gap:6px;}'
     + '.gsch-item-actions .gsch-btn{flex:1;text-align:center;padding:5px 9px;font-size:12px;}'
     + '.gsch-empty{text-align:center;color:#8a8172;font-size:14px;padding:26px;background:#faf7f0;border-radius:12px;}'
+    + '.gsch-dayempty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#9a917f;padding:34px 20px;background:#faf7f0;border:1px dashed #e2dac9;border-radius:12px;min-height:120px;}'
+    + '.gsch-dayempty svg{color:#c3b9a3;}'
+    + '.gsch-dayempty div{font-size:14px;font-weight:600;color:#7c7360;}'
+    + '.gsch-dayempty small{font-size:12px;color:#a49a86;}'
+    + ':root[data-theme="dark"] .gsch-dayempty{background:#1f1b14;border-color:#3a3428;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-dayempty svg{color:#5c5646;}'
+    + ':root[data-theme="dark"] .gsch-dayempty div{color:#cabfa8;}'
+    + ':root[data-theme="dark"] .gsch-dayempty small{color:#8a8175;}'
     + '.gsch-cal{background:#fff;border:1px solid #e5ddcd;border-radius:16px;padding:16px 16px 14px;box-shadow:0 2px 12px rgba(30,25,20,.05);display:flex;flex-direction:column;min-height:0;height:100%;}'
     + '.gsch-cal-h{display:flex;align-items:center;gap:10px;margin-bottom:14px;}'
     + '.gsch-cal-h b{font-size:18px;font-weight:800;color:#2a2a2a;letter-spacing:-.01em;}'
@@ -218,6 +226,8 @@
     + '.gsch-daymodal-form.editing .dmf-cancel{display:inline-block;}'
     + '.gsch-daymodal-form .dmf-edittag{display:none;font-size:11.5px;font-weight:700;color:#2C5856;background:#e7f0ee;border-radius:7px;padding:7px 9px;margin:0 0 11px;line-height:1.4;}'
     + '.gsch-daymodal-form.editing .dmf-edittag{display:block;}'
+    + '.gsch-daymodal-form.editing .dmf-rep-l{display:none;}'
+    + '.gsch-daymodal-form .dmf-rep{background-image:none;}'
     + '.gsch-daymodal-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.16);}'
     + '.gsch-daymodal-form.editing .dmf-title{color:#2C5856;}'
     + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-edittag{color:#bfe0da;background:#22403e;}'
@@ -992,6 +1002,7 @@
         + '<div class="dmf-row"><label class="dmf-l">Saat<span class="dmf-time"><select class="dmf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="dmf-m">'+_mopt+'</select></span></label>'
         + '<label class="dmf-l">Süre<select class="dmf-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
         + '<label class="dmf-l">Not<input type="text" class="dmf-n" placeholder="Öğrencilere kısa not" maxlength="140"></label>'
+        + '<label class="dmf-l dmf-rep-l">Tekrar<select class="dmf-rep"><option value="0" selected>Tekrar yok — sadece bu gün</option><option value="4">Haftalık · 4 hafta</option><option value="8">Haftalık · 8 hafta</option><option value="12">Haftalık · 12 hafta</option></select></label>'
         + '<div class="dmf-acts"><button type="button" class="gsch-btn dmf-save">Planla</button><button type="button" class="gsch-btn ghost dmf-cancel">Vazgeç</button></div>'
         + '</div>'
       ) : '';
@@ -1013,6 +1024,7 @@
         q('.dmf-title').textContent='Bu güne ders planla';
         q('.dmf-save').textContent='Planla';
         q('.dmf-t').value=''; q('.dmf-n').value=''; q('.dmf-h').value=''; q('.dmf-m').value=''; q('.dmf-dur').value='60';
+        var rp=q('.dmf-rep'); if(rp) rp.value='0';
       }
       function editInPane(id){
         if(!showForm){ close(); startEdit(id); return; }
@@ -1036,7 +1048,7 @@
       }
       function renderDay(){
         var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
-        listEl.innerHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün henüz planlı ders yok.</div>';
+        listEl.innerHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-dayempty"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg><div>Bu güne henüz ders planlanmadı.</div>'+(showForm?'<small>Sağdaki formla ilk dersi ekle.</small>':'')+'</div>';
         countSlot.innerHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' ders</span>'):'';
         listEl.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click', async function(){ var cid=b.getAttribute('data-cancel'); await cancelLesson(cid); if(editingId===cid) resetPane(); renderDay(); }); });
         listEl.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click', function(){ editInPane(b.getAttribute('data-edit')); }); });
@@ -1053,14 +1065,21 @@
           var dur=parseInt(q('.dmf-dur').value,10)||60;
           var note=(q('.dmf-n').value||'').trim();
           var classId=aggregate ? ((q('.dmf-class')||{}).value||'') : opts.classId;
+          var rep=parseInt((q('.dmf-rep')||{}).value||'0',10)||0;
           if(!title){ alert('Başlık gir.'); return; }
           if(!h){ alert('Saat seç.'); return; }
           if(aggregate && !classId){ alert('Sınıf seç.'); return; }
-          var startsAt=new Date(y,mo,dnum,parseInt(h,10),parseInt(m||'0',10),0,0);
+          var H=parseInt(h,10), M=parseInt(m||'0',10);
+          var startsAt=new Date(y,mo,dnum,H,M,0,0);
           sv.disabled=true; var ot=sv.textContent; sv.textContent='Kaydediliyor…';
           try{
             if(editingId){ await updateLesson(editingId,classId,title,startsAt,dur,note); }
-            else { await createLesson(classId,title,startsAt,dur,note); }
+            else {
+              var made=0;
+              await createLesson(classId,title,startsAt,dur,note); made++;
+              for(var k=1;k<=rep;k++){ await createLesson(classId,title,new Date(y,mo,dnum+7*k,H,M,0,0),dur,note); made++; }
+              if(made>1) alert(made+' ders planlandı (haftalık tekrar).');
+            }
             resetPane(); await load(); renderDay();
           }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }
           finally{ sv.disabled=false; sv.textContent=ot; }

@@ -171,14 +171,13 @@
             page: location.pathname,
             anon: true
           };
-          // Eğer login olmuşsa, user_id + email + display_name'i de ekle
+          // GÜVENLİK: presence kanalı public (anon abone olabilir) → PII (email/isim) YAYINLAMA.
+          // Yalnızca user_id (uuid) yayınlanır; admin paneli email'i sunucu-taraflı admin-gate'li RPC ile çözer.
           try {
             var sess = await sb.auth.getSession();
             var user = sess && sess.data && sess.data.session && sess.data.session.user;
             if (user) {
               trackData.user_id = user.id;
-              trackData.email = user.email;
-              trackData.display_name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || (user.email ? user.email.split('@')[0] : '');
               trackData.anon = false;
             }
           } catch (e) {}

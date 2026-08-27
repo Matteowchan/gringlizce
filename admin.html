@@ -21,7 +21,7 @@
   <!-- Modern paylaşımlı nav (gri-nav): curriculum.js GRI_NAV'ı sağlar, nav.js body'e enjekte eder, site-config.js hesap widget'ını doldurur -->
   <script src="assets/curriculum.js?v=29"></script>
   <script src="assets/nav.js?v=31"></script>
-  <script src="assets/site-config.js?v=7" defer></script>
+  <script src="assets/site-config.js?v=8" defer></script>
   <style>
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
@@ -3322,7 +3322,8 @@
 
     // ============ PRESENCE ============
     var presenceChannel = null;
-    var presenceUsers = []; // {id, email, display_name, page, joined_at, anon}
+    var presenceUsers = []; // {id, user_id, page, joined_at, anon} — GÜVENLİK: presence PII taşımaz; email admin RPC ile çözülür
+    var onlineEmailMap = {}; // user_id -> email (admin_online_emails RPC'sinden, cache'li)
 
     function startPresenceListener() {
       try {
@@ -3380,11 +3381,23 @@
       return count;
     }
 
-    function renderOnlineUsersList() {
+    async function renderOnlineUsersList() {
       var listEl = $('online-list');
       var subEl = $('online-modal-sub');
       if (!listEl) return;
       var raw = (presenceUsers || []).slice();
+
+      // E-postaları SUNUCU-TARAFLI admin-gate'li RPC ile çöz (presence kanalı PII taşımaz)
+      var needIds = [];
+      raw.forEach(function (u) { if (u.user_id && !(u.user_id in onlineEmailMap)) { if (needIds.indexOf(u.user_id) === -1) needIds.push(u.user_id); } });
+      if (needIds.length) {
+        try {
+          var er = await sb.rpc('admin_online_emails', { p_ids: needIds });
+          (er && er.data || []).forEach(function (row) { onlineEmailMap[row.id] = row.email; });
+        } catch (e) {}
+        needIds.forEach(function (id) { if (!(id in onlineEmailMap)) onlineEmailMap[id] = null; });
+      }
+      raw.forEach(function (u) { if (u.user_id) u.email = onlineEmailMap[u.user_id] || null; });
 
       // Logged-in user'ları user_id ile grupla, anonimleri ayrı tut
       var grouped = {};
@@ -3459,7 +3472,7 @@
         var refTime = (u.tab_count > 1) ? u.oldest_joined : u.joined_at;
         var dur = refTime ? Math.max(1, Math.round((Date.now() - refTime) / 60000)) : null;
         var durStr = dur ? (dur >= 60 ? Math.round(dur / 60) + ' saat' : dur + ' dk') : '';
-        var name = u.email || 'Anonim ziyaretçi';
+        var name = u.email || (u.anon ? 'Anonim ziyaretçi' : 'Üye');
         var sub = u.display_name && u.display_name !== u.email ? u.display_name : '';
         if (durStr) {
           var timeLabel = (u.tab_count > 1) ? ('site\'de ' + durStr) : (durStr + ' bu sayfada');

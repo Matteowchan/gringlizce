@@ -225,6 +225,8 @@
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
     .deneme-card.completed { background: #fafaf7; }
+    .deneme-card.locked { opacity: 0.86; }
+    .deneme-card .lock-badge { position: absolute; top: 1rem; right: 1rem; }
 
     .deneme-card .eyebrow {
       color: #888;
@@ -392,6 +394,7 @@
   <script src="assets/nav.js?v=31"></script>
   <script src="assets/track.js?v=3" defer></script>
   <script src="assets/gri-sozluk.js?v=9" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -783,9 +786,20 @@
         });
       }
 
+      // Premium: her bölümde ilk (en yeni) pratik ücretsiz, gerisi kilitli
+      let prem = false;
+      try { if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); } } catch (e) {}
+      const freeSlug = shownTests.length ? shownTests[0].slug : null;
+      const pbadge = function (s) {
+        if (window.GriPremium && window.GriPremium.badge) return window.GriPremium.badge(s);
+        return '<span class="gpb gpb--' + s + '">' + (s === 'free' ? 'Ücretsiz' : 'Premium') + '</span>';
+      };
+
       const list = document.getElementById('testsList');
       let h = '';
       for (const t of shownTests) {
+        const isPremTest = freeSlug && t.slug !== freeSlug;
+        const locked = !prem && isPremTest;
         const status = statusByTest[t.id];
         // Bölüm-bazlıda "Gri Deneme N" yerine tipe/temaya göre isim (Tam Deneme sayfasi ayri, dokunulmaz)
         const num = (String(t.name || '').match(/\d+/) || [''])[0];
@@ -845,7 +859,18 @@
           ? '<div class="task-spec">' + taskRow('Task 1', wType1 || '—') + taskRow('Task 2', wType2 || '—') + '</div>'
           : '<div class="name">' + escapeHtml(cardName) + '</div>' + topics;
 
+        if (locked) {
+          h += '<a href="premium" class="deneme-card locked">'
+             + '<span class="lock-badge">' + pbadge('lock') + '</span>'
+             + '<div class="eyebrow" lang="en">' + escapeHtml(cardEyebrow) + '</div>'
+             + cardBody
+             + '<div class="detail"><span>Premium ile kilidi aç</span><span class="arrow">→</span></div>'
+             + '</a>';
+          continue;
+        }
+        const openBadge = (prem && isPremTest) ? '<span class="lock-badge">' + pbadge('open') + '</span>' : '';
         h += '<a href="' + meta.examUrl + '?test=' + encodeURIComponent(t.slug) + '" class="deneme-card' + cardClass + '">'
+           + openBadge
            + dotHtml
            + '<div class="eyebrow" lang="en">' + escapeHtml(cardEyebrow) + '</div>'
            + cardBody

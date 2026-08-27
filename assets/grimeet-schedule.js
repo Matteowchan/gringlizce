@@ -124,7 +124,7 @@
     + '.gsch-cell.sel .num{color:#1f4644;font-weight:800;}'
     + '.gsch-cell .num{flex:0 0 auto;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 2px;border-radius:999px;font-weight:700;font-size:12.5px;color:#6a6250;margin-bottom:2px;line-height:1;}'
     + '.gsch-cell.today .num{background:#2C5856;color:#fff;font-weight:800;}'
-    + '.gsch-cell .ev{display:block;font-size:10.5px;line-height:1.28;background:#e7f0ee;color:#2C5856;border-radius:4px;padding:1px 6px 2px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
+    + '.gsch-cell .ev{display:block;font-size:10.5px;line-height:1.22;background:#e7f0ee;color:#2C5856;border-radius:4px;padding:1px 6px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}'
     + '.gsch-cell .gsch-evs .ev:first-child{margin-top:0;}'
     + '.gsch-cell .ev b{font-weight:800;margin-right:3px;}'
     + '.gsch-cell .ev:hover{filter:brightness(.96);}'
@@ -179,7 +179,7 @@
     + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
     /* ── Ders İstatistiği (açılır-kapanır yan panel) ── */
     + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;}'
-    + '.gsch-main{flex:1 1 auto;min-width:600px;min-height:440px;max-width:100%;max-height:1100px;height:680px;display:flex;flex-direction:column;resize:both;overflow:hidden;position:relative;}'
+    + '.gsch-main{flex:1 1 auto;min-width:600px;min-height:440px;max-width:100%;max-height:1200px;height:900px;display:flex;flex-direction:column;resize:both;overflow:hidden;position:relative;}'
     + '.gsch-main::after{content:"";position:absolute;right:2px;bottom:2px;width:14px;height:14px;pointer-events:none;background:linear-gradient(135deg,transparent 0 45%,var(--gri-accent,#2C5856) 45% 55%,transparent 55% 70%,var(--gri-accent,#2C5856) 70% 80%,transparent 80%);opacity:.5;border-radius:0 0 4px 0;}'
     + '.gsch-stats{display:none;flex:0 0 300px;max-width:300px;background:#faf7f0;border:1px solid #e5ddcd;border-radius:14px;padding:12px 13px;}'
     + '.gsch-shell.stats-on .gsch-stats{display:block;}'

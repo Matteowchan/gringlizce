@@ -195,6 +195,8 @@
     + '.gsch-daymodal-count{flex:0 0 auto;font-size:11px;font-weight:800;color:#2C5856;background:#e7f0ee;border-radius:100px;padding:3px 10px;white-space:nowrap;}'
     + ':root[data-theme="dark"] .gsch-daymodal-count{color:#bfe0da;background:#22403e;}'
     + '.gsch-daymodal.has-form{max-width:740px;}'
+    + '.gsch-modal-ov.gsch-anchored{background:rgba(20,16,12,.22);}'
+    + '.gsch-daymodal{max-height:calc(100vh - 24px);overflow:auto;}'
     + '.gsch-daymodal-body{display:flex;gap:16px;align-items:flex-start;}'
     + '.gsch-daymodal-left{flex:1 1 auto;min-width:0;}'
     + '.gsch-daymodal-form{flex:0 0 252px;background:#fff;border:1px solid #ece4d4;border-radius:12px;padding:13px 14px;}'
@@ -901,7 +903,7 @@
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
-      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); openDayModal(y,mo,dd); }); });
+      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); openDayModal(y,mo,dd,c.getBoundingClientRect()); }); });
       if(role==='teacher'||manageOwn){
         el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
           ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });
@@ -940,7 +942,7 @@
     }
 
     // Bir güne tıklayınca: solda o günün planı (ajanda), sağda o güne hızlı ders planlama (öğretmen)
-    function openDayModal(y,mo,dnum){
+    function openDayModal(y,mo,dnum,anchorRect){
       var dObj=new Date(y,mo,dnum);
       var hol=holidayMap(y)[y+'-'+two(mo+1)+'-'+two(dnum)];
       var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
@@ -1029,6 +1031,19 @@
           }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }
           finally{ sv.disabled=false; sv.textContent=ot; }
         });
+      }
+      // Outlook tarzı: popup'ı tıklanan günün YANINA konumlandır (geniş ekran); dar ekranda ortalı kalır
+      if(anchorRect && window.innerWidth>760){
+        ov.classList.add('gsch-anchored');
+        var card=ov.querySelector('.gsch-daymodal');
+        var pad=12, vw=window.innerWidth, vh=window.innerHeight;
+        var mw=card.offsetWidth, mh=card.offsetHeight, left, place;
+        if(anchorRect.right+pad+mw <= vw-pad){ left=anchorRect.right+pad; place='right'; }
+        else if(anchorRect.left-pad-mw >= pad){ left=anchorRect.left-pad-mw; place='left'; }
+        else { left=Math.max(pad, Math.min(vw-mw-pad, anchorRect.left)); place='clamp'; }
+        var top=Math.max(pad, Math.min(vh-mh-pad, anchorRect.top-6));
+        card.style.position='fixed'; card.style.left=left+'px'; card.style.top=top+'px'; card.style.margin='0';
+        card.style.transformOrigin=(place==='left'?'right center':(place==='right'?'left center':'center top'));
       }
     }
 

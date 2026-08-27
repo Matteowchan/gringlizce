@@ -32,6 +32,7 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <style>
     .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
     .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
@@ -567,6 +568,24 @@
     // ========================================================
     // INIT
     // ========================================================
+    // Runner-tarafı premium kilit: ib-bolum-calisma.html ile AYNI freeSlug mantığı
+    // (level+paper, is_published, created_at ASC, ilk deneme ücretsiz).
+    // EMİN DEĞİLSEK redirect ETME — yanlış kilitlemektense aç bırak.
+    async function ibPremiumBlocked(test) {
+      let prem = false;
+      try { if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); } } catch (e) {}
+      if (prem) return false;
+      try {
+        if (!test.level || !test.paper) return false;
+        const { data, error } = await sb.from('ib_tests').select('slug')
+          .eq('level', test.level).eq('paper', test.paper).eq('is_published', true)
+          .order('created_at', { ascending: true });
+        if (error || !data || !data.length) return false;
+        const freeSlug = data[0].slug;
+        return !!(freeSlug && test.slug !== freeSlug);
+      } catch (e) { return false; }
+    }
+
     async function initPage() {
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
         auth: { persistSession: true, autoRefreshToken: true }
@@ -594,6 +613,7 @@
         return;
       }
       state.test = testRes.data;
+      if (await ibPremiumBlocked(state.test)) { location.replace('premium'); return; }
       state.duration = ((state.test.time_minutes || 75) * 60);
 
       // Parts (task options)

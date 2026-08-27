@@ -395,6 +395,7 @@
   </script>
   <script src="assets/site-config.js?v=7" defer></script>
   <script src="assets/gri-sozluk.js?v=9" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
 </head>
 <body>
 <div class="launch-banner" data-site-banner></div>
@@ -510,6 +511,39 @@
       timerRunning: false,
     };
 
+    // Runner-tarafı premium kilit: kilitli denemeye ?test=<slug> ile doğrudan gelinirse premium'a yönlendir.
+    // Bölüm-bazlı sayfa (ielts-bolum-calisma.html) ve tam deneme sayfası (ielts-deneme.html) ile AYNI freeSlug mantığı.
+    // EMİN DEĞİLSEK (sorgu hatası/veri yok) redirect ETME — yanlış kilitlemektense aç bırak.
+    async function ieltsPremiumBlocked(test, SECTION) {
+      if (window.parent !== window) return false; // Gri Meet gömülü materyali — dokunma
+      let prem = false;
+      try { if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); } } catch (e) {}
+      if (prem) return false;
+      try {
+        const { data: pub, error: e1 } = await sb.from('ielts_tests')
+          .select('id, slug').eq('is_published', true)
+          .order('test_date', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false });
+        if (e1 || !pub || !pub.length) return false;
+        const ids = pub.map(t => t.id);
+        const { data: secs, error: e2 } = await sb.from('ielts_sections').select('test_id, section').in('test_id', ids);
+        if (e2 || !secs) return false;
+        const secCount = {}, hasSec = {};
+        secs.forEach(s => { secCount[s.test_id] = (secCount[s.test_id] || 0) + 1; if (s.section === SECTION) hasSec[s.test_id] = true; });
+        const thisCount = secCount[test.id];
+        if (!thisCount) return false; // bu testin section verisi yok → emin değil
+        let freeSlug = null;
+        if (thisCount === 1) {
+          const bolumTests = pub.filter(t => hasSec[t.id] && secCount[t.id] === 1);
+          freeSlug = bolumTests.length ? bolumTests[0].slug : null;
+        } else {
+          const mockTests = pub.filter(t => { const s = (t.slug || '').toLowerCase(); return s.indexOf('ielts-mock-') === 0 || s.indexOf('gri-deneme-') === 0; });
+          freeSlug = mockTests.length ? mockTests[0].slug : null;
+        }
+        return !!(freeSlug && test.slug !== freeSlug);
+      } catch (e) { return false; }
+    }
+
     async function loadTest() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) { window.location.href = 'giris?next=' + encodeURIComponent(location.pathname + location.search); return; }
@@ -517,6 +551,7 @@
 
       const { data: test } = await sb.from('ielts_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
       if (!test) { document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Test bulunamadı</h4><p>Bu deneme yüklenemedi. Denemeler sayfasından başka bir deneme seçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme">Denemelere Dön →</a></div>'; return; }
+      if (await ieltsPremiumBlocked(test, 'reading')) { location.replace('premium'); return; }
       state.test = test;
 
       const { data: section } = await sb.from('ielts_sections').select('*').eq('test_id', test.id).eq('section', 'reading').single();

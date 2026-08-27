@@ -33,6 +33,7 @@
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <script src="assets/auth.js" defer></script>
   <script src="assets/site-config.js?v=7" defer></script>
   <!-- PWA -->
@@ -427,8 +428,53 @@ function ready(){
     }
   }
   SUBMITTED=!!SUB;
-  document.getElementById('odLoading').style.display='none';
-  buildPage();
+  petDenemeGuard(function(blocked){
+    if(blocked){ location.replace('premium'); return; }
+    document.getElementById('odLoading').style.display='none';
+    buildPage();
+  });
+}
+
+/* PET deneme numarası (pet-denemeler.html ile aynı) */
+function petNum(t){ var m=String(t||'').match(/Deneme\s*(\d+)/i); return m?parseInt(m[1],10):9999; }
+
+/* Runner-tarafı premium kilit — SADECE herkese açık PET self-study denemesi:
+   deneme=1 modu + 'PET · Deneme' başlık. Öğretmen-atanmış ödevler (deneme=1 DEĞİL)
+   ve Gri Meet sunum (present) modu ETKİLENMEZ. pet-denemeler.html ile aynı sıra
+   (level='B1', skill='mixed', title ilike 'PET · Deneme%', Deneme no ARTAN); ilk deneme ücretsiz.
+   EMİN DEĞİLSEK (veri yok/sorgu hatası) done(false) — yanlış kilitlemektense aç bırak. */
+function petDenemeGuard(done){
+  try{
+    if(!DENEME || PRESENT || !ASG || !/^PET\s*·\s*Deneme/i.test(String(ASG.title||''))){ return done(false); }
+    var proceed=function(prem){
+      if(prem) return done(false);
+      try{
+        window.GRI_SB.from('ge_assignments').select('id,title')
+          .eq('level','B1').eq('skill','mixed').ilike('title','PET · Deneme%')
+          .then(function(res){
+            try{
+              var rows=(res&&res.data)?res.data.slice():[];
+              if(!rows.length) return done(false);
+              rows.sort(function(a,b){ return petNum(a.title)-petNum(b.title); });
+              var freeId=rows[0].id;
+              done(!!(freeId && ASG.id!==freeId));
+            }catch(e){ done(false); }
+          },function(){ done(false); });
+      }catch(e){ done(false); }
+    };
+    var prem=false;
+    try{
+      if(window.GriPremium){
+        if(window.GriPremium.refresh){
+          window.GriPremium.refresh().then(function(){ var p=false; try{p=window.GriPremium.isActive();}catch(e){} proceed(p); },
+                                            function(){ var p=false; try{p=window.GriPremium.isActive();}catch(e){} proceed(p); });
+          return;
+        }
+        prem=window.GriPremium.isActive();
+      }
+    }catch(e){}
+    proceed(prem);
+  }catch(e){ done(false); }
 }
 
 /* ---------- build ---------- */

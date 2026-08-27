@@ -321,6 +321,7 @@
     .result-summary .result-actions a:hover { background: var(--accent, #c89a3c); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <script src="assets/auth-gate.js" defer></script>
   <script src="assets/bug-report.js" defer></script>
   <meta name="description" content="IB English B — Paper 2 (Reading) — Gri English">
@@ -481,6 +482,24 @@
       timerRunning: false,
     };
 
+    // Runner-tarafı premium kilit: ib-bolum-calisma.html ile AYNI freeSlug mantığı
+    // (level+paper, is_published, created_at ASC, ilk deneme ücretsiz).
+    // EMİN DEĞİLSEK redirect ETME — yanlış kilitlemektense aç bırak.
+    async function ibPremiumBlocked(test) {
+      let prem = false;
+      try { if (window.GriPremium) { await window.GriPremium.refresh(); prem = window.GriPremium.isActive(); } } catch (e) {}
+      if (prem) return false;
+      try {
+        if (!test.level || !test.paper) return false;
+        const { data, error } = await sb.from('ib_tests').select('slug')
+          .eq('level', test.level).eq('paper', test.paper).eq('is_published', true)
+          .order('created_at', { ascending: true });
+        if (error || !data || !data.length) return false;
+        const freeSlug = data[0].slug;
+        return !!(freeSlug && test.slug !== freeSlug);
+      } catch (e) { return false; }
+    }
+
     async function loadTest() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) { window.location.href = 'giris?next=' + encodeURIComponent(location.pathname + location.search); return; }
@@ -491,6 +510,7 @@
       const { data: test } = await sb.from('ib_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
       if (!test) { document.getElementById('loading').textContent = 'Test bulunamadı.'; return; }
       state.test = test;
+      if (await ibPremiumBlocked(test)) { location.replace('premium'); return; }
       state.duration = (test.time_minutes || 60) * 60;
 
       const { data: parts } = await sb.from('ib_parts').select('*, question_groups:ib_question_groups(*, questions:ib_questions(*))').eq('test_id', test.id).order('part_number');

@@ -100,16 +100,18 @@
     + '.gsch-item-actions{margin-top:6px;display:flex;gap:6px;}'
     + '.gsch-item-actions .gsch-btn{flex:1;text-align:center;padding:5px 9px;font-size:12px;}'
     + '.gsch-empty{text-align:center;color:#8a8172;font-size:14px;padding:26px;background:#faf7f0;border-radius:12px;}'
-    + '.gsch-cal{background:#fff;border:1px solid #e5ddcd;border-radius:16px;padding:16px 16px 14px;box-shadow:0 2px 12px rgba(30,25,20,.05);}'
+    + '.gsch-cal{background:#fff;border:1px solid #e5ddcd;border-radius:16px;padding:16px 16px 14px;box-shadow:0 2px 12px rgba(30,25,20,.05);display:flex;flex-direction:column;min-height:0;height:100%;}'
     + '.gsch-cal-h{display:flex;align-items:center;gap:10px;margin-bottom:14px;}'
     + '.gsch-cal-h b{font-size:18px;font-weight:800;color:#2a2a2a;letter-spacing:-.01em;}'
     + '.gsch-cal-h .cal-nav{margin-left:auto;display:inline-flex;gap:6px;}'
     + '.gsch-cal-h button{border:1px solid #e4dccb;background:#fff;border-radius:50%;width:34px;height:34px;font-size:17px;line-height:1;color:#6a6250;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,border-color .12s,color .12s;}'
     + '.gsch-cal-h button:hover{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856);}'
-    /* ── Outlook-benzeri bağlı grid: 1px boşluk = paylaşılan çizgi ── */
-    + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e9e2d2;border:1px solid #e9e2d2;border-radius:12px;overflow:hidden;}'
-    + '.gsch-grid .wd{text-align:center;font-size:10.5px;color:#9a8f79;padding:8px 0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#f7f2e8;}'
-    + '.gsch-cell{min-height:118px;padding:6px 6px 6px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;}'
+    /* ── Outlook-benzeri bağlı grid: 1px boşluk = paylaşılan çizgi; başlık satırı ayrı, gövde yüksekliği doldurur ── */
+    + '.gsch-gridwrap{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:auto 1fr;gap:1px;background:#e9e2d2;border:1px solid #e9e2d2;border-radius:12px;overflow:hidden;}'
+    + '.gsch-wdrow{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e9e2d2;}'
+    + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:1px;background:#e9e2d2;min-height:0;}'
+    + '.gsch-cal .wd{text-align:center;font-size:10.5px;color:#9a8f79;padding:8px 0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#f7f2e8;}'
+    + '.gsch-cell{min-height:66px;padding:6px 6px 6px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;}'
     + '.gsch-cell.out{background:#f7f2e8;}'
     + '.gsch-cell.has{cursor:pointer;}'
     + '.gsch-cell.has:hover{background:#f1f8f6;}'
@@ -127,7 +129,7 @@
     + '.gsch-cell .ev.dragging{opacity:.4;}'
     + '.gsch-cell.drop-ok{background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.35);}'
     /* ── Hafta içi / hafta sonu / resmî tatil tonları (belirgin) ── */
-    + '.gsch-grid .wd.we{background:#e6ebee;color:#78838d;}'
+    + '.gsch-cal .wd.we{background:#e6ebee;color:#78838d;}'
     + '.gsch-cell.we{background:#eef2f5;}'
     + '.gsch-cell.out.we{background:#e8edf1;}'
     + '.gsch-cell.we.has:hover{background:#e4eef0;}'
@@ -156,9 +158,9 @@
     + '.gsch-form.editing .edit-tag{display:block;}'
     + '.gsch-cell.sel .ev.ev-more{background:transparent;color:#2C5856;}'
     + '.gsch-daylist{margin-top:12px;}'
-    + '.gsch-split{display:flex;gap:0;align-items:stretch;}'
+    + '.gsch-split{display:flex;gap:0;align-items:stretch;flex:1 1 auto;min-height:0;}'
     + '.gsch-col{min-width:0;}'
-    + '.gsch-col-cal{flex:1 1 auto;min-width:420px;}'
+    + '.gsch-col-cal{flex:1 1 auto;min-width:420px;display:flex;flex-direction:column;min-height:0;}'
     + '.gsch-resizer{flex:0 0 16px;align-self:stretch;cursor:col-resize;position:relative;touch-action:none;user-select:none;}'
     + '.gsch-resizer::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:46px;border-radius:4px;background:#d8d2c4;transition:background .12s,height .12s;}'
     + '.gsch-resizer:hover::before,.gsch-resizer.drag::before{background:var(--gri-accent,#2C5856);height:64px;}'
@@ -172,7 +174,8 @@
     + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
     /* ── Ders İstatistiği (açılır-kapanır yan panel) ── */
     + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;}'
-    + '.gsch-main{flex:1 1 auto;min-width:0;}'
+    + '.gsch-main{flex:1 1 auto;min-width:600px;min-height:440px;max-width:100%;max-height:1100px;height:680px;display:flex;flex-direction:column;resize:both;overflow:hidden;position:relative;}'
+    + '.gsch-main::after{content:"";position:absolute;right:2px;bottom:2px;width:14px;height:14px;pointer-events:none;background:linear-gradient(135deg,transparent 0 45%,var(--gri-accent,#2C5856) 45% 55%,transparent 55% 70%,var(--gri-accent,#2C5856) 70% 80%,transparent 80%);opacity:.5;border-radius:0 0 4px 0;}'
     + '.gsch-stats{display:none;flex:0 0 300px;max-width:300px;background:#faf7f0;border:1px solid #e5ddcd;border-radius:14px;padding:12px 13px;}'
     + '.gsch-shell.stats-on .gsch-stats{display:block;}'
     + '.gsch-stats-h{font-size:13px;font-weight:800;color:#2a2a2a;margin-bottom:10px;letter-spacing:.01em;}'
@@ -190,7 +193,7 @@
     + '.gsch-stats-body::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
     + '.gsch-stats-body::-webkit-scrollbar-track{background:transparent;}'
     + '@media(max-width:900px){.gsch-shell{flex-direction:column;}.gsch-stats{flex-basis:auto;max-width:none;width:100%;}.gsch-stats-body{max-height:340px;}}'
-    + '@media(max-width:760px){.gsch-split{flex-direction:column;}.gsch-resizer{display:none;}.gsch-col-list{position:static;flex-basis:auto;}.gsch-col-list-inner{position:static;max-height:320px;}}'
+    + '@media(max-width:760px){.gsch-main{resize:none;min-width:0;height:auto;max-height:none;}.gsch-split{flex-direction:column;}.gsch-resizer{display:none;}.gsch-col-cal{min-width:0;}.gsch-gridwrap{flex:none;}.gsch-grid{grid-auto-rows:auto;}.gsch-cell{min-height:92px;}.gsch-col-list{position:static;flex-basis:auto;}.gsch-col-list-inner{position:static;max-height:320px;}}'
     + '@media(max-width:480px){'
     + '.gsch-cal{padding:8px;}'
     + '.gsch-grid{gap:2px;}'
@@ -227,7 +230,7 @@
     + ':root[data-theme="dark"] .gsch-cal-h button{background:#2a2419;border-color:#3a3428;color:#b5ac98;}'
     + ':root[data-theme="dark"] .gsch-cal-h button:hover{background:#2C5856;color:#fff;border-color:#2C5856;}'
     + ':root[data-theme="dark"] .gsch-grid{background:#332e23;border-color:#332e23;}'
-    + ':root[data-theme="dark"] .gsch-grid .wd{color:#9a917d;background:#221d16;}'
+    + ':root[data-theme="dark"] .gsch-cal .wd{color:#9a917d;background:#221d16;}'
     + ':root[data-theme="dark"] .gsch-cell{background:#1c1813;}'
     + ':root[data-theme="dark"] .gsch-cell.out{background:#181410;}'
     + ':root[data-theme="dark"] .gsch-cell.has:hover{background:#20302d;}'
@@ -239,7 +242,7 @@
     + ':root[data-theme="dark"] .gsch-cell.sel{background:#1e2e2b;box-shadow:inset 0 0 0 2px #3f7a72;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .num{color:#cbe8e2;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .ev.ev-more{color:#bfe0da;}'
-    + ':root[data-theme="dark"] .gsch-grid .wd.we{background:#191f25;color:#8794a0;}'
+    + ':root[data-theme="dark"] .gsch-cal .wd.we{background:#191f25;color:#8794a0;}'
     + ':root[data-theme="dark"] .gsch-cell.we{background:#141a20;}'
     + ':root[data-theme="dark"] .gsch-cell.out.we{background:#10151b;}'
     + ':root[data-theme="dark"] .gsch-cell.we.has:hover{background:#1c2b30;}'
@@ -664,7 +667,7 @@
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+evHTML+'</div>';
       }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
-        + '<div class="gsch-grid">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+cells+'</div></div>';
+        + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });
@@ -772,6 +775,14 @@
     }
 
     function setupResizer(){
+      // Kutu (takvim+liste) boyutunu geri yükle — sadece geniş ekran
+      var main=body.querySelector('.gsch-main');
+      if(main && window.innerWidth>760){
+        try{ var bw=parseInt(localStorage.getItem('gsch-box-w'),10), bh=parseInt(localStorage.getItem('gsch-box-h'),10);
+          if(bw&&bw>=600) main.style.width=Math.min(bw,3000)+'px';
+          if(bh&&bh>=440) main.style.height=Math.min(bh,1100)+'px';
+        }catch(e){}
+      }
       var split=body.querySelector('.gsch-split'); if(!split) return;
       var rz=split.querySelector('.gsch-resizer'); if(!rz) return;
       var saved; try{ saved=parseInt(localStorage.getItem('gsch-list-w'),10); }catch(e){}
@@ -798,6 +809,13 @@
       }
       paintStats();
     }
+
+    // Kutu köşe-boyutlandırma (native resize:both) kalıcılığı: pointerup'ta boyut değiştiyse kaydet
+    (function(){
+      var sw=0,sh=0;
+      document.addEventListener('pointerdown',function(){ var m=cont.querySelector('.gsch-main'); if(!m)return; var r=m.getBoundingClientRect(); sw=r.width; sh=r.height; });
+      document.addEventListener('pointerup',function(){ if(window.innerWidth<=760)return; var m=cont.querySelector('.gsch-main'); if(!m)return; var r=m.getBoundingClientRect(); if(Math.abs(r.width-sw)>2||Math.abs(r.height-sh)>2){ try{ localStorage.setItem('gsch-box-w',String(Math.round(r.width))); localStorage.setItem('gsch-box-h',String(Math.round(r.height))); }catch(e){} } });
+    })();
 
     load();
     return { reload:load };

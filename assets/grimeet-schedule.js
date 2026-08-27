@@ -716,6 +716,15 @@
       openDropModal(row,y,mo,day);
     }
 
+    // Planlama formunu belirli bir günün tarihiyle ön-doldurup aç
+    function openNewForm(y,mo,dnum){
+      var f=cont.querySelector('.gsch-form'); if(!f) return;
+      resetForm(); f.classList.add('open');
+      var fd=cont.querySelector('.f-date'); if(fd && y!=null) fd.value=y+'-'+two(mo+1)+'-'+two(dnum);
+      var ft=cont.querySelector('.f-title'); if(ft){ try{ ft.focus(); }catch(e){} }
+      if(f.scrollIntoView) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+
     // Bir güne tıklayınca o günün tüm planını gösteren popup (kaç ders olursa olsun)
     function openDayModal(y,mo,dnum){
       var dObj=new Date(y,mo,dnum);
@@ -724,14 +733,16 @@
       var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
       var listHTML=rows.length ? rows.map(itemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
+      var planBtn=(role==='teacher') ? '<button type="button" class="gsch-btn gsch-dayplan">+ Bu güne ders planla</button>' : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
       ov.innerHTML='<div class="gsch-modal gsch-daymodal"><h4>'+esc(head)+'</h4>'+holBadge
         +'<div class="gsch-daymodal-list">'+listHTML+'</div>'
-        +'<div class="macts" style="margin-top:14px;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
+        +'<div class="macts" style="margin-top:14px;justify-content:space-between;">'+planBtn+'<button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
       ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
       ov.querySelector('.m-close').addEventListener('click',close);
+      var pb=ov.querySelector('.gsch-dayplan'); if(pb) pb.addEventListener('click',function(){ close(); openNewForm(y,mo,dnum); });
       bindActions(ov);
       ov.querySelectorAll('[data-edit],[data-cancel]').forEach(function(b){ b.addEventListener('click',close); });
     }

@@ -550,6 +550,7 @@
       _listBtn.textContent='Liste '+(listOpen?'▾':'▸');
       var sp=cont.querySelector('.gsch-split'); if(sp) sp.classList.toggle('list-off', !listOpen);
       var sh=cont.querySelector('.gsch-shell'); if(sh) sh.classList.toggle('centered', !listOpen && !statsOpen);
+      applyBoxSize();
       try{ fitDayCells(cont.querySelector('.gsch-gridwrap')); }catch(e){}
     });
 
@@ -559,6 +560,8 @@
       try{ localStorage.setItem('gsch-stats-open', statsOpen?'1':'0'); }catch(e){}
       _statsBtn.textContent='Ders İstatistiği '+(statsOpen?'▾':'▸');
       var shell=cont.querySelector('.gsch-shell'); if(shell){ shell.classList.toggle('stats-on', statsOpen); shell.classList.toggle('centered', !listOpen && !statsOpen); }
+      applyBoxSize();
+      try{ fitDayCells(cont.querySelector('.gsch-gridwrap')); }catch(e){}
       if(statsOpen && statsData==null) loadStats();
     });
 
@@ -1151,15 +1154,21 @@
       });
     }
 
+    // Kutu boyutunu uygula: genişlik YALNIZ takvim tek başınayken (centered) kayıtlı değeri alır;
+    // liste/istatistik açıkken main tam genişliği doldurur (sağda ölü boşluk / "yamuk" olmasın).
+    function applyBoxSize(){
+      var main=body.querySelector('.gsch-main'); if(!main || window.innerWidth<=760) return;
+      var solo=(!listOpen && !statsOpen);
+      try{
+        if(solo){ var bw=parseInt(localStorage.getItem('gsch-box-w'),10); main.style.width=(bw&&bw>=600)?Math.min(bw,3000)+'px':''; }
+        else { main.style.width=''; }
+        var bh=parseInt(localStorage.getItem('gsch-box-h'),10); if(bh&&bh>=440) main.style.height=Math.min(bh,1200)+'px';
+      }catch(e){}
+    }
+
     function setupResizer(){
-      // Kutu (takvim+liste) boyutunu geri yükle — sadece geniş ekran
       var main=body.querySelector('.gsch-main');
-      if(main && window.innerWidth>760){
-        try{ var bw=parseInt(localStorage.getItem('gsch-box-w'),10), bh=parseInt(localStorage.getItem('gsch-box-h'),10);
-          if(bw&&bw>=600) main.style.width=Math.min(bw,3000)+'px';
-          if(bh&&bh>=440) main.style.height=Math.min(bh,1200)+'px';
-        }catch(e){}
-      }
+      applyBoxSize();
       setupBoxHandles(main);
       var split=body.querySelector('.gsch-split'); if(!split) return;
       var rz=split.querySelector('.gsch-resizer'); if(!rz) return;

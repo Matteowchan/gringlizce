@@ -112,10 +112,7 @@
     + '.gsch-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:1px;background:#e9e2d2;min-height:0;}'
     + '.gsch-cal .wd{text-align:center;font-size:10.5px;color:#9a8f79;padding:8px 0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#f7f2e8;}'
     + '.gsch-cell{min-height:66px;padding:5px 5px 5px;font-size:12px;position:relative;cursor:default;background:#fffdf9;overflow:hidden;transition:background .12s;display:flex;flex-direction:column;}'
-    + '.gsch-cell .gsch-evs{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px;}'
-    + '.gsch-cell .gsch-evs::-webkit-scrollbar{width:5px;}'
-    + '.gsch-cell .gsch-evs::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:5px;}'
-    + '.gsch-cell .gsch-evs::-webkit-scrollbar-track{background:transparent;}'
+    + '.gsch-cell .gsch-evs{flex:1 1 auto;min-height:0;overflow:hidden;}'
     + '.gsch-cell.out{background:#f7f2e8;}'
     + '.gsch-cell.has{cursor:pointer;}'
     + '.gsch-cell.has:hover{background:#f1f8f6;}'
@@ -128,8 +125,9 @@
     + '.gsch-cell .gsch-evs .ev:first-child{margin-top:0;}'
     + '.gsch-cell .ev b{font-weight:800;margin-right:3px;}'
     + '.gsch-cell .ev:hover{filter:brightness(.96);}'
-    + '.gsch-cell .ev.ev-more{background:transparent;color:#8a8172;padding:1px 6px 0;font-weight:700;margin-top:2px;}'
+    + '.gsch-cell .ev.ev-more{background:transparent;color:#2C5856;padding:0 6px;font-size:10px;font-weight:800;margin-top:1px;cursor:pointer;}'
     + '.gsch-cell .ev.ev-more:hover{filter:none;text-decoration:underline;}'
+    + ':root[data-theme="dark"] .gsch-cell .ev.ev-more{color:#7fb8b0;}'
     + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
     + '.gsch-cell .ev.dragging{opacity:.4;}'
     + '.gsch-cell.drop-ok{background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.35);}'
@@ -151,6 +149,19 @@
     + '.gsch-modal .mrow label{font-size:12px;color:#6a6250;font-weight:600;}'
     + '.gsch-modal select{font:inherit;padding:8px 10px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
     + '.gsch-modal .macts{display:flex;gap:8px;justify-content:flex-end;}'
+    /* ── Gün planı popup ── */
+    + '.gsch-clk{cursor:pointer;}'
+    + '.gsch-daymodal{max-width:460px;}'
+    + '.gsch-daymodal>h4{margin-bottom:10px;}'
+    + '.gsch-daymodal-hol{font-size:12px;font-weight:700;color:#8c2b24;background:#f4d9d4;border-left:3px solid #B23A48;border-radius:4px;padding:6px 11px;margin:0 0 12px;}'
+    + '.gsch-daymodal-hol.half{color:#894c22;background:#f2dccb;border-left-color:#C67A34;}'
+    + '.gsch-daymodal-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;}'
+    + '.gsch-daymodal-list::-webkit-scrollbar{width:7px;}'
+    + '.gsch-daymodal-list::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
+    + '.gsch-daymodal-list::-webkit-scrollbar-track{background:transparent;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-hol{color:#efab9f;background:#3a211d;border-left-color:#c2564d;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-hol.half{color:#e6b98c;background:#3a2a1a;border-left-color:#b5804a;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-list::-webkit-scrollbar-thumb{background:#3a3428;}'
     + '.gsch-clrlist{display:flex;flex-direction:column;gap:12px;max-height:52vh;overflow-y:auto;}'
     + '.gsch-clrrow{display:flex;flex-direction:column;gap:6px;}'
     + '.gsch-clrname{font-size:13px;font-weight:700;color:#2a2a2a;}'
@@ -653,6 +664,7 @@
       if(first&&first.scrollIntoView) first.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
 
+    var _calRO=null;
     function renderCal(el){
       var m=state.month, y=m.getFullYear(), mo=m.getMonth();
       var first=new Date(y,mo,1), startWd=(first.getDay()+6)%7; // Pzt=0
@@ -667,16 +679,15 @@
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(_dd,today), selD=state.sel&&sameDay(_dd,state.sel);
         var holHTML=hol?('<span class="hol'+(hol.half?' half':'')+'" title="'+esc(hol.name)+'">'+esc(hol.name)+'</span>'):'';
-        var evHTML=evs.slice(0,10).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
-        if(evs.length>10) evHTML+='<span class="ev ev-more">+'+(evs.length-10)+' ders</span>';
-        var cls='gsch-cell'+(has?' has':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
+        var evHTML=evs.map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
+        var cls='gsch-cell'+(has?' has':'')+((has||hol)?' gsch-clk':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
-      el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });
+      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); openDayModal(y,mo,dd); }); });
       if(role==='teacher'||manageOwn){
         el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
           ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });
@@ -688,12 +699,64 @@
           c.addEventListener('drop',function(e){ e.preventDefault(); c.classList.remove('drop-ok'); var id=''; try{ id=e.dataTransfer.getData('text/plain'); }catch(_e){} var day=parseInt(c.dataset.day,10); if(!id||!day) return; dropReschedule(id,y,mo,day); });
         });
       }
+      // Sığmayan dersleri "+N" ile göster; yükseklik değişince (kutu boyutlandırma) yeniden hesapla
+      try{
+        if(_calRO && _calRO.disconnect) _calRO.disconnect();
+        var _gw=el.querySelector('.gsch-gridwrap');
+        if(_gw){
+          fitDayCells(_gw); // senkron ilk hesap (layout clientHeight okunarak zorlanır)
+          if(window.ResizeObserver){ _calRO=new ResizeObserver(function(){ fitDayCells(_gw); }); _calRO.observe(_gw); }
+        }
+      }catch(e){ try{ fitDayCells(el.querySelector('.gsch-gridwrap')); }catch(_e){} }
     }
 
     function dropReschedule(id,y,mo,day){
       var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
       if(!row || !canManage(row)) return;
       openDropModal(row,y,mo,day);
+    }
+
+    // Bir güne tıklayınca o günün tüm planını gösteren popup (kaç ders olursa olsun)
+    function openDayModal(y,mo,dnum){
+      var dObj=new Date(y,mo,dnum);
+      var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
+      var hol=holidayMap(y)[y+'-'+two(mo+1)+'-'+two(dnum)];
+      var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
+      var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
+      var listHTML=rows.length ? rows.map(itemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
+      var ov=document.createElement('div'); ov.className='gsch-modal-ov';
+      ov.innerHTML='<div class="gsch-modal gsch-daymodal"><h4>'+esc(head)+'</h4>'+holBadge
+        +'<div class="gsch-daymodal-list">'+listHTML+'</div>'
+        +'<div class="macts" style="margin-top:14px;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
+      document.body.appendChild(ov);
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.querySelector('.m-close').addEventListener('click',close);
+      bindActions(ov);
+      ov.querySelectorAll('[data-edit],[data-cancel]').forEach(function(b){ b.addEventListener('click',close); });
+    }
+
+    // Hücreye sığmayan dersleri gizleyip "+N ders" etiketi ekle (yükseklik değişince yeniden çalışır)
+    function fitDayCells(gw){
+      if(!gw) return;
+      gw.querySelectorAll('.gsch-cell .gsch-evs').forEach(function(evs){
+        var pills=[].slice.call(evs.children).filter(function(x){ return x.classList&&x.classList.contains('ev')&&!x.classList.contains('ev-more'); });
+        var oldChip=evs.querySelector('.ev-more'); if(oldChip) oldChip.parentNode.removeChild(oldChip);
+        if(!pills.length) return;
+        for(var k=0;k<pills.length;k++) pills[k].style.display='';
+        var avail=evs.clientHeight; if(avail<=6) return;
+        var total=0; pills.forEach(function(p){ total+=p.offsetHeight+1; });
+        if(total<=avail) return; // hepsi sığıyor
+        var chipH=15, used=0, showN=0;
+        for(var i=0;i<pills.length;i++){ var h=pills[i].offsetHeight+1; if(used+h<=avail){ used+=h; showN++; } else break; }
+        if(showN<1){ showN=1; used=pills[0].offsetHeight+1; }
+        while(showN>0 && used+chipH>avail){ showN--; used-=(pills[showN].offsetHeight+1); }
+        if(showN<1) showN=1;
+        for(var j=showN;j<pills.length;j++) pills[j].style.display='none';
+        var hidden=pills.length-showN; if(hidden<=0) return;
+        var chip=document.createElement('span'); chip.className='ev ev-more'; chip.textContent='+'+hidden+' ders';
+        evs.appendChild(chip);
+      });
     }
 
     function openDropModal(row,y,mo,day){
@@ -809,9 +872,9 @@
       body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
         + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
       if(state.rows.length){
+        setupResizer();
         renderCal(body.querySelector('.gsch-col-cal'));
         renderListInner(body.querySelector('.gsch-col-list-inner'));
-        setupResizer();
       }
       paintStats();
     }
@@ -819,8 +882,10 @@
     // Kutu köşe-boyutlandırma (native resize:both) kalıcılığı: pointerup'ta boyut değiştiyse kaydet
     (function(){
       var sw=0,sh=0;
+      function refit(){ try{ fitDayCells(cont.querySelector('.gsch-gridwrap')); }catch(e){} }
       document.addEventListener('pointerdown',function(){ var m=cont.querySelector('.gsch-main'); if(!m)return; var r=m.getBoundingClientRect(); sw=r.width; sh=r.height; });
-      document.addEventListener('pointerup',function(){ if(window.innerWidth<=760)return; var m=cont.querySelector('.gsch-main'); if(!m)return; var r=m.getBoundingClientRect(); if(Math.abs(r.width-sw)>2||Math.abs(r.height-sh)>2){ try{ localStorage.setItem('gsch-box-w',String(Math.round(r.width))); localStorage.setItem('gsch-box-h',String(Math.round(r.height))); }catch(e){} } });
+      document.addEventListener('pointerup',function(){ if(window.innerWidth<=760){ refit(); return; } var m=cont.querySelector('.gsch-main'); if(!m){ refit(); return; } var r=m.getBoundingClientRect(); if(Math.abs(r.width-sw)>2||Math.abs(r.height-sh)>2){ try{ localStorage.setItem('gsch-box-w',String(Math.round(r.width))); localStorage.setItem('gsch-box-h',String(Math.round(r.height))); }catch(e){} } refit(); });
+      var _wt=null; window.addEventListener('resize',function(){ if(_wt) clearTimeout(_wt); _wt=setTimeout(refit,180); });
     })();
 
     load();

@@ -175,7 +175,10 @@
     /* ── Gün planı popup ── */
     + '.gsch-clk{cursor:pointer;}'
     + '.gsch-daymodal{max-width:460px;}'
-    + '.gsch-daymodal>h4{margin-bottom:10px;}'
+    + '.gsch-daymodal-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}'
+    + '.gsch-daymodal-h h4{margin:0;}'
+    + '.gsch-daymodal-count{flex:0 0 auto;font-size:11px;font-weight:800;color:#2C5856;background:#e7f0ee;border-radius:100px;padding:3px 10px;white-space:nowrap;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-count{color:#bfe0da;background:#22403e;}'
     + '.gsch-daymodal-hol{font-size:12px;font-weight:700;color:#8c2b24;background:#f4d9d4;border-left:3px solid #B23A48;border-radius:4px;padding:6px 11px;margin:0 0 12px;}'
     + '.gsch-daymodal-hol.half{color:#894c22;background:#f2dccb;border-left-color:#C67A34;}'
     + '.gsch-daymodal-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;}'
@@ -848,8 +851,9 @@
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
       var listHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-empty" style="padding:20px">Bu gün planlı ders yok.</div>';
       var planBtn=(role==='teacher') ? '<button type="button" class="gsch-btn gsch-dayplan">+ Bu güne ders planla</button>' : '';
+      var countHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' ders</span>'):'';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal gsch-daymodal"><h4>'+esc(head)+'</h4>'+holBadge
+      ov.innerHTML='<div class="gsch-modal gsch-daymodal"><div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4>'+countHTML+'</div>'+holBadge
         +'<div class="gsch-daymodal-list">'+listHTML+'</div>'
         +'<div class="macts" style="margin-top:14px;justify-content:space-between;">'+planBtn+'<button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);

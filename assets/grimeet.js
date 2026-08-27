@@ -23,7 +23,7 @@ var STATE={
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
   breakout:null, myGroup:null, boTimer:null, ytPlayer:null, _ytPending:null, _ytHb:null, hands:[], _hb:null,
-  waitingRoom:true, admitted:false, pending:[], _admitTimer:null,
+  waitingRoom:true, admitted:false, pending:[], _admitTimer:null, _knockTimer:null,
   attendance:{}, points:{}, pnames:{}, startedAt:null,
   captionsOn:false, transcript:[]
 };
@@ -259,7 +259,15 @@ async function connectLiveKit(){
     refreshPeople(); updateGridCount(); startHeartbeat();
     if(STATE.isHost){ STATE.admitted=true; await publishLocal(); }
     else if(STATE.admitted){ hideWaiting(); $$('#gmr-videos audio').forEach(function(a){a.muted=false;}); await publishLocal(); setTimeout(function(){ sendData({t:'req-state'}); },600); }
-    else { showWaiting(); setTimeout(function(){ sendData({t:'knock',name:STATE.name}); },400); STATE._admitTimer=setTimeout(admitSelf,20000); setTimeout(function(){ sendData({t:'req-state'}); },1200); }
+    else {
+      // Bekleme odası: öğretmen KABUL edene kadar bekle. Otomatik-kabul YOK (eskiden 20sn sonra kendini alıyordu — bug).
+      showWaiting();
+      var _knock=function(){ if(STATE.admitted||STATE._leaving)return; sendData({t:'knock',name:STATE.name}); };
+      setTimeout(_knock,400);
+      if(STATE._knockTimer){ clearInterval(STATE._knockTimer); }
+      STATE._knockTimer=setInterval(function(){ if(STATE.admitted||STATE._leaving){ clearInterval(STATE._knockTimer); STATE._knockTimer=null; return; } _knock(); },5000); // kayıp knock'lara karşı periyodik tekrar
+      setTimeout(function(){ sendData({t:'req-state'}); },1200);
+    }
   }catch(e){ if(STATE._reconnecting){ scheduleReconnect(); } else { enterDemo('Bağlanılamadı'); } }
 }
 /* ---- Tam kopmada otomatik yeniden bağlanma ----
@@ -329,7 +337,7 @@ async function publishLocal(){ if(!STATE.lkRoom)return;
 }
 function showWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.remove('hidden'); }
 function hideWaiting(){ var w=$('#gmr-waiting'); if(w)w.classList.add('hidden'); }
-function admitSelf(){ if(STATE.admitted)return; STATE.admitted=true; clearTimeout(STATE._admitTimer); hideWaiting(); $$('#gmr-videos audio').forEach(function(a){a.muted=false;}); publishLocal(); if(STATE.breakout) refreshBreakoutAV(); }
+function admitSelf(){ if(STATE.admitted)return; STATE.admitted=true; clearTimeout(STATE._admitTimer); if(STATE._knockTimer){ clearInterval(STATE._knockTimer); STATE._knockTimer=null; } hideWaiting(); $$('#gmr-videos audio').forEach(function(a){a.muted=false;}); publishLocal(); if(STATE.breakout) refreshBreakoutAV(); }
 function addPending(id,name){ if(!id||STATE.pending.some(function(p){return p.id===id;}))return; STATE.pending.push({id:id,name:name}); renderPending(); toast(name+' kapıda bekliyor.'); }
 function removePending(id){ STATE.pending=STATE.pending.filter(function(p){return p.id!==id;}); renderPending(); }
 function pendItemsHtml(){ return STATE.pending.map(function(p){ return '<div class="pend-item"><span class="hqn">'+esc(p.name)+'</span><button data-admit="'+esc(p.id)+'">Kabul</button><button class="deny" data-deny="'+esc(p.id)+'">Reddet</button></div>'; }).join(''); }

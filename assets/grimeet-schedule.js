@@ -251,7 +251,7 @@
     + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
     /* ── Ders İstatistiği (açılır-kapanır yan panel) ── */
     + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;}'
-    + '.gsch-main{flex:1 1 auto;min-width:600px;min-height:440px;max-width:100%;max-height:1200px;height:900px;display:flex;flex-direction:column;resize:both;overflow:hidden;position:relative;}'
+    + '.gsch-main{flex:0 1 auto;width:100%;min-width:min(600px,100%);min-height:440px;max-width:100%;max-height:1200px;height:900px;display:flex;flex-direction:column;resize:both;overflow:hidden;position:relative;}'
     + '.gsch-main::after{content:"";position:absolute;right:2px;bottom:2px;width:14px;height:14px;pointer-events:none;background:linear-gradient(135deg,transparent 0 45%,var(--gri-accent,#2C5856) 45% 55%,transparent 55% 70%,var(--gri-accent,#2C5856) 70% 80%,transparent 80%);opacity:.5;border-radius:0 0 4px 0;}'
     + '.gsch-stats{display:none;flex:0 0 300px;max-width:300px;background:#faf7f0;border:1px solid #e5ddcd;border-radius:14px;padding:12px 13px;}'
     + '.gsch-shell.stats-on .gsch-stats{display:block;}'

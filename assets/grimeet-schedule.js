@@ -197,6 +197,11 @@
     + '.gsch-daymodal.has-form{max-width:740px;}'
     + '.gsch-modal-ov.gsch-anchored{background:rgba(20,16,12,.22);}'
     + '.gsch-daymodal{max-height:calc(100vh - 24px);overflow:auto;}'
+    + '.gsch-modal-arrow{position:fixed;width:0;height:0;z-index:100000;pointer-events:none;}'
+    + '.gsch-modal-arrow.point-left{border-top:9px solid transparent;border-bottom:9px solid transparent;border-right:9px solid #fff;filter:drop-shadow(-1.5px 0 1px rgba(20,16,12,.10));}'
+    + '.gsch-modal-arrow.point-right{border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:9px solid #fff;filter:drop-shadow(1.5px 0 1px rgba(20,16,12,.10));}'
+    + ':root[data-theme="dark"] .gsch-modal-arrow.point-left{border-right-color:#241f18;}'
+    + ':root[data-theme="dark"] .gsch-modal-arrow.point-right{border-left-color:#241f18;}'
     + '.gsch-daymodal-body{display:flex;gap:16px;align-items:flex-start;}'
     + '.gsch-daymodal-left{flex:1 1 auto;min-width:0;}'
     + '.gsch-daymodal-form{flex:0 0 252px;background:#fff;border:1px solid #ece4d4;border-radius:12px;padding:13px 14px;}'
@@ -1036,14 +1041,28 @@
       if(anchorRect && window.innerWidth>760){
         ov.classList.add('gsch-anchored');
         var card=ov.querySelector('.gsch-daymodal');
-        var pad=12, vw=window.innerWidth, vh=window.innerHeight;
+        var pad=14, gap=14, vw=window.innerWidth, vh=window.innerHeight;
         var mw=card.offsetWidth, mh=card.offsetHeight, left, place;
-        if(anchorRect.right+pad+mw <= vw-pad){ left=anchorRect.right+pad; place='right'; }
-        else if(anchorRect.left-pad-mw >= pad){ left=anchorRect.left-pad-mw; place='left'; }
+        if(anchorRect.right+gap+mw <= vw-pad){ left=anchorRect.right+gap; place='right'; }
+        else if(anchorRect.left-gap-mw >= pad){ left=anchorRect.left-gap-mw; place='left'; }
         else { left=Math.max(pad, Math.min(vw-mw-pad, anchorRect.left)); place='clamp'; }
-        var top=Math.max(pad, Math.min(vh-mh-pad, anchorRect.top-6));
+        var top=Math.max(pad, Math.min(vh-mh-pad, anchorRect.top-8));
         card.style.position='fixed'; card.style.left=left+'px'; card.style.top=top+'px'; card.style.margin='0';
         card.style.transformOrigin=(place==='left'?'right center':(place==='right'?'left center':'center top'));
+        // Taşma güvenliği: alt/üst kenar viewport'u aşarsa geri çek (kart içi kaydırma max-height ile)
+        var rb=card.getBoundingClientRect();
+        if(rb.bottom>vh-pad){ card.style.top=Math.max(pad, vh-pad-rb.height)+'px'; }
+        if(card.getBoundingClientRect().top<pad){ card.style.top=pad+'px'; }
+        // Tıklanan günü gösteren üçgen ok (yalnız yana yerleşimde)
+        if(place==='right'||place==='left'){
+          var cr2=card.getBoundingClientRect();
+          var cy=anchorRect.top+anchorRect.height/2;
+          var arrow=document.createElement('div');
+          arrow.className='gsch-modal-arrow '+(place==='right'?'point-left':'point-right');
+          arrow.style.top=(Math.max(cr2.top+20, Math.min(cr2.bottom-20, cy))-9)+'px';
+          arrow.style.left=(place==='right'?(cr2.left-9):cr2.right)+'px';
+          ov.appendChild(arrow);
+        }
       }
     }
 

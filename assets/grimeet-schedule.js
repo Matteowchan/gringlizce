@@ -12,6 +12,37 @@
   function clsHash(s){ s=String(s||''); var h=0; for(var i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return Math.abs(h); }
   function autoColor(classId){ return PALETTE[clsHash(classId)%PALETTE.length]; }
 
+  // ── Türkiye resmî tatilleri ──
+  // Ulusal (sabit) tatiller ay-gün olarak: HER yıl otomatik üretilir.
+  var NAT_HOL=[['01-01','Yılbaşı'],['04-23','23 Nisan'],['05-01','1 Mayıs'],['05-19','19 Mayıs'],['07-15','15 Temmuz'],['08-30','30 Ağustos Zafer Bayramı'],['10-29','29 Ekim Cumhuriyet Bayramı']];
+  var NAT_HALF=[['10-28','29 Ekim arifesi']]; // yarım gün
+  // Dinî bayramların 1. gün tarihleri (Diyanet). Ramazan 3 gün, Kurban 4 gün; arife = 1 gün öncesi (yarım gün).
+  // Yeni yıl eklemek için buraya satır ekle.
+  var RELIG_HOL={
+    2026:{r:'2026-03-20',k:'2026-05-27'},
+    2027:{r:'2027-03-09',k:'2027-05-16'},
+    2028:{r:'2028-02-27',k:'2028-05-05'},
+    2029:{r:'2029-02-15',k:'2029-04-24'},
+    2030:{r:'2030-02-04',k:'2030-04-13'}
+  };
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+  function _ymd(d){ return d.getFullYear()+'-'+_pad2(d.getMonth()+1)+'-'+_pad2(d.getDate()); }
+  function _shift(iso,n){ var p=iso.split('-'); var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+n); return d; }
+  function _setHol(map,dObj,name,half){ var k=_ymd(dObj); var ex=map[k]; if(ex){ if(!ex.half) return; if(!half){ map[k]={name:name,half:false}; } return; } map[k]={name:name,half:half}; }
+  var _holCache={};
+  function holidayMap(year){
+    if(_holCache[year]) return _holCache[year];
+    var map={};
+    NAT_HOL.forEach(function(x){ map[year+'-'+x[0]]={name:x[1],half:false}; });
+    NAT_HALF.forEach(function(x){ var k=year+'-'+x[0]; if(!map[k]) map[k]={name:x[1],half:true}; });
+    var R=RELIG_HOL[year];
+    if(R){
+      if(R.r){ _setHol(map,_shift(R.r,-1),'Ramazan Bayramı arifesi',true); for(var i=0;i<3;i++) _setHol(map,_shift(R.r,i),'Ramazan Bayramı',false); }
+      if(R.k){ _setHol(map,_shift(R.k,-1),'Kurban Bayramı arifesi',true); for(var j=0;j<4;j++) _setHol(map,_shift(R.k,j),'Kurban Bayramı',false); }
+    }
+    _holCache[year]=map; return map;
+  }
+
   var CSS = ''
     + '.gsch{font-family:inherit;color:#2a2a2a;}'
     + '.gsch-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}'
@@ -95,6 +126,15 @@
     + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
     + '.gsch-cell .ev.dragging{opacity:.4;}'
     + '.gsch-cell.drop-ok{background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.35);}'
+    /* ── Hafta içi / hafta sonu / resmî tatil tonları ── */
+    + '.gsch-grid .wd.we{background:#efeadd;color:#8a7f66;}'
+    + '.gsch-cell.we{background:#f4f0e6;}'
+    + '.gsch-cell.out.we{background:#efeade;}'
+    + '.gsch-cell.we.has:hover{background:#ecefe7;}'
+    + '.gsch-cell.holi{background:#fbeeeb;}'
+    + '.gsch-cell.holi.we{background:#f8e9e4;}'
+    + '.gsch-cell .hol{display:block;font-size:10.5px;line-height:1.35;background:#f2d8d3;color:#9a3630;border-left:3px solid #B23A48;border-radius:4px;padding:2px 7px 3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}'
+    + '.gsch-cell .hol.half{background:#f6e6df;color:#96552b;border-left-color:#C67A34;font-weight:600;}'
     + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
     + '.gsch-modal-ov{position:fixed;inset:0;background:rgba(20,16,12,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;}'
     + '.gsch-modal{background:#fff;border-radius:16px;padding:20px 22px;max-width:480px;width:100%;box-shadow:0 18px 50px rgba(20,16,12,.3);font-family:inherit;}'
@@ -196,6 +236,14 @@
     + ':root[data-theme="dark"] .gsch-cell.sel{background:#1e2e2b;box-shadow:inset 0 0 0 2px #3f7a72;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .num{color:#cbe8e2;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .ev.ev-more{color:#bfe0da;}'
+    + ':root[data-theme="dark"] .gsch-grid .wd.we{background:#1e1a13;color:#8f846d;}'
+    + ':root[data-theme="dark"] .gsch-cell.we{background:#191510;}'
+    + ':root[data-theme="dark"] .gsch-cell.out.we{background:#151109;}'
+    + ':root[data-theme="dark"] .gsch-cell.we.has:hover{background:#20302d;}'
+    + ':root[data-theme="dark"] .gsch-cell.holi{background:#2a1a17;}'
+    + ':root[data-theme="dark"] .gsch-cell.holi.we{background:#261613;}'
+    + ':root[data-theme="dark"] .gsch-cell .hol{background:#3a211d;color:#e8a99e;border-left-color:#b5514a;}'
+    + ':root[data-theme="dark"] .gsch-cell .hol.half{background:#33261a;color:#e0b48a;border-left-color:#b5804a;}'
     + ':root[data-theme="dark"] .gsch-col-list-inner::-webkit-scrollbar-thumb{background:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-modal{background:#241f18;}'
     + ':root[data-theme="dark"] .gsch-modal h4{color:#f0e9db;}'
@@ -597,16 +645,21 @@
       var days=new Date(y,mo+1,0).getDate();
       var byDay={}; state.rows.forEach(function(r){ if(r._d.getFullYear()===y&&r._d.getMonth()===mo){ (byDay[r._d.getDate()]=byDay[r._d.getDate()]||[]).push(r); } });
       var today=new Date();
+      var holMap=holidayMap(y);
       var cells='';
-      for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out"></div>';
+      for(var i=0;i<startWd;i++) cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"></div>';
       for(var dnum=1;dnum<=days;dnum++){
-        var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(new Date(y,mo,dnum),today), selD=state.sel&&sameDay(new Date(y,mo,dnum),state.sel);
+        var _dd=new Date(y,mo,dnum), _dw=_dd.getDay(), we=(_dw===0||_dw===6);
+        var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
+        var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(_dd,today), selD=state.sel&&sameDay(_dd,state.sel);
+        var holHTML=hol?('<span class="hol'+(hol.half?' half':'')+'" title="'+esc(hol.name)+'">'+esc(hol.name)+'</span>'):'';
         var evHTML=evs.slice(0,4).map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev'+(r._ext?' ev-ext':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+(r._ext?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join('');
         if(evs.length>4) evHTML+='<span class="ev ev-more">+'+(evs.length-4)+' ders</span>';
-        cells+='<div class="gsch-cell'+(has?' has':'')+(isToday?' today':'')+(selD?' sel':'')+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+evHTML+'</div>';
+        var cls='gsch-cell'+(has?' has':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
+        cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+evHTML+'</div>';
       }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
-        + '<div class="gsch-grid">'+WD.map(function(w){return '<div class="wd">'+w+'</div>';}).join('')+cells+'</div></div>';
+        + '<div class="gsch-grid">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+cells+'</div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-cell.has').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); state.sel=new Date(y,mo,dd); renderCal(el); highlightDay(new Date(y,mo,dd)); }); });

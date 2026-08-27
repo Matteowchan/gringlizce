@@ -238,6 +238,8 @@
     + '.gsch-dayrow-meta{font-size:12px;color:#8a8172;margin-top:3px;}'
     + '.gsch-dayrow .gsch-item-actions{margin-top:9px;}'
     + '.gsch-dayrow.ext{opacity:.92;}'
+    + '.gsch-dayrow.editing{box-shadow:0 0 0 2px var(--gri-accent,#2C5856);background:#f4faf8;}'
+    + ':root[data-theme="dark"] .gsch-dayrow.editing{box-shadow:0 0 0 2px #3f7a72;background:#1e2e2b;}'
     + ':root[data-theme="dark"] .gsch-dayrow{background:#241f18;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-dayrow-time b{color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-dayrow-time span{color:#9a917d;}'
@@ -829,7 +831,7 @@
       var d=row._d, dur=row.duration_min||60, col=rowColor(row);
       var end=new Date(d.getTime()+dur*60000);
       var cls=(row.classes&&row.classes.name)?row.classes.name:'';
-      return '<div class="gsch-dayrow'+(row._ext?' ext':'')+'" style="border-left:4px solid '+col+'">'
+      return '<div class="gsch-dayrow'+(row._ext?' ext':'')+'" data-id="'+esc(row.id)+'" style="border-left:4px solid '+col+'">'
         + '<div class="gsch-dayrow-time"><b>'+hhmm(d)+'</b><span>'+hhmm(end)+'</span></div>'
         + '<div class="gsch-dayrow-main">'
           + '<div class="gsch-dayrow-title">'+esc(row.title)+(cls?' <span class="gsch-dayrow-cls" style="background:'+col+'22;color:'+col+'">'+esc(cls)+'</span>':'')+'</div>'
@@ -968,7 +970,9 @@
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
       function q(s){ return formEl?formEl.querySelector(s):null; }
       function resetPane(){
-        editingId=null; if(!formEl) return;
+        editingId=null;
+        try{ listEl.querySelectorAll('.gsch-dayrow.editing').forEach(function(r){ r.classList.remove('editing'); }); }catch(e){}
+        if(!formEl) return;
         formEl.classList.remove('editing');
         q('.dmf-title').textContent='Bu güne ders planla';
         q('.dmf-save').textContent='Planla';
@@ -988,6 +992,9 @@
         formEl.classList.add('editing');
         q('.dmf-title').textContent='Dersi Düzenle';
         q('.dmf-save').textContent='Güncelle';
+        var _c=(row.classes&&row.classes.name)?(' · '+row.classes.name):'';
+        q('.dmf-edittag').innerHTML='<b>'+esc(hhmm(d)+' '+(row.title||'Ders')+_c)+'</b> dersini düzenliyorsun — değiştir, Güncelle\'ye bas.';
+        listEl.querySelectorAll('.gsch-dayrow').forEach(function(r){ r.classList.toggle('editing', r.getAttribute('data-id')===String(id)); });
         if(formEl.scrollIntoView) formEl.scrollIntoView({block:'nearest'});
         var t=q('.dmf-t'); if(t){ try{ t.focus(); }catch(e){} }
       }

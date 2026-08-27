@@ -45,6 +45,20 @@
 
   var CSS = ''
     + '.gsch{font-family:inherit;color:#2a2a2a;}'
+    /* ── Animasyonlar (profesyonel his) — reduced-motion'a saygılı ── */
+    + '@keyframes gschFade{from{opacity:0}to{opacity:1}}'
+    + '@keyframes gschPop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}'
+    + '@keyframes gschEditPulse{0%{box-shadow:0 0 0 7px rgba(44,88,86,0)}45%{box-shadow:0 0 0 5px rgba(44,88,86,.22)}100%{box-shadow:0 0 0 2px rgba(44,88,86,.16)}}'
+    + '.gsch-modal-ov{animation:gschFade .15s ease both;}'
+    + '.gsch-modal,.gsch-minical{animation:gschPop .22s cubic-bezier(.2,.7,.3,1) both;}'
+    + '.gsch-form-ov{animation:gschFade .15s ease both;}'
+    + '.gsch-form-ov .gsch-form{animation:gschPop .22s cubic-bezier(.2,.7,.3,1) both;}'
+    + '.gsch-daymodal-form.editing{animation:gschEditPulse .5s ease;}'
+    + '.gsch-gridwrap{animation:gschFade .18s ease both;}'
+    + '.gsch-btn{transition:transform .08s ease,filter .12s ease,background .12s ease;}'
+    + '.gsch-btn:active{transform:scale(.97);}'
+    + '.gsch-cell .ev,.gsch-item,.gsch-dayrow,.f-datebtn,.gsch-sub,.gsch-cal-h button,.gsch-minical .mc-day{transition:transform .1s ease,box-shadow .15s ease,background .12s ease,filter .12s ease,border-color .12s ease;}'
+    + '@media(prefers-reduced-motion:reduce){.gsch-modal-ov,.gsch-modal,.gsch-minical,.gsch-form-ov,.gsch-form-ov .gsch-form,.gsch-daymodal-form.editing,.gsch-gridwrap{animation:none !important;}.gsch-btn:active{transform:none;}}'
     + '.gsch-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}'
     + '.gsch-toggle{display:inline-flex;border:1px solid #d8d2c4;border-radius:9px;overflow:hidden;}'
     + '.gsch-toggle button{border:none;background:#f4efe6;color:#6a6250;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer;}'
@@ -260,7 +274,8 @@
     + '.gsch-item:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(30,25,20,.10);}'
     + '.gsch-item.hl{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.20);}'
     /* ── Ders İstatistiği (açılır-kapanır yan panel) ── */
-    + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;}'
+    + '.gsch-shell{display:flex;gap:16px;align-items:flex-start;justify-content:flex-start;}'
+    + '.gsch-shell.centered{justify-content:center;}'
     + '.gsch-main{flex:0 1 auto;width:100%;min-width:min(600px,100%);min-height:440px;max-width:100%;max-height:1200px;height:900px;display:flex;flex-direction:column;resize:none;overflow:hidden;position:relative;}'
     /* ── Özel resize tutamakları (sağ kenar / alt kenar / köşe) ── */
     + '.gsch-rh{position:absolute;z-index:6;touch-action:none;}'
@@ -534,6 +549,7 @@
       try{ localStorage.setItem('gsch-list-open', listOpen?'1':'0'); }catch(e){}
       _listBtn.textContent='Liste '+(listOpen?'▾':'▸');
       var sp=cont.querySelector('.gsch-split'); if(sp) sp.classList.toggle('list-off', !listOpen);
+      var sh=cont.querySelector('.gsch-shell'); if(sh) sh.classList.toggle('centered', !listOpen && !statsOpen);
       try{ fitDayCells(cont.querySelector('.gsch-gridwrap')); }catch(e){}
     });
 
@@ -542,7 +558,7 @@
       statsOpen=!statsOpen;
       try{ localStorage.setItem('gsch-stats-open', statsOpen?'1':'0'); }catch(e){}
       _statsBtn.textContent='Ders İstatistiği '+(statsOpen?'▾':'▸');
-      var shell=cont.querySelector('.gsch-shell'); if(shell) shell.classList.toggle('stats-on', statsOpen);
+      var shell=cont.querySelector('.gsch-shell'); if(shell){ shell.classList.toggle('stats-on', statsOpen); shell.classList.toggle('centered', !listOpen && !statsOpen); }
       if(statsOpen && statsData==null) loadStats();
     });
 
@@ -1162,7 +1178,7 @@
       var mainHTML = !state.rows.length
         ? '<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'
         : '<div class="gsch-split'+(listOpen?'':' list-off')+'"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
-      body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
+      body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+((!listOpen&&!statsOpen)?' centered':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
         + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
       if(state.rows.length){
         setupResizer();

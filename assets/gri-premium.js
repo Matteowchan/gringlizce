@@ -28,6 +28,23 @@
     (document.head || document.documentElement).appendChild(st);
   } catch (e) {}
 
+  // ── Paylaşılan premium/kilit rozeti (.gpb) — tüm site tek görsel dil ──
+  // Kilitli = turuncu (kilit ikonu) · Açık/Ücretsiz = yeşil (açık kilit / rozetsiz)
+  try {
+    var bcss =
+      '.gpb{display:inline-flex;align-items:center;gap:.34em;font-family:var(--font-ui,Inter),system-ui,sans-serif;' +
+      'font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.26em .64em;' +
+      'border-radius:100px;line-height:1;white-space:nowrap;vertical-align:.1em}' +
+      '.gpb svg{width:1em;height:1em;flex:none;display:block}' +
+      '.gpb--lock{background:#BE6A1B;color:#fff}' +
+      '.gpb--open{background:#2F8F6B;color:#fff}' +
+      '.gpb--free{background:#2F8F6B;color:#fff}';
+    var bst = document.createElement('style');
+    bst.setAttribute('data-gri-premium-badge', '1');
+    bst.textContent = bcss;
+    (document.head || document.documentElement).appendChild(bst);
+  } catch (e) {}
+
   function waitSupabase(tries) {
     return new Promise(function (resolve) {
       (function loop(n) {
@@ -71,10 +88,23 @@
   // varsayılan: premium değil (anonim ziyaretçi)
   setState(false, null);
 
+  var LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/></svg>';
+  var OPEN_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5 1 1 0 0 0 2 0 3 3 0 0 1 6 0v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5z"/></svg>';
+
+  // Paylaşılan rozet HTML üreticisi.
+  //   state: 'lock' (kilitli/turuncu) · 'open' (premium açık/yeşil) · 'free' (ücretsiz/yeşil)
+  //   label: opsiyonel metin (varsayılan: lock/open → 'Premium', free → 'Ücretsiz')
+  function badge(state, label) {
+    if (state === 'free') return '<span class="gpb gpb--free">' + (label || 'Ücretsiz') + '</span>';
+    if (state === 'open')  return '<span class="gpb gpb--open">' + OPEN_SVG + (label || 'Premium') + '</span>';
+    return '<span class="gpb gpb--lock">' + LOCK_SVG + (label || 'Premium') + '</span>';
+  }
+
   window.GriPremium = {
     refresh: refresh,
     isActive: function () { return !!(window.GRI_PREMIUM && window.GRI_PREMIUM.active); },
-    until: function () { return window.GRI_PREMIUM ? window.GRI_PREMIUM.until : null; }
+    until: function () { return window.GRI_PREMIUM ? window.GRI_PREMIUM.until : null; },
+    badge: badge
   };
 
   if (document.readyState !== 'loading') refresh();

@@ -103,21 +103,9 @@
     .deneme-card.locked { opacity: 0.86; }
     .deneme-card .lock-badge {
       position: absolute;
-      top: 1.15rem;
-      right: 1.15rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.28rem;
-      font-size: 0.64rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      background: #7A3B3B;
-      color: #fff;
-      padding: 0.22rem 0.5rem;
-      border-radius: 100px;
+      top: 1.05rem;
+      right: 1.05rem;
     }
-    .deneme-card .lock-badge.open { background: #2f8f6b; }
 
     .deneme-card .eyebrow {
       color: var(--text-muted);
@@ -369,7 +357,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="assets/site-config.js?v=7" defer></script>
 <script src="assets/auth-gate.js" defer></script>
-  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
@@ -692,6 +680,12 @@
       }
     });
 
+    // Paylaşılan premium rozeti (gri-premium.js) — yüklenmemişse sade .gpb fallback
+    function pbadge(state) {
+      if (window.GriPremium && window.GriPremium.badge) return window.GriPremium.badge(state);
+      return '<span class="gpb gpb--' + state + '">' + (state === 'free' ? 'Ücretsiz' : 'Premium') + '</span>';
+    }
+
     // Bu sayfada listelenen TAM denemeler (bölüm-bazlı girişler hariç)
     function denemeList(tests) {
       return (tests || []).filter(function (t) {
@@ -771,14 +765,14 @@
         const locked = !prem && isPremTest;
         if (locked) {
           return '<a class="deneme-card locked" href="premium">'
-               + '<span class="lock-badge">🔒 Premium</span>'
+               + '<span class="lock-badge">' + pbadge('lock') + '</span>'
                + '<div class="eyebrow">' + escapeHtml(date) + '</div>'
                + '<div class="name">' + escapeHtml(t.name) + '</div>'
                + topics
                + '<div class="detail"><span>Premium ile kilidi aç</span><span class="arrow">→</span></div>'
                + '</a>';
         }
-        const openBadge = (prem && isPremTest) ? '<span class="lock-badge open">🔓 Premium</span>' : '';
+        const openBadge = (prem && isPremTest) ? '<span class="lock-badge">' + pbadge('open') + '</span>' : '';
         return '<a class="deneme-card' + cardClass + '" href="ielts-deneme.html?test=' + encodeURIComponent(t.slug) + '">'
              + openBadge
              + dotHtml

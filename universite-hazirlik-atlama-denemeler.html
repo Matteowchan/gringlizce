@@ -29,7 +29,7 @@
   <script src="assets/theme.js?v=2" defer></script>
   <script src="assets/site-config.js?v=7" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"ItemList","name":"Üniversite Hazırlık Atlama Denemeleri","itemListElement":[
     {"@type":"ListItem","position":1,"name":"Deneme 1","url":"https://gringlizce.com/universite-hazirlik-atlama"},
@@ -76,7 +76,7 @@
     .hz-note{max-width:720px;margin:1rem auto 2.4rem;padding:0 1.1rem;text-align:center;font-size:.9rem;opacity:.8;line-height:1.65}
     .hz-note a{color:var(--teal,#2C5856);font-weight:700}
     .hz-card.locked{opacity:.84}
-    .hz-lock{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;gap:.28rem;font-size:.64rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#7A3B3B;color:#fff;padding:.22rem .5rem;border-radius:100px}
+    .hz-lock{position:absolute;top:1rem;right:1rem}
     @media(max-width:520px){.hz-hero h1{font-size:1.6rem}}
   </style>
 </head>
@@ -292,8 +292,7 @@
   <script>
     /* İlk deneme ücretsiz, gerisi Premium — kilit katmanı */
     (function () {
-      var LOCK = '<span class="hz-lock">🔒 Premium</span>';                                   // kilitli (premium değil)
-      var OPEN = '<span class="hz-lock hz-open" style="background:#2f8f6b;">🔓 Premium</span>'; // premium — açık, yeşil
+      function pill(s){ var b=(window.GriPremium&&window.GriPremium.badge)?window.GriPremium.badge(s):'<span class="gpb gpb--'+s+'">'+(s==='free'?'Ücretsiz':'Premium')+'</span>'; return '<span class="hz-lock">'+b+'</span>'; }
       function isPrem(){ try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
       function apply(){
         var prem = isPrem();
@@ -307,12 +306,12 @@
           if (prem) {                                    // premium — AÇIK, yeşil 🔓 rozet
             card.setAttribute('href', card.dataset.href);
             card.classList.remove('locked');
-            card.insertAdjacentHTML('afterbegin', OPEN);
+            card.insertAdjacentHTML('afterbegin', pill('open'));
             if (go) go.textContent = 'Denemeyi başlat';
           } else {                                       // premium yok — kilitli, kırmızı 🔒
             card.setAttribute('href', 'premium');
             card.classList.add('locked');
-            card.insertAdjacentHTML('afterbegin', LOCK);
+            card.insertAdjacentHTML('afterbegin', pill('lock'));
             if (go) go.textContent = 'Premium ile aç';
           }
         });

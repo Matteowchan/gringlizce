@@ -135,7 +135,7 @@
   <script src="assets/site-config.js?v=7" defer></script>
   <script src="assets/track.js?v=3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/gri-premium.js?v=9" defer></script>
 </head>
 <body data-cat="sat">
   <!-- Google Tag Manager (noscript) -->
@@ -207,10 +207,7 @@
         .qb-packs #qb-packs-list{padding:0 .4rem .5rem}
         .qb-pk-row.is-locked{opacity:.9}
         .qb-pk-sub{display:block;font-family:var(--font-ui,Inter),sans-serif;font-size:.78rem;font-weight:400;color:var(--text-muted,#8a7f6e);margin-top:.2rem}
-        .qb-pk-badge{display:inline-block;margin-left:.5rem;font-family:var(--font-ui,Inter),sans-serif;font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:.15rem .5rem;border-radius:100px;vertical-align:.1em;white-space:nowrap}
-        .qb-pk-badge.free{color:#1f6d4a;background:rgba(31,109,74,.13)}
-        .qb-pk-badge.lock{color:#fff;background:#2b7a56}
-        .qb-pk-badge.prem{color:#8a6d1f;background:var(--gold-soft,#f5ecd4)}
+        .qb-pk-row .gpb{margin-left:.5rem}
       </style>
       <script>
         (function(){
@@ -227,13 +224,18 @@
             {key:'sat_pack_mixed_hard',name:'SAT+ En Zor Karışık',sub:'Tüm tipler karışık &middot; Hard–Harder &middot; tam çözümlü'}
           ];
           function isPrem(){ try{ return !!(window.GriPremium&&window.GriPremium.isActive&&window.GriPremium.isActive()); }catch(e){ return false; } }
+          function mkBadge(state){
+            if(window.GriPremium&&GriPremium.badge) return GriPremium.badge(state);
+            var t=state==='free'?'Ücretsiz':'Premium';
+            return '<span class="gpb gpb--'+state+'">'+t+'</span>';
+          }
           function render(){
             var prem=isPrem(), el=document.getElementById('qb-packs-list'); if(!el) return;
             el.innerHTML=PACKS.map(function(p){
               var badge,href,cls='',cta;
-              if(p.free){ badge='<span class="qb-pk-badge free">Ücretsiz</span>'; href='soru?subcategory='+p.key; cta='Başla'; }
-              else if(prem){ badge='<span class="qb-pk-badge prem">🔓 Premium</span>'; href='soru?subcategory='+p.key; cta='Başla'; }
-              else { badge='<span class="qb-pk-badge lock">🔒 Premium</span>'; href='premium'; cls=' is-locked'; cta='Aç'; }
+              if(p.free){ badge=mkBadge('free'); href='soru?subcategory='+p.key; cta='Başla'; }
+              else if(prem){ badge=mkBadge('open'); href='soru?subcategory='+p.key; cta='Başla'; }
+              else { badge=mkBadge('lock'); href='premium'; cls=' is-locked'; cta='Aç'; }
               return '<div class="qb-topic-row qb-topic-active qb-pk-row'+cls+'"><span class="qb-topic-name">'+p.name+' '+badge+'<span class="qb-pk-sub">'+p.sub+'</span></span><a class="qb-topic-status active" href="'+href+'">'+cta+'</a></div>';
             }).join('');
           }

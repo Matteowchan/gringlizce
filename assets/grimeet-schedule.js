@@ -353,6 +353,30 @@
     + ':root[data-theme="dark"] .gsch-minical .mc-day.today{color:#E0B85A;}'
     + ':root[data-theme="dark"] .gsch-minical .mc-day.sel{background:#3f7a72;color:#fff;}'
     + ':root[data-theme="dark"] .gsch-minical .mc-day.we{color:#93a3ad;}'
+    /* Çoklu tarih: chip'ler + ipucu + tekrar + footer */
+    + '.gsch-form .f-hint{font-weight:400;color:#a89a78;font-size:11px;}'
+    + '.gsch-form .f-datechips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}'
+    + '.f-datechip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#2C5856;background:#e7f0ee;border-radius:100px;padding:4px 5px 4px 11px;}'
+    + '.f-datechip .f-chipx{background:none;border:none;color:#2C5856;font-size:16px;line-height:1;cursor:pointer;padding:0 3px;opacity:.65;}'
+    + '.f-datechip .f-chipx:hover{opacity:1;}'
+    + '.gsch-minical-multi{width:302px;}'
+    + '.gsch-minical .mc-rec{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #ece4d4;}'
+    + '.gsch-minical .mc-rec-l{font-size:11.5px;color:#8a8172;font-weight:600;}'
+    + '.gsch-minical .mc-rec-b{font:inherit;font-size:11.5px;font-weight:700;color:#2C5856;background:#e7f0ee;border:none;border-radius:100px;padding:4px 10px;cursor:pointer;}'
+    + '.gsch-minical .mc-rec-b:hover{background:#d8ebe6;}'
+    + '.gsch-minical .mc-rec-clr{font:inherit;font-size:11.5px;color:#8a8172;background:none;border:none;cursor:pointer;margin-left:auto;text-decoration:underline;}'
+    + '.gsch-minical .mc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;}'
+    + '.gsch-minical .mc-cnt{font-size:12px;font-weight:700;color:#2a2a2a;}'
+    + '.gsch-minical .mc-done{font:inherit;font-weight:700;font-size:13px;color:#fff;background:var(--gri-accent,#2C5856);border:none;border-radius:8px;padding:7px 18px;cursor:pointer;}'
+    + ':root[data-theme="dark"] .f-datechip{color:#bfe0da;background:#22403e;}'
+    + ':root[data-theme="dark"] .f-datechip .f-chipx{color:#bfe0da;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-rec{border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-rec-l,:root[data-theme="dark"] .gsch-minical .mc-rec-clr{color:#9a917d;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-rec-b{color:#bfe0da;background:#22403e;}'
+    + ':root[data-theme="dark"] .gsch-minical .mc-cnt{color:#f0e9db;}'
+    /* Form modalini gun-popup ile gorsel uyumlu yap (beyaz kart) */
+    + '.gsch-form{background:#fff;}'
+    + ':root[data-theme="dark"] .gsch-form{background:#241f18;}'
     + ':root[data-theme="dark"] .gsch-btn.ghost{color:#b5ac98;border-color:#3a3428;}'
     + ':root[data-theme="dark"] .gsch-btn.danger{color:#e6796a;border-color:#5a3630;}'
     + ':root[data-theme="dark"] .gsch-item{background:#241f18;border-color:#3a3428;}'
@@ -462,7 +486,7 @@
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
           + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label></div>'
-          + '<div class="row"><label>Tarih<span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button></span></label></div>'
+          + '<div class="row"><label>Tarih<small class="f-hint"> — birden çok gün seçip tekrarlı planlayabilirsin</small><span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button></span><div class="f-datechips"></div></label></div>'
           + '<div class="row"><label>Saat<span class="f-when-ctl"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
           + '<label>Süre<select class="f-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
           + '<div class="row"><label style="flex:2">Not (opsiyonel)<input type="text" class="f-note" placeholder="Öğrencilere kısa not" maxlength="140"></label></div>'
@@ -475,11 +499,17 @@
     var body=cont.querySelector('.gsch-body');
     cont.querySelectorAll('.gsch-toggle button').forEach(function(b){ b.addEventListener('click',function(){ state.view=b.dataset.v; try{localStorage.setItem('gsch-view',state.view);}catch(e){} cont.querySelectorAll('.gsch-toggle button').forEach(function(x){x.classList.toggle('on',x===b);}); render(); }); });
 
-    function setFDate(iso){
-      var inp=cont.querySelector('.f-date'), btn=cont.querySelector('.f-datebtn'); if(!inp) return;
-      inp.value=iso||'';
-      if(btn){ if(iso){ btn.textContent=fmtDateLong(iso); btn.classList.remove('empty'); } else { btn.textContent='Tarih seç'; btn.classList.add('empty'); } }
+    function setFDates(isos){
+      isos=(isos||[]).filter(Boolean); isos=isos.filter(function(v,i){return isos.indexOf(v)===i;}); isos.sort();
+      var inp=cont.querySelector('.f-date'), btn=cont.querySelector('.f-datebtn'), chips=cont.querySelector('.f-datechips'); if(!inp) return;
+      inp.value=isos.join(',');
+      if(btn){ if(!isos.length){ btn.textContent='Tarih seç'; btn.classList.add('empty'); } else if(isos.length===1){ btn.textContent=fmtDateLong(isos[0]); btn.classList.remove('empty'); } else { btn.textContent=isos.length+' gün seçildi · düzenle'; btn.classList.remove('empty'); } }
+      if(chips){
+        chips.innerHTML=(isos.length>1?isos:[]).map(function(iso){ var d=parseIso(iso); return '<span class="f-datechip" data-iso="'+iso+'">'+(d?d.getDate()+' '+MONTHS[d.getMonth()]+' '+WD[(d.getDay()+6)%7]:iso)+'<button type="button" class="f-chipx" aria-label="Kaldır">&times;</button></span>'; }).join('');
+        chips.querySelectorAll('.f-chipx').forEach(function(b){ b.addEventListener('click',function(e){ e.stopPropagation(); var iso=b.parentNode.getAttribute('data-iso'); setFDates((inp.value?inp.value.split(','):[]).filter(function(x){return x!==iso;})); }); });
+      }
     }
+    function setFDate(iso){ setFDates(iso?[iso]:[]); }
     function setFormTitle(t){ var el=cont.querySelector('.gsch-form-title'); if(el) el.textContent=t; }
     function formOpen(){ var ov=cont.querySelector('.gsch-form-ov'); if(ov) ov.classList.add('open'); }
     function resetForm(){
@@ -503,18 +533,21 @@
       cont.querySelectorAll('.f-cancel').forEach(function(b){ b.addEventListener('click', resetForm); });
       cont.querySelector('.f-save').addEventListener('click', save);
       var _dbtn=cont.querySelector('.f-datebtn');
-      if(_dbtn) _dbtn.addEventListener('click',function(){ openDatePicker(cont.querySelector('.f-date').value, function(iso){ setFDate(iso); }); });
+      if(_dbtn) _dbtn.addEventListener('click',function(){ var cur=(cont.querySelector('.f-date').value||'').split(',').filter(Boolean); openMultiDatePicker(cur, setFDates); });
       if(_formOvEl){ _formOvEl.addEventListener('click',function(e){ if(e.target===_formOvEl) resetForm(); }); }
       document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var ov=cont.querySelector('.gsch-form-ov'); if(ov&&ov.classList.contains('open')) resetForm(); } });
     }
 
-    // Mini takvim tarih seçici popup
-    function openDatePicker(curIso, onPick){
-      var cur=parseIso(curIso)||new Date();
-      var view=new Date(cur.getFullYear(),cur.getMonth(),1);
+    // Mini takvim — ÇOKLU gün seçici + haftalık tekrar (tekrarlı ders için)
+    function openMultiDatePicker(selectedIsos, onDone){
+      var sel={}; (selectedIsos||[]).forEach(function(s){ if(s) sel[s]=1; });
+      var base=(selectedIsos&&selectedIsos.length)?parseIso(selectedIsos[selectedIsos.length-1]):new Date();
+      if(!base) base=new Date();
+      var view=new Date(base.getFullYear(),base.getMonth(),1);
       var ov=document.createElement('div'); ov.className='gsch-modal-ov'; ov.style.zIndex='100001';
-      ov.innerHTML='<div class="gsch-minical"></div>';
+      ov.innerHTML='<div class="gsch-minical gsch-minical-multi"></div>';
       var box=ov.querySelector('.gsch-minical');
+      function keys(){ return Object.keys(sel); }
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
       function draw(){
         var y=view.getFullYear(), mo=view.getMonth();
@@ -522,17 +555,21 @@
         var cells='';
         for(var i=0;i<startWd;i++) cells+='<span class="mc-cell"></span>';
         for(var d=1;d<=days;d++){
-          var dObj=new Date(y,mo,d), dw=(dObj.getDay()===0||dObj.getDay()===6);
-          var sel=curIso&&sameDay(dObj,parseIso(curIso)), isT=sameDay(dObj,today);
-          cells+='<span class="mc-cell"><button type="button" class="mc-day'+(sel?' sel':'')+(isT?' today':'')+(dw?' we':'')+'" data-d="'+d+'">'+d+'</button></span>';
+          var iso=y+'-'+two(mo+1)+'-'+two(d), dObj=new Date(y,mo,d), dw=(dObj.getDay()===0||dObj.getDay()===6);
+          cells+='<span class="mc-cell"><button type="button" class="mc-day'+(sel[iso]?' sel':'')+(sameDay(dObj,today)?' today':'')+(dw?' we':'')+'" data-iso="'+iso+'">'+d+'</button></span>';
         }
         box.innerHTML='<div class="mc-h"><button type="button" class="mc-prev" aria-label="Önceki ay">‹</button><b>'+MONTHS_L[mo]+' '+y+'</b><button type="button" class="mc-next" aria-label="Sonraki ay">›</button></div>'
-          +'<div class="mc-grid">'+MWD.map(function(w){return '<span class="mc-wd">'+w+'</span>';}).join('')+cells+'</div>';
+          +'<div class="mc-grid">'+MWD.map(function(w){return '<span class="mc-wd">'+w+'</span>';}).join('')+cells+'</div>'
+          +'<div class="mc-rec"><span class="mc-rec-l">Haftalık tekrarla:</span><button type="button" class="mc-rec-b" data-n="4">+4 hafta</button><button type="button" class="mc-rec-b" data-n="8">+8 hafta</button><button type="button" class="mc-rec-clr">Temizle</button></div>'
+          +'<div class="mc-foot"><span class="mc-cnt">'+keys().length+' gün seçili</span><button type="button" class="mc-done">Bitti</button></div>';
         box.querySelector('.mc-prev').onclick=function(){ view=new Date(y,mo-1,1); draw(); };
         box.querySelector('.mc-next').onclick=function(){ view=new Date(y,mo+1,1); draw(); };
-        box.querySelectorAll('.mc-day').forEach(function(b){ b.onclick=function(){ var dd=parseInt(b.getAttribute('data-d'),10); curIso=y+'-'+two(mo+1)+'-'+two(dd); onPick(curIso); close(); }; });
+        box.querySelectorAll('.mc-day').forEach(function(b){ b.onclick=function(){ var iso=b.getAttribute('data-iso'); if(sel[iso]) delete sel[iso]; else sel[iso]=1; draw(); }; });
+        box.querySelectorAll('.mc-rec-b').forEach(function(b){ b.onclick=function(){ var n=parseInt(b.getAttribute('data-n'),10); var seed=keys(); if(!seed.length){ alert('Önce en az bir gün seç, sonra haftalık tekrarla.'); return; } seed.forEach(function(iso){ for(var k=1;k<=n;k++){ sel[_ymd(_shift(iso,7*k))]=1; } }); draw(); }; });
+        box.querySelector('.mc-rec-clr').onclick=function(){ sel={}; draw(); };
+        box.querySelector('.mc-done').onclick=function(){ onDone(keys()); close(); };
       }
-      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.addEventListener('click',function(e){ if(e.target===ov){ onDone(keys()); close(); } });
       document.body.appendChild(ov); draw();
     }
 
@@ -739,35 +776,27 @@
 
     async function save(){
       var title=(cont.querySelector('.f-title').value||'').trim();
-      var _fd=(cont.querySelector('.f-date').value||'');
+      var isos=(cont.querySelector('.f-date').value||'').split(',').filter(Boolean);
       var _fh=cont.querySelector('.f-h').value, _fm=cont.querySelector('.f-m').value;
-      var when=_fd ? (_fd+'T'+(_fh||'00')+':'+(_fm||'00')) : '';
       var dur=parseInt(cont.querySelector('.f-dur').value,10)||60;
       var note=(cont.querySelector('.f-note').value||'').trim();
       if(!title){ alert('Başlık gir.'); return; }
-      if(!_fd){ alert('Tarih seç.'); return; }
+      if(!isos.length){ alert('Tarih seç.'); return; }
       if(!_fh){ alert('Saat seç.'); return; }
-      var startsAt=new Date(when);
-      if(isNaN(startsAt.getTime())){ alert('Geçerli bir tarih seç.'); return; }
       var classId = aggregate ? ((cont.querySelector('.f-class')||{}).value||'') : opts.classId;
       if(aggregate && !classId){ alert('Sınıf seç.'); return; }
-      var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
+      function mk(iso){ return new Date(iso+'T'+(_fh||'00')+':'+(_fm||'00')); }
       var btn=cont.querySelector('.f-save'); btn.disabled=true; var old=btn.textContent; btn.textContent='Kaydediliyor…';
       try{
         if(state.editing){
-          var upd={ title:title, starts_at:startsAt.toISOString(), duration_min:dur, note:note||null };
-          if(aggregate && classId){ upd.class_id=classId; upd.room_code=room; }
-          var ru=await sb.from('grimeet_schedule').update(upd).eq('id',state.editing);
-          if(ru.error) throw ru.error;
-          sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:state.editing}}).catch(function(){});
-          resetForm();
-          await load();
+          var d0=mk(isos[0]); if(isNaN(d0.getTime())){ alert('Geçerli bir tarih seç.'); return; }
+          await updateLesson(state.editing, classId, title, d0, dur, note);
+          resetForm(); await load();
         } else {
-          var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
-          if(r.error) throw r.error;
-          if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
-          resetForm();
-          await load();
+          var made=0;
+          for(var i=0;i<isos.length;i++){ var d=mk(isos[i]); if(isNaN(d.getTime())) continue; await createLesson(classId,title,d,dur,note); made++; }
+          resetForm(); await load();
+          if(made>1) alert(made+' güne ders planlandı.');
         }
       }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }
       finally{ btn.disabled=false; btn.textContent=old; }

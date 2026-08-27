@@ -126,15 +126,15 @@
     + '.gsch-cell .ev[draggable="true"]{cursor:grab;}'
     + '.gsch-cell .ev.dragging{opacity:.4;}'
     + '.gsch-cell.drop-ok{background:#eaf3f1;box-shadow:inset 0 0 0 2px rgba(44,88,86,.35);}'
-    /* ── Hafta içi / hafta sonu / resmî tatil tonları ── */
-    + '.gsch-grid .wd.we{background:#efeadd;color:#8a7f66;}'
-    + '.gsch-cell.we{background:#f4f0e6;}'
-    + '.gsch-cell.out.we{background:#efeade;}'
-    + '.gsch-cell.we.has:hover{background:#ecefe7;}'
-    + '.gsch-cell.holi{background:#fbeeeb;}'
-    + '.gsch-cell.holi.we{background:#f8e9e4;}'
-    + '.gsch-cell .hol{display:block;font-size:10.5px;line-height:1.35;background:#f2d8d3;color:#9a3630;border-left:3px solid #B23A48;border-radius:4px;padding:2px 7px 3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}'
-    + '.gsch-cell .hol.half{background:#f6e6df;color:#96552b;border-left-color:#C67A34;font-weight:600;}'
+    /* ── Hafta içi / hafta sonu / resmî tatil tonları (belirgin) ── */
+    + '.gsch-grid .wd.we{background:#e6ebee;color:#78838d;}'
+    + '.gsch-cell.we{background:#eef2f5;}'
+    + '.gsch-cell.out.we{background:#e8edf1;}'
+    + '.gsch-cell.we.has:hover{background:#e4eef0;}'
+    + '.gsch-cell.holi{background:#fbe0db;}'
+    + '.gsch-cell.holi.we{background:#f6dbd8;}'
+    + '.gsch-cell .hol{display:block;font-size:10.5px;line-height:1.35;background:#efc7c0;color:#8c2b24;border-left:3px solid #B23A48;border-radius:4px;padding:2px 7px 3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}'
+    + '.gsch-cell .hol.half{background:#f2dccb;color:#894c22;border-left-color:#C67A34;font-weight:600;}'
     + '.gsch-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.15);}'
     + '.gsch-modal-ov{position:fixed;inset:0;background:rgba(20,16,12,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;}'
     + '.gsch-modal{background:#fff;border-radius:16px;padding:20px 22px;max-width:480px;width:100%;box-shadow:0 18px 50px rgba(20,16,12,.3);font-family:inherit;}'
@@ -156,10 +156,13 @@
     + '.gsch-form.editing .edit-tag{display:block;}'
     + '.gsch-cell.sel .ev.ev-more{background:transparent;color:#2C5856;}'
     + '.gsch-daylist{margin-top:12px;}'
-    + '.gsch-split{display:flex;gap:16px;align-items:stretch;}'
+    + '.gsch-split{display:flex;gap:0;align-items:stretch;}'
     + '.gsch-col{min-width:0;}'
-    + '.gsch-col-cal{flex:1 1 auto;}'
-    + '.gsch-col-list{flex:0 1 400px;position:relative;}'
+    + '.gsch-col-cal{flex:1 1 auto;min-width:420px;}'
+    + '.gsch-resizer{flex:0 0 16px;align-self:stretch;cursor:col-resize;position:relative;touch-action:none;user-select:none;}'
+    + '.gsch-resizer::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:46px;border-radius:4px;background:#d8d2c4;transition:background .12s,height .12s;}'
+    + '.gsch-resizer:hover::before,.gsch-resizer.drag::before{background:var(--gri-accent,#2C5856);height:64px;}'
+    + '.gsch-col-list{flex:0 0 var(--gsch-list-w,400px);position:relative;}'
     + '.gsch-col-list-inner{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-right:6px;}'
     + '.gsch-col-list-inner::-webkit-scrollbar{width:8px;}'
     + '.gsch-col-list-inner::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
@@ -187,7 +190,7 @@
     + '.gsch-stats-body::-webkit-scrollbar-thumb{background:#d8d2c4;border-radius:6px;}'
     + '.gsch-stats-body::-webkit-scrollbar-track{background:transparent;}'
     + '@media(max-width:900px){.gsch-shell{flex-direction:column;}.gsch-stats{flex-basis:auto;max-width:none;width:100%;}.gsch-stats-body{max-height:340px;}}'
-    + '@media(max-width:760px){.gsch-split{flex-direction:column;}.gsch-col-list{position:static;}.gsch-col-list-inner{position:static;max-height:320px;}}'
+    + '@media(max-width:760px){.gsch-split{flex-direction:column;}.gsch-resizer{display:none;}.gsch-col-list{position:static;flex-basis:auto;}.gsch-col-list-inner{position:static;max-height:320px;}}'
     + '@media(max-width:480px){'
     + '.gsch-cal{padding:8px;}'
     + '.gsch-grid{gap:2px;}'
@@ -236,15 +239,17 @@
     + ':root[data-theme="dark"] .gsch-cell.sel{background:#1e2e2b;box-shadow:inset 0 0 0 2px #3f7a72;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .num{color:#cbe8e2;}'
     + ':root[data-theme="dark"] .gsch-cell.sel .ev.ev-more{color:#bfe0da;}'
-    + ':root[data-theme="dark"] .gsch-grid .wd.we{background:#1e1a13;color:#8f846d;}'
-    + ':root[data-theme="dark"] .gsch-cell.we{background:#191510;}'
-    + ':root[data-theme="dark"] .gsch-cell.out.we{background:#151109;}'
-    + ':root[data-theme="dark"] .gsch-cell.we.has:hover{background:#20302d;}'
-    + ':root[data-theme="dark"] .gsch-cell.holi{background:#2a1a17;}'
-    + ':root[data-theme="dark"] .gsch-cell.holi.we{background:#261613;}'
-    + ':root[data-theme="dark"] .gsch-cell .hol{background:#3a211d;color:#e8a99e;border-left-color:#b5514a;}'
-    + ':root[data-theme="dark"] .gsch-cell .hol.half{background:#33261a;color:#e0b48a;border-left-color:#b5804a;}'
+    + ':root[data-theme="dark"] .gsch-grid .wd.we{background:#191f25;color:#8794a0;}'
+    + ':root[data-theme="dark"] .gsch-cell.we{background:#141a20;}'
+    + ':root[data-theme="dark"] .gsch-cell.out.we{background:#10151b;}'
+    + ':root[data-theme="dark"] .gsch-cell.we.has:hover{background:#1c2b30;}'
+    + ':root[data-theme="dark"] .gsch-cell.holi{background:#331714;}'
+    + ':root[data-theme="dark"] .gsch-cell.holi.we{background:#2d1512;}'
+    + ':root[data-theme="dark"] .gsch-cell .hol{background:#4a251f;color:#efab9f;border-left-color:#c2564d;}'
+    + ':root[data-theme="dark"] .gsch-cell .hol.half{background:#3a2a1a;color:#e6b98c;border-left-color:#b5804a;}'
     + ':root[data-theme="dark"] .gsch-col-list-inner::-webkit-scrollbar-thumb{background:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-resizer::before{background:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-resizer:hover::before,:root[data-theme="dark"] .gsch-resizer.drag::before{background:#3f7a72;}'
     + ':root[data-theme="dark"] .gsch-modal{background:#241f18;}'
     + ':root[data-theme="dark"] .gsch-modal h4{color:#f0e9db;}'
     + ':root[data-theme="dark"] .gsch-modal p{color:#b5ac98;}'
@@ -766,15 +771,30 @@
       }catch(e){ statsData=[]; paintStats(); } // hata: ana takvimi etkileme, panel sessizce boş
     }
 
+    function setupResizer(){
+      var split=body.querySelector('.gsch-split'); if(!split) return;
+      var rz=split.querySelector('.gsch-resizer'); if(!rz) return;
+      var saved; try{ saved=parseInt(localStorage.getItem('gsch-list-w'),10); }catch(e){}
+      if(saved && saved>=300 && saved<=760) split.style.setProperty('--gsch-list-w', saved+'px');
+      var dragging=false, lastW=0;
+      function clamp(w){ var maxW=Math.max(320, split.getBoundingClientRect().width-460); return Math.max(300, Math.min(Math.min(720,maxW), w)); }
+      function move(e){ if(!dragging) return; var x=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX; var r=split.getBoundingClientRect(); lastW=clamp(r.right - x - 8); split.style.setProperty('--gsch-list-w', lastW+'px'); if(e.cancelable) e.preventDefault(); }
+      function up(){ if(!dragging) return; dragging=false; rz.classList.remove('drag'); try{ document.body.style.userSelect=''; }catch(e){} if(lastW){ try{ localStorage.setItem('gsch-list-w', String(Math.round(lastW))); }catch(e){} }
+        document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up); }
+      function down(e){ dragging=true; rz.classList.add('drag'); try{ document.body.style.userSelect='none'; }catch(_e){} document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up); if(e.cancelable) e.preventDefault(); }
+      rz.addEventListener('mousedown',down); rz.addEventListener('touchstart',down,{passive:false});
+    }
+
     function render(){
       var mainHTML = !state.rows.length
         ? '<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'
-        : '<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
+        : '<div class="gsch-split"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
       body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
         + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
       if(state.rows.length){
         renderCal(body.querySelector('.gsch-col-cal'));
         renderListInner(body.querySelector('.gsch-col-list-inner'));
+        setupResizer();
       }
       paintStats();
     }

@@ -2205,6 +2205,10 @@
               <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
               <span><span class="t-type-name">Genel İngilizce</span><span class="t-type-hint">Havuz alıştırması</span></span>
             </button>
+            <button type="button" class="t-type-btn" data-type="pet_deneme">
+              <span class="t-type-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a1 1 0 0 1 1-1z"/><path d="M9 13l2 2 4-4"/></svg></span>
+              <span><span class="t-type-name">PET Denemesi</span><span class="t-type-hint">Cambridge B1 · sınav</span></span>
+            </button>
           </div>
           <div class="ca-rail-label" style="margin-top:1.1rem;">Şablon</div>
           <div class="ca-template-bar" id="ca-tpl-bar">
@@ -2460,6 +2464,13 @@
           <label for="ca-ge-item" style="margin-top:.7rem;">Alıştırma</label>
           <select id="ca-ge-item"></select>
           <p class="t-config-note">Genel İngilizce havuzundan (gramer/okuma/dinleme/yazma/kelime) bir alıştırma seç. Öğrenci çözer, otomatik puanlanır; istersen ayrıca değerlendirirsin.</p>
+        </div>
+
+        <div class="t-config-block" data-config="pet_deneme">
+          <div class="t-config-eyebrow">PET (Cambridge B1) · Deneme</div>
+          <label for="ca-pet-item">Deneme</label>
+          <select id="ca-pet-item"></select>
+          <p class="t-config-note">15 PET (Preliminary) denemesinden birini seç. Öğrenci panelinden çözer (Reading + Listening + Writing); gönderimi otomatik takip edilir, istersen Yazma bölümünü ayrıca değerlendirirsin. Atanan deneme öğrenciye ücretsiz açılır.</p>
         </div>
 
         </div><!-- /.ca-main -->
@@ -5926,6 +5937,29 @@
         if (t === 'reading') { populateSitePicker(document.getElementById('ca-r-cat'), document.getElementById('ca-r-page'), true); }
         if (t === 'material') { populateSitePicker(document.getElementById('ca-m-cat'), document.getElementById('ca-m-page'), true); }
         if (t === 'ge_pool') { populateGePool(); }
+        if (t === 'pet_deneme') { populatePetDeneme(); }
+      }
+      // ---- PET denemesi seçici (ge_assignments 'PET · Deneme%' -> class_assignments, GE havuzuyla aynı yol) ----
+      var PET_ROWS = null;
+      function autofillPetTitle() {
+        var itSel = document.getElementById('ca-pet-item'), ttl = document.getElementById('ca-title');
+        var opt = itSel && itSel.selectedOptions && itSel.selectedOptions[0];
+        if (ttl && opt && opt.value && (!ttl.value || ttl.dataset.autofill === '1')) { ttl.value = opt.getAttribute('data-name') || ''; ttl.dataset.autofill = '1'; }
+      }
+      async function populatePetDeneme() {
+        var itSel = document.getElementById('ca-pet-item');
+        if (!itSel) return;
+        if (!PET_ROWS) {
+          try {
+            var r = await sb.from('ge_assignments').select('id,title,unit').eq('active', true).ilike('title', 'PET · Deneme%').order('unit');
+            PET_ROWS = ((r && r.data) || []).slice().sort(function (a, b) { return (a.unit || 0) - (b.unit || 0); });
+          } catch (e) { PET_ROWS = []; }
+        }
+        itSel.innerHTML = PET_ROWS.length
+          ? PET_ROWS.map(function (x) { return '<option value="' + esc(x.id) + '" data-name="' + esc(x.title) + '">' + esc(x.title) + '</option>'; }).join('')
+          : '<option value="">— Deneme bulunamadı —</option>';
+        if (!itSel._petWired) { itSel.addEventListener('change', autofillPetTitle); itSel._petWired = true; }
+        autofillPetTitle();
       }
       // ---- Genel İngilizce havuz ödevi seçici (ge_assignments -> class_assignments) ----
       var GE_POOL_ROWS = [];
@@ -6513,6 +6547,7 @@
           // GE havuz ödevi: ge_pool tipi VEYA Materyal/Reading'ten 'gepool:<id>' seçimi -> class_assignments
           var _geId = '';
           if (caCurrentType === 'ge_pool') { var _gs = document.getElementById('ca-ge-item'); _geId = _gs ? _gs.value : ''; }
+          else if (caCurrentType === 'pet_deneme') { var _ps = document.getElementById('ca-pet-item'); _geId = _ps ? _ps.value : ''; }
           else if (caCurrentType === 'material') { var _mp = document.getElementById('ca-m-page'); if (_mp && _mp.value.indexOf('gepool:') === 0) _geId = _mp.value.slice(7); }
           else if (caCurrentType === 'reading') { var _rp = document.getElementById('ca-r-page'); if (_rp && _rp.value.indexOf('gepool:') === 0) _geId = _rp.value.slice(7); }
           if (_geId) {
@@ -6522,6 +6557,8 @@
             r = { data: null };
           } else if (caCurrentType === 'ge_pool') {
             caErr.textContent = 'Bir alıştırma seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return;
+          } else if (caCurrentType === 'pet_deneme') {
+            caErr.textContent = 'Bir PET denemesi seç.'; submitBtn.disabled = false; submitBtn.textContent = 'Ödevi Oluştur'; return;
           } else if (caCurrentType === 'vocab' && config._vocab_bank) {
             // Kelime Bankası otomatik: module tipi + vocab_flash config (list_my_assignments ile otomatik takip)
             var vbConfig = { kind: config.kind, url: config.url, category: config.category, count: config.count, label: config.label };

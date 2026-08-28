@@ -2312,6 +2312,47 @@
       .cl-teacher-banner { flex-direction: column; align-items: stretch; }
       .cl-teacher-banner-btn { width: 100%; text-align: center; }
     }
+    /* Öğretmen: takvimin üstünde ince aksiyon şeridi (kalın kart yerine) */
+    .sf-tstrip {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.6rem 0.7rem 0.6rem 0.95rem;
+      margin: 0 0 1.15rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line, #e4ddcc);
+      border-left: 3px solid var(--teal, #2C5856);
+      border-radius: 12px;
+    }
+    .sf-tstrip .tstrip-ic {
+      flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(44, 88, 86, 0.12); color: var(--teal, #2C5856);
+    }
+    .sf-tstrip .tstrip-tx { flex: 1; min-width: 0; line-height: 1.3; }
+    .sf-tstrip .tstrip-tx .tstrip-eyebrow {
+      display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--gold, #C89A3C); font-weight: 700; margin-bottom: 1px;
+    }
+    .sf-tstrip .tstrip-tx b {
+      display: block; font-family: var(--font-ui, Inter), system-ui, sans-serif;
+      font-size: 0.9rem; font-weight: 700; color: var(--text);
+    }
+    .sf-tstrip .tstrip-tx span {
+      display: block; font-size: 0.78rem; color: var(--text-soft, #6a6250);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sf-tstrip .tstrip-btn {
+      flex: 0 0 auto; padding: 0.55rem 0.95rem; border-radius: 8px;
+      background: var(--teal, #2C5856); color: #F4EFE3;
+      border: 1px solid var(--teal, #2C5856);
+      font: 600 12px var(--font-ui, Inter), system-ui, sans-serif;
+      text-decoration: none; white-space: nowrap; transition: background 0.2s ease;
+    }
+    .sf-tstrip .tstrip-btn:hover { background: #234644; }
+    @media (max-width: 560px) {
+      .sf-tstrip { flex-wrap: wrap; }
+      .sf-tstrip .tstrip-btn { width: 100%; text-align: center; }
+    }
 
     /* Class cards in student panel (editorial tiles) */
     .cl-list {
@@ -2668,6 +2709,8 @@
         <p>Sınıfların, canlı derslerin ve ödevlerin — hepsi tek yerde.</p>
       </div>
     </div>
+    <!-- Öğretmen ince aksiyon şeridi (yalnız öğretmen/admin; JS doldurur) -->
+    <div id="sf-teacher-strip" class="sf-tstrip" style="display:none;"></div>
     <div id="sf-schedule-wrap" style="display:none;margin:0 0 1.75rem;">
       <div class="zone-head"><span class="zone-eyebrow">Online</span><span class="zone-line"></span><h2>Yaklaşan Online Dersler</h2><button type="button" id="sf-sched-toggle" class="zone-toggle" style="flex:0 0 auto;margin-left:10px;font:600 12px var(--font-ui,inherit);color:#6a6250;background:transparent;border:1px solid #d8d2c4;border-radius:20px;padding:5px 14px;cursor:pointer">Gizle</button></div>
       <div id="sf-schedule"></div>
@@ -2831,12 +2874,17 @@
         var banner = document.getElementById('cl-teacher-banner');
 
         function renderBannerForTeacher() {
-          banner.innerHTML = ''
-            + '<div class="ctb-text">'
-            + '<strong>Öğretmen Paneli</strong>'
-            + '<span>Sınıflarını oluştur, öğrenci ilerlemelerini gör, ödev ata.</span>'
-            + '</div>'
-            + '<a href="ogretmen" class="cl-teacher-banner-btn">Öğretmen Paneline Git →</a>';
+          // Kalın kart yerine takvimin ÜSTÜNDE ince aksiyon şeridi
+          var strip = document.getElementById('sf-teacher-strip');
+          if (strip) {
+            strip.innerHTML = ''
+              + '<span class="tstrip-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-5 9 5-9 5-9-5z"/><path d="M7 12v4c0 1.1 2.24 2.2 5 2.2s5-1.1 5-2.2v-4"/><path d="M21 10v5"/></svg></span>'
+              + '<span class="tstrip-tx"><span class="tstrip-eyebrow">Öğretmen</span><b>Öğretmen Paneli</b><span>Sınıf oluştur, ödev ata, öğrenci ilerlemesini gör.</span></span>'
+              + '<a href="ogretmen" class="tstrip-btn">Öğretmen Paneline Git →</a>';
+            strip.style.display = '';
+          }
+          // Alttaki kalın kartı öğretmene gösterme (şerit üstte)
+          if (banner) { banner.innerHTML = ''; banner.classList.add('cl-teacher-banner-empty'); }
         }
 
         function renderBannerForCustomer() {

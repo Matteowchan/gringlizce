@@ -226,8 +226,15 @@
     + '.gsch-daymodal-form.editing .dmf-cancel{display:inline-block;}'
     + '.gsch-daymodal-form .dmf-edittag{display:none;font-size:11.5px;font-weight:700;color:#2C5856;background:#e7f0ee;border-radius:7px;padding:7px 9px;margin:0 0 11px;line-height:1.4;}'
     + '.gsch-daymodal-form.editing .dmf-edittag{display:block;}'
-    + '.gsch-daymodal-form.editing .dmf-rep-l{display:none;}'
-    + '.gsch-daymodal-form .dmf-rep{background-image:none;}'
+    + '.gsch-daymodal-form.editing .dmf-days-l,.gsch-daymodal-form.editing .dmf-weeks-l{display:none;}'
+    + '.gsch-daymodal-form .dmf-days{display:flex;gap:4px;margin-top:2px;}'
+    + '.gsch-daymodal-form .dmf-day{flex:1;min-width:0;padding:7px 0;border:1px solid #d8d2c4;border-radius:7px;background:#fff;color:#6a6250;font:700 11px inherit;cursor:pointer;transition:background .12s,border-color .12s,color .12s;}'
+    + '.gsch-daymodal-form .dmf-day:hover{border-color:#2C5856;}'
+    + '.gsch-daymodal-form .dmf-day.on{background:#2C5856;border-color:#2C5856;color:#fff;}'
+    + '.gsch-daymodal-form .dmf-days-hint{display:block;margin-top:5px;font-size:10.5px;color:#9a917f;font-weight:400;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-day{background:#2a2419;border-color:#3a3428;color:#b5ac98;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-day.on{background:#3f7a72;border-color:#3f7a72;color:#fff;}'
+    + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-days-hint{color:#8a8175;}'
     + '.gsch-daymodal-form.editing{border-color:#2C5856;box-shadow:0 0 0 2px rgba(44,88,86,.16);}'
     + '.gsch-daymodal-form.editing .dmf-title{color:#2C5856;}'
     + ':root[data-theme="dark"] .gsch-daymodal-form .dmf-edittag{color:#bfe0da;background:#22403e;}'
@@ -1002,7 +1009,8 @@
         + '<div class="dmf-row"><label class="dmf-l">Saat<span class="dmf-time"><select class="dmf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="dmf-m">'+_mopt+'</select></span></label>'
         + '<label class="dmf-l">Süre<select class="dmf-dur"><option value="30">30 dk</option><option value="45">45 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label></div>'
         + '<label class="dmf-l">Not<input type="text" class="dmf-n" placeholder="Öğrencilere kısa not" maxlength="140"></label>'
-        + '<label class="dmf-l dmf-rep-l">Tekrar<select class="dmf-rep"><option value="0" selected>Tekrar yok — sadece bu gün</option><option value="4">Haftalık · 4 hafta</option><option value="8">Haftalık · 8 hafta</option><option value="12">Haftalık · 12 hafta</option></select></label>'
+        + '<div class="dmf-l dmf-days-l">Hangi günler<div class="dmf-days">'+WD.map(function(w,i){return '<button type="button" class="dmf-day" data-wd="'+i+'">'+w+'</button>';}).join('')+'</div><small class="dmf-days-hint">Bu haftada ders yapılacak günleri seç</small></div>'
+        + '<label class="dmf-l dmf-weeks-l">Tekrar<select class="dmf-weeks"><option value="1" selected>Sadece bu hafta</option><option value="2">2 hafta boyunca</option><option value="4">4 hafta boyunca</option><option value="8">8 hafta boyunca</option><option value="12">12 hafta boyunca</option></select></label>'
         + '<div class="dmf-acts"><button type="button" class="gsch-btn dmf-save">Planla</button><button type="button" class="gsch-btn ghost dmf-cancel">Vazgeç</button></div>'
         + '</div>'
       ) : '';
@@ -1024,7 +1032,9 @@
         q('.dmf-title').textContent='Bu güne ders planla';
         q('.dmf-save').textContent='Planla';
         q('.dmf-t').value=''; q('.dmf-n').value=''; q('.dmf-h').value=''; q('.dmf-m').value=''; q('.dmf-dur').value='60';
-        var rp=q('.dmf-rep'); if(rp) rp.value='0';
+        var _awd=(dObj.getDay()+6)%7;
+        formEl.querySelectorAll('.dmf-day').forEach(function(b){ b.classList.toggle('on', parseInt(b.getAttribute('data-wd'),10)===_awd); });
+        var ws=q('.dmf-weeks'); if(ws) ws.value='1';
       }
       function editInPane(id){
         if(!showForm){ close(); startEdit(id); return; }
@@ -1059,26 +1069,38 @@
       if(showForm){
         var sv=q('.dmf-save');
         q('.dmf-cancel').addEventListener('click', resetPane);
+        // Tıklanan günün haftası: gün-çiplerini kur (tıklanan gün seçili başlar), toggle'la
+        try{ var _awd0=(dObj.getDay()+6)%7; var _c0=formEl.querySelector('.dmf-day[data-wd="'+_awd0+'"]'); if(_c0) _c0.classList.add('on'); }catch(e){}
+        formEl.querySelectorAll('.dmf-day').forEach(function(b){ b.addEventListener('click', function(){ b.classList.toggle('on'); }); });
         sv.addEventListener('click', async function(){
           var title=(q('.dmf-t').value||'').trim();
           var h=q('.dmf-h').value, m=q('.dmf-m').value;
           var dur=parseInt(q('.dmf-dur').value,10)||60;
           var note=(q('.dmf-n').value||'').trim();
           var classId=aggregate ? ((q('.dmf-class')||{}).value||'') : opts.classId;
-          var rep=parseInt((q('.dmf-rep')||{}).value||'0',10)||0;
           if(!title){ alert('Başlık gir.'); return; }
           if(!h){ alert('Saat seç.'); return; }
           if(aggregate && !classId){ alert('Sınıf seç.'); return; }
           var H=parseInt(h,10), M=parseInt(m||'0',10);
-          var startsAt=new Date(y,mo,dnum,H,M,0,0);
           sv.disabled=true; var ot=sv.textContent; sv.textContent='Kaydediliyor…';
           try{
-            if(editingId){ await updateLesson(editingId,classId,title,startsAt,dur,note); }
-            else {
+            if(editingId){
+              await updateLesson(editingId,classId,title,new Date(y,mo,dnum,H,M,0,0),dur,note);
+            } else {
+              var wds=[]; formEl.querySelectorAll('.dmf-day.on').forEach(function(b){ wds.push(parseInt(b.getAttribute('data-wd'),10)); });
+              if(!wds.length){ alert('En az bir gün seç.'); return; }
+              wds.sort(function(a,b){return a-b;});
+              var weeks=parseInt((q('.dmf-weeks')||{}).value||'1',10)||1;
+              var anchorWd=(dObj.getDay()+6)%7;
+              var monday=new Date(y,mo,dnum-anchorWd); // tıklanan haftanın pazartesisi
               var made=0;
-              await createLesson(classId,title,startsAt,dur,note); made++;
-              for(var k=1;k<=rep;k++){ await createLesson(classId,title,new Date(y,mo,dnum+7*k,H,M,0,0),dur,note); made++; }
-              if(made>1) alert(made+' ders planlandı (haftalık tekrar).');
+              for(var wk=0;wk<weeks;wk++){
+                for(var di=0;di<wds.length;di++){
+                  var d=new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+wds[di]+7*wk,H,M,0,0);
+                  await createLesson(classId,title,d,dur,note); made++;
+                }
+              }
+              if(made>1) alert(made+' ders planlandı.');
             }
             resetPane(); await load(); renderDay();
           }catch(e){ alert('Kaydedilemedi: '+(e.message||'hata')); }

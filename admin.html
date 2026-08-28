@@ -1773,7 +1773,7 @@
   <!-- PWA INSTALL -->
   <link rel="stylesheet" href="/assets/pwa-install.css">
   <script src="/assets/pwa-install.js" defer></script>
-  <script src="assets/admin-tracking.js" defer></script>
+  <script src="assets/admin-tracking.js?v=2" defer></script>
 </head>
 <body data-cat="admin">
   <div class="launch-banner" data-site-banner></div>
@@ -2796,6 +2796,8 @@
         startIdleWatcher();
         // New tabs (lazy-loaded on first open + initial parallel start)
         initNewTabs();
+        // GUVENLIK: canli akis widget'i yalnizca reverify gate'i gecilince baslar
+        if (window.GriAdminTracking) window.GriAdminTracking.start();
       } catch (e) {
         $('loading').innerHTML = '<p style="color:#c44;">Veri yüklenemedi: ' + (e.message || e) + '</p>';
         show('loading');
@@ -2809,6 +2811,8 @@
       $('reverify-error').textContent = '';
       $('reverify-locked-notice').style.display = wasIdle ? '' : 'none';
       hide('admin-content');
+      // GUVENLIK: kilitliyken canli akis widget'ini durdur (feed + realtime kapansin)
+      if (window.GriAdminTracking) window.GriAdminTracking.stop();
       show('reverify-prompt');
       setTimeout(function () {
         var inp = $('reverify-password');

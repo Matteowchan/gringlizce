@@ -61,10 +61,10 @@
     ".gat-card .h .x{margin-left:auto;cursor:pointer;color:#888;font-size:20px}" +
     ".gat-tl{overflow:auto;padding:6px 0}";
 
-  var panel, list, ov, ovBody, ovTitle;
+  var panel, list, ov, ovBody, ovTitle, fabEl, feedCh;
   function inject() {
     var st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
-    var fab = document.createElement("button"); fab.className = "gat-fab";
+    var fab = document.createElement("button"); fab.className = "gat-fab"; fabEl = fab;
     fab.innerHTML = '<span class="dot"></span>Canli Akis';
     var p = document.createElement("div"); p.className = "gat-panel";
     p.innerHTML = '<div class="gat-head">Canli Akis<span class="x" data-close>&times;</span></div><div class="gat-list" id="gat-list"></div>';
@@ -104,7 +104,7 @@
 
   function subscribe(){
     var sb = sbc(); if(!sb || !sb.channel) return;
-    sb.channel("gat-events")
+    feedCh = sb.channel("gat-events")
       .on("postgres_changes", { event:"INSERT", schema:"public", table:"events" }, function(payload){
         var r = payload["new"]; if(!r) return;
         r.at = r.created_at;
@@ -135,7 +135,22 @@
   }
   window.showUserTimeline = openTimeline;  // admin modalindan da cagrilabilir
 
-  function start(){ inject(); loadFeed(); subscribe(); }
-  if (document.readyState !== "loading") start();
-  else document.addEventListener("DOMContentLoaded", start);
+  // GUVENLIK: widget kendiliginden BASLAMAZ. admin.html reverify (sifre) gate'i
+  // gecildikten sonra window.GriAdminTracking.start() cagirir; gate geri gelince stop().
+  var _injected = false;
+  function start(){
+    if (!_injected){ inject(); _injected = true; }
+    if (fabEl) fabEl.style.display = "";
+    loadFeed();
+    if (!feedCh) subscribe();
+  }
+  function stop(){
+    // Realtime aboneligini kapat, paneli/fab'i gizle, DOM'daki satirlari temizle (kilitliyken veri akmasin/gorunmesin)
+    try{ if (feedCh){ var sb = sbc(); if (sb && sb.removeChannel) sb.removeChannel(feedCh); feedCh = null; } }catch(e){}
+    if (panel) panel.classList.remove("open");
+    if (ov) ov.classList.remove("open");
+    if (fabEl) fabEl.style.display = "none";
+    if (list) list.innerHTML = "";
+  }
+  window.GriAdminTracking = { start: start, stop: stop };
 })();

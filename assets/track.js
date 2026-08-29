@@ -62,14 +62,52 @@
   function trackName(t) { return t === "junior" ? "Junior" : t === "teen" ? "Teen" : "Adult"; }
   function pageIdentity() {
     var p = (location.pathname.split("/").pop() || "").toLowerCase();
-    var m = p.match(/^genel-(junior|teen)-(a1|a2|b1|b2|c1|c2)-unite-\d+(?:\.html)?$/);
-    if (m) return { track: m[1], level: m[2].toUpperCase() };
-    var m2 = p.match(/^genel-(a1|a2|b1|b2|c1|c2)-unite-\d+(?:\.html)?$/);
-    if (m2) return { track: "adult", level: m2[1].toUpperCase() };
+    var m = p.match(/^genel-(junior|teen)-(a1|a2|b1|b2|c1|c2)-unite-(\d+)(?:\.html)?$/);
+    if (m) return { track: m[1], level: m[2].toUpperCase(), unit: parseInt(m[3], 10) };
+    var m2 = p.match(/^genel-(a1|a2|b1|b2|c1|c2)-unite-(\d+)(?:\.html)?$/);
+    if (m2) return { track: "adult", level: m2[1].toUpperCase(), unit: parseInt(m2[2], 10) };
     return null;
   }
+  // Premium kapisi: her seviyede ilk 3 unite ucretsiz, 4+ premium
+  var FREE_UNITS = 3;
+  function showPremiumLock(anon) {
+    if (document.getElementById("geTrackLock") || document.getElementById("gePremLock")) return;
+    var lock = '<svg viewBox="0 0 24 24" width="34" height="34" style="margin-bottom:.3rem" aria-hidden="true"><path fill="#BE6A1B" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/></svg>';
+    var msg = anon
+      ? "Bu unite Premium icerigidir. Her seviyenin ilk 3 unitesi ucretsiz; devami icin giris yapip Premium'a gec."
+      : "Bu unite Premium icerigidir. Her seviyenin ilk 3 unitesi ucretsiz; devami Premium uyelere acik.";
+    var ov = document.createElement("div");
+    ov.id = "gePremLock";
+    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:#FFF9EF;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:system-ui,-apple-system,sans-serif;";
+    var box = '<div style="max-width:460px;width:100%;text-align:center;background:#fff;border:2px solid #BE6A1B;border-radius:22px;padding:2.2rem 1.8rem;box-shadow:0 10px 34px rgba(190,106,27,.14)">';
+    box += lock;
+    box += '<div style="font-family:Georgia,serif;font-size:1.4rem;color:#BE6A1B;font-weight:700;margin-bottom:.3rem">Gri <span style="font-style:italic">English</span> Premium</div>';
+    box += '<h2 style="margin:.2rem 0 .6rem;font-size:1.15rem;color:#2E3A59">Bu unite Premium</h2>';
+    box += '<p style="color:#666;font-size:.94rem;line-height:1.6;margin:0 0 1.3rem">' + msg + '</p>';
+    box += '<a href="premium" style="display:inline-block;background:#BE6A1B;color:#fff;text-decoration:none;font-weight:700;padding:.7rem 1.4rem;border-radius:999px;font-size:.95rem">Premium\'a Gec</a>';
+    box += '<div style="margin-top:.9rem"><a href="genel-ingilizce.html" style="color:#BE6A1B;font-size:.85rem">Genel Ingilizce&#39;ye Don</a></div>';
+    if (anon) box += '<div style="margin-top:.5rem"><a href="giris?return=' + encodeURIComponent(location.pathname) + '" style="color:#888;font-size:.82rem">Zaten uye misin? Giris yap</a></div>';
+    box += '</div>';
+    ov.innerHTML = box;
+    document.body.appendChild(ov);
+    try { document.documentElement.style.overflow = "hidden"; } catch (e) {}
+  }
+  // Self-study (sinifsiz) kullanici + anon icin premium kapisi. Sinifli ogrenci / admin / teacher / premium = muaf.
+  function applyPremiumGate(sb, uid, id) {
+    if (!id || !id.unit || id.unit <= FREE_UNITS) return;   // ilk 3 unite ucretsiz
+    if (!uid) { showPremiumLock(true); return; }            // anon: kilitli
+    try {
+      sb.from("profiles").select("premium_until, role").eq("id", uid).maybeSingle().then(function (pr) {
+        var rec = pr && pr.data; if (!rec) return;          // fail-open
+        if (rec.role === "admin" || rec.role === "teacher") return;
+        var active = !!(rec.premium_until && new Date(rec.premium_until).getTime() > Date.now());
+        if (active) return;
+        showPremiumLock(false);
+      }, function () {});                                    // hata: fail-open
+    } catch (e) {}
+  }
   function showTrackLock(rec, pageTrack, pageLevel, reason) {
-    if (document.getElementById("geTrackLock")) return;
+    if (document.getElementById("geTrackLock") || document.getElementById("gePremLock")) return;
     var msg = reason === "track"
       ? ("Seviye belirleme sinavinda <b>" + trackName(rec.track) + "</b> kategorisini sectin. Bu ders <b>" + trackName(pageTrack) + "</b> kategorisine ait, o yuzden sana kapali.")
       : reason === "classlevel"
@@ -108,15 +146,18 @@
         if (st && st.in_class) {
           // Sinifli ogrenci: atanan seviye UST SINIR — A1..assigned_level acik, ustu kilitli.
           // FAIL-OPEN: seviye atanmamissa (null) hicbir sey kilitlenmez.
+          // Sinifli ogrenci PREMIUM'dan MUAF (kurumsal mufredati ogretmen saglar).
           var al = st.assigned_level;
           if (al && LVLORD[id.level] && LVLORD[al] && LVLORD[id.level] > LVLORD[al]) {
             showTrackLock({ track: id.track, level: al }, id.track, id.level, "classlevel");
           }
           return;
         }
+        // Self-study: once premium kapisi (unite 4+), sonra track/seviye kilidi
+        applyPremiumGate(sb, uid, id);
         checkPlacement(sb, uid, id);
-      }, function () { checkPlacement(sb, uid, id); });
-    } catch (e) { checkPlacement(sb, uid, id); }
+      }, function () { applyPremiumGate(sb, uid, id); checkPlacement(sb, uid, id); });
+    } catch (e) { applyPremiumGate(sb, uid, id); checkPlacement(sb, uid, id); }
   }
 
   function init() {
@@ -135,6 +176,9 @@
         } catch (e) {}
         window.logEvent("page_view", {});
         try { applyTrackGate(sb, _userId); } catch (e) {}
+      } else {
+        // Anon ziyaretci: sadece premium kapisi (unite 4+ kilitli)
+        try { var _pid = pageIdentity(); if (_pid) applyPremiumGate(sb, null, _pid); } catch (e) {}
       }
       flush();
     }, function () { _ready = true; });

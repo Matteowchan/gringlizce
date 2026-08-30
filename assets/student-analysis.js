@@ -11,7 +11,7 @@
 (function () {
   if (window.GriAnalysis) return;
 
-  var EXAM_META = { sat: { label: 'SAT' }, sat_deneme: { label: 'SAT Denemeleri' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' }, ielts: { label: 'IELTS (Deneme)' }, vocab: { label: 'Kelime Bilgisi' } };
+  var EXAM_META = { sat: { label: 'SAT' }, sat_deneme: { label: 'SAT Denemeleri' }, yds: { label: 'YDS' }, ydt: { label: 'YDT' }, udsp: { label: 'ÜDS / YÖKDİL' }, toefl: { label: 'TOEFL' }, ielts: { label: 'IELTS (Deneme)' }, vocab: { label: 'Kelime Bilgisi' }, hazirlik: { label: 'Üniversite Hazırlık Atlama' }, toefl_deneme: { label: 'TOEFL Denemeleri' }, ge: { label: 'Genel İngilizce Sınavları' } };
   var SECTION_LABEL = { reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking', genel: 'Genel' };
   function num1(x) { var n = parseFloat(x); return isNaN(n) ? null : n; }
   var SAT_MATH_CATS = { advanced_math: 1, algebra: 1, geometry_and_trigonometry: 1, problem_solving_and_data_analysis: 1 };
@@ -528,6 +528,190 @@
     return html;
   }
 
+  // ===== Üniversite Hazırlık Atlama denemeleri =====
+  function hazirlikSecLabel(s) {
+    var M = { reading: 'Okuma', vocabulary: 'Kelime', use_of_english: 'Dil Kullanımı', grammar: 'Gramer', sentence_analysis: 'Cümle Analizi', writing: 'Yazma', listening: 'Dinleme' };
+    return M[s] || catLabel(s);
+  }
+  function hazirlikQuestionRows(qs) {
+    if (!qs || !qs.length) return '';
+    return qs.map(function (q) {
+      var ok = q.ok === true;
+      var cls = ok ? 'ok' : 'no';
+      var mark = ok ? '✓' : '✗';
+      var qtext = q.q ? esc(String(q.q)) : ('<span style="color:var(--text-muted,#6b6862);">Soru ' + esc(String(q.n)) + '</span>');
+      var ans;
+      if (ok) {
+        var okTxt = q.chosen_text != null && String(q.chosen_text) !== '' ? q.chosen_text : (q.correct_text != null ? q.correct_text : (q.chosen != null ? q.chosen : q.correct));
+        ans = '<span class="qans"><span class="qgood">' + esc(okTxt || '') + (q.chosen ? ' (' + esc(q.chosen) + ')' : '') + '</span></span>';
+      } else {
+        var stud = (q.chosen != null && String(q.chosen) !== '')
+          ? (esc(q.chosen_text != null && String(q.chosen_text) !== '' ? q.chosen_text : q.chosen) + (q.chosen != null ? ' (' + esc(q.chosen) + ')' : ''))
+          : '— boş —';
+        var corr = esc(q.correct_text != null && String(q.correct_text) !== '' ? q.correct_text : (q.correct || '')) + (q.correct != null ? ' (' + esc(q.correct) + ')' : '');
+        ans = '<span class="qans">Öğrenci: <span class="qbad">' + stud + '</span> · Doğru: <span class="qgood">' + corr + '</span></span>';
+      }
+      return '<div class="ga-q ' + cls + '"><span class="qn">' + esc(String(q.n)) + '</span><span class="qmark">' + mark + '</span>'
+        + '<span class="qtext">' + qtext + ans + '</span></div>';
+    }).join('');
+  }
+  function hazirlikAttemptBlock(a) {
+    var score = a.total_score;
+    var passed = !!a.passed;
+    var chipColor = passed ? '#1FA971' : '#c0392b';
+    var when = fmtDate(a.created_at);
+    var head = '<summary><span class="ga-secname">' + esc(a.exam_set || 'Deneme') + '</span>'
+      + (when ? ' <span class="ga-when">' + esc(when) + '</span>' : '')
+      + '<span class="ga-bchip" style="background:' + chipColor + '">' + (score != null ? score + '/100' : '—') + (passed ? ' · Geçti' : ' · Kaldı') + '</span></summary>';
+    var body = '';
+    if (a.mc_total) {
+      var mp = pctOf(a.mc_total, a.mc_correct);
+      body += '<div class="ga-row"><span class="n">Çoktan Seçmeli</span>' + bar(mp, accColor(mp)) + '<span class="p">%' + mp + ' (' + (a.mc_correct || 0) + '/' + (a.mc_total || 0) + ')</span></div>';
+    }
+    (a.sections || []).forEach(function (s) {
+      var p = pctOf(s.total, s.correct);
+      body += '<div class="ga-row"><span class="n">' + esc(hazirlikSecLabel(s.section)) + '</span>' + bar(p, accColor(p)) + '<span class="p">%' + p + ' (' + (s.correct || 0) + '/' + (s.total || 0) + ')</span></div>';
+    });
+    var qrows = hazirlikQuestionRows(a.questions);
+    if (qrows) body += qrows;
+    if (a.essay_text && String(a.essay_text).trim()) {
+      var ev = a.essay_eval || null;
+      body += '<div class="ga-essay"><div class="et">Yazma (Essay)'
+        + (ev && ev.overall20 != null ? ' <span class="ga-chip">' + esc(ev.overall20) + '/20</span>' : '')
+        + (ev && ev.cefr ? ' <span class="ga-chip mut">' + esc(ev.cefr) + '</span>' : '') + '</div>';
+      if (a.essay_prompt) body += '<div class="ga-fb"><b>Soru:</b> ' + esc(String(a.essay_prompt)) + '</div>';
+      body += '<div class="ga-essay-box">' + esc(String(a.essay_text)) + '</div>';
+      if (ev) {
+        var sc = ev.scores || {};
+        var SCL = { content: 'İçerik', language: 'Dil', organisation: 'Organizasyon', communication: 'İletişim' };
+        Object.keys(SCL).forEach(function (k) {
+          if (sc[k] == null) return;
+          var val = num1(sc[k]); if (val == null) return;
+          var p = Math.max(0, Math.min(100, Math.round(val / 5 * 100)));
+          body += '<div class="ga-row"><span class="n">' + SCL[k] + '</span>' + bar(p, accColor(p)) + '<span class="p">' + val + '/5</span></div>';
+        });
+        if (ev.comment) body += '<div class="ga-fb"><b>Yorum:</b> ' + esc(String(ev.comment)) + '</div>';
+        if (ev.strengths) { var str = Array.isArray(ev.strengths) ? ev.strengths.join(', ') : String(ev.strengths); if (str.trim()) body += '<div class="ga-fb"><b>Güçlü yönler:</b> ' + esc(str) + '</div>'; }
+      }
+      body += '</div>';
+    }
+    return '<details class="ga-att">' + head + '<div class="ga-qs">' + (body || '<div class="ga-empty-mini">Döküm bulunamadı.</div>') + '</div></details>';
+  }
+  function buildHazirlik(d) {
+    var detail = d.attempts_detail || [];
+    if (!detail.length && !(d.attempts > 0)) return '<div class="ga-empty">Üniversite Hazırlık Atlama denemesi verisi yok.</div>';
+    var scores = detail.map(function (a) { return a.total_score; }).filter(function (x) { return x != null; });
+    var best = scores.length ? Math.max.apply(null, scores) : null;
+    var passCount = detail.filter(function (a) { return !!a.passed; }).length;
+    var html = '<div class="ga-cards">';
+    html += card('En iyi skor', best, '/100', detail.length, true);
+    html += card('Geçme', passCount, 'deneme', detail.length);
+    html += card('Deneme', d.attempts != null ? d.attempts : detail.length, '', detail.length);
+    html += '</div>';
+    html += '<div class="ga-note">Üniversite Hazırlık Atlama deneme sonuçları · ' + (d.attempts != null ? d.attempts : detail.length) + ' deneme · geçme: ' + passCount + '.</div>';
+    var goal = goalNum(d.goal);
+    if (goal != null && best != null) {
+      var gap = goal - best;
+      var gColor = gap <= 0 ? '#1FA971' : (gap <= 10 ? '#B78A2E' : '#c0392b');
+      var gapTxt = gap <= 0 ? 'hedefin üzerinde ▲' : ('hedefe ' + gap + ' puan var');
+      html += '<div class="ga-goal">🎯 Hedef: <b>' + esc(String(d.goal)) + '</b>/100 · En iyi: <b>' + best + '</b>/100 · <b style="color:' + gColor + '">' + gapTxt + '</b></div>';
+    } else if (d.goal) {
+      html += '<div class="ga-goal">🎯 Hedef: <b>' + esc(String(d.goal)) + '</b></div>';
+    }
+    html += '<div class="ga-grp">Denemeler (' + detail.length + ')</div>';
+    html += detail.map(hazirlikAttemptBlock).join('');
+    // Bölüm bazlı zayıflık (verdict)
+    var secAgg = {};
+    detail.forEach(function (a) { (a.sections || []).forEach(function (s) { if (!secAgg[s.section]) secAgg[s.section] = { c: 0, t: 0 }; secAgg[s.section].c += s.correct || 0; secAgg[s.section].t += s.total || 0; }); });
+    var weakest = null;
+    Object.keys(secAgg).forEach(function (k) { if (!secAgg[k].t) return; var p = pctOf(secAgg[k].t, secAgg[k].c); if (weakest == null || p < weakest.p) weakest = { sec: k, p: p }; });
+    var v = '<b>Üniversite Hazırlık Atlama</b>: ' + detail.length + ' deneme çözülmüş';
+    if (best != null) v += ', en iyi skor <b>' + best + '</b>/100';
+    v += '. ';
+    if (passCount) v += passCount + ' denemede geçme barajı aşıldı. ';
+    if (weakest) v += 'En zayıf bölüm: <b>' + esc(hazirlikSecLabel(weakest.sec)) + '</b> (%' + weakest.p + ') — bu bölüme ağırlık verilmeli.';
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+
+  // ===== TOEFL denemeleri =====
+  function toeflDenemeBlock(a) {
+    var pct = a.percent;
+    var chipColor = pct != null ? accColor(pct) : 'var(--teal,#2C5856)';
+    var when = fmtDate(a.completed_at);
+    var name = String(a.deneme_slug == null ? 'Deneme' : a.deneme_slug).replace(/^toefl-/, 'Deneme ').replace(/[-_]/g, ' ');
+    var head = '<summary><span class="ga-secname">' + esc(name) + '</span>'
+      + (when ? ' <span class="ga-when">' + esc(when) + '</span>' : '')
+      + '<span class="ga-bchip" style="background:' + chipColor + '">' + (pct != null ? '%' + pct : '—') + (a.total_raw != null ? ' · ' + a.total_raw + '/' + (a.total_max != null ? a.total_max : '—') : '') + '</span></summary>';
+    var body = '';
+    function secBar(label, raw, max) {
+      if (raw == null) return '';
+      var p = max ? pctOf(max, raw) : 0;
+      return '<div class="ga-row"><span class="n">' + label + '</span>' + bar(p, accColor(p)) + '<span class="p">' + raw + '/' + max + '</span></div>';
+    }
+    body += secBar('Grammar', a.grammar_raw, 18);
+    body += secBar('Spelling', a.spelling_raw, 9);
+    body += secBar('Reading', a.reading_raw, 25);
+    return '<details class="ga-att">' + head + '<div class="ga-qs">' + (body || '<div class="ga-empty-mini">Bölüm dökümü yok.</div>') + '</div></details>';
+  }
+  function buildToeflDeneme(d) {
+    var detail = d.attempts_detail || [];
+    if (!detail.length && !(d.attempts > 0)) return '<div class="ga-empty">TOEFL deneme verisi yok.</div>';
+    var html = '<div class="ga-cards">';
+    html += card('En iyi', d.best_percent, '%', detail.length, true);
+    if (d.best_total_raw != null) html += card('En iyi ham', d.best_total_raw, '/' + (d.total_max != null ? d.total_max : '—'), detail.length);
+    html += card('Deneme', d.attempts != null ? d.attempts : detail.length, '', detail.length);
+    html += '</div>';
+    html += '<div class="ga-note">TOEFL deneme sonuçları · ' + (d.attempts != null ? d.attempts : detail.length) + ' deneme.</div>';
+    html += '<div class="ga-grp">Denemeler (' + detail.length + ')</div>';
+    html += detail.map(toeflDenemeBlock).join('');
+    // en zayıf bölüm (ortalama %)
+    var agg = { grammar_raw: { c: 0, t: 0, m: 18, l: 'Grammar' }, spelling_raw: { c: 0, t: 0, m: 9, l: 'Spelling' }, reading_raw: { c: 0, t: 0, m: 25, l: 'Reading' } };
+    detail.forEach(function (a) { ['grammar_raw', 'spelling_raw', 'reading_raw'].forEach(function (k) { if (a[k] != null) { agg[k].c += a[k]; agg[k].t += agg[k].m; } }); });
+    var weakest = null;
+    Object.keys(agg).forEach(function (k) { if (!agg[k].t) return; var p = pctOf(agg[k].t, agg[k].c); if (weakest == null || p < weakest.p) weakest = { l: agg[k].l, p: p }; });
+    var v = '<b>TOEFL Denemeleri</b>: ' + (d.attempts != null ? d.attempts : detail.length) + ' deneme çözülmüş';
+    if (d.best_percent != null) v += ', en iyi %' + d.best_percent;
+    if (d.best_total_raw != null && d.total_max != null) v += ' (' + d.best_total_raw + '/' + d.total_max + ')';
+    v += '. ';
+    if (weakest) v += 'En zayıf bölüm: <b>' + esc(weakest.l) + '</b> (%' + weakest.p + ') — bu bölüme ağırlık verilmeli.';
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+
+  // ===== Genel İngilizce sınavları (midterm / final) =====
+  function buildGe(d) {
+    var results = d.results || [];
+    if (!results.length) return '<div class="ga-empty">Genel İngilizce sınav verisi yok.</div>';
+    var EXL = { midterm: 'Ara Sınav', final: 'Final' };
+    var pcts = results.map(function (r) { return r.pct; }).filter(function (x) { return x != null; });
+    var best = pcts.length ? Math.max.apply(null, pcts) : null;
+    var passCount = results.filter(function (r) { return !!r.passed; }).length;
+    var html = '<div class="ga-cards">';
+    html += card('En iyi', best, '%', results.length, true);
+    html += card('Geçme', passCount, 'sınav', results.length);
+    html += card('Sınav', results.length, '', results.length);
+    html += '</div>';
+    html += '<div class="ga-note">Genel İngilizce sınav sonuçları · ' + results.length + ' sınav · geçme: ' + passCount + '.</div>';
+    html += '<div class="ga-grp">Sınav Sonuçları (' + results.length + ')</div>';
+    html += results.map(function (r) {
+      var when = fmtDate(r.taken_at);
+      var examL = EXL[r.exam] || (r.exam || '');
+      var name = (r.level ? esc(r.level) + ' · ' : '') + esc(examL) + (when ? ' <span class="ga-when">' + esc(when) + '</span>' : '');
+      var pct = r.pct;
+      var chipColor = pct != null ? accColor(pct) : 'var(--teal,#2C5856)';
+      var badge = r.passed ? '<span class="ga-chip" style="background:#1FA971">Geçti</span>' : '<span class="ga-chip" style="background:#c0392b">Kaldı</span>';
+      return '<div class="ga-row"><span class="n" style="flex:0 0 42%;">' + name + '</span>'
+        + bar(pct != null ? pct : 0, chipColor)
+        + '<span class="p">' + (r.score != null ? r.score : '—') + '/' + (r.total != null ? r.total : '—') + ' · %' + (pct != null ? pct : '—') + '</span> ' + badge + '</div>';
+    }).join('');
+    var v = '<b>Genel İngilizce Sınavları</b>: ' + results.length + ' sınav sonucu';
+    if (best != null) v += ', en iyi %' + best;
+    v += '. ' + passCount + '/' + results.length + ' sınav geçildi.';
+    html += '<div class="ga-verdict">' + v + '</div>';
+    return html;
+  }
+
   function printAnalysis(sel, body, studentLabel) {
     var win = window.open('', '_blank', 'width=820,height=940');
     if (!win) { alert('PDF için açılır pencereye izin ver.'); return; }
@@ -562,6 +746,9 @@
       if (exam === 'ielts') { rpc = 'admin_user_ielts_analysis'; arg = { p_user_id: userId }; }
       else if (exam === 'vocab') { rpc = 'admin_user_vocab_analysis'; arg = { p_user_id: userId }; }
       else if (exam === 'sat_deneme') { rpc = 'admin_user_sat_deneme_analysis'; arg = { p_user_id: userId }; }
+      else if (exam === 'hazirlik') { rpc = 'admin_user_hazirlik_analysis'; arg = { p_user_id: userId }; }
+      else if (exam === 'toefl_deneme') { rpc = 'admin_user_toefl_deneme_analysis'; arg = { p_user_id: userId }; }
+      else if (exam === 'ge') { rpc = 'admin_user_ge_analysis'; arg = { p_user_id: userId }; }
       else { rpc = 'admin_user_exam_analysis'; arg = { p_user_id: userId, p_exam: exam }; }
       sb.rpc(rpc, arg).then(function (r) {
         if (r.error) throw r.error;
@@ -570,6 +757,9 @@
         if (exam === 'ielts') { body.innerHTML = buildIelts(d); attachGriHandlers(body); }
         else if (exam === 'vocab') { body.innerHTML = buildVocab(d); }
         else if (exam === 'sat_deneme') { body.innerHTML = buildSatDeneme(d); }
+        else if (exam === 'hazirlik') { body.innerHTML = buildHazirlik(d); }
+        else if (exam === 'toefl_deneme') { body.innerHTML = buildToeflDeneme(d); }
+        else if (exam === 'ge') { body.innerHTML = buildGe(d); }
         else {
           body.innerHTML = build(exam, d, !!onAssign, opts.assignLabel);
           if (onAssign) { body.querySelectorAll('[data-assign-cat]').forEach(function (b) { b.addEventListener('click', function () { onAssign(exam, b.dataset.assignCat, b.dataset.assignLabel); }); }); }
@@ -584,10 +774,18 @@
       var hasSat = exams.some(function (e) { return e.exam === 'sat'; });
       var hasDen = exams.some(function (e) { return e.exam === 'sat_deneme'; });
       if (hasSat && !hasDen) { exams.push({ exam: 'sat_deneme', answered: 0 }); }
+      // initialExam istenmiş ama admin_user_exams listelemiyorsa yine de seçilebilir + render edilebilir yap
+      if (opts.initialExam && !exams.some(function (e) { return e.exam === opts.initialExam; })) { exams.push({ exam: opts.initialExam, answered: 0 }); }
       if (!exams.length) { sel.style.display = 'none'; if (printBtn) { printBtn.style.display = 'none'; } body.className = 'ga-body ga-empty'; body.textContent = 'Bu öğrenci soru bankası, IELTS denemesi ya da kelime çalışması yapmamış — analiz için henüz veri yok.'; return; }
-      sel.innerHTML = exams.map(function (e) { var m = EXAM_META[e.exam] || { label: e.exam }; var unit = (e.exam === 'sat_deneme') ? ' deneme' : ' soru'; return '<option value="' + esc(e.exam) + '">' + esc(m.label) + ' (' + e.answered + unit + ')</option>'; }).join('');
+      sel.innerHTML = exams.map(function (e) {
+        var m = EXAM_META[e.exam] || { label: e.exam };
+        var unit = (e.exam === 'sat_deneme' || e.exam === 'hazirlik' || e.exam === 'toefl_deneme') ? ' deneme' : (e.exam === 'ge' ? ' sınav' : ' soru');
+        return '<option value="' + esc(e.exam) + '">' + esc(m.label) + ' (' + e.answered + unit + ')</option>';
+      }).join('');
       sel.addEventListener('change', function () { render(sel.value); });
-      render(exams[0].exam);
+      var startExam = (opts.initialExam && exams.some(function (e) { return e.exam === opts.initialExam; })) ? opts.initialExam : exams[0].exam;
+      sel.value = startExam;
+      render(startExam);
     }).catch(function () { sel.style.display = 'none'; body.className = 'ga-body ga-empty'; body.textContent = 'Analiz yüklenemedi.'; });
   }
 

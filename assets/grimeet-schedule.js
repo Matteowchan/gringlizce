@@ -225,10 +225,17 @@
     + ':root[data-theme="dark"] .gsch-modal-arrow.point-right{border-left-color:#241f18;}'
     + '.gsch-daymodal-body{display:flex;gap:16px;align-items:flex-start;}'
     + '.gsch-daymodal-left{flex:1 1 auto;min-width:0;}'
-    + '.gsch-daymodal.three-col{max-width:940px;}'
-    /* Kişisel not defteri artık ders listesinin SOLUNDA (altında değil) — kendi sütunu */
-    + '.gsch-daymodal-body > .gsch-pnnote{flex:0 0 240px;margin-top:0;align-self:stretch;}'
-    + '@media(max-width:720px){.gsch-daymodal-body{flex-direction:column;}.gsch-daymodal-body > .gsch-pnnote{flex:1 1 auto;width:100%;}}'
+    /* Kişisel not defteri = modalın sol kenarından SOLA açılan yatay flyout (cascade) */
+    + '.gsch-daymodal-wrap{position:relative;display:flex;align-items:center;}'
+    + '.gsch-pn-fly{position:absolute;right:100%;top:0;height:100%;display:flex;align-items:center;z-index:3;}'
+    + '.gsch-pn-trigger{writing-mode:vertical-rl;background:#7C5CBF;color:#fff;border:none;border-radius:13px 0 0 13px;padding:18px 9px;font:inherit;font-weight:800;font-size:12px;letter-spacing:.05em;cursor:pointer;box-shadow:-3px 0 12px rgba(20,16,12,.14);white-space:nowrap;display:flex;align-items:center;gap:7px;}'
+    + '.gsch-pn-trigger:hover,.gsch-pn-fly.open .gsch-pn-trigger{background:#6a4ea8;}'
+    + '.gsch-pn-trigger svg{transition:transform .2s ease;}'
+    + '.gsch-pn-fly.open .gsch-pn-trigger svg{transform:rotate(180deg);}'
+    + '.gsch-pn-fly .gsch-pnnote.gsch-pn-flyout{position:absolute;right:100%;top:50%;transform:translateY(-50%);margin-right:8px;width:274px;box-sizing:border-box;max-height:86vh;overflow:auto;display:none;box-shadow:-12px 0 34px rgba(20,16,12,.22);}'
+    + '.gsch-pn-fly.open .gsch-pnnote.gsch-pn-flyout{display:flex;animation:gschFlyIn .2s cubic-bezier(.2,.7,.3,1) both;}'
+    + '@keyframes gschFlyIn{from{opacity:0;transform:translateY(-50%) translateX(12px);}to{opacity:1;transform:translateY(-50%) translateX(0);}}'
+    + '@media(max-width:760px){.gsch-daymodal-wrap{display:block;}.gsch-pn-fly{position:static;right:auto;height:auto;display:block;margin-bottom:10px;}.gsch-pn-fly .gsch-pn-trigger{display:none;}.gsch-pn-fly .gsch-pnnote.gsch-pn-flyout{position:static !important;transform:none !important;width:100% !important;max-height:none;display:flex !important;animation:none;margin:0;box-shadow:none;}}'
     /* Tek kayıt detay popup (ders / kişisel not) */
     + '.gsch-dayrow{cursor:pointer;}'
     + '.gsch-detail-h{display:flex;align-items:center;gap:9px;margin-bottom:8px;}'
@@ -1138,7 +1145,7 @@
       var showPersonal=personal;   // öğrenci VE öğretmen kişisel not/etkinlik ekleyebilir (yalnız KENDİ görür — RLS own-row)
       var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('');
       var personalNoteHTML = showPersonal ? (
-        '<div class="gsch-pnnote">'
+        '<div class="gsch-pnnote gsch-pn-flyout">'
         + '<div class="gsch-pnnote-h">Kişisel not defteri <small>yalnız sen görürsün</small></div>'
         + '<input type="text" class="pnf-t" placeholder="Başlık — örn. Bugün ne çalışacağım" maxlength="90">'
         + '<div class="gsch-pnnote-time"><span class="gsch-pnnote-tlbl">Saat (opsiyonel)</span><span class="dmf-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span></div>'
@@ -1160,12 +1167,35 @@
         + '<div class="dmf-acts"><button type="button" class="gsch-btn dmf-save">Planla</button><button type="button" class="gsch-btn ghost dmf-cancel">Vazgeç</button></div>'
         + '</div>'
       ) : '';
+      var flyHTML = showPersonal ? (
+        '<div class="gsch-pn-fly">'+personalNoteHTML
+        + '<button type="button" class="gsch-pn-trigger" aria-label="Kişisel not defteri" title="Kişisel not defteri (yalnız sen görürsün)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>Kişisel Not</span></button>'
+        + '</div>'
+      ) : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal gsch-daymodal'+((showForm||showPersonal)?' has-form':'')+((showForm&&showPersonal)?' three-col':'')+'">'
+      ov.innerHTML='<div class="gsch-daymodal-wrap">'+flyHTML
+        + '<div class="gsch-modal gsch-daymodal'+(showForm?' has-form':'')+'">'
         + '<div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4><span class="gsch-daymodal-count-slot"></span></div>'+holBadge
-        + '<div class="gsch-daymodal-body">'+personalNoteHTML+'<div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
-        + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
+        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
+        + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>'
+        + '</div>';
       document.body.appendChild(ov);
+      // Kişisel not flyout aç/kapa (sola doğru cascade); taşarsa modalı sağa kaydırıp ekranda tut
+      (function(){ var fly=ov.querySelector('.gsch-pn-fly'); var trig=ov.querySelector('.gsch-pn-trigger'); if(!fly||!trig) return;
+        trig.addEventListener('click',function(e){ e.stopPropagation();
+          var opening=!fly.classList.contains('open'); fly.classList.toggle('open');
+          if(!opening) return;
+          var t=fly.querySelector('.pnf-t'); if(t) try{ t.focus(); }catch(_e){}
+          setTimeout(function(){ try{
+            var fo=fly.querySelector('.gsch-pn-flyout'); if(!fo) return;
+            var r=fo.getBoundingClientRect(), pad=10; if(r.left>=pad) return;
+            var shift=pad-r.left, card=ov.querySelector('.gsch-daymodal'), cs=card.getBoundingClientRect();
+            if(getComputedStyle(card).position!=='fixed'){ card.style.position='fixed'; card.style.top=cs.top+'px'; card.style.margin='0'; }
+            card.style.left=(cs.left+shift)+'px';
+            fly.style.position='fixed'; fly.style.top=cs.top+'px'; fly.style.height=cs.height+'px'; fly.style.left='auto'; fly.style.right=(window.innerWidth-(cs.left+shift))+'px';
+          }catch(_e){} }, 30);
+        });
+      })();
       var listEl=ov.querySelector('.gsch-daymodal-list'), countSlot=ov.querySelector('.gsch-daymodal-count-slot');
       var formEl=ov.querySelector('.gsch-daymodal-form'), editingId=null;
       function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -1291,6 +1321,8 @@
         var top=Math.max(pad, Math.min(vh-mh-pad, anchorRect.top-8));
         card.style.position='fixed'; card.style.left=left+'px'; card.style.top=top+'px'; card.style.margin='0';
         card.style.transformOrigin=(place==='left'?'right center':(place==='right'?'left center':'center top'));
+        // Kişisel not flyout'unu da card'ın sol kenarına sabitle (wrap position:fixed card yüzünden çöker)
+        try{ var _fly=ov.querySelector('.gsch-pn-fly'); if(_fly){ var _cr=card.getBoundingClientRect(); _fly.style.position='fixed'; _fly.style.top=_cr.top+'px'; _fly.style.height=_cr.height+'px'; _fly.style.right=(window.innerWidth-_cr.left)+'px'; _fly.style.left='auto'; } }catch(_e){}
         // Taşma güvenliği: alt/üst kenar viewport'u aşarsa geri çek (kart içi kaydırma max-height ile)
         var rb=card.getBoundingClientRect();
         if(rb.bottom>vh-pad){ card.style.top=Math.max(pad, vh-pad-rb.height)+'px'; }

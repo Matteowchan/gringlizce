@@ -1883,7 +1883,9 @@
     .ks-class-row #ks-schedule-wrap{ flex:1 1 auto; min-width:0; max-width:none; margin:0; padding:0; }
     .ks-class-col-assign{ flex:0 0 380px; max-width:380px; min-width:0; box-sizing:border-box; }
     .ks-class-col-assign .ks-section-head{ margin-top:0; }
-    .ks-class-col-assign .ks-assign-list{ margin-bottom:0; max-height:700px; overflow-y:auto; padding-right:4px; }
+    .ks-class-col-assign .ks-assign-list{ margin-bottom:0; overflow-y:auto; padding-right:4px; }
+    /* ÖDEVLER listesi de takvim gibi yeniden boyutlandırılabilir (dikey) — altta sürükleme grip'i */
+    .ks-class-col-assign #ks-assign-list{ height:640px; min-height:220px; max-height:1400px; resize:vertical; padding-bottom:10px; }
     @media(max-width:900px){
       .ks-class-row{ flex-direction:column; align-items:stretch; gap:1.6rem; }
       .ks-class-row #ks-schedule-wrap{ width:100%; }
@@ -2698,6 +2700,18 @@
       (function(){ var g=document.getElementById('ks-grimeet'); var cid=classInfo.id||new URLSearchParams(location.search).get('id'); if(g&&cid){ var room=('C'+String(cid).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); g.href='grimeet-oda?room='+room+'&host=1&class='+encodeURIComponent(cid); g.style.display='inline-flex'; }
         try{ var _clsRow=document.getElementById('ks-class-row'); if(_clsRow)_clsRow.style.display='flex'; }catch(e){}
         try{ if(window.GriSchedule&&cid){ var uid=sess.data.session.user.id; var w=document.getElementById('ks-schedule-wrap'); if(w)w.style.display='block'; GriSchedule.mount({ sb:sb, container:document.getElementById('ks-schedule'), role:'teacher', classId:cid, userId:uid, personal:true, roomForClass:function(c){ return ('C'+String(c).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); } }); } }catch(e){}
+        /* ÖDEVLER listesi yeniden boyutlandırma: kayıtlı yüksekliği uygula + değişince sakla */
+        try{
+          var _al=document.getElementById('ks-assign-list');
+          if(_al){
+            var _sv=parseInt(localStorage.getItem('ks-assign-h'),10);
+            if(_sv&&_sv>=220&&_sv<=1400) _al.style.height=_sv+'px';
+            if(window.ResizeObserver){
+              var _t; var _ro=new ResizeObserver(function(){ clearTimeout(_t); _t=setTimeout(function(){ try{ var h=Math.round(_al.getBoundingClientRect().height); if(h>=220&&h<=1400) localStorage.setItem('ks-assign-h',String(h)); }catch(e){} },250); });
+              _ro.observe(_al);
+            }
+          }
+        }catch(e){}
       })();
       var descEl = document.getElementById('ks-class-desc');
       if (classInfo.description) {

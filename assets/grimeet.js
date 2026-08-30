@@ -188,17 +188,55 @@ function setupGate(){
     }catch(e){}
     $('#gate-note').textContent=STATE.isHost?'Bu odayı öğretmen olarak açıyorsun.':'Derse öğrenci olarak katılıyorsun.';
   })();
-  $('#gate-join').addEventListener('click',function(){
-    var nm=($('#gate-name').value||'').trim(); if(!nm){ toast('Lütfen adını yaz.'); $('#gate-name').focus(); return; }
-    STATE.name=nm; STATE.micOn=micOn; STATE.camOn=camOn;
-    // Token'ı hemen çekmeye başla — oda hazırlığıyla paralel
-    STATE._tokenPromise = fetchLKToken().catch(function(){ return {}; });
+  // Odaya asıl geçiş (öğretmen: her zaman; öğrenci: oda açık olunca)
+  function proceedJoin(haveToken){
+    if(!haveToken) STATE._tokenPromise = fetchLKToken().catch(function(){ return {}; });
     // preTrack varsa odaya taşınmak üzere KORUNUR (kamera yeniden açılmaz, model+arka plan hazır → giriş anlık).
     // Yalnız ham gate akışı (fallback) serbest bırakılır.
     if(!STATE.preTrack && gateStream){ gateStream.getTracks().forEach(function(t){t.stop();}); gateStream=null; try{ if(gv) gv.srcObject=null; }catch(e){} }
     $('#gmr-gate').classList.add('hidden');
     setTimeout(enterRoom, STATE.preTrack?60:200);
+  }
+  function isFullBlock(r){ return !!(r && r.blocked && (r.code==='room_full' || /dolu/i.test(r.blocked))); }
+  function isInactiveBlock(r){ return !!(r && r.blocked && (r.code==='room_inactive' || /bulunamad|kapal|süresi|suresi/i.test(r.blocked))); }
+  function setGateWaiting(on){
+    STATE._waitingForTeacher=!!on;
+    var jb=$('#gate-join'), gw=$('#gate-wait');
+    if(jb) jb.classList.toggle('hidden', on);
+    if(gw) gw.classList.toggle('hidden', !on);
+  }
+  var _waitPoll=null;
+  function startWaitForTeacher(){
+    // Öğretmen dersi başlatana kadar gate'te bekle (kamera/mikrofon/arka plan ayarları canlı kalır),
+    // 5 sn'de bir oda açıldı mı diye yokla; açılınca otomatik gir (bekleme odası açıksa knock ekranına düşer).
+    setGateWaiting(true);
+    if(_waitPoll) clearInterval(_waitPoll);
+    _waitPoll=setInterval(function(){
+      if(!STATE._waitingForTeacher){ clearInterval(_waitPoll); _waitPoll=null; return; }
+      fetchLKToken().then(function(r){
+        if(!STATE._waitingForTeacher) return;
+        if(r && r.token){ clearInterval(_waitPoll); _waitPoll=null; setGateWaiting(false); STATE._tokenPromise=Promise.resolve(r); proceedJoin(true); }
+        else if(isFullBlock(r)){ clearInterval(_waitPoll); _waitPoll=null; setGateWaiting(false); blockJoin(r.blocked); }
+        // oda hâlâ pasif / geçici hata → beklemeye devam
+      }).catch(function(){});
+    }, 5000);
+  }
+  async function gateTryJoin(){
+    var jb=$('#gate-join'); var _ot=jb?jb.textContent:''; if(jb){ jb.disabled=true; jb.textContent='Bağlanıyor…'; }
+    var r=await fetchLKToken();
+    if(jb){ jb.disabled=false; jb.textContent=_ot||'Derse Katıl'; }
+    if(r && r.token){ STATE._tokenPromise=Promise.resolve(r); proceedJoin(true); return; }
+    if(isFullBlock(r)){ blockJoin(r.blocked); return; }
+    if(isInactiveBlock(r)){ startWaitForTeacher(); return; }   // öğretmen henüz başlatmadı → bekle
+    proceedJoin(false);   // belirsiz hata / token yok → eski akış (demo'ya düşebilir)
+  }
+  $('#gate-join').addEventListener('click',function(){
+    var nm=($('#gate-name').value||'').trim(); if(!nm){ toast('Lütfen adını yaz.'); $('#gate-name').focus(); return; }
+    STATE.name=nm; STATE.micOn=micOn; STATE.camOn=camOn;
+    if(STATE.isHost) proceedJoin(false);   // öğretmen odayı açar (token her zaman gelir)
+    else gateTryJoin();                     // öğrenci: oda açık mı? değilse öğretmeni bekle
   });
+  var _gwc=$('#gate-wait-cancel'); if(_gwc) _gwc.addEventListener('click',function(){ STATE._waitingForTeacher=false; if(_waitPoll){ clearInterval(_waitPoll); _waitPoll=null; } setGateWaiting(false); });
 }
 
 /* ================= ENTER ROOM ================= */
@@ -220,7 +258,7 @@ async function fetchLKToken(){
   if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
   try{
     var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
-    if(res.status===403){ var e403=await res.json().catch(function(){return{};}); return {blocked:e403.error||'Oda bulunamadı.'}; }
+    if(res.status===403){ var e403=await res.json().catch(function(){return{};}); return {blocked:e403.error||'Oda bulunamadı.', code:e403.code||''}; }
     if(res.ok){ var jr=await res.json(); return {token:jr.token, url:jr.url}; }
   }catch(e){}
   return {};

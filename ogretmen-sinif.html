@@ -1878,18 +1878,21 @@
     .ks-assign-card:hover{ transform:translateY(-2px); box-shadow:0 11px 26px rgba(0,0,0,.16)!important; }
     .ks-assign-progress-fill{ background:linear-gradient(90deg,#2C5856,#3a726e)!important; }
     #ks-schedule-wrap h2{ font-family:var(--font-display,Georgia),serif; }
-    /* Sınıf görünümü: takvim solda, ÖDEVLER listesi sağda (iki sütun) */
-    .ks-class-row{ display:flex; gap:1.4rem; align-items:flex-start; max-width:1260px; margin:1.5rem auto 0; padding:0 1rem; box-sizing:border-box; }
-    .ks-class-row #ks-schedule-wrap{ flex:1 1 auto; min-width:0; max-width:none; margin:0; padding:0; }
-    .ks-class-col-assign{ flex:0 0 380px; max-width:380px; min-width:0; box-sizing:border-box; }
-    .ks-class-col-assign .ks-section-head{ margin-top:0; }
-    .ks-class-col-assign .ks-assign-list{ margin-bottom:0; overflow-y:auto; padding-right:4px; }
+    /* Sınıf görünümü: takvim solda (sabit), sağda tek sekmeli panel (Ödevler | Öğrenciler | Yazılar | Genel İngilizce) */
+    .ks-class-row{ display:flex; gap:1.6rem; align-items:flex-start; max-width:1320px; margin:1.5rem auto 0; padding:0 1rem; box-sizing:border-box; }
+    .ks-class-row #ks-schedule-wrap{ flex:0 0 560px; max-width:560px; min-width:0; margin:0; padding:0; }
+    .ks-class-row #ks-schedule-wrap .gsch-main{ max-width:100%; }
+    .ks-class-col-panel{ flex:1 1 auto; min-width:0; box-sizing:border-box; }
+    .ks-class-col-panel .ks-tabs{ margin-top:0; }
+    .ks-class-col-panel .ks-tab-content{ margin-top:1.1rem; }
+    .ks-class-col-panel .ks-section-head:first-child{ margin-top:0; }
+    .ks-class-col-panel .ks-assign-list{ margin-bottom:0; overflow-y:auto; padding-right:4px; }
     /* ÖDEVLER listesi de takvim gibi yeniden boyutlandırılabilir (dikey) — altta sürükleme grip'i */
-    .ks-class-col-assign #ks-assign-list{ height:640px; min-height:220px; max-height:1400px; resize:vertical; padding-bottom:10px; }
-    @media(max-width:900px){
-      .ks-class-row{ flex-direction:column; align-items:stretch; gap:1.6rem; }
-      .ks-class-row #ks-schedule-wrap{ width:100%; }
-      .ks-class-col-assign{ flex:1 1 auto; max-width:none; width:100%; }
+    .ks-class-col-panel #ks-assign-list{ height:560px; min-height:220px; max-height:1400px; resize:vertical; padding-bottom:10px; }
+    @media(max-width:1040px){
+      .ks-class-row{ flex-direction:column; align-items:stretch; gap:1.6rem; max-width:960px; }
+      .ks-class-row #ks-schedule-wrap{ flex:1 1 auto; max-width:none; width:100%; }
+      .ks-class-col-panel{ flex:1 1 auto; max-width:none; width:100%; }
     }
     /* Modern Panel hero */
     .ks-hero-panel{ display:flex; align-items:flex-start; gap:1.15rem; background:var(--bg-card); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow-md); padding:1.5rem 1.6rem; flex-wrap:wrap; }
@@ -1995,18 +1998,7 @@
         <h2 style="font-size:1.25rem; margin:0 0 0.75rem;">Ders Programı</h2>
         <div id="ks-schedule"></div>
       </section>
-      <aside class="ks-class-col-assign" aria-label="Ödevler">
-        <div class="ks-section-head">
-          <h2>Ödevler</h2>
-          <button id="ks-new-assign-btn" class="btn-primary" type="button">+ Yeni Ödev</button>
-        </div>
-        <div id="ks-assign-list" class="ks-assign-list"></div>
-        <div id="ks-assign-empty" class="ks-empty" style="display:none;">
-          <div class="ks-empty-eyebrow">Başla</div>
-          <h3>Henüz ödev yok</h3>
-          <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
-        </div>
-      </aside>
+      <div id="ks-right-panel" class="ks-class-col-panel" aria-label="Sınıf paneli"><!-- Sekmeler + içerikler JS ile buraya taşınır (Ödevler | Öğrenciler | Yazılar | Genel İngilizce) --></div>
     </div>
 
     <div id="ks-loading" class="loading-state">Yükleniyor...</div>
@@ -2043,9 +2035,12 @@
       <!-- Seviye Belirleme (CEFR) panosu -->
       <div id="ks-placement" style="margin:0 0 1.6rem"></div>
 
-      <!-- Tabs -->
+      <!-- Tabs (JS ile takvimin sağındaki panele taşınır) -->
       <div class="ks-tabs">
-        <button class="ks-tab active" data-tab="students" type="button">
+        <button class="ks-tab active" data-tab="assignments" type="button">
+          Ödevler <span class="tab-count" id="tab-count-assignments">0</span>
+        </button>
+        <button class="ks-tab" data-tab="students" type="button">
           Öğrenciler <span class="tab-count" id="tab-count-students">0</span>
         </button>
         <button class="ks-tab" data-tab="writings" type="button">
@@ -2056,8 +2051,22 @@
         </button>
       </div>
 
+      <!-- Tab: Ödevler -->
+      <div class="ks-tab-content" data-tab-content="assignments">
+        <div class="ks-section-head">
+          <h2>Ödevler</h2>
+          <button id="ks-new-assign-btn" class="btn-primary" type="button">+ Yeni Ödev</button>
+        </div>
+        <div id="ks-assign-list" class="ks-assign-list"></div>
+        <div id="ks-assign-empty" class="ks-empty" style="display:none;">
+          <div class="ks-empty-eyebrow">Başla</div>
+          <h3>Henüz ödev yok</h3>
+          <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
+        </div>
+      </div>
+
       <!-- Tab: Students -->
-      <div class="ks-tab-content" data-tab-content="students">
+      <div class="ks-tab-content" data-tab-content="students" style="display:none;">
         <div class="ks-section-head">
           <h2>Öğrenciler</h2>
           <span class="ks-section-hint">Detay için satıra tıkla.</span>
@@ -2710,6 +2719,18 @@
               var _t; var _ro=new ResizeObserver(function(){ clearTimeout(_t); _t=setTimeout(function(){ try{ var h=Math.round(_al.getBoundingClientRect().height); if(h>=220&&h<=1400) localStorage.setItem('ks-assign-h',String(h)); }catch(e){} },250); });
               _ro.observe(_al);
             }
+          }
+        }catch(e){}
+      })();
+      /* Sekmeleri + tüm sekme-içeriklerini takvimin sağındaki panele taşı (Ödevler | Öğrenciler | Yazılar | Genel İngilizce) */
+      (function(){
+        try{
+          var rp=document.getElementById('ks-right-panel');
+          var tabs=document.querySelector('#ks-content .ks-tabs');
+          if(rp&&tabs){
+            var contents=document.querySelectorAll('#ks-content .ks-tab-content'); // statik NodeList
+            rp.appendChild(tabs);
+            Array.prototype.forEach.call(contents,function(c){ rp.appendChild(c); });
           }
         }catch(e){}
       })();

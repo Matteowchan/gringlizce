@@ -597,6 +597,26 @@ function toggleFullscreen(){ try{ if(!document.fullscreenElement){ var el=docume
 /* Resizable galeri: kamera tile min-genişligini ayarla (herkesin kamerasi grid'de) */
 function setTileSize(px,save){ px=Math.max(160,Math.min(620,px|0)); document.documentElement.style.setProperty('--tile-min',px+'px'); var app=$('#gm-app'); if(app)app.setAttribute('data-tilemanual','1'); var r=$('#gmr-tile-range'); if(r&&(+r.value)!==px)r.value=px; if(save!==false){ try{ localStorage.setItem('gm-tilemin',px); }catch(e){} } }
 
+/* ===== Ders Planla / Takvim (host) — paylaşılan GriSchedule modülü, geniş modal ===== */
+var _schedMounted=false;
+function roomForClass(cid){ return ('C'+String(cid||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); }
+async function openSchedule(){
+  if(!STATE.isHost)return;
+  var modal=$('#sched-modal'); if(!modal)return;
+  modal.classList.remove('hidden');
+  if(_schedMounted)return;
+  var body=$('#sched-body'), sb=STATE.supabase||window.GRI_SB;
+  if(!sb||!window.GriSchedule){ if(body)body.innerHTML='<div class="gmr-sched-loading">Takvim şu an yüklenemedi. Sayfayı yenileyip tekrar dene.</div>'; return; }
+  _schedMounted=true;
+  try{
+    var uid=''; try{ var s=await sb.auth.getSession(); uid=(s&&s.data&&s.data.session&&s.data.session.user&&s.data.session.user.id)||''; }catch(e){}
+    var classes=[]; try{ var rc=await sb.rpc('list_my_classes'); classes=(rc&&!rc.error&&rc.data)?rc.data.map(function(c){return {id:c.class_id,name:c.name};}):[]; }catch(e){}
+    if(body)body.innerHTML='';
+    window.GriSchedule.mount({ sb:sb, container:body, role:'teacher', aggregate:true, userId:uid, classes:classes, personal:true, roomForClass:roomForClass });
+  }catch(e){ _schedMounted=false; if(body)body.innerHTML='<div class="gmr-sched-loading">Takvim yüklenemedi. Sayfayı yenileyip tekrar dene.</div>'; }
+}
+function closeSchedule(){ var m=$('#sched-modal'); if(m)m.classList.add('hidden'); }
+
 function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
@@ -604,6 +624,8 @@ function bindControls(){
       if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if((STATE._bgApplied&&STATE.bg&&STATE.bg!=='none')||STATE.autoframe){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
       else { STATE.camTrack=null; renderPlaceholder('self'); } } });
   $('#ctrl-tools').addEventListener('click',function(){ toggleDock('tools'); });
+  (function(){ var sb=$('#ctrl-schedule'); if(sb)sb.addEventListener('click',openSchedule); var sc=$('#sched-close'); if(sc)sc.addEventListener('click',closeSchedule);
+    document.addEventListener('keydown',function(e){ if(e.key!=='Escape')return; var m=$('#sched-modal'); if(!m||m.classList.contains('hidden'))return; if(document.querySelector('.gsch-form-ov.open')||document.querySelector('.gsch-modal-ov'))return; closeSchedule(); }); })();
   $('#ctrl-share').addEventListener('click',shareScreen);
   $('#ctrl-board').addEventListener('click',function(){ setMode(STATE.mode==='board'?'grid':'board'); });
   $('#ctrl-materials').addEventListener('click',function(){ setMode(STATE.mode==='materials'?'grid':'materials'); });

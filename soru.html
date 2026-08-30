@@ -499,7 +499,7 @@
     .gri-exam-reviewbar {
       position: fixed; right: 18px; bottom: 18px; z-index: 8000;
       display: flex; align-items: center; gap: 12px;
-      background: var(--surface, #fff); border: 1px solid var(--line, #E3D8C5);
+      background: var(--bg-card, #fff); border: 1px solid var(--line, #E3D8C5);
       border-radius: 100px; padding: 8px 8px 8px 16px;
       font-family: var(--font-ui, Inter, system-ui, sans-serif);
       font-size: 13px; font-weight: 600; color: var(--text, #1A2230);
@@ -519,7 +519,7 @@
     }
     .gri-exam-overlay .exr-card {
       max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto;
-      background: var(--surface, #fff); border: 1px solid var(--line, #E3D8C5);
+      background: var(--bg-card, #fff); border: 1px solid var(--line, #E3D8C5);
       border-radius: 20px; box-shadow: 0 24px 70px rgba(20, 15, 10, .34);
       padding: 30px 26px; text-align: center;
     }
@@ -1794,8 +1794,8 @@
     "sameAs": ["https://www.instagram.com/gringlizce/"]
   }
   </script>
-  <script src="assets/curriculum.js?v=29"></script>
-  <script src="assets/nav.js?v=31"></script>
+  <script src="assets/curriculum.js?v=30"></script>
+  <script src="assets/nav.js?v=32"></script>
   <script src="assets/track.js?v=4" defer></script>
 </head>
 <body data-cat="sat">
@@ -2364,8 +2364,56 @@
     function griDailyCount() { return parseInt(localStorage.getItem(griTodayKey()) || '0', 10) || 0; }
     function griDailyInc() { try { localStorage.setItem(griTodayKey(), String(griDailyCount() + 1)); } catch (e) {} }
     function griIsPremiumNow() { try { return !!(window.GriPremium && window.GriPremium.isActive()); } catch (e) { return false; } }
-    function griLimitReached() { return !griIsPremiumNow() && griDailyCount() >= GRI_DAILY_LIMIT; }
+    // === Sunucu kotası (birincil) — RPC gri_quota_status/consume; FAIL-OPEN: hata olursa localStorage'a düş ===
+    var GRI_QUOTA = { srv: false, remaining: null, limit: GRI_DAILY_LIMIT, premium: false };
+    async function griQuotaStatus() {
+      try {
+        var r = await supabase.rpc('gri_quota_status', { p_kind: 'question' });
+        if (r && !r.error && r.data && typeof r.data === 'object') {
+          var d = r.data;
+          GRI_QUOTA.srv = true;
+          GRI_QUOTA.premium = !!d.is_premium;
+          GRI_QUOTA.remaining = (typeof d.remaining === 'number') ? d.remaining : null;
+          GRI_QUOTA.limit = (typeof d.limit === 'number' && d.limit > 0) ? d.limit : GRI_DAILY_LIMIT;
+          GRI_DAILY_LIMIT = GRI_QUOTA.limit;
+          return d;
+        }
+      } catch (e) {}
+      GRI_QUOTA.srv = false; // fail-open → localStorage yedeği geçerli
+      return null;
+    }
+    async function griQuotaConsume() {
+      try {
+        var r = await supabase.rpc('gri_quota_consume', { p_kind: 'question' });
+        if (r && !r.error && r.data && typeof r.data === 'object') {
+          GRI_QUOTA.srv = true;
+          if (typeof r.data.remaining === 'number') GRI_QUOTA.remaining = r.data.remaining;
+          return r.data;
+        }
+      } catch (e) {}
+      return null; // fail-open: yerel sayaç zaten artırıldı
+    }
+    // Kalan hak (üst-seviye görüntüleme için) — sunucu varsa ondan, yoksa yerelden
+    function griRemaining() {
+      if (griIsPremiumNow() || (GRI_QUOTA.srv && GRI_QUOTA.premium)) return -1;
+      if (GRI_QUOTA.srv && typeof GRI_QUOTA.remaining === 'number') return Math.max(0, GRI_QUOTA.remaining);
+      return Math.max(0, GRI_DAILY_LIMIT - griDailyCount());
+    }
+    function griLimitReached() {
+      if (griIsPremiumNow()) return false;
+      if (GRI_QUOTA.srv) {
+        if (GRI_QUOTA.premium) return false;
+        if (typeof GRI_QUOTA.remaining === 'number') return GRI_QUOTA.remaining <= 0;
+      }
+      return griDailyCount() >= GRI_DAILY_LIMIT; // yerel yedek
+    }
     // Login kullanıcıda bugünkü DB cevap sayısını al, yerel sayaca tohum at (cihazlar arası tutarlılık)
+    // NOT (bilinen sınırlama): Bu sayım bugünkü TÜM user_answers'ı içerir — deneme (tam test) cevapları dahil.
+    // user_answers şemasında deneme cevabını ayırt edecek bir kolon yok (question_slug düz slug, time_spent_ms
+    // güvenilir bir ayraç değil), bu yüzden tek count sorgusuyla deneme cevaplarını dışlamak mümkün değil.
+    // Bu fonksiyon yalnızca FAIL-OPEN yedeği: birincil kota sunucu RPC'si gri_quota_status'tir (server-side
+    // doğru sayar). RPC çalıştığında bu tohumlanan yerel sayaç kullanılmaz. RPC başarısız olduğu nadir durumda,
+    // aynı gün deneme çözmüş bir kullanıcı normal set açınca haksız paywall görebilir — remaining'e bırakıldı.
     async function griSeedDailyFromDb() {
       if (!GRI_USER_ID) return;
       try {
@@ -2379,33 +2427,127 @@
         }
       } catch (e) {}
     }
+    // Kutlamalı bağlamsal upsell CSS (bir kez enjekte edilir)
+    function griPaywallCss() {
+      if (document.getElementById('gri-paywall-css')) return;
+      var st = document.createElement('style');
+      st.id = 'gri-paywall-css';
+      st.textContent =
+        '#gri-paywall{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,15,10,.58);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:gpwFade .28s ease both;font-family:var(--font-ui,Inter),system-ui,sans-serif}' +
+        '@keyframes gpwFade{from{opacity:0}to{opacity:1}}' +
+        '@keyframes gpwPop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}' +
+        '#gri-paywall .gpw-card{position:relative;max-width:440px;width:100%;background:var(--bg-card,#FBF6EA);border:1px solid var(--line,#E3D8C3);border-radius:22px;box-shadow:0 24px 70px rgba(20,15,10,.32);padding:34px 30px 26px;text-align:center;animation:gpwPop .34s cubic-bezier(.2,.9,.3,1.2) both;max-height:92vh;overflow:auto}' +
+        '#gri-paywall .gpw-ring{width:66px;height:66px;margin:0 auto 16px;border-radius:50%;background:radial-gradient(circle at 30% 25%,rgba(46,110,106,.18),rgba(46,110,106,.06));display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(46,110,106,.08)}' +
+        '#gri-paywall .gpw-ring svg{width:34px;height:34px;color:var(--teal,#2E6E6A)}' +
+        '#gri-paywall .gpw-kick{display:inline-flex;align-items:center;gap:6px;background:var(--teal-soft,rgba(46,110,106,.13));color:var(--teal-deep,#123C39);font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:6px 13px;border-radius:100px}' +
+        '#gri-paywall h3{font-family:"Playfair Display",Georgia,serif;font-size:1.55rem;line-height:1.2;margin:14px 0 8px;color:var(--text,#241E17);font-weight:800}' +
+        '#gri-paywall .gpw-sub{color:var(--text-muted,#786D59);font-size:14.5px;line-height:1.6;margin:0 auto 18px;max-width:34ch}' +
+        '#gri-paywall .gpw-perks{list-style:none;margin:0 0 20px;padding:0;text-align:left;display:grid;gap:9px}' +
+        '#gri-paywall .gpw-perks li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--text,#241E17);line-height:1.45}' +
+        '#gri-paywall .gpw-perks svg{width:17px;height:17px;flex:none;color:var(--teal,#2E6E6A);margin-top:1px}' +
+        '#gri-paywall .gpw-btn{display:block;width:100%;box-sizing:border-box;border:none;cursor:pointer;text-decoration:none;font-family:inherit;font-weight:800;border-radius:13px;transition:transform .12s ease,box-shadow .2s ease,filter .2s ease}' +
+        '#gri-paywall .gpw-btn:hover{transform:translateY(-1px)}' +
+        '#gri-paywall .gpw-primary{background:linear-gradient(135deg,var(--teal,#2E6E6A),var(--teal-deep,#123C39));color:#fff;font-size:15px;padding:15px;box-shadow:0 8px 22px rgba(18,60,57,.28);margin-bottom:10px}' +
+        '#gri-paywall .gpw-primary:disabled{opacity:.7;cursor:default;transform:none}' +
+        '#gri-paywall .gpw-primary small{display:block;font-weight:600;font-size:11.5px;opacity:.85;margin-top:3px;letter-spacing:.2px}' +
+        '#gri-paywall .gpw-secondary{background:var(--gold-soft,rgba(183,138,46,.15));color:var(--gold-deep,#8A6A22);font-size:13.5px;padding:12px;margin-bottom:14px}' +
+        '#gri-paywall .gpw-secondary b{font-weight:800}' +
+        '#gri-paywall .gpw-trust{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--text-muted,#786D59);font-size:12px;line-height:1.4;margin:0 0 14px}' +
+        '#gri-paywall .gpw-trust svg{width:14px;height:14px;flex:none;color:var(--teal,#2E6E6A)}' +
+        '#gri-paywall .gpw-tert{display:block;color:var(--text-muted,#786D59);text-decoration:none;font-size:13px;font-weight:600}' +
+        '#gri-paywall .gpw-tert:hover{color:var(--gold-deep,#8A6A22)}' +
+        '#gri-paywall .gpw-msg{font-size:12.5px;line-height:1.5;margin:-4px 0 12px;padding:9px 12px;border-radius:10px;display:none}' +
+        '#gri-paywall .gpw-msg.err{display:block;background:rgba(122,59,59,.1);color:#7A3B3B}' +
+        '#gri-paywall .gpw-msg.ok{display:block;background:var(--teal-soft,rgba(46,110,106,.13));color:var(--teal-deep,#123C39);font-weight:700}';
+      (document.head || document.documentElement).appendChild(st);
+    }
+    function griClosePaywall() {
+      var ov = document.getElementById('gri-paywall');
+      if (ov) ov.remove();
+      document.removeEventListener('keydown', griPaywallEsc);
+    }
+    function griPaywallEsc(e) { if (e.key === 'Escape') { location.href = 'panelim'; } }
     function griShowPaywall() {
       if (document.getElementById('gri-paywall')) return;
-      var ov = document.createElement('div');
-      ov.id = 'gri-paywall';
-      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,15,10,.55);backdrop-filter:blur(4px)';
+      griPaywallCss();
+      var CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
       var _anon = !GRI_USER_ID;
       var _ret = encodeURIComponent(location.pathname + location.search);
-      var _body = _anon
-        ? 'Ücretsiz üye ol, kaldığın yerden devam et. Üyelere günde ' + GRI_DAILY_LIMIT + ' soru, ilerleme takibi ve yanlış-soru defteri. Sınırsız çözmek için Premium\'a geçebilirsin.'
-        : 'Ücretsiz planla günde ' + GRI_DAILY_LIMIT + ' soru çözebilirsin. Hakkın yarın sıfırlanır. Sınırsız çözmek ve reklamsız çalışmak için Premium\'a geçebilirsin.';
-      var _cta = _anon
-        ? '<a href="giris?return=' + _ret + '" style="display:block;background:var(--teal,#2C5856);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px;border-radius:12px;margin-bottom:10px">Ücretsiz üye ol →</a>' +
-          '<a href="premium" style="display:block;background:var(--gold-soft,#f5ecd4);color:var(--gold-deep,#8a6d1f);text-decoration:none;font-weight:700;font-size:13.5px;padding:11px;border-radius:12px;margin-bottom:10px">Premium ile sınırsız çöz</a>'
-        : '<a href="premium" style="display:block;background:var(--teal,#2C5856);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px;border-radius:12px;margin-bottom:10px">Premium ile sınırsız çöz</a>';
-      ov.innerHTML = '<div style="max-width:420px;width:100%;background:var(--surface,#fff);border:1px solid var(--line,#E3D8C5);border-radius:18px;box-shadow:0 20px 60px rgba(20,15,10,.28);padding:30px 26px;text-align:center;font-family:Inter,system-ui,sans-serif">' +
-        '<div style="display:inline-block;background:#7A3B3B;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 12px;border-radius:100px">GÜNLÜK HAK DOLDU</div>' +
-        '<h3 style="font-family:Georgia,serif;font-size:1.4rem;margin:16px 0 8px;color:var(--text,#1A2230)">Bugünlük bu kadar!</h3>' +
-        '<p style="color:var(--text-muted,#8A7F6E);font-size:14.5px;line-height:1.6;margin:0 0 20px">' + _body + '</p>' +
-        _cta +
-        '<a href="panelim" style="display:block;color:var(--text-muted,#8A7F6E);text-decoration:none;font-size:13px">Çalışma Masama dön</a>' +
+      var _solved = (GRI_QUOTA.srv && GRI_QUOTA.limit) ? GRI_QUOTA.limit : (griDailyCount() || GRI_DAILY_LIMIT);
+
+      var ov = document.createElement('div');
+      ov.id = 'gri-paywall';
+      ov.setAttribute('role', 'dialog');
+      ov.setAttribute('aria-modal', 'true');
+      ov.setAttribute('aria-label', 'Bugünkü hedefini tamamladın');
+
+      // Ana eylem (primary): girişli → 7 gün Pro deneme (gri_start_trial); anonim → üyelik + deneme
+      var primaryHtml = _anon
+        ? '<a class="gpw-btn gpw-primary" href="giris?return=' + _ret + '">7 gün ücretsiz Pro dene<small>Ücretsiz üye ol · kart gerekmez</small></a>'
+        : '<button type="button" class="gpw-btn gpw-primary" id="gpwTrial">7 gün ücretsiz Pro dene<small>Kart gerekmez · istediğin an iptal</small></button>';
+
+      ov.innerHTML =
+        '<div class="gpw-card">' +
+          '<div class="gpw-ring">' + CHK + '</div>' +
+          '<span class="gpw-kick">' + CHK + ' Günlük hedef tamam</span>' +
+          '<h3>Bugünkü hedefini tamamladın!</h3>' +
+          '<p class="gpw-sub">Bugün ' + _solved + ' soru çözdün. Bu tempoyu kaybetme — Gri Pro ile bugün olduğu gibi sınırsız devam et.</p>' +
+          '<div class="gpw-msg" id="gpwMsg"></div>' +
+          '<ul class="gpw-perks">' +
+            '<li>' + CHK + '<span><b>Sınırsız soru & tüm denemeler</b> — 7 sınavın tamamı</span></li>' +
+            '<li>' + CHK + '<span>Sınırsız AI mentor & yazma değerlendirme</span></li>' +
+            '<li>' + CHK + '<span>Reklamsız çalışma + tahmini skor & hedef paneli</span></li>' +
+          '</ul>' +
+          primaryHtml +
+          '<a class="gpw-btn gpw-secondary" href="premium">İlk aboneliğine özel avantajlı fiyat · <b>öğrenci indirimi</b> →</a>' +
+          '<div class="gpw-trust">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+            '<span>Kartsız başlar · 7 gün sonra otomatik ücretsize döner</span>' +
+          '</div>' +
+          '<a class="gpw-tert" href="panelim">Yarın devam et — Çalışma Masama dön</a>' +
         '</div>';
       document.body.appendChild(ov);
+      document.addEventListener('keydown', griPaywallEsc);
+
+      var trialBtn = document.getElementById('gpwTrial');
+      if (trialBtn) trialBtn.addEventListener('click', griStartTrialFlow);
+    }
+    // 7 gün Pro deneme akışı — gri_start_trial RPC; FAIL-OPEN: hata olursa premium sayfasına yönlendir
+    async function griStartTrialFlow() {
+      var btn = document.getElementById('gpwTrial');
+      var msg = document.getElementById('gpwMsg');
+      if (btn) { btn.disabled = true; btn.textContent = 'Başlatılıyor…'; }
+      try {
+        var r = await supabase.rpc('gri_start_trial');
+        var d = r && r.data;
+        if (r && !r.error && d && d.ok) {
+          // Premium yetkisini tazele, kotayı sıfırla, kilidi kaldır ve devam et
+          try { if (window.GriPremium && window.GriPremium.refresh) await window.GriPremium.refresh(); } catch (e) {}
+          GRI_QUOTA.srv = true; GRI_QUOTA.premium = true; GRI_QUOTA.remaining = -1;
+          if (msg) { msg.className = 'gpw-msg ok'; msg.textContent = 'Pro aktif, hazırlanıyor…'; }
+          // Tam yeniden yükle: URL zaten ?q= içerir; trial sonrası griQuotaStatus premium döner,
+          // kapı geçilir ve soru click handler'ları (attachInteractivity) yeniden bağlanır — soru tıklanabilir gelir.
+          setTimeout(function () { location.reload(); }, 900);
+          return;
+        }
+        // ok=false → büyük olasılıkla deneme daha önce kullanıldı
+        var reason = (d && d.reason) || '';
+        if (msg) {
+          msg.className = 'gpw-msg err';
+          msg.textContent = /used|kullan/i.test(reason)
+            ? 'Ücretsiz deneme hakkını daha önce kullandın. Sınırsız devam için Premium\'a geçebilirsin.'
+            : 'Deneme şu an başlatılamadı. Premium ile hemen sınırsız devam edebilirsin.';
+        }
+        if (btn) { btn.disabled = false; btn.style.display = 'none'; }
+      } catch (e) {
+        // FAIL-OPEN: kullanıcıyı engelleme — premium sayfasına yönlendir
+        location.href = 'premium';
+      }
     }
     function setAnswerStatus(slug, status) {
       var wasNew = !sessionStorage.getItem('gri.answer.' + slug);
       sessionStorage.setItem('gri.answer.' + slug, status);
-      if (wasNew && !griIsPremiumNow()) griDailyInc();
+      if (wasNew && !griIsPremiumNow()) { griDailyInc(); griQuotaConsume(); }
       // Login kullanıcı için DB'ye de kaydet (fire-and-forget)
       if (GRI_USER_ID) {
         supabase.from('user_answers').upsert({
@@ -2486,6 +2628,8 @@
       }
       // Premium durumunu netleştir (limit yanlış tetiklenmesin)
       try { if (window.GriPremium && typeof window.GriPremium.refresh === 'function') await window.GriPremium.refresh(); } catch (e) {}
+      // Sunucu kotasını tohumla (birincil kaynak; hata olursa yerel yedeğe düşer — FAIL-OPEN)
+      if (!GRI_DENEME_MODE) { try { await griQuotaStatus(); } catch (e) {} }
 
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('q');
@@ -3136,6 +3280,7 @@
     }
 
     function renderQuestion(q) {
+      window.__griLastQuestion = q; // trial sonrası kilidi kaldırıp aynı soruyu yeniden çizmek için
       // Freemium gate: görülmemiş yeni soru + günlük ücretsiz hak dolduysa → paywall
       try {
         if (q && q.slug && !GRI_DENEME_MODE && !getAnswerStatus(q.slug) && griLimitReached()) {

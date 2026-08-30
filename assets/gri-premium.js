@@ -11,6 +11,8 @@
   function setState(active, until) {
     window.GRI_PREMIUM = { active: !!active, until: until || null };
     try { document.documentElement.setAttribute('data-premium', active ? '1' : '0'); } catch (e) {}
+    // Senkron cache — nav.js (ve gri-premium.js yüklemeyen ~882 sayfa) bunu okur (FAIL-OPEN sözleşmesi)
+    try { localStorage.setItem('gri-prem-active', active ? '1' : '0'); } catch (e) {}
     try { window.dispatchEvent(new CustomEvent('gri-premium', { detail: window.GRI_PREMIUM })); } catch (e) {}
   }
 
@@ -73,11 +75,21 @@
       if (!c) { setState(false, null); return window.GRI_PREMIUM; }
       var s = await c.auth.getSession();
       var user = s && s.data && s.data.session && s.data.session.user;
-      if (!user) { setState(false, null); return window.GRI_PREMIUM; }
+      if (!user) { setState(false, null); try { localStorage.removeItem('gri-streak'); } catch (e) {} window.GRI_STREAK = 0; return window.GRI_PREMIUM; }
       var r = await c.from('profiles').select('premium_until').eq('id', user.id).maybeSingle();
       var until = (r && r.data) ? r.data.premium_until : null;
       var active = !!(until && (new Date(until).getTime() > Date.now()));
       setState(active, until);
+      // Günlük seri (streak) — bilindiğinde cache'le; nav.js senkron okuyup anında gösterir.
+      try {
+        c.rpc('get_user_stats').then(function (rs) {
+          if (rs && !rs.error && rs.data) {
+            var n = Number(rs.data.current_streak || 0);
+            window.GRI_STREAK = n;
+            try { localStorage.setItem('gri-streak', String(n)); } catch (e) {}
+          }
+        }).catch(function () {});
+      } catch (e) {}
       return window.GRI_PREMIUM;
     } catch (e) {
       setState(false, null);
@@ -85,8 +97,14 @@
     }
   }
 
-  // varsayılan: premium değil (anonim ziyaretçi)
-  setState(false, null);
+  // Açılış durumu: senkron cache varsa ondan erken set (data-premium erken → reklamsız erken paint,
+  // nav CTA erken "Pro"); refresh() gerçek DB durumuyla düzeltir. Cache yoksa: premium değil (anonim).
+  (function () {
+    var pc = null;
+    try { pc = localStorage.getItem('gri-prem-active'); } catch (e) {}
+    if (pc === '1') setState(true, null);
+    else setState(false, null);
+  })();
 
   var LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/></svg>';
   var OPEN_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5 1 1 0 0 0 2 0 3 3 0 0 1 6 0v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5z"/></svg>';

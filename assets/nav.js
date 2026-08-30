@@ -50,6 +50,34 @@
     ".gri-ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--gri-line);background:var(--gri-surface);color:var(--gri-ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:12.5px}",
     ".gri-ico:hover{color:var(--gri-ink);border-color:var(--gri-ink-faint)}",
     ".gri-avatar{width:34px;height:34px;border-radius:50%;background:var(--gri-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:14px}",".gri-user-mount{display:flex;align-items:center}",".gri-giris{display:inline-flex;align-items:center;background:var(--gri-accent);color:#fff;border-radius:20px;padding:8px 16px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;text-decoration:none}.gri-giris:hover{background:var(--gri-accent-deep)}",".gri-rdd{position:relative}",".gri-rdd>button{display:flex;align-items:center;gap:6px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:20px;padding:7px 13px;cursor:pointer;font-family:Inter,sans-serif;font-size:13px;color:var(--gri-ink-soft)}",".gri-rdd>button:hover{color:var(--gri-ink);border-color:var(--gri-ink-faint)}",".gri-user-dd>button{background:none;border:none;padding:0}",".gri-rdd>button .cv{width:9px;height:9px;opacity:.6;transition:.2s}.gri-rdd.open>button .cv{transform:rotate(180deg)}",".gri-rdd-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:186px;background:var(--gri-surface);border:1px solid var(--gri-line);border-radius:14px;box-shadow:var(--gri-shadow);padding:8px;display:none;z-index:80}",".gri-rdd.open .gri-rdd-menu{display:block}",".gri-rdd-menu a{display:block;padding:9px 11px;border-radius:9px;color:var(--gri-ink);font-weight:500;text-decoration:none;font-family:Inter,sans-serif;font-size:13.5px}",".gri-rdd-menu a:hover{background:var(--gri-surface-2);color:var(--gri-ink)}",".gri-thgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;min-width:276px}",".gri-th-opt{display:flex;flex-direction:column;align-items:center;gap:6px;width:auto;padding:9px 3px;border:none;background:none;cursor:pointer;border-radius:10px;font-family:Inter,sans-serif;font-size:10px;line-height:1.15;color:var(--gri-ink-soft);text-align:center;word-break:normal;overflow-wrap:break-word;hyphens:none}",".gri-th-opt:hover{background:var(--gri-surface-2);color:var(--gri-ink)}.gri-th-opt.on{color:var(--gri-ink);font-weight:600}",".gri-th-opt .dot{width:24px;height:24px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.28);transition:box-shadow .15s,transform .12s}",".gri-th-opt:hover .dot{transform:scale(1.1)}",".gri-th-opt.on .dot{box-shadow:0 0 0 2px var(--gri-surface),0 0 0 3.5px var(--gri-ink)}",".gri-th-lbl{font-family:Inter,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gri-ink-faint);padding:6px 11px 4px}",
+    /* ── Premium CTA + günlük seri (streak) — nav.js enjekte ── */
+    ".gri-prem{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;font-family:Inter,sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.01em;white-space:nowrap;text-decoration:none;border:none;cursor:pointer;color:#3A2A05;background:linear-gradient(135deg,#F6D673,#D8A93C 55%,#B78A2E);box-shadow:0 2px 9px rgba(183,138,46,.38),inset 0 1px 0 rgba(255,255,255,.45);transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}",
+    ".gri-prem:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(183,138,46,.5),inset 0 1px 0 rgba(255,255,255,.5);filter:brightness(1.03);color:#3A2A05}",
+    ".gri-prem svg{width:15px;height:15px;flex:none}",
+    ".gri-prem.is-pro{color:var(--gri-gold);background:transparent;border:1.5px solid var(--gri-gold);box-shadow:none}",
+    ".gri-prem.is-pro:hover{transform:none;filter:none;box-shadow:none;background:var(--gri-accent-soft);color:var(--gri-gold)}",
+    ".gri-streak{display:none;align-items:center;gap:5px;height:34px;padding:0 11px;border-radius:999px;font-family:Inter,sans-serif;font-weight:800;font-size:12.5px;white-space:nowrap;color:#B5460B;background:linear-gradient(135deg,#FCE6C2,#F7CE92);border:1px solid rgba(181,70,11,.18)}",
+    ".gri-streak.show{display:inline-flex}",
+    ".gri-streak svg{width:14px;height:14px;flex:none;color:#E8701A}",
+    "[data-theme='dark'] .gri-streak{background:linear-gradient(135deg,#3A2A12,#241B10);color:#EDB65E;border-color:#4A3820}",
+    "[data-theme='dark'] .gri-streak svg{color:#EDA24A}",
+    ".gri-mprem{display:flex;align-items:center;gap:12px;padding:15px 16px;margin:2px 0 16px;border-radius:16px;text-decoration:none;color:#3A2A05;background:linear-gradient(135deg,#F6D673,#C79A34);box-shadow:0 6px 20px rgba(183,138,46,.3)}",
+    ".gri-mprem:active{filter:brightness(.98)}",
+    ".gri-mprem .ic{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.38);display:flex;align-items:center;justify-content:center;flex:none}",
+    ".gri-mprem .ic svg{width:23px;height:23px}",
+    ".gri-mprem .tx{display:flex;flex-direction:column;gap:2px;min-width:0}",
+    ".gri-mprem .t{font-family:Inter,sans-serif;font-weight:800;font-size:15.5px;line-height:1.15}",
+    ".gri-mprem .s{font-family:Inter,sans-serif;font-weight:600;font-size:12px;line-height:1.25;opacity:.82}",
+    ".gri-mprem .go{margin-left:auto;font-size:26px;line-height:1;flex:none;opacity:.6}",
+    ".gri-mprem.is-pro{background:var(--gri-surface);border:1.5px solid var(--gri-gold);color:var(--gri-ink);box-shadow:none}",
+    ".gri-mprem.is-pro .ic{background:var(--gri-accent-soft);color:var(--gri-gold)}",
+    ".gri-mstreak{display:none;align-items:center;gap:6px;width:100%;justify-content:center;padding:11px 14px;margin:0 0 16px;border-radius:13px;font-family:Inter,sans-serif;font-weight:700;font-size:14px;color:#B5460B;background:linear-gradient(135deg,#FCE6C2,#F7CE92);border:1px solid rgba(181,70,11,.18)}",
+    ".gri-mstreak.show{display:flex}",
+    ".gri-mstreak svg{width:17px;height:17px;flex:none;color:#E8701A}",
+    ".gri-mstreak b{font-weight:800}",
+    "[data-theme='dark'] .gri-mstreak{background:linear-gradient(135deg,#3A2A12,#241B10);color:#EDB65E;border-color:#4A3820}",
+    "[data-theme='dark'] .gri-mstreak svg{color:#EDA24A}",
+    "@media(max-width:1200px){.gri-streak-bar{display:none!important}.gri-prem{width:40px;padding:0;gap:0;justify-content:center}.gri-prem .pl{display:none}}",
     ".gri-burger{display:none;width:42px;height:42px;border-radius:10px;border:1px solid var(--gri-line);background:var(--gri-surface);cursor:pointer;align-items:center;justify-content:center}",
     ".gri-burger svg{width:18px;height:18px;color:var(--gri-ink)}",
     ".gri-mmenu{display:none}",
@@ -112,6 +140,8 @@
     "</svg>";
 
   var CVDOWN = '<svg class="cv" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CROWN = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l3.6 2.8L12 4l5.4 6.8L21 8l-1.8 10.4H4.8L3 8zm2.4 12.4h13.2v1.4H5.4v-1.4z"/></svg>';
+  var FLAME = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2.5s.9 3.2-.9 5.4c-1.7 2-3.6 2.6-3.6 5.7A5.5 5.5 0 0 0 18 15c.5-3-1.2-4.6-1.2-4.6.1 1.4-.7 2.2-1.5 2.2-1 0-1.5-.8-1.4-2.2.2-3.7-.9-7.9-.9-7.9zM9.8 14.6c0 1.2.9 2 1.9 2-1 .2-1.9 1-1.9 2.2A2.2 2.2 0 0 0 12 21a2.2 2.2 0 0 0 2.2-2.2c0-1.2-.9-2-2-2.2 1.1 0 2-.8 2-2 0-1.5-2.2-2.6-2.2-2.6s-2.2 1.1-2.2 2.6z" opacity=".55"/><path d="M13 2.5s.9 3.2-.9 5.4c-1.7 2-3.6 2.6-3.6 5.7A5.5 5.5 0 0 0 18 15c.5-3-1.2-4.6-1.2-4.6.1 1.4-.7 2.2-1.5 2.2-1 0-1.5-.8-1.4-2.2.2-3.7-.9-7.9-.9-7.9z"/></svg>';
 
   var THEMES = [
     { t: "krem", name: "Zümrüt", ic: "💎", dot: "#2E6E6A" },
@@ -251,6 +281,16 @@
 
     var tOpts = themeOptsHtml();
 
+    // Premium CTA (masaüstü bar + mobil drawer) + günlük seri pill — durum JS ile güncellenir
+    var premHref = href("premium");
+    var premBtn = '<a href="' + premHref + '" class="gri-prem" id="gri-prem" title="Gri Pro\'ya yükselt" aria-label="Gri Pro\'ya yükselt">' + CROWN + '<span class="pl">Premium</span></a>';
+    var streakBar = '<span class="gri-streak gri-streak-bar" id="gri-streak" data-streak-wrap title="Günlük çalışma serin" aria-live="polite">' + FLAME + '<span class="gri-streak-n">0</span></span>';
+    var mprem = '<a href="' + premHref + '" class="gri-mprem" id="gri-mprem">'
+      + '<span class="ic">' + CROWN + '</span>'
+      + '<span class="tx"><span class="t">Gri Pro</span><span class="s">Sınırsız soru · reklamsız · AI mentor</span></span>'
+      + '<span class="go" aria-hidden="true">&rsaquo;</span></a>';
+    var mstreak = '<span class="gri-mstreak" id="gri-mstreak" data-streak-wrap title="Günlük çalışma serin">' + FLAME + '<b class="gri-streak-n">0</b> günlük seri</span>';
+
     var xl = xlateData();
     var xlDD = xl ? ('<div class="gri-rdd gri-xlate-dd"><button type="button" data-dd>Dil' + CVDOWN + '</button><div class="gri-rdd-menu">'
       + '<div class="gri-th-lbl" style="padding-top:2px">Dil / Language</div>'
@@ -273,6 +313,7 @@
       '<a href="/" class="brand">Gri<span class="it">English</span></a>' +
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
+      streakBar + premBtn +
       '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
       "<button class='gri-ico' id='gri-dark' title='Gece modu'><svg viewBox='0 0 20 20' width='16' height='16' fill='currentColor'><path d='M13 2a8 8 0 105 14A7 7 0 0113 2z'/></svg></button>" +
@@ -282,6 +323,7 @@
       "</div></div>" +
       '<div class="gri-mmenu" id="gri-mmenu"><div class="in">' +
       '<div class="gri-mclose"><a href="/" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
+      mprem + mstreak +
       mquick +
       '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
       '<a class="gri-mcard' + (here === "panelim" ? " here" : "") + '" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
@@ -359,6 +401,66 @@
       }
       place();
       try { mq.addEventListener("change", place); } catch (e) { try { mq.addListener(place); } catch (e2) {} }
+    })();
+
+    // ── Premium durumu: GRI_PREMIUM'a göre CTA'yı "Yükselt" ↔ "Pro" arasında değiştir ──
+    function setPrem(active) {
+      var b = document.getElementById("gri-prem");
+      if (b) {
+        b.classList.toggle("is-pro", !!active);
+        var pl = b.querySelector(".pl"); if (pl) pl.textContent = active ? "Pro" : "Premium";
+        b.title = active ? "Gri Pro üyeliğin aktif" : "Gri Pro'ya yükselt";
+        b.setAttribute("aria-label", b.title);
+      }
+      var m = document.getElementById("gri-mprem");
+      if (m) {
+        m.classList.toggle("is-pro", !!active);
+        var t = m.querySelector(".t"), s = m.querySelector(".s");
+        if (t) t.textContent = active ? "Gri Pro aktif" : "Gri Pro";
+        if (s) s.textContent = active ? "Üyeliğini yönet" : "Sınırsız soru · reklamsız · AI mentor";
+      }
+    }
+    // Durum: önce canlı GRI_PREMIUM (gri-premium.js yüklü ~37 sayfa), yoksa senkron localStorage cache
+    // ('gri-prem-active'='1' → anında Pro). Cache yok/‘0’ ise güvenli varsayılan: "Premium" (yükselt). FAIL-OPEN.
+    try {
+      var _premActive = false;
+      if (window.GRI_PREMIUM) _premActive = !!window.GRI_PREMIUM.active;
+      else { var _pc = null; try { _pc = localStorage.getItem("gri-prem-active"); } catch (e) {} if (_pc === "1") _premActive = true; }
+      setPrem(_premActive);
+    } catch (e) {}
+    // Canlı olay geldiğinde (gri-premium.js refresh sonrası) durumu güncelle
+    window.addEventListener("gri-premium", function (ev) { try { setPrem(!!(ev.detail && ev.detail.active)); } catch (e) {} });
+
+    // ── Günlük seri (streak) pill'i: gerçek veri varsa göster, yoksa sessizce atla (uydurma yok) ──
+    (function () {
+      var tries = 24; // ~3.6s: gri-premium.js paylaşılan client'ini bekle
+      function apply(n) {
+        if (!(n > 0)) return;
+        var nums = document.querySelectorAll(".gri-streak-n");
+        for (var i = 0; i < nums.length; i++) nums[i].textContent = n;
+        var wraps = document.querySelectorAll("[data-streak-wrap]");
+        for (var j = 0; j < wraps.length; j++) wraps[j].classList.add("show");
+      }
+      // 1) Senkron cache — 'gri-streak' > 0 ise TÜM sayfalarda anında göster (FAIL-OPEN: yoksa gizli).
+      try { var _cs = parseInt(localStorage.getItem("gri-streak") || "", 10); if (_cs > 0) apply(_cs); } catch (e) {}
+      // 2) Canlı fetch — paylaşılan client varsa gerçek değerle güncelle + cache'le (uydurma yok).
+      (function loop() {
+        var c = window.__griPremiumClient; // salt paylaşılan client; nav.js kendi client'ini kurmaz
+        if (c && c.rpc) {
+          try {
+            c.rpc("get_user_stats").then(function (res) {
+              if (res && !res.error && res.data) {
+                var n = Number(res.data.current_streak || 0);
+                apply(n);
+                try { localStorage.setItem("gri-streak", String(n)); } catch (e) {}
+              }
+            }).catch(function () {});
+          } catch (e) {}
+          return;
+        }
+        if (--tries <= 0) return;
+        setTimeout(loop, 150);
+      })();
     })();
   }
 

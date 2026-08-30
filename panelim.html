@@ -2601,8 +2601,8 @@
   <!-- PWA INSTALL -->
   <link rel="stylesheet" href="/assets/pwa-install.css">
   <script src="/assets/pwa-install.js" defer></script>
-  <script src="assets/curriculum.js?v=29"></script>
-  <script src="assets/nav.js?v=31"></script>
+  <script src="assets/curriculum.js?v=30"></script>
+  <script src="assets/nav.js?v=32"></script>
   <script src="assets/gri-premium.js?v=8" defer></script>
   <script src="assets/track.js?v=4" defer></script>
   <script src="assets/grimeet-schedule.js?v=54" defer></script>
@@ -2761,6 +2761,47 @@
       .ah-goal.done .ah-goal-fill{background:var(--gold,#C89A3C)}
       .ah-goal-msg{margin-top:.45rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.8rem;line-height:1.4;color:var(--text-soft,#6b6862)}
       .ah-goal.done .ah-goal-msg{color:var(--gold,#C89A3C);font-weight:600}
+
+      /* Günlük hedef "kutlandı" şeridi */
+      .ah-cheer{display:none;align-items:center;gap:.55rem;margin:.7rem auto 0;max-width:360px;padding:.6rem .8rem;border-radius:12px;
+        background:linear-gradient(135deg,rgba(200,154,60,.14),rgba(44,88,86,.1));border:1px solid var(--gold,#C89A3C);text-align:left}
+      .ah-goal.done + .ah-cheer,.ah-cheer.show{display:flex}
+      .ah-cheer-ic{font-size:1.25rem;line-height:1;flex:0 0 auto}
+      .ah-cheer-tx{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;line-height:1.4;color:var(--text,#241c12)}
+      .ah-cheer-tx b{color:var(--gold,#B78A2E)}
+
+      /* Seri Koruma (premium perk çerçevesi) */
+      .ah-freeze{position:relative;display:flex;align-items:center;gap:.7rem;margin:.9rem auto 0;max-width:360px;padding:.75rem .9rem;border-radius:12px;
+        background:var(--bg,#F4EFE3);border:1px dashed var(--line,#d9d2c4);text-align:left}
+      [data-theme="dark"] .ah-freeze{background:rgba(255,255,255,.03)}
+      .ah-freeze-ic{width:26px;height:26px;flex:0 0 auto;color:#4f97c9}
+      .ah-freeze-ic svg{width:100%;height:100%;display:block}
+      .ah-freeze-tx{flex:1;min-width:0;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .ah-freeze-tx b{display:block;font-size:.82rem;color:var(--text,#241c12);margin-bottom:.12rem}
+      .ah-freeze-tx small{display:block;font-size:.76rem;line-height:1.45;color:var(--text-soft,#6b6862)}
+      .ah-freeze-tx a{color:var(--teal,#2C5856);font-weight:600;text-decoration:none;border-bottom:1px solid transparent}
+      .ah-freeze-tx a:hover{border-color:var(--teal,#2C5856)}
+      .ah-freeze-soon{display:inline-block;margin-left:.4rem;padding:.08em .5em;border-radius:100px;background:var(--gold,#C89A3C);color:#fff;
+        font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;vertical-align:.08em}
+      .ah-freeze .sf-pro{display:none}
+      html[data-premium="1"] .ah-freeze .sf-free{display:none}
+      html[data-premium="1"] .ah-freeze .sf-pro{display:block}
+      html[data-premium="1"] .ah-freeze{border-style:solid;border-color:var(--gold,#C89A3C);background:linear-gradient(135deg,rgba(79,151,201,.08),rgba(44,88,86,.06))}
+
+      /* Günlük ücretsiz limit → Premium köprüsü */
+      .ah-limit{display:none;align-items:center;gap:.9rem;margin:1rem 0 0;padding:1rem 1.15rem;border-radius:14px;
+        background:linear-gradient(135deg,var(--gri-accent,#2C5856),var(--teal-deep,#1E4E4B));color:#fff;box-shadow:0 8px 22px rgba(44,88,86,.22);text-align:left}
+      .ah-limit.show{display:flex;flex-wrap:wrap}
+      .ah-limit-ic{font-size:1.6rem;line-height:1;flex:0 0 auto}
+      .ah-limit-tx{flex:1;min-width:180px;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .ah-limit-tx b{display:block;font-family:var(--font-display,Georgia),serif;font-size:1.05rem;font-weight:700;margin-bottom:.15rem}
+      .ah-limit-tx small{display:block;font-size:.82rem;line-height:1.45;opacity:.92}
+      .ah-limit-cta{display:flex;gap:.5rem;flex-wrap:wrap;flex:0 0 auto}
+      .ah-limit-cta a,.ah-limit-cta button{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;font-weight:700;white-space:nowrap;cursor:pointer;
+        border-radius:100px;padding:.55rem 1.1rem;text-decoration:none;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;transition:all .15s ease}
+      .ah-limit-cta a.primary{background:#fff;color:var(--teal,#2C5856);border-color:#fff}
+      .ah-limit-cta a:hover,.ah-limit-cta button:hover{background:rgba(255,255,255,.16)}
+      .ah-limit-cta a.primary:hover{background:rgba(255,255,255,.9)}
     </style>
     <div id="user-stats-area" style="padding: 0 0 1.5rem; display: none;">
 
@@ -2792,12 +2833,35 @@
           <div class="ah-goal-track"><div class="ah-goal-fill" id="ah-goal-fill"></div></div>
           <div class="ah-goal-msg" id="ah-goal-msg"></div>
         </div>
+        <div class="ah-cheer" id="ah-goal-cheer">
+          <span class="ah-cheer-ic" aria-hidden="true">🎉</span>
+          <span class="ah-cheer-tx" id="ah-goal-cheer-tx"><b>Günlük hedef tamam!</b> Serini bir gün daha uzattın.</span>
+        </div>
         <div class="ah-calendar">
           <div class="cal-dots" id="cal-dots"></div>
           <div class="cal-label">Son 14 gün</div>
         </div>
         <div class="ah-quote" id="us-days-quote">Defter açıldı. Asıl iş tekrarda.</div>
         <div class="ah-meta">Toplam <strong id="us-total-days">—</strong> gün aktivite</div>
+        <div class="ah-freeze">
+          <span class="ah-freeze-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 5.6l14.2 12.8M19.1 5.6L4.9 18.4"/><path d="M12 6l2 2-2 2-2-2 2-2zM6.5 8.8l1.4 2.7-2.9.5.6-3.1zM17.5 8.8l-1.4 2.7 2.9.5-.6-3.1zM6.5 15.2l1.4-2.7-2.9-.5.6 3.1zM17.5 15.2l-1.4-2.7 2.9-.5-.6 3.1z"/></svg></span>
+          <span class="ah-freeze-tx">
+            <b>Seri Koruma <span class="ah-freeze-soon">Çok Yakında</span></b>
+            <small class="sf-free">Bir günü kaçırsan bile serin kırılmasın. <a href="premium">Premium ile serini koru →</a></small>
+            <small class="sf-pro">Premium üyesin — Seri Koruma açıldığında bir günlük telafi hakkı otomatik senin olacak.</small>
+          </span>
+        </div>
+      </div>
+      <div class="ah-limit" id="ah-limit-bridge" role="status">
+        <span class="ah-limit-ic" aria-hidden="true">✦</span>
+        <span class="ah-limit-tx">
+          <b id="ah-limit-title">Bugünkü ücretsiz hakkın doldu</b>
+          <small id="ah-limit-sub">Premium ile sınırsız soru, tüm denemeler, reklamsız ve sınırsız AI mentor.</small>
+        </span>
+        <span class="ah-limit-cta">
+          <a class="primary" href="premium">Premium’a geç</a>
+          <button type="button" id="ah-limit-trial">7 gün ücretsiz dene</button>
+        </span>
       </div>
 
       <!-- Aktivite haritası + Rozetler -->
@@ -3058,6 +3122,308 @@
         </div></div>
       </div>
     </div>
+
+    <!-- ============ TAHMİNİ SKOR YOLCULUĞU (premium içgörü) ============ -->
+    <style>
+      .sj-card{background:var(--bg-card,#fbf6ec);border:1px solid var(--line,#e5ddcd);border-radius:18px;padding:1.4rem 1.5rem;margin:0 0 1.6rem;box-shadow:0 6px 22px rgba(60,45,25,.05);overflow:hidden}
+      [data-theme="dark"] .sj-card{background:linear-gradient(150deg,#1d2a2a,#223a3f);border-color:rgba(255,255,255,.1);box-shadow:0 6px 22px rgba(0,0,0,.4)}
+      .sj-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
+      .sj-eyebrow{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold,#C89A3C);font-weight:800}
+      .sj-eyebrow::before{content:'';width:1em;height:1em;background:var(--gold,#C89A3C);-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2l2.9 6.3L22 9.2l-5 4.6 1.3 6.9L12 17.5 5.7 20.7 7 13.8 2 9.2l7.1-.9L12 2z'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2l2.9 6.3L22 9.2l-5 4.6 1.3 6.9L12 17.5 5.7 20.7 7 13.8 2 9.2l7.1-.9L12 2z'/></svg>") center/contain no-repeat}
+      .sj-title{font-family:var(--font-display,Georgia),serif;font-size:1.5rem;font-weight:600;color:var(--text,#1a2230);margin:.25rem 0 0;letter-spacing:-.01em}
+      .sj-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
+      .sj-tab{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.78rem;font-weight:600;color:var(--text-soft,#6b6862);background:var(--bg,#F4EFE3);border:1px solid var(--line,#d9d2c4);border-radius:999px;padding:.35rem .85rem;cursor:pointer;transition:all .15s ease}
+      .sj-tab:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      .sj-tab.active{background:var(--teal,#2C5856);border-color:var(--teal,#2C5856);color:#fff}
+      .sj-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.1rem}
+      @media(max-width:520px){.sj-metrics{grid-template-columns:1fr;gap:.5rem}}
+      .sj-tile{background:var(--bg,#F4EFE3);border:1px solid var(--line,#e5ddcd);border-radius:12px;padding:.85rem .95rem}
+      [data-theme="dark"] .sj-tile{background:rgba(255,255,255,.03)}
+      .sj-tile-lbl{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted,#8a9099);font-weight:700;margin-bottom:.35rem}
+      .sj-tile-val{font-family:var(--font-display,Georgia),serif;font-size:1.7rem;line-height:1;color:var(--text,#1a2230);font-weight:600}
+      .sj-tile-val small{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.7rem;font-weight:600;color:var(--text-soft,#6b6862);margin-left:.25rem}
+      .sj-tile-val.up{color:var(--teal,#2C5856)} .sj-tile-val.down{color:#b5643c} .sj-tile-val.gold{color:var(--gold,#B78A2E)}
+      .sj-tile-sub{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.72rem;line-height:1.35;color:var(--text-soft,#6b6862);margin-top:.3rem}
+      .sj-tile-sub a{color:var(--teal,#2C5856);font-weight:600;text-decoration:none;border-bottom:1px solid transparent}
+      .sj-tile-sub a:hover{border-color:var(--teal,#2C5856)}
+      .sj-chart-wrap{position:relative}
+      .sj-chart{width:100%;height:auto;display:block}
+      .sj-axis{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:8px;fill:var(--text-muted,#8a9099)}
+      .sj-empty{text-align:center;padding:1.5rem 1rem;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .sj-empty h4{font-family:var(--font-display,Georgia),serif;font-size:1.15rem;color:var(--text,#1a2230);margin:0 0 .4rem}
+      .sj-empty p{font-size:.86rem;line-height:1.5;color:var(--text-soft,#6b6862);margin:0 auto 1rem;max-width:34ch}
+      .sj-empty a{display:inline-block;font-size:.82rem;font-weight:700;color:var(--teal,#2C5856);text-decoration:none;border:1px solid var(--teal,#2C5856);border-radius:100px;padding:.5rem 1.15rem;transition:all .15s ease}
+      .sj-empty a:hover{background:var(--teal,#2C5856);color:#fff}
+      .sj-loading{text-align:center;padding:1.6rem 1rem;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.85rem;color:var(--text-muted,#8a9099)}
+      /* Kilitli önizleme */
+      .sj-locked{position:relative}
+      .sj-blur{filter:blur(6px);opacity:.55;pointer-events:none;user-select:none}
+      .sj-lock-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.5rem;padding:1rem;
+        background:radial-gradient(ellipse at 50% 45%,rgba(251,246,236,.72),rgba(251,246,236,.9));border-radius:12px}
+      [data-theme="dark"] .sj-lock-ov{background:radial-gradient(ellipse at 50% 45%,rgba(29,42,42,.72),rgba(29,42,42,.92))}
+      .sj-lock-ic{width:34px;height:34px;color:var(--gold,#C89A3C)}
+      .sj-lock-ic svg{width:100%;height:100%;display:block}
+      .sj-lock-ov b{font-family:var(--font-display,Georgia),serif;font-size:1.15rem;color:var(--text,#1a2230)}
+      .sj-lock-ov p{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;line-height:1.5;color:var(--text-soft,#6b6862);margin:0 auto;max-width:38ch}
+      .sj-lock-cta{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem}
+      .sj-lock-cta a,.sj-lock-cta button{font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;font-weight:700;white-space:nowrap;cursor:pointer;border-radius:100px;padding:.55rem 1.2rem;text-decoration:none;transition:all .15s ease}
+      .sj-lock-cta a.primary{background:linear-gradient(135deg,var(--gri-accent,#2C5856),var(--teal-deep,#1E4E4B));color:#fff;border:none}
+      .sj-lock-cta a.primary:hover{filter:brightness(1.08)}
+      .sj-lock-cta button{background:transparent;border:1px solid var(--line,#d9d2c4);color:var(--text-soft,#6b6862)}
+      .sj-lock-cta button:hover{border-color:var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      /* Gri toast */
+      .gri-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:9999;opacity:0;
+        background:var(--teal-deep,#1E4E4B);color:#fff;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.86rem;font-weight:600;
+        padding:.8rem 1.3rem;border-radius:100px;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:opacity .25s ease,transform .25s ease;pointer-events:none;max-width:90vw;text-align:center}
+      .gri-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    </style>
+
+    <div id="score-journey" class="sj-card" style="display:none">
+      <div class="sj-head">
+        <div class="sj-head-l">
+          <span class="sj-eyebrow">Premium İçgörü</span>
+          <h2 class="sj-title">Tahmini Skor Yolculuğu</h2>
+        </div>
+        <div class="sj-tabs" id="sj-tabs"></div>
+      </div>
+      <div class="sj-stage" id="sj-stage"><div class="sj-loading">Skor yolculuğun hazırlanıyor…</div></div>
+    </div>
+
+    <!-- Paylaşılan Premium deneme (trial) yardımcısı — panelim'e özel -->
+    <script>
+      (function () {
+        var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+        var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+        function toast(msg) {
+          try {
+            var t = document.createElement('div'); t.className = 'gri-toast'; t.textContent = msg;
+            document.body.appendChild(t);
+            requestAnimationFrame(function () { t.classList.add('show'); });
+            setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove(); }, 300); }, 3200);
+          } catch (e) {}
+        }
+        async function start(btn) {
+          var label = btn ? btn.textContent : '';
+          try {
+            if (btn) { btn.disabled = true; btn.textContent = 'Başlatılıyor…'; }
+            if (!window.supabase || !window.supabase.createClient) { location.href = 'premium'; return; }
+            var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+            var s = await sb.auth.getSession();
+            if (!s || !s.data || !s.data.session) { location.href = 'giris?next=panelim'; return; }
+            var r = await sb.rpc('gri_start_trial');
+            if (r && !r.error && r.data && r.data.ok) {
+              try { if (window.GriPremium && GriPremium.refresh) await GriPremium.refresh(); } catch (e) {}
+              try { if (window.GriFX) GriFX.confetti({ y: 0.3 }); } catch (e) {}
+              toast('7 günlük Premium denemen başladı 🎉');
+            } else {
+              var reason = r && r.data && r.data.reason;
+              if (reason === 'already_used' || reason === 'trial_used') { toast('Deneme hakkını daha önce kullanmışsın — Premium sayfasına yönlendiriliyorsun.'); setTimeout(function () { location.href = 'premium'; }, 1400); }
+              else { location.href = 'premium'; } // RPC hazır değil → premium sayfası (FAIL-OPEN)
+            }
+          } catch (e) { location.href = 'premium'; }
+          finally { if (btn) { btn.disabled = false; if (label) btn.textContent = label; } }
+        }
+        window.GriTrial = { start: start, toast: toast };
+      })();
+    </script>
+
+    <!-- Tahmini Skor Yolculuğu — render motoru -->
+    <script>
+      (function () {
+        var card = document.getElementById('score-journey');
+        if (!card) return;
+        var stage = document.getElementById('sj-stage'), tabsEl = document.getElementById('sj-tabs');
+        var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+        var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+        var data = null, goalMap = {}, activeKey = null, ready = false;
+
+        function isPrem() { try { if (document.documentElement.getAttribute('data-premium') === '1') return true; } catch (e) {} return !!(window.GriPremium && window.GriPremium.isActive()); }
+        function esc(s) { var e = document.createElement('div'); e.textContent = (s == null ? '' : String(s)); return e.innerHTML; }
+        function num(v) { var n = Number(v); return isFinite(n) ? n : null; }
+        function tdate(s) { try { return new Date(s).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
+        function goalNumFor(key) {
+          var raw = goalMap[key]; if (raw == null) return null;
+          var n = parseFloat(String(raw).replace(/[^0-9.]/g, '')); return isFinite(n) ? n : null;
+        }
+
+        // Sınav tipleri → skor serisi çıkarımı (my_exam_results yapısına göre)
+        var EXAMS = {
+          sat:       { label: 'SAT', unit: 'puan', goalKey: 'sat',
+                       rows: function (d) { return (d.sat || []).map(function (a) { return { date: a.date, val: num(a.total) }; }); } },
+          toefl:     { label: 'TOEFL', unit: 'puan', goalKey: 'toefl',
+                       rows: function (d) { return (d.toefl || []).map(function (a) { return { date: a.date, val: num(a.total) }; }); } },
+          hazirlik:  { label: 'Üniv. Hazırlık', unit: '/100', goalKey: null,
+                       rows: function (d) { return (d.hazirlik || []).map(function (a) { return { date: a.date, val: num(a.total) }; }); } },
+          ge_exam:   { label: 'Genel İngilizce', unit: '%', goalKey: null,
+                       rows: function (d) { return (d.ge_exam || []).map(function (a) { return { date: a.date, val: num(a.pct) }; }); } },
+          placement: { label: 'Seviye Tespit', unit: '%', goalKey: null,
+                       rows: function (d) { return (d.placement || []).map(function (a) { return { date: a.date, val: num(a.pct) }; }); } }
+        };
+        var ORDER = ['sat', 'toefl', 'ge_exam', 'hazirlik', 'placement'];
+
+        function seriesFor(key) {
+          if (!data || !EXAMS[key]) return [];
+          return EXAMS[key].rows(data)
+            .filter(function (p) { return p.val != null && p.date; })
+            .sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+        }
+        function availableKeys() { return ORDER.filter(function (k) { return seriesFor(k).length > 0; }); }
+
+        function fmtVal(v, unit) {
+          if (v == null) return '—';
+          if (unit === '%') return '%' + Math.round(v);
+          return Number.isInteger(v) ? String(v) : v.toFixed(1);
+        }
+
+        // ── SVG çizgi grafiği ──
+        function buildChart(series, goalNum, unit) {
+          var W = 340, H = 150, padL = 10, padR = 10, padT = 16, padB = 24;
+          var vals = series.map(function (p) { return p.val; });
+          var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+          if (goalNum != null) { lo = Math.min(lo, goalNum); hi = Math.max(hi, goalNum); }
+          if (lo === hi) { lo -= 1; hi += 1; }
+          var span = hi - lo, pad = span * 0.18; lo -= pad; hi += pad;
+          var n = series.length;
+          function X(i) { return n <= 1 ? W / 2 : padL + i * (W - padL - padR) / (n - 1); }
+          function Y(v) { return padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo)); }
+          var svg = '<svg class="sj-chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Skor zaman grafiği">';
+          svg += '<defs><linearGradient id="sjGrad" x1="0" y1="0" x2="0" y2="1">'
+               + '<stop offset="0%" stop-color="var(--teal,#2C5856)" stop-opacity="0.28"/>'
+               + '<stop offset="100%" stop-color="var(--teal,#2C5856)" stop-opacity="0"/></linearGradient></defs>';
+          // Hedef çizgisi
+          if (goalNum != null) {
+            var gy = Y(goalNum).toFixed(1);
+            svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="var(--gold,#C89A3C)" stroke-width="1.2" stroke-dasharray="4 4"/>';
+            svg += '<text x="' + (W - padR) + '" y="' + (Number(gy) - 4) + '" text-anchor="end" class="sj-axis" fill="var(--gold,#C89A3C)">Hedef ' + fmtVal(goalNum, unit) + '</text>';
+          }
+          if (n >= 2) {
+            var pts = series.map(function (p, i) { return X(i).toFixed(1) + ',' + Y(p.val).toFixed(1); });
+            var area = 'M' + X(0).toFixed(1) + ',' + (H - padB) + ' L' + pts.join(' L') + ' L' + X(n - 1).toFixed(1) + ',' + (H - padB) + ' Z';
+            svg += '<path d="' + area + '" fill="url(#sjGrad)"/>';
+            svg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--teal,#2C5856)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+          }
+          series.forEach(function (p, i) {
+            var last = (i === n - 1);
+            svg += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.val).toFixed(1) + '" r="' + (last ? 4.5 : 3) + '" fill="' + (last ? 'var(--gold,#C89A3C)' : 'var(--teal,#2C5856)') + '" stroke="var(--bg-card,#fff)" stroke-width="1.5"/>';
+            if (last) {
+              var lx = X(i), ly = Y(p.val);
+              var anchor = (n <= 1) ? 'middle' : 'end', tx = (n <= 1) ? lx : lx - 6;
+              svg += '<text x="' + tx.toFixed(1) + '" y="' + (ly - 8).toFixed(1) + '" text-anchor="' + anchor + '" class="sj-axis" fill="var(--gold,#B78A2E)" font-weight="700" font-size="10">' + fmtVal(p.val, unit) + '</text>';
+            }
+          });
+          // X ekseni tarihleri (ilk/son)
+          svg += '<text x="' + padL + '" y="' + (H - 6) + '" text-anchor="start" class="sj-axis">' + esc(tdate(series[0].date)) + '</text>';
+          if (n >= 2) svg += '<text x="' + (W - padR) + '" y="' + (H - 6) + '" text-anchor="end" class="sj-axis">' + esc(tdate(series[n - 1].date)) + '</text>';
+          svg += '</svg>';
+          return svg;
+        }
+
+        function weekDelta(series) {
+          if (series.length < 2) return null;
+          var last = series[series.length - 1];
+          var cutoff = new Date(last.date).getTime() - 7 * 864e5;
+          var base = null;
+          for (var i = series.length - 2; i >= 0; i--) { if (new Date(series[i].date).getTime() <= cutoff) { base = series[i]; break; } }
+          if (!base) base = series[0]; // tüm denemeler bu hafta içindeyse en baştakine göre
+          if (base === last) return null;
+          return { delta: last.val - base.val };
+        }
+
+        function panelHtml(key) {
+          var cfg = EXAMS[key], series = seriesFor(key), unit = cfg.unit;
+          var last = series[series.length - 1];
+          var goalNum = cfg.goalKey ? goalNumFor(cfg.goalKey) : null;
+          // Tile 1 — Şu an
+          var t1 = '<div class="sj-tile"><div class="sj-tile-lbl">Şu an</div>'
+                 + '<div class="sj-tile-val">' + fmtVal(last.val, unit) + '<small>' + esc(unit) + '</small></div>'
+                 + '<div class="sj-tile-sub">' + series.length + ' deneme · son: ' + esc(tdate(last.date)) + '</div></div>';
+          // Tile 2 — Hedefe kalan
+          var t2;
+          if (goalNum != null) {
+            var rem = goalNum - last.val;
+            if (rem > 0) t2 = '<div class="sj-tile"><div class="sj-tile-lbl">Hedefe kalan</div><div class="sj-tile-val gold">' + fmtVal(rem, unit) + '<small>' + esc(unit) + '</small></div><div class="sj-tile-sub">Hedef ' + fmtVal(goalNum, unit) + '</div></div>';
+            else t2 = '<div class="sj-tile"><div class="sj-tile-lbl">Hedef</div><div class="sj-tile-val up">Aştın 🎉</div><div class="sj-tile-sub">Hedef ' + fmtVal(goalNum, unit) + ' — geçtin</div></div>';
+          } else {
+            t2 = '<div class="sj-tile"><div class="sj-tile-lbl">Hedefe kalan</div><div class="sj-tile-val" style="font-size:1rem;padding-top:.35rem">Hedef belirle</div><div class="sj-tile-sub"><a href="#goals-roadmap-area">Hedefini seç →</a></div></div>';
+          }
+          // Tile 3 — Bu hafta
+          var wd = weekDelta(series), t3;
+          if (wd) {
+            var up = wd.delta > 0, flat = wd.delta === 0;
+            var cls = flat ? '' : (up ? 'up' : 'down'), sign = up ? '+' : (wd.delta < 0 ? '−' : '');
+            t3 = '<div class="sj-tile"><div class="sj-tile-lbl">Bu hafta</div><div class="sj-tile-val ' + cls + '">' + sign + fmtVal(Math.abs(wd.delta), unit) + '</div><div class="sj-tile-sub">' + (up ? 'yükseliyorsun' : (wd.delta < 0 ? 'toparlanma zamanı' : 'sabit')) + '</div></div>';
+          } else {
+            t3 = '<div class="sj-tile"><div class="sj-tile-lbl">Bu hafta</div><div class="sj-tile-val" style="font-size:1rem;padding-top:.35rem">İlk sonuç</div><div class="sj-tile-sub">İkinci denemede ivme görünür</div></div>';
+          }
+          return '<div class="sj-metrics">' + t1 + t2 + t3 + '</div>'
+               + '<div class="sj-chart-wrap">' + buildChart(series, goalNum, unit) + '</div>';
+        }
+
+        function lockOverlay(inner) {
+          var lock = '<div class="sj-lock-ov">'
+            + '<span class="sj-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/></svg></span>'
+            + '<b>Skor Yolculuğu · Premium</b>'
+            + '<p>Tahmini skorunun zaman içindeki değişimi, hedefe kalan mesafe ve haftalık ivmen — tek bakışta.</p>'
+            + '<div class="sj-lock-cta"><a class="primary" href="premium">Premium ile aç</a><button type="button" data-sj-trial>7 gün ücretsiz dene</button></div>'
+            + '</div>';
+          return '<div class="sj-locked"><div class="sj-blur" aria-hidden="true" inert>' + inner + '</div>' + lock + '</div>';
+        }
+
+        function bindTrial() {
+          var b = stage.querySelector('[data-sj-trial]');
+          if (b) b.addEventListener('click', function () { if (window.GriTrial) GriTrial.start(b); else location.href = 'premium'; });
+        }
+
+        function renderTabs(keys) {
+          if (!keys.length) { tabsEl.innerHTML = ''; return; }
+          tabsEl.innerHTML = keys.map(function (k) {
+            return '<button type="button" class="sj-tab' + (k === activeKey ? ' active' : '') + '" data-k="' + k + '">' + esc(EXAMS[k].label) + '</button>';
+          }).join('');
+          tabsEl.querySelectorAll('.sj-tab').forEach(function (b) {
+            b.addEventListener('click', function () { activeKey = b.dataset.k; render(); });
+          });
+        }
+
+        function render() {
+          if (!ready) return;
+          var keys = availableKeys();
+          if (activeKey == null || keys.indexOf(activeKey) < 0) activeKey = keys[0] || null;
+          renderTabs(keys);
+          if (!keys.length) {
+            // Veri yok
+            if (isPrem()) {
+              stage.innerHTML = '<div class="sj-empty"><h4>Skor yolculuğun burada başlıyor</h4>'
+                + '<p>Bir deneme veya seviye testi çöz — tahmini skorun, hedefe kalan mesafen ve haftalık ivmen otomatik olarak bu grafikte birikir.</p>'
+                + '<a href="seviye-belirleme">Seviye testine başla →</a></div>';
+            } else {
+              stage.innerHTML = lockOverlay('<div class="sj-empty"><h4>Skor yolculuğun burada başlıyor</h4>'
+                + '<p>Denemelerini çöz, tahmini skorunu zaman içinde izle.</p></div>');
+              bindTrial();
+            }
+            return;
+          }
+          var inner = panelHtml(activeKey);
+          if (isPrem()) { stage.innerHTML = inner; }
+          else { stage.innerHTML = lockOverlay(inner); bindTrial(); }
+        }
+
+        window.addEventListener('gri-premium', function () { if (ready) render(); });
+
+        (async function init() {
+          try {
+            if (!window.supabase || !window.supabase.createClient) return; // anonim/no-sdk → gizli kalsın
+            var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+            var sess = await sb.auth.getSession();
+            if (!sess || !sess.data || !sess.data.session) return; // giriş yoksa kartı gösterme
+            card.style.display = 'block';
+            var uid = sess.data.session.user.id;
+            try { var gr = await sb.from('user_goals').select('exam,target').eq('user_id', uid); if (gr && gr.data) gr.data.forEach(function (r) { if (r.target) goalMap[r.exam] = r.target; }); } catch (e) {}
+            try { var rr = await sb.rpc('my_exam_results'); if (rr && !rr.error && rr.data) data = rr.data; } catch (e) { /* fail-open */ }
+            ready = true; render();
+          } catch (e) { /* fail-open: kart yüklenme durumunda kalır ama sayfayı bozmaz */ }
+        })();
+      })();
+    </script>
 
     <div id="examResultsWrap" style="display:none">
       <div class="zone-head">
@@ -4242,7 +4608,9 @@
           var cEl = document.getElementById('ah-goal-count'), tEl = document.getElementById('ah-goal-target'),
               fEl = document.getElementById('ah-goal-fill'), mEl = document.getElementById('ah-goal-msg'),
               editBtn = document.getElementById('ah-goal-edit'), sel = document.getElementById('ah-goal-select');
+          var cheerEl = document.getElementById('ah-goal-cheer'), cheerTx = document.getElementById('ah-goal-cheer-tx');
           function getGoal() { var g = parseInt(localStorage.getItem('gr_daily_goal'), 10); return (!g || g < 1) ? 10 : g; }
+          function isPremium() { return !!(window.GriPremium && window.GriPremium.isActive()); }
           function paint() {
             var goal = getGoal();
             var pct = Math.max(0, Math.min(100, Math.round(todayCount / goal * 100)));
@@ -4257,6 +4625,15 @@
                 if (!localStorage.getItem(ck)) { localStorage.setItem(ck, '1'); setTimeout(function () { GriFX.confetti({ y: 0.35 }); }, 350); }
               } catch (e) {}
             }
+            // "Kutlandı" şeridi
+            if (cheerEl) {
+              cheerEl.classList.toggle('show', met);
+              if (met && cheerTx) {
+                cheerTx.innerHTML = isPremium()
+                  ? '<b>Günlük hedef tamam!</b> Serin güvende — sınırsız Premium ile bugün istediğin kadar devam et.'
+                  : '<b>Günlük hedef tamam!</b> Serini bir gün daha uzattın — yarın da buradasın.';
+              }
+            }
             if (mEl) {
               if (met) mEl.textContent = 'Bugünkü hedefin tamam — serin güvende.';
               else if (todayCount > 0) mEl.textContent = 'Az kaldı — bugün ' + (goal - todayCount) + ' soru daha çöz.';
@@ -4265,6 +4642,41 @@
             if (sel) sel.value = String(goal);
           }
           paint();
+
+          // ── Günlük ücretsiz limit → Premium köprüsü (FAIL-OPEN) ──
+          (function () {
+            var bridge = document.getElementById('ah-limit-bridge');
+            if (!bridge) return;
+            var FREE_Q_LIMIT = 10; // ücretsiz: 10 soru/gün (client-side yedek)
+            var subEl = document.getElementById('ah-limit-sub'), titleEl = document.getElementById('ah-limit-title');
+            function showBridge(remaining) {
+              if (isPremium()) { bridge.classList.remove('show'); return; }
+              // Bugün hakkını doldurmuşsa (server kotası veya client yedeği) köprüyü göster
+              var exhausted = (remaining != null) ? (remaining <= 0) : (todayCount >= FREE_Q_LIMIT);
+              if (!exhausted) { bridge.classList.remove('show'); return; }
+              if (titleEl) titleEl.textContent = 'Bugünkü ücretsiz soru hakkın doldu 👏';
+              if (subEl) subEl.textContent = 'Bugün güzel çalıştın. Premium ile sınırsız soru, tüm denemeler, reklamsız ve sınırsız AI mentor — ya da 7 gün ücretsiz dene.';
+              bridge.classList.add('show');
+            }
+            // Önce client-side yedekle çiz (anında), sonra server kotasıyla düzelt
+            showBridge(null);
+            (async function () {
+              try {
+                if (isPremium() || !window.supabase || !window.supabase.createClient) return;
+                var qc = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+                var qr = await qc.rpc('gri_quota_status', { p_kind: 'question' });
+                if (qr && !qr.error && qr.data) {
+                  var st = qr.data;
+                  if (st.is_premium) { bridge.classList.remove('show'); return; }
+                  showBridge(typeof st.remaining === 'number' ? st.remaining : null);
+                }
+              } catch (e) { /* fail-open: client-side yedek zaten çizildi */ }
+            })();
+            var tbtn = document.getElementById('ah-limit-trial');
+            if (tbtn) tbtn.addEventListener('click', function () { if (window.GriTrial) GriTrial.start(tbtn); else location.href = 'premium'; });
+            // Premium sonradan yüklenirse köprüyü ve şeridi güncelle
+            window.addEventListener('gri-premium', function () { paint(); showBridge(null); });
+          })();
           if (editBtn && sel) {
             editBtn.addEventListener('click', function () {
               sel.style.display = (sel.style.display === 'none' || !sel.style.display) ? 'inline-block' : 'none';

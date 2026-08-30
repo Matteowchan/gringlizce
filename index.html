@@ -12,7 +12,29 @@
   <script>document.documentElement.classList.add('js-ready');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-adsense-account" content="ca-pub-5818550785641442">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5818550785641442" crossorigin="anonymous"></script>
+  <!-- AdSense yalnızca PREMIUM (premium/trial aktif) kullanıcıda kapanır; ücretsiz kullanıcı
+       (girişli olsa dahi) reklam görür — böylece "reklamsız" gerçek bir premium ayrıcalığıdır ve
+       karşılaştırma tablosuyla (Ücretsiz=Var, Pro=Yok) tutarlı kalır. Premium durumu
+       localStorage 'gri-prem-active' anahtarından senkron okunur; okunamazsa fail-open (reklam yüklenir). -->
+  <script>
+  (function(){
+    var SRC='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5818550785641442';
+    function loadAds(){
+      try{
+        if(document.getElementById('gri-adsense-head')) return;
+        var s=document.createElement('script');
+        s.id='gri-adsense-head'; s.async=true; s.crossOrigin='anonymous'; s.src=SRC;
+        (document.head||document.documentElement).appendChild(s);
+      }catch(_){}
+    }
+    try{
+      var prem=false;
+      try{ prem=(localStorage.getItem('gri-prem-active')==='1'); }catch(_){ prem=false; }
+      if(prem) return;            // premium/trial aktif → reklam yükleme
+      loadAds();                  // ücretsiz (girişli dahil) → reklam yükle
+    }catch(e){ loadAds(); }       // hata → fail-open (reklam yükle)
+  })();
+  </script>
   <title>Sınav İngilizcesi Öğren — Ücretsiz Soru Bankası, Deneme ve AI Mentor | Gri English</title>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://gringlizce.com/">
@@ -1467,8 +1489,9 @@
     "publisher": { "@type": "EducationalOrganization", "name": "Gri English" }
   }
   </script>
-  <script src="assets/curriculum.js?v=29"></script>
-  <script src="assets/nav.js?v=31"></script>
+  <script src="assets/curriculum.js?v=30"></script>
+  <script src="assets/gri-premium.js?v=8" defer></script>
+  <script src="assets/nav.js?v=32"></script>
   <script src="assets/track.js?v=4" defer></script>
   <script src="assets/gri-wordle.js?v=5" defer></script>
   <script src="assets/wordle-daily.js?v=3" defer></script>
@@ -1478,7 +1501,7 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
-  <div class="launch-banner" data-site-banner>Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
+  <div class="launch-banner" data-site-banner style="display:none">Açılışa Özel <strong>%30 İndirim</strong> Tüm Materyallerde</div>
 
   
 
@@ -1703,6 +1726,26 @@
   .hm-cta.hm-cta-ghost:hover {
     background: rgba(44, 88, 86, 0.06);
     transform: translateY(-1px);
+  }
+  /* Hero ikincil satır: 7 gün deneme + not */
+  .hm-cta-sub {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 0.55rem 0.7rem; margin: -0.8rem 0 1.8rem;
+    font-family: var(--font-ui, Inter), system-ui, sans-serif;
+    font-size: 0.82rem;
+  }
+  .hm-trial-link {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    color: var(--gold, #C89A3C); font-weight: 700;
+    text-decoration: none; letter-spacing: 0.01em;
+    border-bottom: 1px solid transparent; transition: border-color 0.2s, color 0.2s;
+  }
+  .hm-trial-link svg { flex: none; }
+  .hm-trial-link:hover { border-color: var(--gold, #C89A3C); }
+  .hm-cta-sub .hm-cta-dot { color: var(--text-muted); }
+  .hm-cta-sub .hm-cta-note { color: var(--text-muted); }
+  @media (max-width: 720px) {
+    .hm-cta-sub { justify-content: center; margin-top: -0.3rem; }
   }
   /* Gece modu kontrast düzeltmeleri */
   [data-theme="dark"] .hm-cta.hm-cta-primary {
@@ -3227,6 +3270,15 @@
 
         <div class="hm-cta-row">
           <a href="giris?return=/soru-bankasi.html" class="hm-cta hm-cta-primary">Ücretsiz Başla</a>
+          <a href="premium" class="hm-cta hm-cta-ghost">Premium'u Keşfet</a>
+        </div>
+        <div class="hm-cta-sub">
+          <a href="#" class="hm-trial-link" data-gri-trial>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            7 gün ücretsiz Pro dene
+          </a>
+          <span class="hm-cta-dot" aria-hidden="true">·</span>
+          <span class="hm-cta-note">Kart yok, kayıtta başlar</span>
           <a href="ogretmen" class="hm-cta-link hide-in-app"><span>Öğretmensen buradan</span> <span class="hm-cta-link-arrow">›</span></a>
         </div>
 
@@ -3505,7 +3557,7 @@
                   <div class="hmp-gallery-card" style="background:#EAF3DE;"><span style="color:#3B6D11;">YDT</span></div>
                   <div class="hmp-gallery-card" style="background:#FAEEDA;"><span style="color:#854F0B;">TOEFL</span></div>
                 </div>
-                <div class="hmp-foot-row"><span>Tek satınalma</span><span style="font-weight:700;">Ömür boyu</span></div>
+                <div class="hmp-foot-row"><span>Gri Pro</span><span style="font-weight:700;">Tek abonelik</span></div>
               </div>
 
             </div>
@@ -3695,6 +3747,51 @@
     </div>
   </div>
 </section>
+
+<!-- ===================================================================
+     RAKAMLARLA GRI — dürüst, doğrulanabilir platform gerçekleri
+     =================================================================== -->
+<style>
+  .gstat-sec{border-top:1px solid var(--line);background:var(--bg-soft);padding:3rem 0 3.2rem;}
+  .gstat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;max-width:960px;margin:0 auto;}
+  @media(max-width:720px){.gstat-grid{grid-template-columns:repeat(2,1fr);gap:1.4rem 1rem;}}
+  .gstat{text-align:center;padding:.4rem .6rem;}
+  .gstat b{display:block;font-family:var(--font-display),Georgia,serif;font-weight:700;
+    font-size:clamp(1.9rem,4vw,2.5rem);line-height:1;color:var(--teal,#2C5856);letter-spacing:-.02em;}
+  .gstat span{display:block;margin-top:.45rem;font-family:var(--font-ui);font-size:.76rem;
+    letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--text-soft);line-height:1.35;}
+  .gstat-foot{text-align:center;margin-top:1.6rem;font-family:var(--font-ui);font-size:.78rem;color:var(--text-muted);}
+</style>
+<section class="gstat-sec" aria-label="Rakamlarla Gri">
+  <div class="wrap">
+    <div class="gstat-grid reveal-scroll" data-stagger>
+      <div class="gstat"><b id="gstat-q">17.000+</b><span>Çözümlü Soru</span></div>
+      <div class="gstat"><b id="gstat-w">5.000+</b><span>Kelime Kartı</span></div>
+      <div class="gstat"><b>7</b><span>Sınav + Genel İng.</span></div>
+      <div class="gstat"><b>A1–C2</b><span>Tüm Seviyeler</span></div>
+    </div>
+    <p class="gstat-foot">Türkçe açıklamalı içerik havuzu her hafta büyüyor.</p>
+  </div>
+</section>
+<script>
+/* Sayaçlar gerçek DB verisine bağlı; okuma başarısızsa dürüst asgari değer kalır (uydurma yok). */
+(function(){
+  var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function floorFmt(n){ var f=Math.floor(n/1000)*1000; return f.toLocaleString('tr-TR')+'+'; }
+  var tries=0;
+  (function run(){
+    if(!(window.supabase&&window.supabase.createClient)){ if(tries++>40)return; return void setTimeout(run,150); }
+    var sb; try{ sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){ return; }
+    sb.from('questions').select('id',{count:'exact',head:true}).then(function(r){
+      if(r&&typeof r.count==='number'&&r.count>0){ var el=document.getElementById('gstat-q'); if(el) el.textContent=floorFmt(r.count); }
+    }).catch(function(){});
+    sb.from('kelimeler').select('id',{count:'exact',head:true}).then(function(r){
+      if(r&&typeof r.count==='number'&&r.count>0){ var el=document.getElementById('gstat-w'); if(el) el.textContent=floorFmt(r.count); }
+    }).catch(function(){});
+  })();
+})();
+</script>
 
 <!-- ===================================================================
      BÖLÜM 01 — Üç Çalışma Alanı (2+1 Card Grid)
@@ -3999,6 +4096,278 @@
     </div>
   </div>
 </section>
+
+<!-- ===================================================================
+     GRI PRO — Premium değer + kilitli özellik teaser
+     =================================================================== -->
+<style>
+  .gpv-sec{border-top:1px solid var(--line);padding:5rem 0 5.2rem;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--teal,#2C5856) 5%,var(--bg)));}
+  .gpv-sec::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(ellipse 760px 420px at 82% 8%,rgba(200,154,60,.09),transparent 62%),
+               radial-gradient(ellipse 620px 420px at 12% 92%,rgba(44,88,86,.08),transparent 66%);}
+  .gpv-sec .wrap{position:relative;z-index:1;}
+  .gpv-head{text-align:center;max-width:680px;margin:0 auto 2.6rem;}
+  .gpv-eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-ui);font-size:.7rem;
+    letter-spacing:.22em;text-transform:uppercase;font-weight:800;color:var(--gold,#C89A3C);margin-bottom:.7rem;}
+  .gpv-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold,#C89A3C);
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--gold,#C89A3C) 20%,transparent);}
+  .gpv-title{font-family:var(--font-display),Georgia,serif;font-size:clamp(1.7rem,3.6vw,2.35rem);
+    font-weight:600;line-height:1.18;letter-spacing:-.015em;color:var(--text);margin:0 0 .55rem;}
+  .gpv-title em{font-style:italic;color:var(--teal,#2C5856);font-weight:500;}
+  .gpv-lead{font-family:var(--font-body),Georgia,serif;font-size:1.06rem;line-height:1.65;
+    color:var(--text-soft);margin:0 auto;max-width:58ch;}
+
+  /* Kilitli özellik teaser */
+  .gpv-teaser{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin:0 auto 3rem;max-width:960px;}
+  @media(max-width:820px){.gpv-teaser{grid-template-columns:1fr;max-width:420px;}}
+  .gpv-lock-card{position:relative;border:1px solid var(--line);border-radius:var(--radius-lg,18px);
+    overflow:hidden;background:var(--bg-card);min-height:200px;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}
+  .gpv-lock-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(0,0,0,.1);border-color:var(--teal,#2C5856);}
+  .gpv-lock-preview{position:absolute;inset:0;padding:1.3rem 1.4rem;filter:blur(5px);opacity:.55;
+    user-select:none;pointer-events:none;}
+  .gpv-lp-tag{font-family:var(--font-ui);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    font-weight:800;color:var(--teal,#2C5856);margin-bottom:.5rem;}
+  .gpv-lp-score{font-family:var(--font-display),Georgia,serif;font-size:3.2rem;font-weight:700;
+    line-height:1;color:var(--teal,#2C5856);}
+  .gpv-lp-scorelbl{font-family:var(--font-ui);font-size:.72rem;color:var(--text-muted);margin-top:.2rem;}
+  .gpv-lp-split{display:flex;gap:1.4rem;margin-top:.9rem;}
+  .gpv-lp-split b{display:block;font-family:var(--font-display);font-size:1.3rem;color:var(--text);}
+  .gpv-lp-split span{font-family:var(--font-ui);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+  .gpv-lp-chart{display:flex;align-items:flex-end;gap:7px;height:92px;margin-top:.4rem;}
+  .gpv-lp-chart i{flex:1;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--gold,#C89A3C),color-mix(in srgb,var(--teal,#2C5856) 70%,var(--gold,#C89A3C)));}
+  .gpv-lp-rows{display:flex;flex-direction:column;gap:.55rem;margin-top:.3rem;}
+  .gpv-lp-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-ui);font-size:.82rem;color:var(--text);}
+  .gpv-lp-bar{height:7px;border-radius:99px;background:var(--bg-soft);margin-top:.3rem;overflow:hidden;}
+  .gpv-lp-bar i{display:block;height:100%;border-radius:99px;background:var(--teal,#2C5856);}
+  .gpv-lp-inf{font-family:var(--font-display),Georgia,serif;font-size:3rem;font-weight:700;color:var(--teal,#2C5856);line-height:1;}
+  .gpv-lock-overlay{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:1.4rem;gap:.5rem;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--bg-card) 55%,transparent),color-mix(in srgb,var(--bg-card) 78%,transparent));}
+  .gpv-lock-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb,var(--gold,#C89A3C) 16%,transparent);color:var(--gold,#C89A3C);margin-bottom:.15rem;}
+  .gpv-lock-ic svg{width:22px;height:22px;}
+  .gpv-lock-name{font-family:var(--font-display),Georgia,serif;font-size:1.22rem;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+  .gpv-lock-desc{font-family:var(--font-body);font-size:.9rem;line-height:1.45;color:var(--text-soft);max-width:24ch;}
+  .gpv-lock-pill{margin-top:.35rem;font-family:var(--font-ui);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:800;color:var(--gold-deep,#8a6a1e);background:color-mix(in srgb,var(--gold,#C89A3C) 20%,transparent);
+    padding:.32rem .7rem;border-radius:99px;}
+
+  /* Değer + plan gövdesi */
+  .gpv-body{display:grid;grid-template-columns:1.15fr .85fr;gap:2rem;align-items:stretch;max-width:1000px;margin:0 auto;}
+  @media(max-width:860px){.gpv-body{grid-template-columns:1fr;gap:1.4rem;}}
+  .gpv-value{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg,18px);padding:1.8rem 1.9rem;}
+  .gpv-value h3{font-family:var(--font-display),Georgia,serif;font-size:1.35rem;font-weight:700;margin:0 0 1.1rem;letter-spacing:-.01em;color:var(--text);}
+  .gpv-list{list-style:none;padding:0;margin:0 0 1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.2rem;}
+  @media(max-width:520px){.gpv-list{grid-template-columns:1fr;}}
+  .gpv-list li{position:relative;padding-left:1.7rem;font-family:var(--font-body);font-size:.95rem;line-height:1.4;color:var(--text);}
+  .gpv-list li::before{content:"";position:absolute;left:0;top:.15em;width:18px;height:18px;border-radius:50%;
+    background:color-mix(in srgb,var(--teal,#2C5856) 14%,transparent);}
+  .gpv-list li::after{content:"";position:absolute;left:5px;top:.4em;width:7px;height:4px;
+    border-left:2px solid var(--teal,#2C5856);border-bottom:2px solid var(--teal,#2C5856);transform:rotate(-45deg);}
+  .gpv-list li strong{font-weight:700;}
+  .gpv-compare{border-top:1px solid var(--line);padding-top:1.2rem;}
+  .gpv-compare-head{display:grid;grid-template-columns:1fr auto auto;gap:.6rem;font-family:var(--font-ui);
+    font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--text-muted);
+    padding:0 0 .5rem;align-items:center;}
+  .gpv-compare-head span:nth-child(2),.gpv-compare-head span:nth-child(3){width:74px;text-align:center;}
+  .gpv-crow{display:grid;grid-template-columns:1fr auto auto;gap:.6rem;align-items:center;padding:.5rem 0;
+    border-top:1px solid var(--line);font-family:var(--font-body);font-size:.9rem;color:var(--text);}
+  .gpv-crow .gpv-c-free,.gpv-crow .gpv-c-pro{width:74px;text-align:center;font-family:var(--font-ui);font-size:.8rem;font-weight:700;}
+  .gpv-crow .gpv-c-free{color:var(--text-muted);}
+  .gpv-crow .gpv-c-pro{color:var(--teal,#2C5856);}
+
+  /* Plan kartı */
+  .gpv-plan{position:relative;border:1.5px solid var(--teal,#2C5856);border-radius:var(--radius-lg,18px);
+    padding:1.8rem 1.7rem;background:var(--bg-card);display:flex;flex-direction:column;
+    box-shadow:0 14px 40px rgba(44,88,86,.12);}
+  .gpv-plan-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:var(--gold,#C89A3C);color:#1a2230;font-family:var(--font-ui);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:800;padding:.4rem .9rem;border-radius:99px;box-shadow:0 4px 12px rgba(200,154,60,.35);}
+  .gpv-plan-tier{font-family:var(--font-ui);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
+    font-weight:800;color:var(--text-muted);margin:.5rem 0 .3rem;}
+  .gpv-plan-price{display:flex;align-items:baseline;gap:.4rem;margin-bottom:.15rem;}
+  .gpv-plan-price .gpv-amt{font-family:var(--font-display),Georgia,serif;font-size:2.6rem;font-weight:700;color:var(--teal,#2C5856);line-height:1;}
+  .gpv-plan-price .gpv-per{font-family:var(--font-ui);font-size:.9rem;color:var(--text-soft);font-weight:600;}
+  .gpv-plan-sub{font-family:var(--font-ui);font-size:.82rem;color:var(--text-soft);margin-bottom:1rem;}
+  .gpv-plan-chips{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.3rem;}
+  .gpv-chip{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);
+    border-radius:10px;padding:.6rem .8rem;font-family:var(--font-ui);font-size:.86rem;color:var(--text);
+    background:var(--bg-soft);}
+  .gpv-chip.best{border-color:var(--teal,#2C5856);background:color-mix(in srgb,var(--teal,#2C5856) 7%,var(--bg-card));}
+  .gpv-chip .gpv-chip-name{font-weight:700;display:flex;align-items:center;gap:.5rem;}
+  .gpv-chip .gpv-chip-tag{font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;
+    color:#1a2230;background:var(--gold,#C89A3C);padding:.16rem .45rem;border-radius:5px;}
+  .gpv-chip .gpv-chip-price{font-weight:700;color:var(--teal,#2C5856);}
+  .gpv-chip .gpv-chip-price small{display:block;font-weight:600;color:var(--text-muted);font-size:.68rem;text-align:right;}
+  .gpv-plan .btn-primary{width:100%;text-align:center;box-shadow:0 6px 18px rgba(44,88,86,.22);}
+  .gpv-plan-trial{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.7rem;
+    font-family:var(--font-ui);font-size:.85rem;font-weight:700;color:var(--gold,#C89A3C);text-decoration:none;
+    border-bottom:1px solid transparent;align-self:center;transition:border-color .2s;}
+  .gpv-plan-trial:hover{border-color:var(--gold,#C89A3C);}
+  .gpv-plan-note{font-family:var(--font-ui);font-size:.74rem;color:var(--text-muted);text-align:center;
+    margin:.9rem 0 0;line-height:1.5;}
+  .gpv-plan-note span{color:var(--teal,#2C5856);font-weight:700;}
+  [data-theme="dark"] .gpv-chip .gpv-chip-tag,[data-theme="dark"] .gpv-plan-badge{color:#12201f;}
+</style>
+<section id="gri-pro" class="gpv-sec" aria-label="Gri Pro Premium">
+  <div class="wrap">
+    <div class="gpv-head reveal-scroll">
+      <span class="gpv-eyebrow">Gri Pro</span>
+      <h2 class="gpv-title">Ücretsiz başladın — <em>sonuca</em> Pro ile git</h2>
+      <p class="gpv-lead">Sınırsız çalışma, denemelerinden çıkan tahmini skorun ve zayıf konu analizin, tüm denemeler ve reklamsız odak. Sınav dönemini tam performansla geçir.</p>
+    </div>
+
+    <div class="gpv-teaser reveal-scroll" data-stagger>
+      <article class="gpv-lock-card" aria-label="Tahmini Skor — Premium ile açılır">
+        <div class="gpv-lock-preview" aria-hidden="true">
+          <div class="gpv-lp-tag">Tahmini Sınav Skoru</div>
+          <div class="gpv-lp-score">1480</div>
+          <div class="gpv-lp-scorelbl">SAT · son 3 denemeye göre</div>
+          <div class="gpv-lp-split">
+            <div><b>740</b><span>EBRW</span></div>
+            <div><b>740</b><span>Math</span></div>
+          </div>
+        </div>
+        <div class="gpv-lock-overlay">
+          <span class="gpv-lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <div class="gpv-lock-name">Tahmini Skor</div>
+          <div class="gpv-lock-desc">Denemelerin gerçek sınavda nereye denk geldiğini gör.</div>
+          <span class="gpv-lock-pill">Pro ile aç</span>
+        </div>
+      </article>
+
+      <article class="gpv-lock-card" aria-label="Detaylı Analiz — Premium ile açılır">
+        <div class="gpv-lock-preview" aria-hidden="true">
+          <div class="gpv-lp-tag">Konu Bazlı Analiz</div>
+          <div class="gpv-lp-chart">
+            <i style="height:42%"></i><i style="height:66%"></i><i style="height:38%"></i><i style="height:82%"></i><i style="height:58%"></i><i style="height:94%"></i><i style="height:72%"></i>
+          </div>
+          <div class="gpv-lp-rows" style="margin-top:.8rem">
+            <div><div class="gpv-lp-row"><span>Transitions</span><span>%92</span></div><div class="gpv-lp-bar"><i style="width:92%"></i></div></div>
+            <div><div class="gpv-lp-row"><span>Inference</span><span>%61</span></div><div class="gpv-lp-bar"><i style="width:61%"></i></div></div>
+          </div>
+        </div>
+        <div class="gpv-lock-overlay">
+          <span class="gpv-lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+          <div class="gpv-lock-name">Detaylı Analiz</div>
+          <div class="gpv-lock-desc">Hangi konu güçlü, hangisi zayıf — hedefe göre kıyasla.</div>
+          <span class="gpv-lock-pill">Pro ile aç</span>
+        </div>
+      </article>
+
+      <article class="gpv-lock-card" aria-label="Sınırsız çalışma ve SRS — Premium ile açılır">
+        <div class="gpv-lock-preview" aria-hidden="true">
+          <div class="gpv-lp-tag">Günlük Limit</div>
+          <div class="gpv-lp-inf">∞</div>
+          <div class="gpv-lp-scorelbl">Sınırsız soru · sınırsız AI · reklamsız</div>
+          <div class="gpv-lp-rows" style="margin-top:1rem">
+            <div class="gpv-lp-row"><span>SRS tekrar kutusu</span><span>14</span></div>
+            <div class="gpv-lp-bar"><i style="width:70%"></i></div>
+          </div>
+        </div>
+        <div class="gpv-lock-overlay">
+          <span class="gpv-lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M20 9a8 8 0 0 0-14-3L4 10"/><path d="M4 15a8 8 0 0 0 14 3l2-4"/></svg></span>
+          <div class="gpv-lock-name">Sınırsız + SRS</div>
+          <div class="gpv-lock-desc">Limit yok; aralıklı tekrar zayıf konuları geri getirir.</div>
+          <span class="gpv-lock-pill">Pro ile aç</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="gpv-body reveal-scroll">
+      <div class="gpv-value">
+        <h3>Pro'da ne açılır?</h3>
+        <ul class="gpv-list">
+          <li><strong>Sınırsız</strong> soru bankası</li>
+          <li>7 sınavın <strong>tüm denemeleri</strong></li>
+          <li><strong>Tahmini skor</strong> &amp; hedef paneli</li>
+          <li>Konu bazlı <strong>detaylı analiz</strong></li>
+          <li>Sınırsız <strong>AI mentor</strong> &amp; writing değerlendirme</li>
+          <li><strong>SRS</strong> aralıklı tekrar</li>
+          <li><strong>Reklamsız</strong> odak</li>
+          <li>Tek abonelik, <strong>tüm sınavlar</strong></li>
+        </ul>
+
+        <div class="gpv-compare">
+          <div class="gpv-compare-head"><span>Özellik</span><span>Ücretsiz</span><span>Pro</span></div>
+          <div class="gpv-crow"><span>Soru bankası</span><span class="gpv-c-free">10 / gün</span><span class="gpv-c-pro">Sınırsız</span></div>
+          <div class="gpv-crow"><span>AI mentor &amp; writing</span><span class="gpv-c-free">2 / gün</span><span class="gpv-c-pro">Sınırsız</span></div>
+          <div class="gpv-crow"><span>Denemeler + tahmini skor</span><span class="gpv-c-free">1. deneme</span><span class="gpv-c-pro">Tümü</span></div>
+          <div class="gpv-crow"><span>Detaylı analiz &amp; SRS</span><span class="gpv-c-free">Temel</span><span class="gpv-c-pro">Tam</span></div>
+          <div class="gpv-crow"><span>Reklam</span><span class="gpv-c-free">Var</span><span class="gpv-c-pro">Yok</span></div>
+        </div>
+      </div>
+
+      <aside class="gpv-plan">
+        <span class="gpv-plan-badge">7 gün ücretsiz dene</span>
+        <div class="gpv-plan-tier">Gri Pro · Tüm Sınavlar</div>
+        <div class="gpv-plan-price">
+          <span class="gpv-amt" data-pm-amt="premium-monthly">349₺</span>
+          <span class="gpv-per">/ ay</span>
+        </div>
+        <div class="gpv-plan-sub">Aylıktan başlar · istediğinde bırak</div>
+
+        <div class="gpv-plan-chips">
+          <div class="gpv-chip">
+            <span class="gpv-chip-name">Aylık</span>
+            <span class="gpv-chip-price"><span data-pm-amt="premium-monthly">349₺</span></span>
+          </div>
+          <div class="gpv-chip">
+            <span class="gpv-chip-name">3 Aylık</span>
+            <span class="gpv-chip-price"><span data-pm-amt="premium-3month">899₺</span><small data-pm-eff="premium-3month">~300₺ / ay</small></span>
+          </div>
+          <div class="gpv-chip best">
+            <span class="gpv-chip-name">Yıllık <span class="gpv-chip-tag">En avantajlı</span></span>
+            <span class="gpv-chip-price"><span data-pm-amt="premium-yearly">2490₺</span><small data-pm-eff="premium-yearly">~208₺ / ay</small></span>
+          </div>
+        </div>
+
+        <a href="premium" class="btn btn-primary">Planları Gör</a>
+        <a href="#" class="gpv-plan-trial" data-gri-trial>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          7 gün ücretsiz Pro dene
+        </a>
+        <p class="gpv-plan-note">Kart yok · otomatik yenileme yok · <span>öğrenci indirimi</span> mevcut</p>
+      </aside>
+    </div>
+  </div>
+</section>
+<script>
+/* Gri Pro fiyatları DB'den (products.base_price) — premium.html ile aynı kaynak.
+   Fetch başarısızsa spec varsayılanları (349/899/2490) HTML'de kalır. */
+(function(){
+  var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function fmt(n){return Math.round(n).toLocaleString('tr-TR');}
+  var tries=0;
+  (function run(){
+    if(!(window.supabase&&window.supabase.createClient)){ if(tries++>40)return; return void setTimeout(run,150); }
+    var sb;
+    try{ sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){ return; }
+    Promise.all([
+      sb.from('products').select('slug,base_price,premium_days,has_discount').eq('product_type','premium').eq('active',true),
+      sb.from('site_config').select('value').eq('key','discount').maybeSingle()
+    ]).then(function(res){
+      var r=res[0]; if(!r||!r.data||!r.data.length)return;
+      var dc=(res[1]&&res[1].data&&res[1].data.value)||null;
+      var disc=(dc&&dc.enabled&&Number(dc.percentage)>0)?Number(dc.percentage):0;
+      function effOf(p){return (disc&&p.has_discount)?Number(p.base_price)*(1-disc/100):Number(p.base_price);}
+      var map={}; r.data.forEach(function(p){map[p.slug]=p;});
+      r.data.forEach(function(p){
+        var eff=effOf(p), days=Number(p.premium_days)||30;
+        document.querySelectorAll('[data-pm-amt="'+p.slug+'"]').forEach(function(el){ el.textContent=fmt(eff)+'₺'; });
+        // aylık-eşdeğer'i amt (eff) ile KOŞULSUZ türet: days>31 ise DB fiyatından hesapla ve göster,
+        // değilse eff ile çelişebilecek statik fallback'i gizle.
+        document.querySelectorAll('[data-pm-eff="'+p.slug+'"]').forEach(function(el){
+          if(days>31){ el.textContent='~'+fmt(eff/(days/30))+'₺ / ay'; el.style.display=''; }
+          else { el.style.display='none'; }
+        });
+      });
+    }).catch(function(){});
+  })();
+})();
+</script>
 
 <section class="bolum bolum-01">
   <div class="wrap">
@@ -4524,18 +4893,115 @@
     })();
   </script>
 
-  <section style="padding:2.5rem 0 3.5rem;">
-    <div class="wrap" style="max-width:760px;">
-      <div style="position:relative;overflow:hidden;background:var(--bg-card,#FBF6EC);border:1px solid var(--line);border-radius:20px;padding:2.2rem 1.8rem;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.12);">
-        <div style="position:absolute;inset:0 0 auto 0;height:5px;background:linear-gradient(90deg,var(--gri-accent,#2E6E6A),var(--accent-2,#B78A2E));"></div>
-        <img src="assets/gri-cat-happy.png" alt="Gri" width="80" height="80" style="width:80px;height:80px;object-fit:cover;border-radius:50%;box-shadow:0 3px 12px rgba(0,0,0,.12);margin:0 auto .4rem;display:block;">
-        <span class="eyebrow" style="color:var(--accent-2,#B78A2E);">Gönüllü Destek</span>
-        <h2 style="font-size:1.7rem;margin:.4rem 0 .8rem;">Gri herkese ücretsiz — sen de Gri'ye bir mama ısmarla</h2>
-        <p style="color:var(--text-soft);line-height:1.7;max-width:560px;margin:0 auto 1.2rem;">
-          Tüm içerik, sınavlar ve canlı sınıf her öğrenci ve öğretmene ücretsiz. Yapacağın küçük bir destek, kabaca
-          <b>bir öğrencinin bir haftalık çalışma masrafı</b> kadar; ama Gri'nin herkese açık kalmasına doğrudan katkı.
-        </p>
-        <a href="destek" class="btn btn-primary" style="padding:.9rem 2.2rem;font-size:1.02rem;">Destek Ol</a>
+  <!-- ===================================================================
+       DENEYİMLER — gerçek onaylı testimonials (DB) + dürüst boş-durum
+       =================================================================== -->
+  <style>
+    .gtm-sec{border-top:1px solid var(--line);padding:4rem 0 4.4rem;background:var(--bg-soft);}
+    .gtm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;max-width:1000px;margin:2.4rem auto 0;}
+    @media(max-width:820px){.gtm-grid{grid-template-columns:1fr;max-width:520px;}}
+    .gtm-card{display:flex;flex-direction:column;background:var(--bg-card);border:1px solid var(--line);
+      border-radius:var(--radius-lg,18px);padding:1.5rem 1.5rem 1.4rem;}
+    .gtm-quote{font-family:var(--font-body),Georgia,serif;font-size:1rem;line-height:1.6;color:var(--text);
+      margin:0 0 1.1rem;flex:1;}
+    .gtm-quote::before{content:"“";font-family:var(--font-display),Georgia,serif;color:var(--gold,#C89A3C);
+      font-size:1.6rem;line-height:0;vertical-align:-.25em;margin-right:.1em;}
+    .gtm-meta{display:flex;align-items:center;justify-content:space-between;gap:.6rem;border-top:1px solid var(--line);padding-top:.9rem;}
+    .gtm-who{font-family:var(--font-ui);font-size:.86rem;font-weight:700;color:var(--text);}
+    .gtm-who small{display:block;font-weight:600;color:var(--text-muted);font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;margin-top:.15rem;}
+    .gtm-score{font-family:var(--font-ui);font-size:.8rem;font-weight:800;color:var(--teal,#2C5856);
+      background:color-mix(in srgb,var(--teal,#2C5856) 10%,transparent);padding:.3rem .6rem;border-radius:8px;white-space:nowrap;}
+    .gtm-empty{max-width:620px;margin:2.4rem auto 0;text-align:center;background:var(--bg-card);
+      border:1px dashed var(--line);border-radius:var(--radius-lg,18px);padding:2.2rem 1.8rem;}
+    .gtm-empty img{width:64px;height:64px;object-fit:cover;border-radius:50%;margin:0 auto .8rem;display:block;}
+    .gtm-empty h3{font-family:var(--font-display),Georgia,serif;font-size:1.35rem;margin:0 0 .5rem;color:var(--text);}
+    .gtm-empty p{font-family:var(--font-body);color:var(--text-soft);line-height:1.6;max-width:44ch;margin:0 auto 1.2rem;}
+  </style>
+  <section class="gtm-sec" aria-label="Öğrenci deneyimleri">
+    <div class="wrap">
+      <div class="section-head reveal-scroll" style="text-align:center;">
+        <span class="eyebrow" style="color:var(--gold);">Deneyimler</span>
+        <h2>Gri ile <span class="it">yol alanlar</span></h2>
+        <p style="max-width:560px;margin:.6rem auto 0;color:var(--text-soft);line-height:1.6;">Yalnızca gerçek, onaylı kullanıcı geri bildirimleri burada yayımlanır.</p>
+      </div>
+      <div id="gtm-list" class="reveal-scroll">
+        <div class="gtm-empty">
+          <img src="assets/gri-cat-happy.png" alt="Gri">
+          <h3>İlk başarı hikâyemiz sen ol</h3>
+          <p>Gri ile hedefine ulaştığında hikâyeni paylaş — bu alanı gerçek deneyimler dolduracak.</p>
+          <a href="iletisim" class="btn btn-ghost">Hikâyeni Paylaş</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script>
+  /* Testimonials: yalnızca approved=true kayıtlar. Yoksa/erişilemezse dürüst boş-durum kalır. */
+  (function(){
+    var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    var tries=0;
+    (function run(){
+      if(!(window.supabase&&window.supabase.createClient)){ if(tries++>40)return; return void setTimeout(run,150); }
+      var sb; try{ sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){ return; }
+      sb.from('testimonials').select('name,exam,quote,score_before,score_after').eq('approved',true).order('created_at',{ascending:false}).limit(6)
+        .then(function(r){
+          if(!r||!r.data||!r.data.length) return; // boş-durum kalsın
+          var host=document.getElementById('gtm-list'); if(!host) return;
+          var cards=r.data.map(function(t){
+            var score='';
+            if(t.score_before&&t.score_after) score='<span class="gtm-score">'+esc(t.score_before)+' → '+esc(t.score_after)+'</span>';
+            else if(t.score_after) score='<span class="gtm-score">'+esc(t.score_after)+'</span>';
+            var who=esc(t.name||'Gri kullanıcısı')+(t.exam?'<small>'+esc(t.exam)+'</small>':'');
+            return '<article class="gtm-card"><p class="gtm-quote">'+esc(t.quote)+'</p>'+
+                   '<div class="gtm-meta"><div class="gtm-who">'+who+'</div>'+score+'</div></article>';
+          }).join('');
+          host.className='gtm-grid reveal-scroll is-visible';
+          host.innerHTML=cards;
+        }).catch(function(){});
+    })();
+  })();
+  </script>
+  <script>
+  /* 7 gün ücretsiz Pro deneme — [data-gri-trial] linkleri. Fail-open: RPC yoksa engelleme. */
+  (function(){
+    var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
+    var SB_KEY='sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+    var RETURN='/soru-bankasi.html';
+    function client(){
+      if(window.__griPremiumClient) return window.__griPremiumClient;
+      try{ if(window.supabase&&window.supabase.createClient){ window.__griPremiumClient=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}}); return window.__griPremiumClient; } }catch(e){}
+      return null;
+    }
+    async function start(a){
+      if(a.__busy) return; a.__busy=true; a.setAttribute('aria-busy','true');
+      var c=client();
+      if(!c){ location.href='giris?return='+encodeURIComponent(RETURN)+'&trial=1#signup'; return; }
+      try{
+        var s=await c.auth.getSession();
+        var user=s&&s.data&&s.data.session&&s.data.session.user;
+        if(!user){ location.href='giris?return='+encodeURIComponent(RETURN)+'&trial=1#signup'; return; }
+        var r=await c.rpc('gri_start_trial');
+        if(r&&r.data&&r.data.ok===false){ location.href='premium'; return; } // ör. daha önce kullanılmış
+        location.href=RETURN; // başarı ya da bilinmeyen → premium erişimle çalışmaya başla
+      }catch(e){ location.href='premium'; } // RPC yok/hata → engelleme, premium sayfasına al
+    }
+    document.addEventListener('click',function(e){
+      var a=e.target.closest&&e.target.closest('[data-gri-trial]');
+      if(!a) return;
+      e.preventDefault(); start(a);
+    });
+  })();
+  </script>
+
+  <!-- Bağış: birincil huniden ayrı, sade ve gönüllü -->
+  <section style="border-top:1px solid var(--line);padding:1.8rem 0;">
+    <div class="wrap" style="max-width:820px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:.6rem 1rem;flex-wrap:wrap;text-align:center;">
+        <span style="font-family:var(--font-body),Georgia,serif;font-size:.92rem;color:var(--text-muted);line-height:1.5;">
+          Gri'nin çekirdeği herkese ücretsiz. Gönüllü bir katkı sürmesine yardım eder.
+        </span>
+        <a href="destek" style="font-family:var(--font-ui);font-size:.82rem;font-weight:700;color:var(--text-soft);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;white-space:nowrap;">Destek ol →</a>
       </div>
     </div>
   </section>

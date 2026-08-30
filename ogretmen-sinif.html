@@ -1878,6 +1878,17 @@
     .ks-assign-card:hover{ transform:translateY(-2px); box-shadow:0 11px 26px rgba(0,0,0,.16)!important; }
     .ks-assign-progress-fill{ background:linear-gradient(90deg,#2C5856,#3a726e)!important; }
     #ks-schedule-wrap h2{ font-family:var(--font-display,Georgia),serif; }
+    /* Sınıf görünümü: takvim solda, ÖDEVLER listesi sağda (iki sütun) */
+    .ks-class-row{ display:flex; gap:1.4rem; align-items:flex-start; max-width:1260px; margin:1.5rem auto 0; padding:0 1rem; box-sizing:border-box; }
+    .ks-class-row #ks-schedule-wrap{ flex:1 1 auto; min-width:0; max-width:none; margin:0; padding:0; }
+    .ks-class-col-assign{ flex:0 0 380px; max-width:380px; min-width:0; box-sizing:border-box; }
+    .ks-class-col-assign .ks-section-head{ margin-top:0; }
+    .ks-class-col-assign .ks-assign-list{ margin-bottom:0; }
+    @media(max-width:900px){
+      .ks-class-row{ flex-direction:column; align-items:stretch; gap:1.6rem; }
+      .ks-class-row #ks-schedule-wrap{ width:100%; }
+      .ks-class-col-assign{ flex:1 1 auto; max-width:none; width:100%; }
+    }
     /* Modern Panel hero */
     .ks-hero-panel{ display:flex; align-items:flex-start; gap:1.15rem; background:var(--bg-card); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow-md); padding:1.5rem 1.6rem; flex-wrap:wrap; }
     .ks-hero-badge{ width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,#2C5856,#3a726e); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display,Georgia),serif; font-size:1.55rem; font-weight:600; letter-spacing:.01em; flex-shrink:0; box-shadow:0 6px 16px rgba(44,88,86,.30); overflow:hidden; }
@@ -1977,10 +1988,24 @@
       </div>
     </section>
 
-    <section id="ks-schedule-wrap" style="display:none; max-width:960px; margin:1.5rem auto 0; padding:0 1rem;">
-      <h2 style="font-size:1.25rem; margin:0 0 0.75rem;">Ders Programı</h2>
-      <div id="ks-schedule"></div>
-    </section>
+    <div id="ks-class-row" class="ks-class-row" style="display:none;">
+      <section id="ks-schedule-wrap" style="display:none;">
+        <h2 style="font-size:1.25rem; margin:0 0 0.75rem;">Ders Programı</h2>
+        <div id="ks-schedule"></div>
+      </section>
+      <aside class="ks-class-col-assign" aria-label="Ödevler">
+        <div class="ks-section-head">
+          <h2>Ödevler</h2>
+          <button id="ks-new-assign-btn" class="btn-primary" type="button">+ Yeni Ödev</button>
+        </div>
+        <div id="ks-assign-list" class="ks-assign-list"></div>
+        <div id="ks-assign-empty" class="ks-empty" style="display:none;">
+          <div class="ks-empty-eyebrow">Başla</div>
+          <h3>Henüz ödev yok</h3>
+          <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
+        </div>
+      </aside>
+    </div>
 
     <div id="ks-loading" class="loading-state">Yükleniyor...</div>
 
@@ -2021,9 +2046,6 @@
         <button class="ks-tab active" data-tab="students" type="button">
           Öğrenciler <span class="tab-count" id="tab-count-students">0</span>
         </button>
-        <button class="ks-tab" data-tab="assignments" type="button">
-          Ödevler <span class="tab-count" id="tab-count-assignments">0</span>
-        </button>
         <button class="ks-tab" data-tab="writings" type="button">
           Yazılar <span class="tab-count" id="tab-count-writings">0</span>
         </button>
@@ -2039,20 +2061,6 @@
           <span class="ks-section-hint">Detay için satıra tıkla.</span>
         </div>
         <div id="ks-roster-body"></div>
-      </div>
-
-      <!-- Tab: Assignments -->
-      <div class="ks-tab-content" data-tab-content="assignments" style="display:none;">
-        <div class="ks-section-head">
-          <h2>Ödevler</h2>
-          <button id="ks-new-assign-btn" class="btn-primary" type="button">+ Yeni Ödev</button>
-        </div>
-        <div id="ks-assign-list" class="ks-assign-list"></div>
-        <div id="ks-assign-empty" class="ks-empty" style="display:none;">
-          <div class="ks-empty-eyebrow">Başla</div>
-          <h3>Henüz ödev yok</h3>
-          <p>"+ Yeni Ödev" diyerek sınıfına soru bankası, writing veya reading ödevi ekleyebilirsin. Öğrencilerin panelinde anında görünür.</p>
-        </div>
       </div>
 
       <!-- Tab: Writings -->
@@ -2688,6 +2696,7 @@
         }
       })();
       (function(){ var g=document.getElementById('ks-grimeet'); var cid=classInfo.id||new URLSearchParams(location.search).get('id'); if(g&&cid){ var room=('C'+String(cid).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); g.href='grimeet-oda?room='+room+'&host=1&class='+encodeURIComponent(cid); g.style.display='inline-flex'; }
+        try{ var _clsRow=document.getElementById('ks-class-row'); if(_clsRow)_clsRow.style.display='flex'; }catch(e){}
         try{ if(window.GriSchedule&&cid){ var uid=sess.data.session.user.id; var w=document.getElementById('ks-schedule-wrap'); if(w)w.style.display='block'; GriSchedule.mount({ sb:sb, container:document.getElementById('ks-schedule'), role:'teacher', classId:cid, userId:uid, personal:true, roomForClass:function(c){ return ('C'+String(c).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); } }); } }catch(e){}
       })();
       var descEl = document.getElementById('ks-class-desc');
@@ -4477,6 +4486,8 @@
           }
         });
       });
+      // ÖDEVLER artık takvimin sağındaki sabit sütunda (sekme değil) — açılışta bir kez yükle.
+      if (!assignmentsLoaded) { assignmentsLoaded = true; loadAssignments(); }
 
       // ===== Assignment drawer =====
       var aDrawer = document.getElementById('assign-drawer');
@@ -5038,7 +5049,7 @@
             return ((a.config && a.config.part_order) || 0) - ((b.config && b.config.part_order) || 0);
           });
 
-          document.getElementById('tab-count-assignments').textContent = assignments.length;
+          var _tcA = document.getElementById('tab-count-assignments'); if (_tcA) _tcA.textContent = assignments.length;
 
           if (assignments.length === 0) {
             list.innerHTML = '';

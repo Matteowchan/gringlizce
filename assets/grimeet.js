@@ -18,7 +18,7 @@ var STATE={
   micOn:true, camOn:true, handUp:false, mode:'grid',
   lkRoom:null, connected:false, demo:false, localStream:null, camTrack:null, preTrack:null,
   _leaving:false, _reconnecting:false, _reconnectTries:0, _reconnectTimer:null,
-  mirror:true, _bgApplied:false, bgFlip:false,
+  mirror:true, _bgApplied:false, bgFlip:false, autoframe:false,
   bg:'none', customBg:'', supabase:null, tiles:{}, currentMaterial:null, matShared:false, matPaused:false, matZoom:1, scrZoom:1, matControl:false, _matScrollLock:false,
   camId:'', micId:'', camRes:'540', spotlight:null, chatLocked:false, layout:'gallery', pinned:null, activeSpeaker:null,
   quiz:null, quizView:null, quizScore:0, quizQueue:[], quizSet:null, quizRun:null,
@@ -138,7 +138,7 @@ function setupGate(){
         stopPre();
         STATE.preTrack = await LK.createLocalVideoTrack({ deviceId: STATE.camId||undefined, resolution:resObj() });
         STATE.preTrack.attach(gv); gp.classList.remove('camoff'); applyMirror(); fillDevices();
-        if(STATE.bg && STATE.bg!=='none') applyGateBg(STATE.bg);
+        if((STATE.bg && STATE.bg!=='none') || STATE.autoframe) applyGateBg(STATE.bg);
         return;
       }catch(e){ stopPre(); }
     }
@@ -149,18 +149,25 @@ function setupGate(){
     }catch(e){ camOn=false; $('#gate-cam').classList.remove('on'); $('#gate-cam').textContent='Kamera kapalı'; gp.classList.add('camoff'); fillDevices(); }
   }
   async function applyGateBg(bg){
-    STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} highlightGateBg(bg);
-    if(!STATE.preTrack){ if(bg!=='none') toast('Arka plan önizlemesi için kamerayı aç.'); STATE._bgApplied=(bg!=='none'); return; }
-    var lbl=$('#gate-bg-hint'); if(lbl&&bg!=='none') lbl.textContent='(uygulanıyor…)';
+    if(bg!==undefined){ STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} }
+    bg=STATE.bg; highlightGateBg(bg);
+    // Processor gerekli mi? Arka plan seçiliyse VEYA otomatik çerçeveleme açıksa.
+    var want=(bg&&bg!=='none')||STATE.autoframe;
+    if(!STATE.preTrack){ if(want) toast('Arka plan önizlemesi için kamerayı aç.'); STATE._bgApplied=(bg&&bg!=='none'); return; }
+    var lbl=$('#gate-bg-hint'); if(lbl&&want) lbl.textContent='(uygulanıyor…)';
     try{
-      if(bg==='none'){ if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; }
-      else if(_HQBG && window.GriBg){
-        try{ await STATE.preTrack.setProcessor(window.GriBg.create({mode:bg==='blur'?'blur':'image',blurRadius:14,imagePath:bg==='blur'?null:await bgSrc(bg),flip:STATE.bgFlip})); STATE._bgApplied=true; }
-        catch(_hq){ var tpG=await loadTP(); if(tpG){ if(bg==='blur') await STATE.preTrack.setProcessor(tpG.BackgroundBlur(12)); else await STATE.preTrack.setProcessor(tpG.VirtualBackground(await bgSrc(bg))); STATE._bgApplied=true; } else { if(lbl)lbl.textContent='(uygulanamadı)'; return; } } }
-      else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(lbl)lbl.textContent='(bu tarayıcıda yok)'; return; }
-        if(bg==='blur') await STATE.preTrack.setProcessor(tp.BackgroundBlur(12));
-        else await STATE.preTrack.setProcessor(tp.VirtualBackground(await bgSrc(bg)));
-        STATE._bgApplied=true; }
+      if(!want){ if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; if(lbl)lbl.textContent='(dersten önce seç, canlı gör)'; return; }
+      if(_HQBG && window.GriBg){
+        try{ await STATE.preTrack.setProcessor(window.GriBg.create({mode:bg==='none'?'none':(bg==='blur'?'blur':'image'),blurRadius:14,imagePath:(bg==='none'||bg==='blur')?null:await bgSrc(bg),flip:STATE.bgFlip,autoframe:STATE.autoframe})); STATE._bgApplied=(bg&&bg!=='none'); }
+        catch(_hq){ // track-processors autoframe DESTEKLEMEZ → yalnız arka planı uygula; bg yoksa autoframe sessizce devre dışı.
+          if(bg&&bg!=='none'){ var tpG=await loadTP(); if(tpG){ if(bg==='blur') await STATE.preTrack.setProcessor(tpG.BackgroundBlur(12)); else await STATE.preTrack.setProcessor(tpG.VirtualBackground(await bgSrc(bg))); STATE._bgApplied=true; } else { if(lbl)lbl.textContent='(uygulanamadı)'; return; } }
+          else { if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; } } }
+      else{ // GriBg yok → track-processors (autoframe desteklenmez)
+        if(bg&&bg!=='none'){ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(lbl)lbl.textContent='(bu tarayıcıda yok)'; return; }
+          if(bg==='blur') await STATE.preTrack.setProcessor(tp.BackgroundBlur(12));
+          else await STATE.preTrack.setProcessor(tp.VirtualBackground(await bgSrc(bg)));
+          STATE._bgApplied=true; }
+        else { if(STATE.preTrack.getProcessor&&STATE.preTrack.getProcessor()) await STATE.preTrack.stopProcessor(); STATE._bgApplied=false; } }
       if(lbl) lbl.textContent='(dersten önce seç, canlı gör)';
     }catch(e){ toast('Arka plan uygulanamadı.'); if(lbl)lbl.textContent='(uygulanamadı)'; }
   }
@@ -174,6 +181,7 @@ function setupGate(){
   var mir=$('#gate-mirror'); if(mir){ mir.checked=STATE.mirror!==false; mir.addEventListener('change',function(){ STATE.mirror=mir.checked; try{localStorage.setItem('gm-mirror',mir.checked?'1':'0');}catch(e){} applyMirror(); }); }
   var resSel=$('#gate-res'); if(resSel){ resSel.value=STATE.camRes; resSel.addEventListener('change',function(){ STATE.camRes=resSel.value; try{localStorage.setItem('gm-res',resSel.value);}catch(e){} if(camOn){ toast('Kalite değiştiriliyor…'); preview(); } }); }
   var bgf=$('#gate-bg-flip'); if(bgf){ bgf.checked=!!STATE.bgFlip; bgf.addEventListener('change',function(){ STATE.bgFlip=bgf.checked; try{localStorage.setItem('gm-bgflip',bgf.checked?'1':'0');}catch(e){} var b=$('#bg-flip'); if(b)b.checked=bgf.checked; if(STATE.bg&&STATE.bg!=='none'&&STATE.bg!=='blur') applyGateBg(STATE.bg); }); }
+  var afg=$('#gate-autoframe'); if(afg){ afg.checked=!!STATE.autoframe; afg.addEventListener('change',function(){ STATE.autoframe=afg.checked; try{localStorage.setItem('gm-autoframe',afg.checked?'1':'0');}catch(e){} var r=$('#bg-autoframe'); if(r)r.checked=afg.checked; applyGateBg(); }); }
   if(camOn) preview(); else { gp.classList.add('camoff'); fillDevices(); }
   camSel.addEventListener('change',function(){ STATE.camId=camSel.value; if(camOn)preview(); });
   micSel.addEventListener('change',function(){ STATE.micId=micSel.value; });
@@ -349,7 +357,7 @@ async function publishLocal(){ if(!STATE.lkRoom)return;
   if(STATE.micOn) scheduleNoiseFilter();
   var lp=STATE.lkRoom.localParticipant;
   // ARKA PLANSIZ: gate track'ini doğrudan yayına taşı (kamera yeniden açılmaz, anlık).
-  if(STATE.camOn && STATE.preTrack && !STATE._bgApplied){
+  if(STATE.camOn && STATE.preTrack && !STATE._bgApplied && !STATE.autoframe){
     try{
       await lp.publishTrack(STATE.preTrack,{source:LK.Track.Source.Camera});
       STATE.camTrack=STATE.preTrack; STATE.preTrack=null; attachSelf();
@@ -369,7 +377,7 @@ async function publishLocal(){ if(!STATE.lkRoom)return;
     if(STATE.camOn){ try{ if(STATE.camId) await STATE.lkRoom.switchActiveDevice('videoinput',STATE.camId); }catch(e){}
       var camPub=lp.getTrackPublication(LK.Track.Source.Camera);
       if(camPub&&camPub.videoTrack){ STATE.camTrack=camPub.videoTrack; attachSelf();
-        if(STATE._bgApplied && STATE.bg && STATE.bg!=='none'){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
+        if((STATE._bgApplied && STATE.bg && STATE.bg!=='none') || STATE.autoframe){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
   }
   try{ if(STATE.micId) await STATE.lkRoom.switchActiveDevice('audioinput',STATE.micId); }catch(e){}
 }
@@ -593,7 +601,7 @@ function bindControls(){
   $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
     if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
-      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if(STATE._bgApplied&&STATE.bg&&STATE.bg!=='none'){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
+      if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if((STATE._bgApplied&&STATE.bg&&STATE.bg!=='none')||STATE.autoframe){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
       else { STATE.camTrack=null; renderPlaceholder('self'); } } });
   $('#ctrl-tools').addEventListener('click',function(){ toggleDock('tools'); });
   $('#ctrl-share').addEventListener('click',shareScreen);
@@ -1395,20 +1403,28 @@ function scheduleAutoBg(){
     setTimeout(function(){ try{ toast('Arka planın hazır — açmak için “Arka Plan”a dokun.'); }catch(e){} }, 3000);
   }
 }
+function bindAutoframe(){ var f=$('#bg-autoframe'); if(!f)return; f.checked=!!STATE.autoframe; f.addEventListener('change',function(){ STATE.autoframe=f.checked; try{localStorage.setItem('gm-autoframe',f.checked?'1':'0');}catch(e){} var g=$('#gate-autoframe'); if(g)g.checked=f.checked; if(STATE.camTrack) applyBackground(); }); }
 async function applyBackground(bg){
-  STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} var track=STATE.camTrack;
+  if(bg!==undefined){ STATE.bg=bg; try{localStorage.setItem('gm-bg',bg);}catch(e){} }
+  bg=STATE.bg; var track=STATE.camTrack;
   if(!track){ toast(STATE.demo?'Arka plan için canlı bağlantı gerekli.':'Kamera açık değil.'); return; }
   var note=$('#bg-note'); if(note)note.textContent='Uygulanıyor…';
+  // Processor gerekli mi? Arka plan seçiliyse VEYA otomatik çerçeveleme açıksa.
+  var want=(bg&&bg!=='none')||STATE.autoframe;
   try{
-    if(bg==='none'){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
+    if(!want){ if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); }
     else if(_HQBG && window.GriBg){
-      try{ await track.setProcessor(window.GriBg.create({mode:bg==='blur'?'blur':'image',blurRadius:14,imagePath:bg==='blur'?null:await bgSrc(bg),flip:STATE.bgFlip})); }
-      catch(_hq){ var tpH=await loadTP(); if(tpH){ if(bg==='blur') await track.setProcessor(tpH.BackgroundBlur(12)); else await track.setProcessor(tpH.VirtualBackground(await bgSrc(bg))); } else { toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; return; } } }
-    else{ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
-      if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(12));
-      else await track.setProcessor(tp.VirtualBackground(await bgSrc(bg))); }
+      try{ await track.setProcessor(window.GriBg.create({mode:bg==='none'?'none':(bg==='blur'?'blur':'image'),blurRadius:14,imagePath:(bg==='none'||bg==='blur')?null:await bgSrc(bg),flip:STATE.bgFlip,autoframe:STATE.autoframe})); }
+      catch(_hq){ // track-processors autoframe DESTEKLEMEZ → yalnız arka planı uygula; bg yoksa autoframe sessizce devre dışı.
+        if(bg&&bg!=='none'){ var tpH=await loadTP(); if(tpH){ if(bg==='blur') await track.setProcessor(tpH.BackgroundBlur(12)); else await track.setProcessor(tpH.VirtualBackground(await bgSrc(bg))); } else { toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; return; } }
+        else { if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); } } }
+    else{ // GriBg yok → track-processors (autoframe desteklenmez)
+      if(bg&&bg!=='none'){ var tp=await loadTP(); if(!tp){ toast('Bu tarayıcıda arka plan efekti desteklenmiyor.'); if(note)note.textContent='Bu tarayıcıda desteklenmiyor.'; return; }
+        if(bg==='blur') await track.setProcessor(tp.BackgroundBlur(12));
+        else await track.setProcessor(tp.VirtualBackground(await bgSrc(bg))); }
+      else { if(track.getProcessor&&track.getProcessor()) await track.stopProcessor(); } }
     if(note)note.textContent='Hazır. İlk seçimde birkaç saniye sürebilir.';
-    setTimeout(function(){ $('#bg-modal').classList.add('hidden'); },300);
+    setTimeout(function(){ var m=$('#bg-modal'); if(m)m.classList.add('hidden'); },300);
   }catch(e){ toast('Arka plan uygulanamadı.'); if(note)note.textContent='Uygulanamadı.'; }
 }
 
@@ -2302,10 +2318,11 @@ function boot(){
   try{ STATE.mirror = localStorage.getItem('gm-mirror')!=='0'; }catch(e){}
   try{ var _r=localStorage.getItem('gm-res'); if(_r&&RES_MAP[_r]) STATE.camRes=_r; }catch(e){}
   try{ STATE.bgFlip = localStorage.getItem('gm-bgflip')==='1'; }catch(e){}
+  try{ STATE.autoframe = localStorage.getItem('gm-autoframe')==='1'; }catch(e){}
   try{ var _tm=parseInt(localStorage.getItem('gm-tilemin'),10); if(_tm>=160&&_tm<=620){ setTileSize(_tm,false); } }catch(e){}
   initSupabase();
   bindControls(); bindDockTabs(); bindChat(); bindDoc(); bindHostActions(); bindTools(); bindMaterials(); bindRecording(); bindWaiting();
-  buildBgGrid(); bindBgUpload(); bindBgFlip(); buildThemeSel(); WB.init(); ANNO.init(); DOCDRAW.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();
+  buildBgGrid(); bindBgUpload(); bindBgFlip(); bindAutoframe(); buildThemeSel(); WB.init(); ANNO.init(); DOCDRAW.init(); bindReactions(); bindNotes(); bindCloseRoom(); bindScreenZoom(); setupAutoPiP(); bindCaptions(); setupGate();
   var _teardown=function(){ try{ if(STATE.lkRoom)STATE.lkRoom.disconnect(); }catch(e){} releaseAllMedia(); };
   window.addEventListener('beforeunload',_teardown);
   window.addEventListener('pagehide',_teardown);

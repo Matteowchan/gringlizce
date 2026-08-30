@@ -1203,9 +1203,11 @@ function sendQuiz(){
   var cur=readQuizForm(); var list=STATE.quizQueue.slice(); if(quizFilled(cur)) list.push(cur);
   if(!list.length) list.push({q:'Doğru cevap hangisi?',opts:{},correct:null});
   STATE.quizSet={list:list,votes:{}}; STATE.quizQueue=[]; clearQuizForm(); updateQueueLabel();
-  sendData({t:'quizset',list:list.map(function(x){return {q:x.q,opts:x.opts,correct:x.correct||null};}),dur:30});
+  var _dur=parseInt(($('#quiz-dur')||{}).value,10)||30; if([30,45,60,120].indexOf(_dur)===-1)_dur=30;
+  STATE.quizSet.dur=_dur;
+  sendData({t:'quizset',list:list.map(function(x){return {q:x.q,opts:x.opts,correct:x.correct||null};}),dur:_dur});
   renderQuizSetTally();
-  toast(list.length+' soruluk quiz gönderildi. Öğrenciler otomatik ilerler.');
+  toast(list.length+' soruluk quiz gönderildi ('+_dur+' sn/soru). Öğrenciler otomatik ilerler.');
 }
 function renderQuizSetTally(){ var el=$('#quiz-tally'); if(!el||!STATE.quizSet)return; var L=STATE.quizSet.list,V=STATE.quizSet.votes;
   el.innerHTML=L.map(function(item,qi){ var v=V[qi]||{}; var ks=(item.opts&&Object.keys(item.opts).length)?Object.keys(item.opts).sort():['A','B','C','D']; var tot=ks.reduce(function(s,k){return s+(v[k]||0);},0)||1;
@@ -1263,7 +1265,7 @@ async function qbLoadCategories(){
 }
 async function qbAdd(){
   if(!STATE.supabase){ toast('Soru bankası için giriş yapmış olmalısın.'); return; }
-  var exam=$('#qb-exam').value, cat=$('#qb-cat').value, n=Math.max(1,Math.min(15,parseInt($('#qb-count').value,10)||5));
+  var exam=$('#qb-exam').value, cat=$('#qb-cat').value, n=Math.max(1,Math.min(50,parseInt($('#qb-count').value,10)||5));
   if(!cat){ toast('Önce kategori seç.'); return; }
   var btn=$('#qb-add'), old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Çekiliyor…'; }
   try{

@@ -16,7 +16,7 @@
 
   // Stil
   var css =
-    '#gri-bug-btn{position:fixed;top:96px;right:18px;z-index:9998;background:#fcfaf3;color:#1a2a28;border:1px solid #d8d2c4;padding:0.45rem 0.8rem;border-radius:3px;font:600 0.8rem/1 Georgia,serif;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.08);letter-spacing:0.02em}' +
+    '#gri-bug-btn{position:fixed;right:18px;bottom:18px;z-index:9998;background:#fcfaf3;color:#1a2a28;border:1px solid #d8d2c4;padding:0.5rem 0.9rem;border-radius:100px;font:600 0.8rem/1 Georgia,serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.16);letter-spacing:0.02em}' +
     '#gri-bug-btn:hover{background:#fff;border-color:#1a2a28}' +
     '#gri-bug-overlay{position:fixed;inset:0;background:rgba(20,25,24,0.55);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem}' +
     '#gri-bug-overlay.show{display:flex}' +

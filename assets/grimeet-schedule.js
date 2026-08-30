@@ -160,6 +160,7 @@
     + '.gsch-cell .gsch-evs{flex:1 1 auto;min-height:0;overflow:hidden;}'
     + '.gsch-cell.out{background:#faf7f1;}'
     + '.gsch-cell.out .num{color:#c6b9a0;font-weight:600;}'
+    + '.gsch-cell.out .ev.ev-out{opacity:.5;}'
     + '.gsch-cell.has{cursor:pointer;}'
     + '.gsch-cell.has:hover{background:#f1f8f6;}'
     + '.gsch-cell.today{background:#fbf7ee;}'
@@ -934,11 +935,14 @@
       var first=new Date(y,mo,1), startWd=(first.getDay()+6)%7; // Pzt=0
       var days=new Date(y,mo+1,0).getDate();
       var byDay={}; state.rows.forEach(function(r){ if(r._d.getFullYear()===y&&r._d.getMonth()===mo){ (byDay[r._d.getDate()]=byDay[r._d.getDate()]||[]).push(r); } });
+      // Ay-devri (out) hücreleri için: o gerçek tarihteki dersleri soluk göster
+      function _evsFor(yy,mm,dd){ return state.rows.filter(function(r){ var d=r._d; return d.getFullYear()===yy && d.getMonth()===mm && d.getDate()===dd; }); }
+      function _evOut(evs){ return evs.map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev ev-out" style="background:'+col+'18;color:'+col+';border-left:3px solid '+col+'"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join(''); }
       var today=new Date();
       var holMap=holidayMap(y);
       var cells='';
       var prevDays=new Date(y,mo,0).getDate();
-      for(var i=0;i<startWd;i++){ var _pd=prevDays-startWd+1+i; cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"><span class="num">'+_pd+'</span></div>'; }
+      for(var i=0;i<startWd;i++){ var _pd=prevDays-startWd+1+i; var _pdD=new Date(y,mo-1,_pd); cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"><span class="num">'+_pd+'</span><div class="gsch-evs">'+_evOut(_evsFor(_pdD.getFullYear(),_pdD.getMonth(),_pd))+'</div></div>'; }
       for(var dnum=1;dnum<=days;dnum++){
         var _dd=new Date(y,mo,dnum), _dw=_dd.getDay(), we=(_dw===0||_dw===6);
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
@@ -949,7 +953,7 @@
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
       var _tot=startWd+days, _trail=(7-(_tot%7))%7;
-      for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+'"><span class="num">'+_tj+'</span></div>'; }
+      for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; var _tjD=new Date(y,mo+1,_tj); cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+'"><span class="num">'+_tj+'</span><div class="gsch-evs">'+_evOut(_evsFor(_tjD.getFullYear(),_tjD.getMonth(),_tj))+'</div></div>'; }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });

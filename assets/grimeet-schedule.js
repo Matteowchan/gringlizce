@@ -225,6 +225,36 @@
     + ':root[data-theme="dark"] .gsch-modal-arrow.point-right{border-left-color:#241f18;}'
     + '.gsch-daymodal-body{display:flex;gap:16px;align-items:flex-start;}'
     + '.gsch-daymodal-left{flex:1 1 auto;min-width:0;}'
+    + '.gsch-daymodal.three-col{max-width:940px;}'
+    /* Kişisel not defteri artık ders listesinin SOLUNDA (altında değil) — kendi sütunu */
+    + '.gsch-daymodal-body > .gsch-pnnote{flex:0 0 240px;margin-top:0;align-self:stretch;}'
+    + '@media(max-width:720px){.gsch-daymodal-body{flex-direction:column;}.gsch-daymodal-body > .gsch-pnnote{flex:1 1 auto;width:100%;}}'
+    /* Tek kayıt detay popup (ders / kişisel not) */
+    + '.gsch-dayrow{cursor:pointer;}'
+    + '.gsch-detail-h{display:flex;align-items:center;gap:9px;margin-bottom:8px;}'
+    + '.gsch-detail-h h4{margin:0;font-size:16px;color:#2a2a2a;}'
+    + '.gsch-detail-dot{flex:0 0 auto;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.07);}'
+    + '.gsch-detail-meta{font-size:12px;color:#8a8172;margin:-2px 0 13px;}'
+    + '.gsch-detail-meta .gsch-pn-tag{background:rgba(124,92,191,.14);color:#7C5CBF;border-radius:20px;padding:2px 9px;font-weight:800;font-size:10.5px;}'
+    + '.gsch-detail-note{font-size:13.5px;line-height:1.65;color:#2a2a2a;background:#faf7f0;border:1px solid #ece4d4;border-radius:10px;padding:12px 13px;word-break:break-word;}'
+    + '.gsch-detail-lbl{font-size:10.5px;font-weight:800;color:#8a8172;letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;}'
+    + '.gsch-detail-lbl small{font-weight:600;text-transform:none;letter-spacing:0;opacity:.85;margin-left:6px;}'
+    + '.gsch-detail-teachernote{margin-bottom:14px;}'
+    + '.gsch-detail-empty{font-size:13px;color:#8a8172;font-style:italic;margin-bottom:12px;}'
+    + '.gsch-lnotes{margin-top:14px;border-top:1px solid #ece4d4;padding-top:13px;}'
+    + '.gsch-lnotes-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}'
+    + '.gsch-lnote{display:flex;gap:8px;align-items:flex-start;background:rgba(124,92,191,.06);border:1px solid rgba(124,92,191,.2);border-radius:9px;padding:8px 10px;font-size:13px;line-height:1.55;color:#2a2a2a;}'
+    + '.gsch-lnote-txt{flex:1 1 auto;word-break:break-word;white-space:pre-wrap;}'
+    + '.gsch-lnote-del{flex:0 0 auto;background:none;border:none;color:#b33a3a;font-size:16px;line-height:1;cursor:pointer;padding:0 2px;}'
+    + '.gsch-lnotes .gsch-lnote-in{width:100%;box-sizing:border-box;min-height:66px;font:inherit;padding:8px 9px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;resize:vertical;margin-bottom:8px;line-height:1.5;}'
+    + '.gsch-lnotes .gsch-lnote-add{background:#7C5CBF;border-color:#7C5CBF;color:#fff;}'
+    + '.gsch-lnotes .gsch-lnote-add:hover{background:#6a4ea8;}'
+    + '.gsch-lnotes-empty{font-size:12.5px;color:#8a8172;font-style:italic;margin-bottom:10px;}'
+    + ':root[data-theme="dark"] .gsch-detail-h h4{color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-detail-note{background:#241f18;border-color:#3a3428;color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-lnotes{border-color:#3a3428;}'
+    + ':root[data-theme="dark"] .gsch-lnote{background:rgba(124,92,191,.16);border-color:rgba(124,92,191,.34);color:#f0e9db;}'
+    + ':root[data-theme="dark"] .gsch-lnotes .gsch-lnote-in{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-daymodal-form{flex:0 0 252px;background:#fff;border:1px solid #ece4d4;border-radius:12px;padding:13px 14px;}'
     + '.gsch-daymodal-form .dmf-title{font-size:13px;font-weight:800;color:#2a2a2a;margin-bottom:11px;}'
     + '.gsch-daymodal-form .dmf-l{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#6a6250;margin-bottom:10px;}'
@@ -859,8 +889,8 @@
         // Kişisel notlar/etkinlikler (yalnız kullanıcının kendisi görür — RLS own-row; öğretmen ASLA görmez)
         if(personal && opts.userId){
           try{
-            var pn=await sb.from('calendar_personal_notes').select('id,note_date,note_time,title,note,color').eq('user_id',opts.userId);
-            (pn.data||[]).forEach(function(n){ var _t=(n.note_time&&/^\d{1,2}:\d{2}$/.test(n.note_time))?n.note_time:'00:00'; var d=new Date(n.note_date+'T'+_t); if(isNaN(d.getTime()))return; state.rows.push({ id:'pn-'+n.id, _pid:n.id, title:n.title, note:n.note||null, duration_min:0, _d:d, _personal:true, _color:n.color||null, _allDay:!n.note_time }); });
+            var pn=await sb.from('calendar_personal_notes').select('id,note_date,note_time,title,note,color,event_id').eq('user_id',opts.userId);
+            (pn.data||[]).forEach(function(n){ if(n.event_id) return; /* derse bağlı notlar takvimde ayrı görünmez, ders detayında görünür */ var _t=(n.note_time&&/^\d{1,2}:\d{2}$/.test(n.note_time))?n.note_time:'00:00'; var d=new Date(n.note_date+'T'+_t); if(isNaN(d.getTime()))return; state.rows.push({ id:'pn-'+n.id, _pid:n.id, title:n.title, note:n.note||null, duration_min:0, _d:d, _personal:true, _color:n.color||null, _allDay:!n.note_time }); });
             state.rows.sort(function(a,b){ return a._d.getTime()-b._d.getTime(); });
           }catch(_e){}
         }
@@ -878,6 +908,19 @@
     async function deletePersonalNote(pid){
       if(!confirm('Bu kişisel not silinsin mi?')) return false;
       var r=await sb.from('calendar_personal_notes').delete().eq('id',pid); if(r.error) throw r.error; return true;
+    }
+    // Bir derse (grimeet_schedule) bağlı kişisel notlar — yalnız kullanıcının kendisi görür (RLS own-row)
+    async function loadLessonNotes(eventId){
+      if(!opts.userId||!eventId) return [];
+      var r=await sb.from('calendar_personal_notes').select('id,title,note,created_at').eq('user_id',opts.userId).eq('event_id',eventId).order('created_at',{ascending:true});
+      if(r.error) throw r.error; return r.data||[];
+    }
+    async function createLessonNote(eventId, dateIso, lessonTitle, note){
+      var r=await sb.from('calendar_personal_notes').insert({ user_id:opts.userId, note_date:dateIso, note_time:null, title:(lessonTitle||'Ders notu').slice(0,90), note:(note||null), event_id:eventId });
+      if(r.error) throw r.error; return r;
+    }
+    async function deleteLessonNote(id){
+      var r=await sb.from('calendar_personal_notes').delete().eq('id',id); if(r.error) throw r.error; return true;
     }
     function actionBtns(row){
       if(row._personal){ return '<span class="gsch-ext-tag gsch-pn-tag">Kişisel</span><button class="gsch-btn danger" data-delnote="'+esc(row._pid)+'">Sil</button>'; }
@@ -1037,6 +1080,54 @@
       var ft=cont.querySelector('.f-title'); if(ft){ try{ ft.focus(); }catch(e){} }
     }
 
+    // Tek kayıt detayı: bir derse veya kişisel nota tıklayınca açılır.
+    // Ders detayında öğrenci/öğretmen o derse özel (yalnız kendisinin gördüğü) notlar ekleyebilir.
+    function openItemDetail(row, cbs){
+      cbs=cbs||{};
+      var col=rowColor(row);
+      var d=row._d;
+      var dateLabel=WD_L[(d.getDay()+6)%7]+' · '+d.getDate()+' '+MONTHS_L[d.getMonth()]+' '+d.getFullYear();
+      var isExt=!!row._ext || (row.id!=null && String(row.id).indexOf('ext-')===0);
+      var canLessonNotes=(personal && !!opts.userId && !row._personal && !isExt && row.id!=null);
+      var bodyHTML;
+      if(row._personal){
+        var when=row._allDay?'Tüm gün':hhmm(d);
+        bodyHTML='<div class="gsch-detail-meta"><span class="gsch-pn-tag">Kişisel</span> · '+esc(when)+' · '+esc(dateLabel)+'</div>'
+          + (row.note?('<div class="gsch-detail-note">'+esc(row.note)+'</div>'):'<div class="gsch-detail-empty">Bu notun içeriği boş.</div>');
+      } else {
+        var end=new Date(d.getTime()+(row.duration_min||60)*60000);
+        var cls=(row.classes&&row.classes.name)?row.classes.name:'';
+        bodyHTML='<div class="gsch-detail-meta">'+(cls?esc(cls)+' · ':'')+esc(hhmm(d)+'–'+hhmm(end))+' · '+(row.duration_min||60)+' dk · '+esc(dateLabel)+(isExt?' · Dış takvim':'')+'</div>'
+          + (row.note?('<div class="gsch-detail-note gsch-detail-teachernote"><div class="gsch-detail-lbl">Ders notu</div>'+esc(row.note)+'</div>'):'')
+          + (canLessonNotes?('<div class="gsch-lnotes"><div class="gsch-detail-lbl">Bu derse özel notların <small>yalnız sen görürsün</small></div><div class="gsch-lnotes-list gsch-lnotes-empty">Yükleniyor…</div><textarea class="gsch-lnote-in" placeholder="Bu derse dair notunu yaz…" maxlength="1000"></textarea><button type="button" class="gsch-btn gsch-lnote-add">Not ekle</button></div>'):'');
+      }
+      var actsHTML='<div class="macts" style="margin-top:16px;justify-content:flex-end;gap:8px;">';
+      if(row._personal){ actsHTML+='<button type="button" class="gsch-btn danger gsch-det-del">Sil</button>'; }
+      else if(canManage(row) && cbs.onEdit){ actsHTML+='<button type="button" class="gsch-btn ghost gsch-det-edit">Dersi Düzenle</button>'; }
+      actsHTML+='<button type="button" class="gsch-btn ghost gsch-det-close">Kapat</button></div>';
+      var ov2=document.createElement('div'); ov2.className='gsch-modal-ov';
+      ov2.innerHTML='<div class="gsch-modal gsch-daymodal"><div class="gsch-detail-h"><span class="gsch-detail-dot" style="background:'+col+'"></span><h4>'+esc(row.title||'—')+'</h4></div>'+bodyHTML+actsHTML+'</div>';
+      document.body.appendChild(ov2);
+      function close2(){ if(ov2.parentNode) ov2.parentNode.removeChild(ov2); }
+      ov2.addEventListener('click',function(e){ if(e.target===ov2) close2(); });
+      ov2.querySelector('.gsch-det-close').addEventListener('click',close2);
+      var delB=ov2.querySelector('.gsch-det-del'); if(delB) delB.addEventListener('click',async function(){ try{ var ok=await deletePersonalNote(row._pid); if(ok){ close2(); if(cbs.onChange) await cbs.onChange(); } }catch(e){ alert('Silinemedi.'); } });
+      var edB=ov2.querySelector('.gsch-det-edit'); if(edB) edB.addEventListener('click',function(){ close2(); try{ cbs.onEdit(row.id); }catch(e){} });
+      if(canLessonNotes){
+        var listEl2=ov2.querySelector('.gsch-lnotes-list'), inEl=ov2.querySelector('.gsch-lnote-in'), addB=ov2.querySelector('.gsch-lnote-add');
+        var dateIso=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
+        function renderLN(items){
+          if(!items||!items.length){ listEl2.className='gsch-lnotes-list gsch-lnotes-empty'; listEl2.textContent='Henüz not eklemedin.'; return; }
+          listEl2.className='gsch-lnotes-list';
+          listEl2.innerHTML=items.map(function(n){ return '<div class="gsch-lnote"><div class="gsch-lnote-txt">'+esc(n.note||'')+'</div><button type="button" class="gsch-lnote-del" title="Sil" data-ln="'+esc(n.id)+'">×</button></div>'; }).join('');
+          listEl2.querySelectorAll('[data-ln]').forEach(function(b){ b.addEventListener('click',async function(){ if(!confirm('Not silinsin mi?'))return; try{ await deleteLessonNote(b.getAttribute('data-ln')); await refreshLN(); }catch(e){ alert('Silinemedi.'); } }); });
+        }
+        async function refreshLN(){ try{ renderLN(await loadLessonNotes(row.id)); }catch(e){ listEl2.className='gsch-lnotes-list gsch-lnotes-empty'; listEl2.textContent='Notlar yüklenemedi.'; } }
+        addB.addEventListener('click',async function(){ var t=(inEl.value||'').trim(); if(!t){ inEl.focus(); return; } addB.disabled=true; var ot=addB.textContent; addB.textContent='Ekleniyor…'; try{ await createLessonNote(row.id, dateIso, row.title, t); inEl.value=''; await refreshLN(); }catch(e){ alert('Eklenemedi: '+(e.message||'hata')); } finally{ addB.disabled=false; addB.textContent=ot; } });
+        refreshLN();
+      }
+    }
+
     // Bir güne tıklayınca: solda o günün planı (ajanda), sağda o güne hızlı ders planlama (öğretmen)
     function openDayModal(y,mo,dnum,anchorRect){
       var dObj=new Date(y,mo,dnum);
@@ -1051,7 +1142,7 @@
         + '<div class="gsch-pnnote-h">Kişisel not defteri <small>yalnız sen görürsün</small></div>'
         + '<input type="text" class="pnf-t" placeholder="Başlık — örn. Bugün ne çalışacağım" maxlength="90">'
         + '<div class="gsch-pnnote-time"><span class="gsch-pnnote-tlbl">Saat (opsiyonel)</span><span class="dmf-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span></div>'
-        + '<textarea class="pnf-n" placeholder="Ne çalışacaksın, hangi saatlerde, neler yapacaksın… serbestçe yaz." maxlength="2000"></textarea>'
+        + '<textarea class="pnf-n" maxlength="2000"></textarea>'
         + '<button type="button" class="gsch-btn pnf-save">Ekle</button>'
         + '</div>'
       ) : '';
@@ -1070,9 +1161,9 @@
         + '</div>'
       ) : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
-      ov.innerHTML='<div class="gsch-modal gsch-daymodal'+((showForm||showPersonal)?' has-form':'')+'">'
+      ov.innerHTML='<div class="gsch-modal gsch-daymodal'+((showForm||showPersonal)?' has-form':'')+((showForm&&showPersonal)?' three-col':'')+'">'
         + '<div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4><span class="gsch-daymodal-count-slot"></span></div>'+holBadge
-        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div>'+personalNoteHTML+'</div>'+formHTML+'</div>'
+        + '<div class="gsch-daymodal-body">'+personalNoteHTML+'<div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
         + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);
       var listEl=ov.querySelector('.gsch-daymodal-list'), countSlot=ov.querySelector('.gsch-daymodal-count-slot');
@@ -1119,6 +1210,14 @@
         listEl.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click', async function(){ var cid=b.getAttribute('data-cancel'); await cancelLesson(cid); if(editingId===cid) resetPane(); renderDay(); }); });
         listEl.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click', function(){ editInPane(b.getAttribute('data-edit')); }); });
         listEl.querySelectorAll('[data-delnote]').forEach(function(b){ b.addEventListener('click', async function(){ try{ var ok=await deletePersonalNote(b.getAttribute('data-delnote')); if(ok){ await load(); renderDay(); } }catch(e){ alert('Silinemedi.'); } }); });
+        // Satıra (buton dışına) tıklayınca tek-kayıt detay popup'ı aç (ders notu görüntüle / o derse özel not ekle)
+        listEl.querySelectorAll('.gsch-dayrow').forEach(function(rowEl){ rowEl.addEventListener('click', function(e){
+          if(e.target.closest('button,a,[data-edit],[data-cancel],[data-delnote]')) return;
+          var id=rowEl.getAttribute('data-id'), row=null;
+          for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
+          if(!row) return;
+          openItemDetail(row, { onChange: async function(){ await load(); renderDay(); }, onEdit: function(rid){ editInPane(rid); } });
+        }); });
       }
       ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
       ov.querySelector('.m-close').addEventListener('click',close);

@@ -2680,6 +2680,94 @@
       })();
     </script>
 
+    <!-- Ödememi Talep Et — Shopier sipariş no ile erişim kurtarma (gri_claim_purchase) -->
+    <style>
+      .claim-card{display:flex;gap:.9rem;align-items:flex-start;margin:0 0 1.3rem;padding:1rem 1.2rem;border-radius:14px;
+        background:var(--bg-card,#fefcf7);border:1px solid var(--line,#e5ddcd);border-left:3px solid var(--gold,#C89A3C)}
+      [data-theme="dark"] .claim-card{background:rgba(255,255,255,.03)}
+      .claim-ic{font-size:1.5rem;line-height:1;flex:0 0 auto;margin-top:.1rem}
+      .claim-body{flex:1;min-width:0;font-family:var(--font-ui,Inter),system-ui,sans-serif}
+      .claim-body b{display:block;font-family:var(--font-display,Georgia),serif;font-size:1.02rem;font-weight:600;color:var(--text,#241c12)}
+      .claim-body>small{display:block;font-size:.82rem;line-height:1.45;color:var(--text-muted,#8a9099);margin:.15rem 0 .7rem}
+      .claim-form{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+      .claim-form input{flex:1;min-width:180px;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.85rem;color:var(--text);
+        background:var(--bg,#F4EFE3);border:1px solid var(--line,#d9d2c4);border-radius:10px;padding:.55rem .8rem}
+      .claim-form input:focus{outline:none;border-color:var(--teal,#2C5856);box-shadow:0 0 0 3px rgba(44,88,86,.12)}
+      .claim-form button{flex:0 0 auto;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;font-weight:700;white-space:nowrap;cursor:pointer;
+        border:1px solid var(--teal,#2C5856);background:linear-gradient(135deg,var(--gri-accent,#2C5856),var(--teal-deep,#1E4E4B));color:#fff;border-radius:100px;padding:.55rem 1.1rem;transition:filter .15s ease,opacity .15s ease}
+      .claim-form button:hover:not(:disabled){filter:brightness(1.08)}
+      .claim-form button:disabled{opacity:.65;cursor:default}
+      .claim-msg{display:none;margin-top:.6rem;font-size:.82rem;line-height:1.45;padding:.5rem .7rem;border-radius:9px}
+      .claim-msg.show{display:block}
+      .claim-msg.ok{background:rgba(44,88,86,.1);border:1px solid var(--teal,#2C5856);color:var(--teal,#2C5856)}
+      .claim-msg.err{background:rgba(180,90,60,.08);border:1px solid #c47a52;color:#a85a34}
+      [data-theme="dark"] .claim-msg.err{color:#e6a480}
+    </style>
+    <div class="claim-card" id="claim-card">
+      <span class="claim-ic" aria-hidden="true">🎟️</span>
+      <div class="claim-body">
+        <b>Ödeme yaptın ama erişemiyor musun?</b>
+        <small>Shopier sipariş numaranı gir — Premium, AI kredisi veya materyal erişimini hemen bu hesaba tanımlayalım. (Ödeme e-postan bu hesabın e-postasıyla aynı olmalı.)</small>
+        <form class="claim-form" id="claim-form" autocomplete="off" novalidate>
+          <input type="text" id="claim-ref" inputmode="text" placeholder="Shopier sipariş no" aria-label="Shopier sipariş numarası" maxlength="80">
+          <button type="submit" id="claim-btn">Talep Et</button>
+        </form>
+        <div class="claim-msg" id="claim-msg" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+        var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+        var form = document.getElementById('claim-form');
+        if (!form) return;
+        var input = document.getElementById('claim-ref');
+        var btn = document.getElementById('claim-btn');
+        var msg = document.getElementById('claim-msg');
+        var REASONS = {
+          empty_ref: 'Lütfen Shopier sipariş numaranı gir.',
+          not_authenticated: 'Önce giriş yapmalısın — giriş sayfasına yönlendiriliyorsun…',
+          not_found: 'Bu sipariş numarası bulunamadı. Shopier onay e-postandaki numarayı kontrol edip tekrar dene.',
+          already_claimed: 'Bu sipariş zaten bir hesaba tanımlanmış. Sana ait olduğunu düşünüyorsan bize ulaş.',
+          already_linked: 'Bu sipariş başka bir hesaba bağlı. Ödemeyi yaptığın hesapla giriş yaptığından emin ol.',
+          email_mismatch: 'Ödeme e-postan bu hesabın e-postasıyla eşleşmiyor. Ödemede kullandığın e-posta ile giriş yap ya da bize ulaş.'
+        };
+        function say(text, kind) { msg.textContent = text; msg.className = 'claim-msg show' + (kind ? ' ' + kind : ''); }
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          var ref = (input.value || '').trim();
+          if (!ref) { say(REASONS.empty_ref, 'err'); try { input.focus(); } catch (x) {} return; }
+          var lbl = btn.textContent;
+          btn.disabled = true; btn.textContent = 'Kontrol ediliyor…';
+          say('Siparişin kontrol ediliyor…', '');
+          try {
+            if (!window.supabase || !window.supabase.createClient) { say('Bağlantı kurulamadı — sayfayı yenileyip tekrar dene.', 'err'); return; }
+            var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+            var r = await sb.rpc('gri_claim_purchase', { p_ref: ref });
+            if (r && r.error) { say('Bir sorun oluştu, birazdan tekrar dene.', 'err'); return; }
+            var d = (r && r.data) || {};
+            if (d.ok) {
+              var parts = [];
+              if (Number(d.premium_days) > 0) parts.push(d.premium_days + ' gün Premium');
+              if (Number(d.ai_quota) > 0) parts.push(d.ai_quota + ' AI kredisi');
+              if (d.materials && d.materials.length) parts.push(d.materials.length + ' materyal');
+              var extra = parts.length ? (' — ' + parts.join(', ') + ' hesabına tanımlandı.') : ' Erişimin açıldı.';
+              say('Teşekkürler! Ödemen doğrulandı.' + extra, 'ok');
+              input.value = '';
+              try { if (window.GriPremium && GriPremium.refresh) await GriPremium.refresh(); } catch (x) {}
+              try { if (window.GriFX) GriFX.confetti({ y: 0.3 }); } catch (x) {}
+              try { if (window.GriTrial && GriTrial.toast) GriTrial.toast('Erişimin açıldı 🎉'); } catch (x) {}
+            } else {
+              var reason = d.reason || '';
+              say(REASONS[reason] || 'Talep tamamlanamadı. Numarayı kontrol edip tekrar dene.', 'err');
+              if (reason === 'not_authenticated') { setTimeout(function () { location.href = 'giris?next=panelim'; }, 1500); }
+            }
+          } catch (err) { say('Beklenmeyen bir hata oluştu, birazdan tekrar dene.', 'err'); }
+          finally { btn.disabled = false; btn.textContent = lbl; }
+        });
+      })();
+    </script>
+
     <!-- Hızlı erişim barı -->
     <style>
       .masam-quick a{display:flex;align-items:center;gap:.75rem;padding:.9rem 1rem;background:var(--bg-card,#fefcf7);border:1px solid var(--line,#d9d2c4);border-radius:12px;text-decoration:none;color:var(--text);transition:border-color .18s ease,box-shadow .18s ease}
@@ -2774,7 +2862,7 @@
       .ah-freeze{position:relative;display:flex;align-items:center;gap:.7rem;margin:.9rem auto 0;max-width:360px;padding:.75rem .9rem;border-radius:12px;
         background:var(--bg,#F4EFE3);border:1px dashed var(--line,#d9d2c4);text-align:left}
       [data-theme="dark"] .ah-freeze{background:rgba(255,255,255,.03)}
-      .ah-freeze-ic{width:26px;height:26px;flex:0 0 auto;color:#4f97c9}
+      .ah-freeze-ic{width:26px;height:26px;flex:0 0 auto;color:var(--teal)}
       .ah-freeze-ic svg{width:100%;height:100%;display:block}
       .ah-freeze-tx{flex:1;min-width:0;font-family:var(--font-ui,Inter),system-ui,sans-serif}
       .ah-freeze-tx b{display:block;font-size:.82rem;color:var(--text,#241c12);margin-bottom:.12rem}
@@ -2787,6 +2875,12 @@
       html[data-premium="1"] .ah-freeze .sf-free{display:none}
       html[data-premium="1"] .ah-freeze .sf-pro{display:block}
       html[data-premium="1"] .ah-freeze{border-style:solid;border-color:var(--gold,#C89A3C);background:linear-gradient(135deg,rgba(79,151,201,.08),rgba(44,88,86,.06))}
+      .ah-freeze-credits{display:inline-block;margin-left:.4rem;padding:.1em .55em;border-radius:100px;background:var(--teal);color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.04em;vertical-align:.1em}
+      .ah-freeze-credits.empty{background:var(--text-muted,#8a9099)}
+      .ah-freeze-btn{flex:0 0 auto;align-self:center;border:1px solid var(--teal);background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.78rem;font-weight:700;border-radius:100px;padding:.5rem 1rem;cursor:pointer;white-space:nowrap;transition:filter .15s ease,opacity .15s ease}
+      .ah-freeze-btn:hover:not(:disabled){filter:brightness(1.08)}
+      .ah-freeze-btn:disabled{opacity:.6;cursor:default}
+      .ah-freeze-tx a#ah-freeze-trial{margin-left:.25rem;white-space:nowrap}
 
       /* Günlük ücretsiz limit → Premium köprüsü */
       .ah-limit{display:none;align-items:center;gap:.9rem;margin:1rem 0 0;padding:1rem 1.15rem;border-radius:14px;
@@ -2843,13 +2937,14 @@
         </div>
         <div class="ah-quote" id="us-days-quote">Defter açıldı. Asıl iş tekrarda.</div>
         <div class="ah-meta">Toplam <strong id="us-total-days">—</strong> gün aktivite</div>
-        <div class="ah-freeze">
+        <div class="ah-freeze" id="ah-freeze">
           <span class="ah-freeze-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 5.6l14.2 12.8M19.1 5.6L4.9 18.4"/><path d="M12 6l2 2-2 2-2-2 2-2zM6.5 8.8l1.4 2.7-2.9.5.6-3.1zM17.5 8.8l-1.4 2.7 2.9.5-.6-3.1zM6.5 15.2l1.4-2.7-2.9-.5.6 3.1zM17.5 15.2l-1.4-2.7 2.9-.5-.6 3.1z"/></svg></span>
           <span class="ah-freeze-tx">
-            <b>Seri Koruma <span class="ah-freeze-soon">Çok Yakında</span></b>
-            <small class="sf-free">Bir günü kaçırsan bile serin kırılmasın. <a href="premium">Premium ile serini koru →</a></small>
-            <small class="sf-pro">Premium üyesin — Seri Koruma açıldığında bir günlük telafi hakkı otomatik senin olacak.</small>
+            <b>Seri Koruma <span class="ah-freeze-credits" id="ah-freeze-credits" hidden></span></b>
+            <small class="sf-free">Bir günü kaçırsan bile serin kırılmasın. <a href="premium">Premium ile serini koru →</a> <a href="#" id="ah-freeze-trial">3 gün ücretsiz dene</a></small>
+            <small class="sf-pro" id="ah-freeze-promsg">Bir günü kaçırırsan telafi hakkın serini korur. Ayda 2 hak otomatik yenilenir.</small>
           </span>
+          <button type="button" class="ah-freeze-btn" id="ah-freeze-btn" hidden>Bugünü koru</button>
         </div>
       </div>
       <div class="ah-limit" id="ah-limit-bridge" role="status">
@@ -2860,7 +2955,7 @@
         </span>
         <span class="ah-limit-cta">
           <a class="primary" href="premium">Premium’a geç</a>
-          <button type="button" id="ah-limit-trial">7 gün ücretsiz dene</button>
+          <button type="button" id="ah-limit-trial">3 gün ücretsiz dene</button>
         </span>
       </div>
 
@@ -3214,7 +3309,7 @@
             if (r && !r.error && r.data && r.data.ok) {
               try { if (window.GriPremium && GriPremium.refresh) await GriPremium.refresh(); } catch (e) {}
               try { if (window.GriFX) GriFX.confetti({ y: 0.3 }); } catch (e) {}
-              toast('7 günlük Premium denemen başladı 🎉');
+              toast('3 günlük Premium denemen başladı 🎉');
             } else {
               var reason = r && r.data && r.data.reason;
               if (reason === 'already_used' || reason === 'trial_used') { toast('Deneme hakkını daha önce kullanmışsın — Premium sayfasına yönlendiriliyorsun.'); setTimeout(function () { location.href = 'premium'; }, 1400); }
@@ -3224,6 +3319,107 @@
           finally { if (btn) { btn.disabled = false; if (label) btn.textContent = label; } }
         }
         window.GriTrial = { start: start, toast: toast };
+      })();
+    </script>
+
+    <!-- Seri Koruma — canlı mekanik (gri_streak_freeze_status / gri_use_streak_freeze) — FAIL-OPEN -->
+    <script>
+      (function () {
+        var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+        var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+        var wrap = document.getElementById('ah-freeze');
+        if (!wrap) return;
+        var elFree = wrap.querySelector('.sf-free');
+        var elPro = document.getElementById('ah-freeze-promsg');
+        var elCred = document.getElementById('ah-freeze-credits');
+        var btn = document.getElementById('ah-freeze-btn');
+        var trial = document.getElementById('ah-freeze-trial');
+        var sbCli = null, loaded = false;
+
+        function toastLocal(m) { try { if (window.GriTrial && GriTrial.toast) { GriTrial.toast(m); } } catch (e) {} }
+        function setCred(c) {
+          if (!elCred) return;
+          elCred.hidden = false;
+          elCred.textContent = c + ' hak';
+          elCred.classList.toggle('empty', c <= 0);
+        }
+        function showFree() {
+          if (elFree) elFree.style.display = 'block';
+          if (elPro) elPro.style.display = 'none';
+          if (elCred) elCred.hidden = true;
+          if (btn) btn.hidden = true;
+        }
+        function showPremium(c) {
+          if (elFree) elFree.style.display = 'none';
+          if (elPro) elPro.style.display = 'block';
+          setCred(c);
+          if (btn) {
+            btn.hidden = false;
+            btn.disabled = c <= 0;
+            btn.textContent = c > 0 ? 'Bugünü koru' : 'Bu ay hak kalmadı';
+          }
+        }
+
+        if (trial) {
+          trial.addEventListener('click', function (e) {
+            e.preventDefault();
+            try { if (window.GriTrial && GriTrial.start) { GriTrial.start(trial); return; } } catch (err) {}
+            location.href = 'premium';
+          });
+        }
+
+        async function sb() {
+          if (sbCli) return sbCli;
+          if (!window.supabase || !window.supabase.createClient) return null;
+          sbCli = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+          return sbCli;
+        }
+
+        async function load() {
+          try {
+            var c = await sb();
+            if (!c) return; // FAIL-OPEN: statik iskelet (data-premium) kalsın
+            var r = await c.rpc('gri_streak_freeze_status');
+            if (!r || r.error || !r.data || r.data.error) return; // FAIL-OPEN
+            var d = r.data;
+            loaded = true;
+            if (d.is_premium) showPremium(Number(d.credits) || 0);
+            else showFree();
+          } catch (e) { /* FAIL-OPEN */ }
+        }
+
+        if (btn) {
+          btn.addEventListener('click', async function () {
+            var c = await sb();
+            if (!c) { location.href = 'premium'; return; }
+            var lbl = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Koruma uygulanıyor…';
+            try {
+              var r = await c.rpc('gri_use_streak_freeze');
+              var d = (r && r.data) || {};
+              if (r && r.error) { toastLocal('Şu an yapılamadı, birazdan tekrar dene.'); btn.textContent = lbl; btn.disabled = false; return; }
+              if (d.ok) {
+                var left = Number(d.credits) || 0;
+                setCred(left);
+                if (d.already_protected) { toastLocal('Bugün zaten korumalıydı — serin güvende.'); }
+                else { toastLocal('Bugün korundu! Bir gün kaçırsan bile serin kırılmayacak.'); try { if (window.GriFX) GriFX.confetti({ y: 0.3 }); } catch (e) {} }
+                btn.textContent = left > 0 ? 'Bugün korundu ✓' : 'Bu ay hak kalmadı';
+                btn.disabled = true; // günde bir kez
+              } else {
+                var reason = d.reason || '';
+                setCred(Number(d.credits) || 0);
+                if (reason === 'no_credits') { toastLocal('Bu ay koruma hakkın kalmadı — ay başında yenilenecek.'); btn.textContent = 'Bu ay hak kalmadı'; btn.disabled = true; }
+                else if (reason === 'not_authenticated') { location.href = 'giris?next=panelim'; }
+                else { toastLocal('Şu an yapılamadı, birazdan tekrar dene.'); btn.textContent = lbl; btn.disabled = false; }
+              }
+            } catch (e) { toastLocal('Bir sorun oluştu, birazdan tekrar dene.'); btn.textContent = lbl; btn.disabled = false; }
+          });
+        }
+
+        if (document.readyState !== 'loading') load();
+        else document.addEventListener('DOMContentLoaded', load);
+        // Trial/premium durumu değişirse yeniden değerlendir
+        window.addEventListener('gri-premium', function () { load(); });
       })();
     </script>
 
@@ -3364,7 +3560,7 @@
             + '<span class="sj-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/></svg></span>'
             + '<b>Skor Yolculuğu · Premium</b>'
             + '<p>Tahmini skorunun zaman içindeki değişimi, hedefe kalan mesafe ve haftalık ivmen — tek bakışta.</p>'
-            + '<div class="sj-lock-cta"><a class="primary" href="premium">Premium ile aç</a><button type="button" data-sj-trial>7 gün ücretsiz dene</button></div>'
+            + '<div class="sj-lock-cta"><a class="primary" href="premium">Premium ile aç</a><button type="button" data-sj-trial>3 gün ücretsiz dene</button></div>'
             + '</div>';
           return '<div class="sj-locked"><div class="sj-blur" aria-hidden="true" inert>' + inner + '</div>' + lock + '</div>';
         }
@@ -4655,7 +4851,7 @@
               var exhausted = (remaining != null) ? (remaining <= 0) : (todayCount >= FREE_Q_LIMIT);
               if (!exhausted) { bridge.classList.remove('show'); return; }
               if (titleEl) titleEl.textContent = 'Bugünkü ücretsiz soru hakkın doldu 👏';
-              if (subEl) subEl.textContent = 'Bugün güzel çalıştın. Premium ile sınırsız soru, tüm denemeler, reklamsız ve sınırsız AI mentor — ya da 7 gün ücretsiz dene.';
+              if (subEl) subEl.textContent = 'Bugün güzel çalıştın. Premium ile sınırsız soru, tüm denemeler, reklamsız ve sınırsız AI mentor — ya da 3 gün ücretsiz dene.';
               bridge.classList.add('show');
             }
             // Önce client-side yedekle çiz (anında), sonra server kotasıyla düzelt

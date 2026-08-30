@@ -724,7 +724,7 @@
     })();
   </script>
 
-  <!-- ══ 7 GÜN ÜCRETSİZ PRO DENEMESİ (gri_start_trial) ══ -->
+  <!-- ══ 3 GÜN ÜCRETSİZ PRO DENEMESİ (gri_start_trial) ══ -->
   <script>
     (function(){
       var SB_URL='https://vazbvbqgvtlaqkytfsbi.supabase.co';
@@ -739,7 +739,7 @@
         try{ m.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
       }
       function toPlans(){ var el=document.getElementById('pmPlans'); if(el){ try{ el.scrollIntoView({behavior:'smooth'});}catch(e){ location.hash='#pmPlans'; } } }
-      function loginRedirect(){ location.href='/giris?return='+encodeURIComponent(location.pathname||'/premium'); }
+      function loginRedirect(){ location.href='/giris?return='+encodeURIComponent('/premium?trial=1'); }
       function getClient(){
         // gri-premium.js ile aynı istemciyi paylaş (session localStorage'da ortak)
         if(window.__griPremiumClient) return window.__griPremiumClient;
@@ -798,8 +798,19 @@
           b.addEventListener('click', function(ev){ ev.preventDefault(); startTrial(); });
         });
       }
-      if(document.readyState!=='loading') bind();
-      else document.addEventListener('DOMContentLoaded', bind);
+      // Girişten sonra kesintisiz deneme: /premium?trial=1 ile dönüldüyse ve oturum varsa otomatik başlat.
+      // Döngü güvenliği: yalnız oturum mevcutken başlatır; oturum yoksa hiçbir şey yapmaz (kullanıcı butonu görür).
+      async function maybeAuto(){
+        try{
+          if(new URLSearchParams(location.search).get('trial')!=='1') return;
+          var c=getClient(); if(!c) return;
+          var s=await c.auth.getSession();
+          if(s && s.data && s.data.session && s.data.session.user){ startTrial(); }
+        }catch(e){}
+      }
+      function init(){ bind(); maybeAuto(); }
+      if(document.readyState!=='loading') init();
+      else document.addEventListener('DOMContentLoaded', init);
     })();
   </script>
 

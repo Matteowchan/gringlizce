@@ -228,7 +228,8 @@
     /* Kişisel not defteri = modalın sol kenarından SOLA açılan yatay flyout (cascade) */
     + '.gsch-daymodal-wrap{position:relative;display:flex;align-items:center;}'
     + '.gsch-pn-fly{position:absolute;right:100%;top:0;height:100%;display:flex;align-items:center;z-index:3;}'
-    + '.gsch-pn-trigger{writing-mode:vertical-rl;background:#7C5CBF;color:#fff;border:none;border-radius:13px 0 0 13px;padding:18px 9px;font:inherit;font-weight:800;font-size:12px;letter-spacing:.05em;cursor:pointer;box-shadow:-3px 0 12px rgba(20,16,12,.14);white-space:nowrap;display:flex;align-items:center;gap:7px;}'
+    + '.gsch-pn-trigger{background:#7C5CBF;color:#fff;border:none;border-radius:13px 0 0 13px;padding:14px 10px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;box-shadow:-3px 0 12px rgba(20,16,12,.14);display:flex;flex-direction:column;align-items:center;gap:8px;}'
+    + '.gsch-pn-trigger-txt{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px;line-height:1.05;text-transform:none;}'
     + '.gsch-pn-trigger:hover,.gsch-pn-fly.open .gsch-pn-trigger{background:#6a4ea8;}'
     + '.gsch-pn-trigger svg{transition:transform .2s ease;}'
     + '.gsch-pn-fly.open .gsch-pn-trigger svg{transform:rotate(180deg);}'
@@ -1169,7 +1170,7 @@
       ) : '';
       var flyHTML = showPersonal ? (
         '<div class="gsch-pn-fly">'+personalNoteHTML
-        + '<button type="button" class="gsch-pn-trigger" aria-label="Kişisel not defteri" title="Kişisel not defteri (yalnız sen görürsün)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>Kişisel Not</span></button>'
+        + '<button type="button" class="gsch-pn-trigger" aria-label="Kişisel not defteri" title="Kişisel not defteri (yalnız sen görürsün)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span class="gsch-pn-trigger-txt">Kişisel Not</span></button>'
         + '</div>'
       ) : '';
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
@@ -1189,10 +1190,10 @@
           setTimeout(function(){ try{
             var fo=fly.querySelector('.gsch-pn-flyout'); if(!fo) return;
             var r=fo.getBoundingClientRect(), pad=10; if(r.left>=pad) return;
-            var shift=pad-r.left, card=ov.querySelector('.gsch-daymodal'), cs=card.getBoundingClientRect();
-            if(getComputedStyle(card).position!=='fixed'){ card.style.position='fixed'; card.style.top=cs.top+'px'; card.style.margin='0'; }
-            card.style.left=(cs.left+shift)+'px';
-            fly.style.position='fixed'; fly.style.top=cs.top+'px'; fly.style.height=cs.height+'px'; fly.style.left='auto'; fly.style.right=(window.innerWidth-(cs.left+shift))+'px';
+            var shift=pad-r.left, wrap=ov.querySelector('.gsch-daymodal-wrap'); if(!wrap) return;
+            var wr=wrap.getBoundingClientRect();
+            if(getComputedStyle(wrap).position!=='fixed'){ wrap.style.position='fixed'; wrap.style.top=wr.top+'px'; wrap.style.left=wr.left+'px'; wrap.style.margin='0'; }
+            wrap.style.left=(wr.left+shift)+'px';
           }catch(_e){} }, 30);
         });
       })();
@@ -1319,14 +1320,14 @@
         else if(anchorRect.left-gap-mw >= pad){ left=anchorRect.left-gap-mw; place='left'; }
         else { left=Math.max(pad, Math.min(vw-mw-pad, anchorRect.left)); place='clamp'; }
         var top=Math.max(pad, Math.min(vh-mh-pad, anchorRect.top-8));
-        card.style.position='fixed'; card.style.left=left+'px'; card.style.top=top+'px'; card.style.margin='0';
+        // WRAP'i konumlandır (card değil) → kişisel not flyout'u (right:100% of wrap) hep modalın soluna yapışık kalır
+        var _wrap=ov.querySelector('.gsch-daymodal-wrap')||card;
+        _wrap.style.position='fixed'; _wrap.style.left=left+'px'; _wrap.style.top=top+'px'; _wrap.style.margin='0';
         card.style.transformOrigin=(place==='left'?'right center':(place==='right'?'left center':'center top'));
-        // Kişisel not flyout'unu da card'ın sol kenarına sabitle (wrap position:fixed card yüzünden çöker)
-        try{ var _fly=ov.querySelector('.gsch-pn-fly'); if(_fly){ var _cr=card.getBoundingClientRect(); _fly.style.position='fixed'; _fly.style.top=_cr.top+'px'; _fly.style.height=_cr.height+'px'; _fly.style.right=(window.innerWidth-_cr.left)+'px'; _fly.style.left='auto'; } }catch(_e){}
         // Taşma güvenliği: alt/üst kenar viewport'u aşarsa geri çek (kart içi kaydırma max-height ile)
         var rb=card.getBoundingClientRect();
-        if(rb.bottom>vh-pad){ card.style.top=Math.max(pad, vh-pad-rb.height)+'px'; }
-        if(card.getBoundingClientRect().top<pad){ card.style.top=pad+'px'; }
+        if(rb.bottom>vh-pad){ _wrap.style.top=Math.max(pad, vh-pad-rb.height)+'px'; }
+        if(card.getBoundingClientRect().top<pad){ _wrap.style.top=pad+'px'; }
         // Tıklanan günü gösteren üçgen ok (yalnız yana yerleşimde)
         if(place==='right'||place==='left'){
           var cr2=card.getBoundingClientRect();

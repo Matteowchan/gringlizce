@@ -69,6 +69,17 @@
     + '.gsch-sub:disabled{opacity:.5;cursor:default;}'
     + '.gsch-ext-tag{font-size:11px;font-weight:700;color:#8a8172;background:#f1ece1;border:1px dashed #c9bfa8;border-radius:20px;padding:4px 10px;}'
     + '.gsch-pn-tag{color:#7C5CBF !important;background:rgba(124,92,191,.12) !important;border-color:rgba(124,92,191,.4) !important;}'
+    + '.gsch-pnbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;background:rgba(124,92,191,.07);border:1px solid rgba(124,92,191,.25);border-radius:12px;}'
+    + '.gsch-pnbar-lbl{font-size:12px;font-weight:800;color:#7C5CBF;white-space:nowrap;line-height:1.2;}'
+    + '.gsch-pnbar-lbl small{display:block;font-weight:600;font-size:10px;opacity:.85;}'
+    + '.gsch-pnbar input{flex:1;min-width:110px;font:inherit;padding:7px 9px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
+    + '.gsch-pnbar .pnf-t{flex:1.3;}'
+    + '.gsch-pnbar .gsch-pnbar-time{flex:0 0 auto;}'
+    + '.gsch-pnbar .gsch-pnbar-time select{padding:7px 4px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;font:inherit;}'
+    + '.gsch-pnbar .pnf-save{flex:0 0 auto;background:#7C5CBF;border-color:#7C5CBF;color:#fff;}'
+    + '.gsch-pnbar .pnf-save:hover{background:#6a4ea8;}'
+    + ':root[data-theme="dark"] .gsch-pnbar{background:rgba(124,92,191,.16);border-color:rgba(124,92,191,.38);}'
+    + ':root[data-theme="dark"] .gsch-pnbar input,:root[data-theme="dark"] .gsch-pnbar .gsch-pnbar-time select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-cell .ev.ev-ext b{font-weight:600;}'
     + '.gsch-imp{margin-top:16px;border-top:1px solid #e5ddcd;padding-top:14px;}'
     + '.gsch-imp h5{margin:0 0 4px;font-size:14px;font-weight:700;color:#2a2a2a;}'
@@ -497,7 +508,7 @@
       + '<div class="gsch-head"><button class="gsch-sub" type="button">Takvime Abone Ol</button>'
         + ((role==='teacher' && classList.length) ? '<button class="gsch-sub gsch-colors" type="button">Takvim Renkleri</button>' : '')
         + '<button class="gsch-sub gsch-list-btn" type="button">Liste '+(listOpen?'▾':'▸')+'</button>'
-        + '<button class="gsch-sub gsch-stats-btn" type="button">Ders İstatistiği '+(statsOpen?'▾':'▸')+'</button>'
+        + (role==='teacher' ? '<button class="gsch-sub gsch-stats-btn" type="button">Ders İstatistiği '+(statsOpen?'▾':'▸')+'</button>' : '')
         + (role==='teacher' ? '<button class="gsch-new">+ Yeni Ders Planla</button>' : '')
       + '</div>'
       + ((role==='teacher'||manageOwn) ?
@@ -971,7 +982,8 @@
       var holMap=holidayMap(y);
       var cells='';
       var prevDays=new Date(y,mo,0).getDate();
-      for(var i=0;i<startWd;i++){ var _pd=prevDays-startWd+1+i; var _pdD=new Date(y,mo-1,_pd); cells+='<div class="gsch-cell out'+(i>=5?' we':'')+'"><span class="num">'+_pd+'</span><div class="gsch-evs">'+_evOut(_evsFor(_pdD.getFullYear(),_pdD.getMonth(),_pd))+'</div></div>'; }
+      var _outClk=(role==='teacher'||personal)?' gsch-clk':'';
+      for(var i=0;i<startWd;i++){ var _pd=prevDays-startWd+1+i; var _pdD=new Date(y,mo-1,_pd); cells+='<div class="gsch-cell out'+(i>=5?' we':'')+_outClk+'" data-day="'+_pd+'" data-mo="'+_pdD.getMonth()+'" data-yr="'+_pdD.getFullYear()+'"><span class="num">'+_pd+'</span><div class="gsch-evs">'+_evOut(_evsFor(_pdD.getFullYear(),_pdD.getMonth(),_pd))+'</div></div>'; }
       for(var dnum=1;dnum<=days;dnum++){
         var _dd=new Date(y,mo,dnum), _dw=_dd.getDay(), we=(_dw===0||_dw===6);
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
@@ -982,12 +994,12 @@
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
       var _tot=startWd+days, _trail=(7-(_tot%7))%7;
-      for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; var _tjD=new Date(y,mo+1,_tj); cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+'"><span class="num">'+_tj+'</span><div class="gsch-evs">'+_evOut(_evsFor(_tjD.getFullYear(),_tjD.getMonth(),_tj))+'</div></div>'; }
+      for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; var _tjD=new Date(y,mo+1,_tj); cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+_outClk+'" data-day="'+_tj+'" data-mo="'+_tjD.getMonth()+'" data-yr="'+_tjD.getFullYear()+'"><span class="num">'+_tj+'</span><div class="gsch-evs">'+_evOut(_evsFor(_tjD.getFullYear(),_tjD.getMonth(),_tj))+'</div></div>'; }
       el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
-      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); openDayModal(y,mo,dd,c.getBoundingClientRect()); }); });
+      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
       if(role==='teacher'||manageOwn){
         el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
           ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });
@@ -1032,16 +1044,15 @@
       var head=WD_L[(dObj.getDay()+6)%7]+' · '+dnum+' '+MONTHS_L[mo]+' '+y;
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
       var showForm=(role==='teacher');
-      var showPersonal=(personal && !showForm);   // öğrenci: kişisel not/etkinlik formu (yalnız kendi görür)
+      var showPersonal=personal;   // öğrenci VE öğretmen kişisel not/etkinlik ekleyebilir (yalnız KENDİ görür — RLS own-row)
       var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('');
-      var personalFormHTML = showPersonal ? (
-        '<div class="gsch-daymodal-form gsch-pnform">'
-        + '<div class="dmf-title">Kişisel not / etkinlik</div>'
-        + '<label class="dmf-l">Başlık<input type="text" class="pnf-t" placeholder="Örn. Kelime tekrarı" maxlength="80"></label>'
-        + '<div class="dmf-row"><label class="dmf-l">Saat (opsiyonel)<span class="dmf-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span></label></div>'
-        + '<label class="dmf-l">Not (opsiyonel)<input type="text" class="pnf-n" placeholder="Kısa açıklama" maxlength="200"></label>'
-        + '<div class="dmf-acts"><button type="button" class="gsch-btn pnf-save">Ekle</button></div>'
-        + '<small class="dmf-days-hint">Sadece sen görürsün — öğretmenine görünmez.</small>'
+      var personalBarHTML = showPersonal ? (
+        '<div class="gsch-pnbar">'
+        + '<span class="gsch-pnbar-lbl">Kişisel not <small>yalnız sen görürsün</small></span>'
+        + '<input type="text" class="pnf-t" placeholder="Başlık" maxlength="80">'
+        + '<span class="dmf-time gsch-pnbar-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span>'
+        + '<input type="text" class="pnf-n" placeholder="Not (opsiyonel)" maxlength="200">'
+        + '<button type="button" class="gsch-btn pnf-save">Ekle</button>'
         + '</div>'
       ) : '';
       var formHTML = showForm ? (
@@ -1061,7 +1072,8 @@
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
       ov.innerHTML='<div class="gsch-modal gsch-daymodal'+((showForm||showPersonal)?' has-form':'')+'">'
         + '<div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4><span class="gsch-daymodal-count-slot"></span></div>'+holBadge
-        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+personalFormHTML+'</div>'
+        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
+        + personalBarHTML
         + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);
       var listEl=ov.querySelector('.gsch-daymodal-list'), countSlot=ov.querySelector('.gsch-daymodal-count-slot');
@@ -1102,7 +1114,7 @@
       }
       function renderDay(){
         var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
-        var _emptyHint=(showForm?'<small>Sağdaki formla ilk dersi ekle.</small>':(showPersonal?'<small>Sağdaki formla kişisel not ekle.</small>':''));
+        var _emptyHint=(showForm?'<small>Sağdaki formla ders planla.</small>':'')+(showPersonal?'<small>Aşağıdan kişisel not ekleyebilirsin.</small>':'');
         listEl.innerHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-dayempty"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg><div>Bu güne henüz kayıt yok.</div>'+_emptyHint+'</div>';
         countSlot.innerHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' kayıt</span>'):'';
         listEl.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click', async function(){ var cid=b.getAttribute('data-cancel'); await cancelLesson(cid); if(editingId===cid) resetPane(); renderDay(); }); });
@@ -1113,7 +1125,7 @@
       ov.querySelector('.m-close').addEventListener('click',close);
       renderDay();
       if(showPersonal){
-        var _pnf=ov.querySelector('.gsch-pnform');
+        var _pnf=ov.querySelector('.gsch-pnbar');
         var psv=_pnf?_pnf.querySelector('.pnf-save'):null;
         if(psv) psv.addEventListener('click', async function(){
           var title=(_pnf.querySelector('.pnf-t').value||'').trim();
@@ -1357,16 +1369,13 @@
     }
 
     function render(){
-      var mainHTML = !state.rows.length
-        ? '<div class="gsch-empty">'+(role==='teacher'?'Henüz planlanmış ders yok. “+ Yeni Ders Planla” ile ekle.':'Yaklaşan online ders yok.')+'</div>'
-        : '<div class="gsch-split'+(listOpen?'':' list-off')+'"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
+      // Takvim grid'i HER ZAMAN gösterilir (ders/sınıf olmasa da) — boş durum liste sütununda belirir.
+      var mainHTML = '<div class="gsch-split'+(listOpen?'':' list-off')+'"><div class="gsch-col gsch-col-cal"></div><div class="gsch-resizer" title="Sürükleyerek takvim / liste genişliğini ayarla" aria-label="Genişliği ayarla"></div><div class="gsch-col gsch-col-list"><div class="gsch-col-list-inner"></div></div></div>';
       body.innerHTML='<div class="gsch-shell'+(statsOpen?' stats-on':'')+((!listOpen&&!statsOpen)?' centered':'')+'"><div class="gsch-main">'+mainHTML+'</div>'
         + '<aside class="gsch-stats"><div class="gsch-stats-h">Ders İstatistiği · son 3 ay</div><div class="gsch-stats-body"></div></aside></div>';
-      if(state.rows.length){
-        setupResizer();
-        renderCal(body.querySelector('.gsch-col-cal'));
-        renderListInner(body.querySelector('.gsch-col-list-inner'));
-      }
+      setupResizer();
+      renderCal(body.querySelector('.gsch-col-cal'));
+      renderListInner(body.querySelector('.gsch-col-list-inner'));
       paintStats();
     }
 

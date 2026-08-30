@@ -69,17 +69,17 @@
     + '.gsch-sub:disabled{opacity:.5;cursor:default;}'
     + '.gsch-ext-tag{font-size:11px;font-weight:700;color:#8a8172;background:#f1ece1;border:1px dashed #c9bfa8;border-radius:20px;padding:4px 10px;}'
     + '.gsch-pn-tag{color:#7C5CBF !important;background:rgba(124,92,191,.12) !important;border-color:rgba(124,92,191,.4) !important;}'
-    + '.gsch-pnbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;background:rgba(124,92,191,.07);border:1px solid rgba(124,92,191,.25);border-radius:12px;}'
-    + '.gsch-pnbar-lbl{font-size:12px;font-weight:800;color:#7C5CBF;white-space:nowrap;line-height:1.2;}'
-    + '.gsch-pnbar-lbl small{display:block;font-weight:600;font-size:10px;opacity:.85;}'
-    + '.gsch-pnbar input{flex:1;min-width:110px;font:inherit;padding:7px 9px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
-    + '.gsch-pnbar .pnf-t{flex:1.3;}'
-    + '.gsch-pnbar .gsch-pnbar-time{flex:0 0 auto;}'
-    + '.gsch-pnbar .gsch-pnbar-time select{padding:7px 4px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;font:inherit;}'
-    + '.gsch-pnbar .pnf-save{flex:0 0 auto;background:#7C5CBF;border-color:#7C5CBF;color:#fff;}'
-    + '.gsch-pnbar .pnf-save:hover{background:#6a4ea8;}'
-    + ':root[data-theme="dark"] .gsch-pnbar{background:rgba(124,92,191,.16);border-color:rgba(124,92,191,.38);}'
-    + ':root[data-theme="dark"] .gsch-pnbar input,:root[data-theme="dark"] .gsch-pnbar .gsch-pnbar-time select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
+    + '.gsch-pnnote{margin-top:12px;padding:12px 13px;background:rgba(124,92,191,.06);border:1px solid rgba(124,92,191,.22);border-radius:12px;display:flex;flex-direction:column;gap:8px;}'
+    + '.gsch-pnnote-h{font-size:12px;font-weight:800;color:#7C5CBF;}'
+    + '.gsch-pnnote-h small{font-weight:600;font-size:10.5px;opacity:.85;margin-left:6px;}'
+    + '.gsch-pnnote input,.gsch-pnnote textarea,.gsch-pnnote select{font:inherit;padding:8px 9px;border:1px solid #d8d2c4;border-radius:8px;background:#fff;color:#2a2a2a;}'
+    + '.gsch-pnnote textarea{min-height:130px;resize:vertical;line-height:1.55;width:100%;box-sizing:border-box;}'
+    + '.gsch-pnnote-time{display:flex;align-items:center;gap:8px;}'
+    + '.gsch-pnnote-tlbl{font-size:11px;color:#8a8172;}'
+    + '.gsch-pnnote .pnf-save{background:#7C5CBF;border-color:#7C5CBF;color:#fff;align-self:flex-start;padding-left:18px;padding-right:18px;}'
+    + '.gsch-pnnote .pnf-save:hover{background:#6a4ea8;}'
+    + ':root[data-theme="dark"] .gsch-pnnote{background:rgba(124,92,191,.14);border-color:rgba(124,92,191,.34);}'
+    + ':root[data-theme="dark"] .gsch-pnnote input,:root[data-theme="dark"] .gsch-pnnote textarea,:root[data-theme="dark"] .gsch-pnnote select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-cell .ev.ev-ext b{font-weight:600;}'
     + '.gsch-imp{margin-top:16px;border-top:1px solid #e5ddcd;padding-top:14px;}'
     + '.gsch-imp h5{margin:0 0 4px;font-size:14px;font-weight:700;color:#2a2a2a;}'
@@ -1046,12 +1046,12 @@
       var showForm=(role==='teacher');
       var showPersonal=personal;   // öğrenci VE öğretmen kişisel not/etkinlik ekleyebilir (yalnız KENDİ görür — RLS own-row)
       var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('');
-      var personalBarHTML = showPersonal ? (
-        '<div class="gsch-pnbar">'
-        + '<span class="gsch-pnbar-lbl">Kişisel not <small>yalnız sen görürsün</small></span>'
-        + '<input type="text" class="pnf-t" placeholder="Başlık" maxlength="80">'
-        + '<span class="dmf-time gsch-pnbar-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span>'
-        + '<input type="text" class="pnf-n" placeholder="Not (opsiyonel)" maxlength="200">'
+      var personalNoteHTML = showPersonal ? (
+        '<div class="gsch-pnnote">'
+        + '<div class="gsch-pnnote-h">Kişisel not defteri <small>yalnız sen görürsün</small></div>'
+        + '<input type="text" class="pnf-t" placeholder="Başlık — örn. Bugün ne çalışacağım" maxlength="90">'
+        + '<div class="gsch-pnnote-time"><span class="gsch-pnnote-tlbl">Saat (opsiyonel)</span><span class="dmf-time"><select class="pnf-h">'+_hopt+'</select><span class="f-colon">:</span><select class="pnf-m">'+_mopt+'</select></span></div>'
+        + '<textarea class="pnf-n" placeholder="Ne çalışacaksın, hangi saatlerde, neler yapacaksın… serbestçe yaz." maxlength="2000"></textarea>'
         + '<button type="button" class="gsch-btn pnf-save">Ekle</button>'
         + '</div>'
       ) : '';
@@ -1072,8 +1072,7 @@
       var ov=document.createElement('div'); ov.className='gsch-modal-ov';
       ov.innerHTML='<div class="gsch-modal gsch-daymodal'+((showForm||showPersonal)?' has-form':'')+'">'
         + '<div class="gsch-daymodal-h"><h4>'+esc(head)+'</h4><span class="gsch-daymodal-count-slot"></span></div>'+holBadge
-        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div></div>'+formHTML+'</div>'
-        + personalBarHTML
+        + '<div class="gsch-daymodal-body"><div class="gsch-daymodal-left"><div class="gsch-daymodal-list"></div>'+personalNoteHTML+'</div>'+formHTML+'</div>'
         + '<div class="macts" style="margin-top:14px;justify-content:flex-end;"><button type="button" class="gsch-btn ghost m-close">Kapat</button></div></div>';
       document.body.appendChild(ov);
       var listEl=ov.querySelector('.gsch-daymodal-list'), countSlot=ov.querySelector('.gsch-daymodal-count-slot');
@@ -1114,7 +1113,7 @@
       }
       function renderDay(){
         var rows=state.rows.filter(function(r){ return sameDay(r._d,dObj); });
-        var _emptyHint=(showForm?'<small>Sağdaki formla ders planla.</small>':'')+(showPersonal?'<small>Aşağıdan kişisel not ekleyebilirsin.</small>':'');
+        var _emptyHint=(showForm?'<small>Sağdaki formla ders planla.</small>':'')+(showPersonal?'<small>Aşağıdaki not defterine yazabilirsin.</small>':'');
         listEl.innerHTML=rows.length ? rows.map(dayItemHTML).join('') : '<div class="gsch-dayempty"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg><div>Bu güne henüz kayıt yok.</div>'+_emptyHint+'</div>';
         countSlot.innerHTML=rows.length?('<span class="gsch-daymodal-count">'+rows.length+' kayıt</span>'):'';
         listEl.querySelectorAll('[data-cancel]').forEach(function(b){ b.addEventListener('click', async function(){ var cid=b.getAttribute('data-cancel'); await cancelLesson(cid); if(editingId===cid) resetPane(); renderDay(); }); });
@@ -1125,7 +1124,7 @@
       ov.querySelector('.m-close').addEventListener('click',close);
       renderDay();
       if(showPersonal){
-        var _pnf=ov.querySelector('.gsch-pnbar');
+        var _pnf=ov.querySelector('.gsch-pnnote');
         var psv=_pnf?_pnf.querySelector('.pnf-save'):null;
         if(psv) psv.addEventListener('click', async function(){
           var title=(_pnf.querySelector('.pnf-t').value||'').trim();

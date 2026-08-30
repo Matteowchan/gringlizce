@@ -2355,10 +2355,13 @@
     }
     .sf-tstrip .tstrip-btn { cursor: pointer; }
     /* Öğretmen Paneli popup — sınıflara tek tıkla erişim */
-    .sf-tpop { position: fixed; inset: 0; z-index: 9999; background: rgba(20,15,10,0.45); display: none; align-items: center; justify-content: center; padding: 1.2rem; }
-    .sf-tpop.open { display: flex; }
-    .sf-tpop-card { background: var(--bg-card, #fff); border: 1px solid var(--line, #e4ddcc); border-radius: 16px; max-width: 440px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: sfTpop 0.18s ease; }
-    @keyframes sfTpop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+    .sf-tstrip.sf-tstrip-click { cursor: pointer; }
+    .sf-tstrip.sf-tstrip-click:hover { border-color: var(--teal, #2C5856); }
+    .sf-tstrip.sf-tstrip-click:hover .tstrip-btn { background: #234644; }
+    .sf-tpop { position: fixed; inset: 0; z-index: 9999; background: transparent; display: none; }
+    .sf-tpop.open { display: block; }
+    .sf-tpop-card { position: fixed; background: var(--bg-card, #fff); border: 1px solid var(--line, #e4ddcc); border-radius: 14px; width: 320px; max-width: calc(100vw - 20px); max-height: 70vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.28); animation: sfTpop 0.14s ease; }
+    @keyframes sfTpop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
     .sf-tpop-h { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line, #eee); }
     .sf-tpop-h b { font-family: var(--font-display, Georgia), serif; font-size: 1.15rem; color: var(--text); }
     .sf-tpop-x { background: transparent; border: none; font-size: 1.5rem; line-height: 1; color: var(--text-muted, #8a7f68); cursor: pointer; padding: 0 4px; }
@@ -2895,23 +2898,36 @@
         var banner = document.getElementById('cl-teacher-banner');
 
         function renderBannerForTeacher() {
-          // Kalın kart yerine takvimin ÜSTÜNDE ince aksiyon şeridi
+          // Kalın kart yerine takvimin ÜSTÜNDE ince aksiyon şeridi — TÜM ŞERİT tıklanabilir
           var strip = document.getElementById('sf-teacher-strip');
           if (strip) {
             strip.innerHTML = ''
               + '<span class="tstrip-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-5 9 5-9 5-9-5z"/><path d="M7 12v4c0 1.1 2.24 2.2 5 2.2s5-1.1 5-2.2v-4"/><path d="M21 10v5"/></svg></span>'
               + '<span class="tstrip-tx"><span class="tstrip-eyebrow">Öğretmen</span><b>Öğretmen Paneli</b><span>Sınıf oluştur, ödev ata, öğrenci ilerlemesini gör.</span></span>'
-              + '<button type="button" class="tstrip-btn" id="sf-tpop-open">Öğretmen Paneline Git →</button>';
+              + '<span class="tstrip-btn" aria-hidden="true">Öğretmen Paneline Git →</span>';
+            strip.classList.add('sf-tstrip-click');
+            strip.setAttribute('role', 'button');
+            strip.setAttribute('tabindex', '0');
             strip.style.display = '';
-            var _ob = document.getElementById('sf-tpop-open');
-            if (_ob) _ob.addEventListener('click', openTeacherPop);
+            strip.addEventListener('click', openTeacherPop);
+            strip.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTeacherPop(e); } });
           }
           // Alttaki kalın kartı öğretmene gösterme (şerit üstte)
           if (banner) { banner.innerHTML = ''; banner.classList.add('cl-teacher-banner-empty'); }
         }
 
-        // "Öğretmen Paneline Git" → sınıfları popup'ta göster, tek tıkla ilgili sınıfa gir (click azaltır)
-        function openTeacherPop() {
+        function _tpopEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function _tpopPlace(card, mx, my) {
+          card.style.position = 'fixed';
+          var w = card.offsetWidth || 320, h = card.offsetHeight || 240, vw = window.innerWidth, vh = window.innerHeight, pad = 10;
+          var x = mx + 12; if (x + w > vw - pad) x = mx - w - 12; if (x < pad) x = pad;
+          var y = my - 12; if (y + h > vh - pad) y = Math.max(pad, vh - pad - h); if (y < pad) y = pad;
+          card.style.left = Math.round(x) + 'px'; card.style.top = Math.round(y) + 'px';
+        }
+        // Şeride tıklayınca sınıflar farenin yanında popover olarak çıkar, tek tıkla o sınıfa gir
+        function openTeacherPop(evt) {
+          var mx = (evt && typeof evt.clientX === 'number' && evt.clientX) ? evt.clientX : (window.innerWidth - 340);
+          var my = (evt && typeof evt.clientY === 'number' && evt.clientY) ? evt.clientY : 150;
           var ov = document.getElementById('sf-tpop');
           if (!ov) {
             ov = document.createElement('div'); ov.id = 'sf-tpop'; ov.className = 'sf-tpop';
@@ -2921,22 +2937,29 @@
             ov.querySelector('.sf-tpop-x').addEventListener('click', function () { ov.classList.remove('open'); });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.classList.remove('open'); });
           }
-          ov.classList.add('open');
+          var card = ov.querySelector('.sf-tpop-card');
           var body = ov.querySelector('.sf-tpop-body');
+          ov.classList.add('open');
           body.innerHTML = '<div class="sf-tpop-loading">Yükleniyor…</div>';
-          sbCli.rpc('list_my_classes').then(function (r) {
+          _tpopPlace(card, mx, my);
+          Promise.resolve(sbCli.rpc('list_my_classes')).then(function (r) {
+            if (r && r.error) throw r.error;
             var rows = (r && r.data) || [];
             if (!rows.length) {
               body.innerHTML = '<div class="sf-tpop-empty">Henüz sınıfın yok.<br><a href="ogretmen">Öğretmen Paneli\'nde sınıf oluştur →</a></div>';
-              return;
+            } else {
+              body.innerHTML = rows.map(function (c) {
+                return '<a class="sf-tpop-cls" href="ogretmen-sinif.html?id=' + encodeURIComponent(c.class_id) + '">'
+                  + '<span class="sf-tpop-cls-main"><span class="sf-tpop-cls-name">' + _tpopEsc(c.name || 'Sınıf') + '</span>'
+                  + '<span class="sf-tpop-cls-meta">' + (c.member_count || 0) + ' öğrenci · ' + (c.assignment_count || 0) + ' ödev</span></span>'
+                  + '<span class="sf-tpop-cls-go">›</span></a>';
+              }).join('');
             }
-            body.innerHTML = rows.map(function (c) {
-              return '<a class="sf-tpop-cls" href="ogretmen-sinif.html?id=' + encodeURIComponent(c.class_id) + '">'
-                + '<span class="sf-tpop-cls-main"><span class="sf-tpop-cls-name">' + escMA(c.name || 'Sınıf') + '</span>'
-                + '<span class="sf-tpop-cls-meta">' + (c.member_count || 0) + ' öğrenci · ' + (c.assignment_count || 0) + ' ödev</span></span>'
-                + '<span class="sf-tpop-cls-go">›</span></a>';
-            }).join('');
-          }, function () { body.innerHTML = '<div class="sf-tpop-empty">Sınıflar yüklenemedi.</div>'; });
+            _tpopPlace(card, mx, my);
+          }).catch(function (e) {
+            body.innerHTML = '<div class="sf-tpop-empty">Sınıflar yüklenemedi.' + (e && e.message ? '<br><small>' + _tpopEsc(e.message) + '</small>' : '') + '</div>';
+            _tpopPlace(card, mx, my);
+          });
         }
 
         function renderBannerForCustomer() {

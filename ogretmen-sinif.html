@@ -3860,6 +3860,107 @@
         }
       }
 
+      async function openHazirlikDrawer(assignmentId, title) {
+        adTitle.textContent = title || 'Hazırlık Atlama Denemesi';
+        adBody.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-style:italic;">Yükleniyor...</p>';
+        aDrawer.classList.add('show'); document.body.style.overflow = 'hidden';
+        var SEC_LABEL = { use_of_english: 'Use of English', vocabulary: 'Vocabulary', sentence_analysis: 'Sentence Analysis', reading: 'Reading' };
+        function haChip(total) {
+          var n = parseInt(total);
+          if (isNaN(n)) return '<span style="display:inline-block;padding:1px 9px;border-radius:20px;background:#7a7a7a;color:#fff;font-size:.74rem;font-weight:700;">—</span>';
+          var color = n >= 60 ? '#1FA971' : (n >= 45 ? '#B78A2E' : '#c0392b');
+          return '<span style="display:inline-block;padding:1px 9px;border-radius:20px;background:' + color + ';color:#fff;font-size:.74rem;font-weight:700;">' + n + ' / 100</span>';
+        }
+        try {
+          var r = await withTimeout(sb.rpc('teacher_hazirlik_detail', { p_assignment_id: assignmentId }), 15000, 'Deneme detayı');
+          if (r.error) throw r.error;
+          var d = r.data || {};
+          if (d.error) {
+            var msg = d.error === 'forbidden'
+              ? 'Bu sınıfı görüntüleme yetkin yok veya oturumun düşmüş görünüyor. Sağ üstten <b>çıkış yapıp tekrar giriş</b> yapıp tekrar dene.'
+              : (d.error === 'assignment_not_found' ? 'Ödev bulunamadı.' : rpcErrMsg(d.error));
+            adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + msg + '</p>';
+            return;
+          }
+          var set = d.exam_set || '';
+          var mset = String(set).match(/(\d+)\s*$/);
+          var nn = mset ? mset[1] : '';
+          var url = (nn === '1' || nn === '') ? 'universite-hazirlik-atlama' : 'universite-hazirlik-atlama-' + nn;
+          var students = d.students || [];
+          var header = '<div class="gepool-head"><a href="' + url + '" target="_blank" rel="noopener" class="qd-open">Denemeyi aç →</a> '
+            + '<span style="color:var(--text-muted);font-size:.8rem;">' + esc(d.label || set) + '</span></div>';
+          if (!students.length) { adBody.innerHTML = header + '<p class="qd-empty">Bu sınıfta öğrenci yok.</p>'; return; }
+          var html = header + '<ul class="ad-list">' + students.map(function (st) {
+            var email = st.email || '(e-posta yok)';
+            var at = st.attempt; var did = !!at;
+            var detailInner;
+            if (!did) {
+              detailInner = '<div class="ad-detail-inner"><p class="qd-empty">Bu öğrenci bu denemeyi henüz yapmadı.</p></div>';
+            } else {
+              var secs = at.section_breakdown || {};
+              var secRows = Object.keys(secs).map(function (k) {
+                var s = secs[k] || {};
+                return '<div class="qd-q" style="display:flex;justify-content:space-between;gap:1rem;"><span>' + esc(SEC_LABEL[k] || k) + '</span><b>' + (s.c != null ? s.c : '—') + ' / ' + (s.t != null ? s.t : '—') + '</b></div>';
+              }).join('');
+              var mc = (at.mc_correct != null ? at.mc_correct : '—') + ' / ' + (at.mc_total != null ? at.mc_total : '—');
+              var etext = (at.essay_text || '').trim();
+              var eprompt = (at.essay_prompt || '').trim();
+              var essayBlock;
+              if (etext || eprompt) {
+                var evalHtml = '';
+                var ev = at.essay_eval;
+                if (ev && typeof ev === 'object') {
+                  var parts = [];
+                  if (ev.band != null) parts.push('Band ' + esc(String(ev.band)));
+                  if (ev.overall != null) parts.push('Genel ' + esc(String(ev.overall)));
+                  if (ev.score != null) parts.push('Puan ' + esc(String(ev.score)));
+                  var fb = ev.feedback || ev.summary || ev.comment || ev.overall_feedback || '';
+                  if (parts.length || fb) evalHtml = '<div class="qd-exp">' + (parts.length ? '<b>' + parts.join(' · ') + '</b><br>' : '') + esc(String(fb)) + '</div>';
+                }
+                essayBlock = '<div style="margin-top:10px;"><div class="qd-q" style="font-weight:600;">Yazma (Essay)'
+                  + (at.essay_score != null ? ' · ' + esc(String(at.essay_score)) + ' / 20' : ' · değerlendirilmedi')
+                  + '</div>'
+                  + (eprompt ? '<div class="qd-passage"><b>Konu:</b> ' + esc(eprompt) + '</div>' : '')
+                  + (etext ? '<div class="qd-passage" style="white-space:pre-wrap;">' + esc(etext) + '</div>' : '<p class="qd-empty">Yazı metni yok.</p>')
+                  + evalHtml + '</div>';
+              } else {
+                essayBlock = '<p class="qd-empty" style="margin-top:8px;">Essay yazılmamış.</p>';
+              }
+              var summ = 'Toplam ' + (at.total_score != null ? at.total_score : '—') + ' / 100 · Çoktan seçmeli ' + mc
+                + (at.essay_score != null ? ' · Essay ' + at.essay_score + '/20' : '');
+              detailInner = '<div class="ad-detail-inner"><div class="qd-summary"><span>' + esc(summ) + '</span>'
+                + '<span style="color:var(--text-muted);font-size:.74rem">' + (at.created_at ? fmtRelative(at.created_at) : '') + '</span></div>'
+                + '<div style="margin-top:8px;">' + secRows + '</div>'
+                + essayBlock + '</div>';
+            }
+            var totChip = did ? haChip(at.total_score) : '';
+            var pill = did
+              ? (at.passed === true ? '<span class="ad-status-pill status-completed">Geçti</span>'
+                : (at.passed === false ? '<span class="ad-status-pill status-pending">Kaldı</span>'
+                  : '<span class="ad-status-pill status-completed">Yaptı</span>'))
+              : '<span class="ad-status-pill status-pending">Yapmadı</span>';
+            var _sid = st.student_id || '';
+            return '<li class="ad-row"><div class="ad-email">' + esc(email) + '</div>'
+              + '<div class="ad-progress ' + (did ? 'progress-completed' : 'progress-pending') + '">' + (did ? totChip : '—') + '</div>'
+              + pill
+              + '<div class="ad-actions">' + (did && _sid ? adAnalizBtn(_sid, email, 'hazirlik') : '') + '<button type="button" class="ad-inspect-btn hazirlik-inspect">İncele</button></div></li>'
+              + '<li class="ad-detail-row" hidden>' + detailInner + '</li>';
+          }).join('') + '</ul>';
+          adBody.innerHTML = html;
+          adBody.querySelectorAll('.hazirlik-inspect').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var row = btn.closest('.ad-row').nextElementSibling;
+              if (row && row.classList.contains('ad-detail-row')) {
+                row.hidden = !row.hidden; btn.textContent = row.hidden ? 'İncele' : 'Gizle'; btn.classList.toggle('open', !row.hidden);
+              }
+            });
+          });
+          if (students.length === 1) { var b0 = adBody.querySelector('.hazirlik-inspect'); if (b0) b0.click(); }
+        } catch (err) {
+          adBody.innerHTML = '<p style="color:#b33a3a;font-style:italic;text-align:center;">' + rpcErrMsg(err) + '</p>';
+        }
+      }
+
       function slugLabel(slug) {
         if (!slug) return 'Soru';
         var m = String(slug).match(/(\d+)\s*$/);
@@ -5176,6 +5277,8 @@
                 openSatDenemeDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'ielts_mock') {
                 openIeltsMockDrawer(card.dataset.id, card.dataset.title);
+              } else if (card.dataset.type === 'hazirlik') {
+                openHazirlikDrawer(card.dataset.id, card.dataset.title);
               } else if (card.dataset.type === 'writing') {
                 openWritingAssignDrawer(card.dataset.id, card.dataset.title);
               } else {

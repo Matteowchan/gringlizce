@@ -192,6 +192,7 @@ select.pick{border:1px solid var(--border);border-radius:8px;padding:7px 11px;fo
       </div>
       <div class="sb-note">Sınav başlayınca <b>150 dakikalık sayaç</b> çalışır; süre bitince cevapların otomatik değerlendirilir. Çoktan seçmeli bölümler objektif puanlanır (her doğru MC 2 puan → 80); essay <b>Gri AI</b> ile 20 üzerinden değerlendirilir. Sessiz bir ortamda çöz; sekme değiştirme (3 uyarıda sınav başa döner).</div>
       <button class="btn gold" id="start-btn">Sınavı Başlat &rsaquo;</button>
+      <div id="prev-review" class="no-print"></div>
     </div>
   </div>
 
@@ -228,7 +229,7 @@ function wordCount(t){t=(t||'').trim();return t?t.split(/\s+/).filter(Boolean).l
   var sb=null; try{ sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SBURL,SBKEY):null; }catch(e){} window.__SBC=sb;
   if(!sb){ showGate(); return; }
   sb.auth.getSession().then(function(r){ var sess=r&&r.data&&r.data.session;
-    if(sess){ window.USER=sess.user; window.__SB_TOKEN=sess.access_token; intro.classList.remove('hidden'); } else showGate();
+    if(sess){ window.USER=sess.user; window.__SB_TOKEN=sess.access_token; intro.classList.remove('hidden'); loadPrevReview(); } else showGate();
   }).catch(showGate);
 })();
 
@@ -360,6 +361,39 @@ var SECMETA={
     weak:'Okuma-çıkarımında ve bağlamdaki kelimede zorlanıyorsun; pasajın ana fikrini ayrıntıdan ayırmakta hata var.',
     study:'Her paragrafın ana fikrini tek cümleyle özetle; çıkarım sorularında metinde DOĞRUDAN söyleneni değil ima edileni ara. Haftada 3-4 akademik pasaj çöz.'},
 };
+function _hazExpFor(n){ var q=(EXAM.questions||[])[n-1]; return q?(q.explanation_html||''):''; }
+function loadPrevReview(){
+  try{
+    if(!window.USER) return; var sb=window.__SBC; if(!sb) return;
+    sb.from('hazirlik_atlama_attempts').select('review,total_score,created_at')
+      .eq('user_id',window.USER.id).eq('exam_set',EXAM.set)
+      .order('created_at',{ascending:false}).limit(1)
+      .then(function(r){
+        var row=r&&r.data&&r.data[0]; if(!row||!row.review) return;
+        var wrong=(row.review||[]).filter(function(x){return !x.ok;});
+        var wrap=document.getElementById('prev-review'); if(!wrap) return;
+        var d=new Date(row.created_at); var ds=isNaN(d.getTime())?'':d.toLocaleDateString('tr-TR');
+        wrap.innerHTML='<div class="sb-note" style="margin-top:14px">Bu denemeyi daha once cozdun'+(ds?(' ('+ds+', '+(row.total_score!=null?row.total_score:'-')+'/100)'):'')+'. Yeni bir deneme baslatabilir ya da onceki yanlislarini inceleyebilirsin.<br><button class="btn ghost" id="prev-review-btn" style="margin-top:10px">Onceki denemenin yanlislarini incele ('+wrong.length+')</button></div>';
+        var b=document.getElementById('prev-review-btn'); if(b)b.addEventListener('click',function(){renderPrevReview(row);});
+      },function(){});
+  }catch(e){}
+}
+function renderPrevReview(row){
+  var wrong=(row.review||[]).filter(function(x){return !x.ok;});
+  intro.classList.add('hidden'); resDiv.classList.remove('hidden');
+  var d=new Date(row.created_at); var ds=isNaN(d.getTime())?'':d.toLocaleDateString('tr-TR');
+  var h='<div class="sb-card"><h2>Onceki denemenin yanlislari ('+wrong.length+')</h2>'
+    +'<p class="instr">'+ds+' &middot; '+(row.total_score!=null?row.total_score:'-')+'/100 &middot; Her yanlis icin dogru cevap ve ayrintili aciklama.</p></div>';
+  if(!wrong.length){ h+='<div class="sb-card"><p class="instr">Bu denemede tum coktan secmelileri dogru yapmissin.</p></div>'; }
+  else { h+='<div class="sb-card">'; wrong.forEach(function(w){
+    h+='<div class="rev-item"><div style="font-weight:600;font-size:.93rem">'+w.n+'. <span style="color:var(--muted)">'+esc(SEC[w.sec]||w.sec)+'</span></div>'
+      +'<div style="font-size:.9rem;margin:4px 0"><span style="color:var(--bad)">Senin: '+esc(w.co||'bos')+'</span> &rarr; <span style="color:var(--good);font-weight:600">Dogru: '+esc(w.ca)+') '+esc(w.cc)+'</span></div>'
+      +'<div class="rev-exp">'+_hazExpFor(w.n)+'</div></div>';
+  }); h+='</div>'; }
+  h+='<div class="sb-card no-print" style="text-align:center"><button class="btn gold" onclick="location.reload()">Denemeyi yeniden coz</button> &nbsp; <a class="btn ghost" href="universite-hazirlik-atlama-denemeler">Diger denemeler</a></div>';
+  resDiv.innerHTML=h; window.scrollTo(0,0);
+}
+
 function renderResults(essayScore){
   var R=window.__RES; app.classList.add('hidden'); barMount.innerHTML=''; resDiv.classList.remove('hidden');
   var essayKnown=(typeof essayScore==='number');

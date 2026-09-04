@@ -339,8 +339,14 @@ function passageHtml(texts){
         cnt = lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
       }
     }
-    // Icerik XSS'e karsi escape edilir; yalnizca alti-cizili (<u>) etiketine izin verilir (soru koku "underlined sentence" referanslari icin)
-    var safe = esc(cnt).replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+    // Icerik icindeki guvenilir <table>/<svg> bloklari HAM birakilir (kendi uretimimiz veri tablosu/figur);
+    // geri kalan metin XSS'e karsi escape edilir, yalnizca <u> etiketine izin verilir.
+    var safe = String(cnt).split(/(<svg[\s\S]*?<\/svg>|<table[\s\S]*?<\/table>)/i).map(function(part, i){
+      if (i % 2 === 1){
+        return /^<table/i.test(part) ? '<div class="st-table">'+part+'</div>' : '<div class="st-fig">'+part+'</div>';
+      }
+      return esc(part).replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+    }).join('');
     return '<div class="st-passage" style="white-space:pre-line">'+lbl+tbl+safe+'</div>';
   }).join('');
 }

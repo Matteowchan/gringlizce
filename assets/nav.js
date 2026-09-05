@@ -534,3 +534,65 @@
   if (document.readyState !== "loading") boot();
   else document.addEventListener("DOMContentLoaded", boot);
 })();
+
+/* ============================================================
+   Çerez bilgilendirme bandı (KVKK/şeffaflık) — bağımsız IIFE
+   Hafif, engellemeyen alt bant; localStorage'da hatırlanır.
+   ============================================================ */
+(function () {
+  "use strict";
+  var KEY = "gri-cookie-consent";
+  try { if (localStorage.getItem(KEY)) return; } catch (e) { /* private mode: yine göster */ }
+
+  function inject() {
+    if (document.getElementById("gri-cc-bar")) return;
+
+    var css = document.createElement("style");
+    css.id = "gri-cc-css";
+    css.textContent =
+      '#gri-cc-bar{position:fixed;left:50%;transform:translateX(-50%) translateY(140%);bottom:16px;z-index:9600;' +
+      'width:min(680px,calc(100vw - 24px));box-sizing:border-box;display:flex;align-items:center;gap:14px;flex-wrap:wrap;' +
+      'padding:14px 18px;border-radius:16px;background:var(--bg-card,#fffdf8);color:var(--text,#2a2621);' +
+      'border:1px solid var(--gri-line,var(--line,rgba(0,0,0,.12)));box-shadow:0 10px 34px rgba(0,0,0,.18);' +
+      'font-family:var(--font-ui,Inter,system-ui,sans-serif);font-size:.86rem;line-height:1.5;' +
+      'opacity:0;transition:transform .42s cubic-bezier(.2,.8,.25,1),opacity .42s}' +
+      '#gri-cc-bar.gri-cc-in{transform:translateX(-50%) translateY(0);opacity:1}' +
+      '#gri-cc-bar .gri-cc-txt{flex:1;min-width:200px}' +
+      '#gri-cc-bar a{color:var(--teal,#2E6E6A);font-weight:600;text-decoration:underline;text-underline-offset:2px}' +
+      '#gri-cc-bar .gri-cc-actions{display:flex;gap:8px;flex-shrink:0}' +
+      '#gri-cc-bar button{font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:.5rem 1.05rem;border:1px solid transparent;white-space:nowrap}' +
+      '#gri-cc-accept{background:#2E6E6A;color:#fff}' +
+      '#gri-cc-accept:hover{background:#255b57}' +
+      '#gri-cc-nec{background:transparent;color:var(--text-soft,var(--text-muted,#6b6459));border-color:var(--gri-line,var(--line,rgba(0,0,0,.18)))}' +
+      '#gri-cc-nec:hover{border-color:#2E6E6A;color:#2E6E6A}' +
+      '@media(max-width:520px){#gri-cc-bar{gap:10px}#gri-cc-bar .gri-cc-actions{width:100%}#gri-cc-bar button{flex:1}}' +
+      '@media(prefers-reduced-motion:reduce){#gri-cc-bar{transition:opacity .3s}}';
+    document.head.appendChild(css);
+
+    var bar = document.createElement("div");
+    bar.id = "gri-cc-bar";
+    bar.setAttribute("role", "dialog");
+    bar.setAttribute("aria-label", "Çerez bilgilendirmesi");
+    bar.setAttribute("aria-live", "polite");
+    bar.innerHTML =
+      '<div class="gri-cc-txt">Bu sitede deneyimi iyileştirmek ve kullanımı ölçmek için çerezler kullanıyoruz. ' +
+      'Ayrıntılar için <a href="cerez-politikasi">Çerez Politikası</a>.</div>' +
+      '<div class="gri-cc-actions">' +
+      '<button id="gri-cc-nec" type="button">Yalnızca gerekli</button>' +
+      '<button id="gri-cc-accept" type="button">Kabul Et</button>' +
+      '</div>';
+    document.body.appendChild(bar);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add("gri-cc-in"); }); });
+
+    function dismiss(val) {
+      try { localStorage.setItem(KEY, val); } catch (e) {}
+      bar.classList.remove("gri-cc-in");
+      setTimeout(function () { bar.remove(); }, 480);
+    }
+    document.getElementById("gri-cc-accept").addEventListener("click", function () { dismiss("accepted"); });
+    document.getElementById("gri-cc-nec").addEventListener("click", function () { dismiss("necessary"); });
+  }
+
+  if (document.readyState !== "loading") inject();
+  else document.addEventListener("DOMContentLoaded", inject);
+})();

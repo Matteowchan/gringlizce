@@ -56,6 +56,19 @@
     .panel-actions { position: relative; z-index: 1; margin-left: auto; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
     .btn-action { background: rgba(255,255,255,.7); border: 1px solid #e3d9c8; border-radius: 100px; padding: 0.55rem 1.05rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: #6a655c; cursor: pointer; transition: all 0.18s; }
     .btn-action:hover { border-color: var(--teal, #2C5856); color: var(--teal, #2C5856); background: var(--bg-card); }
+    .acct-wrap { position: relative; }
+    .acct-trigger .acct-caret { display: inline-block; margin-left: .35rem; transition: transform .18s; font-weight: 700; }
+    .acct-trigger[aria-expanded="true"] .acct-caret { transform: rotate(90deg); }
+    .acct-menu { position: absolute; top: calc(100% + .5rem); right: 0; min-width: 210px; max-width: calc(100vw - 2rem); background: var(--bg-card, #fefcf7); border: 1px solid var(--line, #d9d2c4); border-radius: 12px; box-shadow: 0 12px 30px rgba(26,34,48,.16); padding: .4rem; z-index: 50; display: flex; flex-direction: column; gap: .1rem; }
+    .acct-item { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: .6rem .8rem; font-family: var(--font-ui, Inter), system-ui, sans-serif; font-size: .85rem; font-weight: 600; color: var(--text, #3a3527); cursor: pointer; text-decoration: none; transition: background .15s, color .15s; }
+    .acct-item:hover { background: var(--bg-soft, #f1ead9); }
+    .acct-item.danger { color: #b0342c; }
+    .acct-item.danger:hover { background: rgba(176,52,44,.09); }
+    .acct-sep { height: 1px; background: var(--line, #e3d9c8); margin: .3rem .2rem; }
+    [data-theme="dark"] .acct-menu { background: #20302f; border-color: rgba(255,255,255,.12); box-shadow: 0 12px 30px rgba(0,0,0,.5); }
+    [data-theme="dark"] .acct-item { color: var(--text, #eef2f6); }
+    [data-theme="dark"] .acct-item:hover { background: rgba(255,255,255,.06); }
+    [data-theme="dark"] .acct-item.danger { color: #e6857c; }
     /* Mobil: panel aksiyonları tam genişlik + dokunma hedefi 44px */
     @media (max-width: 600px) {
       .panel-actions { width: 100%; margin-left: 0; }
@@ -2634,13 +2647,30 @@
           <div id="premium-status" class="premium-status" aria-live="polite"></div>
         </div>
         <div class="panel-actions">
-          <button class="btn-action" id="btn-reset-progress">İlerlememi Sıfırla</button>
-          <button class="btn-action" id="btn-change-pw">Şifre Değiştir</button>
-          <button class="btn-action" onclick="doLogout()">Çıkış Yap</button>
-          <a class="btn-action" href="hesap-sil" style="text-decoration:none">Hesabımı Sil</a>
+          <div class="acct-wrap">
+            <button class="btn-action acct-trigger" id="acct-trigger" type="button" aria-haspopup="true" aria-expanded="false">Hesap <span class="acct-caret" aria-hidden="true">&rsaquo;</span></button>
+            <div class="acct-menu" id="acct-menu" role="menu" hidden>
+              <button class="acct-item" id="btn-change-pw" type="button" role="menuitem">Şifre Değiştir</button>
+              <button class="acct-item" onclick="doLogout()" type="button" role="menuitem">Çıkış Yap</button>
+              <div class="acct-sep"></div>
+              <button class="acct-item danger" id="btn-reset-progress" type="button" role="menuitem">İlerlememi Sıfırla</button>
+              <a class="acct-item danger" href="hesap-sil" role="menuitem" style="text-decoration:none">Hesabımı Sil</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+    <script>
+      (function(){
+        var t=document.getElementById('acct-trigger'), m=document.getElementById('acct-menu');
+        if(!t||!m)return;
+        function close(){ m.hidden=true; t.setAttribute('aria-expanded','false'); }
+        function open(){ m.hidden=false; t.setAttribute('aria-expanded','true'); }
+        t.addEventListener('click', function(e){ e.stopPropagation(); if(m.hidden)open(); else close(); });
+        document.addEventListener('click', function(e){ if(!m.hidden && !m.contains(e.target) && e.target!==t) close(); });
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+      })();
+    </script>
 
     <style>
       .premium-status{margin-top:.7rem;font-family:var(--font-ui,Inter),system-ui,sans-serif}
@@ -2677,94 +2707,6 @@
         }
         if(document.readyState!=='loading')init();
         else document.addEventListener('DOMContentLoaded', init);
-      })();
-    </script>
-
-    <!-- Ödememi Talep Et — Shopier sipariş no ile erişim kurtarma (gri_claim_purchase) -->
-    <style>
-      .claim-card{display:flex;gap:.9rem;align-items:flex-start;margin:0 0 1.3rem;padding:1rem 1.2rem;border-radius:14px;
-        background:var(--bg-card,#fefcf7);border:1px solid var(--line,#e5ddcd);border-left:3px solid var(--gold,#C89A3C)}
-      [data-theme="dark"] .claim-card{background:rgba(255,255,255,.03)}
-      .claim-ic{font-size:1.5rem;line-height:1;flex:0 0 auto;margin-top:.1rem}
-      .claim-body{flex:1;min-width:0;font-family:var(--font-ui,Inter),system-ui,sans-serif}
-      .claim-body b{display:block;font-family:var(--font-display,Georgia),serif;font-size:1.02rem;font-weight:600;color:var(--text,#241c12)}
-      .claim-body>small{display:block;font-size:.82rem;line-height:1.45;color:var(--text-muted,#8a9099);margin:.15rem 0 .7rem}
-      .claim-form{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-      .claim-form input{flex:1;min-width:180px;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.85rem;color:var(--text);
-        background:var(--bg,#F4EFE3);border:1px solid var(--line,#d9d2c4);border-radius:10px;padding:.55rem .8rem}
-      .claim-form input:focus{outline:none;border-color:var(--teal,#2C5856);box-shadow:0 0 0 3px rgba(44,88,86,.12)}
-      .claim-form button{flex:0 0 auto;font-family:var(--font-ui,Inter),system-ui,sans-serif;font-size:.82rem;font-weight:700;white-space:nowrap;cursor:pointer;
-        border:1px solid var(--teal,#2C5856);background:linear-gradient(135deg,var(--gri-accent,#2C5856),var(--teal-deep,#1E4E4B));color:#fff;border-radius:100px;padding:.55rem 1.1rem;transition:filter .15s ease,opacity .15s ease}
-      .claim-form button:hover:not(:disabled){filter:brightness(1.08)}
-      .claim-form button:disabled{opacity:.65;cursor:default}
-      .claim-msg{display:none;margin-top:.6rem;font-size:.82rem;line-height:1.45;padding:.5rem .7rem;border-radius:9px}
-      .claim-msg.show{display:block}
-      .claim-msg.ok{background:rgba(44,88,86,.1);border:1px solid var(--teal,#2C5856);color:var(--teal,#2C5856)}
-      .claim-msg.err{background:rgba(180,90,60,.08);border:1px solid #c47a52;color:#a85a34}
-      [data-theme="dark"] .claim-msg.err{color:#e6a480}
-    </style>
-    <div class="claim-card" id="claim-card">
-      <span class="claim-ic" aria-hidden="true">🎟️</span>
-      <div class="claim-body">
-        <b>Ödeme yaptın ama erişemiyor musun?</b>
-        <small>Shopier sipariş numaranı gir — Premium, AI kredisi veya materyal erişimini hemen bu hesaba tanımlayalım. (Ödeme e-postan bu hesabın e-postasıyla aynı olmalı.)</small>
-        <form class="claim-form" id="claim-form" autocomplete="off" novalidate>
-          <input type="text" id="claim-ref" inputmode="text" placeholder="Shopier sipariş no" aria-label="Shopier sipariş numarası" maxlength="80">
-          <button type="submit" id="claim-btn">Talep Et</button>
-        </form>
-        <div class="claim-msg" id="claim-msg" role="status" aria-live="polite"></div>
-      </div>
-    </div>
-    <script>
-      (function () {
-        var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
-        var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
-        var form = document.getElementById('claim-form');
-        if (!form) return;
-        var input = document.getElementById('claim-ref');
-        var btn = document.getElementById('claim-btn');
-        var msg = document.getElementById('claim-msg');
-        var REASONS = {
-          empty_ref: 'Lütfen Shopier sipariş numaranı gir.',
-          not_authenticated: 'Önce giriş yapmalısın — giriş sayfasına yönlendiriliyorsun…',
-          not_found: 'Bu sipariş numarası bulunamadı. Shopier onay e-postandaki numarayı kontrol edip tekrar dene.',
-          already_claimed: 'Bu sipariş zaten bir hesaba tanımlanmış. Sana ait olduğunu düşünüyorsan bize ulaş.',
-          already_linked: 'Bu sipariş başka bir hesaba bağlı. Ödemeyi yaptığın hesapla giriş yaptığından emin ol.',
-          email_mismatch: 'Ödeme e-postan bu hesabın e-postasıyla eşleşmiyor. Ödemede kullandığın e-posta ile giriş yap ya da bize ulaş.'
-        };
-        function say(text, kind) { msg.textContent = text; msg.className = 'claim-msg show' + (kind ? ' ' + kind : ''); }
-        form.addEventListener('submit', async function (e) {
-          e.preventDefault();
-          var ref = (input.value || '').trim();
-          if (!ref) { say(REASONS.empty_ref, 'err'); try { input.focus(); } catch (x) {} return; }
-          var lbl = btn.textContent;
-          btn.disabled = true; btn.textContent = 'Kontrol ediliyor…';
-          say('Siparişin kontrol ediliyor…', '');
-          try {
-            if (!window.supabase || !window.supabase.createClient) { say('Bağlantı kurulamadı — sayfayı yenileyip tekrar dene.', 'err'); return; }
-            var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
-            var r = await sb.rpc('gri_claim_purchase', { p_ref: ref });
-            if (r && r.error) { say('Bir sorun oluştu, birazdan tekrar dene.', 'err'); return; }
-            var d = (r && r.data) || {};
-            if (d.ok) {
-              var parts = [];
-              if (Number(d.premium_days) > 0) parts.push(d.premium_days + ' gün Premium');
-              if (Number(d.ai_quota) > 0) parts.push(d.ai_quota + ' AI kredisi');
-              if (d.materials && d.materials.length) parts.push(d.materials.length + ' materyal');
-              var extra = parts.length ? (' — ' + parts.join(', ') + ' hesabına tanımlandı.') : ' Erişimin açıldı.';
-              say('Teşekkürler! Ödemen doğrulandı.' + extra, 'ok');
-              input.value = '';
-              try { if (window.GriPremium && GriPremium.refresh) await GriPremium.refresh(); } catch (x) {}
-              try { if (window.GriFX) GriFX.confetti({ y: 0.3 }); } catch (x) {}
-              try { if (window.GriTrial && GriTrial.toast) GriTrial.toast('Erişimin açıldı 🎉'); } catch (x) {}
-            } else {
-              var reason = d.reason || '';
-              say(REASONS[reason] || 'Talep tamamlanamadı. Numarayı kontrol edip tekrar dene.', 'err');
-              if (reason === 'not_authenticated') { setTimeout(function () { location.href = 'giris?next=panelim'; }, 1500); }
-            }
-          } catch (err) { say('Beklenmeyen bir hata oluştu, birazdan tekrar dene.', 'err'); }
-          finally { btn.disabled = false; btn.textContent = lbl; }
-        });
       })();
     </script>
 

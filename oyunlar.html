@@ -180,6 +180,7 @@
         <button type="button" class="oy-tile" data-go="bulmaca"><div class="em">🧩</div><h3>Bulmaca</h3><p>Temaya göre kelime bulmacaları — ipuçları Türkçe, cevaplar İngilizce.</p></button>
         <button type="button" class="oy-tile" data-go="wordsearch"><div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p></button>
         <button type="button" class="oy-tile" data-go="match"><div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p></button>
+        <button type="button" class="oy-tile" data-go="sentence"><div class="em">🧱</div><h3>Cümle Kur</h3><p>Karışık kelimeleri doğru sıraya diz, cümleyi kur. Gramer ve söz dizimi.</p></button>
       </div>
 
       <div class="oy-secttl">Rozetler</div>
@@ -270,6 +271,17 @@
       </div>
     </div>
 
+    <!-- PANEL: Cümle Kur -->
+    <div class="oy-panel" id="view-sentence" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Cümle Kur</h2>
+        <p class="oy-cardsub">Türkçe cümleyi oku, altındaki karışık İngilizce kelimeleri <b>doğru sıraya</b> dizerek cümleyi kur. Söz dizimi ve gramer pratiği.</p>
+        <div id="seHost"></div>
+        <div style="text-align:center;margin-top:12px"><button type="button" id="seNew" class="btn-ghost" style="font-weight:700">Yeni Cümleler</button></div>
+      </div>
+    </div>
+
     <!-- PANEL: Bulmaca -->
     <div class="oy-panel" id="view-bulmaca" hidden>
       <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
@@ -295,6 +307,7 @@
   <script src="assets/wordle-daily.js?v=3"></script>
   <script src="assets/gri-wordsearch.js?v=6"></script>
   <script src="assets/gri-match.js?v=5"></script>
+  <script src="assets/gri-sentence.js?v=1"></script>
   <script src="assets/gri-wheel.js?v=10"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=10"></script>
@@ -326,7 +339,7 @@
     function updateSound(){ var b=$('oySound'); if(!b)return; var m=(window.GriFX&&GriFX.muted()); b.textContent=m?'🔇 Sessiz':'🔊 Ses'; b.className='oy-catbtn'+(m?'':' cur'); }
 
     /* ---- router ---- */
-    var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match','bulmaca'];
+    var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match','sentence','bulmaca'];
     function go(name){
       current=name;
       $('oyHub').hidden=(name!==null);
@@ -337,8 +350,8 @@
     }
     /* kategori değişince içerik-bağımlı oyunları sıfırla (wow hariç) */
     function resetContentGames(){
-      ['wordle','wordsearch','match','bulmaca'].forEach(function(v){ mounted[v]=false; });
-      ['oyWordle','wsHost','mtHost','buHost'].forEach(function(id){ var el=$(id); if(el)el.innerHTML=''; });
+      ['wordle','wordsearch','match','sentence','bulmaca'].forEach(function(v){ mounted[v]=false; });
+      ['oyWordle','wsHost','mtHost','seHost','buHost'].forEach(function(id){ var el=$(id); if(el)el.innerHTML=''; });
       var wt=$('wsTheme'); if(wt)wt.textContent='';
     }
 
@@ -432,6 +445,36 @@
           var b=$('mtNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
         }).catch(function(){});
       },
+      sentence:function(){
+        var SENT={
+          social:[
+            {tr:"Her sabah bir fincan kahve içerim.",tokens:["I","drink","a","cup","of","coffee","every","morning"]},
+            {tr:"Şu anda yeni bir dizi izliyoruz.",tokens:["We","are","watching","a","new","series","right","now"]},
+            {tr:"Dün akşam arkadaşlarımla sinemaya gittim.",tokens:["I","went","to","the","cinema","with","my","friends","last","night"]},
+            {tr:"Yarın hava güneşli olacak.",tokens:["The","weather","will","be","sunny","tomorrow"]},
+            {tr:"Daha önce hiç sushi denemedim.",tokens:["I","have","never","tried","sushi","before"]},
+            {tr:"O, benden daha hızlı koşar.",tokens:["She","runs","faster","than","me"]},
+            {tr:"Çocukken piyano çalardım.",tokens:["I","used","to","play","the","piano","when","I","was","a","child"]},
+            {tr:"Zamanım olsaydı sana yardım ederdim.",tokens:["If","I","had","time",",","I","would","help","you"]},
+            {tr:"Otobüsü kaçırmamak için erken çıkmalısın.",tokens:["You","should","leave","early","to","catch","the","bus"]},
+            {tr:"Bu kitabı okumayı bitirdin mi?",tokens:["Have","you","finished","reading","this","book","?"]}
+          ],
+          academic:[
+            {tr:"Bu çalışma, iklim değişikliğinin etkilerini incelemektedir.",tokens:["This","study","examines","the","effects","of","climate","change"]},
+            {tr:"Veriler, güçlü bir korelasyon olduğunu göstermektedir.",tokens:["The","data","suggest","that","there","is","a","strong","correlation"]},
+            {tr:"Sonuçlar dikkatle yorumlanmalıdır.",tokens:["The","results","must","be","interpreted","carefully"]},
+            {tr:"Araştırmacılar hipotezi test etmek için bir deney tasarladılar.",tokens:["The","researchers","designed","an","experiment","to","test","the","hypothesis"]},
+            {tr:"Örneklem daha büyük olsaydı, bulgular daha güvenilir olurdu.",tokens:["If","the","sample","had","been","larger",",","the","findings","would","have","been","more","reliable"]},
+            {tr:"Bu teori 20. yüzyılın başında ortaya atıldı.",tokens:["This","theory","was","proposed","in","the","early","twentieth","century"]},
+            {tr:"Yazar, önceki araştırmaların sınırlı olduğunu savunuyor.",tokens:["The","author","argues","that","previous","research","was","limited"]},
+            {tr:"Daha fazla çalışma yapılması gerektiği açıktır.",tokens:["It","is","clear","that","further","research","is","needed"]},
+            {tr:"Grafik, on yıldaki istikrarlı bir artışı göstermektedir.",tokens:["The","graph","shows","a","steady","increase","over","the","decade"]},
+            {tr:"Bu faktörler dikkate alınmadan sonuç çıkarılamaz.",tokens:["No","conclusion","can","be","drawn","without","considering","these","factors"]}
+          ]
+        };
+        function neu(){ if(!window.GriSentence)return; var set=SENT[CAT]||SENT.social; GriSentence.mount($('seHost'),{ sentences:set, count:6, onReplay:neu, onFinish:function(res){ if(window.GriGames){ GriGames.addCoins(12); if(res&&res.acc>=100)GriGames.unlock('yaratici'); } } }); }
+        var b=$('seNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
+      },
       bulmaca:function(){
         fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var ALL=(j&&j.themes)||[];
@@ -454,7 +497,7 @@
     document.addEventListener('click',function(e){
       var t=e.target; while(t&&t!==document){
         if(t.getAttribute&&t.hasAttribute('data-sound')){ if(window.GriFX){ GriFX.setMuted(!GriFX.muted()); updateSound(); if(!GriFX.muted())GriFX.sound('ok'); } return; }
-        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match','bulmaca'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
+        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match','sentence','bulmaca'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
         if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; }
         if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; }
         t=t.parentNode;
@@ -463,7 +506,7 @@
     window.addEventListener('hashchange',function(){ var h=location.hash.replace('#',''); if(VIEWS.indexOf(h)>=0)go(h); else go(null); });
 
     /* ---- giriş şartı (login gate) ---- */
-    var GATE_IDS=['oyGate','oyHub','view-wordle','view-wow','view-wordsearch','view-match','view-bulmaca'];
+    var GATE_IDS=['oyGate','oyHub','view-wordle','view-wow','view-wordsearch','view-match','view-sentence','view-bulmaca'];
     function hideAllGated(){ GATE_IDS.forEach(function(id){ var el=$(id); if(el)el.hidden=true; }); }
     function startApp(){
       var g=$('oyGate'); if(g)g.hidden=true;

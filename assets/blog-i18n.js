@@ -29,7 +29,7 @@
 
   function injectToggle() {
     if (document.querySelector('.blog-lang-toggle')) return;
-    var hero = document.querySelector('.blog-hero, .blog-hub-head');
+    var hero = document.querySelector('.blog-hero, .blog-hub-head, .ka-hero');
     if (!hero) return;
     var wrap = document.createElement('div');
     wrap.className = 'blog-lang-toggle';

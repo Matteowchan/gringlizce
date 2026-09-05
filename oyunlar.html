@@ -181,6 +181,7 @@
         <button type="button" class="oy-tile" data-go="wordsearch"><div class="em">🔤</div><h3>Kelime Avı</h3><p>Izgarada gizli kelimeleri bul — dokun ve sürükle.</p></button>
         <button type="button" class="oy-tile" data-go="match"><div class="em">⚡</div><h3>Eşleştirme</h3><p>Kelime ve anlamı hızlıca eşleştir.</p></button>
         <button type="button" class="oy-tile" data-go="sentence"><div class="em">🧱</div><h3>Cümle Kur</h3><p>Karışık kelimeleri doğru sıraya diz, cümleyi kur. Gramer ve söz dizimi.</p></button>
+        <button type="button" class="oy-tile" data-go="rain"><div class="em">🌧️</div><h3>Kelime Yağmuru</h3><p>Düşen İngilizce kelimeyi, yere değmeden doğru Türkçe anlamıyla eşleştir. Hız ve refleks.</p></button>
       </div>
 
       <div class="oy-secttl">Rozetler</div>
@@ -282,6 +283,16 @@
       </div>
     </div>
 
+    <!-- PANEL: Kelime Yağmuru -->
+    <div class="oy-panel" id="view-rain" hidden>
+      <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
+      <div class="oy-card">
+        <h2 class="oy-cardttl">Kelime Yağmuru</h2>
+        <p class="oy-cardsub">İngilizce kelime yukarıdan düşer. Yere değmeden, altındaki üç Türkçe anlamdan <b>doğru olanı</b> seç. Hız arttıkça puan artar; 3 canın var.</p>
+        <div id="raHost"></div>
+      </div>
+    </div>
+
     <!-- PANEL: Bulmaca -->
     <div class="oy-panel" id="view-bulmaca" hidden>
       <button type="button" class="oy-back" data-back>&lsaquo; Oyunlar</button>
@@ -308,6 +319,7 @@
   <script src="assets/gri-wordsearch.js?v=6"></script>
   <script src="assets/gri-match.js?v=5"></script>
   <script src="assets/gri-sentence.js?v=1"></script>
+  <script src="assets/gri-rain.js?v=1"></script>
   <script src="assets/gri-wheel.js?v=10"></script>
   <script src="assets/gri-wheel-endless.js?v=2"></script>
   <script src="assets/gri-crossword.js?v=10"></script>
@@ -339,7 +351,7 @@
     function updateSound(){ var b=$('oySound'); if(!b)return; var m=(window.GriFX&&GriFX.muted()); b.textContent=m?'🔇 Sessiz':'🔊 Ses'; b.className='oy-catbtn'+(m?'':' cur'); }
 
     /* ---- router ---- */
-    var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match','sentence','bulmaca'];
+    var mounted={}, current=null, VIEWS=['wordle','wow','wordsearch','match','sentence','rain','bulmaca'];
     function go(name){
       current=name;
       $('oyHub').hidden=(name!==null);
@@ -350,8 +362,8 @@
     }
     /* kategori değişince içerik-bağımlı oyunları sıfırla (wow hariç) */
     function resetContentGames(){
-      ['wordle','wordsearch','match','sentence','bulmaca'].forEach(function(v){ mounted[v]=false; });
-      ['oyWordle','wsHost','mtHost','seHost','buHost'].forEach(function(id){ var el=$(id); if(el)el.innerHTML=''; });
+      ['wordle','wordsearch','match','sentence','rain','bulmaca'].forEach(function(v){ mounted[v]=false; });
+      ['oyWordle','wsHost','mtHost','seHost','raHost','buHost'].forEach(function(id){ var el=$(id); if(el)el.innerHTML=''; });
       var wt=$('wsTheme'); if(wt)wt.textContent='';
     }
 
@@ -475,6 +487,14 @@
         function neu(){ if(!window.GriSentence)return; var set=SENT[CAT]||SENT.social; GriSentence.mount($('seHost'),{ sentences:set, count:6, onReplay:neu, onFinish:function(res){ if(window.GriGames){ GriGames.addCoins(12); if(res&&res.acc>=100)GriGames.unlock('yaratici'); } } }); }
         var b=$('seNew'); if(b&&!b._wired){ b._wired=1; b.addEventListener('click',neu); } neu();
       },
+      rain:function(){
+        var url=CAT==='academic'?'assets/wordle-words.json':'assets/wordle-words-social.json';
+        fetch(url,{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+          var POOL=(j||[]).map(function(o){return {en:o.w,tr:(o.tr||'').split(' / ')[0]};}).filter(function(o){return o.en&&o.tr;});
+          if(!POOL.length||!window.GriRain)return;
+          GriRain.mount($('raHost'),{ words:POOL, onReplay:function(){ MOUNT.rain(); }, onFinish:function(res){ if(window.GriGames){ GriGames.addCoins(12); if(res&&res.score>=15)GriGames.unlock('ince-iscilik'); if(res&&res.best>=8)GriGames.unlock('hedef-belirleyen'); } } });
+        }).catch(function(){});
+      },
       bulmaca:function(){
         fetch('assets/game-words.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
           var ALL=(j&&j.themes)||[];
@@ -497,7 +517,7 @@
     document.addEventListener('click',function(e){
       var t=e.target; while(t&&t!==document){
         if(t.getAttribute&&t.hasAttribute('data-sound')){ if(window.GriFX){ GriFX.setMuted(!GriFX.muted()); updateSound(); if(!GriFX.muted())GriFX.sound('ok'); } return; }
-        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match','sentence','bulmaca'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
+        if(t.getAttribute&&t.getAttribute('data-cat')){ setCat(t.getAttribute('data-cat')); refreshHub(); resetContentGames(); if(['wordle','wordsearch','match','sentence','rain','bulmaca'].indexOf(current)>=0){ mounted[current]=true; MOUNT[current](); } return; }
         if(t.getAttribute&&t.getAttribute('data-go')){ go(t.getAttribute('data-go')); return; }
         if(t.getAttribute&&t.hasAttribute('data-back')){ go(null); return; }
         t=t.parentNode;
@@ -506,7 +526,7 @@
     window.addEventListener('hashchange',function(){ var h=location.hash.replace('#',''); if(VIEWS.indexOf(h)>=0)go(h); else go(null); });
 
     /* ---- giriş şartı (login gate) ---- */
-    var GATE_IDS=['oyGate','oyHub','view-wordle','view-wow','view-wordsearch','view-match','view-sentence','view-bulmaca'];
+    var GATE_IDS=['oyGate','oyHub','view-wordle','view-wow','view-wordsearch','view-match','view-sentence','view-rain','view-bulmaca'];
     function hideAllGated(){ GATE_IDS.forEach(function(id){ var el=$(id); if(el)el.hidden=true; }); }
     function startApp(){
       var g=$('oyGate'); if(g)g.hidden=true;

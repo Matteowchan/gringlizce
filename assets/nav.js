@@ -255,23 +255,24 @@
     // 6) pill durumları
     var pills = document.querySelectorAll(".gri-lang [data-setlang]");
     for (var p = 0; p < pills.length; p++) pills[p].setAttribute("aria-pressed", pills[p].getAttribute("data-setlang") === lang ? "true" : "false");
-    // 7) yerinde makine çevirisi ağı (küratörlü içeriğin kapsamadığı her Türkçe metin)
+    // 7) gömülü çeviri sözlüğünü uygula (küratörlü içeriğin kapsamadığı JS/dinamik metin)
     try { runMT(lang); } catch (e) {}
   }
 
-  /* Dil pili tıklaması: TAMAMEN yerinde (in-page) çeviri — Google/proxy YOK.
-     Küratörlü içerik data-blog-lang ile; kalan her şey (JS-üretilen dahil) GriMT (OpenAI) ile. */
+  /* Dil pili tıklaması: TAMAMEN yerinde (in-page) çeviri — Google/proxy/runtime-API YOK.
+     Küratörlü içerik data-blog-lang ile; JS-üretilen/dinamik içerik GÖMÜLÜ sözlükle (gri-i18n-map.js). */
   function onLangClick(lang) { applyLang(lang); }
-  // GriMT (makine çevirisi ağı) — ilk EN'de tembel yükle, sonra uygula
+  function _loadScript(src, cb) { var s = document.createElement("script"); s.src = src; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
+  // Gömülü çeviri sözlüğü + uygulayıcı — ilk EN'de tembel yükle, sonra uygula
   var _mtLoading = false;
   function runMT(lang) {
     if (window.GriMT) { try { window.GriMT.apply(lang); } catch (e) {} return; }
     if (lang !== "en") return;
     if (_mtLoading) return; _mtLoading = true;
-    var s = document.createElement("script");
-    s.src = "assets/gri-mt.js?v=2";
-    s.onload = function () { try { window.GriMT.apply(getLang()); } catch (e) {} };
-    document.head.appendChild(s);
+    function applier() { _loadScript("assets/gri-mt.js?v=3", function () { try { window.GriMT.apply(getLang()); } catch (e) {} }); }
+    // Ağır gömülü sözlüğü yalnız JS-içerikli (öğren vb.) sayfalarda yükle; diğerlerinde hızlı fallback yeter
+    if (document.getElementById("data")) { _loadScript("assets/gri-i18n-map.js?v=1", applier); }
+    else { applier(); }
   }
 
   function readTheme() { try { return localStorage.getItem("gri-theme") || "krem"; } catch (e) { return "krem"; } }

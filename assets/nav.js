@@ -269,7 +269,7 @@
     if (lang !== "en") return;
     if (_mtLoading) return; _mtLoading = true;
     var s = document.createElement("script");
-    s.src = "assets/gri-mt.js?v=1";
+    s.src = "assets/gri-mt.js?v=2";
     s.onload = function () { try { window.GriMT.apply(getLang()); } catch (e) {} };
     document.head.appendChild(s);
   }

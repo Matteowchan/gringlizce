@@ -111,10 +111,66 @@
     try { node.nodeValue = lead + en + trail; } catch (e) {}
   }
 
+  // ---- Öznitelik çevirisi (placeholder/title/aria-label/alt) ----
+  var ATTRS = ["placeholder", "title", "aria-label", "alt"];
+  var attrHandled = []; // {el, attr, orig}
+  var attrQueued = new WeakSet();
+  function collectAttrs() {
+    var jobs = []; // {el, attr, val}
+    var els = document.querySelectorAll("[placeholder],[title],[aria-label],[alt]");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (skip(el)) continue;
+      for (var a = 0; a < ATTRS.length; a++) {
+        var attr = ATTRS[a];
+        if (!el.hasAttribute(attr)) continue;
+        var key = attr + "|" + (el.__mtA = el.__mtA || Math.random());
+        if (attrQueued.has(el) && el.getAttribute("data-mt-a-" + a) === "1") continue;
+        var v = el.getAttribute(attr);
+        if (!v || !ok(v)) continue;
+        jobs.push({ el: el, attr: attr, val: v, ai: a });
+      }
+    }
+    return jobs;
+  }
+  function processAttrs(jobs) {
+    if (!jobs.length) return;
+    var byKey = {}; var need = {};
+    jobs.forEach(function (j) {
+      try { j.el.setAttribute("data-mt-a-" + j.ai, "1"); } catch (e) {}
+      attrHandled.push({ el: j.el, attr: j.attr, orig: j.val });
+      var k = keyOf(j.val);
+      (byKey[k] = byKey[k] || []).push(j);
+      if (cache[k] != null) { try { j.el.setAttribute(j.attr, cache[k]); } catch (e) {} }
+      else need[k] = true;
+    });
+    var miss = Object.keys(need);
+    for (var i = 0; i < miss.length; i += 90) {
+      (function (chunk) {
+        fetch(EP, { method: "POST", headers: { "Content-Type": "application/json", "apikey": AK, "Authorization": "Bearer " + AK }, body: JSON.stringify({ texts: chunk }) })
+          .then(function (r) { return r.json(); }).then(function (res) {
+            var tr = (res && res.translations) || {}; var changed = false;
+            chunk.forEach(function (k) { var en = tr[k]; if (en == null) return; cache[k] = en; changed = true;
+              if (!active) return;
+              (byKey[k] || []).forEach(function (j) { try { j.el.setAttribute(j.attr, en); } catch (e) {} });
+            });
+            if (changed) saveCache();
+          }).catch(function () {});
+      })(miss.slice(i, i + 90));
+    }
+  }
+  function restoreAttrs() {
+    for (var i = 0; i < attrHandled.length; i++) {
+      var h = attrHandled[i];
+      try { if (h.el) h.el.setAttribute(h.attr, h.orig); } catch (e) {}
+    }
+  }
+
   function flush() {
     flushTimer = null;
     if (!active) return;
     processNodes(collect(document.body));
+    processAttrs(collectAttrs());
   }
   function schedule() { if (flushTimer) return; flushTimer = setTimeout(flush, 250); }
 
@@ -134,17 +190,18 @@
       var h = handled[i];
       if (h.node && h.node.parentNode) { try { h.node.nodeValue = h.orig; } catch (e) {} }
     }
+    restoreAttrs();
   }
 
+  function pass() { processNodes(collect(document.body)); processAttrs(collectAttrs()); }
   function apply(lang) {
     if (lang === "en") {
       if (active) { schedule(); return; }
       active = true;
-      // ilk geçiş + gecikmeli ikinci geçiş (geç render edilen JS içerik için)
-      processNodes(collect(document.body));
+      pass();               // ilk geçiş
       startObs();
-      setTimeout(function () { if (active) processNodes(collect(document.body)); }, 900);
-      setTimeout(function () { if (active) processNodes(collect(document.body)); }, 2500);
+      setTimeout(function () { if (active) pass(); }, 900);   // geç-render JS içerik
+      setTimeout(function () { if (active) pass(); }, 2500);
     } else {
       restore();
     }

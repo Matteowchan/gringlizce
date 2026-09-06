@@ -678,13 +678,21 @@
     bar.setAttribute("role", "dialog");
     bar.setAttribute("aria-label", "Çerez bilgilendirmesi");
     bar.setAttribute("aria-live", "polite");
-    bar.innerHTML =
-      '<div class="gri-cc-txt">Bu sitede deneyimi iyileştirmek ve kullanımı ölçmek için çerezler kullanıyoruz. ' +
-      'Ayrıntılar için <a href="cerez-politikasi">Çerez Politikası</a>.</div>' +
-      '<div class="gri-cc-actions">' +
-      '<button id="gri-cc-nec" type="button">Yalnızca gerekli</button>' +
-      '<button id="gri-cc-accept" type="button">Kabul Et</button>' +
-      '</div>';
+    var _ccEn = false; try { _ccEn = localStorage.getItem("gri-blog-lang") === "en"; } catch (e) {}
+    bar.innerHTML = _ccEn ?
+      ('<div class="gri-cc-txt">We use cookies to improve your experience and measure usage. ' +
+       'See our <a href="cerez-politikasi">Cookie Policy</a> for details.</div>' +
+       '<div class="gri-cc-actions">' +
+       '<button id="gri-cc-nec" type="button">Only necessary</button>' +
+       '<button id="gri-cc-accept" type="button">Accept</button>' +
+       '</div>')
+      :
+      ('<div class="gri-cc-txt">Bu sitede deneyimi iyileştirmek ve kullanımı ölçmek için çerezler kullanıyoruz. ' +
+       'Ayrıntılar için <a href="cerez-politikasi">Çerez Politikası</a>.</div>' +
+       '<div class="gri-cc-actions">' +
+       '<button id="gri-cc-nec" type="button">Yalnızca gerekli</button>' +
+       '<button id="gri-cc-accept" type="button">Kabul Et</button>' +
+       '</div>');
     document.body.appendChild(bar);
     requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add("gri-cc-in"); }); });
 

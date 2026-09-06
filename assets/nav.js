@@ -259,12 +259,17 @@
 
   /* Dil pili tıklaması: küratörlü sayfada yerinde EN (premium); küratörsüz/dinamik
      sayfada tüm-site EN için translate.goog proxy'sine yönlendir → "komple site İngilizce". */
+  // Kimlik/oturum-kritik sayfalar proxy'ye YÖNLENDİRİLMEZ (proxy farklı alan adı = oturum kopar/login bozulur)
+  function _noProxyPage() {
+    var f = (location.pathname.split("/").pop() || "index").toLowerCase().replace(/\.html$/, "");
+    return /^(giris|sifre-sifirla|hesap-sil|odeme|shopier|premium-basari|premium-iptal)$/.test(f);
+  }
   function onLangClick(lang) {
     applyLang(lang);
     var xl = null; try { xl = xlateData(); } catch (e) {}
     if (!xl) return; // yalnız canlı gringlizce.com / translate.goog'da yönlendirme yapılır
     var curated = !!document.querySelector('[data-blog-lang="en"]');
-    if (lang === "en" && !curated && !xl.on) { location.href = xl.en; }
+    if (lang === "en" && !curated && !xl.on && !_noProxyPage()) { location.href = xl.en; }
     else if (lang === "tr" && xl.on) { location.href = xl.tr; }
   }
 
@@ -531,7 +536,7 @@
     try {
       if (getLang() === "en") {
         var _xl = xlateData();
-        if (_xl && !_xl.on && !document.querySelector('[data-blog-lang="en"]')) location.replace(_xl.en);
+        if (_xl && !_xl.on && !document.querySelector('[data-blog-lang="en"]') && !_noProxyPage()) location.replace(_xl.en);
       }
     } catch (e) {}
 

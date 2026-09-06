@@ -203,13 +203,14 @@
     "Ana Sayfa":"Home","Harita":"Map","Soru":"Questions","Sınıf":"Class","Masam":"Desk","günlük seri":"day streak",
     "Gri Pro":"Gri Pro","Gri Pro aktif":"Gri Pro active","Üyeliğini yönet":"Manage membership","Sınırsız soru · reklamsız · AI mentor":"Unlimited questions · ad-free · AI mentor",
     "Çalış":"Study","Platform":"Platform","IELTS Denemeleri":"IELTS Mock Tests","Hakkımızda":"About","Gizlilik Politikası":"Privacy Policy","KVKK Aydınlatma Metni":"KVKK Notice","Çerez Politikası":"Cookie Policy","Kullanım Koşulları":"Terms of Use","Editöryal İlkeler":"Editorial Principles","İçerik ve Kaynak Politikası":"Content & Sources","AI Mentor Nasıl Çalışır?":"How AI Mentor Works","İade / İptal / Üyelik":"Refunds / Cancellation / Membership",
-    "Digital SAT":"Digital SAT","IELTS Academic":"IELTS Academic","TOEFL iBT":"TOEFL iBT","IB Diploma":"IB Diploma","YDS / YÖKDİL":"YDS / YÖKDİL"
+    "Digital SAT":"Digital SAT","IELTS Academic":"IELTS Academic","TOEFL iBT":"TOEFL iBT","IB Diploma":"IB Diploma","YDS / YÖKDİL":"YDS / YÖKDİL",
+    "Öğrendiğini pekiştir":"Reinforce what you learned","Öğrendiğini Pekiştir":"Reinforce What You Learned","Tüm konu anlatımları":"All topic guides","Tüm Konu Anlatımları":"All Topic Guides","İlgili Konular":"Related Topics","İlgili Rehberler":"Related Guides","Akademik Etkinlikler":"Academic Activities","Bu sayfada":"On this page","BU SAYFADA":"ON THIS PAGE","Genel İngilizce (B2+)":"General English (B2+)","Soru Bankası":"Question Bank","Denemeler":"Mock Tests","Soru Bankasına Git":"Go to Question Bank","Bu sayfa neye yarar?":"What is this page for?"
   };
   function tr2en(tr, lang) { return (lang === "en" && I18N.hasOwnProperty(tr)) ? I18N[tr] : tr; }
   var _premState = false, _premRefresh = null;
   function translateRegion(root, lang) {
     if (!root) return;
-    var els = root.querySelectorAll("a, h4, span, li, button, .footer-tagline");
+    var els = root.querySelectorAll("a, h4, h3, span, li, button, div, p, .footer-tagline");
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (el.children.length) continue;            // yalnız yaprak metin
@@ -234,8 +235,18 @@
       else if (k === "cta") el.innerHTML = HEART + esc(txt);
       else el.textContent = txt;
     }
-    // 3) footer (yaprak metin sözlükle)
+    // 3) footer + konu sayfası chrome'u (yaprak metin sözlükle)
     translateRegion(document.querySelector(".site-footer"), lang);
+    var chromeSel = document.querySelectorAll(".ob-next, .ka-back, .ka-eyebrow, .kt-back, .kt-eyebrow, .ka-toc-title, .ka-toc-h");
+    for (var c = 0; c < chromeSel.length; c++) translateRegion(chromeSel[c], lang);
+    // 3b) konu içi TOC: her bağlantının etiketini hedef bölümün GÖRÜNÜR başlığından türet
+    var toc = document.querySelectorAll('.ka-toc a[href^="#"], .kt-toc a[href^="#"]');
+    for (var q = 0; q < toc.length; q++) {
+      var a = toc[q], id = a.getAttribute("href").slice(1), sec = id && document.getElementById(id);
+      if (!sec) continue;
+      var hh = sec.querySelector('[data-blog-lang="' + lang + '"] h2, [data-blog-lang="' + lang + '"] h3') || sec.querySelector("h2, h3");
+      if (hh) { var tx = (hh.textContent || "").replace(/^\s*\d+[\.\)]\s*/, "").trim(); if (tx) a.textContent = tx; }
+    }
     // 4) premium metnini dile göre tazele
     if (_premRefresh) try { _premRefresh(); } catch (e) {}
     // 5) blog-i18n'in hero toggle'ı varsa kaldır (tek switch nav'da)

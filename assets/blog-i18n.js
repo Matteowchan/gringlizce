@@ -28,6 +28,8 @@
   }
 
   function injectToggle() {
+    // Dil değiştirici artık nav'da (nav.js, site-geneli tek switch). Hero'ya toggle enjekte etme.
+    if (window.griSetLang) return;
     if (document.querySelector('.blog-lang-toggle')) return;
     var hero = document.querySelector('.blog-hero, .blog-hub-head, .ka-hero, .kt-hero');
     if (!hero) return;

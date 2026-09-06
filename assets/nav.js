@@ -181,6 +181,71 @@
 
   function twoline(label, caret) { var i = label.indexOf(" "); var w1 = i === -1 ? label : label.slice(0, i); var w2 = i === -1 ? "" : label.slice(i + 1); var cv = caret ? CVDOWN : ""; return '<span class="nw1">' + esc(w1) + (w2 ? "" : cv) + '</span>' + (w2 ? '<span class="nw2">' + esc(w2) + cv + "</span>" : ""); }
 
+  /* ===== Site-geneli TR/EN dil değiştirici (native; tek anahtar: gri-blog-lang) ===== */
+  var LANG_KEY = "gri-blog-lang";
+  function getLang() { try { return localStorage.getItem(LANG_KEY) === "en" ? "en" : "tr"; } catch (e) { return "tr"; } }
+  function setLangStore(v) { try { localStorage.setItem(LANG_KEY, v === "en" ? "en" : "tr"); } catch (e) {} }
+  var HEART = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M12 21s-6.7-4.35-9.33-8.02C1.1 10.6 1.53 7.6 3.7 6.2c1.9-1.22 4.2-.6 5.3.98L12 11l3-3.82c1.1-1.58 3.4-2.2 5.3-.98 2.17 1.4 2.6 4.4.03 6.78C18.7 16.65 12 21 12 21z"/></svg>';
+  function di(tr) { return ' data-i18n="' + esc(tr) + '"'; }
+  var I18N = {
+    "Sınavlar":"Exams","Genel İngilizce":"General English","Çalışma Alanı":"Study Area",
+    "Seviye Belirleme":"Placement Test","Seviye Belirleme Sınavı":"Placement Test","Seviye Belirleme Testi":"Placement Test",
+    "Araçlar":"Tools","AI Araçları":"AI Tools","Sınıflarım":"My Classes","Oyunlar":"Games",
+    "Soru Bankası":"Question Bank","Soru Bankasi":"Question Bank","Konu Anlatımı":"Topic Guides",
+    "Kelime":"Vocabulary","Kelime Bankası":"Vocabulary Bank","Yazı Pratiği":"Writing Practice","Yazi Pratigi":"Writing Practice",
+    "Denemeler":"Mock Tests","Deneme":"Mock Test","Tam Deneme":"Full Mock","Alıştırmalar":"Exercises","Alistir . Pratik":"Practice","Pratik":"Practice",
+    "Driller":"Drills","Gramer Drill":"Grammar Drill","Bölüm Bazlı":"By Section","Metin turleri":"Text Types","Textsorten":"Text Types",
+    "Öğrenme Haritası":"Learning Map","Üniversite Hazırlık Atlama":"Uni Prep Skip Test","Bize Ulaşın":"Contact","Destek Ol":"Support Us",
+    "Almanca":"German","İngilizce":"English","TOK Rehberi":"TOK Guide","Paper 1 & Paper 2":"Paper 1 & Paper 2",
+    "Math Denemeleri":"Math Mocks","R&W Denemeleri":"R&W Mocks","YÖKDİL Fen":"YÖKDİL Science","YÖKDİL Sağlık":"YÖKDİL Health","YÖKDİL Sosyal":"YÖKDİL Social",
+    "Ogren":"Learn","Ogren Modulu":"Learn Module","Ogren . 2026 Format":"Learn · 2026 Format","Ogren . Beceriler":"Learn · Skills","Ogren . Math":"Learn · Math","Ogren . Paper 1":"Learn · Paper 1","Ogren . Reading & Writing":"Learn · Reading & Writing","Ogren . Ucretsiz Soru Modulu":"Learn · Free Module",
+    "Premium":"Premium","Pro":"Pro","Giriş":"Sign in","Giriş Yap":"Sign in","Tema":"Theme","Hesap":"Account","Çalışma Masam":"My Desk","Menü":"Menu",
+    "Ana Sayfa":"Home","Harita":"Map","Soru":"Questions","Sınıf":"Class","Masam":"Desk","günlük seri":"day streak",
+    "Gri Pro":"Gri Pro","Gri Pro aktif":"Gri Pro active","Üyeliğini yönet":"Manage membership","Sınırsız soru · reklamsız · AI mentor":"Unlimited questions · ad-free · AI mentor",
+    "Çalış":"Study","Platform":"Platform","IELTS Denemeleri":"IELTS Mock Tests","Hakkımızda":"About","Gizlilik Politikası":"Privacy Policy","KVKK Aydınlatma Metni":"KVKK Notice","Çerez Politikası":"Cookie Policy","Kullanım Koşulları":"Terms of Use","Editöryal İlkeler":"Editorial Principles","İçerik ve Kaynak Politikası":"Content & Sources","AI Mentor Nasıl Çalışır?":"How AI Mentor Works","İade / İptal / Üyelik":"Refunds / Cancellation / Membership",
+    "Digital SAT":"Digital SAT","IELTS Academic":"IELTS Academic","TOEFL iBT":"TOEFL iBT","IB Diploma":"IB Diploma","YDS / YÖKDİL":"YDS / YÖKDİL"
+  };
+  function tr2en(tr, lang) { return (lang === "en" && I18N.hasOwnProperty(tr)) ? I18N[tr] : tr; }
+  var _premState = false, _premRefresh = null;
+  function translateRegion(root, lang) {
+    if (!root) return;
+    var els = root.querySelectorAll("a, h4, span, li, button, .footer-tagline");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.children.length) continue;            // yalnız yaprak metin
+      var orig = el.getAttribute("data-i18n-tr");
+      if (orig === null) { orig = (el.textContent || "").trim(); el.setAttribute("data-i18n-tr", orig); }
+      if (!orig) continue;
+      el.textContent = (lang === "en" && I18N[orig]) ? I18N[orig] : orig;
+    }
+  }
+  function applyLang(lang) {
+    lang = (lang === "en") ? "en" : "tr";
+    setLangStore(lang);
+    try { document.documentElement.setAttribute("lang", lang); } catch (e) {}
+    // 1) küratörlü gövde içeriği (konu/blog)
+    var g = document.querySelectorAll("[data-blog-lang]");
+    for (var i = 0; i < g.length; i++) g[i].hidden = (g[i].getAttribute("data-blog-lang") !== lang);
+    // 2) işaretli chrome (nav)
+    var els = document.querySelectorAll("[data-i18n]");
+    for (var j = 0; j < els.length; j++) {
+      var el = els[j], t = el.getAttribute("data-i18n"), txt = tr2en(t, lang), k = el.getAttribute("data-ik");
+      if (k === "tl" || k === "tlc") el.innerHTML = twoline(txt, k === "tlc");
+      else if (k === "cta") el.innerHTML = HEART + esc(txt);
+      else el.textContent = txt;
+    }
+    // 3) footer (yaprak metin sözlükle)
+    translateRegion(document.querySelector(".site-footer"), lang);
+    // 4) premium metnini dile göre tazele
+    if (_premRefresh) try { _premRefresh(); } catch (e) {}
+    // 5) blog-i18n'in hero toggle'ı varsa kaldır (tek switch nav'da)
+    var dup = document.querySelectorAll(".blog-lang-toggle");
+    for (var m = 0; m < dup.length; m++) if (dup[m].parentNode) dup[m].parentNode.removeChild(dup[m]);
+    // 6) pill durumları
+    var pills = document.querySelectorAll(".gri-lang [data-setlang]");
+    for (var p = 0; p < pills.length; p++) pills[p].setAttribute("aria-pressed", pills[p].getAttribute("data-setlang") === lang ? "true" : "false");
+  }
+
   function readTheme() { try { return localStorage.getItem("gri-theme") || "krem"; } catch (e) { return "krem"; } }
   function applyTheme(t) {
     document.documentElement.setAttribute("data-theme", t);
@@ -192,6 +257,13 @@
 
   var st = document.createElement("style"); st.setAttribute("data-gri-nav", ""); st.textContent = CSS;
   (document.head || document.documentElement).appendChild(st);
+  var LANG_CSS =
+    '.gri-lang{display:inline-flex;gap:2px;border:1px solid var(--gri-line,rgba(0,0,0,.16));border-radius:999px;padding:2px;background:var(--bg-card,#fff)}' +
+    '.gri-lang button{font:700 .72rem/1 var(--font-ui,Inter),system-ui,sans-serif;letter-spacing:.03em;border:0;background:transparent;color:var(--text-muted,#7a7168);padding:.34rem .6rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}' +
+    '.gri-lang button[aria-pressed="true"]{background:var(--teal,#2C5856);color:#fff}' +
+    '.gri-mxlate .gri-lang{width:100%;justify-content:stretch}.gri-mxlate .gri-lang button{flex:1;padding:.55rem}';
+  var stl = document.createElement("style"); stl.setAttribute("data-gri-lang", ""); stl.textContent = LANG_CSS;
+  (document.head || document.documentElement).appendChild(stl);
 
   function hrefsOf(item, acc) { if (item.href) acc.push(item.href.toLowerCase().split("/").pop()); if (item.children) item.children.forEach(function (c) { hrefsOf(c, acc); }); return acc; }
 
@@ -232,21 +304,21 @@
     var links = MENU.map(function (it) {
       var active = hrefsOf(it, []).map(function (h) { return String(h).replace(/\.html$/, ""); }).indexOf(here) !== -1;
       if (!it.children) {
-        if (it.cta) { var HRT='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M12 21s-6.7-4.35-9.33-8.02C1.1 10.6 1.53 7.6 3.7 6.2c1.9-1.22 4.2-.6 5.3.98L12 11l3-3.82c1.1-1.58 3.4-2.2 5.3-.98 2.17 1.4 2.6 4.4.03 6.78C18.7 16.65 12 21 12 21z"/></svg>'; return '<a href="' + href(it.href) + '" class="gri-cta' + (active ? ' here' : '') + '">' + HRT + esc(it.label) + "</a>"; }
-        return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + ">" + twoline(it.label, false) + "</a>";
+        if (it.cta) { return '<a href="' + href(it.href) + '" class="gri-cta' + (active ? ' here' : '') + '"' + di(it.label) + ' data-ik="cta">' + HEART + esc(it.label) + "</a>"; }
+        return '<a href="' + href(it.href) + '"' + (active ? ' class="here"' : "") + di(it.label) + ' data-ik="tl">' + twoline(it.label, false) + "</a>";
       }
       var isMega = it.children.some(function (ch) { return ch.children && ch.children.length; });
       var cols2 = !isMega && it.children.length >= 7;
       var ddCls = "gri-dd" + (active ? " here" : "") + (isMega ? " gri-dd-mega" : (cols2 ? " gri-dd-cols2" : ""));
       var groups = it.children.map(function (ch) {
         if (ch.children) {
-          var subs = ch.children.map(function (g) { return '<a href="' + href(g.href) + '">' + esc(g.label) + "</a>"; }).join("");
-          return '<div class="gri-grp"><a class="gh" href="' + href(ch.href) + '">' + esc(ch.label) + '</a><div class="gri-sub">' + subs + "</div></div>";
+          var subs = ch.children.map(function (g) { return '<a href="' + href(g.href) + '"' + di(g.label) + '>' + esc(g.label) + "</a>"; }).join("");
+          return '<div class="gri-grp"><a class="gh" href="' + href(ch.href) + '"' + di(ch.label) + '>' + esc(ch.label) + '</a><div class="gri-sub">' + subs + "</div></div>";
         }
-        return '<a href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
+        return '<a href="' + href(ch.href) + '"' + di(ch.label) + '>' + esc(ch.label) + "</a>";
       }).join("");
       if (!isMega) groups = '<div class="gri-grp gri-grp-flat">' + groups + "</div>";
-      return '<div class="' + ddCls + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
+      return '<div class="' + ddCls + '"><button type="button" data-dd aria-haspopup="true" aria-expanded="false"' + di(it.label) + ' data-ik="tlc">' + twoline(it.label, true) + '</button><div class="gri-dd-menu" role="menu">' + groups + "</div></div>";
     }).join("");
 
     // Mobil: tum linkler duz (gruplu) liste olarak kalir — masaustu dropdown'lari
@@ -258,12 +330,12 @@
     function isHere(h){ return h && String(h).toLowerCase().split("/").pop().replace(/\.html$/, "") === here; }
     var mcards = MENU.map(function (it) {
       var act = hrefsOf(it, []).map(function (h) { return String(h).replace(/\.html$/, ""); }).indexOf(here) !== -1;
-      if (!it.children) return '<a class="gri-mcard' + (act ? " here" : "") + '" href="' + href(it.href) + '">' + esc(it.label) + "</a>";
+      if (!it.children) return '<a class="gri-mcard' + (act ? " here" : "") + '" href="' + href(it.href) + '"' + di(it.label) + '>' + esc(it.label) + "</a>";
       var inner = it.children.map(function (ch) {
         if (!ch.href) return "";
-        return '<a' + (isHere(ch.href) ? ' class="here"' : "") + ' href="' + href(ch.href) + '">' + esc(ch.label) + "</a>";
+        return '<a' + (isHere(ch.href) ? ' class="here"' : "") + ' href="' + href(ch.href) + '"' + di(ch.label) + '>' + esc(ch.label) + "</a>";
       }).join("");
-      return '<div class="gri-msec' + (act ? " open here" : "") + '"><div class="gri-mrow" data-msec>' + esc(it.label) + MCARET + '</div><div class="gri-msub">' + inner + "</div></div>";
+      return '<div class="gri-msec' + (act ? " open here" : "") + '"><div class="gri-mrow" data-msec><span' + di(it.label) + '>' + esc(it.label) + '</span>' + MCARET + '</div><div class="gri-msub">' + inner + "</div></div>";
     }).join("");
 
     // Mobil hizli-erisim izgarasi (kaldirilan alt tabbar'in tek-dokunus hedefleri drawer'da)
@@ -276,7 +348,7 @@
     ];
     var mquick = '<div class="gri-mquick">' + MQ.map(function (q) {
       var on = here === q.f || (q.f === "index" && (here === "" || here === "index"));
-      return '<a href="' + q.h + '"' + (on ? ' class="here"' : "") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + q.ic + '</svg><span>' + q.l + '</span></a>';
+      return '<a href="' + q.h + '"' + (on ? ' class="here"' : "") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + q.ic + '</svg><span' + di(q.l) + '>' + q.l + '</span></a>';
     }).join("") + "</div>";
 
     var tOpts = themeOptsHtml();
@@ -289,20 +361,12 @@
       + '<span class="ic">' + CROWN + '</span>'
       + '<span class="tx"><span class="t">Gri Pro</span><span class="s">Sınırsız soru · reklamsız · AI mentor</span></span>'
       + '<span class="go" aria-hidden="true">&rsaquo;</span></a>';
-    var mstreak = '<span class="gri-mstreak" id="gri-mstreak" data-streak-wrap title="Günlük çalışma serin">' + FLAME + '<b class="gri-streak-n">0</b> günlük seri</span>';
+    var mstreak = '<span class="gri-mstreak" id="gri-mstreak" data-streak-wrap title="Günlük çalışma serin">' + FLAME + '<b class="gri-streak-n">0</b> <span' + di("günlük seri") + '>günlük seri</span></span>';
 
-    var xl = xlateData();
-    var xlDD = xl ? ('<div class="gri-rdd gri-xlate-dd"><button type="button" data-dd>Dil' + CVDOWN + '</button><div class="gri-rdd-menu">'
-      + '<div class="gri-th-lbl" style="padding-top:2px">Dil / Language</div>'
-      + '<a href="' + esc(xl.tr) + '"' + (xl.on ? "" : ' class="here"') + '>Türkçe <span style="opacity:.55">· orijinal</span></a>'
-      + '<a href="' + esc(xl.en) + '" lang="en" rel="nofollow">English</a>'
-      + '<a href="' + esc(xl.de) + '" lang="de" rel="nofollow">Deutsch</a>'
-      + '</div></div>') : "";
-    var xlM = xl ? ('<div class="gri-mxlate"><div class="gri-th-lbl">Dil / Language</div><div class="gri-mxrow">'
-      + '<a href="' + esc(xl.tr) + '"' + (xl.on ? "" : ' class="on"') + '>Türkçe</a>'
-      + '<a href="' + esc(xl.en) + '" lang="en" rel="nofollow">English</a>'
-      + '<a href="' + esc(xl.de) + '" lang="de" rel="nofollow">Deutsch</a>'
-      + '</div></div>') : "";
+    var _lng = getLang();
+    function _pill(v, txt) { return '<button type="button" data-setlang="' + v + '" aria-pressed="' + (_lng === v ? "true" : "false") + '"' + (v === "en" ? ' lang="en"' : "") + '>' + txt + '</button>'; }
+    var xlDD = '<div class="gri-lang" role="group" aria-label="Dil / Language">' + _pill("tr", "TR") + _pill("en", "EN") + '</div>';
+    var xlM = '<div class="gri-mxlate"><div class="gri-th-lbl">Dil / Language</div><div class="gri-lang">' + _pill("tr", "Türkçe") + _pill("en", "English") + '</div></div>';
 
     var frag = document.createElement("div");
     frag.insertAdjacentHTML("beforeend", SPRITE);
@@ -314,7 +378,7 @@
       '<nav class="links">' + links + "</nav>" +
       '<div class="right">' +
       streakBar + premBtn +
-      '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd>Tema' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
+      '<div class="gri-rdd gri-theme-dd"><button type="button" data-dd><span' + di("Tema") + '>Tema</span>' + CVDOWN + '</button><div class="gri-rdd-menu">' + tOpts + '</div></div>' +
       "<button class='gri-ico aa' id='gri-fs' title='Yazi boyutu'>Aa</button>" +
       "<button class='gri-ico' id='gri-dark' title='Gece modu'><svg viewBox='0 0 20 20' width='16' height='16' fill='currentColor'><path d='M13 2a8 8 0 105 14A7 7 0 0113 2z'/></svg></button>" +
       '<div id="navUserMount" class="gri-user-mount"></div>' +
@@ -325,10 +389,10 @@
       '<div class="gri-mclose"><a href="/" class="brand">Gri<span class="it">English</span></a><button type="button" class="gri-mclose-x" id="gri-mclose-x" aria-label="Kapat">&times;</button></div>' +
       mprem + mstreak +
       mquick +
-      '<div class="gri-th-lbl">Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
-      '<a class="gri-mcard' + (here === "panelim" ? " here" : "") + '" href="' + BASE + 'panelim.html">Çalışma Masam</a></div>' +
+      '<div class="gri-th-lbl"' + di("Hesap") + '>Hesap</div><div id="navUserMountSlot"></div><div class="gri-mcards">' + mcards +
+      '<a class="gri-mcard' + (here === "panelim" ? " here" : "") + '" href="' + BASE + 'panelim.html"' + di("Çalışma Masam") + '>Çalışma Masam</a></div>' +
       xlM +
-      '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h">Tema' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
+      '<div class="gri-mtheme"><button type="button" class="gri-mtheme-h" id="gri-mtheme-h"><span' + di("Tema") + '>Tema</span>' + CVDOWN + '</button><div class="gri-mtheme-body">' + tOpts + "</div></div></div></div></header>");
 
     var _lb = document.querySelector(".launch-banner");
     var _ref = (_lb && _lb.parentNode === document.body) ? _lb.nextSibling : document.body.firstChild;
@@ -336,12 +400,14 @@
     while (frag.firstChild) document.body.insertBefore(frag.firstChild, _ref);
     applyTheme(readTheme());
     var _mnt = document.getElementById("navUserMount");
-    if (_mnt && !_mnt.innerHTML.trim()) _mnt.innerHTML = '<a href="' + BASE + 'giris.html" class="gri-giris">Giriş</a>';
+    if (_mnt && !_mnt.innerHTML.trim()) _mnt.innerHTML = '<a href="' + BASE + 'giris.html" class="gri-giris"' + di("Giriş") + '>Giriş</a>';
 
     function closeAllDD() { document.querySelectorAll(".gri-dd.open,.gri-rdd.open").forEach(function (x) { x.classList.remove("open"); }); syncAria(); }
     function syncAria() { document.querySelectorAll(".gri-dd>[data-dd],.gri-rdd>[data-dd]").forEach(function (b) { b.setAttribute("aria-expanded", b.parentNode.classList.contains("open") ? "true" : "false"); }); }
     document.addEventListener("click", function (e) {
       var t = e.target;
+      var sl = t.closest && t.closest("[data-setlang]");
+      if (sl) { applyLang(sl.getAttribute("data-setlang")); return; }
       var themeBtn = t.closest && t.closest(".gri-th-opt[data-t]");
       if (themeBtn) { applyTheme(themeBtn.getAttribute("data-t")); closeAllDD(); return; }
       var dd = t.closest && t.closest("[data-dd]");
@@ -405,10 +471,12 @@
 
     // ── Premium durumu: GRI_PREMIUM'a göre CTA'yı "Yükselt" ↔ "Pro" arasında değiştir ──
     function setPrem(active) {
+      _premState = !!active;
+      var lang = getLang();
       var b = document.getElementById("gri-prem");
       if (b) {
         b.classList.toggle("is-pro", !!active);
-        var pl = b.querySelector(".pl"); if (pl) pl.textContent = active ? "Pro" : "Premium";
+        var pl = b.querySelector(".pl"); if (pl) pl.textContent = active ? tr2en("Pro", lang) : tr2en("Premium", lang);
         b.title = active ? "Gri Pro üyeliğin aktif" : "Gri Pro'ya yükselt";
         b.setAttribute("aria-label", b.title);
       }
@@ -416,10 +484,11 @@
       if (m) {
         m.classList.toggle("is-pro", !!active);
         var t = m.querySelector(".t"), s = m.querySelector(".s");
-        if (t) t.textContent = active ? "Gri Pro aktif" : "Gri Pro";
-        if (s) s.textContent = active ? "Üyeliğini yönet" : "Sınırsız soru · reklamsız · AI mentor";
+        if (t) t.textContent = active ? tr2en("Gri Pro aktif", lang) : tr2en("Gri Pro", lang);
+        if (s) s.textContent = active ? tr2en("Üyeliğini yönet", lang) : tr2en("Sınırsız soru · reklamsız · AI mentor", lang);
       }
     }
+    _premRefresh = function () { setPrem(_premState); };
     // Durum: önce canlı GRI_PREMIUM (gri-premium.js yüklü ~37 sayfa), yoksa senkron localStorage cache
     // ('gri-prem-active'='1' → anında Pro). Cache yok/‘0’ ise güvenli varsayılan: "Premium" (yükselt). FAIL-OPEN.
     try {
@@ -430,6 +499,12 @@
     } catch (e) {}
     // Canlı olay geldiğinde (gri-premium.js refresh sonrası) durumu güncelle
     window.addEventListener("gri-premium", function (ev) { try { setPrem(!!(ev.detail && ev.detail.active)); } catch (e) {} });
+
+    // ── Kayıtlı dili uygula (nav etiketleri + gövde [data-blog-lang] + footer) ──
+    try { applyLang(getLang()); } catch (e) {}
+    // footer sonradan/dinamik gelirse tekrar dene
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { try { applyLang(getLang()); } catch (e) {} });
+    window.griSetLang = applyLang;
 
     // ── Günlük seri (streak) pill'i: gerçek veri varsa göster, yoksa sessizce atla (uydurma yok) ──
     (function () {

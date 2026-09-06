@@ -257,6 +257,17 @@
     for (var p = 0; p < pills.length; p++) pills[p].setAttribute("aria-pressed", pills[p].getAttribute("data-setlang") === lang ? "true" : "false");
   }
 
+  /* Dil pili tıklaması: küratörlü sayfada yerinde EN (premium); küratörsüz/dinamik
+     sayfada tüm-site EN için translate.goog proxy'sine yönlendir → "komple site İngilizce". */
+  function onLangClick(lang) {
+    applyLang(lang);
+    var xl = null; try { xl = xlateData(); } catch (e) {}
+    if (!xl) return; // yalnız canlı gringlizce.com / translate.goog'da yönlendirme yapılır
+    var curated = !!document.querySelector('[data-blog-lang="en"]');
+    if (lang === "en" && !curated && !xl.on) { location.href = xl.en; }
+    else if (lang === "tr" && xl.on) { location.href = xl.tr; }
+  }
+
   function readTheme() { try { return localStorage.getItem("gri-theme") || "krem"; } catch (e) { return "krem"; } }
   function applyTheme(t) {
     document.documentElement.setAttribute("data-theme", t);
@@ -418,7 +429,7 @@
     document.addEventListener("click", function (e) {
       var t = e.target;
       var sl = t.closest && t.closest("[data-setlang]");
-      if (sl) { applyLang(sl.getAttribute("data-setlang")); return; }
+      if (sl) { onLangClick(sl.getAttribute("data-setlang")); return; }
       var themeBtn = t.closest && t.closest(".gri-th-opt[data-t]");
       if (themeBtn) { applyTheme(themeBtn.getAttribute("data-t")); closeAllDD(); return; }
       var dd = t.closest && t.closest("[data-dd]");
@@ -516,6 +527,13 @@
     // footer sonradan/dinamik gelirse tekrar dene
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { try { applyLang(getLang()); } catch (e) {} });
     window.griSetLang = applyLang;
+    // ── Yükleme anında: EN seçiliyse ve bu sayfa küratörlü değilse, tüm-site EN proxy'sine geç ──
+    try {
+      if (getLang() === "en") {
+        var _xl = xlateData();
+        if (_xl && !_xl.on && !document.querySelector('[data-blog-lang="en"]')) location.replace(_xl.en);
+      }
+    } catch (e) {}
 
     // ── Günlük seri (streak) pill'i: gerçek veri varsa göster, yoksa sessizce atla (uydurma yok) ──
     (function () {

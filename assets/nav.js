@@ -255,8 +255,6 @@
     // 6) pill durumları
     var pills = document.querySelectorAll(".gri-lang [data-setlang]");
     for (var p = 0; p < pills.length; p++) pills[p].setAttribute("aria-pressed", pills[p].getAttribute("data-setlang") === lang ? "true" : "false");
-    // 7) gömülü çeviri sözlüğünü uygula (küratörlü içeriğin kapsamadığı JS/dinamik metin)
-    try { runMT(lang); } catch (e) {}
   }
 
   /* Dil pili tıklaması: TAMAMEN yerinde (in-page) çeviri — Google/proxy/runtime-API YOK.
@@ -290,7 +288,9 @@
     '.gri-lang{display:inline-flex;gap:2px;border:1px solid var(--gri-line,rgba(0,0,0,.16));border-radius:999px;padding:2px;background:var(--bg-card,#fff)}' +
     '.gri-lang button{font:700 .72rem/1 var(--font-ui,Inter),system-ui,sans-serif;letter-spacing:.03em;border:0;background:transparent;color:var(--text-muted,#7a7168);padding:.34rem .6rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}' +
     '.gri-lang button[aria-pressed="true"]{background:var(--teal,#2C5856);color:#fff}' +
-    '.gri-mxlate .gri-lang{width:100%;justify-content:stretch}.gri-mxlate .gri-lang button{flex:1;padding:.55rem}';
+    '.gri-mxlate .gri-lang{width:100%;justify-content:stretch}.gri-mxlate .gri-lang button{flex:1;padding:.55rem}' +
+    /* Site-geneli: pasif dil daima gizli — sayfa-içi CSS (ör. .gstat span{display:block}) bunu ezemesin */
+    '[data-blog-lang][hidden]{display:none!important}';
   var stl = document.createElement("style"); stl.setAttribute("data-gri-lang", ""); stl.textContent = LANG_CSS;
   (document.head || document.documentElement).appendChild(stl);
 

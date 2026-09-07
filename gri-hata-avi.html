@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WN2KGM8J');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gri'nin Hata Avı · Sınav İngilizcesi Oyunu | Gri English</title>
+  <meta name="description" content="Cümledeki hatayı bul, doğru düzeltmeyi seç, Türkçe açıklamayla öğren. SAT, YDT/YDS ve genel İngilizce için kısa, öğretici hata avı turları.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2C5856">
+  <link rel="canonical" href="https://gringlizce.com/gri-hata-avi">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Gri'nin Hata Avı · Sınav İngilizcesi Oyunu">
+  <meta property="og:description" content="Cümledeki hatayı bul, doğru düzeltmeyi seç, Türkçe açıklamayla öğren.">
+  <meta property="og:url" content="https://gringlizce.com/gri-hata-avi">
+  <meta property="og:image" content="https://gringlizce.com/assets/og-default.png">
+  <meta property="og:site_name" content="Gri English">
+  <meta property="og:locale" content="tr_TR">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Anasayfa","item":"https://gringlizce.com/"},{"@type":"ListItem","position":2,"name":"Oyunlar","item":"https://gringlizce.com/oyunlar"},{"@type":"ListItem","position":3,"name":"Gri'nin Hata Avı","item":"https://gringlizce.com/gri-hata-avi"}]}
+  </script>
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/site-overrides.css">
+  <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+  <script src="assets/theme.js?v=2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/site-config.js?v=8" defer></script>
+  <script src="assets/auth.js" defer></script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/assets/app-mode.css?v=2">
+  <script src="/assets/app-mode.js?v=3" defer></script>
+  <script src="assets/curriculum.js?v=30"></script>
+  <script src="assets/nav.js?v=42"></script>
+  <style>
+  /* ===== Gri'nin Hata Avı — çalışma-notu / cümle tamiri masası ===== */
+  .ha-wrap{max-width:760px;margin:0 auto;padding:1.4rem 1.2rem 4rem}
+  .ha-crumb{font-size:.85rem;color:var(--text-muted);margin:.4rem 0 1rem}
+  .ha-crumb a{color:var(--text-soft);text-decoration:none}.ha-crumb a:hover{color:var(--teal)}
+  .ha-head{text-align:center;margin-bottom:1.4rem}
+  .ha-eyebrow{font-family:var(--font-ui);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold,#B78A2E)}
+  .ha-head h1{font-family:var(--font-display);font-size:clamp(1.8rem,4.5vw,2.6rem);margin:.35rem 0 .3rem;letter-spacing:-.01em;color:var(--text)}
+  .ha-head p{color:var(--text-soft);max-width:52ch;margin:.2rem auto 0;line-height:1.6}
+  .ha-cat{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto .4rem;display:block;box-shadow:var(--shadow-sm)}
+
+  /* Study-note surface */
+  .ha-note{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);padding:1.5rem 1.4rem;position:relative;overflow:hidden}
+  .ha-note::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--teal),var(--gold,#B78A2E));opacity:.5}
+
+  /* Start screen */
+  .ha-panel{display:flex;flex-direction:column;gap:1.1rem}
+  .ha-modes{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem}
+  @media(max-width:520px){.ha-modes{grid-template-columns:1fr}}
+  .ha-mode{display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:.85rem 1rem;cursor:pointer;font:inherit;text-align:left;transition:transform .12s,border-color .12s,box-shadow .12s}
+  .ha-mode:hover{transform:translateY(-2px);border-color:var(--teal);box-shadow:var(--shadow-sm)}
+  .ha-mode[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
+  .ha-mode b{font-family:var(--font-ui);font-size:1rem;color:var(--text)}
+  .ha-mode span{font-size:.82rem;color:var(--text-soft)}
+  .ha-optrow{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem}
+  .ha-optrow .lbl b{display:block;font-family:var(--font-ui);font-size:.95rem;color:var(--text)}
+  .ha-optrow .lbl span{font-size:.82rem;color:var(--text-soft)}
+  .ha-switch{appearance:none;width:46px;height:26px;border-radius:999px;background:var(--line-strong,#C9BCA0);position:relative;cursor:pointer;flex:none;transition:background .15s;border:none}
+  .ha-switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+  .ha-switch[aria-checked="true"]{background:var(--teal)}
+  .ha-switch[aria-checked="true"]::after{transform:translateX(20px)}
+
+  .ha-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--font-ui);font-weight:700;font-size:1.05rem;border-radius:12px;padding:.9rem 1.6rem;border:1px solid transparent;background:var(--teal);color:#fff;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s;text-decoration:none}
+  .ha-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);background:var(--teal-deep,#123C39)}
+  .ha-btn.sec{background:transparent;color:var(--teal);border-color:var(--line-strong,#C9BCA0)}
+  .ha-btn.sec:hover{background:var(--teal-soft);border-color:var(--teal)}
+  .ha-btn.wide{width:100%}
+  .ha-btnrow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
+
+  /* Round */
+  .ha-topbar{display:flex;align-items:center;justify-content:space-between;gap:.8rem;margin-bottom:.9rem;font-family:var(--font-ui)}
+  .ha-count{font-size:.85rem;color:var(--text-muted);font-weight:600}
+  .ha-streak{font-size:.85rem;font-weight:700;color:var(--gold-deep,#8A6A22);display:inline-flex;align-items:center;gap:.3rem}
+  .ha-prog{height:5px;background:var(--line);border-radius:999px;overflow:hidden;margin-bottom:1.1rem}
+  .ha-prog i{display:block;height:100%;background:var(--teal);width:0;border-radius:999px;transition:width .35s ease}
+  .ha-timer{height:4px;background:var(--line);border-radius:999px;overflow:hidden;margin:.2rem 0 1rem}
+  .ha-timer i{display:block;height:100%;background:var(--gold,#B78A2E);width:100%}
+  .ha-skill{font-family:var(--font-ui);font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-deep,var(--teal));background:var(--teal-soft);display:inline-block;padding:.2rem .6rem;border-radius:999px;margin-bottom:.7rem}
+  .ha-prompt{font-family:var(--font-ui);font-size:.9rem;color:var(--text-soft);margin-bottom:.6rem}
+  .ha-sentence{font-family:var(--font-prose,Georgia,serif);font-size:1.35rem;line-height:1.6;color:var(--text);margin:0 0 .2rem}
+  .ha-sentence u{text-decoration:none;background:linear-gradient(transparent 60%,rgba(183,138,46,.35) 0);padding:0 .1em;font-style:normal}
+  .ha-opts{display:flex;flex-direction:column;gap:.5rem;margin-top:1.1rem}
+  .ha-opt{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;font:inherit;font-size:1rem;color:var(--text);background:var(--bg-card);border:1px solid var(--line);border-radius:11px;padding:.7rem .9rem;cursor:pointer;transition:transform .1s,border-color .12s,background .12s}
+  .ha-opt:hover:not(:disabled){border-color:var(--teal);transform:translateX(2px)}
+  .ha-opt:disabled{cursor:default}
+  .ha-opt .k{font-family:var(--font-ui);font-weight:700;font-size:.8rem;width:1.5rem;height:1.5rem;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--teal-soft);color:var(--teal-deep)}
+  .ha-opt .txt{font-family:var(--font-body,Inter),sans-serif}
+  .ha-opt.correct{border-color:var(--correct,#2C6E49);background:var(--correct-soft,rgba(44,110,73,.12))}
+  .ha-opt.correct .k{background:var(--correct,#2C6E49);color:#fff}
+  .ha-opt.wrong{border-color:var(--incorrect,#B0342C);background:var(--incorrect-soft,rgba(176,52,44,.1))}
+  .ha-opt.wrong .k{background:var(--incorrect,#B0342C);color:#fff}
+  .ha-opt .mark{margin-left:auto;font-weight:800}
+  .ha-opt.correct .mark{color:var(--correct,#2C6E49)}
+  .ha-opt.wrong .mark{color:var(--incorrect,#B0342C)}
+
+  /* Explanation — Gri joins the desk */
+  .ha-exp{margin-top:1.1rem;background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:12px;padding:1rem 1.1rem;opacity:0;transform:translateY(8px)}
+  .ha-exp.in{opacity:1;transform:none;transition:opacity .3s ease,transform .3s ease}
+  @media(prefers-reduced-motion:reduce){.ha-exp{transition:none!important}.ha-prog i,.ha-opt,.ha-btn,.ha-mode{transition:none!important}}
+  .ha-exp-head{display:flex;align-items:center;gap:.5rem;font-family:var(--font-ui);font-weight:700;font-size:.8rem;color:var(--teal-deep,var(--teal));margin-bottom:.5rem}
+  .ha-exp-head img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+  .ha-exp dl{margin:0;display:flex;flex-direction:column;gap:.5rem}
+  .ha-exp dt{font-family:var(--font-ui);font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.1rem}
+  .ha-exp dd{margin:0;font-family:var(--font-body,Inter),sans-serif;font-size:.95rem;line-height:1.55;color:var(--text-soft)}
+  .ha-exp dd b{color:var(--text)}
+  .ha-exp .fixed{font-family:var(--font-prose,Georgia,serif);color:var(--text);background:var(--correct-soft,rgba(44,110,73,.1));border-radius:8px;padding:.45rem .65rem;font-size:1.02rem}
+  .ha-next{margin-top:1rem;display:flex;justify-content:flex-end}
+
+  /* Recap */
+  .ha-recap .big{font-family:var(--font-display);font-size:2.4rem;color:var(--text);line-height:1;margin:.2rem 0}
+  .ha-recap .sub{color:var(--text-soft);margin-bottom:1rem}
+  .ha-catlist{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0}
+  .ha-catrow{display:flex;align-items:center;justify-content:space-between;gap:.8rem;background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:.6rem .85rem;font-size:.92rem}
+  .ha-catrow .c{color:var(--text)}
+  .ha-catrow .n{font-family:var(--font-ui);font-weight:700;color:var(--incorrect,#B0342C);font-size:.85rem}
+  .ha-nexts{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:1rem}
+  @media(max-width:560px){.ha-nexts{grid-template-columns:1fr}}
+  .ha-nextcard{display:block;text-decoration:none;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:.9rem;text-align:center;color:var(--text);font-family:var(--font-ui);font-weight:600;font-size:.92rem;transition:transform .12s,border-color .12s,box-shadow .12s}
+  .ha-nextcard:hover{transform:translateY(-2px);border-color:var(--teal);box-shadow:var(--shadow-sm)}
+  .ha-nextcard span{display:block;font-size:1.4rem;margin-bottom:.2rem}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  </style>
+</head>
+<body>
+<div class="launch-banner" data-site-banner></div>
+
+<div class="ha-wrap">
+  <nav class="ha-crumb" aria-label="breadcrumb">
+    <a href="index">Anasayfa</a> › <a href="oyunlar">Oyunlar</a> › <span>Gri'nin Hata Avı</span>
+  </nav>
+
+  <div class="ha-head">
+    <img src="assets/gri-cat-happy.png" alt="Gri" class="ha-cat" width="64" height="64">
+    <span class="ha-eyebrow">Sınav İngilizcesi · Kısa tur</span>
+    <h1>Gri'nin Hata Avı</h1>
+    <p>Cümledeki hatayı yakala, doğru düzeltmeyi seç. Her sorunun ardından Gri kısa bir Türkçe açıklama bırakır — neyin neden yanlış olduğunu öğrenerek ilerlersin.</p>
+  </div>
+
+  <!-- START -->
+  <section class="ha-note ha-panel" id="haStart" aria-label="Başlangıç">
+    <div>
+      <div class="ha-skill" style="margin-bottom:.6rem">Mod seç</div>
+      <div class="ha-modes" id="haModeGrid" role="group" aria-label="Çalışma alanı">
+        <button class="ha-mode" data-mode="mix" aria-pressed="true"><b>Karışık</b><span>Tüm alanlardan</span></button>
+        <button class="ha-mode" data-mode="sat" aria-pressed="false"><b>SAT</b><span>Reading &amp; Writing mantığı</span></button>
+        <button class="ha-mode" data-mode="ydt" aria-pressed="false"><b>YDT / YDS</b><span>Gramer, edat, bağlaç</span></button>
+        <button class="ha-mode" data-mode="genel" aria-pressed="false"><b>IELTS &amp; Genel</b><span>Genel İngilizce yapıları</span></button>
+      </div>
+    </div>
+    <div class="ha-optrow">
+      <span class="lbl"><b>Zorluk modu (süreli)</b><span>Her soruda sakin bir geri sayım. Standart modda süre yok.</span></span>
+      <button class="ha-switch" id="haTimed" role="switch" aria-checked="false" aria-label="Süreli zorluk modu"></button>
+    </div>
+    <button class="ha-btn wide" id="haStartBtn">Ava başla</button>
+    <p style="font-size:.82rem;color:var(--text-muted);text-align:center;margin:0">10 kısa soru · istediğin an çıkabilirsin</p>
+  </section>
+
+  <!-- ROUND -->
+  <section id="haRound" hidden aria-live="polite">
+    <div class="ha-topbar">
+      <span class="ha-count" id="haCount">Soru 1 / 10</span>
+      <span class="ha-streak" id="haStreak" hidden>🔥 <span id="haStreakN">0</span> seri</span>
+    </div>
+    <div class="ha-prog"><i id="haProg"></i></div>
+    <div class="ha-timer" id="haTimerWrap" hidden><i id="haTimerBar"></i></div>
+    <div class="ha-note">
+      <span class="ha-skill" id="haSkill">—</span>
+      <p class="ha-prompt" id="haPrompt">Hatayı düzeltecek en uygun seçeneği bul.</p>
+      <p class="ha-sentence" id="haSentence">—</p>
+      <div class="ha-opts" id="haOpts"></div>
+
+      <div class="ha-exp" id="haExp" hidden>
+        <div class="ha-exp-head"><img src="assets/gri-cat-happy.png" alt="Gri" width="26" height="26"> Gri açıklıyor</div>
+        <dl>
+          <div><dt>Neyi yanlış yaptın</dt><dd id="haExpWrong">—</dd></div>
+          <div><dt>Neden</dt><dd id="haExpWhy">—</dd></div>
+          <div><dt>Kural / strateji</dt><dd id="haExpRule">—</dd></div>
+          <div><dt>Doğru örnek</dt><dd class="fixed" id="haExpFixed">—</dd></div>
+        </dl>
+        <div class="ha-next"><button class="ha-btn" id="haNextBtn">Sonraki →</button></div>
+      </div>
+    </div>
+    <div class="ha-btnrow" style="margin-top:1rem">
+      <button class="ha-btn sec" id="haQuit">Turu bitir</button>
+    </div>
+  </section>
+
+  <!-- RECAP -->
+  <section id="haRecap" hidden class="ha-note ha-recap" aria-label="Tur özeti">
+    <div style="text-align:center">
+      <img src="assets/gri-cat-happy.png" alt="Gri" class="ha-cat" width="64" height="64">
+      <div class="ha-skill" style="margin-bottom:.4rem">Tur özeti</div>
+      <div class="big"><span id="haScore">0</span> / <span id="haTotal">10</span></div>
+      <p class="sub" id="haRecapMsg">Kısa bir çalışma turu tamamlandı.</p>
+    </div>
+    <div id="haCatWrap" hidden>
+      <p style="font-family:var(--font-ui);font-weight:700;font-size:.9rem;color:var(--text);margin:.4rem 0">En çok zorlandığın alanlar</p>
+      <div class="ha-catlist" id="haCatList"></div>
+    </div>
+    <p style="font-family:var(--font-ui);font-weight:700;font-size:.9rem;color:var(--text);margin:1.2rem 0 0">Bir sonraki adım</p>
+    <div class="ha-nexts">
+      <a class="ha-nextcard" href="konu-anlatimi"><span>📘</span>Konuyu çalış</a>
+      <a class="ha-nextcard" href="soru-bankasi"><span>✏️</span>Benzer soruları çöz</a>
+      <a class="ha-nextcard" href="#" id="haReplayWrong"><span>🔁</span>Hataları tekrar et</a>
+    </div>
+    <div class="ha-btnrow" style="margin-top:1.3rem">
+      <button class="ha-btn" id="haAgain">Yeni tur</button>
+      <a class="ha-btn sec" href="oyunlar">Diğer oyunlar</a>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ===== Item bank — özgün, sınav-İngilizcesi hata avı ===== */
+window.HA_ITEMS = [
+  // ---- SAT (Reading & Writing) ----
+  {mode:'sat',skill:'Transition seçimi',prompt:'Boşluğa en uygun bağlacı seç.',sentence:'Sales fell sharply last quarter. ___, the company still met its annual target.',opts:['However','Therefore','For example','Similarly'],ans:0,
+   ex:{wrong:'Cümleler arasında bir <b>zıtlık</b> var; sen bunu kuran bağlacı seçemedin.',why:'Satışların düşmesi ile hedefin tutması birbirine ters iki durum. "Therefore/Similarly" bu zıtlığı kuramaz.',rule:'Zıtlık → however, nevertheless, yet. Sonuç → therefore, as a result.',fixed:'…fell sharply. <b>However</b>, the company still met its target.'}},
+  {mode:'sat',skill:'Noktalama',prompt:'Altı çizili bölümü doğru noktalamayla düzelt.',sentence:'The experiment failed, <u>the</u> researchers tried a new method.',opts:['failed; the','failed the','failed: the','failed, and the — no fix needed'],ans:0,
+   ex:{wrong:'İki tam cümleyi yalnızca virgülle bağladın (comma splice).',why:'"The experiment failed" ve "the researchers tried…" iki bağımsız cümle; virgül tek başına bunları birleştiremez.',rule:'İki bağımsız cümle: nokta, noktalı virgül (;) ya da virgül + bağlaç (, and) ile ayrılır.',fixed:'The experiment failed<b>;</b> the researchers tried a new method.'}},
+  {mode:'sat',skill:'Words in Context',prompt:'Cümlenin anlamına en uygun kelimeyi seç.',sentence:'The author\'s tone is ___: she gently mocks the very customs she describes.',opts:['ironic','sincere','hostile','indifferent'],ans:0,
+   ex:{wrong:'Bağlamın ima ettiği anlamı değil, yüzeysel bir kelimeyi seçtin.',why:'"Gently mocks" (nazikçe alay eder) tam olarak <b>ironi</b>yi tarif eder; içten (sincere) veya kayıtsız (indifferent) değil.',rule:'Words in Context: boşluğu, çevresindeki ipucu cümleyle eşleştir; kelimenin sözlük anlamını değil, bağlamdaki işlevini düşün.',fixed:'Her tone is <b>ironic</b>: she gently mocks those customs.'}},
+  {mode:'sat',skill:'Özne-yüklem uyumu',prompt:'Doğru fiil biçimini seç.',sentence:'The list of participants ___ posted on the board.',opts:['is','are','were','have been'],ans:0,
+   ex:{wrong:'Fiili yanlış özneyle uyumlamışsın.',why:'Özne "the list" (tekil); "of participants" araya giren bir tamlama, fiili etkilemez.',rule:'Araya giren "of + çoğul" ifadeler özneyi değiştirmez. Gerçek özneyi bul, fiili ona göre çek.',fixed:'The list of participants <b>is</b> posted on the board.'}},
+  {mode:'sat',skill:'Zaman uyumu',prompt:'Doğru zaman biçimini seç.',sentence:'By the time we arrived, the train ___.',opts:['had left','has left','leaves','is leaving'],ans:0,
+   ex:{wrong:'Geçmişte, başka bir geçmiş olaydan önce biten eylem için yanlış zaman seçtin.',why:'"By the time we arrived" geçmiş bir an; tren bundan <b>önce</b> gitmiş. Bu, past perfect gerektirir.',rule:'Geçmişte bir olaydan önce biten eylem → had + V3 (past perfect).',fixed:'By the time we arrived, the train <b>had left</b>.'}},
+  {mode:'sat',skill:'Transition seçimi',prompt:'Boşluğa en uygun bağlacı seç.',sentence:'The bridge was closed for repairs; ___, commuters had to find another route.',opts:['as a result','nevertheless','in addition','for instance'],ans:0,
+   ex:{wrong:'Neden–sonuç ilişkisini kuran bağlacı seçemedin.',why:'Köprünün kapanması bir <b>neden</b>, başka yol aramak onun <b>sonucu</b>. "Nevertheless" zıtlık kurar.',rule:'Sonuç → as a result, therefore, consequently. Zıtlık → nevertheless, however.',fixed:'…closed for repairs; <b>as a result</b>, commuters had to find another route.'}},
+
+  // ---- YDT / YDS ----
+  {mode:'ydt',skill:'Edat (preposition)',prompt:'Doğru edatı seç.',sentence:'She has never been interested ___ politics.',opts:['in','on','at','for'],ans:0,
+   ex:{wrong:'Sıfatın istediği edatı yanlış seçtin.',why:'"Interested" sıfatı daima "in" edatıyla kullanılır: interested <b>in</b> something.',rule:'Bazı sıfat+edat kalıpları sabittir: interested in, good at, afraid of, keen on.',fixed:'She has never been interested <b>in</b> politics.'}},
+  {mode:'ydt',skill:'Bağlaç',prompt:'Boşluğa en uygun bağlacı seç.',sentence:'___ he was exhausted, he finished the entire report that night.',opts:['Although','Because','So','Unless'],ans:0,
+   ex:{wrong:'Cümledeki zıtlığı kuran bağlacı bulamadın.',why:'Yorgun olmak ile raporu bitirmek zıt beklentiler; bu bir <b>karşıtlık</b> bağlacı ister. "Because" sebep kurar.',rule:'Zıtlık: although / even though / though + cümle. Sebep: because / since.',fixed:'<b>Although</b> he was exhausted, he finished the report.'}},
+  {mode:'ydt',skill:'Eşdizim (collocation)',prompt:'Boşluğa en uygun fiili seç.',sentence:'The government decided to ___ new safety measures.',opts:['introduce','make','do','open'],ans:0,
+   ex:{wrong:'Yaygın ama yanlış bir fiil eşleşmesi seçtin.',why:'"Measures" (önlemler) fiil olarak "introduce / take / implement" ile birlikte kullanılır; "make measures" denmez.',rule:'Eşdizim (collocation): take measures, introduce measures, implement measures.',fixed:'…decided to <b>introduce</b> new safety measures.'}},
+  {mode:'ydt',skill:'Koşul cümlesi',prompt:'Doğru fiil biçimini seç.',sentence:'If I ___ earlier, I would have caught the bus.',opts:['had left','left','have left','leave'],ans:0,
+   ex:{wrong:'Geçmişe yönelik pişmanlık koşulunu (3. tip) kuramadın.',why:'Ana cümle "would have caught" (past); bu Type 3 koşuldur ve "if" kısmı past perfect ister.',rule:'Type 3: If + had + V3, … would have + V3. (geçmişte gerçekleşmeyen durum).',fixed:'If I <b>had left</b> earlier, I would have caught the bus.'}},
+  {mode:'ydt',skill:'Kelime türü',prompt:'Boşluğa doğru kelime türünü seç.',sentence:'His ___ to the project impressed the whole committee.',opts:['contribution','contribute','contributory','contributed'],ans:0,
+   ex:{wrong:'Cümlede isim gereken yere fiil/sıfat koydun.',why:'"His ___" bir iyelik sıfatından sonra <b>isim</b> ister; "contribute" fiildir.',rule:'Boşluğun türünü çevresi belirler: article/possessive sonrası genelde isim gelir.',fixed:'His <b>contribution</b> to the project impressed the committee.'}},
+
+  // ---- IELTS & Genel İngilizce ----
+  {mode:'genel',skill:'Artikel (a/an)',prompt:'Doğru artikeli seç.',sentence:'She is ___ honest and reliable colleague.',opts:['an','a','the','—'],ans:0,
+   ex:{wrong:'Artikeli yazılışa göre seçtin, sese göre değil.',why:'"Honest" sözcüğünde "h" okunmaz; sesli sesle başlar (/ˈɒnɪst/), bu yüzden "an".',rule:'a/an seçimi sonraki kelimenin <b>sesine</b> bağlıdır: an hour, a university.',fixed:'She is <b>an</b> honest and reliable colleague.'}},
+  {mode:'genel',skill:'make / do ayrımı',prompt:'Boşluğa doğru fiili seç.',sentence:'You should ___ your homework before dinner.',opts:['do','make','take','have'],ans:0,
+   ex:{wrong:'"make" ve "do" karışımına düştün.',why:'Ödev, iş, egzersiz gibi görevlerle "do" kullanılır: do homework, do the dishes.',rule:'do = görev/iş; make = üretmek/oluşturmak (make a cake, make a decision).',fixed:'You should <b>do</b> your homework before dinner.'}},
+  {mode:'genel',skill:'Özne-yüklem uyumu',prompt:'Doğru fiil biçimini seç.',sentence:'Neither the teacher nor the students ___ ready for the exam.',opts:['are','is','was','has been'],ans:0,
+   ex:{wrong:'"Neither…nor" yapısında fiili yanlış özneyle uyumladın.',why:'"Neither A nor B" yapısında fiil, <b>en yakın</b> özneyle uyumlanır; en yakın özne "students" (çoğul).',rule:'Neither…nor / either…or: fiil, ona en yakın özneye göre çekilir.',fixed:'Neither the teacher nor the students <b>are</b> ready.'}},
+  {mode:'genel',skill:'Relative clause',prompt:'Boşluğa doğru ilgi zamirini seç.',sentence:'The book ___ I borrowed last week was fascinating.',opts:['that','what','who','whose'],ans:0,
+   ex:{wrong:'İlgi zamirini yanlış seçtin.',why:'Nesne (a book) için "that/which" kullanılır; "what" ilgi zamiri olarak bir ismi niteleyemez.',rule:'Nesneler → that/which; kişiler → who; iyelik → whose. "what" ≠ ilgi zamiri.',fixed:'The book <b>that</b> I borrowed last week was fascinating.'}},
+  {mode:'genel',skill:'Gerund / infinitive',prompt:'Boşluğa doğru fiil biçimini seç.',sentence:'I look forward to ___ from you soon.',opts:['hearing','hear','to hear','heard'],ans:0,
+   ex:{wrong:'"to" edatını "to + infinitive" sandın.',why:'"look forward to" kalıbındaki "to" bir <b>edattır</b>; edattan sonra fiil -ing alır.',rule:'to bir edat olduğunda (look forward to, be used to) sonrasında V-ing gelir.',fixed:'I look forward to <b>hearing</b> from you soon.'}},
+  {mode:'genel',skill:'Sayılabilirlik',prompt:'Boşluğa doğru miktar sözcüğünü seç.',sentence:'There isn\'t ___ information about the new policy yet.',opts:['much','many','a few','several'],ans:0,
+   ex:{wrong:'Sayılamayan bir ismi sayılabilir gibi işledin.',why:'"Information" sayılamayan bir isimdir; "many/a few/several" yalnızca sayılabilir çoğullarla kullanılır.',rule:'Sayılamayanlar: much, a little, a great deal of. Sayılabilirler: many, a few, several.',fixed:'There isn\'t <b>much</b> information about the new policy yet.'}},
+  {mode:'genel',skill:'Karşılaştırma',prompt:'Boşluğa doğru karşılaştırma biçimini seç.',sentence:'This year\'s exam was ___ than last year\'s.',opts:['more difficult','difficulter','most difficult','the more difficult'],ans:0,
+   ex:{wrong:'Uzun sıfatta yanlış karşılaştırma biçimi kurdun.',why:'İki heceden uzun sıfatlar "-er" almaz; "more + sıfat" kullanılır. "most" ise üstünlük (superlative) içindir.',rule:'Uzun sıfat karşılaştırması: more + adjective + than. Üstünlük: the most + adjective.',fixed:'This year\'s exam was <b>more difficult</b> than last year\'s.'}}
+];
+</script>
+<script>
+(function(){
+  'use strict';
+  var ITEMS = window.HA_ITEMS || [];
+  var LS_KEY='gri-hata-avi';
+  var ROUND=10, TIMED_SECS=30;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var state={mode:'mix',timed:false,queue:[],i:0,score:0,streak:0,best:0,answered:false,catMiss:{},wrongItems:[],timer:null};
+
+  var $=function(id){return document.getElementById(id);};
+  function load(){try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(LS_KEY,JSON.stringify(o));}catch(e){}}
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+  // ---- Start screen ----
+  $('haModeGrid').addEventListener('click',function(e){
+    var b=e.target.closest('.ha-mode'); if(!b)return;
+    [].forEach.call(this.querySelectorAll('.ha-mode'),function(x){x.setAttribute('aria-pressed', x===b?'true':'false');});
+    state.mode=b.getAttribute('data-mode');
+  });
+  var sw=$('haTimed');
+  sw.addEventListener('click',function(){var on=this.getAttribute('aria-checked')!=='true';this.setAttribute('aria-checked',on?'true':'false');state.timed=on;});
+  sw.addEventListener('keydown',function(e){if(e.key===' '||e.key==='Enter'){e.preventDefault();this.click();}});
+
+  $('haStartBtn').addEventListener('click',startRound);
+
+  function pool(){
+    if(state.mode==='mix') return ITEMS.slice();
+    return ITEMS.filter(function(it){return it.mode===state.mode;});
+  }
+  function startRound(replayWrong){
+    var src = (replayWrong && state.wrongItems.length) ? state.wrongItems.slice() : shuffle(pool());
+    state.queue = src.slice(0, Math.min(ROUND, src.length));
+    if(!state.queue.length) state.queue = shuffle(ITEMS).slice(0,ROUND);
+    state.i=0;state.score=0;state.streak=0;state.answered=false;state.catMiss={};state.wrongItems=[];
+    var st=load(); state.best=st.best||0;
+    $('haStart').hidden=true; $('haRecap').hidden=true; $('haRound').hidden=false;
+    $('haTimerWrap').hidden = !state.timed;
+    renderItem();
+    $('haRound').scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  }
+
+  function renderItem(){
+    clearTimer();
+    state.answered=false;
+    var it=state.queue[state.i];
+    $('haCount').textContent='Soru '+(state.i+1)+' / '+state.queue.length;
+    $('haProg').style.width=Math.round(state.i/state.queue.length*100)+'%';
+    var sk=$('haStreak'); if(state.streak>=2){sk.hidden=false;$('haStreakN').textContent=state.streak;}else{sk.hidden=true;}
+    $('haSkill').textContent=it.skill;
+    $('haPrompt').textContent=it.prompt||'Hatayı düzeltecek en uygun seçeneği bul.';
+    $('haSentence').innerHTML=it.sentence;
+    var exp=$('haExp'); exp.hidden=true; exp.classList.remove('in');
+    var box=$('haOpts'); box.innerHTML='';
+    var order=shuffle(it.opts.map(function(t,idx){return {t:t,idx:idx};}));
+    order.forEach(function(o,k){
+      var btn=document.createElement('button');
+      btn.className='ha-opt'; btn.type='button';
+      btn.setAttribute('data-correct', o.idx===it.ans?'1':'0');
+      btn.innerHTML='<span class="k">'+String.fromCharCode(65+k)+'</span><span class="txt"></span>';
+      btn.querySelector('.txt').textContent=o.t;
+      btn.addEventListener('click',function(){choose(btn,it);});
+      box.appendChild(btn);
+    });
+    var first=box.querySelector('.ha-opt'); if(first)first.focus();
+    if(state.timed) startTimer(it);
+  }
+
+  function startTimer(it){
+    var bar=$('haTimerBar'); bar.style.transition='none'; bar.style.width='100%';
+    // force reflow then animate
+    void bar.offsetWidth;
+    if(!reduce){bar.style.transition='width '+TIMED_SECS+'s linear';bar.style.width='0%';}
+    state.timer=setTimeout(function(){ if(!state.answered){ timeoutMiss(it); } }, TIMED_SECS*1000);
+  }
+  function clearTimer(){ if(state.timer){clearTimeout(state.timer);state.timer=null;} var bar=$('haTimerBar'); if(bar){bar.style.transition='none';bar.style.width='100%';} }
+
+  function timeoutMiss(it){
+    state.answered=true; clearTimer();
+    [].forEach.call($('haOpts').querySelectorAll('.ha-opt'),function(b){
+      b.disabled=true;
+      if(b.getAttribute('data-correct')==='1'){b.classList.add('correct');b.querySelector('.mark')||addMark(b,'✓');}
+    });
+    registerMiss(it);
+    reveal(it);
+  }
+
+  function addMark(btn,ch){var s=document.createElement('span');s.className='mark';s.textContent=ch;btn.appendChild(s);}
+
+  function choose(btn,it){
+    if(state.answered) return;
+    state.answered=true; clearTimer();
+    var correct = btn.getAttribute('data-correct')==='1';
+    [].forEach.call($('haOpts').querySelectorAll('.ha-opt'),function(b){
+      b.disabled=true;
+      if(b.getAttribute('data-correct')==='1'){b.classList.add('correct');addMark(b,'✓');}
+    });
+    if(correct){ state.score++; state.streak++; if(state.streak>state.best)state.best=state.streak; }
+    else{ btn.classList.add('wrong'); addMark(btn,'✕'); state.streak=0; registerMiss(it); }
+    reveal(it);
+  }
+
+  function registerMiss(it){
+    state.catMiss[it.skill]=(state.catMiss[it.skill]||0)+1;
+    if(state.wrongItems.indexOf(it)<0) state.wrongItems.push(it);
+  }
+
+  function reveal(it){
+    $('haExpWrong').innerHTML=it.ex.wrong;
+    $('haExpWhy').innerHTML=it.ex.why;
+    $('haExpRule').innerHTML=it.ex.rule;
+    $('haExpFixed').innerHTML=it.ex.fixed;
+    var exp=$('haExp'); exp.hidden=false;
+    if(reduce){exp.classList.add('in');} else { requestAnimationFrame(function(){requestAnimationFrame(function(){exp.classList.add('in');});}); }
+    var nb=$('haNextBtn'); nb.textContent = (state.i+1>=state.queue.length)?'Turu bitir →':'Sonraki →';
+    nb.focus();
+  }
+
+  $('haNextBtn').addEventListener('click',function(){
+    state.i++;
+    if(state.i>=state.queue.length){ finish(); } else { renderItem(); }
+  });
+  $('haQuit').addEventListener('click',finish);
+  $('haAgain').addEventListener('click',function(){startRound(false);});
+  $('haReplayWrong').addEventListener('click',function(e){e.preventDefault(); if(state.wrongItems.length){startRound(true);} else {startRound(false);} });
+
+  // keyboard: 1-4 selects option
+  document.addEventListener('keydown',function(e){
+    if($('haRound').hidden) return;
+    if(state.answered){ if(e.key==='Enter'){/* next handled by focused button */} return; }
+    var n=parseInt(e.key,10);
+    if(n>=1&&n<=4){ var opts=$('haOpts').querySelectorAll('.ha-opt'); if(opts[n-1]){opts[n-1].click();} }
+  });
+
+  function finish(){
+    clearTimer();
+    var st=load(); if(state.best>(st.best||0)) st.best=state.best;
+    st.plays=(st.plays||0)+1;
+    // accumulate error categories for the review notion (Hata Defteri, local)
+    st.cats=st.cats||{}; Object.keys(state.catMiss).forEach(function(c){st.cats[c]=(st.cats[c]||0)+state.catMiss[c];});
+    save(st);
+    $('haProg').style.width='100%';
+    $('haRound').hidden=true; $('haRecap').hidden=false;
+    $('haScore').textContent=state.score; $('haTotal').textContent=state.queue.length;
+    var pct=state.score/Math.max(1,state.queue.length);
+    var msg = pct>=0.9?'Çok temiz bir tur. Hataları hızlı yakalıyorsun.':pct>=0.6?'İyi gidiyor. Aşağıdaki alanlara kısa bir tekrar iyi gelir.':'Sorun değil — asıl öğrenme yanlışların üstünde. Bir alanı seçip çalışalım.';
+    $('haRecapMsg').textContent=msg;
+    var cats=Object.keys(state.catMiss).sort(function(a,b){return state.catMiss[b]-state.catMiss[a];});
+    var cw=$('haCatWrap'), cl=$('haCatList'); cl.innerHTML='';
+    if(cats.length){ cw.hidden=false;
+      cats.slice(0,4).forEach(function(c){
+        var row=document.createElement('div'); row.className='ha-catrow';
+        row.innerHTML='<span class="c"></span><span class="n">'+state.catMiss[c]+' yanlış</span>';
+        row.querySelector('.c').textContent=c; cl.appendChild(row);
+      });
+    } else { cw.hidden=true; }
+    $('haReplayWrong').style.opacity = state.wrongItems.length?'1':'.5';
+    $('haRecap').scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  }
+})();
+</script>
+</body>
+</html>

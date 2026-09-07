@@ -3352,116 +3352,6 @@
 </section>
 
 <!-- ===================================================================
-     BUGÜN NE YAPMAK İSTERSİN — çarkıfelek fonksiyon başlatıcı
-     =================================================================== -->
-<style>
-  .gw-sec{border-top:1px solid var(--line,#E3D9C7);background:var(--bg-soft,#F4EFE3);padding:4rem 0 4.8rem;overflow:hidden}
-  .gw-inner{max-width:1000px;margin:0 auto;padding:0 1.2rem;text-align:center}
-  .gw-eyebrow{font-family:var(--font-ui,Inter),sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--gri-gold,#B78A2E);margin-bottom:.6rem}
-  .gw-title{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:clamp(1.7rem,4vw,2.5rem);color:var(--text,#241c12);margin:.1rem 0 .5rem}
-  .gw-sub{font-size:1rem;color:var(--text-soft,#6b6250);max-width:540px;margin:0 auto 2.6rem;line-height:1.6}
-  .gw-stage{position:relative;width:min(480px,90vw);height:min(480px,90vw);margin:0 auto}
-  /* nefes alan hale */
-  .gw-stage::before{content:"";position:absolute;inset:2%;border-radius:50%;z-index:0;pointer-events:none;
-    background:radial-gradient(closest-side,color-mix(in srgb,var(--gri-gold,#B78A2E) 26%,transparent),transparent 72%);
-    filter:blur(14px);animation:gw-halo 5.5s ease-in-out infinite}
-  @keyframes gw-halo{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.95;transform:scale(1.06)}}
-  .gw-disc{position:absolute;inset:12%;border-radius:50%;z-index:1;
-    background:conic-gradient(#17857A 0deg 45deg,#C9922B 45deg 90deg,#5F9440 90deg 135deg,#C06A34 135deg 180deg,#7E52B0 180deg 225deg,#C05684 225deg 270deg,#2E7BB8 270deg 315deg,#4E8C5E 315deg 360deg);
-    box-shadow:0 20px 50px rgba(40,30,20,.26),inset 0 0 0 8px rgba(255,255,255,.72),inset 0 0 40px rgba(0,0,0,.12)}
-  /* beyaz ışınlar (dilim ayıraçları) */
-  .gw-disc::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.6) 0deg .7deg,transparent .7deg 45deg)}
-  /* üst parlaklık */
-  .gw-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 36%,rgba(255,255,255,.24),transparent 60%)}
-  .gw-needle{position:absolute;left:50%;top:50%;width:9px;height:43%;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);transition:transform 4.2s cubic-bezier(.15,.86,.22,1);z-index:4;pointer-events:none}
-  .gw-needle::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:30px solid var(--gri-gold,#B78A2E);filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
-  .gw-needle::after{content:"";position:absolute;left:50%;top:24px;bottom:8px;width:5px;transform:translateX(-50%);border-radius:3px;background:linear-gradient(var(--gri-gold,#B78A2E),rgba(120,86,20,.4))}
-  .gw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:26%;height:26%;border-radius:50%;border:none;cursor:pointer;
-    background:radial-gradient(circle at 50% 38%,#fff,#F6EFDF);color:var(--text,#241c12);font-family:var(--font-ui,Inter),sans-serif;font-weight:800;font-size:clamp(.85rem,2.6vw,1.08rem);letter-spacing:.03em;
-    box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E);z-index:6;animation:gw-invite 2.6s ease-in-out infinite;transition:transform .15s}
-  @keyframes gw-invite{0%,100%{box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E)}50%{box-shadow:0 8px 30px rgba(183,138,46,.6),inset 0 0 0 4px var(--gri-gold,#B78A2E)}}
-  .gw-hub:hover{transform:translate(-50%,-50%) scale(1.07)}
-  .gw-hub:active{transform:translate(-50%,-50%) scale(.95)}
-  .gw-hub.spinning{animation:gw-invite .8s ease-in-out infinite}
-  .gw-label{position:absolute;inset:0;transform:rotate(var(--a));pointer-events:none;z-index:5}
-  .gw-label .pill{position:absolute;left:50%;top:1.5%;transform:translate(-50%,-50%) rotate(calc(-1 * var(--a)));pointer-events:auto;text-decoration:none;
-    display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg-card,#fff);border:1.5px solid var(--line,#E3D9C7);border-radius:13px;padding:.36rem .66rem;
-    box-shadow:0 4px 13px rgba(40,30,20,.14);transition:transform .18s,box-shadow .18s,border-color .18s}
-  .gw-label .v{font-family:var(--font-ui,Inter),sans-serif;font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--seg)}
-  .gw-label .n{font-family:var(--font-ui,Inter),sans-serif;font-size:.8rem;font-weight:700;color:var(--text,#241c12);line-height:1.1;white-space:nowrap}
-  .gw-label .pill:hover{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.1);border-color:var(--seg);box-shadow:0 7px 18px rgba(40,30,20,.2)}
-  .gw-label.win .pill{border-color:var(--seg);box-shadow:0 0 0 4px color-mix(in srgb,var(--seg) 40%,transparent),0 10px 24px rgba(40,30,20,.24);animation:gw-pop .6s}
-  @keyframes gw-pop{0%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1)}45%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.28)}100%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.12)}}
-  .gw-result{margin:2.2rem auto 0;min-height:1px;max-width:460px}
-  .gw-result.show{animation:gw-rise .42s}
-  @keyframes gw-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  .gw-result .lead{display:block;font-size:.96rem;color:var(--text-soft,#6b6250);margin-bottom:.75rem}
-  .gw-result a{display:inline-flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-family:var(--font-ui,Inter),sans-serif;font-weight:700;font-size:1.02rem;border-radius:999px;padding:.75rem 1.6rem;box-shadow:0 10px 24px rgba(40,30,20,.22)}
-  @media (prefers-reduced-motion:reduce){.gw-stage::before,.gw-hub,.gw-needle{animation:none}}
-  @media (max-width:560px){
-    .gw-stage{width:min(360px,94vw);height:min(360px,94vw)}
-    .gw-label .pill{top:10%;padding:.24rem .44rem;border-radius:11px}
-    .gw-label .n{font-size:.62rem}.gw-label .v{font-size:.5rem;letter-spacing:.06em}
-    .gw-disc{inset:17%}
-  }
-</style>
-<section class="gw-sec" id="bugun-ne-yapsam" aria-label="Bugün ne yapmak istersin">
-  <div class="gw-inner">
-    <div class="gw-eyebrow"><span data-blog-lang="tr">Nereden başlasam?</span><span data-blog-lang="en" hidden lang="en">Where do I start?</span></div>
-    <h2 class="gw-title"><span data-blog-lang="tr">Bugün ne yapmak istersin?</span><span data-blog-lang="en" hidden lang="en">What do you want to do today?</span></h2>
-    <p class="gw-sub"><span data-blog-lang="tr">Kararsızsan çarkı çevir, Gri senin için bir başlangıç seçsin — ya da doğrudan bir dilime dokun.</span><span data-blog-lang="en" hidden lang="en">Not sure? Spin the wheel and let Gri pick a starting point for you — or tap a slice directly.</span></p>
-    <div class="gw-stage">
-      <div class="gw-disc" aria-hidden="true"></div>
-      <div class="gw-needle" id="gwNeedle" aria-hidden="true"></div>
-      <button class="gw-hub" id="gwSpin" type="button"><span data-blog-lang="tr">Çevir</span><span data-blog-lang="en" hidden lang="en">Spin</span></button>
-      <div class="gw-label" style="--a:22.5deg;--seg:#17857A"><a class="pill" href="soru-bankasi"><span class="v"><span data-blog-lang="tr">Çöz</span><span data-blog-lang="en" hidden lang="en">Solve</span></span><span class="n"><span data-blog-lang="tr">Soru Bankası</span><span data-blog-lang="en" hidden lang="en">Question Bank</span></span></a></div>
-      <div class="gw-label" style="--a:67.5deg;--seg:#C9922B"><a class="pill" href="konu-anlatimi"><span class="v"><span data-blog-lang="tr">Öğren</span><span data-blog-lang="en" hidden lang="en">Learn</span></span><span class="n"><span data-blog-lang="tr">Konu Anlatımı</span><span data-blog-lang="en" hidden lang="en">Topic Lessons</span></span></a></div>
-      <div class="gw-label" style="--a:112.5deg;--seg:#5F9440"><a class="pill" href="ogrenme-haritasi"><span class="v"><span data-blog-lang="tr">Keşfet</span><span data-blog-lang="en" hidden lang="en">Explore</span></span><span class="n"><span data-blog-lang="tr">Öğrenme Haritası</span><span data-blog-lang="en" hidden lang="en">Learning Map</span></span></a></div>
-      <div class="gw-label" style="--a:157.5deg;--seg:#C06A34"><a class="pill" href="kelime-bankasi"><span class="v"><span data-blog-lang="tr">Kelime</span><span data-blog-lang="en" hidden lang="en">Vocabulary</span></span><span class="n"><span data-blog-lang="tr">Kelime Bankası</span><span data-blog-lang="en" hidden lang="en">Vocabulary Bank</span></span></a></div>
-      <div class="gw-label" style="--a:202.5deg;--seg:#7E52B0"><a class="pill" href="oyunlar"><span class="v"><span data-blog-lang="tr">Oyna</span><span data-blog-lang="en" hidden lang="en">Play</span></span><span class="n"><span data-blog-lang="tr">Oyunlar</span><span data-blog-lang="en" hidden lang="en">Games</span></span></a></div>
-      <div class="gw-label" style="--a:247.5deg;--seg:#C05684"><a class="pill" href="yazi-pratigi"><span class="v"><span data-blog-lang="tr">Yaz</span><span data-blog-lang="en" hidden lang="en">Write</span></span><span class="n"><span data-blog-lang="tr">Yazı Pratiği</span><span data-blog-lang="en" hidden lang="en">Writing Practice</span></span></a></div>
-      <div class="gw-label" style="--a:292.5deg;--seg:#2E7BB8"><a class="pill" href="seviye-belirleme"><span class="v"><span data-blog-lang="tr">Ölç</span><span data-blog-lang="en" hidden lang="en">Assess</span></span><span class="n"><span data-blog-lang="tr">Seviye Belirleme</span><span data-blog-lang="en" hidden lang="en">Level Assessment</span></span></a></div>
-      <div class="gw-label" style="--a:337.5deg;--seg:#4E8C5E"><a class="pill" href="panelim"><span class="v"><span data-blog-lang="tr">Devam</span><span data-blog-lang="en" hidden lang="en">Continue</span></span><span class="n"><span data-blog-lang="tr">Çalışma Masam</span><span data-blog-lang="en" hidden lang="en">My Study Desk</span></span></a></div>
-    </div>
-    <div class="gw-result" id="gwResult" aria-live="polite"></div>
-  </div>
-</section>
-<script>
-(function(){
-  var FUNCS=[
-    {v:'Çöz',n:'Soru Bankası',u:'soru-bankasi',c:'#17857A'},
-    {v:'Öğren',n:'Konu Anlatımı',u:'konu-anlatimi',c:'#C9922B'},
-    {v:'Keşfet',n:'Öğrenme Haritası',u:'ogrenme-haritasi',c:'#5F9440'},
-    {v:'Kelime',n:'Kelime Bankası',u:'kelime-bankasi',c:'#C06A34'},
-    {v:'Oyna',n:'Oyunlar',u:'oyunlar',c:'#7E52B0'},
-    {v:'Yaz',n:'Yazı Pratiği',u:'yazi-pratigi',c:'#C05684'},
-    {v:'Ölç',n:'Seviye Belirleme',u:'seviye-belirleme',c:'#2E7BB8'},
-    {v:'Devam',n:'Çalışma Masam',u:'panelim',c:'#4E8C5E'}
-  ];
-  var needle=document.getElementById('gwNeedle'), spin=document.getElementById('gwSpin'),
-      result=document.getElementById('gwResult'),
-      labels=[].slice.call(document.querySelectorAll('.gw-sec .gw-label'));
-  if(!needle||!spin) return;
-  var acc=0, busy=false;
-  function land(i){
-    labels.forEach(function(l){l.classList.remove('win');});
-    if(labels[i]) labels[i].classList.add('win');
-    var f=FUNCS[i];
-    result.innerHTML='<span class="lead">Bugün: <b>'+f.n+'</b></span><a href="'+f.u+'" style="background:'+f.c+'">'+f.v+' · Hadi başla →</a>';
-    result.classList.remove('show'); void result.offsetWidth; result.classList.add('show');
-  }
-  spin.addEventListener('click',function(){
-    if(busy) return; busy=true; spin.classList.add('spinning');
-    var s=Math.floor(Math.random()*8);
-    var turns=5+Math.floor(Math.random()*3);
-    acc += turns*360 + (s*45+22.5) - (((acc%360)+360)%360);
-    needle.style.transform='translate(-50%,-100%) rotate('+acc+'deg)';
-    setTimeout(function(){busy=false;spin.classList.remove('spinning');land(s);},4300);
-  });
-})();
-</script>
-
-<!-- ===================================================================
      ÖNE ÇIKANLAR — Hero altı özellik kartı şeridi
      =================================================================== -->
 <style>
@@ -3837,28 +3727,6 @@
   go(0); start();
 })();
 </script>
-<section id="gunun-kelimesi-wordle" style="border-top:1px solid var(--line);background:var(--bg-soft);">
-  <div class="wrap" style="max-width:760px;padding-top:2.4rem;padding-bottom:2.6rem;text-align:center;">
-    <div class="section-head reveal-scroll" style="text-align:center;">
-      <span class="eyebrow" style="color:#4c9f70;"><span data-blog-lang="tr">Günün Oyunu</span><span data-blog-lang="en" hidden lang="en">Game of the Day</span></span>
-      <h2><span data-blog-lang="tr">Günün Kelimesi · <span style="font-style:italic">Wordle</span></span><span data-blog-lang="en" hidden lang="en">Word of the Day · <span style="font-style:italic">Wordle</span></span></h2>
-      <p style="max-width:560px;margin:.4rem auto 0;"><span data-blog-lang="tr">6 denemede günün 5 harfli İngilizce kelimesini bul. Her gün yeni, herkese aynı — çözünce anlamını ve örnek cümlesini öğren.</span><span data-blog-lang="en" hidden lang="en">Guess the day's 5-letter English word in 6 tries. New every day, the same for everyone — once you solve it, learn its meaning and an example sentence.</span></p>
-    </div>
-    <div style="display:flex;justify-content:center;gap:6px;margin:1.6rem 0 0;flex-wrap:wrap;">
-      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#2E6E4E;border-radius:8px;">G</span>
-      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#C79A3A;border-radius:8px;">R</span>
-      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#2b2118;background:#f6f0e4;border:2px solid #d9cfbb;border-radius:8px;">İ</span>
-      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#2E6E4E;border-radius:8px;">N</span>
-      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#2b2118;background:#f6f0e4;border:2px solid #d9cfbb;border-radius:8px;">M</span>
-    </div>
-    <p style="max-width:520px;margin:1rem auto 0;color:var(--text-soft);font-size:.92rem;"><span data-blog-lang="tr">Wordle, Kelime Yolu (99 level), Kelime Avı ve Eşleştirme — hepsi ücretsiz. Serin ve ilerlemen kaydolman için hesabınla saklanır.</span><span data-blog-lang="en" hidden lang="en">Wordle, Word Path (99 levels), Word Hunt, and Matching — all free. Your streak and progress are saved to your account when you sign up.</span></p>
-    <div style="margin-top:1.2rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <a href="oyunlar" class="btn" style="font-weight:700;"><span data-blog-lang="tr">Oyunları Aç →</span><span data-blog-lang="en" hidden lang="en">Open Games →</span></a>
-      <a href="giris#signup" class="btn-ghost" style="font-weight:700;"><span data-blog-lang="tr">Ücretsiz Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create a Free Account</span></a>
-    </div>
-  </div>
-</section>
-
 <section id="ucretsiz-moduller" style="border-top:1px solid var(--line);">
   <div class="wrap">
     <div class="section-head reveal-scroll">
@@ -3914,6 +3782,247 @@
     </div>
   </div>
 </section>
+
+<section id="soru-bankasi" style="border-top: 1px solid var(--line);">
+    <div class="wrap">
+      <div class="section-head reveal-scroll">
+        <span class="eyebrow"><span data-blog-lang="tr">Ücretsiz Başla</span><span data-blog-lang="en" hidden lang="en">Start Free</span></span>
+        <h2><span data-blog-lang="tr">Soru <span class="it">Bankası</span></span><span data-blog-lang="en" hidden lang="en">Question <span class="it">Bank</span></span></h2>
+        <div class="divider"><span class="dia"></span></div>
+        <p style="max-width: 740px; margin: 1rem auto 0; font-size: 1.05rem; color: var(--text-soft); line-height: 1.7;">
+          <span data-blog-lang="tr">Sınava göre değil, konuya göre çalış. Kategori ve alt başlıklara ayrılmış soru havuzu, her soru için adım adım Türkçe açıklama, ve Gri AI mentor desteği. Hesap aç, hemen başla.</span><span data-blog-lang="en" hidden lang="en">Study by topic, not by exam. A question pool split into categories and subtopics, step-by-step Turkish explanations for every question, and Gri AI mentor support. Create an account and start right away.</span>
+        </p>
+
+        <div class="yazi-stats-row">
+          <div class="stat"><strong><span data-blog-lang="tr">Çözümlü</span><span data-blog-lang="en" hidden lang="en">Explained</span></strong><span data-blog-lang="tr">Türkçe açıklamalı havuz</span><span data-blog-lang="en" hidden lang="en">Pool with Turkish explanations</span></div>
+          <div class="stat"><strong>7</strong><span data-blog-lang="tr">Sınav formatı</span><span data-blog-lang="en" hidden lang="en">Exam formats</span></div>
+          <div class="stat"><strong><span data-blog-lang="tr">Adım adım</span><span data-blog-lang="en" hidden lang="en">Step by step</span></strong><span data-blog-lang="tr">Çözüm</span><span data-blog-lang="en" hidden lang="en">Solutions</span></div>
+          <div class="stat"><strong>Gri AI</strong><span data-blog-lang="tr">Mentor desteği</span><span data-blog-lang="en" hidden lang="en">Mentor support</span></div>
+        </div>
+      </div>
+
+      <div class="qb-hub-grid reveal-scroll" data-stagger>
+
+        <a href="sat-soru-bankasi" class="qb-hub-card cat-sat">
+          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="qb-hub-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>Digital SAT</h3>
+          <p class="qb-hub-desc"><span data-blog-lang="tr">Reading &amp; Writing ve Math. Türkçe açıklamalı, College Board taksonomisine uygun.</span><span data-blog-lang="en" hidden lang="en">Reading &amp; Writing and Math. With Turkish explanations, aligned to the College Board taxonomy.</span></p>
+          <div class="qb-hub-meta">
+            <div class="m-item"><span class="m-num">2</span><span class="m-lbl"><span data-blog-lang="tr">Bölüm</span><span data-blog-lang="en" hidden lang="en">Sections</span></span></div>
+            <div class="m-item"><span class="m-num">8</span><span class="m-lbl"><span data-blog-lang="tr">Kategori</span><span data-blog-lang="en" hidden lang="en">Categories</span></span></div>
+            <div class="m-item"><span class="m-num">29</span><span class="m-lbl"><span data-blog-lang="tr">Alt Konu</span><span data-blog-lang="en" hidden lang="en">Subtopics</span></span></div>
+          </div>
+          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
+        </a>
+
+        <a href="ielts-soru-bankasi" class="qb-hub-card cat-ielts">
+          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="qb-hub-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>
+          </div>
+          <h3>IELTS</h3>
+          <p class="qb-hub-desc"><span data-blog-lang="tr">Tam deneme veya bölüm bazlı çalışma. Cambridge formatında mock testler.</span><span data-blog-lang="en" hidden lang="en">Full mock tests or section-based study. Mock tests in the Cambridge format.</span></p>
+          <div class="qb-hub-meta">
+            <div class="m-item"><span class="m-num">3</span><span class="m-lbl"><span data-blog-lang="tr">Tam Deneme</span><span data-blog-lang="en" hidden lang="en">Full Mocks</span></span></div>
+            <div class="m-item"><span class="m-num">3</span><span class="m-lbl"><span data-blog-lang="tr">Bölüm</span><span data-blog-lang="en" hidden lang="en">Sections</span></span></div>
+            <div class="m-item"><span class="m-num">Band</span><span class="m-lbl"><span data-blog-lang="tr">Skorlama</span><span data-blog-lang="en" hidden lang="en">Scoring</span></span></div>
+          </div>
+          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
+        </a>
+
+        <a href="toefl-soru-bankasi" class="qb-hub-card cat-toefl">
+          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="qb-hub-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <h3>TOEFL</h3>
+          <p class="qb-hub-desc"><span data-blog-lang="tr">iBT formatında Reading soru tipleri; Türkçe açıklamalı, gerçek formatta.</span><span data-blog-lang="en" hidden lang="en">iBT-format Reading question types; with Turkish explanations, in the real format.</span></p>
+          <div class="qb-hub-meta">
+            <div class="m-item"><span class="m-num">iBT</span><span class="m-lbl">Format</span></div>
+            <div class="m-item"><span class="m-num">TR</span><span class="m-lbl"><span data-blog-lang="tr">Açıklama</span><span data-blog-lang="en" hidden lang="en">Explanations</span></span></div>
+          </div>
+          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
+        </a>
+
+
+      </div>
+
+      <div style="text-align: center; margin-top: 3rem;">
+        <a href="soru-bankasi" class="btn btn-primary"><span data-blog-lang="tr">Tüm Kategorileri Gör</span><span data-blog-lang="en" hidden lang="en">See All Categories</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-top: 1px solid var(--line); background: var(--bg-soft);">
+    <div class="wrap">
+      <div class="gri-feature-grid reveal-scroll">
+        <div class="gri-feature-visual">
+          <img src="assets/gri-mascot.png" alt="Gri — AI mentor mascot">
+        </div>
+        <div class="gri-feature-content">
+          <span class="gri-feature-meta">AI Mentor</span>
+          <h2><span data-blog-lang="tr">Takıldığında <span style="color: var(--cat-accent);">Gri</span> sana açıklar</span><span data-blog-lang="en" hidden lang="en">When you're stuck, <span style="color: var(--cat-accent);">Gri</span> explains it to you</span></h2>
+          <p class="lead">
+            <span data-blog-lang="tr">Adım adım açıklama yeterli gelmediyse, Gri'ye sor. Bir İngilizce öğretmeninin dijital uzantısı gibi; samimi, net, doğrudan. Türkçe sorarsan Türkçe, İngilizce sorarsan İngilizce cevaplar.</span><span data-blog-lang="en" hidden lang="en">If the step-by-step explanation isn't enough, ask Gri. Like the digital extension of an English teacher; warm, clear, and direct. Ask in Turkish and it answers in Turkish; ask in English and it answers in English.</span>
+          </p>
+          <ul class="gri-feature-points">
+            <li><span data-blog-lang="tr">Her soruyu okur, doğru cevabın neden doğru, yanlış seçeneklerin neden eleyici olduğunu açıklar.</span><span data-blog-lang="en" hidden lang="en">It reads every question and explains why the right answer is right and why the wrong options can be ruled out.</span></li>
+            <li><span data-blog-lang="tr">Yanlış yaptıysan önce moral, sonra analiz. Sokratik değil, doğrudan.</span><span data-blog-lang="en" hidden lang="en">If you got it wrong, encouragement first, then analysis. Not Socratic — direct.</span></li>
+            <li><span data-blog-lang="tr">Hesap açan herkese günlük <strong>10 Gri Token</strong>. Bitince paket alabilirsin.</span><span data-blog-lang="en" hidden lang="en">Everyone who signs up gets <strong>10 Gri Tokens</strong> a day. When they run out, you can buy a pack.</span></li>
+          </ul>
+          <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+            <a href="soru-bankasi" class="btn btn-primary"><span data-blog-lang="tr">Soru Çözmeye Başla</span><span data-blog-lang="en" hidden lang="en">Start Solving Questions</span></a>
+            <a href="giris#signup" class="btn btn-ghost"><span data-blog-lang="tr">Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create Account</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-scroll" style="margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--line);">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+          <span class="eyebrow"><span data-blog-lang="tr">Yetmediğinde</span><span data-blog-lang="en" hidden lang="en">When It's Not Enough</span></span>
+          <h3 style="font-family: var(--font-display); font-size: 1.7rem; margin: 0.6rem 0 0.3rem; letter-spacing: -0.01em;"><span data-blog-lang="tr">Gri Token <span style="color: var(--cat-accent);">paketleri</span></span><span data-blog-lang="en" hidden lang="en">Gri Token <span style="color: var(--cat-accent);">packs</span></span></h3>
+          <p style="color: var(--text-soft); max-width: 580px; margin: 0.8rem auto 0; font-size: 0.95rem; line-height: 1.6;">
+            <span data-blog-lang="tr">Günde 10 Gri Token yetmediğinde paket al. Bonus Gri Token zaman sınırı olmadan birikir, hesabında kalır.</span><span data-blog-lang="en" hidden lang="en">When 10 Gri Tokens a day aren't enough, buy a pack. Bonus Gri Tokens accumulate with no time limit and stay in your account.</span>
+          </p>
+        </div>
+
+        <div class="gri-pack-grid">
+
+          <a href="https://www.shopier.com/SATquestionBank/47230429" target="_blank" rel="noopener" class="gri-pack-card">
+            <div class="gp-tier"><span data-blog-lang="tr">Başlangıç</span><span data-blog-lang="en" hidden lang="en">Starter</span></div>
+            <div class="gp-name"><span data-blog-lang="tr">10 Gri Token</span><span data-blog-lang="en" hidden lang="en">10 Gri Tokens</span></div>
+            <div class="gp-price"><strong>₺100</strong></div>
+            <div class="gp-unit">₺10 / token</div>
+            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
+          </a>
+
+          <a href="https://www.shopier.com/SATquestionBank/47230479" target="_blank" rel="noopener" class="gri-pack-card popular">
+            <span class="gp-badge"><span data-blog-lang="tr">Popüler &middot; %10 İndirim</span><span data-blog-lang="en" hidden lang="en">Popular &middot; 10% Off</span></span>
+            <div class="gp-tier"><span data-blog-lang="tr">Düzenli</span><span data-blog-lang="en" hidden lang="en">Regular</span></div>
+            <div class="gp-name"><span data-blog-lang="tr">25 Gri Token</span><span data-blog-lang="en" hidden lang="en">25 Gri Tokens</span></div>
+            <div class="gp-price"><strong>₺225</strong></div>
+            <div class="gp-unit">₺9 / token</div>
+            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
+          </a>
+
+          <a href="https://www.shopier.com/SATquestionBank/47230505" target="_blank" rel="noopener" class="gri-pack-card">
+            <span class="gp-badge gold"><span data-blog-lang="tr">%15 İndirim</span><span data-blog-lang="en" hidden lang="en">15% Off</span></span>
+            <div class="gp-tier"><span data-blog-lang="tr">Yoğun</span><span data-blog-lang="en" hidden lang="en">Intensive</span></div>
+            <div class="gp-name"><span data-blog-lang="tr">50 Gri Token</span><span data-blog-lang="en" hidden lang="en">50 Gri Tokens</span></div>
+            <div class="gp-price"><strong>₺425</strong></div>
+            <div class="gp-unit">₺8.5 / token</div>
+            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-top: 1px solid var(--line);">
+    <div class="wrap">
+      <div class="section-head reveal-scroll">
+        <span class="eyebrow"><span data-blog-lang="tr">Nasıl Çalışır</span><span data-blog-lang="en" hidden lang="en">How It Works</span></span>
+        <h2><span data-blog-lang="tr">Dört adımda başla</span><span data-blog-lang="en" hidden lang="en">Start in four steps</span></h2>
+        <div class="divider"><span class="dia"></span></div>
+      </div>
+
+      <div class="how-grid reveal-scroll" data-stagger>
+        <div class="how-step">
+          <div class="how-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+          <span class="how-num">01</span>
+          <h3><span data-blog-lang="tr">Ücretsiz Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create a Free Account</span></h3>
+          <p><span data-blog-lang="tr">E-posta ile 30 saniyede kayıt. Hesap açan herkese günde <strong>10 Gri Token</strong> tanımlanır.</span><span data-blog-lang="en" hidden lang="en">Sign up with your email in 30 seconds. Everyone who signs up gets <strong>10 Gri Tokens</strong> a day.</span></p>
+        </div>
+        <div class="how-step">
+          <div class="how-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          </div>
+          <span class="how-num">02</span>
+          <h3><span data-blog-lang="tr">Konuna Odaklan</span><span data-blog-lang="en" hidden lang="en">Focus on Your Topic</span></h3>
+          <p><span data-blog-lang="tr">Sınav, kategori ve alt konu seç. Soruları tek tek çöz, anında adım adım Türkçe açıklamayı gör.</span><span data-blog-lang="en" hidden lang="en">Choose an exam, category, and subtopic. Solve questions one by one and see the step-by-step Turkish explanation instantly.</span></p>
+        </div>
+        <div class="how-step">
+          <div class="how-icon how-icon-mascot">
+            <img src="assets/images/cat-thinking.png" alt="Gri" loading="lazy">
+          </div>
+          <span class="how-num">03</span>
+          <h3><span data-blog-lang="tr">Takılınca Gri'ye Sor</span><span data-blog-lang="en" hidden lang="en">Ask Gri When You're Stuck</span></h3>
+          <p><span data-blog-lang="tr">Açıklama yetmediğinde AI mentor Gri ile sohbet et. Türkçe sorarsın, Türkçe cevap alırsın.</span><span data-blog-lang="en" hidden lang="en">When the explanation isn't enough, chat with the AI mentor Gri. Ask in Turkish, get answers in Turkish.</span></p>
+        </div>
+        <div class="how-step">
+          <div class="how-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </div>
+          <span class="how-num">04</span>
+          <h3><span data-blog-lang="tr">İstersen Derinleş</span><span data-blog-lang="en" hidden lang="en">Go Deeper If You Want</span></h3>
+          <p><span data-blog-lang="tr">Grammar Pack, Vocabulary Pack, full test denemeleri ve birebir Writing Feedback gibi materyalleri incele.</span><span data-blog-lang="en" hidden lang="en">Explore materials like the Grammar Pack, Vocabulary Pack, full mock tests, and one-on-one Writing Feedback.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sinavlar" style="border-top: 1px solid var(--line);">
+    <div class="wrap">
+      <div class="section-head reveal-scroll">
+        <span class="eyebrow"><span data-blog-lang="tr">Sınava Göre Materyaller</span><span data-blog-lang="en" hidden lang="en">Materials by Exam</span></span>
+        <h2><span data-blog-lang="tr">Hangi sınava hazırlanıyorsun?</span><span data-blog-lang="en" hidden lang="en">Which exam are you preparing for?</span></h2>
+        <div class="divider"><span class="dia"></span></div>
+        <p style="max-width: 680px; margin: 1rem auto 0; font-size: 1.02rem; color: var(--text-soft); line-height: 1.7;">
+          <span data-blog-lang="tr">Her sınav için ücretsiz öğrenme modülü, çözümlü soru bankası ve deneme havuzu. Hangi yola bakıyorsan onunla başla — çekirdek tamamen bedava.</span><span data-blog-lang="en" hidden lang="en">A free learning module, an explained question bank, and a mock test pool for every exam. Start with whichever path you're eyeing — the core is completely free.</span>
+        </p>
+
+        <div class="yazi-stats-row">
+          <div class="stat"><strong>7</strong><span data-blog-lang="tr">Sınav formatı</span><span data-blog-lang="en" hidden lang="en">Exam formats</span></div>
+          <div class="stat"><strong><span data-blog-lang="tr">Resmi</span><span data-blog-lang="en" hidden lang="en">Official</span></strong><span data-blog-lang="tr">Sınav rubric'leri</span><span data-blog-lang="en" hidden lang="en">Exam rubrics</span></div>
+          <div class="stat"><strong><span data-blog-lang="tr">Türkçe</span><span data-blog-lang="en" hidden lang="en">Turkish</span></strong><span data-blog-lang="tr">Çözümlü</span><span data-blog-lang="en" hidden lang="en">Explained</span></div>
+        </div>
+      </div>
+
+      <div class="exam-grid reveal-scroll" data-stagger>
+        <a href="sat" class="exam-card cat-sat">
+          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="ex-name">SAT</div>
+          <div class="ex-sub" lang="en">Digital SAT</div>
+        </a>
+        <a href="ielts" class="exam-card cat-ielts">
+          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="ex-name">IELTS</div>
+          <div class="ex-sub" lang="en">Academic</div>
+        </a>
+        <a href="toefl" class="exam-card cat-toefl">
+          <span class="ex-badge active"><span data-blog-lang="tr">Ücretsiz Modül</span><span data-blog-lang="en" hidden lang="en">Free Module</span></span>
+          <div class="ex-name">TOEFL</div>
+          <div class="ex-sub" lang="en">iBT &middot; Versant</div>
+        </a>
+        <a href="ib" class="exam-card cat-ib">
+          <span class="ex-badge active"><span data-blog-lang="tr">Ücretsiz Modül</span><span data-blog-lang="en" hidden lang="en">Free Module</span></span>
+          <div class="ex-name">IB</div>
+          <div class="ex-sub" lang="en">English B &middot; TOK</div>
+        </a>
+        <a href="udsp" class="exam-card cat-udsp">
+          <span class="ex-badge active"><span data-blog-lang="tr">Yeni</span><span data-blog-lang="en" hidden lang="en">New</span></span>
+          <div class="ex-name">UDSP</div>
+          <div class="ex-sub" lang="en">MEB &middot; IB/AP/Abitur</div>
+        </a>
+        <a href="ydt-soru-bankasi" class="exam-card cat-ydt">
+          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="ex-name">YDT</div>
+          <div class="ex-sub"><span data-blog-lang="tr">YKS &middot; Dil Alanı</span><span data-blog-lang="en" hidden lang="en">YKS &middot; Language Track</span></div>
+        </a>
+        <a href="yds-soru-bankasi" class="exam-card cat-yds">
+          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
+          <div class="ex-name">YDS / YÖKDİL</div>
+          <div class="ex-sub"><span data-blog-lang="tr">Akademik Yeterlilik</span><span data-blog-lang="en" hidden lang="en">Academic Proficiency</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
 
 <!-- ===================================================================
      GRI PRO — Premium değer + kilitli özellik teaser
@@ -4429,246 +4538,137 @@
 })();
 </script>
 
-<section id="soru-bankasi" style="border-top: 1px solid var(--line);">
-    <div class="wrap">
-      <div class="section-head reveal-scroll">
-        <span class="eyebrow"><span data-blog-lang="tr">Ücretsiz Başla</span><span data-blog-lang="en" hidden lang="en">Start Free</span></span>
-        <h2><span data-blog-lang="tr">Soru <span class="it">Bankası</span></span><span data-blog-lang="en" hidden lang="en">Question <span class="it">Bank</span></span></h2>
-        <div class="divider"><span class="dia"></span></div>
-        <p style="max-width: 740px; margin: 1rem auto 0; font-size: 1.05rem; color: var(--text-soft); line-height: 1.7;">
-          <span data-blog-lang="tr">Sınava göre değil, konuya göre çalış. Kategori ve alt başlıklara ayrılmış soru havuzu, her soru için adım adım Türkçe açıklama, ve Gri AI mentor desteği. Hesap aç, hemen başla.</span><span data-blog-lang="en" hidden lang="en">Study by topic, not by exam. A question pool split into categories and subtopics, step-by-step Turkish explanations for every question, and Gri AI mentor support. Create an account and start right away.</span>
-        </p>
-
-        <div class="yazi-stats-row">
-          <div class="stat"><strong><span data-blog-lang="tr">Çözümlü</span><span data-blog-lang="en" hidden lang="en">Explained</span></strong><span data-blog-lang="tr">Türkçe açıklamalı havuz</span><span data-blog-lang="en" hidden lang="en">Pool with Turkish explanations</span></div>
-          <div class="stat"><strong>7</strong><span data-blog-lang="tr">Sınav formatı</span><span data-blog-lang="en" hidden lang="en">Exam formats</span></div>
-          <div class="stat"><strong><span data-blog-lang="tr">Adım adım</span><span data-blog-lang="en" hidden lang="en">Step by step</span></strong><span data-blog-lang="tr">Çözüm</span><span data-blog-lang="en" hidden lang="en">Solutions</span></div>
-          <div class="stat"><strong>Gri AI</strong><span data-blog-lang="tr">Mentor desteği</span><span data-blog-lang="en" hidden lang="en">Mentor support</span></div>
-        </div>
-      </div>
-
-      <div class="qb-hub-grid reveal-scroll" data-stagger>
-
-        <a href="sat-soru-bankasi" class="qb-hub-card cat-sat">
-          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="qb-hub-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <h3>Digital SAT</h3>
-          <p class="qb-hub-desc"><span data-blog-lang="tr">Reading &amp; Writing ve Math. Türkçe açıklamalı, College Board taksonomisine uygun.</span><span data-blog-lang="en" hidden lang="en">Reading &amp; Writing and Math. With Turkish explanations, aligned to the College Board taxonomy.</span></p>
-          <div class="qb-hub-meta">
-            <div class="m-item"><span class="m-num">2</span><span class="m-lbl"><span data-blog-lang="tr">Bölüm</span><span data-blog-lang="en" hidden lang="en">Sections</span></span></div>
-            <div class="m-item"><span class="m-num">8</span><span class="m-lbl"><span data-blog-lang="tr">Kategori</span><span data-blog-lang="en" hidden lang="en">Categories</span></span></div>
-            <div class="m-item"><span class="m-num">29</span><span class="m-lbl"><span data-blog-lang="tr">Alt Konu</span><span data-blog-lang="en" hidden lang="en">Subtopics</span></span></div>
-          </div>
-          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
-        </a>
-
-        <a href="ielts-soru-bankasi" class="qb-hub-card cat-ielts">
-          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="qb-hub-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>
-          </div>
-          <h3>IELTS</h3>
-          <p class="qb-hub-desc"><span data-blog-lang="tr">Tam deneme veya bölüm bazlı çalışma. Cambridge formatında mock testler.</span><span data-blog-lang="en" hidden lang="en">Full mock tests or section-based study. Mock tests in the Cambridge format.</span></p>
-          <div class="qb-hub-meta">
-            <div class="m-item"><span class="m-num">3</span><span class="m-lbl"><span data-blog-lang="tr">Tam Deneme</span><span data-blog-lang="en" hidden lang="en">Full Mocks</span></span></div>
-            <div class="m-item"><span class="m-num">3</span><span class="m-lbl"><span data-blog-lang="tr">Bölüm</span><span data-blog-lang="en" hidden lang="en">Sections</span></span></div>
-            <div class="m-item"><span class="m-num">Band</span><span class="m-lbl"><span data-blog-lang="tr">Skorlama</span><span data-blog-lang="en" hidden lang="en">Scoring</span></span></div>
-          </div>
-          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
-        </a>
-
-        <a href="toefl-soru-bankasi" class="qb-hub-card cat-toefl">
-          <span class="qb-hub-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="qb-hub-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          </div>
-          <h3>TOEFL</h3>
-          <p class="qb-hub-desc"><span data-blog-lang="tr">iBT formatında Reading soru tipleri; Türkçe açıklamalı, gerçek formatta.</span><span data-blog-lang="en" hidden lang="en">iBT-format Reading question types; with Turkish explanations, in the real format.</span></p>
-          <div class="qb-hub-meta">
-            <div class="m-item"><span class="m-num">iBT</span><span class="m-lbl">Format</span></div>
-            <div class="m-item"><span class="m-num">TR</span><span class="m-lbl"><span data-blog-lang="tr">Açıklama</span><span data-blog-lang="en" hidden lang="en">Explanations</span></span></div>
-          </div>
-          <span class="qb-hub-cta"><span data-blog-lang="tr">İncele &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Explore &rsaquo;</span></span>
-        </a>
-
-
-      </div>
-
-      <div style="text-align: center; margin-top: 3rem;">
-        <a href="soru-bankasi" class="btn btn-primary"><span data-blog-lang="tr">Tüm Kategorileri Gör</span><span data-blog-lang="en" hidden lang="en">See All Categories</span></a>
-      </div>
+<!-- ===================================================================
+     BUGÜN NE YAPMAK İSTERSİN — çarkıfelek fonksiyon başlatıcı
+     =================================================================== -->
+<style>
+  .gw-sec{border-top:1px solid var(--line,#E3D9C7);background:var(--bg-soft,#F4EFE3);padding:4rem 0 4.8rem;overflow:hidden}
+  .gw-inner{max-width:1000px;margin:0 auto;padding:0 1.2rem;text-align:center}
+  .gw-eyebrow{font-family:var(--font-ui,Inter),sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--gri-gold,#B78A2E);margin-bottom:.6rem}
+  .gw-title{font-family:var(--font-display,'Playfair Display',Georgia,serif);font-size:clamp(1.7rem,4vw,2.5rem);color:var(--text,#241c12);margin:.1rem 0 .5rem}
+  .gw-sub{font-size:1rem;color:var(--text-soft,#6b6250);max-width:540px;margin:0 auto 2.6rem;line-height:1.6}
+  .gw-stage{position:relative;width:min(480px,90vw);height:min(480px,90vw);margin:0 auto}
+  /* nefes alan hale */
+  .gw-stage::before{content:"";position:absolute;inset:2%;border-radius:50%;z-index:0;pointer-events:none;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--gri-gold,#B78A2E) 26%,transparent),transparent 72%);
+    filter:blur(14px);animation:gw-halo 5.5s ease-in-out infinite}
+  @keyframes gw-halo{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.95;transform:scale(1.06)}}
+  .gw-disc{position:absolute;inset:12%;border-radius:50%;z-index:1;
+    background:conic-gradient(#17857A 0deg 45deg,#C9922B 45deg 90deg,#5F9440 90deg 135deg,#C06A34 135deg 180deg,#7E52B0 180deg 225deg,#C05684 225deg 270deg,#2E7BB8 270deg 315deg,#4E8C5E 315deg 360deg);
+    box-shadow:0 20px 50px rgba(40,30,20,.26),inset 0 0 0 8px rgba(255,255,255,.72),inset 0 0 40px rgba(0,0,0,.12)}
+  /* beyaz ışınlar (dilim ayıraçları) */
+  .gw-disc::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.6) 0deg .7deg,transparent .7deg 45deg)}
+  /* üst parlaklık */
+  .gw-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 36%,rgba(255,255,255,.24),transparent 60%)}
+  .gw-needle{position:absolute;left:50%;top:50%;width:9px;height:43%;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);transition:transform 4.2s cubic-bezier(.15,.86,.22,1);z-index:4;pointer-events:none}
+  .gw-needle::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:30px solid var(--gri-gold,#B78A2E);filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+  .gw-needle::after{content:"";position:absolute;left:50%;top:24px;bottom:8px;width:5px;transform:translateX(-50%);border-radius:3px;background:linear-gradient(var(--gri-gold,#B78A2E),rgba(120,86,20,.4))}
+  .gw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:26%;height:26%;border-radius:50%;border:none;cursor:pointer;
+    background:radial-gradient(circle at 50% 38%,#fff,#F6EFDF);color:var(--text,#241c12);font-family:var(--font-ui,Inter),sans-serif;font-weight:800;font-size:clamp(.85rem,2.6vw,1.08rem);letter-spacing:.03em;
+    box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E);z-index:6;animation:gw-invite 2.6s ease-in-out infinite;transition:transform .15s}
+  @keyframes gw-invite{0%,100%{box-shadow:0 8px 22px rgba(40,30,20,.28),inset 0 0 0 4px var(--gri-gold,#B78A2E)}50%{box-shadow:0 8px 30px rgba(183,138,46,.6),inset 0 0 0 4px var(--gri-gold,#B78A2E)}}
+  .gw-hub:hover{transform:translate(-50%,-50%) scale(1.07)}
+  .gw-hub:active{transform:translate(-50%,-50%) scale(.95)}
+  .gw-hub.spinning{animation:gw-invite .8s ease-in-out infinite}
+  .gw-label{position:absolute;inset:0;transform:rotate(var(--a));pointer-events:none;z-index:5}
+  .gw-label .pill{position:absolute;left:50%;top:1.5%;transform:translate(-50%,-50%) rotate(calc(-1 * var(--a)));pointer-events:auto;text-decoration:none;
+    display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg-card,#fff);border:1.5px solid var(--line,#E3D9C7);border-radius:13px;padding:.36rem .66rem;
+    box-shadow:0 4px 13px rgba(40,30,20,.14);transition:transform .18s,box-shadow .18s,border-color .18s}
+  .gw-label .v{font-family:var(--font-ui,Inter),sans-serif;font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--seg)}
+  .gw-label .n{font-family:var(--font-ui,Inter),sans-serif;font-size:.8rem;font-weight:700;color:var(--text,#241c12);line-height:1.1;white-space:nowrap}
+  .gw-label .pill:hover{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.1);border-color:var(--seg);box-shadow:0 7px 18px rgba(40,30,20,.2)}
+  .gw-label.win .pill{border-color:var(--seg);box-shadow:0 0 0 4px color-mix(in srgb,var(--seg) 40%,transparent),0 10px 24px rgba(40,30,20,.24);animation:gw-pop .6s}
+  @keyframes gw-pop{0%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1)}45%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.28)}100%{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a))) scale(1.12)}}
+  .gw-result{margin:2.2rem auto 0;min-height:1px;max-width:460px}
+  .gw-result.show{animation:gw-rise .42s}
+  @keyframes gw-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .gw-result .lead{display:block;font-size:.96rem;color:var(--text-soft,#6b6250);margin-bottom:.75rem}
+  .gw-result a{display:inline-flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-family:var(--font-ui,Inter),sans-serif;font-weight:700;font-size:1.02rem;border-radius:999px;padding:.75rem 1.6rem;box-shadow:0 10px 24px rgba(40,30,20,.22)}
+  @media (prefers-reduced-motion:reduce){.gw-stage::before,.gw-hub,.gw-needle{animation:none}}
+  @media (max-width:560px){
+    .gw-stage{width:min(360px,94vw);height:min(360px,94vw)}
+    .gw-label .pill{top:10%;padding:.24rem .44rem;border-radius:11px}
+    .gw-label .n{font-size:.62rem}.gw-label .v{font-size:.5rem;letter-spacing:.06em}
+    .gw-disc{inset:17%}
+  }
+</style>
+<section class="gw-sec" id="bugun-ne-yapsam" aria-label="Bugün ne yapmak istersin">
+  <div class="gw-inner">
+    <div class="gw-eyebrow"><span data-blog-lang="tr">Nereden başlasam?</span><span data-blog-lang="en" hidden lang="en">Where do I start?</span></div>
+    <h2 class="gw-title"><span data-blog-lang="tr">Bugün ne yapmak istersin?</span><span data-blog-lang="en" hidden lang="en">What do you want to do today?</span></h2>
+    <p class="gw-sub"><span data-blog-lang="tr">Kararsızsan çarkı çevir, Gri senin için bir başlangıç seçsin — ya da doğrudan bir dilime dokun.</span><span data-blog-lang="en" hidden lang="en">Not sure? Spin the wheel and let Gri pick a starting point for you — or tap a slice directly.</span></p>
+    <div class="gw-stage">
+      <div class="gw-disc" aria-hidden="true"></div>
+      <div class="gw-needle" id="gwNeedle" aria-hidden="true"></div>
+      <button class="gw-hub" id="gwSpin" type="button"><span data-blog-lang="tr">Çevir</span><span data-blog-lang="en" hidden lang="en">Spin</span></button>
+      <div class="gw-label" style="--a:22.5deg;--seg:#17857A"><a class="pill" href="soru-bankasi"><span class="v"><span data-blog-lang="tr">Çöz</span><span data-blog-lang="en" hidden lang="en">Solve</span></span><span class="n"><span data-blog-lang="tr">Soru Bankası</span><span data-blog-lang="en" hidden lang="en">Question Bank</span></span></a></div>
+      <div class="gw-label" style="--a:67.5deg;--seg:#C9922B"><a class="pill" href="konu-anlatimi"><span class="v"><span data-blog-lang="tr">Öğren</span><span data-blog-lang="en" hidden lang="en">Learn</span></span><span class="n"><span data-blog-lang="tr">Konu Anlatımı</span><span data-blog-lang="en" hidden lang="en">Topic Lessons</span></span></a></div>
+      <div class="gw-label" style="--a:112.5deg;--seg:#5F9440"><a class="pill" href="ogrenme-haritasi"><span class="v"><span data-blog-lang="tr">Keşfet</span><span data-blog-lang="en" hidden lang="en">Explore</span></span><span class="n"><span data-blog-lang="tr">Öğrenme Haritası</span><span data-blog-lang="en" hidden lang="en">Learning Map</span></span></a></div>
+      <div class="gw-label" style="--a:157.5deg;--seg:#C06A34"><a class="pill" href="kelime-bankasi"><span class="v"><span data-blog-lang="tr">Kelime</span><span data-blog-lang="en" hidden lang="en">Vocabulary</span></span><span class="n"><span data-blog-lang="tr">Kelime Bankası</span><span data-blog-lang="en" hidden lang="en">Vocabulary Bank</span></span></a></div>
+      <div class="gw-label" style="--a:202.5deg;--seg:#7E52B0"><a class="pill" href="oyunlar"><span class="v"><span data-blog-lang="tr">Oyna</span><span data-blog-lang="en" hidden lang="en">Play</span></span><span class="n"><span data-blog-lang="tr">Oyunlar</span><span data-blog-lang="en" hidden lang="en">Games</span></span></a></div>
+      <div class="gw-label" style="--a:247.5deg;--seg:#C05684"><a class="pill" href="yazi-pratigi"><span class="v"><span data-blog-lang="tr">Yaz</span><span data-blog-lang="en" hidden lang="en">Write</span></span><span class="n"><span data-blog-lang="tr">Yazı Pratiği</span><span data-blog-lang="en" hidden lang="en">Writing Practice</span></span></a></div>
+      <div class="gw-label" style="--a:292.5deg;--seg:#2E7BB8"><a class="pill" href="seviye-belirleme"><span class="v"><span data-blog-lang="tr">Ölç</span><span data-blog-lang="en" hidden lang="en">Assess</span></span><span class="n"><span data-blog-lang="tr">Seviye Belirleme</span><span data-blog-lang="en" hidden lang="en">Level Assessment</span></span></a></div>
+      <div class="gw-label" style="--a:337.5deg;--seg:#4E8C5E"><a class="pill" href="panelim"><span class="v"><span data-blog-lang="tr">Devam</span><span data-blog-lang="en" hidden lang="en">Continue</span></span><span class="n"><span data-blog-lang="tr">Çalışma Masam</span><span data-blog-lang="en" hidden lang="en">My Study Desk</span></span></a></div>
     </div>
-  </section>
+    <div class="gw-result" id="gwResult" aria-live="polite"></div>
+  </div>
+</section>
+<script>
+(function(){
+  var FUNCS=[
+    {v:'Çöz',n:'Soru Bankası',u:'soru-bankasi',c:'#17857A'},
+    {v:'Öğren',n:'Konu Anlatımı',u:'konu-anlatimi',c:'#C9922B'},
+    {v:'Keşfet',n:'Öğrenme Haritası',u:'ogrenme-haritasi',c:'#5F9440'},
+    {v:'Kelime',n:'Kelime Bankası',u:'kelime-bankasi',c:'#C06A34'},
+    {v:'Oyna',n:'Oyunlar',u:'oyunlar',c:'#7E52B0'},
+    {v:'Yaz',n:'Yazı Pratiği',u:'yazi-pratigi',c:'#C05684'},
+    {v:'Ölç',n:'Seviye Belirleme',u:'seviye-belirleme',c:'#2E7BB8'},
+    {v:'Devam',n:'Çalışma Masam',u:'panelim',c:'#4E8C5E'}
+  ];
+  var needle=document.getElementById('gwNeedle'), spin=document.getElementById('gwSpin'),
+      result=document.getElementById('gwResult'),
+      labels=[].slice.call(document.querySelectorAll('.gw-sec .gw-label'));
+  if(!needle||!spin) return;
+  var acc=0, busy=false;
+  function land(i){
+    labels.forEach(function(l){l.classList.remove('win');});
+    if(labels[i]) labels[i].classList.add('win');
+    var f=FUNCS[i];
+    result.innerHTML='<span class="lead">Bugün: <b>'+f.n+'</b></span><a href="'+f.u+'" style="background:'+f.c+'">'+f.v+' · Hadi başla →</a>';
+    result.classList.remove('show'); void result.offsetWidth; result.classList.add('show');
+  }
+  spin.addEventListener('click',function(){
+    if(busy) return; busy=true; spin.classList.add('spinning');
+    var s=Math.floor(Math.random()*8);
+    var turns=5+Math.floor(Math.random()*3);
+    acc += turns*360 + (s*45+22.5) - (((acc%360)+360)%360);
+    needle.style.transform='translate(-50%,-100%) rotate('+acc+'deg)';
+    setTimeout(function(){busy=false;spin.classList.remove('spinning');land(s);},4300);
+  });
+})();
+</script>
 
-  <section style="border-top: 1px solid var(--line); background: var(--bg-soft);">
-    <div class="wrap">
-      <div class="gri-feature-grid reveal-scroll">
-        <div class="gri-feature-visual">
-          <img src="assets/gri-mascot.png" alt="Gri — AI mentor mascot">
-        </div>
-        <div class="gri-feature-content">
-          <span class="gri-feature-meta">AI Mentor</span>
-          <h2><span data-blog-lang="tr">Takıldığında <span style="color: var(--cat-accent);">Gri</span> sana açıklar</span><span data-blog-lang="en" hidden lang="en">When you're stuck, <span style="color: var(--cat-accent);">Gri</span> explains it to you</span></h2>
-          <p class="lead">
-            <span data-blog-lang="tr">Adım adım açıklama yeterli gelmediyse, Gri'ye sor. Bir İngilizce öğretmeninin dijital uzantısı gibi; samimi, net, doğrudan. Türkçe sorarsan Türkçe, İngilizce sorarsan İngilizce cevaplar.</span><span data-blog-lang="en" hidden lang="en">If the step-by-step explanation isn't enough, ask Gri. Like the digital extension of an English teacher; warm, clear, and direct. Ask in Turkish and it answers in Turkish; ask in English and it answers in English.</span>
-          </p>
-          <ul class="gri-feature-points">
-            <li><span data-blog-lang="tr">Her soruyu okur, doğru cevabın neden doğru, yanlış seçeneklerin neden eleyici olduğunu açıklar.</span><span data-blog-lang="en" hidden lang="en">It reads every question and explains why the right answer is right and why the wrong options can be ruled out.</span></li>
-            <li><span data-blog-lang="tr">Yanlış yaptıysan önce moral, sonra analiz. Sokratik değil, doğrudan.</span><span data-blog-lang="en" hidden lang="en">If you got it wrong, encouragement first, then analysis. Not Socratic — direct.</span></li>
-            <li><span data-blog-lang="tr">Hesap açan herkese günlük <strong>10 Gri Token</strong>. Bitince paket alabilirsin.</span><span data-blog-lang="en" hidden lang="en">Everyone who signs up gets <strong>10 Gri Tokens</strong> a day. When they run out, you can buy a pack.</span></li>
-          </ul>
-          <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-            <a href="soru-bankasi" class="btn btn-primary"><span data-blog-lang="tr">Soru Çözmeye Başla</span><span data-blog-lang="en" hidden lang="en">Start Solving Questions</span></a>
-            <a href="giris#signup" class="btn btn-ghost"><span data-blog-lang="tr">Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create Account</span></a>
-          </div>
-        </div>
-      </div>
-
-      <div class="reveal-scroll" style="margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--line);">
-        <div style="text-align: center; margin-bottom: 2.5rem;">
-          <span class="eyebrow"><span data-blog-lang="tr">Yetmediğinde</span><span data-blog-lang="en" hidden lang="en">When It's Not Enough</span></span>
-          <h3 style="font-family: var(--font-display); font-size: 1.7rem; margin: 0.6rem 0 0.3rem; letter-spacing: -0.01em;"><span data-blog-lang="tr">Gri Token <span style="color: var(--cat-accent);">paketleri</span></span><span data-blog-lang="en" hidden lang="en">Gri Token <span style="color: var(--cat-accent);">packs</span></span></h3>
-          <p style="color: var(--text-soft); max-width: 580px; margin: 0.8rem auto 0; font-size: 0.95rem; line-height: 1.6;">
-            <span data-blog-lang="tr">Günde 10 Gri Token yetmediğinde paket al. Bonus Gri Token zaman sınırı olmadan birikir, hesabında kalır.</span><span data-blog-lang="en" hidden lang="en">When 10 Gri Tokens a day aren't enough, buy a pack. Bonus Gri Tokens accumulate with no time limit and stay in your account.</span>
-          </p>
-        </div>
-
-        <div class="gri-pack-grid">
-
-          <a href="https://www.shopier.com/SATquestionBank/47230429" target="_blank" rel="noopener" class="gri-pack-card">
-            <div class="gp-tier"><span data-blog-lang="tr">Başlangıç</span><span data-blog-lang="en" hidden lang="en">Starter</span></div>
-            <div class="gp-name"><span data-blog-lang="tr">10 Gri Token</span><span data-blog-lang="en" hidden lang="en">10 Gri Tokens</span></div>
-            <div class="gp-price"><strong>₺100</strong></div>
-            <div class="gp-unit">₺10 / token</div>
-            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
-          </a>
-
-          <a href="https://www.shopier.com/SATquestionBank/47230479" target="_blank" rel="noopener" class="gri-pack-card popular">
-            <span class="gp-badge"><span data-blog-lang="tr">Popüler &middot; %10 İndirim</span><span data-blog-lang="en" hidden lang="en">Popular &middot; 10% Off</span></span>
-            <div class="gp-tier"><span data-blog-lang="tr">Düzenli</span><span data-blog-lang="en" hidden lang="en">Regular</span></div>
-            <div class="gp-name"><span data-blog-lang="tr">25 Gri Token</span><span data-blog-lang="en" hidden lang="en">25 Gri Tokens</span></div>
-            <div class="gp-price"><strong>₺225</strong></div>
-            <div class="gp-unit">₺9 / token</div>
-            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
-          </a>
-
-          <a href="https://www.shopier.com/SATquestionBank/47230505" target="_blank" rel="noopener" class="gri-pack-card">
-            <span class="gp-badge gold"><span data-blog-lang="tr">%15 İndirim</span><span data-blog-lang="en" hidden lang="en">15% Off</span></span>
-            <div class="gp-tier"><span data-blog-lang="tr">Yoğun</span><span data-blog-lang="en" hidden lang="en">Intensive</span></div>
-            <div class="gp-name"><span data-blog-lang="tr">50 Gri Token</span><span data-blog-lang="en" hidden lang="en">50 Gri Tokens</span></div>
-            <div class="gp-price"><strong>₺425</strong></div>
-            <div class="gp-unit">₺8.5 / token</div>
-            <div class="gp-cta"><span data-blog-lang="tr">Satın Al &rsaquo;</span><span data-blog-lang="en" hidden lang="en">Buy &rsaquo;</span></div>
-          </a>
-
-        </div>
-      </div>
+<section id="gunun-kelimesi-wordle" style="border-top:1px solid var(--line);background:var(--bg-soft);">
+  <div class="wrap" style="max-width:760px;padding-top:2.4rem;padding-bottom:2.6rem;text-align:center;">
+    <div class="section-head reveal-scroll" style="text-align:center;">
+      <span class="eyebrow" style="color:#4c9f70;"><span data-blog-lang="tr">Günün Oyunu</span><span data-blog-lang="en" hidden lang="en">Game of the Day</span></span>
+      <h2><span data-blog-lang="tr">Günün Kelimesi · <span style="font-style:italic">Wordle</span></span><span data-blog-lang="en" hidden lang="en">Word of the Day · <span style="font-style:italic">Wordle</span></span></h2>
+      <p style="max-width:560px;margin:.4rem auto 0;"><span data-blog-lang="tr">6 denemede günün 5 harfli İngilizce kelimesini bul. Her gün yeni, herkese aynı — çözünce anlamını ve örnek cümlesini öğren.</span><span data-blog-lang="en" hidden lang="en">Guess the day's 5-letter English word in 6 tries. New every day, the same for everyone — once you solve it, learn its meaning and an example sentence.</span></p>
     </div>
-  </section>
-
-  <section style="border-top: 1px solid var(--line);">
-    <div class="wrap">
-      <div class="section-head reveal-scroll">
-        <span class="eyebrow"><span data-blog-lang="tr">Nasıl Çalışır</span><span data-blog-lang="en" hidden lang="en">How It Works</span></span>
-        <h2><span data-blog-lang="tr">Dört adımda başla</span><span data-blog-lang="en" hidden lang="en">Start in four steps</span></h2>
-        <div class="divider"><span class="dia"></span></div>
-      </div>
-
-      <div class="how-grid reveal-scroll" data-stagger>
-        <div class="how-step">
-          <div class="how-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          </div>
-          <span class="how-num">01</span>
-          <h3><span data-blog-lang="tr">Ücretsiz Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create a Free Account</span></h3>
-          <p><span data-blog-lang="tr">E-posta ile 30 saniyede kayıt. Hesap açan herkese günde <strong>10 Gri Token</strong> tanımlanır.</span><span data-blog-lang="en" hidden lang="en">Sign up with your email in 30 seconds. Everyone who signs up gets <strong>10 Gri Tokens</strong> a day.</span></p>
-        </div>
-        <div class="how-step">
-          <div class="how-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-          </div>
-          <span class="how-num">02</span>
-          <h3><span data-blog-lang="tr">Konuna Odaklan</span><span data-blog-lang="en" hidden lang="en">Focus on Your Topic</span></h3>
-          <p><span data-blog-lang="tr">Sınav, kategori ve alt konu seç. Soruları tek tek çöz, anında adım adım Türkçe açıklamayı gör.</span><span data-blog-lang="en" hidden lang="en">Choose an exam, category, and subtopic. Solve questions one by one and see the step-by-step Turkish explanation instantly.</span></p>
-        </div>
-        <div class="how-step">
-          <div class="how-icon how-icon-mascot">
-            <img src="assets/images/cat-thinking.png" alt="Gri" loading="lazy">
-          </div>
-          <span class="how-num">03</span>
-          <h3><span data-blog-lang="tr">Takılınca Gri'ye Sor</span><span data-blog-lang="en" hidden lang="en">Ask Gri When You're Stuck</span></h3>
-          <p><span data-blog-lang="tr">Açıklama yetmediğinde AI mentor Gri ile sohbet et. Türkçe sorarsın, Türkçe cevap alırsın.</span><span data-blog-lang="en" hidden lang="en">When the explanation isn't enough, chat with the AI mentor Gri. Ask in Turkish, get answers in Turkish.</span></p>
-        </div>
-        <div class="how-step">
-          <div class="how-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          </div>
-          <span class="how-num">04</span>
-          <h3><span data-blog-lang="tr">İstersen Derinleş</span><span data-blog-lang="en" hidden lang="en">Go Deeper If You Want</span></h3>
-          <p><span data-blog-lang="tr">Grammar Pack, Vocabulary Pack, full test denemeleri ve birebir Writing Feedback gibi materyalleri incele.</span><span data-blog-lang="en" hidden lang="en">Explore materials like the Grammar Pack, Vocabulary Pack, full mock tests, and one-on-one Writing Feedback.</span></p>
-        </div>
-      </div>
+    <div style="display:flex;justify-content:center;gap:6px;margin:1.6rem 0 0;flex-wrap:wrap;">
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#2E6E4E;border-radius:8px;">G</span>
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#C79A3A;border-radius:8px;">R</span>
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#2b2118;background:#f6f0e4;border:2px solid #d9cfbb;border-radius:8px;">İ</span>
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#2E6E4E;border-radius:8px;">N</span>
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#2b2118;background:#f6f0e4;border:2px solid #d9cfbb;border-radius:8px;">M</span>
     </div>
-  </section>
-
-  <section id="sinavlar" style="border-top: 1px solid var(--line);">
-    <div class="wrap">
-      <div class="section-head reveal-scroll">
-        <span class="eyebrow"><span data-blog-lang="tr">Sınava Göre Materyaller</span><span data-blog-lang="en" hidden lang="en">Materials by Exam</span></span>
-        <h2><span data-blog-lang="tr">Hangi sınava hazırlanıyorsun?</span><span data-blog-lang="en" hidden lang="en">Which exam are you preparing for?</span></h2>
-        <div class="divider"><span class="dia"></span></div>
-        <p style="max-width: 680px; margin: 1rem auto 0; font-size: 1.02rem; color: var(--text-soft); line-height: 1.7;">
-          <span data-blog-lang="tr">Her sınav için ücretsiz öğrenme modülü, çözümlü soru bankası ve deneme havuzu. Hangi yola bakıyorsan onunla başla — çekirdek tamamen bedava.</span><span data-blog-lang="en" hidden lang="en">A free learning module, an explained question bank, and a mock test pool for every exam. Start with whichever path you're eyeing — the core is completely free.</span>
-        </p>
-
-        <div class="yazi-stats-row">
-          <div class="stat"><strong>7</strong><span data-blog-lang="tr">Sınav formatı</span><span data-blog-lang="en" hidden lang="en">Exam formats</span></div>
-          <div class="stat"><strong><span data-blog-lang="tr">Resmi</span><span data-blog-lang="en" hidden lang="en">Official</span></strong><span data-blog-lang="tr">Sınav rubric'leri</span><span data-blog-lang="en" hidden lang="en">Exam rubrics</span></div>
-          <div class="stat"><strong><span data-blog-lang="tr">Türkçe</span><span data-blog-lang="en" hidden lang="en">Turkish</span></strong><span data-blog-lang="tr">Çözümlü</span><span data-blog-lang="en" hidden lang="en">Explained</span></div>
-        </div>
-      </div>
-
-      <div class="exam-grid reveal-scroll" data-stagger>
-        <a href="sat" class="exam-card cat-sat">
-          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="ex-name">SAT</div>
-          <div class="ex-sub" lang="en">Digital SAT</div>
-        </a>
-        <a href="ielts" class="exam-card cat-ielts">
-          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="ex-name">IELTS</div>
-          <div class="ex-sub" lang="en">Academic</div>
-        </a>
-        <a href="toefl" class="exam-card cat-toefl">
-          <span class="ex-badge active"><span data-blog-lang="tr">Ücretsiz Modül</span><span data-blog-lang="en" hidden lang="en">Free Module</span></span>
-          <div class="ex-name">TOEFL</div>
-          <div class="ex-sub" lang="en">iBT &middot; Versant</div>
-        </a>
-        <a href="ib" class="exam-card cat-ib">
-          <span class="ex-badge active"><span data-blog-lang="tr">Ücretsiz Modül</span><span data-blog-lang="en" hidden lang="en">Free Module</span></span>
-          <div class="ex-name">IB</div>
-          <div class="ex-sub" lang="en">English B &middot; TOK</div>
-        </a>
-        <a href="udsp" class="exam-card cat-udsp">
-          <span class="ex-badge active"><span data-blog-lang="tr">Yeni</span><span data-blog-lang="en" hidden lang="en">New</span></span>
-          <div class="ex-name">UDSP</div>
-          <div class="ex-sub" lang="en">MEB &middot; IB/AP/Abitur</div>
-        </a>
-        <a href="ydt-soru-bankasi" class="exam-card cat-ydt">
-          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="ex-name">YDT</div>
-          <div class="ex-sub"><span data-blog-lang="tr">YKS &middot; Dil Alanı</span><span data-blog-lang="en" hidden lang="en">YKS &middot; Language Track</span></div>
-        </a>
-        <a href="yds-soru-bankasi" class="exam-card cat-yds">
-          <span class="ex-badge active"><span data-blog-lang="tr">Hazır</span><span data-blog-lang="en" hidden lang="en">Ready</span></span>
-          <div class="ex-name">YDS / YÖKDİL</div>
-          <div class="ex-sub"><span data-blog-lang="tr">Akademik Yeterlilik</span><span data-blog-lang="en" hidden lang="en">Academic Proficiency</span></div>
-        </a>
-      </div>
+    <p style="max-width:520px;margin:1rem auto 0;color:var(--text-soft);font-size:.92rem;"><span data-blog-lang="tr">Wordle, Kelime Yolu (99 level), Kelime Avı ve Eşleştirme — hepsi ücretsiz. Serin ve ilerlemen kaydolman için hesabınla saklanır.</span><span data-blog-lang="en" hidden lang="en">Wordle, Word Path (99 levels), Word Hunt, and Matching — all free. Your streak and progress are saved to your account when you sign up.</span></p>
+    <div style="margin-top:1.2rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="oyunlar" class="btn" style="font-weight:700;"><span data-blog-lang="tr">Oyunları Aç →</span><span data-blog-lang="en" hidden lang="en">Open Games →</span></a>
+      <a href="giris#signup" class="btn-ghost" style="font-weight:700;"><span data-blog-lang="tr">Ücretsiz Hesap Aç</span><span data-blog-lang="en" hidden lang="en">Create a Free Account</span></a>
     </div>
-  </section>
+  </div>
+</section>
 
   <section class="cta-strip compact">
     <div class="wrap-narrow center reveal-scroll">

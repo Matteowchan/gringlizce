@@ -50,8 +50,32 @@
     'Durum İfadesi': 'Claim/Thesis', 'Kelime Bilgisi': 'Vocabulary'
   };
 
-  var handled = [];      // {node, orig}
+  var handled = [];      // text node çevirileri {node, orig}
+  var handledEls = [];   // element-seviyesi çeviriler {el, html}
   var mo = null, timer = null, curEN = false;
+  var mapLoaded = false, mapLoading = false;
+  var INLINE = /^(B|I|EM|STRONG|SPAN|A|CODE|SUP|SUB|U|MARK|SMALL|ABBR|WBR)$/;
+
+  function lookup(key) {
+    var v = DICT[key];
+    if (v) return v;
+    if (window.__MTMAP && window.__MTMAP[key]) return window.__MTMAP[key];
+    return null;
+  }
+
+  // Sayfa window.GRI_MAP tanımladıysa (ör. öğren gömülü sözlüğü), İLK EN'de tembel yükle.
+  // AĞ YOK anlamında değil — bu statik bir dosya (edge-fn/proxy değil); indirdikten sonra
+  // tamamen yerel sözlük. Yalnız EN kullanıcıya, yalnız bir kez.
+  function ensureMap(cb) {
+    if (mapLoaded || !window.GRI_MAP || window.__MTMAP) { mapLoaded = true; cb(); return; }
+    if (mapLoading) { cb(); return; }
+    mapLoading = true;
+    var s = document.createElement('script');
+    s.src = window.GRI_MAP;
+    s.onload = function () { mapLoaded = true; mapLoading = false; cb(); };
+    s.onerror = function () { mapLoading = false; cb(); };
+    document.head.appendChild(s);
+  }
 
   function skip(el) {
     while (el && el.nodeType === 1 && el !== document.body) {
@@ -78,18 +102,40 @@
       var n, hits = [];
       while ((n = w.nextNode())) {
         var raw = n.nodeValue; if (!raw) continue;
-        var key = raw.trim(); if (!key || !DICT[key]) continue;
+        var key = raw.trim(); if (!key || key.length > 600 || !lookup(key)) continue;
         if (skip(n.parentElement)) continue;
         hits.push(n);
       }
       for (var i = 0; i < hits.length; i++) {
-        var node = hits[i], k = node.nodeValue.trim(), en = DICT[k];
+        var node = hits[i], k = node.nodeValue.trim(), en = lookup(k);
         if (!en) continue;
         handled.push({ node: node, orig: node.nodeValue });
         node.nodeValue = node.nodeValue.replace(k, en);
       }
     } catch (e) { /* sessiz: çeviri hiçbir zaman sayfayı bozmasın */ }
+    try { if (window.__MTMAP) applyElements(); } catch (e) {}
     if (mo && curEN) mo.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+
+  // Element-seviyesi (öğren gibi zengin paragraflar): yalnız inline çocukları olan
+  // öğelerin tam metni bir sözlük anahtarıysa çevir. Blok/yapısal çocuk varsa DOKUNMA.
+  function applyElements() {
+    var els = document.querySelectorAll('p,li,h1,h2,h3,h4,h5,h6,span,button,a,td,th,dt,dd,caption,figcaption,summary,blockquote,label');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.getAttribute && el.getAttribute('data-uien') === '1') continue; // zaten çevrildi
+      if (skip(el)) continue;
+      var kids = el.children, inlineOnly = true;
+      for (var c = 0; c < kids.length; c++) { if (!INLINE.test(kids[c].tagName)) { inlineOnly = false; break; } }
+      if (!inlineOnly) continue;
+      var key = (el.textContent || '').trim();
+      if (!key || key.length > 600) continue;
+      var en = lookup(key);
+      if (!en || en === key) continue;
+      handledEls.push({ el: el, html: el.innerHTML });
+      el.textContent = en;
+      if (el.setAttribute) el.setAttribute('data-uien', '1');
+    }
   }
 
   function revert() {
@@ -97,6 +143,10 @@
       try { handled[i].node.nodeValue = handled[i].orig; } catch (e) {}
     }
     handled = [];
+    for (var j = 0; j < handledEls.length; j++) {
+      try { handledEls[j].el.innerHTML = handledEls[j].html; handledEls[j].el.removeAttribute('data-uien'); } catch (e) {}
+    }
+    handledEls = [];
   }
 
   function setEN(on) {
@@ -107,7 +157,7 @@
         if (timer) clearTimeout(timer);
         timer = setTimeout(apply, 180);
       });
-      apply(); // apply reconnects observer at the end
+      ensureMap(apply); // önce (varsa) gömülü sözlüğü yükle, sonra uygula + observer başlat
     } else {
       if (timer) { clearTimeout(timer); timer = null; }
       if (mo) mo.disconnect();

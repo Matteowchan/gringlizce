@@ -29,6 +29,58 @@
 
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } }
   function save(o) { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+
+  /* --- Opsiyonel, en-iyi-çaba hesap senkronu (study_targets). ---
+     localStorage her zaman kaynaktır ve önce render edilir; DB tamamen async +
+     try/catch, giriş yoksa/başarısızsa sessizce localStorage'da kalır — kartı ASLA bozmaz. */
+  var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function client() {
+    if (window.GRI_SB) return window.GRI_SB;
+    if (window.griTrackSB) return window.griTrackSB;
+    try { if (window.supabase && window.supabase.createClient) { window.griTrackSB = window.supabase.createClient(SB_URL, SB_KEY); return window.griTrackSB; } } catch (e) {}
+    return null;
+  }
+  function uid(c, cb) {
+    if (window.GRI_UID) return cb(window.GRI_UID);
+    if (!c) return cb(null);
+    try { c.auth.getSession().then(function (r) { cb(r && r.data && r.data.session ? r.data.session.user.id : null); }, function () { cb(null); }); }
+    catch (e) { cb(null); }
+  }
+  function pull(el) {
+    try {
+      var c = client(); if (!c) return;
+      uid(c, function (u) {
+        if (!u) return;
+        try {
+          c.from('study_targets').select('exam,target_date,updated_at').eq('user_id', u).maybeSingle().then(function (r) {
+            if (!r || r.error || !r.data || !r.data.exam) {
+              // DB boş ama local varsa: local'i DB'ye it
+              var lp = load(); if (lp && lp.exam) push(lp);
+              return;
+            }
+            var db = { exam: r.data.exam, date: r.data.target_date || '' };
+            var lp = load();
+            if (!lp || lp.exam !== db.exam || (lp.date || '') !== (db.date || '')) {
+              save(db); if (el) render(el, db);   // DB kazanır (son güncelleme sunucuda)
+            }
+          }, function () {});
+        } catch (e) {}
+      });
+    } catch (e) {}
+  }
+  function push(plan) {
+    try {
+      var c = client(); if (!c || !plan || !plan.exam) return;
+      uid(c, function (u) {
+        if (!u) return;
+        try {
+          c.from('study_targets').upsert({ user_id: u, exam: plan.exam, target_date: plan.date || null, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }).then(function () {}, function () {});
+        } catch (e) {}
+      });
+    } catch (e) {}
+  }
+  function persist(plan) { save(plan); push(plan); }
   function daysLeft(dateStr) {
     if (!dateStr) return null;
     var d = new Date(dateStr + 'T00:00:00'); if (isNaN(d)) return null;
@@ -119,7 +171,7 @@
       '<button type="button" class="griplan-btn" id="gpSave">Planı oluştur</button>';
     el.querySelector('#gpSave').addEventListener('click', function () {
       var np = { exam: el.querySelector('#gpExam').value, date: el.querySelector('#gpDate').value || '' };
-      save(np); render(el, np);
+      persist(np); render(el, np);
     });
   }
 
@@ -130,7 +182,8 @@
       var el = typeof target === 'string' ? document.querySelector(target) : target;
       if (!el) return;
       render(el, load());
+      pull(el);
     },
-    get: load, set: function (p) { save(p); }
+    get: load, set: function (p) { persist(p); }
   };
 })();

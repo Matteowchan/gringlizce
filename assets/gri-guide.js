@@ -40,6 +40,7 @@
     + '.gg-bar i{width:9px;height:9px;border-radius:50%;background:#d9cdb4;}'
     + '.gg-bar i:nth-child(1){background:#e69289;}.gg-bar i:nth-child(2){background:#e6c982;}.gg-bar i:nth-child(3){background:#95cba4;}'
     + '.gg-url{flex:1;margin-left:7px;background:#fff;border:1px solid #e6dcc6;border-radius:7px;padding:3px 9px;font:600 10px/1.4 var(--font-ui,Inter),sans-serif;color:#9a8e7b;font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.gg-eg{flex:none;margin-left:6px;font:700 9px/1 var(--font-ui,Inter),sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8a7f68;background:rgba(0,0,0,.05);border-radius:5px;padding:3px 6px;}'
     + '.gg-app{padding:14px 15px 15px;position:relative;min-height:158px;}'
     + '.gg .qh{font:700 9px/1 var(--font-ui,Inter),sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--teal,#2E6E6A);margin-bottom:9px;}'
     + '.gg .qs{font:600 12.5px/1.42 var(--font-ui,Inter),sans-serif;color:#241E17;margin-bottom:11px;}'
@@ -115,7 +116,7 @@
 
   function injectCSS() { if (document.getElementById('gg-css')) return; var s = document.createElement('style'); s.id = 'gg-css'; s.textContent = CSS; document.head.appendChild(s); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function win(url, inner) { return '<div class="gg-win"><div class="gg-bar"><i></i><i></i><i></i><em class="gg-url">' + url + '</em></div><div class="gg-app">' + inner + '</div></div>'; }
+  function win(url, inner) { return '<div class="gg-win"><div class="gg-bar"><i></i><i></i><i></i><em class="gg-url">' + url + '</em><span class="gg-eg">Örnek</span></div><div class="gg-app">' + inner + '</div></div>'; }
   function sub(txt) { return '<div class="gg-sub"><b>CC</b> ' + txt + '</div>'; }
   function cat(v) { return '<img class="gg-cat" src="assets/gri-cat-' + (v === 'curious' ? 'curious' : 'happy') + '.png" alt="" loading="lazy">'; }
 

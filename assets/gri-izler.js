@@ -84,7 +84,8 @@
     var gunTas = reached(GUN_TASLARI, data.days);
     if (gunTas) stones.push(stone(gunTas + ' farklı gün', 'bu kadar ayrı günde çalıştın'));
     // 4) süreklilik izi (ilk günden bugüne)
-    if (span >= 7 && data.firstDay) stones.push(stone(span + ' gündür buradasın', trTarih(data.firstDay) + '’den beri'));
+    var spanStoneShown = span >= 7 && data.firstDay;
+    if (spanStoneShown) stones.push(stone(span + ' gündür buradasın', trTarih(data.firstDay) + '’den beri'));
 
     // "yaklaştığın iz" — en yakın ulaşılmamış taş (oransal olarak)
     var nextSoru = next(SORU_TASLARI, data.total);
@@ -100,8 +101,9 @@
       nextHtml = '<div class="griz-next"><span class="dot">' + nextGun + '</span><p>Yaklaştığın bir iz: <b>' + nextGun + ' farklı gün</b>. ' + kalanG + ' gün daha geldiğinde bu iz de düşer.</p></div>';
     }
 
+    // Süreklilik izi görünmüyorsa (span<7) tarihi lead cümlesine koy, tekrar olmasın.
     var lead = 'Bugüne kadar <b>' + data.total + ' soru</b> çözdün, <b>' + data.days + ' farklı gün</b> geldin' +
-      (data.firstDay ? ' — <b>' + trTarih(data.firstDay) + '</b>’den beri buradasın' : '') + '.';
+      (!spanStoneShown && data.firstDay ? ' — <b>' + trTarih(data.firstDay) + '</b>’den beri' : '') + '.';
 
     el.innerHTML =
       '<div class="griz-head"><span class="em">🪶</span><h2>Çalışma İzleri</h2></div>' +

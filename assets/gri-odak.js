@@ -27,8 +27,6 @@
       'body.' + CLS + ' .q-hint{display:none!important}' +
       'body.' + CLS + ' .q-tags-bar{display:none!important}' +
       'body.' + CLS + ' #remixBtn{display:none!important}' +
-      'body.' + CLS + ' #bookmarkBtn,body.' + CLS + ' #reportBtn,body.' + CLS + ' #noteBtn{opacity:.4;transition:opacity .14s}' +
-      'body.' + CLS + ' #bookmarkBtn:hover,body.' + CLS + ' #reportBtn:hover,body.' + CLS + ' #noteBtn:hover{opacity:1}' +
       'body.' + CLS + ' .gri-odak-pill{background:var(--teal,#2E6E6A);color:#fff;border-color:var(--teal,#2E6E6A)}' +
       'body.' + CLS + ' .gri-odak-pill:hover{color:#fff;background:var(--teal-deep,#123C39)}' +
       /* sakin zemin + biraz daha nefes */

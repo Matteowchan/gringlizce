@@ -102,8 +102,8 @@
     el.className = 'griplan'; el.innerHTML = html;
     el.querySelector('[data-act="change"]').addEventListener('click', function () { renderSetup(el, plan); });
     el.querySelector('[data-act="other"]').addEventListener('click', function () {
-      // "Karar veremiyorum" mini akışı yerine sakin bir yönlendirme
-      window.location.href = 'ogrenme-haritasi';
+      if (window.GriChooser) window.GriChooser.open();
+      else window.location.href = 'ogrenme-haritasi';
     });
   }
 

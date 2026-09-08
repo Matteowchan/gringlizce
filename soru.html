@@ -1800,6 +1800,7 @@
   <script src="assets/nav.js?v=42"></script>
   <script src="assets/gri-ui-en.js?v=3" defer></script>
   <script src="assets/gri-prompt.js?v=1" defer></script>
+  <script src="assets/gri-pekistir.js?v=1" defer></script>
   <script src="assets/track.js?v=4" defer></script>
   <script>
   /* Gri Prompt — ilk açıklama açıldığında (oturumda bir kez, kalıcı olarak bir kez)
@@ -1818,6 +1819,24 @@
           actions:[{label:'Çalışma Masam', href:'panelim'}, {label:'Şimdi değil', ghost:true}]
         });
       }, 900);
+    });
+  })();
+  /* Faz 7.B — yanlış cevapta "iki soruyla pekiştir" teklifi (deneme modunda değil). */
+  (function(){
+    document.addEventListener('gri:explanation-opened', function(e){
+      if(window.GRI_DENEME_MODE) return;
+      var d = e && e.detail; if(!d || d.status !== 'incorrect' || !d.slug) return;
+      var ce = document.getElementById('expContent'); if(!ce) return;
+      if(ce.querySelector('.gripk-offer')) return;      // aynı soruda bir kez
+      var wrap = document.createElement('div');
+      wrap.className = 'gripk-offer';
+      wrap.style.cssText = 'margin-top:1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;background:var(--teal-soft,rgba(46,110,106,.1));border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem';
+      wrap.innerHTML = '<span style="flex:1;font-family:var(--font-ui,Inter),sans-serif;font-size:.9rem;color:var(--text)">Bu mantığı <b>iki kısa soruyla</b> pekiştirmek ister misin?</span>' +
+        '<button type="button" class="gripk-offer-btn" style="font:inherit;font-weight:700;font-size:.85rem;background:var(--teal,#2E6E6A);color:#fff;border:none;border-radius:9px;padding:.5rem 1rem;cursor:pointer">Pekiştir</button>';
+      ce.appendChild(wrap);
+      wrap.querySelector('.gripk-offer-btn').addEventListener('click', function(){
+        if(window.GriPekistir) window.GriPekistir.forSlug(d.slug);
+      });
     });
   })();
   </script>
@@ -3896,7 +3915,11 @@
             document.getElementById('qExplanation').scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 50);
         }
-        try { document.dispatchEvent(new CustomEvent('gri:explanation-opened')); } catch (_e) {}
+        try {
+          var _es = SUBCATEGORY_LIST[CURRENT_INDEX] && SUBCATEGORY_LIST[CURRENT_INDEX].slug;
+          var _est = _es ? getAnswerStatus(_es) : null;
+          document.dispatchEvent(new CustomEvent('gri:explanation-opened', { detail: { slug: _es, status: _est } }));
+        } catch (_e) {}
       }
       function closeExplanation() {
         grid.classList.remove('show-explanation');

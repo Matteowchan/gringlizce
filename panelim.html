@@ -6807,7 +6807,13 @@
         heads.forEach(function (sec) {
           if (sec.offsetParent === null) return; // gizli bölümü atla
           var h = sec.querySelector('h2');
-          var t = h ? (h.textContent || '').trim() : '';
+          // Yalnızca aktif dildeki metni al — h.textContent gizli [data-blog-lang="en"]
+          // span'ini de katıp "Tekrar ÇalışReview" gibi iki-dil sızıntısı yapıyordu.
+          var t = '';
+          if (h) {
+            var vis = h.querySelector('[data-blog-lang]:not([hidden])');
+            t = ((vis ? vis.textContent : h.textContent) || '').trim();
+          }
           if (!t) return;
           if (!sec.id) sec.id = 'masam-sec-' + chips.length;
           var a = document.createElement('a');

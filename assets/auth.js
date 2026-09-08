@@ -40,9 +40,12 @@
   }
 
   // Supabase'den taze profile + purchases çek, cache'e yaz
-  async function refreshCache() {
-    var resp = await sb.auth.getSession();
-    var session = resp && resp.data && resp.data.session;
+  async function refreshCache(sessionOverride) {
+    var session = sessionOverride || null;
+    if (!session) {
+      try { var resp = await sb.auth.getSession(); session = resp && resp.data && resp.data.session; }
+      catch (e) { session = null; }
+    }
     if (!session) { clearCache(); return null; }
 
     var userId = session.user.id;
@@ -121,7 +124,9 @@
     if (resp.error || !resp.data || !resp.data.session) {
       return { ok: false, error: 'E-posta veya şifre hatalı.' };
     }
-    await refreshCache();
+    // Kimlik doğrulama başarılı; önbellek yenileme hatası girişi ASLA bozmasın
+    // (oturum zaten kuruldu, sonraki yüklemede yeniden kurulur).
+    try { await refreshCache(resp.data.session); } catch (e) {}
     return { ok: true };
   }
 

@@ -24,6 +24,7 @@
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/gri-cat.js"></script>
+  <script src="assets/gri-ogretmen-ipuclari.js?v=1" defer></script>
   <script src="assets/site-config.js?v=8" defer></script>
   <style>
     /* ============ Shared with ogretmen.html ============ */
@@ -2033,6 +2034,8 @@
         </div>
       </div>
 
+      <!-- Öğretmen İpuçları (Faz 6.7) -->
+      <div id="ks-ipuclari" hidden></div>
       <!-- Sınıf Analitiği panosu -->
       <div id="ks-analytics" style="margin:0 0 1.6rem"></div>
       <!-- Seviye Belirleme (CEFR) panosu -->
@@ -2747,6 +2750,9 @@
       document.getElementById('ks-member-count').textContent = classInfo.member_count || 0;
       document.getElementById('ks-assignment-count').textContent = classInfo.assignment_count || 0;
       document.getElementById('ks-created-date').textContent = fmtDateShort(classInfo.created_at);
+
+      // Faz 6.7 — Öğretmen İpuçları (sınıf yüklendiğinde; modül henüz yüklenmediyse bekle)
+      (function () { var n = 0; (function m() { if (window.GriOgretmenIpuclari) { try { window.GriOgretmenIpuclari.mount('#ks-ipuclari'); } catch (e) {} } else if (n++ < 40) { setTimeout(m, 150); } })(); })();
 
       var codeEl = document.getElementById('ks-join-code');
       codeEl.textContent = classInfo.join_code || '—';

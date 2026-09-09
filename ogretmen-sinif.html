@@ -1943,6 +1943,33 @@
     #modal-create-assign .ca-due-time{ display:flex; align-items:center; gap:.3rem; }
     #modal-create-assign .ca-due-time select{ width:auto!important; margin-bottom:0!important; padding:.72rem .6rem!important; }
     #modal-create-assign .ca-due-time span{ color:var(--text-muted); font-weight:700; }
+    /* ===== Writing 4-bölüm accordion (Slice 1b) ===== */
+    #modal-create-assign .wz-intro{ font-size:.85rem; color:var(--text-soft); margin:.1rem 0 1rem; line-height:1.5; }
+    #modal-create-assign .wz-acc{ display:flex; flex-direction:column; gap:.7rem; }
+    #modal-create-assign .wz-sec{ border:1px solid var(--line); border-radius:14px; background:var(--bg-card); overflow:hidden; }
+    #modal-create-assign .wz-sec-h{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:.6rem; background:none; border:none; cursor:pointer; padding:.85rem 1.1rem; font-family:var(--font-ui,Inter),sans-serif; text-align:left; }
+    #modal-create-assign .wz-sec-h .wz-tt{ min-width:0; }
+    #modal-create-assign .wz-sec-t{ font-weight:700; font-size:.97rem; color:var(--text); display:block; }
+    #modal-create-assign .wz-sec.open .wz-sec-t{ color:var(--teal,#2C5856); }
+    #modal-create-assign .wz-sec-hint{ display:block; font-size:.76rem; color:var(--text-muted); font-weight:500; margin-top:2px; line-height:1.25; }
+    #modal-create-assign .wz-chev{ color:var(--text-muted); font-size:.8rem; transition:transform .18s ease; flex:none; }
+    #modal-create-assign .wz-sec.open .wz-chev{ transform:rotate(180deg); }
+    #modal-create-assign .wz-sec-b{ padding:.9rem 1.1rem 1.15rem; border-top:1px solid var(--line); }
+    #modal-create-assign .wz-sec:not(.open) .wz-sec-b{ display:none; }
+    #modal-create-assign .wz-fl{ font-family:var(--font-ui,Inter),sans-serif; font-size:.8rem; font-weight:600; color:var(--text-soft); margin:.85rem 0 .3rem; display:block; }
+    #modal-create-assign .wz-sec-b > .wz-fl:first-child{ margin-top:0; }
+    #modal-create-assign .wz-note{ font-size:.78rem; color:var(--text-muted); line-height:1.5; margin:.5rem 0 0; }
+    #modal-create-assign .wz-two{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+    #modal-create-assign .wz-check{ display:flex; align-items:flex-start; gap:.5rem; font-family:var(--font-ui,Inter),sans-serif; font-size:.88rem; color:var(--text); cursor:pointer; margin:.7rem 0 0; line-height:1.4; }
+    #modal-create-assign .wz-check input{ margin:.15rem 0 0!important; width:auto!important; flex:none; }
+    #modal-create-assign .wz-approve-tag{ display:inline-block; font-size:.7rem; font-weight:700; color:var(--gold-deep,#8A6A22); background:var(--gold-soft,rgba(183,138,46,.15)); border-radius:6px; padding:.08rem .45rem; margin-left:.4rem; vertical-align:middle; }
+    #modal-create-assign .wz-chips{ display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; border:1px solid var(--line); border-radius:10px; padding:.4rem .5rem; background:var(--bg-card); }
+    #modal-create-assign .wz-chips input{ flex:1; min-width:90px; border:none!important; background:none!important; padding:.25rem!important; margin:0!important; font-size:.88rem; box-shadow:none!important; }
+    #modal-create-assign .wz-chips input:focus{ outline:none; }
+    #modal-create-assign .wz-chip{ display:inline-flex; align-items:center; gap:.3rem; background:var(--teal-soft,rgba(46,110,106,.12)); color:var(--teal-deep,#123C39); border-radius:999px; padding:.2rem .3rem .2rem .6rem; font-size:.82rem; font-weight:600; }
+    #modal-create-assign .wz-chip button{ background:none!important; border:none!important; cursor:pointer; color:var(--teal,#2C5856); font-size:1rem; line-height:1; padding:0 .1rem!important; margin:0!important; width:auto!important; }
+    @media(prefers-reduced-motion:reduce){ #modal-create-assign .wz-chev{ transition:none; } }
+    @media(max-width:600px){ #modal-create-assign .wz-two{ grid-template-columns:1fr; } }
     @media(max-width:720px){
       #modal-create-assign .ca-layout{ grid-template-columns:1fr; overflow-y:auto; }
       #modal-create-assign .ca-rail{ border-right:none; border-bottom:1px solid var(--line); position:static; align-self:auto; padding:.85rem 1rem; }
@@ -2295,53 +2322,139 @@
           </div>
         </div>
 
-        <!-- Writing config -->
+        <!-- Writing config (4-bölüm accordion — Slice 1b) -->
         <div class="t-config-block" data-config="writing">
-          <div class="t-config-eyebrow"><span lang="en">Writing</span> Ayarları</div>
-          <div class="t-modal-row">
-            <div>
-              <label for="ca-w-exam">Sınav</label>
-              <select id="ca-w-exam">
-                <option value="ib">IB English B</option>
-                <option value="ielts">IELTS</option>
-                <option value="toefl">TOEFL</option>
-              </select>
-            </div>
-            <div>
-              <label for="ca-w-texttype">Text Type / Rubric</label>
-              <select id="ca-w-texttype">
-                <option value="">Yükleniyor...</option>
-              </select>
-            </div>
+          <div class="t-config-eyebrow"><span lang="en">Writing</span> Ödev Ayarları</div>
+          <p class="wz-intro">Bölüm bölüm ilerle. Sadece A ve B'yi doldurup hızlıca da oluşturabilirsin; C ve D opsiyonel.</p>
+          <div class="wz-acc" id="wz-acc">
+
+            <!-- A. Görev Tanımı -->
+            <section class="wz-sec open" data-sec="a">
+              <button type="button" class="wz-sec-h"><span class="wz-tt"><span class="wz-sec-t">A · Görev Tanımı</span><span class="wz-sec-hint">Sınav, tür, seviye, uzunluk</span></span><span class="wz-chev" aria-hidden="true">▾</span></button>
+              <div class="wz-sec-b">
+                <div class="wz-two">
+                  <div>
+                    <label class="wz-fl" for="ca-w-exam">Sınav / Çerçeve</label>
+                    <select id="ca-w-exam">
+                      <option value="ib">IB English B</option>
+                      <option value="ielts">IELTS</option>
+                      <option value="toefl">TOEFL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="wz-fl" for="ca-w-texttype">Text Type / Rubric</label>
+                    <select id="ca-w-texttype"><option value="">Yükleniyor...</option></select>
+                  </div>
+                </div>
+                <p class="wz-note">Seçilen text type'ın rubric'i değerlendirmede kullanılır; öğrenci wizard'ı açtığında prompt ve rubric otomatik dolar.</p>
+                <div class="wz-two">
+                  <div>
+                    <label class="wz-fl" for="ca-w-level">Hedef Seviye</label>
+                    <select id="ca-w-level">
+                      <option value="">Serbest</option>
+                      <option value="A2">A2</option>
+                      <option value="B1">B1</option>
+                      <option value="B2">B2</option>
+                      <option value="C1">C1</option>
+                      <option value="C2">C2</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="wz-fl">Kelime aralığı (opsiyonel)</label>
+                    <div class="wz-two" style="gap:.5rem">
+                      <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="Min 250">
+                      <input type="number" id="ca-w-maxwords" min="50" max="3000" placeholder="Max 350">
+                    </div>
+                  </div>
+                </div>
+                <label class="wz-check"><input type="checkbox" id="ca-w-allow-draft" checked> <span>Öğrenci taslak kaydedip sonra teslim edebilsin</span></label>
+                <label class="wz-check"><input type="checkbox" id="ca-w-pre-feedback" checked> <span>Teslimden önce Gri geri bildirimi açık olsun</span></label>
+              </div>
+            </section>
+
+            <!-- B. Prompt ve Kaynak -->
+            <section class="wz-sec open" data-sec="b">
+              <button type="button" class="wz-sec-h"><span class="wz-tt"><span class="wz-sec-t">B · Prompt ve Kaynak</span><span class="wz-sec-hint">Görev metni + varsa görsel</span></span><span class="wz-chev" aria-hidden="true">▾</span></button>
+              <div class="wz-sec-b">
+                <label class="wz-fl" for="ca-w-prompt">Prompt</label>
+                <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
+
+                <!-- IELTS Task 1 görsel yükleme (JS ile show/hide) -->
+                <div id="ca-w-image-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px; border:1px dashed var(--line, #D9D2C4);">
+                  <label for="ca-w-image" style="font-family:var(--font-ui); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; color:var(--text-soft);">Task 1 Görseli <span style="color:var(--text-muted); font-weight:400; text-transform:none; letter-spacing:0; font-size:0.78rem;">(chart, graph, table — PNG/JPG/PDF, maks 5MB)</span></label>
+                  <input type="file" id="ca-w-image" accept="image/png,image/jpeg,image/jpg,application/pdf" style="display:block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.85rem;">
+                  <div id="ca-w-image-preview" style="margin-top:0.7rem;"></div>
+                  <p class="t-config-note" style="margin-top:0.5rem;">Öğrenci yazarken bu görseli prompt yanında görür.</p>
+                </div>
+
+                <!-- IELTS tam yazma: Task 2 ekle (sadece IELTS Task 1 secilince gorunur) -->
+                <div id="ca-w-combined-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px;">
+                  <label style="display:flex; align-items:center; gap:0.5rem; font-family:var(--font-ui); font-size:0.85rem; cursor:pointer;">
+                    <input type="checkbox" id="ca-w-combined"> Bu bir IELTS tam yazma, Task 2'yi de ekle
+                  </label>
+                  <div id="ca-w-task2-block" style="display:none; margin-top:0.8rem;">
+                    <label for="ca-w-prompt2">Task 2 Prompt</label>
+                    <textarea id="ca-w-prompt2" rows="4" maxlength="2000" placeholder="Some people believe... To what extent do you agree or disagree?"></textarea>
+                    <p class="t-config-note">Task 1 ve Task 2 ayrı gönderi olarak oluşturulur. Her biri kendi rubriğiyle ayrı değerlendirilir, öğrenci her birini ayrı yazar.</p>
+                  </div>
+                </div>
+                <p class="wz-note">Veriye dayalı Task 1 grafik oluşturucu ve Gri ile prompt taslağı yakında bu bölüme eklenecek.</p>
+              </div>
+            </section>
+
+            <!-- C. Dil Hedefleri -->
+            <section class="wz-sec" data-sec="c">
+              <button type="button" class="wz-sec-h"><span class="wz-tt"><span class="wz-sec-t">C · Dil Hedefleri</span><span class="wz-sec-hint">Kelime, bağlaç, register — opsiyonel</span></span><span class="wz-chev" aria-hidden="true">▾</span></button>
+              <div class="wz-sec-b">
+                <p class="wz-note" style="margin-top:0">Amaç kelime doldurmak değil; öğrenci bunları anlamlı ve doğru kullanmaya teşvik edilir. Yaz ve Enter'a bas.</p>
+                <label class="wz-fl">Zorunlu kelime/ifadeler</label>
+                <div class="wz-chips" id="ca-w-req" data-chips="[]"><input type="text" placeholder="yaz ve Enter"></div>
+                <label class="wz-fl">Önerilen kelime/ifadeler</label>
+                <div class="wz-chips" id="ca-w-sug" data-chips="[]"><input type="text" placeholder="yaz ve Enter"></div>
+                <label class="wz-fl">Bağlaç / geçiş ifadeleri</label>
+                <div class="wz-chips" id="ca-w-linking" data-chips="[]"><input type="text" placeholder="however, furthermore..."></div>
+                <label class="wz-fl">Gramer hedefleri</label>
+                <div class="wz-chips" id="ca-w-grammar" data-chips="[]"><input type="text" placeholder="passive, relative clause..."></div>
+                <div class="wz-two">
+                  <div>
+                    <label class="wz-fl" for="ca-w-register">Register</label>
+                    <select id="ca-w-register">
+                      <option value="">Belirtilmedi</option>
+                      <option value="formal">Formal</option>
+                      <option value="semi-formal">Semi-formal</option>
+                      <option value="informal">Informal</option>
+                      <option value="academic">Academic</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="wz-fl">Kaçınılacak ifadeler</label>
+                    <div class="wz-chips" id="ca-w-avoid" data-chips="[]"><input type="text" placeholder="yaz ve Enter"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- D. Değerlendirme ve Teslim -->
+            <section class="wz-sec" data-sec="d">
+              <button type="button" class="wz-sec-h"><span class="wz-tt"><span class="wz-sec-t">D · Değerlendirme ve Teslim</span><span class="wz-sec-hint">Rubric modeli + görünürlük — opsiyonel</span></span><span class="wz-chev" aria-hidden="true">▾</span></button>
+              <div class="wz-sec-b">
+                <label class="wz-fl" for="ca-w-rubric-model">Değerlendirme modeli</label>
+                <select id="ca-w-rubric-model">
+                  <option value="exam">Seçilen sınava uygun rubric</option>
+                  <option value="cefr">CEFR odaklı rubric</option>
+                  <option value="custom">Öğretmen özel rubric'i</option>
+                  <option value="none">Rubricsiz geri bildirim</option>
+                </select>
+                <p class="wz-note">Rubric oluşturucu (kriter ekle / ağırlık) sonraki adımda gelecek; şimdilik model seçimi kaydedilir.</p>
+                <label class="wz-check"><input type="checkbox" id="ca-w-show-rubric"> <span>Öğrenci rubric'i ödev başında görsün</span></label>
+                <label class="wz-check"><input type="checkbox" id="ca-w-ai-draft" checked> <span>Gri geri bildirimi taslak aşamasında gösterilsin</span></label>
+                <label class="wz-check"><input type="checkbox" id="ca-w-hold-result"> <span>Öğretmen notu yayımlanmadan öğrenci sonucu görmesin</span></label>
+                <label class="wz-check"><input type="checkbox" id="ca-w-allow-resubmit" checked> <span>Öğrenci düzeltip yeniden teslim edebilsin</span></label>
+              </div>
+            </section>
+
           </div>
-          <p class="t-config-note">Seçilen text type'ın rubric'i değerlendirmede kullanılır. Öğrenci wizard'ı açtığında prompt ve rubric otomatik dolar.</p>
-
-          <label for="ca-w-prompt">Prompt</label>
-          <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
-
-          <!-- IELTS Task 1 görsel yükleme (JS ile show/hide) -->
-          <div id="ca-w-image-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px; border:1px dashed var(--line, #D9D2C4);">
-            <label for="ca-w-image" style="font-family:var(--font-ui); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; color:var(--text-soft);">Task 1 Görseli <span style="color:var(--text-muted); font-weight:400; text-transform:none; letter-spacing:0; font-size:0.78rem;">(chart, graph, table — PNG/JPG/PDF, maks 5MB)</span></label>
-            <input type="file" id="ca-w-image" accept="image/png,image/jpeg,image/jpg,application/pdf" style="display:block; margin-top:0.5rem; font-family:var(--font-ui); font-size:0.85rem;">
-            <div id="ca-w-image-preview" style="margin-top:0.7rem;"></div>
-            <p class="t-config-note" style="margin-top:0.5rem;">Öğrenci yazarken bu görseli prompt yanında görür.</p>
-          </div>
-
-          <!-- IELTS tam yazma: Task 2 ekle (sadece IELTS Task 1 secilince gorunur) -->
-          <div id="ca-w-combined-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px;">
-            <label style="display:flex; align-items:center; gap:0.5rem; font-family:var(--font-ui); font-size:0.85rem; cursor:pointer;">
-              <input type="checkbox" id="ca-w-combined"> Bu bir IELTS tam yazma, Task 2'yi de ekle
-            </label>
-            <div id="ca-w-task2-block" style="display:none; margin-top:0.8rem;">
-              <label for="ca-w-prompt2">Task 2 Prompt</label>
-              <textarea id="ca-w-prompt2" rows="4" maxlength="2000" placeholder="Some people believe... To what extent do you agree or disagree?"></textarea>
-              <p class="t-config-note">Task 1 ve Task 2 ayrı gönderi olarak oluşturulur. Her biri kendi rubriğiyle ayrı değerlendirilir, öğrenci her birini ayrı yazar.</p>
-            </div>
-          </div>
-
-          <label for="ca-w-minwords">Minimum Kelime (Opsiyonel)</label>
-          <input type="number" id="ca-w-minwords" min="50" max="2000" placeholder="250">
-          <p class="t-config-note">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanabilir.</p>
+          <p class="wz-note" style="margin-top:.9rem">Öğrenci yazıyı değerlendirdiğinde ödev otomatik tamamlanır. Manuel "Tamamladım" da kullanılabilir. Yeni alanlar opsiyoneldir — eski Writing ödevleri etkilenmez.</p>
         </div>
 
         <!-- Reading config -->
@@ -6572,6 +6685,25 @@
           var minw = parseInt(document.getElementById('ca-w-minwords').value);
           if (minw && minw > 0) config.min_words = minw;
 
+          // Slice 1b — additive Writing alanları (hepsi opsiyonel; eski configleri etkilemez)
+          (function () {
+            var _v = function (id) { var e = document.getElementById(id); return e ? e.value : ''; };
+            var _c = function (id) { var e = document.getElementById(id); return !!(e && e.checked); };
+            var _chips = function (id) { var e = document.getElementById(id); if (!e) return []; try { return JSON.parse(e.dataset.chips || '[]'); } catch (x) { return []; } };
+            var lvl = _v('ca-w-level'); if (lvl) config.target_level = lvl;
+            var maxw = parseInt(_v('ca-w-maxwords'), 10); if (maxw && maxw > 0) config.max_words = maxw;
+            config.allow_draft = _c('ca-w-allow-draft');
+            config.pre_submit_feedback = _c('ca-w-pre-feedback');
+            var reg = _v('ca-w-register'); if (reg) config.register = reg;
+            var lt = { required: _chips('ca-w-req'), suggested: _chips('ca-w-sug'), linking: _chips('ca-w-linking'), grammar: _chips('ca-w-grammar'), avoid: _chips('ca-w-avoid') };
+            if (lt.required.length || lt.suggested.length || lt.linking.length || lt.grammar.length || lt.avoid.length) config.lang_targets = lt;
+            var rm = _v('ca-w-rubric-model'); if (rm) config.rubric_model = rm;
+            config.show_rubric_to_student = _c('ca-w-show-rubric');
+            config.ai_feedback_on_draft = _c('ca-w-ai-draft');
+            config.hold_result_until_teacher = _c('ca-w-hold-result');
+            config.allow_resubmit = _c('ca-w-allow-resubmit');
+          })();
+
           // IELTS Task 1 image upload (Storage'a yüklenip URL config.image_url'e konur)
           var imageInput = document.getElementById('ca-w-image');
           var imageSection = document.getElementById('ca-w-image-section');
@@ -6928,6 +7060,43 @@
       });
     }
     document.querySelectorAll('.ks-drawer-resizer').forEach(wire);
+  })();
+  </script>
+  <!-- Writing 4-bölüm accordion + chip input (Slice 1b) -->
+  <script>
+  (function () {
+    'use strict';
+    function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+    ready(function () {
+      var acc = document.getElementById('wz-acc');
+      if (acc) acc.addEventListener('click', function (e) {
+        var h = e.target.closest ? e.target.closest('.wz-sec-h') : null;
+        if (!h || !acc.contains(h)) return;
+        var sec = h.closest('.wz-sec'); if (sec) sec.classList.toggle('open');
+      });
+      [].forEach.call(document.querySelectorAll('#modal-create-assign .wz-chips'), function (box) {
+        var input = box.querySelector('input'); if (!input) return;
+        function get(){ try { return JSON.parse(box.dataset.chips || '[]'); } catch (e) { return []; } }
+        function set(arr){ box.dataset.chips = JSON.stringify(arr); paint(); }
+        function paint(){
+          [].forEach.call(box.querySelectorAll('.wz-chip'), function (c) { c.remove(); });
+          get().forEach(function (txt, i) {
+            var chip = document.createElement('span'); chip.className = 'wz-chip';
+            chip.appendChild(document.createTextNode(txt));
+            var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Kaldır'); b.textContent = '×';
+            b.addEventListener('click', function () { var a = get(); a.splice(i, 1); set(a); });
+            chip.appendChild(b);
+            box.insertBefore(chip, input);
+          });
+        }
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); var v = input.value.trim(); if (!v) return; var a = get(); if (a.indexOf(v) === -1) { a.push(v); set(a); } input.value = ''; }
+          else if (e.key === 'Backspace' && !input.value) { var a2 = get(); if (a2.length) { a2.pop(); set(a2); } }
+        });
+        box.addEventListener('click', function (e) { if (e.target === box) input.focus(); });
+        paint();
+      });
+    });
   })();
   </script>
 </body>

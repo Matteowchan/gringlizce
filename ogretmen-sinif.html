@@ -1964,6 +1964,15 @@
     #modal-create-assign .wz-two{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
     #modal-create-assign .wz-check{ display:flex; align-items:flex-start; gap:.5rem; font-family:var(--font-ui,Inter),sans-serif; font-size:.88rem; font-weight:400; letter-spacing:normal; text-transform:none; color:var(--text); cursor:pointer; margin:.7rem 0 0; line-height:1.4; }
     #modal-create-assign .wz-check span{ font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text); }
+    #modal-create-assign .wz-gen{ margin-top:.7rem }
+    #modal-create-assign .wz-gen-row{ display:flex; gap:.5rem; align-items:stretch }
+    #modal-create-assign .wz-gen-row input{ flex:1; margin:0 }
+    #modal-create-assign .wz-gen-btn{ flex:none; font-family:var(--font-ui,Inter),sans-serif; font-size:.84rem; font-weight:700; color:#fff; background:var(--teal,#2E6E6A); border:none; border-radius:9px; padding:.5rem .9rem; cursor:pointer; width:auto; text-transform:none; letter-spacing:normal }
+    #modal-create-assign .wz-gen-btn:hover{ background:var(--teal-deep,#123C39) }
+    #modal-create-assign .wz-gen-btn:disabled{ opacity:.6; cursor:default }
+    #modal-create-assign .wz-draft{ margin-top:.6rem; border:1px solid var(--gold,#B78A2E); background:var(--gold-soft,rgba(183,138,46,.08)); border-radius:11px; padding:.75rem .9rem }
+    #modal-create-assign .wz-draft-head{ margin-bottom:.4rem }
+    #modal-create-assign .wz-draft-body{ font-family:var(--font-prose,Georgia,serif); font-size:.95rem; line-height:1.55; color:var(--text,#241E17); white-space:pre-wrap }
     #modal-create-assign .wz-check input{ margin:.15rem 0 0!important; width:auto!important; flex:none; }
     #modal-create-assign .wz-approve-tag{ display:inline-block; font-size:.7rem; font-weight:700; color:var(--gold-deep,#8A6A22); background:var(--gold-soft,rgba(183,138,46,.15)); border-radius:6px; padding:.08rem .45rem; margin-left:.4rem; vertical-align:middle; }
     #modal-create-assign .wz-chips{ display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; border:1px solid var(--line); border-radius:10px; padding:.4rem .5rem; background:var(--bg-card); }
@@ -2381,6 +2390,15 @@
               <div class="wz-sec-b">
                 <label class="wz-fl" for="ca-w-prompt">Prompt</label>
                 <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
+
+                <!-- Gri ile prompt taslağı (Slice 3) -->
+                <div class="wz-gen">
+                  <div class="wz-gen-row">
+                    <input type="text" id="ca-w-topic" placeholder="Konu (ör. teknoloji ve eğitim)">
+                    <button type="button" id="ca-w-genbtn" class="wz-gen-btn">Gri ile taslak üret</button>
+                  </div>
+                  <div id="ca-w-genout" hidden></div>
+                </div>
 
                 <!-- IELTS Task 1 görsel yükleme (JS ile show/hide) -->
                 <div id="ca-w-image-section" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:var(--bg-soft, #EFE8D9); border-radius:6px; border:1px dashed var(--line, #D9D2C4);">
@@ -7102,6 +7120,50 @@
       });
       // Task 1 veri grafiği oluşturucu (Slice 2)
       try { if (window.GriChartBuilder) window.GriChartBuilder.init('#ca-w-chart'); } catch (e) {}
+
+      // Gri ile prompt taslağı (Slice 3) — üretilen taslak öğretmen onayı olmadan öğrenciye GİTMEZ
+      var _ge = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+      var genBtn = document.getElementById('ca-w-genbtn');
+      if (genBtn) genBtn.addEventListener('click', async function () {
+        var out = document.getElementById('ca-w-genout');
+        var topic = (document.getElementById('ca-w-topic').value || '').trim();
+        out.hidden = false;
+        if (!topic) { out.innerHTML = '<p class="wz-note" style="color:var(--incorrect,#B0342C)">Önce kısa bir konu yaz.</p>'; return; }
+        var examEl = document.getElementById('ca-w-exam'), ttSel = document.getElementById('ca-w-texttype');
+        var exam = examEl ? examEl.value : '';
+        var tt = (ttSel && ttSel.options[ttSel.selectedIndex]) ? (ttSel.options[ttSel.selectedIndex].dataset.displayName || ttSel.options[ttSel.selectedIndex].textContent) : '';
+        var lvl = (document.getElementById('ca-w-level') || {}).value || '';
+        genBtn.disabled = true; var _lbl = genBtn.textContent; genBtn.textContent = 'Üretiliyor…';
+        out.innerHTML = '<p class="wz-note">Gri taslak hazırlıyor…</p>';
+        try {
+          var sess = await window.sb.auth.getSession();
+          var tok = (sess && sess.data && sess.data.session) ? sess.data.session.access_token : null;
+          if (!tok) throw new Error('no session');
+          var r = await fetch('https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/gri-generate-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok, 'apikey': 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g' },
+            body: JSON.stringify({ exam: exam, text_type: tt, level: lvl, topic: topic })
+          });
+          var d = await r.json();
+          if (!d || !d.ok) { out.innerHTML = '<p class="wz-note" style="color:var(--incorrect,#B0342C)">Taslak üretilemedi' + (d && d.detail ? ': ' + _ge(d.detail) : '') + '.</p>'; return; }
+          var critHtml = (d.criteria && d.criteria.length) ? '<ul style="margin:.4rem 0 0;padding-left:1.1rem;font-size:.82rem;color:var(--text-soft,#6E6353)">' + d.criteria.map(function (c) { return '<li>' + _ge(c) + '</li>'; }).join('') + '</ul>' : '';
+          out.innerHTML =
+            '<div class="wz-draft"><div class="wz-draft-head"><span class="wz-approve-tag">Taslak · öğretmen onayı gerekir</span></div>' +
+            '<div class="wz-draft-body">' + _ge(d.prompt) + '</div>' +
+            (d.suggested_length ? '<p class="wz-note" style="margin-top:.5rem">Önerilen uzunluk: ' + _ge(d.suggested_length) + '</p>' : '') +
+            (critHtml ? '<p class="wz-note" style="margin-top:.4rem">Değerlendirme odakları:</p>' + critHtml : '') +
+            (d.note ? '<p class="wz-note" style="margin-top:.4rem;font-style:italic">' + _ge(d.note) + '</p>' : '') +
+            '<button type="button" class="wz-gen-btn" id="ca-w-usedraft" style="margin-top:.6rem">Prompt kutusuna aktar</button></div>';
+          var ud = document.getElementById('ca-w-usedraft');
+          if (ud) ud.addEventListener('click', function () {
+            var pEl = document.getElementById('ca-w-prompt');
+            pEl.value = d.prompt; pEl.focus();
+            out.innerHTML = '<p class="wz-note" style="color:var(--teal,#2C5856)">Taslak prompt kutusuna aktarıldı — gözden geçirip düzenleyebilirsin.</p>';
+          });
+        } catch (e) {
+          out.innerHTML = '<p class="wz-note" style="color:var(--incorrect,#B0342C)">Bağlantı hatası. Girişini kontrol edip tekrar dene.</p>';
+        } finally { genBtn.disabled = false; genBtn.textContent = _lbl; }
+      });
     });
   })();
   </script>

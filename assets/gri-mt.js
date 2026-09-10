@@ -97,7 +97,12 @@
   }
 
   var inflight = {};
+  // Statik site: yalnız GÖMÜLÜ sözlük (window.__MTMAP) + localStorage önbelleği.
+  // Çalışma-zamanı OpenAI çevirisi KAPALI (maliyet + istek-fırtınası/donma riski yok).
+  // Sözlükte olmayan metinler Türkçe kalır; sözlük büyütüldükçe kapsam artar.
+  var MT_RUNTIME_FETCH = false;
   function fetchMiss(keys, onEach) {
+    if (!MT_RUNTIME_FETCH) return;
     keys = keys.filter(function (k) { return !inflight[k]; });
     if (!keys.length) return;
     for (var i = 0; i < keys.length; i += 80) {

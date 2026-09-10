@@ -1178,7 +1178,7 @@
   <script src="assets/nav.js?v=42"></script>
   <script src="assets/track.js?v=4" defer></script>
   <script src="assets/gri-chart.js?v=2"></script>
-  <script src="assets/gri-writing-report.js?v=2"></script>
+  <script src="assets/gri-writing-report.js?v=3"></script>
 </head>
 <body data-cat="ib">
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
@@ -2617,6 +2617,30 @@
         var _lt4 = _cfg4 && _cfg4.lang_targets;
         var _txt4 = (document.getElementById('wizText') || {}).value || '';
         if (_lt4 && _txt4.trim().length > 40 && window.GriWritingReport && window.GriWritingReport.renderKeywords) classifyTargets(_txt4, _lt4);
+      } catch (e) {}
+      // Slice 5 — ödev modunda ilk→final taslak önce/sonra görünümü
+      try { if (state.assignment && state.assignment.id) loadProgress(); } catch (e) {}
+    }
+
+    async function loadProgress() {
+      try {
+        var sess = await sb.auth.getSession();
+        var uid = (sess && sess.data && sess.data.session) ? sess.data.session.user.id : null;
+        if (!uid) return;
+        var q = await sb.from('user_saved_writings').select('text, saved_at')
+          .eq('user_id', uid).eq('assignment_id', state.assignment.id)
+          .order('saved_at', { ascending: true }).limit(50);
+        var rows = (q && q.data) || [];
+        if (rows.length < 2) return;
+        var first = rows[0].text || '', last = rows[rows.length - 1].text || '';
+        if (first.trim() === last.trim() || !window.GriWritingReport || !window.GriWritingReport.renderProgress) return;
+        var ph = window.GriWritingReport.renderProgress(first, last);
+        var fb = document.getElementById('feedbackBody');
+        var gwr = fb && fb.querySelector('.gwr');
+        if (gwr && ph) {
+          gwr.insertAdjacentHTML('beforeend', ph);
+          var soon = gwr.querySelector('.gwr-soon'); if (soon) soon.style.display = 'none';
+        }
       } catch (e) {}
     }
 

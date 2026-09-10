@@ -115,7 +115,12 @@
       '.gwr-kw .ks.ok{background:var(--correct-soft,rgba(44,110,73,.14));color:var(--correct,#2C6E49)}' +
       '.gwr-kw .ks.weak{background:var(--gold-soft,rgba(183,138,46,.16));color:var(--gold-deep,#8A6A22)}' +
       '.gwr-kw .ks.unused{background:var(--bg-card,#FBF6EC);color:var(--text-muted,#8B7F6B)}' +
-      '.gwr-kw .ks.bad{background:var(--incorrect-soft,rgba(176,52,44,.12));color:var(--incorrect,#B0342C)}';
+      '.gwr-kw .ks.bad{background:var(--incorrect-soft,rgba(176,52,44,.12));color:var(--incorrect,#B0342C)}' +
+      '.gwr-prog-meta{font-size:.82rem;color:var(--text-soft,#6E6353);margin:0 0 .6rem;font-variant-numeric:tabular-nums}' +
+      '.gwr-add-t{color:var(--correct,#2C6E49);font-weight:700}.gwr-del-t{color:var(--incorrect,#B0342C);font-weight:700}' +
+      '.gwr-prog-body{font-family:var(--font-prose,Georgia,serif);font-size:.98rem;line-height:1.75;color:var(--text,#241E17);max-height:340px;overflow:auto;background:var(--bg-soft,#F4EFE3);border:1px solid var(--line,#E3D8C3);border-radius:10px;padding:.8rem .95rem}' +
+      '.gwr-add{background:var(--correct-soft,rgba(44,110,73,.16));color:var(--correct,#2C6E49);text-decoration:none;border-radius:3px;padding:0 1px}' +
+      '.gwr-del{background:var(--incorrect-soft,rgba(176,52,44,.1));color:var(--incorrect,#B0342C);text-decoration:line-through;border-radius:3px;padding:0 1px}';
     document.head.appendChild(s);
   }
 
@@ -209,5 +214,43 @@
       '<p class="gwr-caveat">Puan yalnızca kelimenin geçmesine göre değil; bağlam, doğruluk ve doğal kullanım birlikte değerlendirilir.</p></div>';
   }
 
-  window.GriWritingReport = { render: render, fromEvaluation: fromEvaluation, cefrFromBand: cefrFromBand, renderKeywords: renderKeywords };
+  // Slice 5 — kelime düzeyi diff (LCS) ile önce/sonra
+  function words(t) { return String(t || '').trim().split(/\s+/).filter(Boolean); }
+  function lcsDiff(A, B) {
+    var n = A.length, m = B.length, i, j;
+    var dp = []; for (i = 0; i <= n; i++) { dp[i] = new Array(m + 1); for (j = 0; j <= m; j++) dp[i][j] = 0; }
+    for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--) dp[i][j] = (A[i] === B[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    var ops = []; i = 0; j = 0;
+    while (i < n && j < m) {
+      if (A[i] === B[j]) { ops.push({ w: B[j], op: 'same' }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ w: A[i], op: 'del' }); i++; }
+      else { ops.push({ w: B[j], op: 'add' }); j++; }
+    }
+    while (i < n) { ops.push({ w: A[i], op: 'del' }); i++; }
+    while (j < m) { ops.push({ w: B[j], op: 'add' }); j++; }
+    return ops;
+  }
+  function renderProgress(first, final) {
+    var A = words(first), B = words(final);
+    if (!A.length || !B.length) return '';
+    ensureStyle();
+    var ops = (A.length + B.length > 1600) ? null : lcsDiff(A, B); // çok uzun metinde diff'i atla
+    var added = 0, removed = 0, body;
+    if (ops) {
+      body = ops.map(function (o) {
+        if (o.op === 'add') { added++; return '<ins class="gwr-add">' + esc(o.w) + '</ins>'; }
+        if (o.op === 'del') { removed++; return '<del class="gwr-del">' + esc(o.w) + '</del>'; }
+        return esc(o.w);
+      }).join(' ');
+    } else {
+      body = esc(final);
+    }
+    return '<div class="gwr-card" style="margin-bottom:1.1rem"><h3>İlk → Final Taslak</h3>' +
+      '<p class="gwr-prog-meta">' + A.length + ' → ' + B.length + ' kelime' +
+      (ops ? ' · <span class="gwr-add-t">' + added + ' eklendi</span> · <span class="gwr-del-t">' + removed + ' çıkarıldı</span>' : '') + '</p>' +
+      '<div class="gwr-prog-body">' + body + '</div>' +
+      '<p class="gwr-caveat">Yeşil eklenen, üstü çizili çıkarılan sözcükler. İlk taslağınla final teslimini karşılaştırır.</p></div>';
+  }
+
+  window.GriWritingReport = { render: render, fromEvaluation: fromEvaluation, cefrFromBand: cefrFromBand, renderKeywords: renderKeywords, renderProgress: renderProgress };
 })();

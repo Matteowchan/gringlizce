@@ -144,6 +144,28 @@
     return svgWrap(g, altText(spec));
   }
 
+  /* ---------- RADAR (rubric profili) ---------- */
+  function renderRadar(spec) {
+    var axes = cats(spec), ser = seriesList(spec);
+    var maxV = num(spec.max) || 0;
+    if (!maxV) { ser.forEach(function (s) { s.values.forEach(function (v) { if (v > maxV) maxV = v; }); }); maxV = niceMax(maxV); }
+    var cx = W / 2, cy = 205, r = 120, n = Math.max(3, axes.length);
+    var ang = function (i) { return -Math.PI / 2 + i * 2 * Math.PI / n; };
+    var pt = function (i, frac) { return [(cx + r * frac * Math.cos(ang(i))).toFixed(1), (cy + r * frac * Math.sin(ang(i))).toFixed(1)]; };
+    var g = '';
+    if (spec.title) g += '<text x="' + (W / 2) + '" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="var(--text,#241E17)">' + esc(spec.title) + '</text>';
+    var i, t;
+    for (t = 1; t <= 4; t++) { var poly = ''; for (i = 0; i < n; i++) { var p = pt(i, t / 4); poly += (i ? ' ' : '') + p[0] + ',' + p[1]; } g += '<polygon points="' + poly + '" fill="none" stroke="var(--line,#E3D8C3)" stroke-width="1"/>'; }
+    for (i = 0; i < n; i++) { var e = pt(i, 1); g += '<line x1="' + cx + '" y1="' + cy + '" x2="' + e[0] + '" y2="' + e[1] + '" stroke="var(--line,#E3D8C3)" stroke-width="1"/>'; var lp = pt(i, 1.16), la = ang(i), anch = Math.abs(Math.cos(la)) < 0.3 ? 'middle' : (Math.cos(la) > 0 ? 'start' : 'end'); g += '<text x="' + lp[0] + '" y="' + (parseFloat(lp[1]) + 3).toFixed(1) + '" text-anchor="' + anch + '" font-family="Inter,sans-serif" font-size="10.5" fill="var(--text-soft,#6E6353)">' + esc(axes[i] || '') + '</text>'; }
+    ser.forEach(function (s, si) {
+      var poly = '', col = color(si), j;
+      for (j = 0; j < n; j++) { var frac = maxV > 0 ? Math.min(1, num(s.values[j]) / maxV) : 0; var q = pt(j, frac); poly += (j ? ' ' : '') + q[0] + ',' + q[1]; }
+      g += '<polygon points="' + poly + '" fill="' + col + '" fill-opacity="0.18" stroke="' + col + '" stroke-width="2"/>';
+      for (j = 0; j < n; j++) { var f2 = maxV > 0 ? Math.min(1, num(s.values[j]) / maxV) : 0; var q2 = pt(j, f2); g += '<circle cx="' + q2[0] + '" cy="' + q2[1] + '" r="3" fill="' + col + '"><title>' + esc((axes[j] || '') + ': ' + fmt(s.values[j], spec.unit)) + '</title></circle>'; }
+    });
+    return svgWrap(g, altText(spec));
+  }
+
   /* ---------- TABLE ---------- */
   function renderTable(spec) {
     var cols = Array.isArray(spec.columns) ? spec.columns : [];
@@ -174,7 +196,7 @@
   function altText(spec) {
     if (spec.alt && String(spec.alt).trim()) return String(spec.alt).trim();
     var t = spec.type, c = cats(spec), ser = seriesList(spec);
-    var tname = { bar: 'Sütun grafiği', line: 'Çizgi grafiği', pie: 'Pasta grafiği', donut: 'Halka grafiği', table: 'Tablo', process: 'Süreç şeması' }[t] || 'Grafik';
+    var tname = { bar: 'Sütun grafiği', line: 'Çizgi grafiği', pie: 'Pasta grafiği', donut: 'Halka grafiği', radar: 'Radar grafiği', table: 'Tablo', process: 'Süreç şeması' }[t] || 'Grafik';
     var parts = [tname + (spec.title ? ': ' + spec.title : '') + '.'];
     if (t === 'table') {
       parts.push((spec.columns || []).join(', ') + ' sütunlu, ' + (spec.rows || []).length + ' satırlık tablo.');
@@ -184,6 +206,8 @@
       var vals = c.map(function (_, i) { return num(ser[0].values[i]); });
       var total = vals.reduce(function (a, b) { return a + b; }, 0) || 1;
       parts.push(c.map(function (cat, i) { return cat + ' %' + Math.round(vals[i] / total * 100); }).join(', ') + '.');
+    } else if (t === 'radar') {
+      parts.push(c.map(function (ax, i) { return ax + ': ' + fmt(ser[0].values[i], spec.unit); }).join(', ') + '.');
     } else {
       // bar/line: describe each series' range
       ser.forEach(function (s) {
@@ -207,12 +231,14 @@
       case 'line': body = renderLine(spec); break;
       case 'pie': body = renderPie(spec, false); break;
       case 'donut': body = renderPie(spec, true); break;
+      case 'radar': body = renderRadar(spec); break;
       case 'table': body = renderTable(spec); break;
       case 'process': body = renderProcess(spec); break;
       default: return '';
     }
-    var isChart = /^(bar|line|pie|donut)$/.test(spec.type);
-    var leg = isChart ? legend(seriesList(spec).map(function (s) { return s.name; })) : '';
+    var isChart = /^(bar|line|pie|donut|radar)$/.test(spec.type);
+    var leg = (isChart && spec.type !== 'radar') ? legend(seriesList(spec).map(function (s) { return s.name; })) : '';
+    if (spec.type === 'radar' && seriesList(spec).length > 1) leg = legend(seriesList(spec).map(function (s) { return s.name; }));
     // pie/donut legend uses categories, not series
     if (spec.type === 'pie' || spec.type === 'donut') leg = legend(cats(spec));
     ensureStyle();

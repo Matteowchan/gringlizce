@@ -85,12 +85,12 @@ def load_existing():
     except Exception: return {}
 
 def extract_curriculum(keys):
-    """curriculum.js EXAMS/tools/units/lessons — Turkish string literals."""
+    """curriculum.js EXAMS/tools/units/lessons — alan-hedefli (desc/name/label/intro/lead/hint)."""
     path = os.path.join(ROOT, "assets", "curriculum.js")
     if not os.path.exists(path): return
     src = open(path, encoding="utf-8").read()
-    for m in re.finditer(r'"((?:[^"\\]|\\.){2,400})"|\'((?:[^\'\\]|\\.){2,400})\'', src):
-        s = (m.group(1) or m.group(2) or "").strip()
+    for m in re.finditer(r'(?:desc|name|label|intro|lead|hint)\s*:\s*"([^"\\]{2,600})"', src):
+        s = m.group(1).strip()
         if s and ok(s) and is_tr(s): keys.add(key_of(s))
 
 # Öğrenme haritası / ünite sayfası render'larındaki elle-yazılı arayüz etiketleri

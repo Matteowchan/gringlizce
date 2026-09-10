@@ -255,6 +255,8 @@
     // 6) pill durumları
     var pills = document.querySelectorAll(".gri-lang [data-setlang]");
     for (var p = 0; p < pills.length; p++) pills[p].setAttribute("aria-pressed", pills[p].getAttribute("data-setlang") === lang ? "true" : "false");
+    // 7) JS-üretilen/gövde içeriği: gömülü sözlükle çevir (dictionary-only, ağsız/maliyetsiz)
+    try { runMT(lang); } catch (e) {}
   }
 
   /* Dil pili tıklaması: TAMAMEN yerinde (in-page) çeviri — Google/proxy/runtime-API YOK.
@@ -267,9 +269,9 @@
     if (window.GriMT) { try { window.GriMT.apply(lang); } catch (e) {} return; }
     if (lang !== "en") return;
     if (_mtLoading) return; _mtLoading = true;
-    function applier() { _loadScript("assets/gri-mt.js?v=3", function () { try { window.GriMT.apply(getLang()); } catch (e) {} }); }
+    function applier() { _loadScript("assets/gri-mt.js?v=4", function () { try { window.GriMT.apply(getLang()); } catch (e) {} }); }
     // Ağır gömülü sözlüğü yalnız JS-içerikli (öğren vb.) sayfalarda yükle; diğerlerinde hızlı fallback yeter
-    if (document.getElementById("data")) { _loadScript("assets/gri-i18n-map.js?v=1", applier); }
+    if (document.getElementById("data")) { _loadScript("assets/gri-i18n-map.js?v=1", function () { _loadScript("assets/gri-i18n-extra.js?v=1", applier); }); }
     else { applier(); }
   }
 

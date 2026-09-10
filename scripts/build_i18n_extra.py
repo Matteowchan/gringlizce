@@ -101,6 +101,10 @@ MANUAL = [
     "Gün Seri","Bu Hafta Ders","Rozet","Yer imi (en uste al)","Ünite Testi","Alıştırma","Alistirma",
     "Nereye gideceğini bil,","her adımda ilerle.","Ücretsiz Başla, İstersen Premium",
     "Çıkarım (inference) soruları","Merkezi fikir ve ayrıntı","Tuzak Pusulası","İlgisiz","Ters yön",
+    "Bu içerik giriş gerektirir","SAT unitelerini calismak icin ucretsiz hesabinla giris yap. Giristen sonra bu sayfaya geri donersin.",
+    "Ünitelerini çalışmak için ücretsiz hesabınla giriş yap. Girişten sonra bu sayfaya geri dönersin.",
+    "Üyelere özel","Yükleniyor","Giriş yap ve devam et","Ücretsiz hesap aç","Bu sayfaya geri dönersin.",
+    "hazırlanıyor","Yakında","Aktif","Devam et","Geri dön","Tamamlandı",
 ]
 
 def main():

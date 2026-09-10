@@ -105,7 +105,17 @@
       '.gwr-fb.teacher{border-left-color:var(--gold,#B78A2E)}' +
       '.gwr-fb h3{margin-bottom:.4rem}' +
       '.gwr-fb p{font-size:.95rem;line-height:1.65;margin:0;color:var(--text,#241E17)}' +
-      '.gwr-soon{font-size:.82rem;color:var(--text-muted,#8B7F6B);background:var(--bg-soft,#F4EFE3);border:1px dashed var(--line,#E3D8C3);border-radius:10px;padding:.7rem .85rem;margin:0}';
+      '.gwr-soon{font-size:.82rem;color:var(--text-muted,#8B7F6B);background:var(--bg-soft,#F4EFE3);border:1px dashed var(--line,#E3D8C3);border-radius:10px;padding:.7rem .85rem;margin:0}' +
+      '.gwr-kw-group{margin:0 0 .7rem}.gwr-kw-group:last-child{margin-bottom:0}' +
+      '.gwr-kw-gl{font-size:.74rem;font-weight:700;letter-spacing:.04em;color:var(--text-muted,#8B7F6B);margin:0 0 .35rem}' +
+      '.gwr-kw-list{display:flex;flex-wrap:wrap;gap:.4rem}' +
+      '.gwr-kw{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--line,#E3D8C3);border-radius:999px;padding:.2rem .3rem .2rem .65rem;font-size:.84rem;background:var(--bg-soft,#F4EFE3)}' +
+      '.gwr-kw .kt{font-weight:600;color:var(--text,#241E17)}' +
+      '.gwr-kw .ks{font-size:.7rem;font-weight:700;border-radius:999px;padding:.08rem .45rem}' +
+      '.gwr-kw .ks.ok{background:var(--correct-soft,rgba(44,110,73,.14));color:var(--correct,#2C6E49)}' +
+      '.gwr-kw .ks.weak{background:var(--gold-soft,rgba(183,138,46,.16));color:var(--gold-deep,#8A6A22)}' +
+      '.gwr-kw .ks.unused{background:var(--bg-card,#FBF6EC);color:var(--text-muted,#8B7F6B)}' +
+      '.gwr-kw .ks.bad{background:var(--incorrect-soft,rgba(176,52,44,.12));color:var(--incorrect,#B0342C)}';
     document.head.appendChild(s);
   }
 
@@ -165,10 +175,39 @@
     if (data.teacherNote) h += '<div class="gwr-card gwr-fb teacher" style="margin-bottom:1.1rem"><h3>Öğretmen Notu</h3><p>' + esc(data.teacherNote) + '</p></div>';
 
     // keyword report + önce/sonra → sonraki slice'lar
-    h += '<p class="gwr-soon">Anahtar kelime / hedef-dil raporu ve ilk–final taslak karşılaştırması sonraki adımlarda bu rapora eklenecek.</p>';
+    h += '<p class="gwr-soon">İlk–final taslak (önce/sonra) karşılaştırması sonraki adımda bu rapora eklenecek.</p>';
     h += '</div>';
     return h;
   }
 
-  window.GriWritingReport = { render: render, fromEvaluation: fromEvaluation, cefrFromBand: cefrFromBand };
+  var KIND_LABEL = { required: 'Zorunlu', suggested: 'Önerilen', linking: 'Bağlaç / geçiş', grammar: 'Gramer hedefi', avoid: 'Kaçınılacak' };
+  // her hedef için (kind'a duyarlı) etiket + renk sınıfı
+  function statusView(kind, status) {
+    if (kind === 'avoid') {
+      return status === 'unused' ? { c: 'ok', t: 'Kaçınıldı' } : { c: 'bad', t: 'Kullanılmış' };
+    }
+    if (status === 'correct') return { c: 'ok', t: 'Doğru kullanıldı' };
+    if (status === 'weak') return { c: 'weak', t: 'Zayıf / bağlam' };
+    if (status === 'overused') return { c: 'bad', t: 'Fazla tekrar' };
+    return { c: 'unused', t: 'Kullanılmadı' };
+  }
+  // Slice 4 — hedef dil sınıflandırma kartı (results: [{term,kind,status}])
+  function renderKeywords(results) {
+    if (!Array.isArray(results) || !results.length) return '';
+    ensureStyle();
+    var groups = {};
+    results.forEach(function (r) { (groups[r.kind] = groups[r.kind] || []).push(r); });
+    var order = ['required', 'suggested', 'linking', 'grammar', 'avoid'];
+    var inner = order.filter(function (k) { return groups[k]; }).map(function (k) {
+      var chips = groups[k].map(function (r) {
+        var v = statusView(k, r.status);
+        return '<span class="gwr-kw"><span class="kt">' + esc(r.term) + '</span><span class="ks ' + v.c + '">' + v.t + '</span></span>';
+      }).join('');
+      return '<div class="gwr-kw-group"><p class="gwr-kw-gl">' + esc(KIND_LABEL[k] || k) + '</p><div class="gwr-kw-list">' + chips + '</div></div>';
+    }).join('');
+    return '<div class="gwr-card" style="margin-bottom:1.1rem"><h3>Hedef Dil Kullanımı</h3>' + inner +
+      '<p class="gwr-caveat">Puan yalnızca kelimenin geçmesine göre değil; bağlam, doğruluk ve doğal kullanım birlikte değerlendirilir.</p></div>';
+  }
+
+  window.GriWritingReport = { render: render, fromEvaluation: fromEvaluation, cefrFromBand: cefrFromBand, renderKeywords: renderKeywords };
 })();

@@ -1178,7 +1178,7 @@
   <script src="assets/nav.js?v=42"></script>
   <script src="assets/track.js?v=4" defer></script>
   <script src="assets/gri-chart.js?v=2"></script>
-  <script src="assets/gri-writing-report.js?v=1"></script>
+  <script src="assets/gri-writing-report.js?v=2"></script>
 </head>
 <body data-cat="ib">
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
@@ -2610,6 +2610,36 @@
         '<p class="pw-note">Her yazı değerlendirmesi 10 Gri Token tüketir. Her soru açıklaması 1 Gri Token tüketir.</p>' +
         '</div>';
       document.getElementById('feedbackBody').innerHTML = html;
+
+      // Slice 4 — ödevde hedef dil öğeleri varsa sınıflandır ve rapora ekle
+      try {
+        var _cfg4 = state.assignment && state.assignment.config;
+        var _lt4 = _cfg4 && _cfg4.lang_targets;
+        var _txt4 = (document.getElementById('wizText') || {}).value || '';
+        if (_lt4 && _txt4.trim().length > 40 && window.GriWritingReport && window.GriWritingReport.renderKeywords) classifyTargets(_txt4, _lt4);
+      } catch (e) {}
+    }
+
+    async function classifyTargets(text, targets) {
+      try {
+        var sess = await sb.auth.getSession();
+        var tok = (sess && sess.data && sess.data.session) ? sess.data.session.access_token : null;
+        if (!tok) return;
+        var r = await fetch(SUPABASE_URL + '/functions/v1/gri-classify-targets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ text: text, targets: targets })
+        });
+        var d = await r.json();
+        if (!d || !d.ok || !d.results || !d.results.length) return;
+        var kwHtml = window.GriWritingReport.renderKeywords(d.results);
+        var fb = document.getElementById('feedbackBody');
+        if (fb && kwHtml) {
+          var gwr = fb.querySelector('.gwr');
+          if (gwr) gwr.insertAdjacentHTML('beforeend', kwHtml);
+          else fb.insertAdjacentHTML('afterbegin', kwHtml);
+        }
+      } catch (e) {}
     }
 
     function computeTotal(scores) {

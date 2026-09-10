@@ -1177,7 +1177,8 @@
   <script src="assets/curriculum.js?v=30"></script>
   <script src="assets/nav.js?v=42"></script>
   <script src="assets/track.js?v=4" defer></script>
-  <script src="assets/gri-chart.js?v=1"></script>
+  <script src="assets/gri-chart.js?v=2"></script>
+  <script src="assets/gri-writing-report.js?v=1"></script>
 </head>
 <body data-cat="ib">
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
@@ -2513,6 +2514,22 @@
       }
 
       html += costMsg;
+
+      // Yazma Raporu (Slice 6) — görsel özet (rubric radar, CEFR tahmini, hedefler)
+      if (window.GriWritingReport) {
+        try {
+          var _labels = {};
+          criteria.forEach(function (c) { if (c && c.key) _labels[c.key] = c.label || c.key; });
+          var _rep = window.GriWritingReport.fromEvaluation(ev, {
+            exam: (state.textType && state.textType.exam) || state.exam || '',
+            textType: (state.textType && state.textType.text_type) || '',
+            totalScore: totalScore, totalMax: totalMax,
+            criterionMax: (criteria[0] && criteria[0].max) || 0,
+            labels: _labels, status: 'ai'
+          });
+          html += window.GriWritingReport.render(_rep);
+        } catch (e) {}
+      }
 
       // Total score
       html += '<div class="wiz-total-card">' +

@@ -13,7 +13,7 @@ OUT = os.path.join(ROOT, "assets", "gri-i18n-extra.js")
 # pages to process passed as argv (basenames without .html); default = IELTS content pages
 DEFAULT = ["ielts-ogren-reading","ielts-ogren-listening","ielts-ogren-speaking",
            "ielts-writing-task1","ielts-writing-task2","ielts-gramer","ielts-kelime","ielts-spelling"]
-PAGES = sys.argv[1:] or DEFAULT
+PAGES = [a for a in sys.argv[1:] if not a.startswith("--")] or DEFAULT
 
 TR_CHARS = re.compile(r"[ğışöüçĞİÖŞÜÇ]")
 TR_WORDS = re.compile(r"\b(ve|bir|bu|için|ile|olarak|daha|çok|ama|gibi|sonra|önce|kadar|soru|cevap|konu|puan|beceri|yaz|oku|hangi|ile|değil|olan|nasıl)\b", re.I)
@@ -79,10 +79,29 @@ def translate_batch(texts):
 def load_existing():
     if not os.path.exists(OUT): return {}
     txt = open(OUT, encoding="utf-8").read()
-    m = re.search(r"__MTMAP\|\|\{\},\s*(\{[\s\S]*\})\s*\);", txt)
+    m = re.search(r"__MTMAP\s*\|\|\s*\{\}\s*,\s*(\{[\s\S]*\})\s*\)\s*;", txt)
     if not m: return {}
     try: return json.loads(m.group(1))
     except Exception: return {}
+
+def extract_curriculum(keys):
+    """curriculum.js EXAMS/tools/units/lessons — Turkish string literals."""
+    path = os.path.join(ROOT, "assets", "curriculum.js")
+    if not os.path.exists(path): return
+    src = open(path, encoding="utf-8").read()
+    for m in re.finditer(r'"((?:[^"\\]|\\.){2,400})"|\'((?:[^\'\\]|\\.){2,400})\'', src):
+        s = (m.group(1) or m.group(2) or "").strip()
+        if s and ok(s) and is_tr(s): keys.add(key_of(s))
+
+# Öğrenme haritası / ünite sayfası render'larındaki elle-yazılı arayüz etiketleri
+MANUAL = [
+    "Basla","Ac","hazirlaniyor","aktif","yakinda","Sayfaya git","Alıştırmaya geç","SAT modülüne dön",
+    "Konu anlatımı","Ne ölçülüyor","Bu bölümde neler var","Başlarken","Öğren","Görevler","İpuçları",
+    "Çalışma alanın","Nereden başlarsın","Sınavını seç, ilk konuu aç","bir sınava tıkla, konuları ve araçları gör",
+    "Gün Seri","Bu Hafta Ders","Rozet","Yer imi (en uste al)","Ünite Testi","Alıştırma","Alistirma",
+    "Nereye gideceğini bil,","her adımda ilerle.","Ücretsiz Başla, İstersen Premium",
+    "Çıkarım (inference) soruları","Merkezi fikir ve ayrıntı","Tuzak Pusulası","İlgisiz","Ters yön",
+]
 
 def main():
     existing = load_existing()
@@ -92,6 +111,12 @@ def main():
         ks = extract_page(base)
         print(f"  {base}: {len(ks)} TR strings", flush=True)
         all_keys |= ks
+    if "--curriculum" in sys.argv or PAGES is DEFAULT:
+        before = len(all_keys); extract_curriculum(all_keys)
+        for s in MANUAL:
+            s2 = key_of(s)
+            if ok(s2): all_keys.add(s2)
+        print(f"  curriculum.js + manual UI: +{len(all_keys)-before} strings", flush=True)
     todo = sorted(k for k in all_keys if k not in existing)
     print(f"total unique TR: {len(all_keys)}, new to translate: {len(todo)}", flush=True)
     result = dict(existing)

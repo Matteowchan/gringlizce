@@ -1177,6 +1177,7 @@
   <script src="assets/curriculum.js?v=30"></script>
   <script src="assets/nav.js?v=42"></script>
   <script src="assets/track.js?v=4" defer></script>
+  <script src="assets/gri-chart.js?v=1"></script>
 </head>
 <body data-cat="ib">
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WN2KGM8J"
@@ -2030,6 +2031,15 @@
             aImgHtml = '<img src="' + aCfgImg.image_url + '" alt="Task 1 görseli" style="max-width:100%;border:1px solid var(--line,#D9D2C4);border-radius:6px;margin-top:0.9rem;display:block;">';
           }
           ptElA.innerHTML += aImgHtml;
+        }
+        // Task 1 veri grafiği (Slice 2) — öğretmenin oluşturduğu deterministik grafik varsa göster
+        if (aCfgImg && aCfgImg.chart && window.GriChart) {
+          try {
+            var chDiv = document.createElement('div');
+            chDiv.style.marginTop = '0.9rem';
+            chDiv.innerHTML = window.GriChart.render(aCfgImg.chart);
+            ptElA.appendChild(chDiv);
+          } catch (e) {}
         }
         // Yeni prompt butonunu gizle (öğretmen prompt'unu zorunlu kıl)
         var npb = document.getElementById('newPromptBtn');

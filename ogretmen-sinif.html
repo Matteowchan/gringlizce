@@ -25,6 +25,8 @@
   <script src="assets/auth.js"></script>
   <script src="assets/gri-cat.js"></script>
   <script src="assets/gri-ogretmen-ipuclari.js?v=1" defer></script>
+  <script src="assets/gri-chart.js?v=1" defer></script>
+  <script src="assets/gri-chart-builder.js?v=1" defer></script>
   <script src="assets/site-config.js?v=8" defer></script>
   <style>
     /* ============ Shared with ogretmen.html ============ */
@@ -2397,7 +2399,9 @@
                     <p class="t-config-note">Task 1 ve Task 2 ayrı gönderi olarak oluşturulur. Her biri kendi rubriğiyle ayrı değerlendirilir, öğrenci her birini ayrı yazar.</p>
                   </div>
                 </div>
-                <p class="wz-note">Veriye dayalı Task 1 grafik oluşturucu ve Gri ile prompt taslağı yakında bu bölüme eklenecek.</p>
+                <!-- Task 1 veri grafiği oluşturucu (Slice 2) -->
+                <div id="ca-w-chart"></div>
+                <p class="wz-note">Gri ile prompt taslağı üretme yakında bu bölüme eklenecek.</p>
               </div>
             </section>
 
@@ -6701,6 +6705,7 @@
             config.ai_feedback_on_draft = _c('ca-w-ai-draft');
             config.hold_result_until_teacher = _c('ca-w-hold-result');
             config.allow_resubmit = _c('ca-w-allow-resubmit');
+            try { var _cs = window.GriChartBuilder && window.GriChartBuilder.getSpec(); if (_cs) config.chart = _cs; } catch (e) {}
           })();
 
           // IELTS Task 1 image upload (Storage'a yüklenip URL config.image_url'e konur)
@@ -7095,6 +7100,8 @@
         box.addEventListener('click', function (e) { if (e.target === box) input.focus(); });
         paint();
       });
+      // Task 1 veri grafiği oluşturucu (Slice 2)
+      try { if (window.GriChartBuilder) window.GriChartBuilder.init('#ca-w-chart'); } catch (e) {}
     });
   })();
   </script>

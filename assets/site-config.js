@@ -63,24 +63,76 @@
     } catch (e) { return '#ffffff'; }
   }
 
+  function applyBg(el, b) {
+    if (b.v === 2 && b.bg) {
+      el.style.background = b.bg;
+      el.style.color = b.color ? '' : bannerContrast(b.bg);
+    } else {
+      el.style.background = '';
+      el.style.color = '';
+    }
+  }
+
+  // Aktif dil (nav applyLang <html lang> ayarlar; yoksa store; yoksa tr)
+  function currentLang() {
+    try { var l = document.documentElement.getAttribute('lang'); if (l === 'en' || l === 'tr') return l; } catch (e) {}
+    try { var s = localStorage.getItem('gri-blog-lang'); if (s === 'en' || s === 'tr') return s; } catch (e) {}
+    return 'tr';
+  }
+
+  // Günlük rotasyon: gün sayısına göre deterministik seçim (UTC gününe göre 1 mesaj/gün)
+  function pickRotatorMessage(rot) {
+    if (!rot || !rot.enabled) return null;
+    var msgs = rot.messages;
+    if (!Array.isArray(msgs) || !msgs.length) return null;
+    var day = Math.floor(Date.now() / 86400000);
+    var n = msgs.length;
+    var idx = ((day % n) + n) % n;
+    return msgs[idx];
+  }
+
+  var _lastCfg = null;
+
   function applyBanner(cfg) {
-    var banner = cfg.banner || { enabled: false, text: '' };
+    _lastCfg = cfg || _lastCfg || {};
+    var banner = _lastCfg.banner || { enabled: false, text: '' };
+    var rot = _lastCfg.banner_rotator || null;
+    var lang = currentLang();
     document.querySelectorAll('[data-site-banner]').forEach(function (el) {
+      // 1) Elle duyuru (manual banner) her şeyi ezer — "gerektiğinde ben duyuru yapayım" yolu.
       if (banner.enabled && banner.text) {
         el.innerHTML = (banner.v === 2) ? buildBannerHtml(banner) : banner.text;
-        if (banner.v === 2 && banner.bg) {
-          el.style.background = banner.bg;
-          el.style.color = banner.color ? '' : bannerContrast(banner.bg);
-        } else {
-          el.style.background = '';
-          el.style.color = '';
-        }
+        applyBg(el, banner);
         el.style.display = 'block';
-      } else {
-        el.style.display = 'none';
+        return;
       }
+      // 2) Otomatik günlük şerit (rotator) — elle banner kapalıyken.
+      var msg = pickRotatorMessage(rot);
+      if (msg) {
+        var text = (lang === 'en' ? msg.en : msg.tr) || msg.tr || msg.en || '';
+        if (text) {
+          var b = { v: 2, text: text, bg: msg.bg || rot.bg || '', bold: true,
+                    size: rot.size || '', color: rot.color || '' };
+          el.innerHTML = buildBannerHtml(b);
+          applyBg(el, b);
+          el.style.display = 'block';
+          return;
+        }
+      }
+      // 3) Hiçbiri: gizle.
+      el.style.display = 'none';
     });
   }
+
+  // Dil değişince (nav <html lang> günceller) rotator mesajını doğru dile çevir.
+  (function watchLangForBanner() {
+    try {
+      var mo = new MutationObserver(function () {
+        if (_lastCfg && _lastCfg.banner_rotator) applyBanner(_lastCfg);
+      });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    } catch (e) {}
+  })();
 
   // supabase-js gerektirmeyen hafif config yükleyici (REST). Banner her sayfada çalışsın diye.
   async function loadConfigRest() {

@@ -21,7 +21,7 @@
   <!-- Modern paylaşımlı nav (gri-nav): curriculum.js GRI_NAV'ı sağlar, nav.js body'e enjekte eder, site-config.js hesap widget'ını doldurur -->
   <script src="assets/curriculum.js?v=30"></script>
   <script src="assets/nav.js?v=46"></script>
-  <script src="assets/site-config.js?v=8" defer></script>
+  <script src="assets/site-config.js?v=9" defer></script>
   <style>
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .admin-h1 { font-family: var(--font-display); font-size: 2.4rem; margin-bottom: 0.4rem; }
@@ -2031,6 +2031,48 @@
       </section>
 
       <section class="admin-section">
+        <span class="sec-eyebrow">Üst Şerit · Otomatik</span>
+        <h2>Günlük Otomatik Şerit</h2>
+
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.9rem; line-height:1.6;">
+          Açıkken üst şerit <b>her gün otomatik olarak</b> listedeki mesajlardan birini gösterir (kelime, ilginç bilgi, çalışma ipucu, hızlı görev — her biri siteye link verebilir).
+          <b>Elle duyuru yapmak istediğinde</b> yukarıdaki “Açılış Banner'ı”nı aç; o açıkken otomatik mesajın yerine seninki görünür. Otomatiğe dönmek için elle banner'ı kapatman yeter.
+          Tümünü durdurmak için bu anahtarı kapat.
+        </p>
+
+        <div class="field-row">
+          <label>Otomatik günlük şerit aktif:</label>
+          <label class="switch">
+            <input type="checkbox" id="rot-enabled">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Bugün gösterilen</label>
+          <div id="rot-today" class="launch-banner" style="display:block; border-radius:6px;"></div>
+        </div>
+
+        <div class="field-row" style="display:block;">
+          <label style="display:block; margin-bottom:0.4rem;">Mesajlar — her satır bir gün <span id="rot-count" style="color:var(--text-muted);font-weight:400;"></span></label>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.45rem; line-height:1.6;">
+            Satır biçimi: <code>Türkçe metin :: English text :: https://link</code> (link opsiyonel; boş bırakabilirsin).<br>
+            Metin içinde <code>**kalın**</code>, <code>*italik*</code>, <code>[yazı](https://…)</code> kullanabilirsin. <code>::</code> ayracı bölümleri ayırır.
+          </div>
+          <textarea id="rot-messages" spellcheck="false" style="width:100%; min-height:320px; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:6px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; line-height:1.6; background:var(--bg-card); color:var(--text); white-space:pre; overflow-wrap:normal; overflow-x:auto;"></textarea>
+        </div>
+
+        <div class="field-row" style="gap:0.6rem; align-items:center; flex-wrap:wrap;">
+          <label style="margin:0;">Varsayılan arka plan</label>
+          <input type="color" id="rot-bg" value="#2E6E6A" style="width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer;">
+          <span style="font-size:0.72rem; color:var(--text-muted);">Mesaj başına özel renk istersen satır sonuna <code>:: bg=#RRGGBB</code> ekleyebilirsin.</span>
+        </div>
+
+        <button class="save-btn" id="save-rot">Otomatik Şeridi Kaydet</button>
+        <div class="status-line" id="rot-status"></div>
+      </section>
+
+      <section class="admin-section">
         <span class="sec-eyebrow">Global Kampanya</span>
         <h2>İndirim Ayarı</h2>
 
@@ -2785,6 +2827,7 @@
         hide('loading');
         show('admin-content');
         renderBanner();
+        renderRotator();
         renderDiscount();
         renderProducts();
         initTabs();
@@ -2953,6 +2996,107 @@
       var d = state.cfg.discount || { enabled: false, percentage: 0 };
       $('discount-enabled').checked = !!d.enabled;
       $('discount-percentage').value = Number(d.percentage || 0);
+    }
+
+    // ---- Otomatik günlük şerit (rotator) ----
+    function rotMessagesToText(msgs) {
+      if (!Array.isArray(msgs)) { return ''; }
+      return msgs.map(function (m) {
+        m = m || {};
+        var parts = [String(m.tr || ''), String(m.en || '')];
+        if (m.link) { parts.push(String(m.link)); }
+        var line = parts.join(' :: ');
+        if (m.bg) { line += ' :: bg=' + m.bg; }
+        return line;
+      }).join('\n');
+    }
+    function rotTextToMessages(text) {
+      var out = [];
+      String(text || '').split('\n').forEach(function (raw) {
+        var line = raw.trim();
+        if (!line) { return; }
+        // ayraç :: — son parçalar link ve/veya bg=... olabilir
+        var segs = line.split('::').map(function (s) { return s.trim(); });
+        var bg = '';
+        // bg=... hangi segmentte olursa çıkar
+        segs = segs.filter(function (s) {
+          var mm = /^bg\s*=\s*(#?[0-9a-fA-F]{3,8})$/.exec(s);
+          if (mm) { bg = mm[1].charAt(0) === '#' ? mm[1] : ('#' + mm[1]); return false; }
+          return true;
+        });
+        var tr = segs[0] || '';
+        var en = segs[1] || '';
+        var link = segs[2] || '';
+        if (!tr && !en) { return; }
+        var m = { tr: tr, en: en };
+        if (link) { m.link = link; }
+        if (bg) { m.bg = bg; }
+        out.push(m);
+      });
+      return out;
+    }
+    function rotPayload() {
+      return {
+        enabled: $('rot-enabled').checked,
+        bg: $('rot-bg').value || '',
+        messages: rotTextToMessages($('rot-messages').value)
+      };
+    }
+    function updateRotToday() {
+      var p = rotPayload();
+      var el = $('rot-today');
+      if (!el) { return; }
+      $('rot-count').textContent = '(' + p.messages.length + ' mesaj)';
+      if (!p.messages.length) {
+        el.innerHTML = '<span style="opacity:0.45;">(mesaj yok)</span>';
+        el.style.background = ''; el.style.color = ''; el.style.opacity = '0.5';
+        return;
+      }
+      var day = Math.floor(Date.now() / 86400000);
+      var n = p.messages.length;
+      var idx = ((day % n) + n) % n;
+      var m = p.messages[idx];
+      var text = m.tr || m.en || '';
+      var b = { v: 2, text: text, bg: m.bg || p.bg || '', bold: true };
+      el.innerHTML = buildBannerHtmlAdmin(b);
+      if (b.bg) { el.style.background = b.bg; el.style.color = bannerContrast(b.bg); }
+      else { el.style.background = ''; el.style.color = ''; }
+      el.style.opacity = p.enabled ? '1' : '0.5';
+    }
+    function renderRotator() {
+      var r = state.cfg.banner_rotator || {};
+      $('rot-enabled').checked = !!r.enabled;
+      $('rot-bg').value = r.bg || '#2E6E6A';
+      $('rot-messages').value = rotMessagesToText(r.messages || []);
+      updateRotToday();
+    }
+    async function saveRotator() {
+      var btn = $('save-rot');
+      btn.disabled = true;
+      var payload = rotPayload();
+      try {
+        var res = await sb.from('site_config').upsert({
+          key: 'banner_rotator',
+          value: payload,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+        if (res.error) throw res.error;
+        state.cfg.banner_rotator = payload;
+        setStatus('rot-status', 'Kaydedildi (' + payload.messages.length + ' mesaj)', 'ok');
+        flash('Otomatik şerit kaydedildi', 'ok');
+        try {
+          sb.rpc('write_audit_log', {
+            p_level: 'audit', p_category: 'settings',
+            p_message: 'Otomatik şerit kaydedildi (aktif: ' + (payload.enabled ? 'evet' : 'hayır') + ', ' + payload.messages.length + ' mesaj)',
+            p_context: { enabled: payload.enabled, count: payload.messages.length }
+          }).then(function () {}).catch(function () {});
+        } catch (e) {}
+      } catch (e) {
+        setStatus('rot-status', 'Hata: ' + (e.message || e), 'err');
+        flash('Kaydedilemedi', 'err');
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     async function saveBanner() {
@@ -5878,6 +6022,10 @@
         });
       }
       $('save-discount').addEventListener('click', saveDiscount);
+      if ($('save-rot')) { $('save-rot').addEventListener('click', saveRotator); }
+      ['rot-enabled','rot-messages','rot-bg'].forEach(function (id) {
+        var el = $(id); if (el) { el.addEventListener('input', updateRotToday); el.addEventListener('change', updateRotToday); }
+      });
       $('reverify-submit').addEventListener('click', attemptReverify);
       $('reverify-password').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') attemptReverify();

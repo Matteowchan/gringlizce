@@ -52,7 +52,7 @@
     if (/^[0-9\s.,:;/%+\-()]+$/.test(s)) return false;
     return true;
   }
-  function keyOf(s) { return s.replace(/\s+/g, " ").trim(); }
+  function keyOf(s) { return s.replace(/[’‘]/g, "'").replace(/ /g, " ").replace(/\s+/g, " ").trim(); }
   function setNode(node, orig, en) {
     var lead = (orig.match(/^\s*/) || [""])[0], trail = (orig.match(/\s*$/) || [""])[0];
     try { node.nodeValue = lead + en + trail; } catch (e) {}

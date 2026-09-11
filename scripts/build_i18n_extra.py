@@ -26,6 +26,9 @@ def ok(s):
     if re.fullmatch(r"[0-9\s.,:;/%+\-()]+", s2): return False
     return True
 def key_of(s):
+    # Görünmez-karakter normalizasyonu (gri-mt.js keyOf ile birebir aynı olmalı):
+    # kıvrık apostrof (U+2019/U+2018) -> düz ', nbsp (U+00A0) -> normal boşluk.
+    s = s.replace("’", "'").replace("‘", "'").replace(" ", " ")
     return re.sub(r"\s+", " ", s).strip()
 
 def collect_from_json(obj, out):

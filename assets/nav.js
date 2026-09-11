@@ -269,10 +269,10 @@
     if (window.GriMT) { try { window.GriMT.apply(lang); } catch (e) {} return; }
     if (lang !== "en") return;
     if (_mtLoading) return; _mtLoading = true;
-    function applier() { _loadScript("assets/gri-mt.js?v=4", function () { try { window.GriMT.apply(getLang()); } catch (e) {} }); }
+    function applier() { _loadScript("assets/gri-mt.js?v=5", function () { try { window.GriMT.apply(getLang()); } catch (e) {} }); }
     // Ağır gömülü sözlüğü yalnız JS-içerikli (öğren vb.) sayfalarda yükle; diğerlerinde hızlı fallback yeter
     // Küçük ek sözlüğü (IELTS/SAT içerik + öğrenme haritası) HER sayfada yükle; büyük ana sözlüğü yalnız #data sayfalarında.
-    function withExtra(next) { _loadScript("assets/gri-i18n-extra.js?v=4", next); }
+    function withExtra(next) { _loadScript("assets/gri-i18n-extra.js?v=5", next); }
     if (document.getElementById("data")) { _loadScript("assets/gri-i18n-map.js?v=1", function () { withExtra(applier); }); }
     else { withExtra(applier); }
   }

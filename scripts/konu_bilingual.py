@@ -231,15 +231,30 @@ def emit(path):
     open(out, 'w', encoding='utf-8').write(json.dumps(uniq, ensure_ascii=False))
     print(f"EMIT {path}: {len(uniq)} chunks -> {out}", flush=True)
 
-def inject(path, tmapfile):
-    """Apply translations from TMAPFILE (JSON {chunk: english}) deterministically. No AI."""
+def _uniq_chunks(html, blocks):
+    all_chunks = []
+    for bl in blocks:
+        ia, ib = bl['inner']; all_chunks += chunk_html(html[ia:ib])
+    return [c for c in dict.fromkeys(all_chunks) if c.strip()]
+
+def inject(path, transfile):
+    """Apply translations from TRANSFILE. Accepts either an ORDERED list [en0, en1, ...] parallel
+    to the emitted chunks (preferred), or a {chunk: english} dict. Deterministic, no AI."""
     html = open(path, encoding='utf-8').read()
     if 'data-blog-lang="en"' in html:
         print(f"SKIP (already bilingual): {path}", flush=True); return None
     blocks = collect_blocks(html)
     if not blocks:
         print(f"SKIP (no blocks): {path}", flush=True); return None
-    tmap = json.load(open(tmapfile, encoding='utf-8'))
+    data = json.load(open(transfile, encoding='utf-8'))
+    uniq = _uniq_chunks(html, blocks)
+    if isinstance(data, list):
+        if len(data) != len(uniq):
+            print(f"  !! TRANS LENGTH MISMATCH got={len(data)} need={len(uniq)} -> NOT WRITING {path}", flush=True)
+            return False
+        tmap = {uniq[i]: data[i] for i in range(len(uniq)) if data[i]}
+    else:
+        tmap = data
     return _build_and_write(path, html, blocks, tmap)
 
 def main():

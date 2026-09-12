@@ -8,9 +8,26 @@
 #        python scripts/konu_bilingual.py --apply PAGE.html ...  (convert in place)
 import re, sys, json, time, urllib.request
 
-EP = "https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/translate"
+EP = "https://vazbvbqgvtlaqkytfsbi.supabase.co/functions/v1/gri-translate-html"
 AK = "sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g"
-MAXLEN = 2900  # edge fn drops texts > 3000
+SECRET = "htmx_7b2c9e14a"
+MAXLEN = 2600  # keep fragments comfortably under model output budget
+def _trletters(s):
+    return len(re.findall(r'[ğşıİĞŞçÇöÖüÜ]', s))
+
+# --- text-only translation: translate text between tags, keep the tags (fewer tokens) ---
+TAGSPLIT = re.compile(r'(<[^>]+>)')
+_TRCH = re.compile(r'[ğışöüçĞİÖÜÇŞ]')
+_TRWORD = re.compile(r'\b(ve|bir|bu|için|ile|olan|değil|nedir|nasıl|gibi|daha|çok|ama|olarak|yani|ise|hem|ya\s?da)\b', re.I)
+def needs_tr(s):
+    s = s.strip()
+    if len(s) < 2:
+        return False
+    if not re.search(r'[A-Za-zğışöüçĞİÖÜÇŞ]', s):
+        return False
+    return bool(_TRCH.search(s) or _TRWORD.search(s))
+def collect_text(frag):
+    return [p.strip() for p in TAGSPLIT.split(frag) if not p.startswith('<') and needs_tr(p)]
 
 TOGGLE_STYLE = ('<style>.ka-hero{position:relative}.blog-lang-toggle{position:absolute;top:0;right:0;display:inline-flex;'
   'gap:2px;border:1px solid var(--gri-line,rgba(0,0,0,.15));border-radius:999px;padding:2px;background:var(--bg-card,#fff);'
@@ -99,26 +116,31 @@ def chunk_html(s):
     return pieces
 
 def translate_map(texts):
-    """texts: list of unique strings -> dict tr->en via edge fn (batched)."""
+    """texts: list of chunk strings -> dict src->en via gri-translate-html (no cache, order array)."""
     uniq = [t for t in dict.fromkeys(texts) if t.strip()]
     res = {}
-    B = 40
+    B = 8
     for i in range(0, len(uniq), B):
         chunk = uniq[i:i+B]
-        body = json.dumps({"texts": chunk}).encode('utf-8')
+        body = json.dumps({"k": SECRET, "texts": chunk}).encode('utf-8')
         req = urllib.request.Request(EP, data=body, method="POST", headers={
             "Content-Type": "application/json", "apikey": AK, "Authorization": "Bearer " + AK})
-        for attempt in range(3):
+        for attempt in range(4):
             try:
-                d = json.loads(urllib.request.urlopen(req, timeout=180).read().decode('utf-8'))
-                res.update((d.get("translations") or {}))
+                d = json.loads(urllib.request.urlopen(req, timeout=300).read().decode('utf-8'))
+                t = d.get("t")
+                if not isinstance(t, list) or len(t) != len(chunk):
+                    raise Exception("bad_resp:" + str(d.get("error"))[:80])
+                for src, en in zip(chunk, t):
+                    if en:
+                        res[src] = en
                 break
             except Exception as e:
-                if attempt == 2:
-                    print("  ! batch fail:", str(e)[:100], flush=True)
+                if attempt == 3:
+                    print("  ! batch fail:", str(e)[:120], flush=True)
                 else:
-                    time.sleep(3)
-        time.sleep(0.4)
+                    time.sleep(4)
+        time.sleep(0.3)
     return res
 
 def translate_fragment(frag, tmap):
@@ -147,11 +169,13 @@ def process(path, apply):
     tmap = translate_map(all_chunks)
     # rebuild from end to start so spans stay valid
     new = html
+    sum_tr = 0; sum_en = 0
     for bl in sorted(blocks, key=lambda d: d['span'][0], reverse=True):
         a, b = bl['span']
         ia, ib = bl['inner']
         tr_inner = html[ia:ib]
         en_inner = translate_fragment(tr_inner, tmap)
+        sum_tr += _trletters(tr_inner); sum_en += _trletters(en_inner)
         if bl['kind'] == 'section':
             open_tag = html[a:ia]  # '<section ... >'
             rebuilt = (open_tag + '<div data-blog-lang="tr">' + tr_inner + '</div>'
@@ -179,6 +203,10 @@ def process(path, apply):
     nen = new.count('data-blog-lang="en"')
     if ntr != nen or nen != len(blocks):
         print(f"  !! COUNT MISMATCH tr={ntr} en={nen} blocks={len(blocks)} -> NOT WRITING {path}", flush=True)
+        return False
+    # translation-success gate: en side must have far fewer Turkish letters than tr side
+    if sum_tr > 40 and sum_en > 0.30 * sum_tr:
+        print(f"  !! TRANSLATION INCOMPLETE tr_letters(en={sum_en} tr={sum_tr}) -> NOT WRITING {path}", flush=True)
         return False
     open(path, 'w', encoding='utf-8').write(new)
     print(f"  OK wrote {path}: {len(blocks)} blocks bilingual (tr={ntr} en={nen})", flush=True)

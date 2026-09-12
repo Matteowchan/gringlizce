@@ -318,6 +318,7 @@
   <script src="assets/gri-sozluk.js?v=9" defer></script>
   <script src="assets/gri-premium.js?v=9" defer></script>
   <script src="assets/gri-ui-en.js?v=3" defer></script>
+<script src="assets/gri-premium-lock.js?v=1" defer></script>
 </head>
 <body>
   <div class="launch-banner" data-site-banner></div>
@@ -489,7 +490,7 @@
 
       const { data: test } = await sb.from('ielts_tests').select('*').eq('slug', TEST_SLUG).eq('is_published', true).maybeSingle();
       if (!test) { document.getElementById('loading').innerHTML = '<div class="gri-empty"><div class="gri-empty-ic">🐱</div><h4>Test bulunamadı</h4><p>Bu deneme yüklenemedi. Denemeler sayfasından başka bir deneme seçebilirsin.</p><a class="gri-empty-cta" href="ielts-deneme">Denemelere Dön →</a></div>'; return; }
-      if (await ieltsPremiumBlocked(test, 'listening')) { location.replace('premium'); return; }
+      if (await ieltsPremiumBlocked(test, 'listening')) { (window.GriPremiumLock?window.GriPremiumLock.show():location.replace('premium')); return; }
       state.test = test;
 
       const { data: section } = await sb.from('ielts_sections').select('*').eq('test_id', test.id).eq('section', 'listening').single();

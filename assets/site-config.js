@@ -80,11 +80,15 @@
     return 'tr';
   }
 
-  // Günlük rotasyon: gün sayısına göre deterministik seçim (UTC gününe göre 1 mesaj/gün)
+  // Günlük rotasyon: gün sayısına göre deterministik seçim (UTC gününe göre 1 mesaj/gün).
+  // rot.pinned bir geçerli index ise günlük dönüş yerine o mesaj sabitlenir (admin seçimi).
   function pickRotatorMessage(rot) {
     if (!rot || !rot.enabled) return null;
     var msgs = rot.messages;
     if (!Array.isArray(msgs) || !msgs.length) return null;
+    if (typeof rot.pinned === 'number' && rot.pinned >= 0 && rot.pinned < msgs.length) {
+      return msgs[rot.pinned];
+    }
     var day = Math.floor(Date.now() / 86400000);
     var n = msgs.length;
     var idx = ((day % n) + n) % n;
@@ -111,10 +115,17 @@
       if (msg) {
         var text = (lang === 'en' ? msg.en : msg.tr) || msg.tr || msg.en || '';
         if (text) {
-          var b = { v: 2, text: text, bg: msg.bg || rot.bg || '', bold: true,
+          var customBg = msg.bg || rot.bg || '';
+          var b = { v: 2, text: text, bg: customBg, bold: true,
                     size: rot.size || '', color: rot.color || '' };
           el.innerHTML = buildBannerHtml(b);
-          applyBg(el, b);
+          if (customBg) {
+            applyBg(el, b);
+          } else {
+            // Temaya uy: renkler seçili temanın değişkenlerinden gelir (data-theme takip eder).
+            el.style.background = 'var(--teal, #2E6E6A)';
+            el.style.color = rot.color ? '' : 'var(--on-accent, #fff)';
+          }
           el.style.display = 'block';
           return;
         }

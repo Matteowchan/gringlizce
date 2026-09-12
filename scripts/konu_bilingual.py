@@ -167,6 +167,9 @@ def process(path, apply):
     if not apply:
         return None
     tmap = translate_map(all_chunks)
+    return _build_and_write(path, html, blocks, tmap)
+
+def _build_and_write(path, html, blocks, tmap):
     # rebuild from end to start so spans stay valid
     new = html
     sum_tr = 0; sum_en = 0
@@ -212,17 +215,55 @@ def process(path, apply):
     print(f"  OK wrote {path}: {len(blocks)} blocks bilingual (tr={ntr} en={nen})", flush=True)
     return True
 
+def emit(path):
+    """Write PATH.chunks.json = unique translatable chunks (HTML fragments) for the page. No AI."""
+    html = open(path, encoding='utf-8').read()
+    if 'data-blog-lang="en"' in html:
+        print(f"SKIP (already bilingual): {path}", flush=True); return
+    blocks = collect_blocks(html)
+    if not blocks:
+        print(f"SKIP (no blocks): {path}", flush=True); return
+    all_chunks = []
+    for bl in blocks:
+        ia, ib = bl['inner']; all_chunks += chunk_html(html[ia:ib])
+    uniq = [c for c in dict.fromkeys(all_chunks) if c.strip()]
+    out = path + '.chunks.json'
+    open(out, 'w', encoding='utf-8').write(json.dumps(uniq, ensure_ascii=False))
+    print(f"EMIT {path}: {len(uniq)} chunks -> {out}", flush=True)
+
+def inject(path, tmapfile):
+    """Apply translations from TMAPFILE (JSON {chunk: english}) deterministically. No AI."""
+    html = open(path, encoding='utf-8').read()
+    if 'data-blog-lang="en"' in html:
+        print(f"SKIP (already bilingual): {path}", flush=True); return None
+    blocks = collect_blocks(html)
+    if not blocks:
+        print(f"SKIP (no blocks): {path}", flush=True); return None
+    tmap = json.load(open(tmapfile, encoding='utf-8'))
+    return _build_and_write(path, html, blocks, tmap)
+
 def main():
     args = sys.argv[1:]
+    files = [a for a in args if not a.startswith('--')]
+    if '--emit' in args:
+        for p in files:
+            emit(p)
+        return
+    if '--inject' in args:
+        # usage: --inject PAGE TMAPFILE
+        if len(files) >= 2:
+            inject(files[0], files[1])
+        else:
+            print("usage: --inject PAGE TMAPFILE", flush=True)
+        return
     apply = '--apply' in args
     dry = '--dry' in args
-    pages = [a for a in args if not a.startswith('--')]
     ok = 0
-    for p in pages:
+    for p in files:
         r = process(p, apply and not dry)
         if r:
             ok += 1
-    print(f"DONE: {ok}/{len(pages)} converted", flush=True)
+    print(f"DONE: {ok}/{len(files)} converted", flush=True)
 
 if __name__ == '__main__':
     main()

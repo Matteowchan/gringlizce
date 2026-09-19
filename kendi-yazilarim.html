@@ -30,6 +30,10 @@
   <link rel="stylesheet" href="assets/site-overrides.css">
   <script>document.documentElement.setAttribute('data-theme',(function(){try{var t=localStorage.getItem('gri-theme');if(t)return t;}catch(e){}return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
   <script src="assets/theme.js?v=2" defer></script>
+  <!-- Nav'daki hesap widget'ini (navUserMount) dolduran script; bu olmadan
+       giris yapmis kullaniciya da nav'da "Giris" butonu gorunuyor.
+       defer: gövde sonundaki supabase-js parse sirasinda zaten calismis olur. -->
+  <script src="assets/site-config.js?v=10" defer></script>
   <style>
     .nav-dropdown-menu { min-width: 160px !important; width: auto !important; }
     .nav-dropdown-menu li a { padding: 0.55rem 1rem !important; white-space: nowrap; }
@@ -76,6 +80,9 @@
       padding: 0.62rem 0.8rem; line-height: 1.5;
     }
     .kw-field textarea { resize: vertical; }
+    /* Soru kokü cogu zaman uzun: veri tablosu, cok satirli yonerge, kelime siniri.
+       Varsayilan yukseklik bunu kesmeden gostersin. */
+    #fPrompt { min-height: 190px; }
     .kw-field select:focus-visible, .kw-field input:focus-visible, .kw-field textarea:focus-visible,
     .kw-btn:focus-visible, .kw-tab:focus-visible, .kw-entry-h:focus-visible {
       outline: 2px solid var(--cat-accent, var(--teal)); outline-offset: 2px;
@@ -258,7 +265,7 @@
 
             <div class="kw-field" style="margin-bottom:1.1rem;">
               <label for="fPrompt">Soru kökü</label>
-              <textarea id="fPrompt" rows="4" placeholder="The chart below shows... Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words."></textarea>
+              <textarea id="fPrompt" rows="8" placeholder="The chart below shows... Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words."></textarea>
               <p class="kw-help">Soruyu eksiksiz yaz. Gri yazını bu soruya göre puanlar; yönerge eksikse değerlendirme de eksik olur.</p>
             </div>
 
@@ -1101,8 +1108,14 @@
       if (!state.user) { $('kwLogin').style.display = ''; return; }
       $('kwMain').style.display = '';
 
+      // Birlesik "Task 1 + Task 2" tipi bu sayfaya uymuyor: burada bir girdi =
+      // bir soru koku + bir gorsel + bir metin. Iki gorevi tek kayda sikistirmak
+      // hem degerlendirmeyi hem arsivi bozar; ogrenci ikisini ayri ayri yazar.
+      var EXCLUDE = ['ielts-writing-complete'];
       var res = await sb.from('writing_text_types').select('*').eq('is_active', true);
-      state.types = (res.data || []).filter(function (t) { return !t.is_coming_soon; });
+      state.types = (res.data || []).filter(function (t) {
+        return !t.is_coming_soon && EXCLUDE.indexOf(t.id) < 0;
+      });
       if (!state.types.length) {
         msg('kwFormMsg', 'err', 'Görev tipleri yüklenemedi. Sayfayı yenile.');
         return;

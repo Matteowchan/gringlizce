@@ -656,7 +656,10 @@ function computeTotalScore(evaluation: any, textType?: any): number {
   if (!vals.length) return 0;
   // IELTS: her kriter 1-9 band; genel skor = kriterlerin ortalaması, en yakın 0.5 band'a yuvarlanır
   // (toplam DEĞİL — aksi halde total_max=9 ile "53/9" gibi anlamsız değer çıkıyordu).
-  if (textType?.exam === "IELTS") {
+  // DİKKAT: DB'de exam değeri KÜÇÜK harf ("ielts"). Buradaki karşılaştırma önceden
+  // "IELTS" ile yapıldığı için bu dal hiç çalışmıyordu ve kriterler TOPLANIYORDU:
+  // sekiz kriterin hepsi 1 olan bir metin "genel band 8" gösteriyordu.
+  if (String(textType?.exam || "").toLowerCase() === "ielts") {
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     return Math.round(avg * 2) / 2;
   }

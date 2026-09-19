@@ -2688,7 +2688,16 @@
 
     function computeTotal(scores) {
       if (!scores) return 0;
-      return Object.values(scores).reduce(function(s, v){ return s + (Number(v) || 0); }, 0);
+      var vals = Object.values(scores).map(function (v) { return Number(v) || 0; });
+      if (!vals.length) return 0;
+      // IELTS'te kriterler 1-9 band; genel skor ORTALAMA, toplam değil.
+      // (Toplasaydık her kriteri 1 olan bir metin "8/9" gösterirdi.)
+      var exam = String((state.textType && state.textType.exam) || state.exam || '').toLowerCase();
+      if (exam === 'ielts') {
+        var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        return Math.round(avg * 2) / 2;
+      }
+      return vals.reduce(function (a, b) { return a + b; }, 0);
     }
 
   </script>

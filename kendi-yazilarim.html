@@ -310,7 +310,8 @@
             <div class="kw-actions">
               <button type="button" class="kw-btn" id="bEval">Kaydet ve Gri değerlendirsin</button>
               <button type="button" class="kw-btn sec" id="bSave">Sadece kaydet</button>
-              <button type="button" class="kw-btn quiet" id="bClear">Temizle</button>
+              <button type="button" class="kw-btn sec" id="bNew">Yeni yazıya başla</button>
+              <button type="button" class="kw-btn quiet" id="bClear">Metni temizle</button>
               <span class="kw-note" id="kwSaveNote"></span>
             </div>
             <p class="kw-help">Değerlendirme 5 Gri Token harcar. Sadece kaydedersen token gitmez — sonra Yazılarım'dan değerlendirtebilirsin.</p>
@@ -403,6 +404,7 @@
       writings: [],
       filter: 'all',
       lastSavedId: null,
+      savedSig: null,     // ayni yazi iki kez kaydedilmesin
       busy: false
     };
 
@@ -632,13 +634,41 @@
     }
 
     // ================= SAVE =================
+    function currentSig() {
+      return $('fPrompt').value.trim() + '' + $('fText').value.trim() + '' + (state.imagePath || '');
+    }
     function validate() {
       if (!state.type) { msg('kwFormMsg', 'err', 'Önce bir görev tipi seç.'); return false; }
       var prompt = $('fPrompt').value.trim();
       if (!prompt) { msg('kwFormMsg', 'err', 'Soru kökünü yaz. Gri yazını bu soruya göre puanlıyor.'); return false; }
       if (!$('fText').value.trim()) { msg('kwFormMsg', 'err', 'Boş yazı kaydedilemez.'); return false; }
+      if (state.savedSig && state.savedSig === currentSig()) {
+        msg('kwFormMsg', 'info',
+          'Bu yazı zaten kaydedildi — ikinci bir kopya oluşturmayalım. ' +
+          'Yazılarım sekmesinden açabilir, ya da <strong>Yeni yazıya başla</strong> ile temiz bir sayfa açabilirsin.');
+        return false;
+      }
       return true;
     }
+
+    // Kaydettikten sonra besteci temizlenir: aksi halde yuklenen gorsel bir
+    // sonraki yaziya da yapisir ve iki kayit ayni dosyayi paylasir (birini
+    // silmek digerinin gorselini goturur).
+    function resetComposer() {
+      $('fText').value = ''; $('fPrompt').value = ''; $('fTitle').value = '';
+      state.imageBlob = null; state.imagePath = null; state.savedSig = null;
+      $('fPrev').classList.remove('on'); $('fPrevImg').src = ''; $('fFile').value = '';
+      $('kwResultCard').style.display = 'none';
+      resetTimer(); updateWords(); clearDraft();
+      msg('kwFormMsg', '', '');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    $('bNew').addEventListener('click', function () {
+      if (!state.savedSig && ($('fText').value.trim() || $('fPrompt').value.trim())) {
+        if (!confirm('Kaydedilmemiş bir yazı var. Yine de temizlensin mi?')) return;
+      }
+      resetComposer();
+    });
 
     async function saveWriting(evaluation) {
       var text = $('fText').value.trim();
@@ -676,7 +706,8 @@
       try {
         await uploadImageIfAny();
         await saveWriting(null);
-        msg('kwFormMsg', 'ok', 'Kaydedildi. Yazılarım sekmesinden açıp istediğin zaman değerlendirtebilir ya da hocana yollayabilirsin.');
+        state.savedSig = currentSig();
+        msg('kwFormMsg', 'ok', 'Kaydedildi. Yazılarım sekmesinden açıp istediğin zaman değerlendirtebilir ya da hocana yollayabilirsin. Yeni bir yazı için <strong>Yeni yazıya başla</strong>.');
         clearDraft();
         state.writings = [];
       } catch (e) {
@@ -737,9 +768,10 @@
         if (!resp.ok) throw new Error(data.error || ('HTTP ' + resp.status));
 
         await saveWriting(data);
+        state.savedSig = currentSig();
         renderEvaluation($('kwResult'), data.evaluation, data.total_score, data.total_max, state.type);
         $('kwResultHint').textContent = 'Kaydedildi · Yazılarım sekmesinden hocana yollayabilirsin';
-        msg('kwFormMsg', 'ok', 'Değerlendirildi ve profiline kaydedildi.');
+        msg('kwFormMsg', 'ok', 'Değerlendirildi ve profiline kaydedildi. Yeni bir yazı için <strong>Yeni yazıya başla</strong>.');
         clearDraft();
         state.writings = [];
       } catch (e) {

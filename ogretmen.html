@@ -195,6 +195,22 @@
       margin-right: 0.4rem;
       letter-spacing: -0.01em;
     }
+    .ot-prog-list { display: flex; flex-direction: column; gap: 8px; }
+    .ot-prog-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 11px 14px; border: 1px solid var(--line, #e5ddcd);
+      border-radius: 10px; background: var(--bg-card, #fefcf7);
+      text-decoration: none; color: inherit; transition: border-color .15s;
+    }
+    .ot-prog-row:hover { border-color: var(--teal, #2C5856); }
+    .ot-prog-who { font-weight: 700; font-size: .92rem; }
+    .ot-prog-title { font-size: .88rem; color: var(--text-soft, #6f6a58); }
+    .ot-prog-meta { margin-left: auto; font-size: .78rem; color: var(--text-soft, #6f6a58); }
+    .ot-prog-pill {
+      font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+      padding: 3px 9px; border-radius: 100px; background: #f5ecd4; color: #C89A3C;
+    }
+    .ot-prog-pill.live { background: #e2f0e4; color: #2f7a44; }
     .ot-sched-title {
       font-family: var(--font-display, Georgia), serif;
       font-size: 1.4rem;
@@ -758,6 +774,12 @@
         <div id="ot-schedule"></div>
       </section>
 
+      <section id="ot-programs-wrap" style="display:none;margin:0 0 1.9rem;">
+        <h2 class="ot-sched-title"><span data-blog-lang="tr">Öğrencilerin Çalışma Programları</span><span data-blog-lang="en" hidden lang="en">Student Study Programmes</span></h2>
+        <p class="ot-sched-sub"><span data-blog-lang="tr">Kurduğun takvimli programlar. Satıra tıkla, ders ve ödevleri düzenle.</span><span data-blog-lang="en" hidden lang="en">The dated programmes you have built. Click a row to edit its lessons and homework.</span></p>
+        <div id="ot-programs" class="ot-prog-list"></div>
+      </section>
+
       <div id="ot-class-grid" class="t-class-grid"></div>
 
       <div id="ot-empty" class="t-empty" style="display:none;">
@@ -852,6 +874,54 @@
       show('ot-dashboard');
       await loadClasses();
 
+      // Ogretmenin kurdugu tum calisma programlari tek listede. Ogrenci adi icin
+      // her sinifin roster'i bir kez cekilir (profiles dogrudan okunamiyor).
+      async function loadStudentPrograms(classes) {
+        var wrap = document.getElementById('ot-programs-wrap');
+        var box = document.getElementById('ot-programs');
+        if (!wrap || !box) return;
+        var res = await sb.from('student_programs')
+          .select('id,student_id,class_id,title,status,start_date,end_date,updated_at')
+          .eq('teacher_id', userId)
+          .order('updated_at', { ascending: false });
+        var rows = (res && res.data) || [];
+        if (!rows.length) { wrap.style.display = 'none'; return; }
+
+        var sinifAd = {};
+        (classes || []).forEach(function (c) { sinifAd[c.class_id] = c.name; });
+        var isim = {};
+        var siniflar = rows.map(function (r) { return r.class_id; })
+                           .filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+        await Promise.all(siniflar.map(function (cid) {
+          return sb.rpc('class_roster', { p_class_id: cid }).then(function (q) {
+            (q.data || []).forEach(function (st) { isim[st.student_id] = st.student_email; });
+          }).catch(function () {});
+        }));
+
+        function kisa(d) {
+          if (!d) return '';
+          var AY = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          var x = new Date(d); return x.getDate() + ' ' + AY[x.getMonth()];
+        }
+
+        box.innerHTML = rows.map(function (p) {
+          var ad = isim[p.student_id] || 'Öğrenci';
+          var tarih = (p.start_date ? kisa(p.start_date) : '') + (p.end_date ? (' – ' + kisa(p.end_date)) : '');
+          var href = 'ogretmen-program?student=' + encodeURIComponent(p.student_id)
+                   + '&class=' + encodeURIComponent(p.class_id || '')
+                   + '&name=' + encodeURIComponent(ad)
+                   + '&id=' + encodeURIComponent(p.id);
+          return '<a class="ot-prog-row" href="' + href + '">'
+            + '<span class="ot-prog-who">' + esc(ad) + '</span>'
+            + '<span class="ot-prog-title">' + esc(p.title || 'Çalışma Programı') + '</span>'
+            + '<span class="ot-prog-pill' + (p.status === 'published' ? ' live' : '') + '">'
+            + (p.status === 'published' ? 'Yayında' : 'Taslak') + '</span>'
+            + '<span class="ot-prog-meta">' + esc((sinifAd[p.class_id] || '') + (tarih ? ('  ·  ' + tarih) : '')) + '</span>'
+            + '</a>';
+        }).join('');
+        wrap.style.display = '';
+      }
+
       async function loadClasses() {
         var grid = document.getElementById('ot-class-grid');
         var empty = document.getElementById('ot-empty');
@@ -874,6 +944,8 @@
               if (schedWrap) schedWrap.style.display = '';
             } else if (schedWrap) { schedWrap.style.display = 'none'; }
           } catch (e) {}
+
+          loadStudentPrograms(classes);
 
           if (classes.length === 0) {
             grid.innerHTML = '';

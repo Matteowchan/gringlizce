@@ -561,6 +561,10 @@
           ? '<div class="wd-prompt-box"><div class="wd-prompt-eyebrow" lang="en">Prompt</div>' + esc(w.prompt_snapshot) + '</div>'
           : '')
         + renderAssignmentImage(w.assignment_config)
+        + (w.task_image_path ? '<div class="wd-prompt-box" id="wd-task-img" style="border-left:3px solid var(--gold);">'
+            + '<div class="wd-prompt-eyebrow">Öğrencinin yüklediği görsel</div>'
+            + '<p style="margin:0.4rem 0 0;font-size:0.85rem;color:var(--text-muted);">Yükleniyor…</p></div>' : '')
+        + renderAiEvaluation(w)
         + '<div class="wd-writing-box" style="position:relative;">'
           + '<div class="wd-writing-text" id="wd-text"></div>'
           + '<div class="wd-sel-popup" id="wd-sel-popup"><button type="button" id="wd-sel-add">Yorum ekle</button></div>'
@@ -598,12 +602,53 @@
     updateAiBtn();
     renderCommentsList();
     bindHandlers();
+    if (w.task_image_path) loadTaskImage(w.task_image_path);
   }
 
   function fmtDate(s) {
     if (!s) return '';
     var d = new Date(s);
     return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // Gri'nin (AI) kendi degerlendirmesi. Ogretmeninkinin yerine GECMEZ; yan yana
+  // dursun ki ogretmen nereye katilip nereye katilmadigini gorebilsin.
+  function renderAiEvaluation(w) {
+    var ev = w.ai_evaluation;
+    if (!ev || !ev.scores) return '';
+    var isIelts = String(w.exam || '').toLowerCase() === 'ielts';
+    var chips = Object.keys(ev.scores).map(function (k) {
+      return '<span style="display:inline-block;margin:0 10px 5px 0;font-size:0.82rem;color:var(--text-soft);">'
+        + esc(k.replace(/_/g, ' ')) + ': <b style="color:var(--text);">' + esc(ev.scores[k]) + '</b></span>';
+    }).join('');
+    return '<details class="wd-prompt-box" style="border-left:3px solid var(--teal);">'
+      + '<summary style="cursor:pointer;list-style:none;">'
+        + '<span class="wd-prompt-eyebrow">Gri\'nin ön değerlendirmesi'
+        + (w.ai_total_score != null ? ' · ' + (isIelts ? 'Band ' : '') + esc(w.ai_total_score) : '')
+        + ' (aç / kapat)</span></summary>'
+      + '<div style="margin-top:0.5rem;">' + chips + '</div>'
+      + (ev.overallComment ? '<p style="margin:0.5rem 0 0;font-size:0.88rem;line-height:1.7;color:var(--text-soft);">' + esc(ev.overallComment) + '</p>' : '')
+      + '<p style="margin:0.6rem 0 0;font-size:0.78rem;color:var(--text-muted);">Bu puanlama AI tarafından yapıldı ve yalnızca bir ön okumadır. Aşağıdaki değerlendirme senindir ve öğrenciye giden karar odur.</p>'
+    + '</details>';
+  }
+
+  // Ogrencinin kendi yukledigi Task 1 gorseli private bucket'ta; imzali URL gerekir.
+  async function loadTaskImage(path) {
+    var box = document.getElementById('wd-task-img');
+    if (!box || !path) return;
+    try {
+      var r = await sb.storage.from('writing-task-images').createSignedUrl(path, 3600);
+      var url = r && r.data && r.data.signedUrl;
+      box.innerHTML = '<div class="wd-prompt-eyebrow">Öğrencinin yüklediği görsel</div>'
+        + (url
+          ? '<img src="' + url + '" alt="Öğrencinin yüklediği görev görseli" '
+            + 'style="max-width:100%;border:1px solid var(--line);border-radius:6px;margin-top:0.5rem;display:block;">'
+            + '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:0.5rem;font-family:var(--font-ui);font-size:0.82rem;color:var(--teal);">Görseli yeni sekmede aç →</a>'
+          : '<p style="margin:0.4rem 0 0;font-size:0.85rem;color:var(--text-muted);">Görsel açılamadı.</p>');
+    } catch (e) {
+      box.innerHTML = '<div class="wd-prompt-eyebrow">Öğrencinin yüklediği görsel</div>'
+        + '<p style="margin:0.4rem 0 0;font-size:0.85rem;color:var(--text-muted);">Görsel açılamadı: ' + esc(e.message || e) + '</p>';
+    }
   }
 
   function renderAssignmentImage(config) {

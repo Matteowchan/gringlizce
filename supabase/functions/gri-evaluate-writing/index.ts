@@ -212,6 +212,8 @@ serve(async (req) => {
       prompt_snapshot,
       text,
       word_count,
+      task_image_path,   // opsiyonel: writing-task-images bucket'inda <uid>/<dosya>
+      custom_prompt,     // true = soru kokunu ogrenci kendi yazdi
     } = body;
 
     if (!text_type_id || !text || !prompt_snapshot || typeof word_count !== "number") {
@@ -276,6 +278,36 @@ serve(async (req) => {
     const costQuota = (isAdmin || isPremium) ? 0 : WRITING_COST;
     const costSource = isAdmin ? "admin" : isPremium ? "premium" : (useDailyFree ? "daily" : "bonus");
 
+    // ===== 4b) Task 1 gorseli (opsiyonel) =====
+    // Ogrenci kendi grafigini yukledigiyse Gri'nin onu GORMESI gerekir; aksi halde
+    // "verileri dogru raporlamis mi" sorusuna cevap veremez. Gorsel storage'dan
+    // service role ile cekilip base64 olarak modele verilir — disari hic acilmaz.
+    let imageDataUrl: string | null = null;
+    if (typeof task_image_path === "string" && task_image_path.trim()) {
+      const path = task_image_path.trim();
+      // Guvenlik: yalnizca cagiranin kendi klasoru okunabilir.
+      if (!path.startsWith(`${userId}/`) || path.includes("..")) {
+        return err("Gecersiz gorsel yolu", 403, "image_forbidden");
+      }
+      try {
+        const { data: blob, error: dlErr } = await supabase
+          .storage.from("writing-task-images").download(path);
+        if (dlErr || !blob) throw new Error(dlErr?.message || "indirilemedi");
+        const buf = new Uint8Array(await blob.arrayBuffer());
+        if (buf.byteLength > 5_000_000) throw new Error("gorsel cok buyuk");
+        let bin = "";
+        for (let i = 0; i < buf.length; i += 8192) {
+          bin += String.fromCharCode(...buf.subarray(i, i + 8192));
+        }
+        const mime = blob.type || "image/jpeg";
+        imageDataUrl = `data:${mime};base64,${btoa(bin)}`;
+      } catch (e) {
+        // Gorsel okunamadi: degerlendirmeyi bloklamayalim, metin uzerinden devam.
+        console.error("task image load failed:", e);
+        imageDataUrl = null;
+      }
+    }
+
     // ===== 5) OpenAI çağrısı (logged) =====
     let evaluation: any;
     const callStart = Date.now();
@@ -288,6 +320,8 @@ serve(async (req) => {
         level,
         minWc,
         maxWc,
+        imageDataUrl,
+        customPrompt: !!custom_prompt,
       });
       evaluation = aiResult.evaluation;
       await logAiCall({
@@ -388,8 +422,10 @@ async function callOpenAI(opts: {
   level: string | null;
   minWc?: number | null;
   maxWc?: number | null;
+  imageDataUrl?: string | null;
+  customPrompt?: boolean;
 }): Promise<AiCallResult> {
-  const { text, word_count, prompt_snapshot, textType, level, minWc, maxWc } = opts;
+  const { text, word_count, prompt_snapshot, textType, level, minWc, maxWc, imageDataUrl, customPrompt } = opts;
 
   const examName = textType.exam.toUpperCase();
   const textTypeName = textType.display_name;
@@ -429,11 +465,30 @@ KALİBRASYON (ÇOK ÖNEMLİ — tedbirli davranıp herkese 6-7 verme):
 HER kriter yorumunda ŞUNU yap: (a) verdiğin band'ı yaz, (b) bu metinde o band'da TUTAN spesifik özelliği kısa bir alıntıyla göster, (c) bir üst yarım-band için TAM olarak neyi değiştireceğini söyle.
 ` : "";
 
+  // Ogrenci kendi sorusunu yazdiginda soru kokunun kendisi de hatali/eksik olabilir.
+  const customPromptGuidance = customPrompt ? `
+KENDI SORUSU MODU (ONEMLI)
+Bu görevin soru kökünü öğrenci KENDİ yazdı veya kendi kaynağından kopyaladı; resmi bir sınav sorusu olmayabilir.
+- Yazıyı, öğrencinin verdiği soru kökünün gerektirdiği görevi ne kadar karşıladığına göre değerlendir. Soru kökü ne kadar tuhaf olursa olsun, öğrencinin ona verdiği cevabı puanla.
+- Soru kökü gerçek sınav formatına uymuyorsa (ör. IELTS Task 2 için tek kelimelik bir başlık, ya da Task 1 için veri içermeyen bir yönerge), bunu "overallComment" içinde TEK bir cümleyle, suçlayıcı olmadan belirt ve doğru formatın nasıl görüneceğini kısaca göster. Bu uyarı yüzünden puan DÜŞÜRME.
+- Soru kökü eksikse bile dört kriteri eksiksiz puanla.
+` : "";
+
+  const imageGuidance = imageDataUrl ? `
+GÖRSEL VERİLDİ (TASK 1 — ÇOK ÖNEMLİ)
+Bu mesajda öğrencinin çalıştığı grafik/tablo/harita/diyagram GÖRSEL olarak ekli. Değerlendirmeni metne DEĞİL, görseldeki gerçek veriye dayandır.
+- Önce görseli kendin oku: hangi eksen, hangi birim, hangi dönem, hangi gruplar, en yüksek/en düşük noktalar, kesişmeler, genel eğilim.
+- Sonra öğrencinin raporladığı sayıları görselle KARŞILAŞTIR. Yanlış okunan, uydurulmuş veya görselde olmayan her sayıyı "specificMistakes" içine "type": "convention" olarak koy ve doğrusunu yaz (ör. original: "sales rose to 80%", correction: "sales rose to 62% — grafikte 2015 değeri 62, 80 değil").
+- Öğrencinin Overview cümlesi görseldeki GERÇEK genel eğilimi veriyor mu? Vermiyorsa Task Achievement'ı buna göre puanla ve doğru overview'ün ne söylemesi gerektiğini göster.
+- Görseldeki en çarpıcı özelliği (en büyük fark, kesişme noktası, zirve) öğrenci atlamışsa bunu açıkça belirt: seçim yapmak Task 1'de puanlanan bir beceridir.
+- Veri yanlış okunmuşsa bu Task Achievement'ı düşürür, Lexical Resource'u değil.
+` : "";
+
   const systemPrompt = `You are Gri — an AI English tutor designed for Turkish university and high school students preparing for international exams. A student has submitted a ${textTypeName} for ${examName}${levelStr}. You will evaluate it against the rubric below.
 
 RUBRIC (TOTAL: ${totalMax} points):
 ${rubricText}
-${ieltsGuidance}
+${ieltsGuidance}${customPromptGuidance}${imageGuidance}
 WORD COUNT CONTEXT
 - Student's word count: ${word_count} words
 - Target range for this text type: ${minWc ?? "—"} to ${maxWc ?? "—"} words${level === "hl" ? " (HL)" : level === "sl" ? " (SL)" : ""}
@@ -475,9 +530,9 @@ NEVER WRITE THIS STYLE
 SCORE KEYS
 The keys inside "scores" and "comments" objects MUST be EXACTLY: ${criteria.map((c: any) => `"${c.key}"`).join(", ")}.`;
 
-  const userQuery = `PROMPT GIVEN TO STUDENT:
+  const userQuery = `PROMPT GIVEN TO STUDENT${customPrompt ? " (written by the student themselves, not an official exam prompt)" : ""}:
 "${prompt_snapshot}"
-
+${imageDataUrl ? "\nTASK VISUAL: the chart/table/map/diagram the student was describing is attached to this message as an image. Read the real values from it and check every figure the student reported.\n" : ""}
 WORD COUNT: ${word_count}
 
 STUDENT TEXT:
@@ -535,11 +590,19 @@ Evaluate and return JSON. Remember: ALL human-facing text fields ("comments", "s
     additionalProperties: false,
   };
 
+  // Gorsel varsa multimodal content array; yoksa duz string (mevcut davranis).
+  const userContent: any = imageDataUrl
+    ? [
+        { type: "text", text: userQuery },
+        { type: "image_url", image_url: { url: imageDataUrl, detail: "high" } },
+      ]
+    : userQuery;
+
   const requestBody = {
     model: OPENAI_MODEL,
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: userQuery },
+      { role: "user", content: userContent },
     ],
     response_format: {
       type: "json_schema",

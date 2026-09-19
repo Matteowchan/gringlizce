@@ -335,6 +335,7 @@ var EXAMS=[
       { label: "Soru Bankası", href: "soru-bankasi" },
       { label: "Kelime Bankası", href: "kelime-bankasi" },
       { label: "Yazı Pratiği", href: "yazi-pratigi" },
+      { label: "Kendi Yazıların", href: "kendi-yazilarim" },
       { label: "Alıştırmalar", href: "genel-odevler" },
       { label: "Oyunlar", href: "oyunlar" }
     ] },

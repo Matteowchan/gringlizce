@@ -409,6 +409,7 @@
       imagePath: null,    // storage yolu
       imageBlob: null,
       writings: [],
+      classes: [],        // my_classes_for_sharing RPC
       filter: 'all',
       lastSavedId: null,
       savedSig: null,     // ayni yazi iki kez kaydedilmesin
@@ -930,7 +931,7 @@
             '<span class="kw-entry-t">' + esc(title) + '</span>' +
             band +
             '<span class="kw-entry-m">' + esc(fmtDate(w.saved_at)) + ' · ' + esc(w.word_count) + ' kelime' +
-              (w.task_image_path ? ' · görselli' : '') + (w.sent_at ? ' · yollandı' : '') + '</span>' +
+              (w.task_image_path ? ' · görselli' : '') + (w.shared_with_teacher ? ' · hocanda' : (w.sent_at ? ' · yollandı' : '')) + '</span>' +
           '</button>' +
           '<div class="kw-entry-b" hidden></div>' +
         '</div>';
@@ -966,13 +967,27 @@
         '<button type="button" class="kw-btn" data-act="mail" data-id="' + esc(w.id) + '">Hocana yolla</button>' +
         '<button type="button" class="kw-btn quiet" data-act="copy" data-id="' + esc(w.id) + '">Metni kopyala</button>' +
         '<button type="button" class="kw-btn quiet" data-act="del" data-id="' + esc(w.id) + '">Sil</button>' +
-        (w.sent_at ? '<span class="kw-note">Son gönderim: ' + esc(fmtDate(w.sent_at)) + ' → ' + esc(w.sent_to || '') + '</span>' : '') +
+        (w.shared_with_teacher ? '<span class="kw-note">Hocanla paylaşıldı: ' + esc(fmtDate(w.shared_at || w.sent_at)) + '</span>' : (w.sent_at ? '<span class="kw-note">Son gönderim: ' + esc(fmtDate(w.sent_at)) + ' → ' + esc(w.sent_to || '') + '</span>' : '')) +
       '</div>';
 
-      // mail paneli
+      // mail paneli — önce sınıf seçimi; adresi öğrencinin bilmesine gerek yok
+      var hasClasses = state.classes.length > 0;
+      var classOpts = state.classes.map(function (c) {
+        return '<option value="' + esc(c.class_id) + '">' + esc(c.class_name) +
+               ' — ' + esc(c.teacher_name) + '</option>';
+      }).join('');
       html += '<div class="kw-send" id="send-' + esc(w.id) + '" hidden>' +
-        '<div class="kw-row" style="margin-bottom:0.8rem;">' +
-          '<div class="kw-field"><label for="mail-' + esc(w.id) + '">Hocanın e-postası</label>' +
+        (hasClasses
+          ? '<div class="kw-field" style="margin-bottom:0.8rem;">' +
+              '<label for="cls-' + esc(w.id) + '">Kime</label>' +
+              '<select id="cls-' + esc(w.id) + '">' + classOpts +
+                '<option value="__other">Başka bir e-posta adresine…</option></select>' +
+              '<p class="kw-help">Sınıfını seçersen yazı hocanın paneline de düşer; adresini bilmene gerek yok.</p>' +
+            '</div>'
+          : '<p class="kw-help" style="margin:0 0 0.8rem;">Henüz bir sınıfa kayıtlı değilsin, o yüzden adresi elle yazman gerekiyor. ' +
+            'Sınıfa katılırsan yazıların doğrudan hocanın paneline düşer.</p>') +
+        '<div class="kw-row" id="mailrow-' + esc(w.id) + '" style="margin-bottom:0.8rem;' + (hasClasses ? 'display:none;' : '') + '">' +
+          '<div class="kw-field"><label for="mail-' + esc(w.id) + '">E-posta adresi</label>' +
             '<input type="email" id="mail-' + esc(w.id) + '" placeholder="ornek@okul.com" autocomplete="email"></div>' +
         '</div>' +
         '<div class="kw-field" style="margin-bottom:0.8rem;"><label for="note-' + esc(w.id) + '">Kısa not (opsiyonel)</label>' +
@@ -983,6 +998,15 @@
         '</div>' +
         '<p class="kw-help">Yazın, soru kökü, görsel ve Gri\'nin değerlendirmesi tek bir e-postada gider. Hocan doğrudan yanıtlarsa mesaj sana ulaşır.</p>' +
       '</div>';
+      // "Başka adres" seçilince e-posta alanı açılır
+      setTimeout(function () {
+        var sel = document.getElementById('cls-' + w.id);
+        if (!sel) return;
+        sel.addEventListener('change', function () {
+          var row = document.getElementById('mailrow-' + w.id);
+          row.style.display = (sel.value === '__other') ? '' : 'none';
+        });
+      }, 0);
 
       if (w.evaluation_json) {
         html += '<div class="kw-sec-t" style="margin-top:1.6rem;">Gri\'nin değerlendirmesi</div><div id="ev-' + esc(w.id) + '"></div>';
@@ -1042,24 +1066,36 @@
         return;
       }
       if (act === 'send') {
+        var sel = document.getElementById('cls-' + w.id);
+        var useClass = sel && sel.value && sel.value !== '__other';
         var email = (document.getElementById('mail-' + w.id).value || '').trim();
         var note = (document.getElementById('note-' + w.id).value || '').trim();
         var out = document.getElementById('sendmsg-' + w.id);
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { out.textContent = 'Geçerli bir e-posta gir.'; return; }
+        if (!useClass && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          out.textContent = 'Geçerli bir e-posta gir.'; return;
+        }
         out.textContent = 'Gönderiliyor…';
         try {
           var sess = await sb.auth.getSession();
           var token = sess.data && sess.data.session && sess.data.session.access_token;
+          var payload = { writing_id: w.id, note: note };
+          if (useClass) payload.class_id = sel.value; else payload.to_email = email;
           var resp = await fetch(SEND_ENDPOINT, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ writing_id: w.id, to_email: email, note: note })
+            body: JSON.stringify(payload)
           });
           var data = await resp.json();
           if (!resp.ok) throw new Error(data.error || ('HTTP ' + resp.status));
-          try { localStorage.setItem('kw-teacher-mail', email); } catch (e) {}
-          out.textContent = 'Gönderildi → ' + email;
-          w.sent_to = email; w.sent_at = new Date().toISOString();
+          if (useClass) {
+            out.textContent = 'Gönderildi → ' + (data.class_name || 'sınıf hocan') + ' · panelinde de görünecek';
+            w.shared_with_teacher = true;
+          } else {
+            try { localStorage.setItem('kw-teacher-mail', email); } catch (e) {}
+            out.textContent = 'Gönderildi → ' + email;
+            w.sent_to = email;
+          }
+          w.sent_at = new Date().toISOString();
         } catch (e) {
           out.textContent = 'Gönderilemedi: ' + (e.message || e);
         }
@@ -1120,6 +1156,12 @@
         msg('kwFormMsg', 'err', 'Görev tipleri yüklenemedi. Sayfayı yenile.');
         return;
       }
+      // Ogrencinin sinif(lar)i: hocanin adresi ISTEMCIYE HIC GELMEZ, yalnizca adi.
+      try {
+        var cr = await sb.rpc('my_classes_for_sharing');
+        state.classes = (cr && cr.data) || [];
+      } catch (e) { state.classes = []; }
+
       fillExams();
       restoreDraft();
       resetTimer();

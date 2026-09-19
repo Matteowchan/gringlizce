@@ -100,8 +100,9 @@ function buildEmail(opts: {
   w: Writing;
   note: string;
   hasImage: boolean;
+  className?: string;
 }): string {
-  const { studentName, studentEmail, w, note, hasImage } = opts;
+  const { studentName, studentEmail, w, note, hasImage, className } = opts;
   const ev = w.evaluation_json || {};
   const isIelts = (w.exam || "").toLowerCase() === "ielts";
   const scores: Record<string, number> = ev.scores || {};
@@ -169,7 +170,7 @@ function buildEmail(opts: {
       <tr>
         <td style="vertical-align:top">
           <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8a8a8a;font-weight:700">${esc(taskLabel)}</div>
-          <div style="font-size:15px;color:#4a463f;margin-top:5px">${esc(dateStr)} &middot; ${esc(w.word_count)} kelime${w.custom_prompt ? " &middot; kendi sorusu" : ""}${hasImage ? " &middot; görsel ekte" : ""}</div>
+          <div style="font-size:15px;color:#4a463f;margin-top:5px">${esc(dateStr)} &middot; ${esc(w.word_count)} kelime${w.custom_prompt ? " &middot; kendi sorusu" : ""}${hasImage ? " &middot; görsel ekte" : ""}${className ? " &middot; " + esc(className) : ""}</div>
         </td>
         <td align="right" style="vertical-align:top">${bandBox}</td>
       </tr>
@@ -246,10 +247,38 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); } catch { return err("Gecersiz JSON", 400); }
 
   const writingId = String(body?.writing_id || "").trim();
-  const toEmail = String(body?.to_email || "").trim().toLowerCase();
+  const classId = String(body?.class_id || "").trim();
+  let toEmail = String(body?.to_email || "").trim().toLowerCase();
   const note = String(body?.note || "").trim().slice(0, NOTE_MAX);
 
   if (!writingId) return err("writing_id zorunlu", 400);
+
+  // Sinif uzerinden gonderim: ogrenci hocanin adresini bilmek zorunda degil ve
+  // bilmesine de gerek yok. Adres sunucuda cozulur, istemciye hic donmez.
+  let teacherId: string | null = null;
+  let className = "";
+  if (classId) {
+    const { data: cls } = await supabase
+      .from("classes").select("id, name, teacher_id").eq("id", classId).maybeSingle();
+    if (!cls) return err("Sinif bulunamadi", 404, "class_not_found");
+
+    const { data: mem } = await supabase
+      .from("class_members").select("student_id")
+      .eq("class_id", classId).eq("student_id", user.id).maybeSingle();
+    if (!mem) return err("Bu sinifin ogrencisi degilsin", 403, "not_member");
+
+    const { data: tp } = await supabase
+      .from("profiles").select("email").eq("id", (cls as any).teacher_id).maybeSingle();
+    const tmail = String((tp as any)?.email || "").trim().toLowerCase();
+    if (!EMAIL_RE.test(tmail)) {
+      return err("Bu sinifin ogretmeninin e-posta adresi kayitli degil. Yazi yine de panelinde gorunecek.",
+                 422, "teacher_email_missing");
+    }
+    toEmail = tmail;
+    teacherId = (cls as any).teacher_id;
+    className = (cls as any).name || "";
+  }
+
   if (!EMAIL_RE.test(toEmail)) return err("Gecerli bir e-posta adresi gir.", 400, "bad_email");
 
   // ---- Gunluk limit ----
@@ -308,6 +337,7 @@ Deno.serve(async (req: Request) => {
     w: w as Writing,
     note,
     hasImage: attachments.length > 0,
+    className,
   });
   const bandPart = w.total_score != null ? ` — ${(w.exam || "").toLowerCase() === "ielts" ? "Band " : ""}${w.total_score}` : "";
   const subject = `${studentName} — ${(w.exam || "").toUpperCase()} ${String(w.text_type || "").replace(/_/g, " ")} yazısı${bandPart}`;
@@ -332,11 +362,25 @@ Deno.serve(async (req: Request) => {
   }
 
   // ---- Kaydi isaretle ----
-  await supabase.from("user_saved_writings").update({
+  const patch: Record<string, unknown> = {
     sent_to: toEmail,
     sent_at: new Date().toISOString(),
     send_count: (w.send_count || 0) + 1,
-  }).eq("id", writingId);
+  };
+  if (classId) {
+    // Sinif uzerinden gitti: hoca kendi panelinden de gorebilsin (RLS bu bayraga bakiyor).
+    patch.shared_with_teacher = true;
+    patch.shared_class_id = classId;
+    patch.shared_at = new Date().toISOString();
+  }
+  await supabase.from("user_saved_writings").update(patch).eq("id", writingId);
 
-  return json({ ok: true, message_id: rd?.id || null, to: toEmail });
+  // Ogrenciye hocanin adresini DONDURME; yalnizca nereye gittigini anlatan bir etiket.
+  return json({
+    ok: true,
+    message_id: rd?.id || null,
+    to: classId ? null : toEmail,
+    class_name: className || null,
+    shared: !!classId,
+  });
 });

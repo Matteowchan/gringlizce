@@ -3252,6 +3252,7 @@
             + '<button class="sd-tab-btn" data-tab="notes" type="button">Notlarım</button>'
             + '<button class="sd-tab-btn" data-tab="analiz" type="button">Analiz</button>'
             + '<button class="sd-tab-btn" data-tab="denemeler" type="button">Sınavlar</button>'
+            + '<button class="sd-tab-btn" data-tab="yazilar" type="button">Yazılar</button>'
           + '</div>';
 
         var overviewPanel = ''
@@ -3268,6 +3269,7 @@
         var notesPanel = '<div class="sd-tab-panel" data-panel="notes" id="sd-panel-notes"><p class="sd-tab-loading">Notlar yüklenecek...</p></div>';
         var analizPanel = '<div class="sd-tab-panel" data-panel="analiz" id="sd-panel-analiz"><p class="sd-tab-loading">Analiz yüklenecek...</p></div>';
         var denemelerPanel = '<div class="sd-tab-panel" data-panel="denemeler" id="sd-panel-denemeler"><p class="sd-tab-loading">Sınav sonuçları yüklenecek...</p></div>';
+        var yazilarPanel = '<div class="sd-tab-panel" data-panel="yazilar" id="sd-panel-yazilar"><p class="sd-tab-loading">Paylaşılan yazılar yüklenecek...</p></div>';
 
         sdBody.innerHTML = ''
           + '<p class="sd-meta">' + meta + '</p>'
@@ -3280,13 +3282,14 @@
           + notesPanel
           + analizPanel
           + denemelerPanel
+          + yazilarPanel
           + '<div class="sd-actions">'
             + '<a class="sd-program-btn" href="ogretmen-program?student=' + encodeURIComponent(studentId) + '&class=' + encodeURIComponent(classId || '') + '&name=' + encodeURIComponent(sdTitle.textContent || 'Öğrenci') + '" style="display:inline-block;text-decoration:none;background:var(--teal,#2C5856);color:#fff;font-weight:700;font-size:0.85rem;padding:9px 16px;border-radius:8px;margin-right:8px;">Çalışma Programı Oluştur</a>'
             + '<button class="sd-remove-btn" data-id="' + esc(studentId) + '" type="button">Sınıftan Çıkar</button>'
           + '</div>';
 
         // Sekme switching
-        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false, analiz: false, denemeler: false };
+        var loaded = { bookmarks: false, wrong: false, vocab: false, notes: false, analiz: false, denemeler: false, yazilar: false };
         sdBody.querySelectorAll('.sd-tab-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var key = btn.dataset.tab;
@@ -3300,6 +3303,7 @@
             else if (key === 'notes' && !loaded.notes) { loaded.notes = true; loadStudentNotes(studentId); }
             else if (key === 'analiz' && !loaded.analiz) { loaded.analiz = true; mountStudentAnalysis(studentId); }
             else if (key === 'denemeler' && !loaded.denemeler) { loaded.denemeler = true; loadStudentExams(studentId); }
+            else if (key === 'yazilar' && !loaded.yazilar) { loaded.yazilar = true; loadStudentWritings(studentId); }
           });
         });
 
@@ -4355,6 +4359,91 @@
         if (diff < 60) return 'Kaydedildi ' + diff + 'sn önce';
         if (diff < 3600) return 'Kaydedildi ' + Math.floor(diff / 60) + 'dk önce';
         return 'Kaydedildi ' + fmtRelative(savedAt.toISOString());
+      }
+
+      // Ogrencinin "Kendi Yazilarin" alanindan SINIF UZERINDEN paylastigi yazilar.
+      // RLS: yalnizca shared_with_teacher=true ve sinifin ogretmeni isek gelir.
+      async function loadStudentWritings(studentId) {
+        var host = document.getElementById('sd-panel-yazilar');
+        if (!host) return;
+        var res = await sb.from('user_saved_writings')
+          .select('id,exam,text_type,level,title,prompt_title,prompt_snapshot,text,word_count,saved_at,shared_at,total_score,total_max,evaluation_json,task_image_path,teacher_seen_at,teacher_note,custom_prompt')
+          .eq('user_id', studentId)
+          .eq('shared_with_teacher', true)
+          .order('shared_at', { ascending: false })
+          .limit(50);
+        if (res.error) {
+          host.innerHTML = '<p class="sd-tab-loading">Yazılar okunamadı: ' + esc(res.error.message) + '</p>';
+          return;
+        }
+        var rows = res.data || [];
+        if (!rows.length) {
+          host.innerHTML = '<p class="sd-tab-loading">Bu öğrenci henüz seninle bir yazı paylaşmadı. '
+            + 'Öğrenci, Kendi Yazıların sayfasından "Hocana yolla" deyip sınıfını seçtiğinde yazılar burada belirir.</p>';
+          return;
+        }
+        function bandCls(sc, exam) {
+          if (String(exam || '').toLowerCase() !== 'ielts' || sc == null) return '';
+          return sc >= 7 ? 'g' : sc >= 6 ? 'w' : 'r';
+        }
+        host.innerHTML = rows.map(function (w, i) {
+          var ev = w.evaluation_json || {};
+          var isIelts = String(w.exam || '').toLowerCase() === 'ielts';
+          var sc = w.total_score;
+          var when = w.shared_at || w.saved_at;
+          var ttl = w.title || w.prompt_title || String(w.prompt_snapshot || '').slice(0, 80) || 'Başlıksız';
+          var crit = Object.keys(ev.scores || {}).map(function (k) {
+            return '<span style="display:inline-block;margin:0 10px 4px 0;font-size:0.8rem;color:var(--text-soft);">'
+              + esc(k.replace(/_/g, ' ')) + ': <b style="color:var(--text);">' + esc(ev.scores[k]) + '</b></span>';
+          }).join('');
+          return '<div class="sd-writing" data-i="' + i + '" style="border:1px solid var(--line);border-radius:10px;margin-bottom:0.7rem;overflow:hidden;">'
+            + '<button type="button" class="sd-w-head" style="width:100%;display:flex;gap:0.7rem;align-items:center;flex-wrap:wrap;padding:0.7rem 0.9rem;background:none;border:0;text-align:left;cursor:pointer;color:var(--text);">'
+              + '<span style="font-size:0.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:var(--teal-soft);color:var(--teal-deep);white-space:nowrap;">'
+                + esc(String(w.exam || '').toUpperCase()) + ' ' + esc(String(w.text_type || '').replace(/_/g, ' ')) + '</span>'
+              + '<span style="flex:1 1 180px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(ttl) + '</span>'
+              + (sc != null ? '<span class="sd-band ' + bandCls(sc, w.exam) + '" style="font-weight:700;font-variant-numeric:tabular-nums;">'
+                    + esc(sc) + (isIelts ? '' : ' / ' + esc(w.total_max || '')) + '</span>' : '')
+              + '<span style="font-size:0.76rem;color:var(--text-muted);white-space:nowrap;">' + esc(fmtTR(when)) + ' · ' + esc(w.word_count) + ' kelime'
+              + (w.task_image_path ? ' · görselli' : '') + (w.teacher_seen_at ? ' · görüldü' : ' · YENİ') + '</span>'
+            + '</button>'
+            + '<div class="sd-w-body" hidden style="padding:0 0.9rem 1rem;border-top:1px solid var(--line);">'
+              + '<div class="sd-section-title">Soru' + (w.custom_prompt ? ' (öğrencinin kendi sorusu)' : '') + '</div>'
+              + '<div style="border-left:3px solid var(--teal);padding-left:0.8rem;white-space:pre-wrap;line-height:1.6;font-size:0.9rem;">' + esc(w.prompt_snapshot || '—') + '</div>'
+              + '<div class="sd-section-title">Yazı</div>'
+              + '<div style="white-space:pre-wrap;line-height:1.8;font-size:0.95rem;max-width:66ch;">' + esc(w.text || '') + '</div>'
+              + (crit ? '<div class="sd-section-title">Gri\'nin puanları</div><div>' + crit + '</div>' : '')
+              + (ev.overallComment ? '<div class="sd-section-title">Gri\'nin yorumu</div><p style="font-size:0.9rem;line-height:1.7;color:var(--text-soft);margin:0;">' + esc(ev.overallComment) + '</p>' : '')
+              + '<div style="margin-top:1rem;display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">'
+                + '<button type="button" class="sd-w-seen" data-id="' + esc(w.id) + '"'
+                  + ' style="border:1px solid var(--teal);background:var(--teal);color:#fff;font-weight:600;font-size:0.82rem;padding:7px 14px;border-radius:8px;cursor:pointer;">'
+                  + (w.teacher_seen_at ? 'Görüldü olarak işaretlendi' : 'Gördüm olarak işaretle') + '</button>'
+                + '<span class="sd-w-msg" style="font-size:0.8rem;color:var(--text-muted);"></span>'
+              + '</div>'
+            + '</div>'
+          + '</div>';
+        }).join('');
+
+        host.querySelectorAll('.sd-w-head').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var body = b.nextElementSibling;
+            body.hidden = !body.hidden;
+          });
+        });
+        host.querySelectorAll('.sd-w-seen').forEach(function (b) {
+          b.addEventListener('click', async function () {
+            var msg = b.nextElementSibling;
+            b.disabled = true;
+            var r = await sb.rpc('teacher_mark_writing_seen', { p_writing_id: b.dataset.id });
+            if (r.error) { msg.textContent = 'İşaretlenemedi: ' + r.error.message; b.disabled = false; return; }
+            b.textContent = 'Görüldü olarak işaretlendi';
+            msg.textContent = 'Kaydedildi.';
+          });
+        });
+      }
+
+      function fmtTR(iso) {
+        try { return new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }); }
+        catch (e) { return ''; }
       }
 
       async function loadStudentNotes(studentId) {
@@ -6295,7 +6384,7 @@
       }
       // ---- Genel İngilizce havuz ödevi seçici (ge_assignments -> class_assignments) ----
       var GE_POOL_ROWS = [];
-      var GE_AUD_TR = { adult: 'Yetişkin', teen: 'Teen', junior: 'Junior' };
+      var GE_AUD_TR = { adult: 'Yetişkin', teen: 'Teen', junior: 'Junior', ielts: 'IELTS Kampı' };
       var GE_SKILL_TR = { grammar: 'Gramer', reading: 'Okuma', listening: 'Dinleme', writing: 'Yazma', vocab: 'Kelime', mixed: 'Karma' };
       async function loadGePool() {
         if (GE_POOL_ROWS.length) return GE_POOL_ROWS;

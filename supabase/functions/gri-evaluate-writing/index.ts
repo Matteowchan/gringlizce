@@ -308,6 +308,21 @@ serve(async (req) => {
       }
     }
 
+    // Soru bankasindan gelen Task 1 gorseli: ogrenci bir sey yuklemedi ama sorunun
+    // kendi grafigi var. URL zaten public (GitHub Pages) oldugu icin modele dogrudan
+    // verilir; indirme/base64 gerekmez. Client'a guvenmeyiz, prompt_id ile DB'den okuruz.
+    if (!imageDataUrl && prompt_id) {
+      const { data: promptRow } = await supabase
+        .from("writing_prompts")
+        .select("image_url")
+        .eq("id", prompt_id)
+        .maybeSingle();
+      const u = promptRow?.image_url;
+      if (typeof u === "string" && u.startsWith("https://")) {
+        imageDataUrl = u;
+      }
+    }
+
     // ===== 5) OpenAI çağrısı (logged) =====
     let evaluation: any;
     const callStart = Date.now();

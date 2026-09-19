@@ -43,6 +43,14 @@
   .tli p{font-size:.85rem;color:var(--text-muted,#6f6a58);margin:0}
   .tli a.golink{font-size:.8rem;color:var(--teal,#2C5856);font-weight:600;text-decoration:none}
   .tbadge{font-size:.64rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold,#C89A3C);background:var(--gold-soft,#f5ecd4);border-radius:100px;padding:1px 8px}
+  /* bu hafta */
+  .wk-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+  .wk-h h2{font-family:Georgia,serif;font-size:1.05rem;margin:0}
+  .wk-cnt{font-size:.78rem;color:var(--text-muted,#6f6a58)}
+  .wk-bar{height:5px;border-radius:3px;background:var(--gri-line,#e5ddc9);overflow:hidden;margin:0 0 12px}
+  .wk-bar i{display:block;height:100%;background:var(--sp,#2C5856);transition:width .25s}
+  .wk-day{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted,#6f6a58);margin-right:6px}
+  .wk-les{font-size:.82rem;padding:7px 0;border-top:1px dashed var(--gri-line,#e5ddc9);margin-top:10px}
   /* homework check */
   .ck{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line,#e5ddc9)}
   .ck:last-child{border-bottom:0}
@@ -89,6 +97,7 @@
     <div class="card"><div class="card-b" id="head"></div></div>
     <div class="cols" style="margin-top:16px">
       <div class="stack">
+        <div class="card" id="wkCard" style="display:none"><div class="card-b" id="week"></div></div>
         <div class="kick">Ders akışı</div>
         <div class="card"><div class="card-b"><div class="tl" id="lessons"></div></div></div>
         <div class="kick">Ödevlerim</div>
@@ -129,6 +138,7 @@
   function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fmtD(s){if(!s)return'';var d=new Date(s);return d.getDate()+' '+MShort[d.getMonth()];}
   function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+  var GUNLER=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
   var SKILLS={speaking:['Speaking','sp'],listening:['Listening','li'],reading:['Reading','re'],writing:['Writing','wr'],grammar:['Grammar','gr'],vocabulary:['Vocabulary','vo'],deneme:['Deneme','dn'],tekrar:['Tekrar','tk'],other:['Diğer','dg']};
 
   var r=await sb.from('student_programs').select('*').eq('student_id',me.id).eq('status','published').order('created_at',{ascending:false}).limit(1);
@@ -181,15 +191,17 @@
 
   // homework with optional audio upload
   var hbox=document.getElementById('homework');
+  var hwEls={};   // item_key -> ana listedeki satir; "Bu hafta" kartiyla tik senkronu
   homework.forEach(function(H,i){
     var key='hw:'+i+':'+(H.date||'');
     var done=!!doneSet[key];
     var el=document.createElement('div');el.className='ck'+(done?' done':'');
+    el.id='hw-'+i;hwEls[key]=el;
     var link=H.url?(' <a class="golink" href="'+esc(H.url)+'" style="font-size:.8rem">↗</a>'):'';
     el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
       '<div class="ck-body"><div class="ck-t"><span class="dt">'+esc(fmtD(H.date))+'</span>'+esc(H.task||'')+link+'</div></div>';
     var box=el.querySelector('.box');
-    box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);});
+    box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);syncWeek(key,nv);});
     if(H.audio){
       var rec=document.createElement('div');rec.className='rec';
       rec.innerHTML='<div class="rc-h">Ses kaydı</div>'+
@@ -202,6 +214,73 @@
     hbox.appendChild(el);
   });
   if(!homework.length)hbox.innerHTML='<p class="meta">Henüz ödev eklenmemiş.</p>';
+
+  // ---- bu hafta ----
+  // Program 6 hafta surdugu icin 42 odevin tamami tek listede uzun kaliyor.
+  // Bu kart yalnizca icinde bulunulan haftayi (Pzt-Paz) one cikarir.
+  var wkEls={};
+  function syncWeek(key,val){var e=wkEls[key];if(e)e.classList.toggle('done',val);}
+  function syncMain(key,val){var e=hwEls[key];if(e)e.classList.toggle('done',val);}
+
+  function mondayOf(d){
+    var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    var wd=(x.getDay()+6)%7;                 // Pzt=0
+    x.setDate(x.getDate()-wd);return x;
+  }
+  function renderWeek(){
+    var wbox=document.getElementById('week');
+    var all=homework.map(function(H,i){return {H:H,key:'hw:'+i+':'+(H.date||''),i:i};})
+                    .filter(function(x){return x.H.date;});
+    if(!all.length)return;
+    var firstMon=mondayOf(new Date(all[0].H.date));
+    var mon=mondayOf(today);
+    // Program basladiysa bu hafta; bitti veya baslamadiysa en yakin dolu hafta.
+    var inWeek=all.filter(function(x){var d=new Date(x.H.date);return d>=mon&&d<new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+7);});
+    if(!inWeek.length){
+      var next=all.filter(function(x){return new Date(x.H.date)>=mon;})[0]||all[all.length-1];
+      mon=mondayOf(new Date(next.H.date));
+      inWeek=all.filter(function(x){var d=new Date(x.H.date);return d>=mon&&d<new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+7);});
+    }
+    if(!inWeek.length)return;
+    var hafta=Math.round((mon-firstMon)/604800000)+1;
+    var bitti=inWeek.filter(function(x){return doneSet[x.key];}).length;
+    var pct=Math.round(bitti/inWeek.length*100);
+
+    wbox.innerHTML='<div class="wk-h"><h2>Bu hafta · Hafta '+hafta+'</h2>'+
+      '<span class="wk-cnt">'+bitti+' / '+inWeek.length+' tamamlandı</span></div>'+
+      '<div class="wk-bar"><i style="width:'+pct+'%"></i></div>';
+
+    inWeek.forEach(function(x){
+      var d=new Date(x.H.date);
+      var el=document.createElement('div');
+      el.className='ck'+(doneSet[x.key]?' done':'');
+      wkEls[x.key]=el;
+      var link=x.H.url?(' <a class="golink" href="'+esc(x.H.url)+'" style="font-size:.8rem">↗</a>'):'';
+      el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
+        '<div class="ck-body"><div class="ck-t"><span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>'+
+        esc(x.H.task||'')+link+'</div></div>';
+      el.querySelector('.box').addEventListener('click',function(){
+        var nv=!el.classList.contains('done');
+        el.classList.toggle('done',nv);setDone(x.key,nv);syncMain(x.key,nv);
+        var n=inWeek.filter(function(y){return doneSet[y.key];}).length;
+        wbox.querySelector('.wk-cnt').textContent=n+' / '+inWeek.length+' tamamlandı';
+        wbox.querySelector('.wk-bar i').style.width=Math.round(n/inWeek.length*100)+'%';
+      });
+      wbox.appendChild(el);
+    });
+
+    var sonPzt=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+7);
+    lessons.filter(function(L){var d=L.date?new Date(L.date):null;return d&&d>=mon&&d<sonPzt;})
+      .forEach(function(L){
+        var d=new Date(L.date);
+        var row=document.createElement('div');row.className='wk-les';
+        row.innerHTML='<span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span><strong>'+esc(L.title||'')+'</strong>';
+        wbox.appendChild(row);
+      });
+
+    document.getElementById('wkCard').style.display='';
+  }
+  renderWeek();
 
   // resources
   var rbox=document.getElementById('resources');

@@ -233,6 +233,17 @@
       color: var(--cat-accent-deep);
       font-weight: 700;
     }
+    /* Task 1 gorseli: sorunun ayrilmaz parcasi, prompt metninin hemen altinda.
+       Grafikler genis oldugu icin tiklaninca tam boyut yeni sekmede acilir. */
+    .wiz-prompt-figure {
+      display: block; margin: 1rem 0 0.35rem; max-width: 100%;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      background: #fff;
+    }
+    .wiz-prompt-figcap {
+      font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-soft);
+      margin: 0 0 0.2rem;
+    }
     .wiz-prompt-actions {
       margin-top: 0.9rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
     }
@@ -2087,14 +2098,42 @@
       }
 
       var prompts = res.data;
-      var randomIdx = Math.floor(Math.random() * prompts.length);
-      state.currentPrompt = prompts[randomIdx];
+      // "Yeni soru getir" ayni soruyu tekrar vermesin: havuzda baska soru varsa mevcut olani ele.
+      var pool = prompts;
+      if (prompts.length > 1 && state.currentPrompt && state.currentPrompt.id) {
+        var filtered = prompts.filter(function (p) { return p.id !== state.currentPrompt.id; });
+        if (filtered.length) pool = filtered;
+      }
+      state.currentPrompt = pool[Math.floor(Math.random() * pool.length)];
 
       document.getElementById('promptTitle').textContent = state.currentPrompt.title;
       var ptEl = document.getElementById('promptText');
       ptEl.innerHTML = formatPromptHTML(state.currentPrompt.prompt);
       // Düz metin snapshot için dataset'te sakla (submit'te kullanılır)
       ptEl.dataset.raw = state.currentPrompt.prompt;
+      renderPromptFigure(ptEl, state.currentPrompt);
+    }
+
+    // ========================================================
+    // TASK 1 GÖRSELİ — soru havuzundaki grafik/tablo/harita/süreç
+    // ========================================================
+    function renderPromptFigure(container, prompt) {
+      if (!container || !prompt || !prompt.image_url) return;
+      var link = document.createElement('a');
+      link.href = prompt.image_url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      var img = document.createElement('img');
+      img.src = prompt.image_url;
+      img.alt = prompt.image_alt || 'Task 1 görseli';
+      img.className = 'wiz-prompt-figure';
+      img.loading = 'lazy';
+      link.appendChild(img);
+      container.appendChild(link);
+      var cap = document.createElement('p');
+      cap.className = 'wiz-prompt-figcap';
+      cap.textContent = 'Görseli büyütmek için üzerine tıkla.';
+      container.appendChild(cap);
     }
 
     // ========================================================

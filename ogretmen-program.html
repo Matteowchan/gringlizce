@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/theme.js?v=2" defer></script>
 <script src="assets/site-config.js?v=31"></script>
+<script src="assets/gri-link-label.js?v=1"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -88,6 +89,20 @@
   .recrow>td{background:var(--gri-gold-soft,#f5ecd4)!important;padding:8px 10px}
   .recrow audio{width:100%;max-width:420px;height:32px;margin-top:3px}
   .recrow .nm{font-size:.74rem;color:var(--text-muted,#6f6a58)}
+  /* link hucresi: ham URL yerine okunur etiket */
+  .lnkcell{padding:0 4px 0 8px!important}
+  .lnkcell .wrap{display:flex;align-items:center;gap:6px;min-height:32px}
+  .lnkcell .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+       cursor:text;font-size:.8rem;color:var(--gri-accent,#2C5856);border-bottom:1px dotted transparent}
+  .lnkcell .lbl:hover{border-bottom-color:var(--gri-line,#e5ddc9)}
+  .lnkcell .lbl.none{color:var(--text-muted,#6f6a58);font-style:italic}
+  .lnkcell .go{flex:0 0 auto;text-decoration:none;color:var(--text-muted,#6f6a58);font-size:.95rem;
+       padding:0 4px;border-radius:5px}
+  .lnkcell .go:hover{color:var(--gri-accent,#2C5856);background:var(--gri-gold-soft,#f5ecd4)}
+  .lnkcell input{padding:7px 4px}
+  /* tur / beceri hucresi */
+  .skcell{border-left:3px solid var(--dg)}
+  .bar .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .addb{margin-top:10px;border:1px dashed var(--gri-line,#e5ddc9);background:transparent;color:var(--gri-accent,#2C5856);
         font-weight:700;font-size:.82rem;padding:8px 14px;border-radius:8px;cursor:pointer}
   .empty{padding:26px 10px;text-align:center;color:var(--text-muted,#6f6a58);font-size:.86rem}
@@ -125,11 +140,13 @@
       <span class="sub" id="pgSum"></span>
       <span class="spacer"></span>
       <span class="msg" id="msg"></span>
-      <select class="btn sm" id="progSelect"><option value="">+ Yeni program</option></select>
-      <button class="btn sm" id="dupBtn" type="button">Kopyala</button>
-      <button class="btn sm" id="delBtn" type="button">Sil</button>
-      <button class="btn sm" id="publishBtn" type="button">Yayınla</button>
-      <button class="btn primary" id="saveDraft" type="button">Kaydet</button>
+      <span class="acts">
+        <select class="btn sm" id="progSelect"><option value="">+ Yeni program</option></select>
+        <button class="btn sm" id="dupBtn" type="button">Kopyala</button>
+        <button class="btn sm" id="delBtn" type="button">Sil</button>
+        <button class="btn sm" id="publishBtn" type="button">Yayınla</button>
+        <button class="btn primary" id="saveDraft" type="button">Kaydet</button>
+      </span>
     </div>
 
     <div class="meta" id="metaBox">
@@ -163,8 +180,8 @@
 
     <div class="pane" id="p-hw">
       <table class="sheet">
-        <colgroup><col style="width:124px"><col style="width:46px"><col><col style="width:22%"><col style="width:46px"><col style="width:32px"></colgroup>
-        <thead><tr><th>Tarih</th><th>Gün</th><th>Ödev</th><th>Link</th><th>Ses</th><th></th></tr></thead>
+        <colgroup><col style="width:118px"><col style="width:44px"><col style="width:118px"><col><col style="width:21%"><col style="width:44px"><col style="width:32px"></colgroup>
+        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Link</th><th>Ses</th><th></th></tr></thead>
         <tbody id="homework"></tbody>
       </table>
       <button class="addb" id="addHw" type="button">+ Ödev ekle</button>
@@ -257,6 +274,33 @@
       });
     });
   }
+  // Link hucresi: normalde okunur etiket, tiklayinca duzenlenebilir input.
+  // Ok isareti linki yeni sekmede acar — ogretmen nereye gittigini gorebilsin.
+  function linkCell(obj){
+    var td=document.createElement('td');td.className='lnkcell';
+    function goster(){
+      var u=obj.url||'';
+      var et=u?(window.GriLinkLabel?window.GriLinkLabel(u):u):'link yok';
+      td.innerHTML='<div class="wrap"><span class="lbl'+(u?'':' none')+'" title="'+esc(u||'Düzenlemek için tıkla')+'">'+esc(et)+'</span>'+
+        (u?('<a class="go" href="'+esc(u)+'" target="_blank" rel="noopener" title="Yeni sekmede aç">↗</a>'):'')+'</div>';
+      td.querySelector('.lbl').addEventListener('click',duzenle);
+    }
+    function duzenle(){
+      td.innerHTML='<input value="'+esc(obj.url||'')+'" placeholder="https://…">';
+      var inp=td.querySelector('input');inp.focus();inp.select();
+      inp.addEventListener('input',function(){obj.url=inp.value;});
+      inp.addEventListener('blur',goster);
+      inp.addEventListener('keydown',function(e){if(e.key==='Enter')inp.blur();});
+    }
+    goster();
+    return td;
+  }
+
+  function skillSelect(sec){
+    return '<select data-k="skill">'+SKILLS.map(function(s){
+      return '<option value="'+s[0]+'"'+(s[0]===sec?' selected':'')+'>'+s[1]+'</option>';}).join('')+'</select>';
+  }
+
   function mondayOf(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
   function kisaTarih(iso){if(!iso)return '';var d=new Date(iso);return d.getDate()+' '+AYLAR[d.getMonth()].slice(0,3);}
 
@@ -270,15 +314,14 @@
       var tr=document.createElement('tr');
       tr.appendChild(cell('<div class="rn">'+(i+1)+'</div>'));
       tr.appendChild(cell('<input type="date" data-k="date" value="'+esc(L.date||'')+'">'));
-      tr.appendChild(cell('<select data-k="skill">'+SKILLS.map(function(s){
-        return '<option value="'+s[0]+'"'+(s[0]===(L.skill||'speaking')?' selected':'')+'>'+s[1]+'</option>';}).join('')+'</select>'));
+      tr.appendChild(cell(skillSelect(L.skill||'speaking')));
       tr.appendChild(cell('<input data-k="title" placeholder="Başlık" value="'+esc(L.title||'')+'">'));
       tr.appendChild(cell('<textarea class="grow" data-k="detail" rows="1" placeholder="Detay" title="'+esc(L.detail||'')+'">'+esc(L.detail||'')+'</textarea>'));
-      tr.appendChild(cell('<input data-k="url" placeholder="Link" value="'+esc(L.url||'')+'">'));
+      tr.appendChild(linkCell(L));
       tr.appendChild(cell('<button class="del" title="Sil">×</button>'));
       // beceri rengi: satirin solunda kucuk nokta
-      var skCell=tr.children[2];
-      skCell.style.borderLeft='3px solid '+skillColor(L.skill||'speaking');
+      var skCell=tr.children[2];skCell.className='skcell';
+      skCell.style.borderLeftColor=skillColor(L.skill||'speaking');
       box.appendChild(tr);
       bind(tr,L,function(k){
         if(k==='date')drawCal();
@@ -295,7 +338,7 @@
   function renderHw(){
     var box=document.getElementById('homework');box.innerHTML='';
     if(!state.homework.length){
-      box.innerHTML='<tr><td colspan="6"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
+      box.innerHTML='<tr><td colspan="7"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
       document.getElementById('hCnt').textContent='0';updateSummary();return;
     }
     var bugunPzt=mondayOf(new Date()).getTime();
@@ -331,7 +374,7 @@
         ? ('Hafta '+(gi+1)+' · '+g.mon.getDate()+' '+AYLAR[g.mon.getMonth()]+' – '+son.getDate()+' '+AYLAR[son.getMonth()])
         : 'Tarihsiz';
       var simdi=(g.mon&&g.mon.getTime()===bugunPzt)?'<span class="bugun">bu hafta</span>':'';
-      var td=document.createElement('td');td.colSpan=6;
+      var td=document.createElement('td');td.colSpan=7;
       td.innerHTML='<button class="wkbtn" type="button"><span class="chev">'+(acik?'▾':'▸')+'</span>'+
         etiket+'<span class="cnt">'+g.items.length+' ödev</span>'+simdi+'</button>';
       wtr.appendChild(td);box.appendChild(wtr);
@@ -345,8 +388,11 @@
         tr.appendChild(cell('<input type="date" data-k="date" value="'+esc(H.date||'')+'">'));
         var gc=cell(d?GUNLER[(d.getDay()+6)%7]:'');gc.className='c';gc.style.fontSize='.76rem';gc.style.color='var(--text-muted,#6f6a58)';
         tr.appendChild(gc);
+        var hsk=cell(skillSelect(H.skill||'other'));hsk.className='skcell';
+        hsk.style.borderLeftColor=skillColor(H.skill||'other');
+        tr.appendChild(hsk);
         tr.appendChild(cell('<textarea class="grow" data-k="task" rows="1" placeholder="Ödev" title="'+esc(H.task||'')+'">'+esc(H.task||'')+'</textarea>'));
-        tr.appendChild(cell('<input data-k="url" placeholder="Link" value="'+esc(H.url||'')+'">'));
+        tr.appendChild(linkCell(H));
         var ac=cell('<input type="checkbox" data-k="audio" style="width:auto"'+(H.audio?' checked':'')+' title="Ses kaydı iste">');
         ac.className='c';tr.appendChild(ac);
         tr.appendChild(cell('<button class="del" title="Sil">×</button>'));
@@ -354,6 +400,7 @@
         bind(tr,H,function(k){
           if(k==='date'){drawCal();renderHw();}
           if(k==='audio')renderHw();
+          if(k==='skill')hsk.style.borderLeftColor=skillColor(H.skill);
         });
         tr.querySelector('.del').addEventListener('click',function(){state.homework.splice(i,1);renderHw();drawCal();});
 
@@ -361,7 +408,7 @@
         // 6 storage cagrisi yapmamak icin tembel).
         if(H.audio&&state.id){
           var rtr=document.createElement('tr');rtr.className='recrow';
-          var rtd=document.createElement('td');rtd.colSpan=6;
+          var rtd=document.createElement('td');rtd.colSpan=7;
           rtd.innerHTML='<button class="btn sm" type="button">Ses kayıtlarını göster</button><div data-role="list"></div>';
           rtr.appendChild(rtd);box.appendChild(rtr);
           var btn=rtd.querySelector('button'), list=rtd.querySelector('[data-role="list"]');
@@ -400,7 +447,7 @@
     state.resources.forEach(function(R,i){
       var tr=document.createElement('tr');
       tr.appendChild(cell('<input data-k="group" placeholder="Grup (ör. Konuşma)" value="'+esc(R.group||'')+'">'));
-      tr.appendChild(cell('<input data-k="url" placeholder="Link / açıklama" value="'+esc(R.url||'')+'">'));
+      tr.appendChild(linkCell(R));
       tr.appendChild(cell('<button class="del" title="Sil">×</button>'));
       box.appendChild(tr);
       bind(tr,R);
@@ -507,7 +554,7 @@
   }
 
   document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
-  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',task:'',url:'',audio:false});weeksInited=false;renderHw();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',url:'',audio:false});weeksInited=false;renderHw();});
   document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
   document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
   document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});
@@ -528,7 +575,18 @@
     await loadPrograms(null);showMsg('Silindi.',true);
   });
 
-  document.getElementById('pgWho').textContent=studentName;
+  // Baslikta ham e-posta cirkin duruyordu: adi buyut, e-postayi kucuk goster.
+  (function(){
+    var ad=studentName, mail='';
+    if(/@/.test(studentName)){mail=studentName;ad=studentName.split('@')[0];}
+    ad=ad.charAt(0).toUpperCase()+ad.slice(1);
+    var el=document.getElementById('pgWho');
+    el.textContent=ad;
+    if(mail){
+      var m=document.createElement('span');m.className='sub';m.style.marginLeft='6px';m.textContent=mail;
+      el.insertAdjacentElement('afterend',m);
+    }
+  })();
   document.getElementById('backBtn').href=classId?('ogretmen-sinif?id='+classId):'ogretmen';
 
   await loadPrograms(params.get('id')||null);

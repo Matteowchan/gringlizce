@@ -1491,6 +1491,7 @@
       textType: null,        // selected text type DB row
       allTypes: [],          // all active text types
       currentPrompt: null,   // DB row
+      pinnedPromptId: null,  // ?prompt= ile gelen soru; ilk yuklemede bir kez kullanilir
       level: 'sl',
       user: null,
       quota: null,
@@ -1525,9 +1526,13 @@
       var examFromUrl = params.get('exam');
       var typeFromUrl = params.get('type');
       var assignmentIdFromUrl = params.get('assignment_id');
+      var promptIdFromUrl = params.get('prompt');
       if (examFromUrl && EXAM_LABELS[examFromUrl]) state.exam = examFromUrl;
       if (typeFromUrl) state.typeId = typeFromUrl;
       if (assignmentIdFromUrl) state.assignmentId = assignmentIdFromUrl;
+      // Derin bağlantı: çalışma programındaki ödev doğrudan o soruyu açar.
+      // Tek seferliktir; "Yeni soru getir" sonrasında havuzdan rastgele devam eder.
+      if (promptIdFromUrl) state.pinnedPromptId = promptIdFromUrl;
 
       // Tüm aktif text type'ları çek
       await loadAllTextTypes();
@@ -1565,6 +1570,14 @@
       } else {
         // typeId'nin exam'i ile state.exam'ı senkronla
         var matched = state.allTypes.find(function(t) { return t.id === state.typeId; });
+        // type= parametresi id yerine text_type slug'ı olarak da verilebilir
+        // (ör. ?exam=ielts&type=task1_academic) — linkler okunur kalsın diye.
+        if (!matched) {
+          matched = state.allTypes.find(function(t) {
+            return t.text_type === state.typeId && (!examFromUrl || t.exam === examFromUrl);
+          });
+          if (matched) state.typeId = matched.id;
+        }
         if (matched) state.exam = matched.exam;
       }
 
@@ -2098,6 +2111,20 @@
       }
 
       var prompts = res.data;
+      // Derin bağlantıyla gelinen soru: ilk yüklemede tam olarak o soruyu göster.
+      if (state.pinnedPromptId) {
+        var pinned = prompts.filter(function (p) { return p.id === state.pinnedPromptId; })[0];
+        state.pinnedPromptId = null;   // tek seferlik
+        if (pinned) {
+          state.currentPrompt = pinned;
+          document.getElementById('promptTitle').textContent = pinned.title;
+          var ptElP = document.getElementById('promptText');
+          ptElP.innerHTML = formatPromptHTML(pinned.prompt);
+          ptElP.dataset.raw = pinned.prompt;
+          renderPromptFigure(ptElP, pinned);
+          return;
+        }
+      }
       // "Yeni soru getir" ayni soruyu tekrar vermesin: havuzda baska soru varsa mevcut olani ele.
       var pool = prompts;
       if (prompts.length > 1 && state.currentPrompt && state.currentPrompt.id) {

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="assets/site-overrides.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/theme.js?v=2" defer></script>
+<script src="assets/gri-link-label.js?v=1"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -43,6 +44,13 @@
   .tli p{font-size:.85rem;color:var(--text-muted,#6f6a58);margin:0}
   .tli a.golink{font-size:.8rem;color:var(--teal,#2C5856);font-weight:600;text-decoration:none}
   .tbadge{font-size:.64rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold,#C89A3C);background:var(--gold-soft,#f5ecd4);border-radius:100px;padding:1px 8px}
+  /* odev satiri: beceri rozeti + okunur link */
+  .hw-sk{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+         color:#fff;padding:2px 7px;border-radius:100px;margin-right:7px;vertical-align:1px}
+  .hw-go{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border-radius:7px;
+         border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);text-decoration:none;
+         font-size:.78rem;font-weight:600;color:var(--gri-accent,#2C5856)}
+  .hw-go:hover{border-color:var(--gri-accent,#2C5856);background:var(--gri-gold-soft,#f5ecd4)}
   /* bu hafta */
   .wk-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
   .wk-h h2{font-family:Georgia,serif;font-size:1.05rem;margin:0}
@@ -139,6 +147,20 @@
   function fmtD(s){if(!s)return'';var d=new Date(s);return d.getDate()+' '+MShort[d.getMonth()];}
   function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
   var GUNLER=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  var SKILL_ETIKET={speaking:'Konuşma',listening:'Dinleme',reading:'Okuma',writing:'Yazma',
+                    grammar:'Gramer',vocabulary:'Kelime',deneme:'Deneme',tekrar:'Tekrar',other:'Çalışma'};
+  // Odev metni + beceri rozeti + okunur link dugmesi. Hem ana listede hem
+  // "Bu hafta" kartinda ayni govde kullanilir ki iki yer birbirinden ayrilmasin.
+  function hwGovde(H,onEk){
+    var sk=H.skill&&SKILL_ETIKET[H.skill]?H.skill:null;
+    var rozet=sk?('<span class="hw-sk" style="background:var(--'+(SKILLS[sk]?SKILLS[sk][1]:'dg')+')">'+SKILL_ETIKET[sk]+'</span>'):'';
+    var buton='';
+    if(H.url){
+      var et=window.GriLinkLabel?window.GriLinkLabel(H.url):'Aç';
+      buton='<a class="hw-go" href="'+esc(H.url)+'" target="_blank" rel="noopener">'+esc(et)+' &rarr;</a>';
+    }
+    return '<div class="ck-t">'+(onEk||'')+rozet+esc(H.task||'')+'</div>'+buton;
+  }
   var SKILLS={speaking:['Speaking','sp'],listening:['Listening','li'],reading:['Reading','re'],writing:['Writing','wr'],grammar:['Grammar','gr'],vocabulary:['Vocabulary','vo'],deneme:['Deneme','dn'],tekrar:['Tekrar','tk'],other:['Diğer','dg']};
 
   var r=await sb.from('student_programs').select('*').eq('student_id',me.id).eq('status','published').order('created_at',{ascending:false}).limit(1);
@@ -197,9 +219,8 @@
     var done=!!doneSet[key];
     var el=document.createElement('div');el.className='ck'+(done?' done':'');
     el.id='hw-'+i;hwEls[key]=el;
-    var link=H.url?(' <a class="golink" href="'+esc(H.url)+'" style="font-size:.8rem">↗</a>'):'';
     el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
-      '<div class="ck-body"><div class="ck-t"><span class="dt">'+esc(fmtD(H.date))+'</span>'+esc(H.task||'')+link+'</div></div>';
+      '<div class="ck-body">'+hwGovde(H,'<span class="dt">'+esc(fmtD(H.date))+'</span>')+'</div>';
     var box=el.querySelector('.box');
     box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);syncWeek(key,nv);});
     if(H.audio){
@@ -255,10 +276,8 @@
       var el=document.createElement('div');
       el.className='ck'+(doneSet[x.key]?' done':'');
       wkEls[x.key]=el;
-      var link=x.H.url?(' <a class="golink" href="'+esc(x.H.url)+'" style="font-size:.8rem">↗</a>'):'';
       el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
-        '<div class="ck-body"><div class="ck-t"><span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>'+
-        esc(x.H.task||'')+link+'</div></div>';
+        '<div class="ck-body">'+hwGovde(x.H,'<span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>')+'</div>';
       el.querySelector('.box').addEventListener('click',function(){
         var nv=!el.classList.contains('done');
         el.classList.toggle('done',nv);setDone(x.key,nv);syncMain(x.key,nv);
@@ -288,7 +307,8 @@
   Object.keys(groups).forEach(function(g){
     var div=document.createElement('div');div.className='rgrp';
     var links=groups[g].map(function(u){
-      if(/^https?:\/\//.test(u))return '<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>';
+      // Kaynak listesinde de ham URL yerine okunur etiket.
+      if(/^https?:\/\//.test(u))return '<a href="'+esc(u)+'" target="_blank" rel="noopener" title="'+esc(u)+'">'+esc(window.GriLinkLabel?window.GriLinkLabel(u):u)+'</a>';
       return '<span>'+esc(u)+'</span>';
     }).join('');
     div.innerHTML='<h4>'+esc(g)+'</h4>'+links;rbox.appendChild(div);

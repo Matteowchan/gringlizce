@@ -2391,6 +2391,15 @@
                 <label class="wz-fl" for="ca-w-prompt">Prompt</label>
                 <textarea id="ca-w-prompt" rows="4" maxlength="2000" placeholder="Some people believe technology has made our lives easier. Others argue..."></textarea>
 
+                <!-- Soru bankasi: hazir, ozgun sorular. Task 1'de gorsel de otomatik baglanir. -->
+                <div class="wz-gen" id="ca-w-bank" style="display:none">
+                  <div class="wz-gen-row">
+                    <select id="ca-w-bank-sel"><option value="">Soru bankasından seç…</option></select>
+                    <button type="button" id="ca-w-bank-btn" class="wz-gen-btn">Kullan</button>
+                  </div>
+                  <p id="ca-w-bank-hint" style="margin:6px 0 0;font-family:var(--font-ui);font-size:.78rem;color:var(--text-soft,#6f6a58)"></p>
+                </div>
+
                 <!-- Gri ile prompt taslağı (Slice 3) -->
                 <div class="wz-gen">
                   <div class="wz-gen-row">
@@ -6354,7 +6363,10 @@
           block.classList.toggle('show', block.dataset.config === t);
         });
         if (t === 'writing') {
-          loadWritingTextTypes().then(populateTextTypeSelect);
+          loadWritingTextTypes().then(function () {
+            populateTextTypeSelect();
+            loadPromptBank();   // sihirbaz ilk acildiginda da banka dolu gelsin
+          });
         }
         if (t === 'questions') { populateCaCategories(document.getElementById('ca-q-cat').value || ''); }
         if (t === 'module') { populateModuleExam(); populateModuleUnits(); }
@@ -6527,8 +6539,67 @@
       document.getElementById('ca-w-exam').addEventListener('change', function () {
         populateTextTypeSelect();
         toggleImageUploadSection();
+        loadPromptBank();
       });
-      document.getElementById('ca-w-texttype').addEventListener('change', toggleImageUploadSection);
+      document.getElementById('ca-w-texttype').addEventListener('change', function () {
+        toggleImageUploadSection();
+        loadPromptBank();
+      });
+
+      // ---- Soru bankasi (writing_prompts) ----
+      // Secilen soru Task 1 ise gorseli de odeve baglanir; ogretmenin dosya
+      // yuklemesine gerek kalmaz. Elle yuklenen dosya her zaman oncelikli.
+      var caBankImage = null;   // {url, alt} veya null
+      var caBankRows = [];
+
+      async function loadPromptBank() {
+        var wrap = document.getElementById('ca-w-bank');
+        var sel = document.getElementById('ca-w-bank-sel');
+        var hint = document.getElementById('ca-w-bank-hint');
+        if (!wrap || !sel) return;
+        caBankImage = null;
+        if (hint) hint.textContent = '';
+        var examSel = document.getElementById('ca-w-exam');
+        var ttSel = document.getElementById('ca-w-texttype');
+        var ttOpt = ttSel && ttSel.options[ttSel.selectedIndex];
+        var textType = ttOpt && ttOpt.dataset ? ttOpt.dataset.textType : '';
+        if (!examSel || !examSel.value || !textType) { wrap.style.display = 'none'; return; }
+
+        var res = await sb.from('writing_prompts')
+          .select('id,title,prompt,image_url,image_alt,figure_type')
+          .eq('exam', examSel.value).eq('text_type', textType).eq('is_active', true)
+          .order('title');
+        caBankRows = (res && res.data) || [];
+        if (!caBankRows.length) { wrap.style.display = 'none'; return; }
+
+        sel.innerHTML = '<option value="">Soru bankasından seç… (' + caBankRows.length + ' soru)</option>';
+        caBankRows.forEach(function (r) {
+          var o = document.createElement('option');
+          o.value = r.id;
+          o.textContent = (r.figure_type ? '[' + r.figure_type + '] ' : '') + r.title;
+          sel.appendChild(o);
+        });
+        wrap.style.display = '';
+      }
+
+      (function () {
+        var btn = document.getElementById('ca-w-bank-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          var sel = document.getElementById('ca-w-bank-sel');
+          var hint = document.getElementById('ca-w-bank-hint');
+          var row = caBankRows.filter(function (r) { return r.id === (sel && sel.value); })[0];
+          if (!row) { if (hint) hint.textContent = 'Önce listeden bir soru seç.'; return; }
+          var pEl = document.getElementById('ca-w-prompt');
+          if (pEl) pEl.value = row.prompt || '';
+          caBankImage = row.image_url ? { url: row.image_url, alt: row.image_alt || '' } : null;
+          if (hint) {
+            hint.textContent = caBankImage
+              ? 'Soru ve görseli eklendi: ' + row.title + '. Ayrıca dosya yüklersen o öncelikli olur.'
+              : 'Soru eklendi: ' + row.title + '.';
+          }
+        });
+      })();
 
       var combinedChkEl = document.getElementById('ca-w-combined');
       if (combinedChkEl) combinedChkEl.addEventListener('change', function () {
@@ -6850,6 +6921,12 @@
               caErr.textContent = 'Görsel yüklenemedi: ' + (upErr.message || upErr);
               return;
             }
+          }
+
+          // Bankadan secilen Task 1 sorusunun gorseli (elle yukleme her zaman oncelikli).
+          if (!config.image_url && caBankImage && caBankImage.url) {
+            config.image_url = caBankImage.url;
+            config.image_type = 'image';
           }
 
           // IELTS tam yazma: Task 2 icin bagli ikinci config

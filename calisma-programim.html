@@ -76,6 +76,16 @@
   .ck-t .dt{color:var(--text-muted,#6f6a58);font-size:.76rem;margin-right:6px}
   .ck.done .ck-t{color:var(--text-muted,#6f6a58);text-decoration:line-through}
   .rec{margin-top:8px;background:var(--bg,#faf7ee);border:1px solid var(--line,#e5ddc9);border-radius:9px;padding:9px 11px}
+  /* odevin soru metni: ogrenci sayfa degistirmeden gorsun */
+  .hw-q{margin:9px 0 2px;padding:10px 12px;border:1px solid var(--gri-line,#e5ddc9);
+        border-left:3px solid var(--sp,#3a6ea5);border-radius:8px;background:var(--bg,#faf7ee)}
+  .hw-q .q-h{font-size:.64rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+             color:var(--text-muted,#6f6a58);margin:0 0 6px}
+  .hw-q p{margin:0 0 6px;font-size:.88rem;line-height:1.5}
+  .hw-q p:last-child{margin-bottom:0}
+  .hw-q ul{margin:0 0 6px;padding-left:18px}
+  .hw-q li{font-size:.88rem;line-height:1.5;margin:0 0 2px}
+  .hw-q .q-t{font-weight:700}
   /* canli seviye grafigi: kaydin gercekten ses aldigi gorunsun */
   .viz-wrap{display:flex;align-items:center;gap:9px;margin:8px 0 2px}
   .viz{flex:1;height:38px;width:100%;color:var(--wr,#c0672a);
@@ -169,6 +179,27 @@
                     grammar:'Gramer',vocabulary:'Kelime',deneme:'Deneme',tekrar:'Tekrar',other:'Çalışma'};
   // Odev metni + beceri rozeti + okunur link dugmesi. Hem ana listede hem
   // "Bu hafta" kartinda ayni govde kullanilir ki iki yer birbirinden ayrilmasin.
+  // Soru metni: bos satir paragrafi ayirir, "•"/"-" ile baslayan satirlar liste
+  // olur, ": " ile biten kisa satir alt baslik sayilir.
+  function soruKarti(H){
+    if(!H.prompt)return '';
+    var html='',liste=false;
+    String(H.prompt).split('\n').forEach(function(ham){
+      var t=ham.trim();
+      if(!t){if(liste){html+='</ul>';liste=false;}return;}
+      if(/^[•\-\*]\s+/.test(t)){
+        if(!liste){html+='<ul>';liste=true;}
+        html+='<li>'+esc(t.replace(/^[•\-\*]\s+/,''))+'</li>';
+        return;
+      }
+      if(liste){html+='</ul>';liste=false;}
+      var altBaslik=/^[^.!?]{3,60}$/.test(t)&&!/[.!?]$/.test(t);
+      html+='<p'+(altBaslik?' class="q-t"':'')+'>'+esc(t)+'</p>';
+    });
+    if(liste)html+='</ul>';
+    return '<div class="hw-q"><div class="q-h">Soru</div>'+html+'</div>';
+  }
+
   function hwGovde(H,onEk){
     var sk=H.skill&&SKILL_ETIKET[H.skill]?H.skill:null;
     var rozet=sk?('<span class="hw-sk" style="background:var(--'+(SKILLS[sk]?SKILLS[sk][1]:'dg')+')">'+SKILL_ETIKET[sk]+'</span>'):'';
@@ -177,7 +208,7 @@
       var et=window.GriLinkLabel?window.GriLinkLabel(H.url):'Aç';
       buton='<a class="hw-go" href="'+esc(H.url)+'" target="_blank" rel="noopener">'+esc(et)+' &rarr;</a>';
     }
-    return '<div class="ck-t">'+(onEk||'')+rozet+esc(H.task||'')+'</div>'+buton;
+    return '<div class="ck-t">'+(onEk||'')+rozet+esc(H.task||'')+'</div>'+soruKarti(H)+buton;
   }
   var SKILLS={speaking:['Speaking','sp'],listening:['Listening','li'],reading:['Reading','re'],writing:['Writing','wr'],grammar:['Grammar','gr'],vocabulary:['Vocabulary','vo'],deneme:['Deneme','dn'],tekrar:['Tekrar','tk'],other:['Diğer','dg']};
 

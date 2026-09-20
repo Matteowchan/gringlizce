@@ -65,7 +65,7 @@
      pane yatay kayar. Genis ekranda tablo %100'e yayilir. */
   .sheet{width:100%;border-collapse:collapse;font-family:var(--font-ui,Inter),sans-serif;font-size:.84rem}
   #p-les .sheet{min-width:1040px}
-  #p-hw  .sheet{min-width:980px}
+  #p-hw  .sheet{min-width:1180px}
   #p-res .sheet{min-width:560px}
   .sheet th{position:sticky;top:52px;z-index:5;background:var(--bg,#faf7ee);text-align:left;
             font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;
@@ -193,8 +193,8 @@
 
     <div class="pane" id="p-hw">
       <table class="sheet">
-        <colgroup><col style="width:118px"><col style="width:44px"><col style="width:118px"><col><col style="width:21%"><col style="width:44px"><col style="width:32px"></colgroup>
-        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Link</th><th>Ses</th><th></th></tr></thead>
+        <colgroup><col style="width:112px"><col style="width:42px"><col style="width:112px"><col style="width:30%"><col><col style="width:17%"><col style="width:42px"><col style="width:32px"></colgroup>
+        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Soru (öğrenciye gösterilir)</th><th>Link</th><th>Ses</th><th></th></tr></thead>
         <tbody id="homework"></tbody>
       </table>
       <button class="addb" id="addHw" type="button">+ Ödev ekle</button>
@@ -367,7 +367,7 @@
   function renderHw(){
     var box=document.getElementById('homework');box.innerHTML='';
     if(!state.homework.length){
-      box.innerHTML='<tr><td colspan="7"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
+      box.innerHTML='<tr><td colspan="8"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
       document.getElementById('hCnt').textContent='0';updateSummary();return;
     }
     var bugunPzt=mondayOf(new Date()).getTime();
@@ -403,7 +403,7 @@
         ? ('Hafta '+(gi+1)+' · '+g.mon.getDate()+' '+AYLAR[g.mon.getMonth()]+' – '+son.getDate()+' '+AYLAR[son.getMonth()])
         : 'Tarihsiz';
       var simdi=(g.mon&&g.mon.getTime()===bugunPzt)?'<span class="bugun">bu hafta</span>':'';
-      var td=document.createElement('td');td.colSpan=7;
+      var td=document.createElement('td');td.colSpan=8;
       td.innerHTML='<button class="wkbtn" type="button"><span class="chev">'+(acik?'▾':'▸')+'</span>'+
         etiket+'<span class="cnt">'+g.items.length+' ödev</span>'+simdi+'</button>';
       wtr.appendChild(td);box.appendChild(wtr);
@@ -421,6 +421,9 @@
         hsk.style.borderLeftColor=skillColor(H.skill||'other');
         tr.appendChild(hsk);
         tr.appendChild(cell('<textarea class="grow" data-k="task" rows="1" placeholder="Ödev" title="'+esc(H.task||'')+'">'+esc(H.task||'')+'</textarea>'));
+        // Soru metni: ogrenci sayfasinda odevin altinda kart olarak gorunur.
+        // Bos satir paragraf ayirir, "•" ile baslayan satirlar liste olur.
+        tr.appendChild(cell('<textarea class="grow" data-k="prompt" rows="1" placeholder="Cue card / sorular (opsiyonel)">'+esc(H.prompt||'')+'</textarea>'));
         tr.appendChild(linkCell(H));
         var ac=cell('<input type="checkbox" data-k="audio" style="width:auto"'+(H.audio?' checked':'')+' title="Ses kaydı iste">');
         ac.className='c';tr.appendChild(ac);
@@ -437,7 +440,7 @@
         // 6 storage cagrisi yapmamak icin tembel).
         if(H.audio&&state.id){
           var rtr=document.createElement('tr');rtr.className='recrow';
-          var rtd=document.createElement('td');rtd.colSpan=7;
+          var rtd=document.createElement('td');rtd.colSpan=8;
           rtd.innerHTML='<button class="btn sm" type="button">Ses kayıtlarını göster</button><div data-role="list"></div>';
           rtr.appendChild(rtd);box.appendChild(rtr);
           var btn=rtd.querySelector('button'), list=rtd.querySelector('[data-role="list"]');
@@ -602,7 +605,7 @@
   }
 
   document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
-  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',url:'',audio:false});weeksInited=false;renderHw();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',audio:false});weeksInited=false;renderHw();});
   document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
   document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
   document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});

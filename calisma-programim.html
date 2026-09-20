@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="assets/site-overrides.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/theme.js?v=2" defer></script>
-<script src="assets/gri-link-label.js?v=1"></script>
+<script src="assets/gri-link-label.js?v=2"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -44,6 +44,13 @@
   .tli p{font-size:.85rem;color:var(--text-muted,#6f6a58);margin:0}
   .tli a.golink{font-size:.8rem;color:var(--teal,#2C5856);font-weight:600;text-decoration:none}
   .tbadge{font-size:.64rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold,#C89A3C);background:var(--gold-soft,#f5ecd4);border-radius:100px;padding:1px 8px}
+  /* ses kaydi: "Bu hafta" kartindan ana listedeki kayit alanina gonderen dugme */
+  .hw-mic{display:inline-flex;align-items:center;gap:5px;margin:6px 0 0 8px;padding:4px 10px;border-radius:7px;
+          border:1px solid var(--wr,#c0672a);background:transparent;cursor:pointer;
+          font-family:inherit;font-size:.78rem;font-weight:600;color:var(--wr,#c0672a)}
+  .hw-mic:hover{background:rgba(192,103,42,.08)}
+  .rec.flash{animation:recFlash 1.6s ease-out}
+  @keyframes recFlash{0%,60%{box-shadow:0 0 0 3px rgba(192,103,42,.45)}100%{box-shadow:0 0 0 0 rgba(192,103,42,0)}}
   /* odev satiri: beceri rozeti + okunur link */
   .hw-sk{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
          color:#fff;padding:2px 7px;border-radius:100px;margin-right:7px;vertical-align:1px}
@@ -241,6 +248,13 @@
   // Bu kart yalnizca icinde bulunulan haftayi (Pzt-Paz) one cikarir.
   var wkEls={};
   function syncWeek(key,val){var e=wkEls[key];if(e)e.classList.toggle('done',val);}
+  // Kayit alani tek yerde (ana odev listesi) duruyor; buradan oraya goturur.
+  function gotoRecorder(key){
+    var row=hwEls[key];if(!row)return;
+    var rec=row.querySelector('.rec');
+    (rec||row).scrollIntoView({behavior:'smooth',block:'center'});
+    if(rec){rec.classList.remove('flash');void rec.offsetWidth;rec.classList.add('flash');}
+  }
   function syncMain(key,val){var e=hwEls[key];if(e)e.classList.toggle('done',val);}
 
   function mondayOf(d){
@@ -277,7 +291,10 @@
       el.className='ck'+(doneSet[x.key]?' done':'');
       wkEls[x.key]=el;
       el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
-        '<div class="ck-body">'+hwGovde(x.H,'<span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>')+'</div>';
+        '<div class="ck-body">'+hwGovde(x.H,'<span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>')+
+        (x.H.audio?'<button type="button" class="hw-mic">&#9679; Ses kaydı yükle</button>':'')+'</div>';
+      var mic=el.querySelector('.hw-mic');
+      if(mic)mic.addEventListener('click',function(){gotoRecorder(x.key);});
       el.querySelector('.box').addEventListener('click',function(){
         var nv=!el.classList.contains('done');
         el.classList.toggle('done',nv);setDone(x.key,nv);syncMain(x.key,nv);

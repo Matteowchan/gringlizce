@@ -25,6 +25,15 @@
     'ielts-speaking-part1': 'IELTS Konuşma · Part 1',
     'ielts-speaking-part2': 'IELTS Konuşma · Part 2 (cue card)',
     'ielts-speaking-part3': 'IELTS Konuşma · Part 3',
+    'konu-ielts-genel-bakis': 'IELTS Konu Anlatımı · Genel bakış',
+    'konu-ielts-listening': 'IELTS Konu Anlatımı · Dinleme',
+    'konu-ielts-reading': 'IELTS Konu Anlatımı · Okuma',
+    'konu-ielts-speaking': 'IELTS Konu Anlatımı · Konuşma',
+    'konu-ielts-grammar': 'IELTS Konu Anlatımı · Gramer',
+    'konu-ielts-kelime': 'IELTS Konu Anlatımı · Kelime',
+    'konu-ielts-akademik-kelime': 'IELTS Konu Anlatımı · Akademik kelime',
+    'konu-ielts-writing-task1': 'IELTS Konu Anlatımı · Writing Task 1',
+    'konu-ielts-writing-task2': 'IELTS Konu Anlatımı · Writing Task 2',
     'ielts-deneme': 'IELTS Deneme',
     'ielts-deneme-reading': 'IELTS Deneme · Okuma',
     'ielts-deneme-listening': 'IELTS Deneme · Dinleme',
@@ -73,7 +82,13 @@
     var etiket;
 
     if (/(^|\.)gringlizce\.com$/i.test(u.hostname)) {
-      etiket = SAYFA[yol] || (yol ? baslikCevir(yol) : 'Gri English');
+      etiket = SAYFA[yol];
+      // Tema bazli kelime sayfalari kalipli: ielts-kelime-<tema>
+      if (!etiket) {
+        var kel = /^ielts-kelime-(.+)$/.exec(yol);
+        if (kel) etiket = 'IELTS Kelime · ' + baslikCevir(kel[1]);
+      }
+      if (!etiket) etiket = yol ? baslikCevir(yol) : 'Gri English';
       var capa = (u.hash || '').replace('#', '');
       if (capa && CAPA[capa]) etiket += ' · ' + CAPA[capa];
       // Yazi Pratigi linkleri: hangi gorev tipi oldugu ve sorunun hazir gelip

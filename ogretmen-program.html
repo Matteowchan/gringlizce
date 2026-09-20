@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/theme.js?v=2" defer></script>
 <script src="assets/site-config.js?v=31"></script>
-<script src="assets/gri-link-label.js?v=1"></script>
+<script src="assets/gri-link-label.js?v=2"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -57,11 +57,16 @@
   .tab .n{font-weight:600;opacity:.75;margin-left:5px}
   .tab.on{background:var(--bg-card,#fff);border-color:var(--gri-line,#e5ddc9);color:var(--text,#23291f)}
   .pane{display:none;background:var(--bg-card,#fff);border:1px solid var(--gri-line,#e5ddc9);border-top:0;
-        border-radius:0 0 10px 10px;padding:12px}
+        border-radius:0 0 10px 10px;padding:12px;overflow-x:auto}
   .pane.on{display:block}
 
   /* ---- hucre tablosu (Excel hissi) ---- */
+  /* Dar ekranda sutunlar ezilmesin: tablo kendi asgari genisligini korur,
+     pane yatay kayar. Genis ekranda tablo %100'e yayilir. */
   .sheet{width:100%;border-collapse:collapse;font-family:var(--font-ui,Inter),sans-serif;font-size:.84rem}
+  #p-les .sheet{min-width:1040px}
+  #p-hw  .sheet{min-width:980px}
+  #p-res .sheet{min-width:560px}
   .sheet th{position:sticky;top:52px;z-index:5;background:var(--bg,#faf7ee);text-align:left;
             font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;
             padding:7px 8px;border:1px solid var(--gri-line,#e5ddc9)}
@@ -70,10 +75,9 @@
   .sheet input,.sheet select,.sheet textarea{width:100%;border:0;background:transparent;padding:7px 8px;
        font-family:inherit;font-size:inherit;color:var(--text,#23291f);resize:none}
   .sheet input:focus,.sheet select:focus,.sheet textarea:focus{outline:2px solid var(--gri-accent,#2C5856);outline-offset:-2px;background:var(--bg-card,#fff)}
-  /* Uzun metin (odev / ders detayi): satir yuksekligi bozulmasin diye tek satir
-     gorunur, tiklayinca acilir. Boylece tablo kompakt kalir ama metin duzenlenebilir. */
-  .sheet textarea.grow{box-sizing:border-box;height:32px;overflow:hidden;line-height:18px;white-space:pre-wrap}
-  .sheet textarea.grow:focus{height:104px;overflow:auto;position:relative;z-index:6;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+  /* Aciklama hucresi: metnin tamami gorunsun diye yukseklik icerige gore
+     ayarlanir (autoGrow). Kesme yok, tiklamaya gerek yok. */
+  .sheet textarea.grow{box-sizing:border-box;min-height:32px;overflow:hidden;line-height:18px;white-space:pre-wrap}
   .sheet .rn{text-align:center;font-weight:700;color:var(--gri-gold,#C89A3C);font-size:.78rem;padding:0 2px}
   .sheet .del{width:100%;border:0;background:transparent;color:var(--text-muted,#6f6a58);cursor:pointer;font-size:1rem;line-height:28px}
   .sheet .del:hover{color:var(--dn);background:rgba(163,59,59,.08)}
@@ -121,6 +125,9 @@
   .msg{font-size:.82rem;padding:7px 11px;border-radius:7px;display:none}
   .msg.ok{background:#e2f0e4;color:#2f7a44;display:inline-block}
   .msg.err{background:#f5e0e0;color:#a33b3b;display:inline-block}
+  /* Dar ekranda arac cubugu uc satira bolunuyordu; ozet metni zaten
+     "Program bilgileri" satirinda da var, orada gizlenir. */
+  @media(max-width:960px){ .bar .sub{display:none} }
   @media(max-width:720px){
     .sheet{font-size:.8rem}
     .sheet th{top:0}
@@ -254,6 +261,7 @@
       document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x===t);});
       document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===t.dataset.pane);});
       if(t.dataset.pane==='p-cal')drawCal();
+      growAll();   // gizliyken olculemeyen hucreler simdi boyutlanir
     });
   });
   document.getElementById('metaToggle').addEventListener('click',function(){
@@ -264,12 +272,26 @@
 
   // ------------------------------------------------------------------ helpers
   function cell(html){var td=document.createElement('td');td.innerHTML=html;return td;}
+
+  // Aciklama hucrelerini icerige gore boyutla. Gizli bir elemanin scrollHeight'i
+  // 0 oldugu icin sekme degisiminde ve yeniden boyutlandirmada tekrar cagrilir.
+  function autoGrow(el){
+    if(!el||el.offsetParent===null)return;
+    el.style.height='auto';
+    el.style.height=(el.scrollHeight+2)+'px';
+  }
+  function growAll(){
+    document.querySelectorAll('.pane.on textarea.grow').forEach(autoGrow);
+  }
+  var growTimer=null;
+  window.addEventListener('resize',function(){clearTimeout(growTimer);growTimer=setTimeout(growAll,120);});
   // Bir satirdaki her alan dogrudan state nesnesine yazar (ara kaydetme yok).
   function bind(tr,obj,after){
     tr.querySelectorAll('[data-k]').forEach(function(el){
       var ev=(el.type==='checkbox')?'change':'input';
       el.addEventListener(ev,function(){
         obj[el.dataset.k]=(el.type==='checkbox')?el.checked:el.value;
+        if(el.classList.contains('grow'))autoGrow(el);
         if(after)after(el.dataset.k);
       });
     });
@@ -330,6 +352,7 @@
       tr.querySelector('.del').addEventListener('click',function(){state.lessons.splice(i,1);renderLessons();drawCal();});
     });
     document.getElementById('lCnt').textContent=state.lessons.length;
+    growAll();
     updateSummary();
   }
 
@@ -420,6 +443,7 @@
       });
     });
     document.getElementById('hCnt').textContent=state.homework.length;
+    growAll();
     updateSummary();
   }
 
@@ -575,18 +599,9 @@
     await loadPrograms(null);showMsg('Silindi.',true);
   });
 
-  // Baslikta ham e-posta cirkin duruyordu: adi buyut, e-postayi kucuk goster.
-  (function(){
-    var ad=studentName, mail='';
-    if(/@/.test(studentName)){mail=studentName;ad=studentName.split('@')[0];}
-    ad=ad.charAt(0).toUpperCase()+ad.slice(1);
-    var el=document.getElementById('pgWho');
-    el.textContent=ad;
-    if(mail){
-      var m=document.createElement('span');m.className='sub';m.style.marginLeft='6px';m.textContent=mail;
-      el.insertAdjacentElement('afterend',m);
-    }
-  })();
+  // Sistemde ogrencinin adi yok (profiles.full_name bos, class_roster yalnizca
+  // e-posta veriyor). E-postadan isim uydurmak yaniltiyordu; oldugu gibi yaz.
+  document.getElementById('pgWho').textContent=studentName;
   document.getElementById('backBtn').href=classId?('ogretmen-sinif?id='+classId):'ogretmen';
 
   await loadPrograms(params.get('id')||null);

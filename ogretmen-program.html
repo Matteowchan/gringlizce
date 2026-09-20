@@ -653,8 +653,20 @@
     if(!el||!state.id){if(el)el.textContent='';return;}
     var pzt=mondayOf(new Date()), son=new Date(pzt.getFullYear(),pzt.getMonth(),pzt.getDate()+7);
     var iso=function(d){return d.toISOString().slice(0,10);};
-    var haftalik=state.homework.map(function(H,i){return {H:H,i:i};})
-      .filter(function(x){return x.H.date&&x.H.date>=iso(pzt)&&x.H.date<iso(son);});
+    var hepsi=state.homework.map(function(H,i){return {H:H,i:i};}).filter(function(x){return x.H.date;});
+    var pencere=function(m){var b=iso(m),e=iso(new Date(m.getFullYear(),m.getMonth(),m.getDate()+7));
+      return hepsi.filter(function(x){return x.H.date>=b&&x.H.date<e;});};
+    var haftalik=pencere(pzt);
+    // Program ileri bir tarihte basliyorsa (ya da bitmisse) bos ozet yerine
+    // en yakin dolu haftayi goster; ogrenci sayfasindaki kartla ayni mantik.
+    var etiket='Bu hafta';
+    if(!haftalik.length){
+      var sonraki=hepsi.filter(function(x){return x.H.date>=iso(pzt);})[0]||hepsi[hepsi.length-1];
+      if(!sonraki){el.textContent='';return;}
+      var d=new Date(sonraki.H.date);
+      pzt=mondayOf(d);haftalik=pencere(pzt);
+      etiket=(d>new Date())?'İlk hafta':'Son hafta';
+    }
     if(!haftalik.length){el.textContent='';return;}
     var r=await sb.from('student_program_progress')
       .select('item_key,done,note,data').eq('program_id',state.id);
@@ -669,7 +681,7 @@
       if(m[k]&&m[k].done)tik++;
       if(m[k]&&(m[k].note||m[k].data))not++;
     });
-    el.innerHTML='Bu hafta: <b>'+tik+'/'+haftalik.length+'</b> tamamlandı · <b>'+not+'</b> not/skor';
+    el.innerHTML=etiket+': <b>'+tik+'/'+haftalik.length+'</b> tamamlandı · <b>'+not+'</b> not/skor';
   }
 
   async function loadPrograms(selectId, yeniBos){

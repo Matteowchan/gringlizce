@@ -67,7 +67,7 @@
   #p-les .sheet{min-width:1040px}
   #p-hw  .sheet{min-width:1240px}
   #p-res .sheet{min-width:560px}
-  .sheet th{position:sticky;top:52px;z-index:5;background:var(--bg,#faf7ee);text-align:left;
+  .sheet th{position:sticky;top:var(--bar-h,52px);z-index:5;background:var(--bg,#faf7ee);text-align:left;
             font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;
             padding:7px 8px;border:1px solid var(--gri-line,#e5ddc9)}
   .sheet td{border:1px solid var(--gri-line,#e5ddc9);padding:0;vertical-align:middle}
@@ -262,6 +262,15 @@
   var weeksInited=false;  // ilk yuklemede yalnizca icinde bulunulan hafta acilir
 
   // ---------------------------------------------------------------- sekmeler
+  // Arac cubugu dar ekranda iki-uc satira sariyor; sabit tablo basligi 52px'e
+  // gore konumlandirilinca ilk satirin uzerine biniyordu. Gercek yuksekligi olc.
+  function barYuksekligi(){
+    var b=document.querySelector('.bar');
+    if(b)document.documentElement.style.setProperty('--bar-h', b.offsetHeight+'px');
+  }
+  barYuksekligi();
+  window.addEventListener('resize',barYuksekligi);
+
   document.querySelectorAll('.tab').forEach(function(t){
     t.addEventListener('click',function(){
       document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x===t);});

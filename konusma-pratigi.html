@@ -12,6 +12,7 @@
 <script src="assets/theme.js?v=2" defer></script>
 <script src="assets/site-config.js?v=31"></script>
 <script src="assets/gri-ses-kaydi.js?v=1"></script>
+<script src="assets/gri-speaking-ai.js?v=1"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -82,7 +83,7 @@
       <div id="kaydediciYeri"></div>
     </div>
 
-    <details class="card ai" id="aiKart">
+    <div id="aiKart"><details class="card ai" style="display:none">
       <summary>ChatGPT ile değerlendirt — sertifikalı examiner promptu</summary>
       <p class="aciklama">Mert Hoca kaydını zaten dinleyecek. Bunu ek olarak, aynı gün geri bildirim almak
         için kullan: prompt seni öven değil, Band 7'ye ne kadar kaldığını sayarak söyleyen bir examiner gibi
@@ -97,7 +98,7 @@
       <button type="button" class="akis-btn" id="kopyaBtn">Promptu kopyala</button>
       <span class="akis-not" id="kopyaSt" style="margin-left:8px"></span>
       <pre id="aiMetin"></pre>
-    </details>
+    </details></div>
   </div>
   <div id="yok" class="yok" style="display:none"></div>
 </div>
@@ -242,27 +243,12 @@
 
   iptalBtn.addEventListener('click', function () { kaydedici.durdur(); akisBitir(); });
 
-  // ---- ChatGPT examiner promptu ----
-  var AI_PROMPT = "You are a certified IELTS Speaking examiner with fifteen years of rating experience. You are NOT a tutor, NOT a coach and NOT a motivational assistant. You are marking a live exam.\n\nTHE CANDIDATE\nI am currently rated between Band 5 and Band 6. My target is Band 7. Band 7 is a real threshold, not a compliment: I do not get it for effort, for trying hard, or for being understandable. Your entire job is to tell me precisely what is holding me below 7 and what a 7 would have sounded like instead.\n\nMARKING RULES - FOLLOW THESE EXACTLY\n1. Mark to the half band (5.0, 5.5, 6.0, 6.5, 7.0...). Give each of the four criteria its own band. They will usually differ; four identical numbers means you have not listened carefully.\n2. If you are hesitating between two bands, award the LOWER one. Inflated marking is the single most damaging thing you can do to me, because it hides the gap I have to close.\n3. Never open with praise. Never write \"good job\", \"well done\", \"nice attempt\", \"you are on the right track\", or any equivalent. Do not soften a criticism by pairing it with a compliment.\n4. Every claim you make must be evidenced with my OWN words, quoted verbatim in quotation marks. A judgement without a quote is worthless to me.\n5. Count things. Do not say \"you paused a lot\" - say how many pauses over two seconds, and where. Do not say \"you repeat words\" - name the word and how many times I used it.\n6. If my Part 2 answer is under two minutes, state the actual length and mark Fluency accordingly: an incomplete long turn cannot reach Band 7.\n\nREPORT FORMAT - use these exact headings\n\n1. FLUENCY AND COHERENCE - Band X.X\n   - Length of my Part 2 turn, and whether the task was completed.\n   - Number of hesitations longer than two seconds, and what I was hesitating over: searching for an idea, or searching for the word? These are graded differently.\n   - Self-corrections and false starts, quoted.\n   - Which discourse markers I overused, quoted with counts.\n   - WHAT A 7 NEEDS HERE: one sentence, concrete.\n\n2. LEXICAL RESOURCE - Band X.X\n   - The five most basic or repeated words I used, quoted, each with the precise Band 7 alternative I should have used IN THAT SENTENCE.\n   - Any collocation errors, quoted with the natural version.\n   - Did I use any less common vocabulary correctly? Quote it. If I used none, say so plainly - that alone caps this criterion at 6.\n   - WHAT A 7 NEEDS HERE: one sentence, concrete.\n\n3. GRAMMATICAL RANGE AND ACCURACY - Band X.X\n   - Count my error-free clauses as a rough proportion of total clauses. Band 7 needs frequent error-free complex sentences.\n   - My five most frequent errors, each quoted from my own speech with the correction and the grammar name (tense, article, agreement, preposition, word form).\n   - Which complex structures did I attempt at all? If I only produced simple and compound sentences, say so - that alone caps this criterion at 6.\n   - WHAT A 7 NEEDS HERE: one sentence, concrete.\n\n4. PRONUNCIATION - Band X.X\n   - Only from what is visible in the transcript and any audio you were given: word stress, sentence stress, sounds I consistently mis-form. If you cannot judge this from a transcript alone, say so in one line rather than inventing a score.\n\n5. IDEA DEVELOPMENT\n   - For each Part 3 answer separately: did it give an opinion, a reason AND a concrete example? Mark each one as COMPLETE or STOPPED SHORT, and if it stopped short, say at which move.\n\n6. THE VERDICT\n   - Overall band, to the half band.\n   - The ONE thing between me and Band 7, in a single sentence. Not three things. One.\n   - What I must do this week to close it - a drill I can actually repeat, not general advice.\n\n7. THE REWRITE\n   - Take my WEAKEST Part 3 answer and rewrite it at exactly Band 7 - not 8, not 9. It must stay close enough to my own level that I can realistically imitate it next week.\n   - Keep MY ideas. Do not invent new content.\n   - Underneath, list the three specific changes you made and why each one raises the band.\n\nIf my answer is Band 5, write Band 5. If it is Band 6, write Band 6. Do not round up to be kind - rounding up costs me the exam.\n\nHere is my material:\n\nCUE CARD:\n[paste the cue card here]\n\nMY PART 2 ANSWER (transcript, word for word, including the \"umm\"s and the restarts):\n[paste your transcript here]\n\nPART 3 QUESTIONS AND MY ANSWERS:\n1. [question] - [your answer]\n2. [question] - [your answer]\n3. [question] - [your answer]";
-  // Sorunun kendisi yer tutucuya gecsin ki ogrenci iki ayri seyi yapistirmasin.
-  var aiHazir = H.prompt
-    ? AI_PROMPT.replace('[paste the cue card here]', H.prompt.trim())
-    : AI_PROMPT;
-  document.getElementById('aiMetin').textContent = aiHazir;
-  document.getElementById('kopyaBtn').addEventListener('click', async function () {
-    var st = document.getElementById('kopyaSt');
-    try {
-      await navigator.clipboard.writeText(aiHazir);
-      st.textContent = 'Kopyalandı — ChatGPT\'ye yapıştır.';
-    } catch (e) {
-      // Pano izni yoksa metni sec, kullanici Ctrl+C yapsin.
-      var pre = document.getElementById('aiMetin');
-      var r = document.createRange(); r.selectNodeContents(pre);
-      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      st.textContent = 'Metin seçildi — Ctrl+C ile kopyala.';
-    }
-    setTimeout(function () { st.textContent = ''; }, 4000);
-  });
+  // ---- ChatGPT examiner promptu (paylasilan modul) ----
+  // Ayni blok ielts-speaking-part1/2/3 sayfalarinda da var; metin tek kaynakta.
+  if (window.GriSpeakingAI) {
+    document.getElementById('aiKart').innerHTML = '';
+    GriSpeakingAI.mount(document.getElementById('aiKart'), { cueCard: H.prompt || '' });
+  }
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = '';

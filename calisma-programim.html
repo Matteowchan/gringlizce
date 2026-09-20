@@ -77,6 +77,21 @@
   .ck-t .dt{color:var(--text-muted,#6f6a58);font-size:.76rem;margin-right:6px}
   .ck.done .ck-t{color:var(--text-muted,#6f6a58);text-decoration:line-through}
   .rec{margin-top:8px;background:var(--bg,#faf7ee);border:1px solid var(--line,#e5ddc9);border-radius:9px;padding:9px 11px}
+  /* deneme trendi: yapisal skorlardan cizilir */
+  .trend{margin:0 0 16px}
+  .trend h3{font-family:Georgia,serif;font-size:1rem;margin:0 0 4px}
+  .trend .alt{font-size:.8rem;color:var(--text-muted,#6f6a58);margin:0 0 10px}
+  .trend-grid{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .trend-col{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px}
+  .trend-bars{display:flex;gap:3px;align-items:flex-end;height:64px}
+  .trend-bars i{width:13px;border-radius:3px 3px 0 0;display:block}
+  .trend-bars i.l{background:var(--li,#7a4fa3)}
+  .trend-bars i.r{background:var(--re,#2f8f6b)}
+  .trend-col .lbl{font-size:.68rem;color:var(--text-muted,#6f6a58)}
+  .trend-col .val{font-size:.72rem;font-weight:700}
+  .trend-key{display:flex;gap:12px;margin-top:8px;font-size:.72rem;color:var(--text-muted,#6f6a58)}
+  .trend-key span{display:inline-flex;align-items:center;gap:5px}
+  .trend-key i{width:9px;height:9px;border-radius:2px;display:inline-block}
   /* ogretmen yorumu: ogrencinin odevinin altinda, okunur ama duzenlenemez */
   .hw-tn{margin:9px 0 2px;padding:10px 12px;border:1px solid var(--gri-line,#e5ddc9);
          border-left:3px solid var(--sp,#3a6ea5);border-radius:8px;background:rgba(58,110,165,.06)}
@@ -151,10 +166,16 @@
   .loading{padding:60px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
   .empty-b{padding:40px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
   @media print{
-    nav,.site-nav,.btnrow,.cal,#calNav,.rec button,.gri-nav,header{display:none!important}
+    /* Kaydedici, kaydirma dugmesi ve "Bu hafta" karti kagitta ise yaramiyor;
+       sonuncusu asagidaki listeyi tekrarliyordu. */
+    nav,.site-nav,.btnrow,.cal,#calNav,.gri-nav,header,.gsk,.hw-mic,#wkCard{display:none!important}
     .cols{grid-template-columns:1fr}
     body{background:#fff}
     .card{border-color:#ccc;box-shadow:none}
+    .ck,.hw-q,.hw-tn,.hw-sc,.tli{break-inside:avoid;page-break-inside:avoid}
+    /* Not alani kagitta kirpilmasin, yazilani goster. */
+    .hw-note textarea{height:auto;min-height:88px;resize:none;border:1px solid #ccc;overflow:visible}
+    .hw-go{border-color:#ccc;color:#333}
   }
 </style>
 </head>
@@ -165,6 +186,13 @@
     <div class="card"><div class="card-b" id="head"></div></div>
     <div class="cols" style="margin-top:16px">
       <div class="stack">
+        <div class="card trend" id="trendCard" style="display:none"><div class="card-b">
+          <h3>Deneme trendin</h3>
+          <p class="alt">Cumartesi denemelerinden girdiğin ham skorlar. Çubuk 40 üzerinden.</p>
+          <div class="trend-grid" id="trendGrid"></div>
+          <div class="trend-key"><span><i style="background:var(--li,#7a4fa3)"></i>Listening</span>
+            <span><i style="background:var(--re,#2f8f6b)"></i>Reading</span></div>
+        </div></div>
         <div class="card" id="wkCard" style="display:none"><div class="card-b" id="week"></div></div>
         <div class="kick">Ders akışı</div>
         <div class="card"><div class="card-b"><div class="tl" id="lessons"></div></div></div>
@@ -434,6 +462,38 @@
     document.getElementById('wkCard').style.display='';
   }
   renderWeek();
+  renderTrend();
+
+  // ---- deneme trendi ----
+  // Skorlar yapisal oldugu icin (progress.data) cubuk grafigi cizilebiliyor;
+  // Excel'deki takip sayfasinin yerini tutar.
+  function renderTrend(){
+    var kayitlar=[];
+    homework.forEach(function(H,i){
+      if(!H.scores)return;
+      var d=veri['hw:'+i+':'+(H.date||'')];
+      if(!d||(d.listening==null&&d.reading==null))return;
+      kayitlar.push({tarih:H.date,d:d});
+    });
+    if(kayitlar.length<1)return;
+    var grid=document.getElementById('trendGrid');
+    grid.innerHTML='';
+    kayitlar.forEach(function(k){
+      var col=document.createElement('div');col.className='trend-col';
+      var yuk=function(v){return Math.max(4,Math.round(v/40*64))+'px';};
+      var cub='';
+      if(k.d.listening!=null)cub+='<i class="l" style="height:'+yuk(k.d.listening)+'"></i>';
+      if(k.d.reading!=null)cub+='<i class="r" style="height:'+yuk(k.d.reading)+'"></i>';
+      var deger=[];
+      if(k.d.listening!=null)deger.push(k.d.listening);
+      if(k.d.reading!=null)deger.push(k.d.reading);
+      col.innerHTML='<div class="trend-bars">'+cub+'</div>'+
+        '<span class="val">'+deger.join('/')+'</span>'+
+        '<span class="lbl">'+esc(fmtD(k.tarih))+'</span>';
+      grid.appendChild(col);
+    });
+    document.getElementById('trendCard').style.display='';
+  }
 
   // resources
   var rbox=document.getElementById('resources');

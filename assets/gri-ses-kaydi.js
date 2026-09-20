@@ -73,6 +73,12 @@
         '<div class="gsk-st" data-r="st"></div><div data-r="list"></div>';
       el.appendChild(kutu);
 
+      // Salt okunur: ogretmen bu bilesenle kayit alamaz (zaten storage politikasi
+      // baskasinin klasorune yazmaya izin vermez), yalnizca dinler ve silebilir.
+      if (opt.saltOkunur) {
+        kutu.querySelector('[data-a="rec"]').remove();
+        kutu.querySelector('[data-a="file"]').remove();
+      }
       var recBtn = kutu.querySelector('[data-a="rec"]');
       var fileBtn = kutu.querySelector('[data-a="file"]');
       var fileInp = kutu.querySelector('input[type=file]');
@@ -179,13 +185,13 @@
           mediaRec.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
           mediaRec.onstop = function () {
             clearTimeout(kesTimer); vizDurdur();
-            recBtn.textContent = '● Kaydet'; recBtn.classList.remove('on');
+            if (recBtn) { recBtn.textContent = '● Kaydet'; recBtn.classList.remove('on'); }
             stream.getTracks().forEach(function (t) { t.stop(); });
             yukle(new Blob(chunks, { type: 'audio/webm' }), 'webm');
           };
           mediaRec.start();
           vizBaslat(stream, bitisSn);
-          recBtn.textContent = '■ Durdur'; recBtn.classList.add('on');
+          if (recBtn) { recBtn.textContent = '■ Durdur'; recBtn.classList.add('on'); }
           stEl.textContent = bitisSn
             ? ('Kaydediliyor… ' + sure(bitisSn) + ' sonunda kendiliğinden duracak.')
             : 'Kaydediliyor… (en fazla 12 dk)';
@@ -198,8 +204,8 @@
         }
       }
 
-      recBtn.addEventListener('click', function () { kayitBaslat(null); });
-      fileBtn.addEventListener('click', function () { fileInp.click(); });
+      if (recBtn) recBtn.addEventListener('click', function () { kayitBaslat(null); });
+      if (fileBtn) fileBtn.addEventListener('click', function () { fileInp.click(); });
       fileInp.addEventListener('change', function () {
         if (!fileInp.files[0]) return;
         var f = fileInp.files[0];

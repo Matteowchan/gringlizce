@@ -545,10 +545,15 @@
       return '<option value="'+p.id+'">'+esc(p.title)+(p.status==='published'?' (yayında)':' (taslak)')+'</option>';}).join('');
     sel.value=state.id||'';
   }
-  async function loadPrograms(selectId){
+  // yeniBos=true yalnizca "+ Yeni program" secildiginde gelir. Aksi halde id
+  // verilmemisse ogrencinin en son programi acilir; onceden bos form aciliyordu
+  // ve ogretmen sinif panelinden gelince "program yok" sanabiliyordu.
+  async function loadPrograms(selectId, yeniBos){
     var r=await sb.from('student_programs').select('*').eq('student_id',studentId).eq('teacher_id',me.id).order('created_at',{ascending:false});
     allPrograms=r.data||[];
-    var pick=selectId?allPrograms.find(function(p){return p.id===selectId;}):null;
+    var pick=null;
+    if(selectId)pick=allPrograms.find(function(p){return p.id===selectId;});
+    else if(!yeniBos)pick=allPrograms[0]||null;
     loadState(pick||null);refreshSelect();
   }
 
@@ -585,7 +590,7 @@
   ['fStart','fEnd','fTitle'].forEach(function(id){
     document.getElementById(id).addEventListener('input',function(){if(id!=='fTitle'){calRef=null;drawCal();}updateSummary();});
   });
-  document.getElementById('progSelect').addEventListener('change',function(e){loadPrograms(e.target.value||null);});
+  document.getElementById('progSelect').addEventListener('change',function(e){loadPrograms(e.target.value||null,!e.target.value);});
   document.getElementById('dupBtn').addEventListener('click',function(){
     state.id=null;state.status='draft';
     document.getElementById('fTitle').value=(document.getElementById('fTitle').value||'Program')+' (kopya)';

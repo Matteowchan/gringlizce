@@ -93,6 +93,12 @@
   .recrow>td{background:var(--gri-gold-soft,#f5ecd4)!important;padding:8px 10px}
   .recrow audio{width:100%;max-width:420px;height:32px;margin-top:3px}
   .recrow .nm{font-size:.74rem;color:var(--text-muted,#6f6a58)}
+  .recrow .line{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .recrow .line audio{flex:1;min-width:0;margin-top:0}
+  .rec-del{border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text-muted,#6f6a58);
+           border-radius:7px;padding:4px 9px;font-family:inherit;font-size:.76rem;font-weight:600;cursor:pointer}
+  .rec-del:hover{border-color:var(--dn);color:var(--dn);background:rgba(163,59,59,.07)}
+  .rec-del:disabled{opacity:.5;cursor:default}
   /* link hucresi: ham URL yerine okunur etiket */
   .lnkcell{padding:0 4px 0 8px!important}
   .lnkcell .wrap{display:flex;align-items:center;gap:6px;min-height:32px}
@@ -453,11 +459,24 @@
     if(l.error||!l.data||!l.data.length){listEl.innerHTML='<span class="nm">Henüz kayıt yüklenmedi.</span>';return;}
     listEl.innerHTML='';
     l.data.forEach(function(f){
+      var path=folder+'/'+f.name;
       var row=document.createElement('div');
-      row.innerHTML='<div class="nm">'+esc(f.name)+'</div>';
+      row.innerHTML='<div class="nm">'+esc(f.name)+'</div><div class="line"></div>';
+      var line=row.querySelector('.line');
+      // Ogretmen de bozuk/yanlis kaydi silebilir (storage: spk_teacher_delete).
+      var del=document.createElement('button');
+      del.type='button';del.className='rec-del';del.textContent='Sil';
+      del.addEventListener('click',async function(){
+        if(!confirm('Bu ses kaydı silinsin mi? Geri alınamaz.'))return;
+        del.disabled=true;
+        var r=await sb.storage.from('speaking-submissions').remove([path]);
+        if(r.error){del.disabled=false;alert('Silinemedi: '+r.error.message);return;}
+        row.remove();
+      });
+      line.appendChild(del);
       listEl.appendChild(row);
-      sb.storage.from('speaking-submissions').createSignedUrl(folder+'/'+f.name,3600).then(function(s){
-        if(s.data&&s.data.signedUrl){var a=document.createElement('audio');a.controls=true;a.src=s.data.signedUrl;row.appendChild(a);}
+      sb.storage.from('speaking-submissions').createSignedUrl(path,3600).then(function(s){
+        if(s.data&&s.data.signedUrl){var a=document.createElement('audio');a.controls=true;a.src=s.data.signedUrl;line.insertBefore(a,del);}
       });
     });
   }

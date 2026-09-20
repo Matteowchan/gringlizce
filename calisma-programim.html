@@ -76,6 +76,17 @@
   .ck-t .dt{color:var(--text-muted,#6f6a58);font-size:.76rem;margin-right:6px}
   .ck.done .ck-t{color:var(--text-muted,#6f6a58);text-decoration:line-through}
   .rec{margin-top:8px;background:var(--bg,#faf7ee);border:1px solid var(--line,#e5ddc9);border-radius:9px;padding:9px 11px}
+  /* canli seviye grafigi: kaydin gercekten ses aldigi gorunsun */
+  .viz-wrap{display:flex;align-items:center;gap:9px;margin:8px 0 2px}
+  .viz{flex:1;height:38px;width:100%;color:var(--wr,#c0672a);
+       background:rgba(192,103,42,.07);border-radius:6px}
+  .viz-t{font-variant-numeric:tabular-nums;font-size:.8rem;font-weight:700;color:var(--wr,#c0672a)}
+  .rec-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .rec-row audio{flex:1;min-width:0;height:34px}
+  .rec-del{border:1px solid var(--gri-line,#e5ddc9);background:transparent;color:var(--text-muted,#6f6a58);
+           border-radius:7px;padding:4px 9px;font-family:inherit;font-size:.76rem;font-weight:600;cursor:pointer}
+  .rec-del:hover{border-color:#a33b3b;color:#a33b3b;background:rgba(163,59,59,.07)}
+  .rec-del:disabled{opacity:.5;cursor:default}
   .rec .rc-h{font-size:.74rem;font-weight:700;color:var(--wr);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
   .rec button{font-size:.8rem;border:1px solid var(--line,#e5ddc9);background:var(--bg-card,#fff);border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:600}
   .rec .rec-on{color:#a33b3b;border-color:#a33b3b}
@@ -235,6 +246,7 @@
       rec.innerHTML='<div class="rc-h">Ses kaydı</div>'+
         '<button data-act="rec">● Kaydet</button> <button data-act="file">Dosya yükle</button>'+
         '<input type="file" accept="audio/*" style="display:none">'+
+        '<div class="viz-wrap" data-role="viz" hidden><canvas class="viz"></canvas><span class="viz-t" data-role="clock">0:00</span></div>'+
         '<div class="small" data-role="st"></div><div data-role="list"></div>';
       el.querySelector('.ck-body').appendChild(rec);
       wireAudio(rec,i);
@@ -341,6 +353,58 @@
     var fileBtn=rec.querySelector('[data-act="file"]');
     var mediaRec=null,chunks=[],timer=null;
     var MAX_MS=12*60*1000,MAX_BYTES=10*1024*1024;
+    var audioCtx=null,vizRaf=null,vizGecmis=[];
+
+    // Mikrofondan gelen sinyalin RMS'ini her karede olcup kaydirmali cubuk
+    // grafigi cizer. Amac olcum degil, "ses geliyor mu" geri bildirimi.
+    function vizBaslat(stream){
+      var wrap=rec.querySelector('[data-role="viz"]');
+      var cv=wrap.querySelector('canvas');
+      var clock=rec.querySelector('[data-role="clock"]');
+      wrap.hidden=false;
+      try{
+        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+        var analiz=audioCtx.createAnalyser();analiz.fftSize=1024;
+        audioCtx.createMediaStreamSource(stream).connect(analiz);
+        var buf=new Uint8Array(analiz.fftSize);
+        vizGecmis=[];
+        var t0=Date.now();
+        (function ciz(){
+          analiz.getByteTimeDomainData(buf);
+          var top=0;
+          for(var i=0;i<buf.length;i++){var d=(buf[i]-128)/128;top+=d*d;}
+          vizGecmis.push(Math.sqrt(top/buf.length));
+
+          var w=cv.clientWidth||300,h=cv.clientHeight||38;
+          if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+          var kalin=3,bosluk=2,adet=Math.max(1,Math.floor(w/(kalin+bosluk)));
+          if(vizGecmis.length>adet)vizGecmis=vizGecmis.slice(-adet);
+          var g=cv.getContext('2d');
+          g.clearRect(0,0,w,h);
+          g.fillStyle=getComputedStyle(cv).color;
+          for(var j=0;j<vizGecmis.length;j++){
+            var y=Math.max(2,Math.min(h-2,vizGecmis[j]*h*3.2));
+            g.fillRect(j*(kalin+bosluk),(h-y)/2,kalin,y);
+          }
+          var sn=Math.floor((Date.now()-t0)/1000);
+          clock.textContent=Math.floor(sn/60)+':'+('0'+(sn%60)).slice(-2);
+          vizRaf=requestAnimationFrame(ciz);
+        })();
+      }catch(e){ wrap.hidden=true; }   // AudioContext yoksa kayit yine de surer
+    }
+    function vizDurdur(){
+      if(vizRaf){cancelAnimationFrame(vizRaf);vizRaf=null;}
+      if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}
+      var wrap=rec.querySelector('[data-role="viz"]');if(wrap)wrap.hidden=true;
+    }
+
+    async function sil(path,btn){
+      if(!confirm('Bu ses kaydını silmek istediğine emin misin? Geri alınamaz.'))return;
+      btn.disabled=true;stEl.textContent='Siliniyor…';
+      var r=await sb.storage.from('speaking-submissions').remove([path]);
+      if(r.error){stEl.textContent='Silinemedi: '+r.error.message;btn.disabled=false;return;}
+      stEl.textContent='Kayıt silindi.';refreshList();
+    }
 
     function folder(){return me.id+'/'+prog.id+'/hw'+idx;}
     async function refreshList(){
@@ -348,10 +412,17 @@
       listEl.innerHTML='';
       (l.data||[]).forEach(function(f){
         var path=folder()+'/'+f.name;
-        var row=document.createElement('div');row.style.marginTop='6px';
+        var row=document.createElement('div');row.className='rec-row';
+        var del=document.createElement('button');
+        del.type='button';del.className='rec-del';del.textContent='Sil';
+        del.addEventListener('click',function(){sil(path,del);});
         sb.storage.from('speaking-submissions').createSignedUrl(path,3600).then(function(s){
-          if(s.data&&s.data.signedUrl){row.innerHTML='<audio controls src="'+s.data.signedUrl+'"></audio>';}
+          if(s.data&&s.data.signedUrl){
+            var a=document.createElement('audio');a.controls=true;a.src=s.data.signedUrl;
+            row.insertBefore(a,del);
+          }
         });
+        row.appendChild(del);
         listEl.appendChild(row);
       });
     }
@@ -373,8 +444,8 @@
         try{opts.mimeType='audio/webm;codecs=opus';}catch(e){}
         mediaRec=new MediaRecorder(stream,opts);chunks=[];
         mediaRec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data);};
-        mediaRec.onstop=function(){clearTimeout(timer);recBtn.textContent='● Kaydet';recBtn.classList.remove('rec-on');stream.getTracks().forEach(function(t){t.stop();});var blob=new Blob(chunks,{type:'audio/webm'});upload(blob,'webm');};
-        mediaRec.start();recBtn.textContent='■ Durdur';recBtn.classList.add('rec-on');stEl.textContent='Kaydediliyor… (en fazla 12 dk)';
+        mediaRec.onstop=function(){clearTimeout(timer);vizDurdur();recBtn.textContent='● Kaydet';recBtn.classList.remove('rec-on');stream.getTracks().forEach(function(t){t.stop();});var blob=new Blob(chunks,{type:'audio/webm'});upload(blob,'webm');};
+        mediaRec.start();vizBaslat(stream);recBtn.textContent='■ Durdur';recBtn.classList.add('rec-on');stEl.textContent='Kaydediliyor… (en fazla 12 dk)';
         timer=setTimeout(function(){if(mediaRec&&mediaRec.state==='recording')mediaRec.stop();},MAX_MS);
       }catch(e){stEl.textContent='Mikrofon izni gerekli.';}
     });

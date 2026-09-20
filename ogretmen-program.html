@@ -93,6 +93,14 @@
   .recrow>td{background:var(--gri-gold-soft,#f5ecd4)!important;padding:8px 10px}
   .recrow audio{width:100%;max-width:420px;height:32px;margin-top:3px}
   .recrow .nm{font-size:.74rem;color:var(--text-muted,#6f6a58)}
+  .recrow .ogr-not{white-space:pre-wrap;font-size:.84rem;line-height:1.5;margin:3px 0 9px}
+  .recrow .skor{font-size:.84rem;font-weight:700;margin:3px 0 9px}
+  .recrow textarea{width:100%;min-height:62px;border:1px solid var(--gri-line,#e5ddc9);border-radius:7px;
+       padding:7px 9px;font-family:inherit;font-size:.84rem;line-height:1.5;background:var(--bg-card,#fff);resize:vertical}
+  .recrow textarea:focus{outline:2px solid var(--sp);outline-offset:-2px}
+  .recrow .kayit-st{font-size:.72rem;color:var(--text-muted,#6f6a58);margin-left:8px}
+  .ozet{font-size:.76rem;color:var(--text-muted,#6f6a58);white-space:nowrap}
+  .ozet b{color:var(--text,#23291f)}
   .recrow .line{display:flex;align-items:center;gap:8px;margin-top:4px}
   .recrow .line audio{flex:1;min-width:0;margin-top:0}
   .rec-del{border:1px solid var(--gri-line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text-muted,#6f6a58);
@@ -151,6 +159,7 @@
       <span class="who" id="pgWho">Öğrenci</span>
       <span class="pill" id="statusPill">Taslak</span>
       <span class="sub" id="pgSum"></span>
+      <span class="ozet" id="ozet"></span>
       <span class="spacer"></span>
       <span class="msg" id="msg"></span>
       <span class="acts">
@@ -193,8 +202,8 @@
 
     <div class="pane" id="p-hw">
       <table class="sheet">
-        <colgroup><col style="width:112px"><col style="width:42px"><col style="width:112px"><col style="width:30%"><col><col style="width:17%"><col style="width:42px"><col style="width:42px"><col style="width:32px"></colgroup>
-        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Soru (öğrenciye gösterilir)</th><th>Link</th><th>Ses</th><th>Not</th><th></th></tr></thead>
+        <colgroup><col style="width:112px"><col style="width:42px"><col style="width:112px"><col style="width:30%"><col><col style="width:17%"><col style="width:42px"><col style="width:74px"><col style="width:32px"></colgroup>
+        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Soru (öğrenciye gösterilir)</th><th>Link</th><th>Ses</th><th>Not / Skor</th><th></th></tr></thead>
         <tbody id="homework"></tbody>
       </table>
       <button class="addb" id="addHw" type="button">+ Ödev ekle</button>
@@ -445,25 +454,32 @@
         var ac=cell('<input type="checkbox" data-k="audio" style="width:auto"'+(H.audio?' checked':'')+' title="Ses kaydı iste">');
         ac.className='c';tr.appendChild(ac);
         // Not alani: ogrenci odevin altina yazar, asagida ogretmene gosterilir.
-        var nc=cell('<input type="checkbox" data-k="notes" style="width:auto"'+(H.notes?' checked':'')+' title="Not alanı iste">');
+        var nc=cell('<label title="Not alanı iste" style="display:inline-flex;align-items:center;gap:2px;font-size:.66rem">'
+          +'<input type="checkbox" data-k="notes" style="width:auto"'+(H.notes?' checked':'')+'>Not</label> '
+          +'<label title="Deneme skoru alanı" style="display:inline-flex;align-items:center;gap:2px;font-size:.66rem">'
+          +'<input type="checkbox" data-k="scores" style="width:auto"'+(H.scores?' checked':'')+'>Skor</label>');
         nc.className='c';tr.appendChild(nc);
         tr.appendChild(cell('<button class="del" title="Sil">×</button>'));
         box.appendChild(tr);
         bind(tr,H,function(k){
           if(k==='date'){drawCal();renderHw();}
-          if(k==='audio'||k==='notes')renderHw();
+          if(k==='audio'||k==='notes'||k==='scores')renderHw();
           if(k==='skill')hsk.style.borderLeftColor=skillColor(H.skill);
         });
         tr.querySelector('.del').addEventListener('click',function(){state.homework.splice(i,1);renderHw();drawCal();});
 
         // Ses kaydi istenen odevlerde: kayitlar tiklayinca yuklenir (her acilista
         // 6 storage cagrisi yapmamak icin tembel).
-        if(H.notes&&state.id){
+        // Not/skor istenen ya da yorum yazilabilen her odev icin geri bildirim satiri.
+        if((H.notes||H.scores)&&state.id){
           var ntr=document.createElement('tr');ntr.className='recrow';
           var ntd=document.createElement('td');ntd.colSpan=9;
-          ntd.innerHTML='<div class="nm">Öğrencinin notu</div><div data-role="not">Yükleniyor…</div>';
+          ntd.innerHTML='<div data-role="ogr">Yükleniyor…</div>'+
+            '<div class="nm">Senin yorumun (öğrenci kendi ödevinin altında görür)</div>'+
+            '<textarea data-role="yorum" placeholder="Bu ödeve dair notun…"></textarea>'+
+            '<span class="kayit-st" data-role="st"></span>';
           ntr.appendChild(ntd);box.appendChild(ntr);
-          ogrenciNotu('hw:'+sortedPos[i]+':'+(H.date||''), ntd.querySelector('[data-role="not"]'));
+          geriBildirim('hw:'+sortedPos[i]+':'+(H.date||''), ntd);
         }
         if(H.audio&&state.id){
           var rtr=document.createElement('tr');rtr.className='recrow';
@@ -483,13 +499,38 @@
     updateSummary();
   }
 
-  async function ogrenciNotu(key,el){
-    var r=await sb.from('student_program_progress').select('note,note_at')
-      .eq('program_id',state.id).eq('item_key',key).maybeSingle();
-    var n=r&&r.data&&r.data.note;
-    el.innerHTML=n
-      ? '<div style="white-space:pre-wrap;font-size:.84rem;line-height:1.5">'+esc(n)+'</div>'
-      : '<span class="nm">Öğrenci henüz not yazmadı.</span>';
+  // Ogrencinin notu + skorlari okunur; ogretmenin yorumu yazilir (set_teacher_note).
+  async function geriBildirim(key,td){
+    var ogr=td.querySelector('[data-role="ogr"]');
+    var ta=td.querySelector('[data-role="yorum"]');
+    var st=td.querySelector('[data-role="st"]');
+    var r=await sb.from('student_program_progress')
+      .select('note,data,teacher_note').eq('program_id',state.id).eq('item_key',key).maybeSingle();
+    var d=(r&&r.data)||{};
+    var html='';
+    if(d.data&&(d.data.listening!=null||d.data.reading!=null)){
+      var p=[];
+      if(d.data.listening!=null)p.push('Listening '+d.data.listening+'/40');
+      if(d.data.reading!=null)p.push('Reading '+d.data.reading+'/40');
+      html+='<div class="nm">Öğrencinin skoru</div><div class="skor">'+esc(p.join('  ·  '))+'</div>';
+    }
+    html+='<div class="nm">Öğrencinin notu</div>'+
+      (d.note?'<div class="ogr-not">'+esc(d.note)+'</div>'
+             :'<div class="ogr-not"><span class="nm">Henüz yazmadı.</span></div>');
+    ogr.innerHTML=html;
+    ta.value=d.teacher_note||'';
+
+    var zam=null, sonKayit=ta.value;
+    async function kaydet(){
+      if(ta.value===sonKayit)return;
+      st.textContent='Kaydediliyor…';
+      var res=await sb.rpc('set_teacher_note',{p_program_id:state.id,p_item_key:key,p_note:ta.value});
+      if(res.error){st.textContent='Kaydedilemedi: '+res.error.message;return;}
+      sonKayit=ta.value;st.textContent='Kaydedildi';
+      setTimeout(function(){if(st.textContent==='Kaydedildi')st.textContent='';},2500);
+    }
+    ta.addEventListener('input',function(){clearTimeout(zam);st.textContent='';zam=setTimeout(kaydet,900);});
+    ta.addEventListener('blur',function(){clearTimeout(zam);kaydet();});
   }
 
   async function loadRecordings(idx,listEl){
@@ -606,13 +647,38 @@
   // yeniBos=true yalnizca "+ Yeni program" secildiginde gelir. Aksi halde id
   // verilmemisse ogrencinin en son programi acilir; onceden bos form aciliyordu
   // ve ogretmen sinif panelinden gelince "program yok" sanabiliyordu.
+  // Arac cubugunda "bu hafta ne yapti": editoru gezmeden gorunsun.
+  async function haftalikOzet(){
+    var el=document.getElementById('ozet');
+    if(!el||!state.id){if(el)el.textContent='';return;}
+    var pzt=mondayOf(new Date()), son=new Date(pzt.getFullYear(),pzt.getMonth(),pzt.getDate()+7);
+    var iso=function(d){return d.toISOString().slice(0,10);};
+    var haftalik=state.homework.map(function(H,i){return {H:H,i:i};})
+      .filter(function(x){return x.H.date&&x.H.date>=iso(pzt)&&x.H.date<iso(son);});
+    if(!haftalik.length){el.textContent='';return;}
+    var r=await sb.from('student_program_progress')
+      .select('item_key,done,note,data').eq('program_id',state.id);
+    var m={};(r.data||[]).forEach(function(x){m[x.item_key]=x;});
+    // Anahtar tarihe gore siralanmis indeksle uretilir (ogrenci sayfasiyla ayni).
+    var idx=state.homework.map(function(H,i){return i;})
+      .sort(function(a,b){return String(state.homework[a].date||'').localeCompare(String(state.homework[b].date||''));});
+    var pos={};idx.forEach(function(orig,p){pos[orig]=p;});
+    var tik=0,not=0;
+    haftalik.forEach(function(x){
+      var k='hw:'+pos[x.i]+':'+(x.H.date||'');
+      if(m[k]&&m[k].done)tik++;
+      if(m[k]&&(m[k].note||m[k].data))not++;
+    });
+    el.innerHTML='Bu hafta: <b>'+tik+'/'+haftalik.length+'</b> tamamlandı · <b>'+not+'</b> not/skor';
+  }
+
   async function loadPrograms(selectId, yeniBos){
     var r=await sb.from('student_programs').select('*').eq('student_id',studentId).eq('teacher_id',me.id).order('created_at',{ascending:false});
     allPrograms=r.data||[];
     var pick=null;
     if(selectId)pick=allPrograms.find(function(p){return p.id===selectId;});
     else if(!yeniBos)pick=allPrograms[0]||null;
-    loadState(pick||null);refreshSelect();
+    loadState(pick||null);refreshSelect();haftalikOzet();
   }
 
   function collect(){
@@ -641,7 +707,7 @@
   }
 
   document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
-  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',url2:'',audio:false,notes:false});weeksInited=false;renderHw();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',url2:'',audio:false,notes:false,scores:false});weeksInited=false;renderHw();});
   document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
   document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
   document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});

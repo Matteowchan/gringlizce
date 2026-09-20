@@ -76,6 +76,17 @@
   .ck-t .dt{color:var(--text-muted,#6f6a58);font-size:.76rem;margin-right:6px}
   .ck.done .ck-t{color:var(--text-muted,#6f6a58);text-decoration:line-through}
   .rec{margin-top:8px;background:var(--bg,#faf7ee);border:1px solid var(--line,#e5ddc9);border-radius:9px;padding:9px 11px}
+  /* not defteri: deneme analizi gibi odevlerde ogrenci notunu buraya yazar */
+  .hw-note{margin:9px 0 2px;padding:10px 12px;border:1px solid var(--gri-line,#e5ddc9);
+           border-left:3px solid var(--tk,#8a7420);border-radius:8px;background:var(--bg-card,#fff)}
+  .hw-note .n-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+                font-size:.64rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+                color:var(--text-muted,#6f6a58);margin:0 0 6px}
+  .hw-note .n-st{font-size:.68rem;letter-spacing:0;text-transform:none;font-weight:600}
+  .hw-note textarea{width:100%;min-height:96px;border:1px solid var(--gri-line,#e5ddc9);border-radius:7px;
+                    padding:8px 10px;font-family:inherit;font-size:.88rem;line-height:1.5;
+                    color:var(--text,#23291f);background:var(--bg,#faf7ee);resize:vertical}
+  .hw-note textarea:focus{outline:2px solid var(--tk,#8a7420);outline-offset:-2px;background:var(--bg-card,#fff)}
   /* odevin soru metni: ogrenci sayfa degistirmeden gorsun */
   .hw-q{margin:9px 0 2px;padding:10px 12px;border:1px solid var(--gri-line,#e5ddc9);
         border-left:3px solid var(--sp,#3a6ea5);border-radius:8px;background:var(--bg,#faf7ee)}
@@ -225,8 +236,12 @@
   var today=new Date();
 
   // progress
-  var prog2=await sb.from('student_program_progress').select('item_key,done').eq('program_id',prog.id).eq('student_id',me.id);
-  var doneSet={};(prog2.data||[]).forEach(function(x){if(x.done)doneSet[x.item_key]=true;});
+  var prog2=await sb.from('student_program_progress').select('item_key,done,note').eq('program_id',prog.id).eq('student_id',me.id);
+  var doneSet={},notlar={};
+  (prog2.data||[]).forEach(function(x){
+    if(x.done)doneSet[x.item_key]=true;
+    if(x.note)notlar[x.item_key]=x.note;
+  });
   async function setDone(key,val){
     doneSet[key]=val;
     await sb.from('student_program_progress').upsert({program_id:prog.id,student_id:me.id,item_key:key,done:val,done_at:new Date().toISOString()},{onConflict:'program_id,item_key'});
@@ -272,6 +287,7 @@
       '<div class="ck-body">'+hwGovde(H,'<span class="dt">'+esc(fmtD(H.date))+'</span>')+'</div>';
     var box=el.querySelector('.box');
     box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);syncWeek(key,nv);});
+    if(H.notes)el.querySelector('.ck-body').appendChild(notAlani(key));
     if(H.audio){
       var rec=document.createElement('div');rec.className='rec';
       rec.innerHTML='<div class="rc-h">Ses kaydı</div>'+
@@ -292,6 +308,12 @@
   var wkEls={};
   function syncWeek(key,val){var e=wkEls[key];if(e)e.classList.toggle('done',val);}
   // Kayit alani tek yerde (ana odev listesi) duruyor; buradan oraya goturur.
+  function gotoNot(key){
+    var row=hwEls[key];if(!row)return;
+    var ta=row.querySelector('.hw-note textarea');
+    (ta||row).scrollIntoView({behavior:'smooth',block:'center'});
+    if(ta)setTimeout(function(){ta.focus();},400);
+  }
   function gotoRecorder(key){
     var row=hwEls[key];if(!row)return;
     var rec=row.querySelector('.rec');
@@ -335,9 +357,12 @@
       wkEls[x.key]=el;
       el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
         '<div class="ck-body">'+hwGovde(x.H,'<span class="wk-day">'+GUNLER[(d.getDay()+6)%7]+'</span>')+
-        (x.H.audio?'<button type="button" class="hw-mic">&#9679; Ses kaydı yükle</button>':'')+'</div>';
-      var mic=el.querySelector('.hw-mic');
+        (x.H.audio?'<button type="button" class="hw-mic">&#9679; Ses kaydı yükle</button>':'')+
+        (x.H.notes?'<button type="button" class="hw-mic" data-not="1">Not yaz</button>':'')+'</div>';
+      var mic=el.querySelector('.hw-mic:not([data-not])');
       if(mic)mic.addEventListener('click',function(){gotoRecorder(x.key);});
+      var notB=el.querySelector('[data-not]');
+      if(notB)notB.addEventListener('click',function(){gotoNot(x.key);});
       el.querySelector('.box').addEventListener('click',function(){
         var nv=!el.classList.contains('done');
         el.classList.toggle('done',nv);setDone(x.key,nv);syncMain(x.key,nv);
@@ -374,6 +399,32 @@
     div.innerHTML='<h4>'+esc(g)+'</h4>'+links;rbox.appendChild(div);
   });
   if(!resources.length)rbox.innerHTML='<p class="meta">Kaynak eklenmemiş.</p>';
+
+  // ---- not defteri ----
+  // Notlar ilerleme satirinin yanina yazilir (student_program_progress.note);
+  // ayni RLS: ogrenci kendi kaydini yazar, ogretmen okur. Yazmayi biraktiktan
+  // 900 ms sonra kendiliginden kaydeder, ayrica alandan cikinca.
+  function notAlani(key){
+    var box=document.createElement('div');box.className='hw-note';
+    box.innerHTML='<div class="n-h"><span>Notların</span><span class="n-st" data-role="st"></span></div>'+
+      '<textarea placeholder="Deneme analizin, yaptığın hatalar, aklında kalanlar…"></textarea>';
+    var ta=box.querySelector('textarea'), st=box.querySelector('[data-role="st"]'), zam=null;
+    ta.value=notlar[key]||'';
+    async function kaydet(){
+      var v=ta.value;
+      if(v===(notlar[key]||''))return;
+      st.textContent='Kaydediliyor…';
+      var r=await sb.from('student_program_progress').upsert(
+        {program_id:prog.id,student_id:me.id,item_key:key,note:v,note_at:new Date().toISOString()},
+        {onConflict:'program_id,item_key'});
+      if(r.error){st.textContent='Kaydedilemedi';return;}
+      notlar[key]=v;st.textContent='Kaydedildi';
+      setTimeout(function(){if(st.textContent==='Kaydedildi')st.textContent='';},2500);
+    }
+    ta.addEventListener('input',function(){clearTimeout(zam);st.textContent='';zam=setTimeout(kaydet,900);});
+    ta.addEventListener('blur',function(){clearTimeout(zam);kaydet();});
+    return box;
+  }
 
   // ---- audio recording/upload ----
   function wireAudio(rec,idx){

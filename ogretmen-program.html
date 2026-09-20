@@ -65,7 +65,7 @@
      pane yatay kayar. Genis ekranda tablo %100'e yayilir. */
   .sheet{width:100%;border-collapse:collapse;font-family:var(--font-ui,Inter),sans-serif;font-size:.84rem}
   #p-les .sheet{min-width:1040px}
-  #p-hw  .sheet{min-width:1180px}
+  #p-hw  .sheet{min-width:1240px}
   #p-res .sheet{min-width:560px}
   .sheet th{position:sticky;top:52px;z-index:5;background:var(--bg,#faf7ee);text-align:left;
             font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#6f6a58);font-weight:700;
@@ -193,8 +193,8 @@
 
     <div class="pane" id="p-hw">
       <table class="sheet">
-        <colgroup><col style="width:112px"><col style="width:42px"><col style="width:112px"><col style="width:30%"><col><col style="width:17%"><col style="width:42px"><col style="width:32px"></colgroup>
-        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Soru (öğrenciye gösterilir)</th><th>Link</th><th>Ses</th><th></th></tr></thead>
+        <colgroup><col style="width:112px"><col style="width:42px"><col style="width:112px"><col style="width:30%"><col><col style="width:17%"><col style="width:42px"><col style="width:42px"><col style="width:32px"></colgroup>
+        <thead><tr><th>Tarih</th><th>Gün</th><th>Tür</th><th>Ödev</th><th>Soru (öğrenciye gösterilir)</th><th>Link</th><th>Ses</th><th>Not</th><th></th></tr></thead>
         <tbody id="homework"></tbody>
       </table>
       <button class="addb" id="addHw" type="button">+ Ödev ekle</button>
@@ -367,7 +367,7 @@
   function renderHw(){
     var box=document.getElementById('homework');box.innerHTML='';
     if(!state.homework.length){
-      box.innerHTML='<tr><td colspan="8"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
+      box.innerHTML='<tr><td colspan="9"><div class="empty">Henüz ödev yok. "+ Ödev ekle" ile başla.</div></td></tr>';
       document.getElementById('hCnt').textContent='0';updateSummary();return;
     }
     var bugunPzt=mondayOf(new Date()).getTime();
@@ -403,7 +403,7 @@
         ? ('Hafta '+(gi+1)+' · '+g.mon.getDate()+' '+AYLAR[g.mon.getMonth()]+' – '+son.getDate()+' '+AYLAR[son.getMonth()])
         : 'Tarihsiz';
       var simdi=(g.mon&&g.mon.getTime()===bugunPzt)?'<span class="bugun">bu hafta</span>':'';
-      var td=document.createElement('td');td.colSpan=8;
+      var td=document.createElement('td');td.colSpan=9;
       td.innerHTML='<button class="wkbtn" type="button"><span class="chev">'+(acik?'▾':'▸')+'</span>'+
         etiket+'<span class="cnt">'+g.items.length+' ödev</span>'+simdi+'</button>';
       wtr.appendChild(td);box.appendChild(wtr);
@@ -427,20 +427,30 @@
         tr.appendChild(linkCell(H));
         var ac=cell('<input type="checkbox" data-k="audio" style="width:auto"'+(H.audio?' checked':'')+' title="Ses kaydı iste">');
         ac.className='c';tr.appendChild(ac);
+        // Not alani: ogrenci odevin altina yazar, asagida ogretmene gosterilir.
+        var nc=cell('<input type="checkbox" data-k="notes" style="width:auto"'+(H.notes?' checked':'')+' title="Not alanı iste">');
+        nc.className='c';tr.appendChild(nc);
         tr.appendChild(cell('<button class="del" title="Sil">×</button>'));
         box.appendChild(tr);
         bind(tr,H,function(k){
           if(k==='date'){drawCal();renderHw();}
-          if(k==='audio')renderHw();
+          if(k==='audio'||k==='notes')renderHw();
           if(k==='skill')hsk.style.borderLeftColor=skillColor(H.skill);
         });
         tr.querySelector('.del').addEventListener('click',function(){state.homework.splice(i,1);renderHw();drawCal();});
 
         // Ses kaydi istenen odevlerde: kayitlar tiklayinca yuklenir (her acilista
         // 6 storage cagrisi yapmamak icin tembel).
+        if(H.notes&&state.id){
+          var ntr=document.createElement('tr');ntr.className='recrow';
+          var ntd=document.createElement('td');ntd.colSpan=9;
+          ntd.innerHTML='<div class="nm">Öğrencinin notu</div><div data-role="not">Yükleniyor…</div>';
+          ntr.appendChild(ntd);box.appendChild(ntr);
+          ogrenciNotu('hw:'+sortedPos[i]+':'+(H.date||''), ntd.querySelector('[data-role="not"]'));
+        }
         if(H.audio&&state.id){
           var rtr=document.createElement('tr');rtr.className='recrow';
-          var rtd=document.createElement('td');rtd.colSpan=8;
+          var rtd=document.createElement('td');rtd.colSpan=9;
           rtd.innerHTML='<button class="btn sm" type="button">Ses kayıtlarını göster</button><div data-role="list"></div>';
           rtr.appendChild(rtd);box.appendChild(rtr);
           var btn=rtd.querySelector('button'), list=rtd.querySelector('[data-role="list"]');
@@ -454,6 +464,15 @@
     document.getElementById('hCnt').textContent=state.homework.length;
     growAll();
     updateSummary();
+  }
+
+  async function ogrenciNotu(key,el){
+    var r=await sb.from('student_program_progress').select('note,note_at')
+      .eq('program_id',state.id).eq('item_key',key).maybeSingle();
+    var n=r&&r.data&&r.data.note;
+    el.innerHTML=n
+      ? '<div style="white-space:pre-wrap;font-size:.84rem;line-height:1.5">'+esc(n)+'</div>'
+      : '<span class="nm">Öğrenci henüz not yazmadı.</span>';
   }
 
   async function loadRecordings(idx,listEl){
@@ -605,7 +624,7 @@
   }
 
   document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
-  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',audio:false});weeksInited=false;renderHw();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',audio:false,notes:false});weeksInited=false;renderHw();});
   document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
   document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
   document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});

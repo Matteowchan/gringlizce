@@ -16,6 +16,7 @@
     'kendi-yazilarim': 'Kendi Yazıların',
     'panelim': 'Panelim',
     'calisma-programim': 'Çalışma Programım',
+    'konusma-pratigi': 'Konuşma Pratiği · soru + kayıt',
     'ielts-reading-tfng': 'IELTS Okuma · True / False / Not Given',
     'ielts-reading-completion': 'IELTS Okuma · Boşluk doldurma',
     'ielts-reading-matching-headings': 'IELTS Okuma · Başlık eşleştirme',

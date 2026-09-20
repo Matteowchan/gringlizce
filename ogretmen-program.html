@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/theme.js?v=2" defer></script>
 <script src="assets/site-config.js?v=31"></script>
-<script src="assets/gri-link-label.js?v=2"></script>
+<script src="assets/gri-link-label.js?v=3"></script>
 <script src="assets/curriculum.js?v=31"></script>
 <script src="assets/nav.js?v=47"></script>
 <style>
@@ -313,23 +313,31 @@
   }
   // Link hucresi: normalde okunur etiket, tiklayinca duzenlenebilir input.
   // Ok isareti linki yeni sekmede acar — ogretmen nereye gittigini gorebilsin.
-  function linkCell(obj){
-    var td=document.createElement('td');td.className='lnkcell';
+  // Bir hucrede iki link: alan='url' (anlatim/kaynak), alan='url2' (yapacagi yer).
+  // Odevlerde ikisi de gosterilir; ders ve kaynaklarda yalnizca url.
+  function linkSatiri(obj,alan,yerTutucu){
+    var sar=document.createElement('div');sar.className='wrap';
     function goster(){
-      var u=obj.url||'';
-      var et=u?(window.GriLinkLabel?window.GriLinkLabel(u):u):'link yok';
-      td.innerHTML='<div class="wrap"><span class="lbl'+(u?'':' none')+'" title="'+esc(u||'Düzenlemek için tıkla')+'">'+esc(et)+'</span>'+
-        (u?('<a class="go" href="'+esc(u)+'" target="_blank" rel="noopener" title="Yeni sekmede aç">↗</a>'):'')+'</div>';
-      td.querySelector('.lbl').addEventListener('click',duzenle);
+      var u=obj[alan]||'';
+      var et=u?(window.GriLinkLabel?window.GriLinkLabel(u):u):yerTutucu;
+      sar.innerHTML='<span class="lbl'+(u?'':' none')+'" title="'+esc(u||'Düzenlemek için tıkla')+'">'+esc(et)+'</span>'+
+        (u?('<a class="go" href="'+esc(u)+'" target="_blank" rel="noopener" title="Yeni sekmede aç">↗</a>'):'');
+      sar.querySelector('.lbl').addEventListener('click',duzenle);
     }
     function duzenle(){
-      td.innerHTML='<input value="'+esc(obj.url||'')+'" placeholder="https://…">';
-      var inp=td.querySelector('input');inp.focus();inp.select();
-      inp.addEventListener('input',function(){obj.url=inp.value;});
+      sar.innerHTML='<input value="'+esc(obj[alan]||'')+'" placeholder="https://…">';
+      var inp=sar.querySelector('input');inp.focus();inp.select();
+      inp.addEventListener('input',function(){obj[alan]=inp.value;});
       inp.addEventListener('blur',goster);
       inp.addEventListener('keydown',function(e){if(e.key==='Enter')inp.blur();});
     }
     goster();
+    return sar;
+  }
+  function linkCell(obj,ikiTane){
+    var td=document.createElement('td');td.className='lnkcell';
+    td.appendChild(linkSatiri(obj,'url',ikiTane?'1. link — anlatım / kaynak':'link yok'));
+    if(ikiTane)td.appendChild(linkSatiri(obj,'url2','2. link — ödevi yapacağı yer'));
     return td;
   }
 
@@ -433,7 +441,7 @@
         // Soru metni: ogrenci sayfasinda odevin altinda kart olarak gorunur.
         // Bos satir paragraf ayirir, "•" ile baslayan satirlar liste olur.
         tr.appendChild(cell('<textarea class="grow" data-k="prompt" rows="1" placeholder="Cue card / sorular (opsiyonel)">'+esc(H.prompt||'')+'</textarea>'));
-        tr.appendChild(linkCell(H));
+        tr.appendChild(linkCell(H,true));
         var ac=cell('<input type="checkbox" data-k="audio" style="width:auto"'+(H.audio?' checked':'')+' title="Ses kaydı iste">');
         ac.className='c';tr.appendChild(ac);
         // Not alani: ogrenci odevin altina yazar, asagida ogretmene gosterilir.
@@ -633,7 +641,7 @@
   }
 
   document.getElementById('addLesson').addEventListener('click',function(){state.lessons.push({date:'',skill:'speaking',title:'',detail:'',url:''});renderLessons();});
-  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',audio:false,notes:false});weeksInited=false;renderHw();});
+  document.getElementById('addHw').addEventListener('click',function(){state.homework.push({date:'',skill:'other',task:'',prompt:'',url:'',url2:'',audio:false,notes:false});weeksInited=false;renderHw();});
   document.getElementById('addRes').addEventListener('click',function(){state.resources.push({group:'',url:''});renderRes();});
   document.getElementById('saveDraft').addEventListener('click',function(){save(null);});
   document.getElementById('publishBtn').addEventListener('click',function(){save(state.status==='published'?'draft':'published');});

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konuşma Pratiği · Gri English</title>
+  <link rel="canonical" href="https://gringlizce.com/konusma-pratigi">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/main.css">
+<link rel="stylesheet" href="assets/site-overrides.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/theme.js?v=2" defer></script>
+<script src="assets/site-config.js?v=31"></script>
+<script src="assets/gri-ses-kaydi.js?v=1"></script>
+<script src="assets/curriculum.js?v=31"></script>
+<script src="assets/nav.js?v=47"></script>
+<style>
+  .pg{max-width:780px;margin:0 auto;padding:22px 18px 70px}
+  .loading{padding:60px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
+  .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .top .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold,#C89A3C);font-weight:700}
+  .back{border:1px solid var(--line,#e5ddc9);background:var(--bg-card,#fff);color:var(--text,#23291f);
+        border-radius:8px;padding:6px 12px;text-decoration:none;font-size:.82rem;font-weight:600}
+  h1{font-family:var(--font-display,Georgia),serif;font-size:1.5rem;margin:.1rem 0 0}
+  .card{background:var(--bg-card,#fff);border:1px solid var(--line,#e5ddc9);border-radius:13px;padding:16px 18px;margin-bottom:14px}
+  .gorev{font-size:.9rem;line-height:1.55;color:var(--text-soft,#4a4636)}
+
+  /* Soru: sinav gibi buyuk ve sakin */
+  .soru{border-left:3px solid var(--sp,#3a6ea5)}
+  .soru .lbl{font-size:.64rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+             color:var(--text-muted,#6f6a58);margin:0 0 8px}
+  .soru p{margin:0 0 8px;font-size:1.02rem;line-height:1.6}
+  .soru p.q-t{font-weight:700}
+  .soru ul{margin:0 0 8px;padding-left:20px}
+  .soru li{font-size:1.02rem;line-height:1.6;margin:0 0 3px}
+
+  /* Sinav akisi: 1 dk hazirlik -> 2 dk konusma */
+  .akis{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .akis-btn{border:1px solid var(--teal,#2C5856);background:var(--teal,#2C5856);color:#fff;border-radius:8px;
+            padding:9px 16px;cursor:pointer;font-family:inherit;font-size:.86rem;font-weight:700}
+  .akis-btn.ikincil{background:transparent;color:var(--teal,#2C5856)}
+  .akis-btn:disabled{opacity:.5;cursor:default}
+  .geri-sayim{font-variant-numeric:tabular-nums;font-family:var(--font-display,Georgia),serif;
+              font-size:2rem;font-weight:700;color:var(--teal,#2C5856);min-width:92px}
+  .geri-sayim.hazir{color:var(--gold,#C89A3C)}
+  .akis-not{font-size:.82rem;color:var(--text-muted,#6f6a58);margin-top:8px}
+  .yok{padding:40px 20px;text-align:center;color:var(--text-muted,#6f6a58)}
+</style>
+</head>
+<body data-cat="student">
+<div class="pg">
+  <div class="loading" id="loading">Yükleniyor…</div>
+  <div id="app" style="display:none">
+    <div class="top">
+      <a class="back" id="backBtn" href="calisma-programim">← Programa dön</a>
+      <div>
+        <div class="eyebrow">Konuşma Pratiği</div>
+        <h1 id="bas">IELTS Speaking</h1>
+      </div>
+    </div>
+
+    <div class="card"><div class="gorev" id="gorev"></div></div>
+    <div class="card soru" id="soruKart" style="display:none"><div class="lbl">Soru</div><div id="soru"></div></div>
+
+    <div class="card">
+      <div class="akis">
+        <button type="button" class="akis-btn" id="akisBtn">Sınav akışı: 1 dk hazırlık → 2 dk konuşma</button>
+        <span class="geri-sayim" id="sayac" style="display:none">1:00</span>
+        <button type="button" class="akis-btn ikincil" id="iptalBtn" style="display:none">Vazgeç</button>
+      </div>
+      <p class="akis-not">Serbest kaydetmek istersen aşağıdaki “Kaydet” düğmesini kullan — süre sınırı yok (en fazla 12 dk).</p>
+      <div id="kaydediciYeri"></div>
+    </div>
+  </div>
+  <div id="yok" class="yok" style="display:none"></div>
+</div>
+
+<script>
+(async function () {
+  var SB_URL = 'https://vazbvbqgvtlaqkytfsbi.supabase.co';
+  var SB_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
+  function hazir() { return window.supabase && window.supabase.createClient; }
+  var d = 0; while (!hazir() && d < 40) { await new Promise(function (r) { setTimeout(r, 120); }); d++; }
+  if (!hazir()) { document.getElementById('loading').textContent = 'Bağlantı kurulamadı.'; return; }
+  var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+  function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  var q = new URLSearchParams(location.search);
+  var programId = q.get('program') || null;
+  var hwIdx = parseInt(q.get('hw'), 10);
+
+  var sess = await sb.auth.getSession();
+  if (!sess || !sess.data || !sess.data.session) {
+    location.href = 'giris?return=' + encodeURIComponent(location.pathname + location.search);
+    return;
+  }
+  var me = sess.data.session.user;
+
+  // Programi cek. RLS zaten ogrencinin kendi kaydini dondurur; program id
+  // verilmemisse yayinlanmis en son programa duser.
+  var r = sb.from('student_programs').select('*').eq('student_id', me.id);
+  r = programId ? r.eq('id', programId) : r.eq('status', 'published');
+  var res = await r.order('created_at', { ascending: false }).limit(1);
+  var prog = (res.data || [])[0] || null;
+
+  function bitir(mesaj) {
+    document.getElementById('loading').style.display = 'none';
+    var y = document.getElementById('yok');
+    y.textContent = mesaj; y.style.display = '';
+  }
+  if (!prog) { bitir('Sana ait bir çalışma programı bulunamadı.'); return; }
+
+  // Calisma Programim odevleri TARIHE gore siralar ve ses klasorunu
+  // hw<siralanmis-index> yapar. Burada da ayni siralama kullanilmali, yoksa
+  // kayit baska bir odevin klasorune duser.
+  var odevler = (prog.content && prog.content.homework || []).slice()
+    .sort(function (a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+  if (!(hwIdx >= 0) || !odevler[hwIdx]) { bitir('Bu bağlantıdaki ödev bulunamadı.'); return; }
+  var H = odevler[hwIdx];
+
+  document.getElementById('gorev').textContent = H.task || '';
+  document.getElementById('backBtn').href = 'calisma-programim';
+
+  // Soru metni: bos satir paragrafi ayirir, "•" ile baslayan satirlar liste olur,
+  // noktalama ile bitmeyen kisa satir alt baslik sayilir. (calisma-programim ile ayni kural.)
+  if (H.prompt) {
+    var html = '', liste = false;
+    String(H.prompt).split('\n').forEach(function (ham) {
+      var t = ham.trim();
+      if (!t) { if (liste) { html += '</ul>'; liste = false; } return; }
+      if (/^[•\-\*]\s+/.test(t)) {
+        if (!liste) { html += '<ul>'; liste = true; }
+        html += '<li>' + esc(t.replace(/^[•\-\*]\s+/, '')) + '</li>';
+        return;
+      }
+      if (liste) { html += '</ul>'; liste = false; }
+      var alt = /^[^.!?]{3,60}$/.test(t) && !/[.!?]$/.test(t);
+      html += '<p' + (alt ? ' class="q-t"' : '') + '>' + esc(t) + '</p>';
+    });
+    if (liste) html += '</ul>';
+    document.getElementById('soru').innerHTML = html;
+    document.getElementById('soruKart').style.display = '';
+  }
+
+  var anahtar = 'hw:' + hwIdx + ':' + (H.date || '');
+  var kaydedici = window.GriSesKaydi.mount({
+    sb: sb,
+    el: document.getElementById('kaydediciYeri'),
+    folder: me.id + '/' + prog.id + '/hw' + hwIdx,
+    onUpload: function () {
+      // Odevi tamamlandi isaretle — programdaki tik ile ayni kayit.
+      sb.from('student_program_progress').upsert(
+        { program_id: prog.id, student_id: me.id, item_key: anahtar, done: true, done_at: new Date().toISOString() },
+        { onConflict: 'program_id,item_key' });
+    }
+  });
+
+  // ---- sinav akisi: 1 dk hazirlik, ardindan 2 dk kayit ----
+  var akisBtn = document.getElementById('akisBtn');
+  var iptalBtn = document.getElementById('iptalBtn');
+  var sayacEl = document.getElementById('sayac');
+  var sayacTimer = null;
+
+  function sureYaz(sn) { sayacEl.textContent = Math.floor(sn / 60) + ':' + ('0' + (sn % 60)).slice(-2); }
+  function akisBitir() {
+    clearInterval(sayacTimer); sayacTimer = null;
+    sayacEl.style.display = 'none'; iptalBtn.style.display = 'none';
+    akisBtn.disabled = false; akisBtn.textContent = 'Sınav akışı: 1 dk hazırlık → 2 dk konuşma';
+  }
+
+  akisBtn.addEventListener('click', function () {
+    akisBtn.disabled = true;
+    akisBtn.textContent = 'Hazırlık — not al';
+    sayacEl.style.display = ''; sayacEl.classList.add('hazir');
+    iptalBtn.style.display = '';
+    var kalan = 60;
+    sureYaz(kalan);
+    sayacTimer = setInterval(function () {
+      kalan--;
+      sureYaz(Math.max(0, kalan));
+      if (kalan <= 0) {
+        clearInterval(sayacTimer); sayacTimer = null;
+        sayacEl.classList.remove('hazir');
+        sayacEl.style.display = 'none';
+        akisBtn.textContent = 'Konuşuyorsun — 2 dakika';
+        // Kayit 120 sn sonra kendiliginden durur; geri sayim kaydedicinin
+        // kendi saatinde gorunur.
+        kaydedici.kayitBaslat(120);
+        setTimeout(akisBitir, 121000);
+      }
+    }, 1000);
+  });
+
+  iptalBtn.addEventListener('click', function () { kaydedici.durdur(); akisBitir(); });
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = '';
+})();
+</script>
+</body>
+</html>

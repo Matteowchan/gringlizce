@@ -238,6 +238,15 @@
     /* Sarmalayici <a> varsayilan olarak inline; genisligi 0 kaliyor ve icindeki
        max-width:100% de 0'a cozulup gorsel hic yuklenmiyordu. Block yapiyoruz. */
     .wiz-prompt-figlink { display: block; max-width: 100%; }
+    /* Degerlendirmeden sonra "yeniden yazmak icin ne yapmaliyim" sorusu geliyordu:
+       metin silinmiyor, ayni kutuda duruyor. Bunu geri bildirimin basinda soyle. */
+    .wiz-again {
+      margin: 0 0 1rem; padding: 0.7rem 0.9rem; border-radius: 8px;
+      border: 1px solid var(--line, #D9D2C4); border-left: 3px solid var(--teal, #2C5856);
+      background: var(--bg, #faf7ee); font-family: var(--font-ui); font-size: 0.82rem;
+      line-height: 1.55; color: var(--text-soft, #4a4636);
+    }
+    .wiz-again b { color: var(--text, #23291f); }
     .wiz-prompt-figure {
       display: block; margin: 1rem 0 0.35rem; max-width: 100%;
       border: 1px solid var(--line); border-radius: var(--radius-sm);
@@ -2588,7 +2597,11 @@
       var totalMax = data.total_max || (state.textType && state.textType.rubric_json && state.textType.rubric_json.total_max) || 30;
       var criteria = (state.textType && state.textType.rubric_json && state.textType.rubric_json.criteria) || [];
 
-      var html = '';
+      // Yazi silinmiyor; ayni kutuda duruyor. Ogrenci "sifirlamam mi gerekiyor"
+      // diye sormasin diye duzeltip tekrar gonderme yolunu bastan soyluyoruz.
+      var html = '<div class="wiz-again">Düzeltilmiş halini yazmak istersen <b>metni silmene gerek yok</b> — '
+        + 'yazın aşağıdaki kutuda duruyor. Geri bildirimi okuyup üzerinde değişiklik yap, sonra yine '
+        + '<b>Değerlendir</b>'e bas. İkisi de kaydedilir, ikisini karşılaştırabilirsin.</div>';
 
       // Cost info
       var costMsg = '';

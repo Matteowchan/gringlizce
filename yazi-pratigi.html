@@ -2474,6 +2474,39 @@
     }
 
     // ========================================================
+    // DEGERLENDIRMEDEN SONRA ARSIVE YAZ
+    // ========================================================
+    // "Degerlendir" yalnizca writing_submissions'a yaziyordu; ogrencinin arsivi ve
+    // ogretmen panelinin okudugu tablo user_saved_writings. Ogrenci ayrica "Yazıyı
+    // Kaydet"e basmazsa yazi hocaya hic gorunmuyordu. Artik degerlendirme kendisi
+    // arsivliyor — ogrencinin beklentisi de buydu.
+    var sonArsivImza = null;
+    async function arsivle(text) {
+      // Odev modunda kaydetme ayri bir eylem ("Gönder ve Tamamla"); otomatik
+      // gondermek ogrencinin yerine karar vermek olur.
+      if (state.assignmentId || !state.user || !state.textType) return;
+      var imza = (state.currentPrompt ? state.currentPrompt.id : '') + '|' + text;
+      if (imza === sonArsivImza) return;   // ayni metni iki kez arsivleme
+      try {
+        var res = await sb.from('user_saved_writings').insert({
+          user_id: state.user.id,
+          exam: state.textType.exam,
+          text_type: state.textType.text_type,
+          level: state.exam === 'ib' ? state.level : null,
+          prompt_id: state.currentPrompt ? state.currentPrompt.id : null,
+          prompt_title: state.currentPrompt ? state.currentPrompt.title : null,
+          prompt_snapshot: document.getElementById('promptText').dataset.raw || '',
+          text: text,
+          word_count: countWords(text)
+        });
+        if (!res.error) {
+          sonArsivImza = imza;
+          toast('Yazın arşivine kaydedildi, öğretmenin görebilir.', 'success');
+        }
+      } catch (e) { /* arsivleme degerlendirmeyi bloklamasin */ }
+    }
+
+    // ========================================================
     // EVALUATE
     // ========================================================
     function showError(msg) {
@@ -2553,6 +2586,7 @@
         }
 
         renderFeedback(data);
+        arsivle(text);
 
         // Quota güncelle
         if (data.quota) {

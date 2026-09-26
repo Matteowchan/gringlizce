@@ -3314,6 +3314,86 @@
   .hm-proof-exp-body{font-family:var(--font-body,Inter),sans-serif;font-size:.86rem;line-height:1.55;color:var(--text-soft);margin:0}
   .hm-proof-exp-body b{color:var(--text);font-weight:700}
 </style>
+<style>
+  /* ===== Hero görsel zenginleştirme — katmanlı ambient zemin + başlık altı el-çizimi + kanıt kartı ışıması.
+     Tek orkestralı an: odak kelimenin altı açılışta çizilir, doğru şık bir kez nazikçe vurgulanır.
+     Geri kalan her şey sakin. Hareket prefers-reduced-motion ile tamamen kapanır; JS'siz içerik tam görünür. ===== */
+
+  /* Katmanlı ambient zemin: yumuşak teal + altın küreler, çok yavaş sürüklenme (nefes alan derinlik) */
+  .hero-manifesto::before {
+    background:
+      radial-gradient(ellipse 720px 440px at 16% 6%, rgba(44, 88, 86, 0.07), transparent 60%),
+      radial-gradient(ellipse 620px 500px at 90% 94%, rgba(200, 154, 60, 0.085), transparent 62%),
+      radial-gradient(ellipse 460px 320px at 96% 2%, rgba(44, 88, 86, 0.045), transparent 60%);
+    animation: hm-amb 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  @keyframes hm-amb {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(-16px, 12px, 0) scale(1.045); }
+  }
+  /* İnce nokta dokusu — merkeze doğru yumuşayan, kağıt hissi veren zemin katmanı */
+  .hero-manifesto::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(44, 88, 86, 0.14) 1px, transparent 1.5px);
+    background-size: 23px 23px;
+    -webkit-mask-image: radial-gradient(ellipse 68% 72% at 50% 42%, #000 0%, transparent 76%);
+            mask-image: radial-gradient(ellipse 68% 72% at 50% 42%, #000 0%, transparent 76%);
+    opacity: 0.5;
+  }
+  [data-theme="dark"] .hero-manifesto::after {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1.5px);
+    opacity: 0.6;
+  }
+
+  /* Başlığın odak kelimesi — el çizimi altın alt çizgi, açılışta soldan sağa çizilir */
+  .hm-headline .hm-brand-it { position: relative; white-space: nowrap; }
+  .hm-headline .hm-brand-it::after {
+    content: '';
+    position: absolute;
+    left: -0.05em; right: -0.05em; bottom: -0.16em;
+    height: 0.4em;
+    background: left center / 100% 100% no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9 C 45 4 78 12 118 7 S 180 3 217 8' fill='none' stroke='%23C89A3C' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: hm-underline 0.95s 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: none;
+  }
+  @keyframes hm-underline { to { transform: scaleX(1); } }
+
+  /* Kanıt kartı — arkasında yumuşak teal ışıma halkası (statik derinlik) */
+  .hm-proof { position: relative; }
+  .hm-proof-win { position: relative; z-index: 1; }
+  .hm-proof::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 54%;
+    width: 116%; height: 116%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 58% 54% at 50% 50%, rgba(44, 88, 86, 0.13), transparent 70%);
+    filter: blur(4px);
+  }
+  /* Doğru şık — kart yerleştikten sonra bir kez nazik halka vurgusu */
+  .hm-proof-opt.is-correct { animation: hm-correct 1.3s 1.7s both; }
+  @keyframes hm-correct {
+    0%   { box-shadow: 0 0 0 0 rgba(44, 88, 86, 0); }
+    35%  { box-shadow: 0 0 0 4px rgba(44, 88, 86, 0.16); }
+    100% { box-shadow: 0 0 0 0 rgba(44, 88, 86, 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-manifesto::before { animation: none; }
+    .hm-headline .hm-brand-it::after { animation: none; transform: scaleX(1); }
+    .hm-proof-opt.is-correct { animation: none; }
+  }
+</style>
 <section class="hero hero-manifesto">
   <div class="wrap">
     <div class="hm-grid">

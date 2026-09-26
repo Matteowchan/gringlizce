@@ -788,17 +788,34 @@ function showShareReq(id,who){
 var encd=new TextEncoder(),decd=new TextDecoder();
 /* Faz0 0.3: LiveKit reliable publishData ~15KB'de sessizce düşürür → senkron kırılmasının kök nedeni.
    Büyük yükleri string olarak parçala (__chunk); karşıda birleştir. opts.to=[identity,...] → yalnız o kimliklere yolla. */
-var CHUNK_MAX=8000; /* JSON string char/parça (çoğu yük ASCII: koordinat/base64 kalıntısı → ~byte); güvenli üst sınır */
+/* Faz0 0.4 (2026-09): parçalama BYTE-tabanlı olmalı — LiveKit reliable ~15KB'yi BYTE cinsinden düşürür,
+   char cinsinden DEĞİL. Türkçe/emoji/doküman metni UTF-8'de char>byte → char-tabanlı 8000'lik parça
+   >15KB byte olabilir ve SESSİZCE düşer (senkron kırılmasının kalan kökü). Hem hızlı-yol boyut kontrolü
+   hem de parçalama artık kodlanmış byte uzunluğuna göre; her ham parça ≤ CHUNK_BYTES, çift-JSON kaçış +
+   sarmalayıcı payı sonrası nihai paket rahatça <15KB. Kod noktası sınırında böler (surrogate bölmez). */
+var CHUNK_BYTES=9000;
 var _chunkOut=0, _chunkIn={};
+function _splitBytes(str,maxBytes){
+  var out=[], cur='', curB=0, i=0, L=str.length;
+  while(i<L){
+    var cp=str.codePointAt(i), step=(cp>0xFFFF)?2:1;
+    var b=(cp<0x80)?1:(cp<0x800)?2:(cp<0x10000)?3:4;
+    if(curB+b>maxBytes && cur){ out.push(cur); cur=''; curB=0; }
+    cur+=str.substr(i,step); curB+=b; i+=step;
+  }
+  if(cur) out.push(cur);
+  return out;
+}
 function _rawSend(bytes,pubOpts){ STATE.lkRoom.localParticipant.publishData(bytes,pubOpts); }
 function sendData(obj,opts){ if(!STATE.lkRoom||!STATE.connected)return;
   var pubOpts={reliable:true}; if(opts&&opts.to&&opts.to.length) pubOpts.destinationIdentities=opts.to;
   try{
     var str=JSON.stringify(obj);
-    if(str.length<=CHUNK_MAX){ _rawSend(encd.encode(str),pubOpts); return; }
+    var enc=encd.encode(str);
+    if(enc.length<=CHUNK_BYTES){ _rawSend(enc,pubOpts); return; }
     var self=(STATE.lkRoom&&STATE.lkRoom.localParticipant&&STATE.lkRoom.localParticipant.identity)||'x';
-    var id=(++_chunkOut)+'_'+self, n=Math.ceil(str.length/CHUNK_MAX);
-    for(var i=0;i<n;i++){ _rawSend(encd.encode(JSON.stringify({t:'__chunk',id:id,i:i,n:n,s:str.substr(i*CHUNK_MAX,CHUNK_MAX)})),pubOpts); }
+    var parts=_splitBytes(str,CHUNK_BYTES), id=(++_chunkOut)+'_'+self, n=parts.length;
+    for(var i=0;i<n;i++){ _rawSend(encd.encode(JSON.stringify({t:'__chunk',id:id,i:i,n:n,s:parts[i]})),pubOpts); }
   }catch(e){ try{ toast('Senkron paketi gönderilemedi (görsel çok büyük olabilir).'); }catch(_){} }
 }
 // Materyal paylaşımını artan seq ile yayınla (öğrencide last-wins: eski nav yok sayılır).
@@ -808,11 +825,21 @@ function onData(payload,p){
   if(msg&&msg.t==='__chunk'){ _onChunk(msg,p); return; }
   handleMsg(msg,p);
 }
+var _lastResync=0;
 function _onChunk(msg,p){ if(!msg.id||!msg.n)return;
-  var b=_chunkIn[msg.id]; if(!b){ b=_chunkIn[msg.id]={n:msg.n,parts:new Array(msg.n),got:0,ts:Date.now()}; }
+  var b=_chunkIn[msg.id];
+  if(!b){ b=_chunkIn[msg.id]={n:msg.n,parts:new Array(msg.n),got:0,ts:Date.now()};
+    /* Kendini-onaran senkron: parça seti 6sn'de tamamlanmazsa (bir parça düştü) at ve öğrenciysek
+       durumu yeniden iste — 30sn'lik pasif temizlik yerine aktif kurtarma. */
+    b.timer=setTimeout(function(){ if(_chunkIn[msg.id]){ delete _chunkIn[msg.id]; _chunkTimedOut(); } }, 6000);
+  }
   if(b.parts[msg.i]==null){ b.parts[msg.i]=msg.s; b.got++; }
-  if(b.got>=b.n){ delete _chunkIn[msg.id]; var full; try{ full=JSON.parse(b.parts.join('')); }catch(e){ return; } handleMsg(full,p); }
-  var now=Date.now(); for(var k in _chunkIn){ if(_chunkIn[k].ts&&now-_chunkIn[k].ts>30000) delete _chunkIn[k]; } /* yarım kalan parçaları temizle */
+  if(b.got>=b.n){ if(b.timer)clearTimeout(b.timer); delete _chunkIn[msg.id]; var full; try{ full=JSON.parse(b.parts.join('')); }catch(e){ return; } handleMsg(full,p); }
+}
+function _chunkTimedOut(){
+  if(STATE.isHost||!STATE.admitted||!STATE.connected)return;
+  var now=Date.now(); if(now-_lastResync<4000)return; _lastResync=now; /* döngü önleme */
+  try{ sendData({t:'req-state'}); }catch(e){}
 }
 function handleMsg(msg,p){
   var from=p?(p.name||'Katılımcı'):'?', id=p?p.identity:null, fromHost=p?isHostMeta(p):false;

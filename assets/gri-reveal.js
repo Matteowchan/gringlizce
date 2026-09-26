@@ -12,24 +12,33 @@
 
   root.classList.add('gri-rv'); /* gating: yalnız script çalışırsa beliriş devreye girer */
 
+  var io = null, seen = [];
+  function showAll() { for (var i = 0; i < seen.length; i++) seen[i].classList.add('in'); }
+  function observe(list) {
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.__grv) continue; el.__grv = 1; seen.push(el);
+      if (io) io.observe(el); else el.classList.add('in');
+    }
+  }
   function run() {
-    var els = [].slice.call(D.querySelectorAll('[data-reveal]'));
-    if (!els.length) return;
-    function showAll() { for (var i = 0; i < els.length; i++) els[i].classList.add('in'); }
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver(function (entries) {
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i];
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        }
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
+    }
+    observe(D.querySelectorAll('[data-reveal]'));
 
-    if (!('IntersectionObserver' in window)) { showAll(); return; }
-
-    var io = new IntersectionObserver(function (entries) {
-      for (var i = 0; i < entries.length; i++) {
-        var e = entries[i];
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-      }
-    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
-
-    els.forEach(function (el) {
-      /* zaten görünür alandaysa (üst-kıvrım) hemen aç — jank/gecikme yok */
-      io.observe(el);
-    });
+    /* JS ile sonradan eklenen [data-reveal] içeriği de yakala (JS-render'lı hub sayfaları için) */
+    if ('MutationObserver' in window) {
+      var mo = new MutationObserver(function () { observe(D.querySelectorAll('[data-reveal]:not([data-grv])')); });
+      try { mo.observe(D.body, { childList: true, subtree: true }); } catch (e) {}
+      /* dinamik render için pencereyi biraz açık tut, sonra kapat (kalıcı gözlemci maliyeti olmasın) */
+      setTimeout(function () { try { mo.disconnect(); } catch (e) {} }, 8000);
+    }
 
     /* GÜVENLİK AĞI: 2sn sonra ne olursa olsun her şeyi göster (hiçbir içerik gizli kalmasın) */
     setTimeout(showAll, 2000);

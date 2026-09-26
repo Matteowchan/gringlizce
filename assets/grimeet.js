@@ -285,7 +285,14 @@ async function connectLiveKit(){
     room.on(LK.RoomEvent.ParticipantConnected,function(p){ onParticipant(p); playJoinChime(); sysChat((p.name||'Katılımcı')+' katıldı'); });
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
-    room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı'); });
+    room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı');
+      /* Yeniden bağlanınca senkronu tazele: kopukken kaçan materyal/nav/tahta güncellemeleri kapansın.
+         Öğretmen mevcut tam durumu yeniden yayar; öğrenci tam durumu yeniden ister. */
+      setTimeout(function(){ try{
+        if(STATE.isHost){ sendState(); try{ WB.broadcastAllPages(); }catch(e){} }
+        else if(STATE.admitted){ sendData({t:'req-state'}); }
+      }catch(e){} }, 800);
+    });
     room.on(LK.RoomEvent.TrackSubscribed,function(track,pub,p){ attachTrack(track,pub,p); });
     room.on(LK.RoomEvent.TrackUnsubscribed,function(track,pub,p){ if(isScreen(pub)){ clearScreen(); if(STATE.mode==='screen') setMode('grid',{remote:true}); } else if(track.kind==='video'){ renderPlaceholder(p.identity); } });
     room.on(LK.RoomEvent.ActiveSpeakersChanged,onSpeakers);
@@ -820,6 +827,13 @@ function sendData(obj,opts){ if(!STATE.lkRoom||!STATE.connected)return;
 }
 // Materyal paylaşımını artan seq ile yayınla (öğrencide last-wins: eski nav yok sayılır).
 function broadcastMat(kind,value,ext,nav){ STATE._matSeq=(STATE._matSeq||0)+1; sendData({t:'mat',kind:kind,value:value,ext:ext,nav:nav?1:0,seq:STATE._matSeq}); }
+/* Senkron beacon: öğretmen her 12sn'de mevcut paylaşım durumunun küçük parmak izini yayar (tek paket, asla
+   parçalanmaz/düşmez). Öğrenci sürüklendiyse (yanlış/eksik materyal) kendini onarır (handleMsg 'sync-beacon'). */
+setInterval(function(){ try{
+  if(!STATE.isHost || !STATE.connected || !STATE.lkRoom) return;
+  var sharing = STATE.matShared && !STATE.matPaused && STATE.currentMaterial;
+  sendData({ t:'sync-beacon', ms: sharing?1:0, mv: sharing?STATE.currentMaterial.value:'' });
+}catch(e){} }, 12000);
 function onData(payload,p){
   var msg; try{ msg=JSON.parse(decd.decode(payload)); }catch(e){ return; }
   if(msg&&msg.t==='__chunk'){ _onChunk(msg,p); return; }
@@ -894,6 +908,13 @@ function handleMsg(msg,p){
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; applyWbLock(); toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
   else if(msg.t==='doc-lock'){ if(!STATE.isHost&&fromHost){ STATE.docLocked=!!msg.on; DOC.setLocked(!!msg.on); toast(msg.on?'Öğretmen yazı tahtasını kilitledi — düzenleyemezsin':'Öğretmen yazı tahtası kilidini açtı'); } }
   else if(msg.t==='req-state'){ if(STATE.isHost){ sendState(id); try{ WB.broadcastAllPages(id); }catch(e){} if(STATE.matShared&&!STATE.matPaused&&STATE.currentMaterial&&isExamRunner(STATE.currentMaterial.value)) setTimeout(requestRunnerState,150); } }
+  else if(msg.t==='sync-beacon'){ if(!STATE.isHost&&fromHost&&STATE.admitted){
+      /* Sürüklenme güvenlik ağı: öğretmen bir materyal paylaşıyor ama ben o materyalde değilsem tam durumu iste.
+         Yalnız materyal KİMLİĞİ uyuşmazlığına bakılır (nav/scroll/seq değil) → mat-control'daki öğrenciyi bozmaz. */
+      var _mine=(STATE.currentMaterial&&STATE.currentMaterial.value)||'';
+      var _drift = msg.ms ? (STATE.mode!=='materials' || _mine!==(msg.mv||'')) : false;
+      if(_drift){ var _n=Date.now(); if(_n-_lastResync>5000){ _lastResync=_n; sendData({t:'req-state'}); } }
+  } }
   else if(msg.t==='state'){ if(!STATE.isHost&&fromHost) applyState(msg); }
   else if(msg.t==='breakout'){ if(!STATE.isHost&&fromHost) applyBreakout(msg.map,msg.mins); }
   else if(msg.t==='breakout-end'){ if(!STATE.isHost&&fromHost) clearBreakout(); }

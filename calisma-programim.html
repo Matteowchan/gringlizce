@@ -119,6 +119,15 @@
                 font-size:.64rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
                 color:var(--text-muted,#6f6a58);margin:0 0 6px}
   .hw-note .n-st{font-size:.68rem;letter-spacing:0;text-transform:none;font-weight:600}
+  .hw-note .n-min{font-size:.68rem;letter-spacing:0;text-transform:none;font-weight:600;
+                  color:var(--text-muted,#6f6a58)}
+  .hw-note .n-min.eksik{color:#a33b3b}
+  /* tik kapisi: not/skor doldurulmadan tamamlandi isaretlenemeyen odevin uyarisi */
+  .hw-gate{margin:8px 0 0;padding:8px 11px;border:1px solid #a33b3b;border-radius:8px;
+           background:rgba(163,59,59,.07);font-size:.82rem;line-height:1.5;color:#a33b3b}
+  .hw-gate.flash{animation:gateFlash .45s ease}
+  @keyframes gateFlash{from{transform:translateY(-3px);opacity:.35}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.hw-gate.flash{animation:none}}
   .hw-note textarea{width:100%;min-height:96px;border:1px solid var(--gri-line,#e5ddc9);border-radius:7px;
                     padding:8px 10px;font-family:inherit;font-size:.88rem;line-height:1.5;
                     color:var(--text,#23291f);background:var(--bg,#faf7ee);resize:vertical}
@@ -235,6 +244,11 @@
   function fmtD(s){if(!s)return'';var d=new Date(s);return d.getDate()+' '+MShort[d.getMonth()];}
   function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
   var GUNLER=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  // Not kapisi. Ikisi de notAlani() icinde kullaniliyor ve notAlani odev listesi
+  // kurulurken cagriliyor; asagidaki kapi blogunda tanimlanirsa var-hoisting
+  // yuzunden deger henuz atanmamis olur (sayac "undefined", notKaydet patlar).
+  var NOT_MIN=80;
+  var notKaydet={};   // key -> notAlani'nin kaydet(); tik aninda bekleyen yazi flush edilir
   var SKILL_ETIKET={speaking:'Konuşma',listening:'Dinleme',reading:'Okuma',writing:'Yazma',
                     grammar:'Gramer',vocabulary:'Kelime',deneme:'Deneme',tekrar:'Tekrar',other:'Çalışma'};
   // Odev metni + beceri rozeti + okunur link dugmesi. Hem ana listede hem
@@ -363,7 +377,13 @@
     el.innerHTML='<div class="box" title="Tamamlandı olarak işaretle"></div>'+
       '<div class="ck-body">'+hwGovde(H,'<span class="dt">'+esc(fmtD(H.date))+'</span>')+'</div>';
     var box=el.querySelector('.box');
-    box.addEventListener('click',function(){var nv=!el.classList.contains('done');el.classList.toggle('done',nv);setDone(key,nv);syncWeek(key,nv);});
+    box.addEventListener('click',function(){
+      var nv=!el.classList.contains('done');
+      if(nv){var k=kapi(H,key);if(k){kapiUyar(el,key,k);return;}
+             if(notKaydet[key])notKaydet[key]();}
+      var g=el.querySelector('.hw-gate');if(g)g.remove();
+      el.classList.toggle('done',nv);setDone(key,nv);syncWeek(key,nv);
+    });
     if(H.scores)el.querySelector('.ck-body').appendChild(skorAlani(key));
     if(H.notes)el.querySelector('.ck-body').appendChild(notAlani(key));
     var hn=hocaNotuAlani(key); if(hn)el.querySelector('.ck-body').appendChild(hn);
@@ -389,6 +409,12 @@
     var ta=row.querySelector('.hw-note textarea');
     (ta||row).scrollIntoView({behavior:'smooth',block:'center'});
     if(ta)setTimeout(function(){ta.focus();},400);
+  }
+  function gotoSkor(key){
+    var row=hwEls[key];if(!row)return;
+    var inp=row.querySelector('.hw-sc input');
+    (inp||row).scrollIntoView({behavior:'smooth',block:'center'});
+    if(inp)setTimeout(function(){inp.focus();},400);
   }
   function gotoRecorder(key){
     var row=hwEls[key];if(!row)return;
@@ -442,6 +468,9 @@
       if(notB)notB.addEventListener('click',function(){gotoNot(x.key);});
       el.querySelector('.box').addEventListener('click',function(){
         var nv=!el.classList.contains('done');
+        if(nv){var k=kapi(x.H,x.key);if(k){kapiUyar(el,x.key,k);return;}
+               if(notKaydet[x.key])notKaydet[x.key]();}
+        var g=el.querySelector('.hw-gate');if(g)g.remove();
         el.classList.toggle('done',nv);setDone(x.key,nv);syncMain(x.key,nv);
         var n=inWeek.filter(function(y){return doneSet[y.key];}).length;
         wbox.querySelector('.wk-cnt').textContent=n+' / '+inWeek.length+' tamamlandı';
@@ -518,6 +547,48 @@
     return box;
   }
 
+  // ---- tik kapilari ----
+  // 1. haftada not isteyen üç ödevin üçü de bos kaldi ve deneme skoru girilmedi:
+  // tik atmak isin kendisinden kolay oldugu icin programin dusunme kismi
+  // atlaniyordu. Artik not/skor isteyen odev, o alan dolmadan kapanmiyor.
+  // Skor kapisi yalnizca ham L/R skoru URETEN denemelerde (scores_req) acik —
+  // Yazma+Konusma denemelerinde girilecek ham skor yok, orada not kapisi yeter.
+  // Kapi son KAYDEDILEN notu degil ekrandaki metni okur: kayit 900 ms gecikmeli
+  // oldugu icin ogrenci yazip hemen tiklerse haksiz engellenmesin.
+  function notMetni(key){
+    var row=hwEls[key], ta=row&&row.querySelector('.hw-note textarea');
+    return String(ta?ta.value:(notlar[key]||'')).trim();
+  }
+  function kapi(H,key){
+    if(H.notes){
+      var n=notMetni(key);
+      if(n.length<NOT_MIN)return {alan:'not',
+        mesaj:'Bu ödevi kapatmak için önce notunu yaz. En az '+NOT_MIN+' karakter gerekiyor, şu an '+n.length+'.'};
+    }
+    if(H.scores_req){
+      var v=veri[key]||{};
+      if(v.listening==null&&v.reading==null)return {alan:'skor',
+        mesaj:'Ham skorunu gir (Listening ve/veya Reading), sonra tikle.'};
+    }
+    return null;
+  }
+  function kapiUyar(el,key,k){
+    var g=el.querySelector('.hw-gate');
+    if(!g){g=document.createElement('div');g.className='hw-gate';el.querySelector('.ck-body').appendChild(g);}
+    g.textContent=k.mesaj;
+    g.classList.remove('flash');void g.offsetWidth;g.classList.add('flash');
+    if(k.alan==='not')gotoNot(key);else gotoSkor(key);
+  }
+  // Alan dolunca uyari kendiliginden kalksin (ana liste + "Bu hafta" karti).
+  function kapiTazele(key){
+    [hwEls[key],wkEls[key]].forEach(function(el){
+      if(!el)return;
+      var H=null;
+      homework.forEach(function(x,i){if('hw:'+i+':'+(x.date||'')===key)H=x;});
+      if(H&&!kapi(H,key)){var g=el.querySelector('.hw-gate');if(g)g.remove();}
+    });
+  }
+
   // ---- deneme skoru (yapisal) ----
   // Serbest metin yerine sayi: boylece trend grafigi cizilebiliyor.
   function skorAlani(key){
@@ -541,7 +612,7 @@
         var n=parseInt(inp.value,10);
         if(isNaN(n)||inp.value===''){delete v[inp.dataset.k];}
         else {v[inp.dataset.k]=Math.max(0,Math.min(40,n));inp.value=v[inp.dataset.k];}
-        veri[key]=v;bandYaz();
+        veri[key]=v;bandYaz();kapiTazele(key);
         await sb.from('student_program_progress').upsert(
           {program_id:prog.id,student_id:me.id,item_key:key,data:v},
           {onConflict:'program_id,item_key'});
@@ -563,10 +634,19 @@
   // 900 ms sonra kendiliginden kaydeder, ayrica alandan cikinca.
   function notAlani(key){
     var box=document.createElement('div');box.className='hw-note';
-    box.innerHTML='<div class="n-h"><span>Notların</span><span class="n-st" data-role="st"></span></div>'+
-      '<textarea placeholder="Deneme analizin, yaptığın hatalar, aklında kalanlar…"></textarea>';
-    var ta=box.querySelector('textarea'), st=box.querySelector('[data-role="st"]'), zam=null;
+    box.innerHTML='<div class="n-h"><span>Notların</span>'+
+      '<span class="n-min" data-role="min"></span>'+
+      '<span class="n-st" data-role="st"></span></div>'+
+      '<textarea placeholder="Deneme analizin, yaptığın hatalar, aklında kalanlar… (bu ödev not yazılmadan kapanmıyor)"></textarea>';
+    var ta=box.querySelector('textarea'), st=box.querySelector('[data-role="st"]'),
+        mn=box.querySelector('[data-role="min"]'), zam=null;
     ta.value=notlar[key]||'';
+    // Asgari uzunluk gizli kalmasin: kac karakter kaldigini canli goster.
+    function sayacYaz(){
+      var u=ta.value.trim().length;
+      if(u>=NOT_MIN){mn.textContent=u+' karakter';mn.classList.remove('eksik');}
+      else {mn.textContent=u+' / '+NOT_MIN+' karakter';mn.classList.add('eksik');}
+    }
     async function kaydet(){
       var v=ta.value;
       if(v===(notlar[key]||''))return;
@@ -575,11 +655,15 @@
         {program_id:prog.id,student_id:me.id,item_key:key,note:v,note_at:new Date().toISOString()},
         {onConflict:'program_id,item_key'});
       if(r.error){st.textContent='Kaydedilemedi';return;}
-      notlar[key]=v;st.textContent='Kaydedildi';
+      notlar[key]=v;st.textContent='Kaydedildi';kapiTazele(key);
       setTimeout(function(){if(st.textContent==='Kaydedildi')st.textContent='';},2500);
     }
-    ta.addEventListener('input',function(){clearTimeout(zam);st.textContent='';zam=setTimeout(kaydet,900);});
+    notKaydet[key]=kaydet;
+    ta.addEventListener('input',function(){
+      clearTimeout(zam);st.textContent='';sayacYaz();kapiTazele(key);zam=setTimeout(kaydet,900);
+    });
     ta.addEventListener('blur',function(){clearTimeout(zam);kaydet();});
+    sayacYaz();
     return box;
   }
 

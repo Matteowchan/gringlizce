@@ -249,6 +249,10 @@
   // yuzunden deger henuz atanmamis olur (sayac "undefined", notKaydet patlar).
   var NOT_MIN=80;
   var notKaydet={};   // key -> notAlani'nin kaydet(); tik aninda bekleyen yazi flush edilir
+  // Ses kapisi kayit DOSYASINA bakar, isaretci satirina degil: ogrenci kaydi
+  // genelde konusma-pratigi'nden yukluyor ve oradaki akis "hw<i>:audio"
+  // isaretcisini yazmiyor. Tek kaynak dogru: storage'daki klasor.
+  var sesVar={}, sesYuklendi=false;
   var SKILL_ETIKET={speaking:'Konuşma',listening:'Dinleme',reading:'Okuma',writing:'Yazma',
                     grammar:'Gramer',vocabulary:'Kelime',deneme:'Deneme',tekrar:'Tekrar',other:'Çalışma'};
   // Odev metni + beceri rozeti + okunur link dugmesi. Hem ana listede hem
@@ -333,6 +337,17 @@
         });
       });
   })();
+  // Hangi odevin ses kaydi var? Tek list cagrisi: alt klasorler yalnizca icinde
+  // dosya varsa dondugu icin "hw14" gorunmesi kayit var demek.
+  (async function(){
+    var r=await sb.storage.from('speaking-submissions').list(me.id+'/'+prog.id,{limit:200});
+    // Liste alinamazsa kapi ACIK kalir: yanlislikla butun konusma odevlerini
+    // kilitlemektense kaydi olmayan bir tike izin vermek yeglenir.
+    if(r.error||!r.data){console.warn('[program] ses listesi alinamadi',r.error);return;}
+    r.data.forEach(function(f){if(f&&f.name)sesVar[f.name]=true;});
+    sesYuklendi=true;
+  })();
+
   async function setDone(key,val){
     doneSet[key]=val;
     await sb.from('student_program_progress').upsert({program_id:prog.id,student_id:me.id,item_key:key,done:val,done_at:new Date().toISOString()},{onConflict:'program_id,item_key'});
@@ -391,7 +406,7 @@
       window.GriSesKaydi.mount({
         sb:sb, el:el.querySelector('.ck-body'),
         folder:me.id+'/'+prog.id+'/hw'+i,
-        onUpload:function(){setDone('hw:'+i+':audio',true);}
+        onUpload:function(){sesVar['hw'+i]=true;kapiTazele(key);}
       });
     }
     hbox.appendChild(el);
@@ -570,6 +585,12 @@
       if(v.listening==null&&v.reading==null)return {alan:'skor',
         mesaj:'Ham skorunu gir (Listening ve/veya Reading), sonra tikle.'};
     }
+    // Liste henuz gelmediyse kapiyi acma — yanlis yere engellemektense gecir.
+    if(H.audio&&sesYuklendi){
+      var m=/^hw:(\d+):/.exec(key);
+      if(m&&!sesVar['hw'+m[1]])return {alan:'ses',
+        mesaj:'Bu ödev ses kaydı istiyor. Kaydını yükle (ödevin 2. linki: soru, sayaç ve kayıt tek ekranda), sonra tikle.'};
+    }
     return null;
   }
   function kapiUyar(el,key,k){
@@ -577,7 +598,9 @@
     if(!g){g=document.createElement('div');g.className='hw-gate';el.querySelector('.ck-body').appendChild(g);}
     g.textContent=k.mesaj;
     g.classList.remove('flash');void g.offsetWidth;g.classList.add('flash');
-    if(k.alan==='not')gotoNot(key);else gotoSkor(key);
+    if(k.alan==='not')gotoNot(key);
+    else if(k.alan==='ses')gotoRecorder(key);
+    else gotoSkor(key);
   }
   // Alan dolunca uyari kendiliginden kalksin (ana liste + "Bu hafta" karti).
   function kapiTazele(key){

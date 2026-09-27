@@ -573,7 +573,7 @@
           '<div class="gsch-form-ov"><div class="gsch-form">'
           + '<div class="gsch-form-head"><h4 class="gsch-form-title">Yeni Ders Planla</h4><button type="button" class="gsch-form-x f-cancel" aria-label="Kapat">&times;</button></div>'
           + '<div class="edit-tag">Dersi düzenliyorsun — saat, tarih, süre veya notu değiştir.</div>'
-          + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'</select></label></div>' : '')
+          + (aggregate ? '<div class="row"><label>Sınıf<select class="f-class">'+classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'<option value="__none__">Sınıfsız (genel)</option></select></label></div>' : '')
           + '<div class="row"><label>Başlık<input type="text" class="f-title" placeholder="Örn. Speaking pratiği" maxlength="80"></label></div>'
           + '<div class="row"><label>Tarih<small class="f-hint"> — birden çok gün seçip tekrarlı planlayabilirsin</small><span class="f-when-ctl"><input type="hidden" class="f-date"><button type="button" class="f-datebtn empty">Tarih seç</button></span><div class="f-datechips"></div></label></div>'
           + '<div class="row"><label>Saat<span class="f-when-ctl"><select class="f-h">'+_hopt+'</select><span class="f-colon">:</span><select class="f-m">'+_mopt+'</select></span></label>'
@@ -834,7 +834,7 @@
       if(!row || !canManage(row)) return;
       state.editing=id;
       var d=row._d;
-      if(aggregate){ var fc=cont.querySelector('.f-class'); if(fc) fc.value=row.class_id; }
+      if(aggregate){ var fc=cont.querySelector('.f-class'); if(fc) fc.value=row.class_id||'__none__'; }
       cont.querySelector('.f-title').value=row.title||'';
       setFDate(d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()));
       cont.querySelector('.f-h').value=two(d.getHours());
@@ -859,7 +859,8 @@
     // Ortak ders güncelleme (save + gün-popup inline düzenleme kullanır)
     async function updateLesson(id, classId, title, startsAt, dur, note){
       var upd={ title:title, starts_at:startsAt.toISOString(), duration_min:dur, note:note||null };
-      if(aggregate && classId){ var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase()); upd.class_id=classId; upd.room_code=room; }
+      var _noCls=(classId==='__none__'||!classId);
+      if(aggregate){ if(_noCls){ upd.class_id=null; /* room_code korunur */ } else { var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase()); upd.class_id=classId; upd.room_code=room; } }
       var ru=await sb.from('grimeet_schedule').update(upd).eq('id',id);
       if(ru.error) throw ru.error;
       sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:id}}).catch(function(){});
@@ -868,8 +869,9 @@
 
     // Ortak ders oluşturma (save + gün-popup hızlı form kullanır)
     async function createLesson(classId, title, startsAt, dur, note){
-      var room=(opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
-      var r=await sb.from('grimeet_schedule').insert({ class_id:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
+      var _noCls=(classId==='__none__'||!classId);
+      var room=_noCls ? ('G'+Math.random().toString(36).slice(2,10).toUpperCase()) : (opts.roomForClass?opts.roomForClass(classId):('C'+String(classId).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase());
+      var r=await sb.from('grimeet_schedule').insert({ class_id:_noCls?null:classId, teacher_id:opts.userId, title:title, starts_at:startsAt.toISOString(), duration_min:dur, room_code:room, note:note||null }).select('id').single();
       if(r.error) throw r.error;
       if(r.data&&r.data.id){ sb.functions.invoke('notify-class-assignment',{body:{kind:'lesson',schedule_id:r.data.id}}).catch(function(){}); }
       return r;
@@ -1184,7 +1186,7 @@
       var holBadge=hol?('<div class="gsch-daymodal-hol'+(hol.half?' half':'')+'">'+esc(hol.name)+(hol.half?' · yarım gün':'')+'</div>'):'';
       var showForm=(role==='teacher');
       var showPersonal=personal;   // öğrenci VE öğretmen kişisel not/etkinlik ekleyebilir (yalnız KENDİ görür — RLS own-row)
-      var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('');
+      var classOpts=classList.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||c.id)+'</option>';}).join('')+'<option value="__none__">Sınıfsız (genel)</option>';
       var personalNoteHTML = showPersonal ? (
         '<div class="gsch-pnnote gsch-pn-flyout">'
         + '<div class="gsch-pnnote-h">Kişisel not defteri <small>yalnız sen görürsün</small></div>'
@@ -1258,7 +1260,7 @@
         var row=null; for(var i=0;i<state.rows.length;i++){ if(String(state.rows[i].id)===String(id)){ row=state.rows[i]; break; } }
         if(!row || !canManage(row)) return;
         editingId=id; var d=row._d;
-        if(aggregate){ var fc=q('.dmf-class'); if(fc) fc.value=row.class_id||''; }
+        if(aggregate){ var fc=q('.dmf-class'); if(fc) fc.value=row.class_id||'__none__'; }
         q('.dmf-t').value=row.title||'';
         q('.dmf-h').value=two(d.getHours());
         q('.dmf-m').value=two(Math.floor(d.getMinutes()/5)*5);

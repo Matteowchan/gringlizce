@@ -2287,7 +2287,18 @@ var FX_LIST=[
   {key:'hearts',  ic:'❤️', txt:'AŞK!',        col:'#e23b7a', kind:'rain',     snd:'pop',   name:'Kalp yağmuru'},
   {key:'laugh',   ic:'😂', txt:'HAHA!',       col:'#c98a3c', kind:'pop',      snd:'pop',   name:'Kahkaha'},
   {key:'cry',     ic:'😭', txt:'BUAAA!',      col:'#3f7fd4', kind:'pop',      snd:'buzz',  name:'Ağlama'},
-  {key:'mind',    ic:'🤯', txt:'VAY!',        col:'#7C5CBF', kind:'punch',    snd:'pop',   name:'Şok oldum'}
+  {key:'mind',    ic:'🤯', txt:'VAY!',        col:'#7C5CBF', kind:'punch',    snd:'pop',   name:'Şok oldum'},
+  {key:'thumbup', ic:'👍', txt:'AFERİN!',     col:'#2C7a63', kind:'pop',      snd:'pop',   name:'Aferin'},
+  {key:'thumbdn', ic:'👎', txt:'OLMADI!',     col:'#c0392b', kind:'pop',      snd:'buzz',  name:'Olmadı'},
+  {key:'trophy',  ic:'🏆', txt:'ŞAMPİYON!',   col:'#c98a3c', kind:'confetti', snd:'pop',   name:'Şampiyon'},
+  {key:'star',    ic:'⭐', txt:'YILDIZ!',     col:'#c98a3c', kind:'rain',     snd:'pop',   name:'Yıldız yağmuru'},
+  {key:'fire',    ic:'🔥', txt:'KIZGIN!',     col:'#e2691b', kind:'rain',     snd:'punch', name:'Ateş yağmuru'},
+  {key:'rocket',  ic:'🚀', txt:'HADİ!',       col:'#3f7fd4', kind:'punch',    snd:'punch', name:'Roket'},
+  {key:'party',   ic:'🥳', txt:'PARTİ!',      col:'#e23b7a', kind:'confetti', snd:'pop',   name:'Parti'},
+  {key:'drum',    ic:'🥁', txt:'TA-DAM!',     col:'#8a6a1e', kind:'pop',      snd:'clap',  name:'Davul'},
+  {key:'dizzy',   ic:'😵', txt:'SERSEM!',     col:'#8a6a1e', kind:'pop',      snd:'buzz',  name:'Sersemleme'},
+  {key:'sleep',   ic:'😴', txt:'ZZZ...',      col:'#3f7fd4', kind:'pop',      snd:'buzz',  name:'Uyku'},
+  {key:'cool',    ic:'😎', txt:'SÜPER!',      col:'#2C7a63', kind:'pop',      snd:'pop',   name:'Süper'}
 ];
 var _fxAC=null;
 function fxAC(){ if(!_fxAC){ try{ _fxAC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ _fxAC=null; } } if(_fxAC&&_fxAC.state==='suspended'){ try{ _fxAC.resume(); }catch(e){} } return _fxAC; }

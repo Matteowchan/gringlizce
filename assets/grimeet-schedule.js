@@ -81,6 +81,12 @@
     + ':root[data-theme="dark"] .gsch-pnnote{background:rgba(124,92,191,.14);border-color:rgba(124,92,191,.34);}'
     + ':root[data-theme="dark"] .gsch-pnnote input,:root[data-theme="dark"] .gsch-pnnote textarea,:root[data-theme="dark"] .gsch-pnnote select{background:#2a2419;border-color:#3a3428;color:#f0e9db;}'
     + '.gsch-cell .ev.ev-ext b{font-weight:600;}'
+    + '.gsch-cell .gsch-evs .ev.ev-extsum{display:block;width:100%;box-sizing:border-box;background:#f2ede2;color:#6b6250;border-left:3px dashed #b9ae97;font-weight:600;cursor:pointer;letter-spacing:.01em;}'
+    + '.gsch-cell .gsch-evs .ev.ev-extsum:hover{background:#e9e2d3;color:#4a4436;}'
+    + '.gsch-cell .gsch-evs .ev.ev-extsum::before{content:"";display:inline-block;width:7px;height:7px;margin-right:6px;border:1.5px solid currentColor;border-radius:2px;transform:translateY(1px);opacity:.7;}'
+    + '.gsch-cell.out .gsch-evs .ev.ev-extsum{opacity:.6;}'
+    + ':root[data-theme="dark"] .gsch-cell .gsch-evs .ev.ev-extsum{background:#2b271f;color:#b8b0a0;border-left-color:#4a4436;}'
+    + ':root[data-theme="dark"] .gsch-cell .gsch-evs .ev.ev-extsum:hover{background:#332e24;color:#e0d8c8;}'
     + '.gsch-imp{margin-top:16px;border-top:1px solid #e5ddcd;padding-top:14px;}'
     + '.gsch-imp h5{margin:0 0 4px;font-size:14px;font-weight:700;color:#2a2a2a;}'
     + '.gsch-imp p{margin:0 0 10px;font-size:12px;color:#6a6250;line-height:1.5;}'
@@ -1054,8 +1060,13 @@
       var days=new Date(y,mo+1,0).getDate();
       var byDay={}; state.rows.forEach(function(r){ if(r._d.getFullYear()===y&&r._d.getMonth()===mo){ (byDay[r._d.getDate()]=byDay[r._d.getDate()]||[]).push(r); } });
       // Ay-devri (out) hücreleri için: o gerçek tarihteki dersleri soluk göster
+      var EXT_COLLAPSE=5; // bir günde bu sayıdan FAZLA dış-takvim etkinliği → tek "Dış takvim · N" satırı
+      function _extSumChip(n,out){ return '<span class="ev ev-extsum'+(out?' ev-out':'')+'" title="'+n+' dış takvim etkinliği — günü açmak için tıkla">Dış takvim · '+n+'</span>'; }
+      // dış (abone) etkinlikleri 5'ten fazlaysa tek satıra topla; kullanıcının kendi dersleri/notları hep tek tek
+      function _packEvs(evs, chipFn){ var own=[],ext=[]; evs.forEach(function(r){ (r._ext?ext:own).push(r); }); var h=own.map(chipFn).join(''); h += (ext.length>EXT_COLLAPSE) ? _extSumChip(ext.length, chipFn===_outChip) : ext.map(chipFn).join(''); return h; }
+      function _outChip(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev ev-out" style="background:'+col+'18;color:'+col+';border-left:3px solid '+col+'"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }
       function _evsFor(yy,mm,dd){ return state.rows.filter(function(r){ var d=r._d; return d.getFullYear()===yy && d.getMonth()===mm && d.getDate()===dd; }); }
-      function _evOut(evs){ return evs.map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title); var col=rowColor(r); return '<span class="ev ev-out" style="background:'+col+'18;color:'+col+';border-left:3px solid '+col+'"><b>'+hhmm(r._d)+'</b> '+lbl+'</span>'; }).join(''); }
+      function _evOut(evs){ return _packEvs(evs, _outChip); }
       var today=new Date();
       var holMap=holidayMap(y);
       var cells='';
@@ -1067,7 +1078,7 @@
         var hol=holMap[y+'-'+two(mo+1)+'-'+two(dnum)];
         var evs=byDay[dnum]||[], has=evs.length>0, isToday=sameDay(_dd,today), selD=state.sel&&sameDay(_dd,state.sel);
         var holHTML=hol?('<span class="hol'+(hol.half?' half':'')+'" title="'+esc(hol.name)+'">'+esc(hol.name)+'</span>'):'';
-        var evHTML=evs.map(function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=r._personal?esc(r.title):(cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title)); var col=rowColor(r); var tm=r._personal&&r._allDay?'':('<b>'+hhmm(r._d)+'</b> '); return '<span class="ev'+(r._ext?' ev-ext':'')+(r._personal?' ev-pn':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+((r._ext||r._personal)?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'>'+tm+lbl+'</span>'; }).join('');
+        var evHTML=_packEvs(evs, function(r){ var cn=r.classes&&r.classes.name?r.classes.name:''; var lbl=r._personal?esc(r.title):(cn?(esc(cn)+' ('+esc(r.title)+')'):esc(r.title)); var col=rowColor(r); var tm=r._personal&&r._allDay?'':('<b>'+hhmm(r._d)+'</b> '); return '<span class="ev'+(r._ext?' ev-ext':'')+(r._personal?' ev-pn':'')+'" style="background:'+col+'22;color:'+col+';border-left:3px '+((r._ext||r._personal)?'dashed':'solid')+' '+col+'"'+(canManage(r)?' draggable="true" data-id="'+esc(r.id)+'"':'')+'>'+tm+lbl+'</span>'; });
         var cls='gsch-cell'+(has?' has':'')+((has||hol||role==='teacher'||personal)?' gsch-clk':'')+(we?' we':'')+((hol&&!hol.half)?' holi':'')+(isToday?' today':'')+(selD?' sel':'');
         cells+='<div class="'+cls+'" data-day="'+dnum+'"><span class="num">'+dnum+'</span>'+holHTML+'<div class="gsch-evs">'+evHTML+'</div></div>';
       }
@@ -1078,6 +1089,8 @@
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
+      // "Dış takvim · N" toplu satırı → o günün popup'ını aç (hücre tıklanamasa da çalışır)
+      el.querySelectorAll('.ev-extsum').forEach(function(ch){ ch.addEventListener('click',function(e){ e.stopPropagation(); var c=ch.closest('.gsch-cell'); if(!c)return; var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
       if(role==='teacher'||manageOwn){
         el.querySelectorAll('.ev[draggable="true"]').forEach(function(ev){
           ev.addEventListener('dragstart',function(e){ e.stopPropagation(); try{ e.dataTransfer.setData('text/plain', ev.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; }catch(_e){} ev.classList.add('dragging'); });

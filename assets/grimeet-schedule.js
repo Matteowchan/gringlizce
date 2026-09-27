@@ -169,6 +169,9 @@
     + '.gsch-cal-h .cal-nav{margin-left:auto;display:inline-flex;gap:6px;}'
     + '.gsch-cal-h button{border:1px solid #e4dccb;background:#fff;border-radius:50%;width:34px;height:34px;font-size:17px;line-height:1;color:#6a6250;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,border-color .12s,color .12s;}'
     + '.gsch-cal-h button:hover{background:var(--gri-accent,#2C5856);color:#fff;border-color:var(--gri-accent,#2C5856);}'
+    + '.gsch-cal-h button.cal-today{width:auto;border-radius:9px;padding:0 13px;font-size:12px;font-weight:700;letter-spacing:.01em;height:34px;}'
+    + '.gsch-hidbadge{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;letter-spacing:.01em;color:#8a6a1e;background:rgba(200,154,60,.18);border-radius:99px;padding:1px 8px;vertical-align:1px;}'
+    + ':root[data-theme="dark"] .gsch-hidbadge{color:#e0c072;background:rgba(200,154,60,.2);}'
     /* ── Outlook-benzeri bağlı grid: 1px boşluk = paylaşılan çizgi; başlık satırı ayrı, gövde yüksekliği doldurur ── */
     + '.gsch-gridwrap{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:auto 1fr;gap:1px;background:#e9e2d2;border:1px solid #e9e2d2;border-radius:12px;overflow:hidden;}'
     + '.gsch-wdrow{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e9e2d2;}'
@@ -1086,8 +1089,11 @@
       }
       var _tot=startWd+days, _trail=(7-(_tot%7))%7;
       for(var _tj=1;_tj<=_trail;_tj++){ var _ci=(_tot+_tj-1)%7; var _tjD=new Date(y,mo+1,_tj); cells+='<div class="gsch-cell out'+(_ci>=5?' we':'')+_outClk+'" data-day="'+_tj+'" data-mo="'+_tjD.getMonth()+'" data-yr="'+_tjD.getFullYear()+'"><span class="num">'+_tj+'</span><div class="gsch-evs">'+_evOut(_evsFor(_tjD.getFullYear(),_tjD.getMonth(),_tj))+'</div></div>'; }
-      el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav"><button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
+      var _nowM=new Date(), _curM=(y===_nowM.getFullYear()&&mo===_nowM.getMonth());
+      var _todayBtn = _curM ? '' : '<button class="cal-today" title="İçinde bulunduğun aya dön">Bugün</button>';
+      el.innerHTML='<div class="gsch-cal"><div class="gsch-cal-h"><b>'+MONTHS_L[mo]+' '+y+'</b><span class="cal-nav">'+_todayBtn+'<button class="cal-prev" aria-label="Önceki ay">‹</button><button class="cal-next" aria-label="Sonraki ay">›</button></span></div>'
         + '<div class="gsch-gridwrap"><div class="gsch-wdrow">'+WD.map(function(w,i){return '<div class="wd'+(i>=5?' we':'')+'">'+w+'</div>';}).join('')+'</div><div class="gsch-grid">'+cells+'</div></div></div>';
+      var _tb=el.querySelector('.cal-today'); if(_tb) _tb.addEventListener('click',function(){ var n=new Date(); state.month=new Date(n.getFullYear(),n.getMonth(),1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
       el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
@@ -1550,6 +1556,15 @@
       renderCal(body.querySelector('.gsch-col-cal'));
       renderListInner(body.querySelector('.gsch-col-list-inner'));
       paintStats();
+      updateColorsBadge();
+    }
+
+    // "Takvim Renkleri" düğmesine kaç abone takvimin gizli olduğunu rozetle (gizle özelliği için görünür geri bildirim)
+    function updateColorsBadge(){
+      var b=cont.querySelector('.gsch-colors'); if(!b) return;
+      var seen={}; (state.allRows||[]).forEach(function(r){ if(r._ext && state.hiddenExt && state.hiddenExt[r._extCalId]) seen[r._extCalId]=1; });
+      var n=Object.keys(seen).length;
+      b.innerHTML='Takvim Renkleri'+(n>0?' <span class="gsch-hidbadge" title="'+n+' abone takvim gizli">'+n+' gizli</span>':'');
     }
 
     // Kutu köşe-boyutlandırma (native resize:both) kalıcılığı: pointerup'ta boyut değiştiyse kaydet

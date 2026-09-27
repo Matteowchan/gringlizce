@@ -860,7 +860,7 @@ function handleMsg(msg,p){
   if(msg.t==='chat'){ addChat(from,msg.text); if(STATE.isHost&&id)addPoint(id,from,1); }
   else if(msg.t==='hand'){ if(id){ var tl=tileEl(id); if(tl){ var h=tl.querySelector('.hand'); if(msg.up&&!h){var d=document.createElement('div');d.className='hand';d.textContent='✋';tl.appendChild(d);} else if(!msg.up&&h)h.remove(); } if(msg.up){ handQueueAdd(id,from); sysChat(from+' el kaldırdı ✋'); if(STATE.isHost)addPoint(id,from,1); } else handQueueRemove(id); } }
   else if(msg.t==='react'){ floatReact(msg.e); if(STATE.isHost&&id){ STATE._rp=STATE._rp||{}; var _now=Date.now(); if(!STATE._rp[id]||_now-STATE._rp[id]>10000){ STATE._rp[id]=_now; addPoint(id,from,1); } } }
-  else if(msg.t==='fx'){ playFx(msg.key); }
+  else if(msg.t==='fx'){ if(fromHost) playFx(msg.key); }
   else if(msg.t==='lower-one'){ if(!STATE.isHost&&STATE.lkRoom&&msg.target===STATE.lkRoom.localParticipant.identity){ STATE.handUp=false; $('#ctrl-hand').classList.remove('active'); setSelfHand(false); sendData({t:'hand',up:false}); } }
   else if(msg.t==='room-closed'){ if(!STATE.isHost&&fromHost){ STATE._leaving=true; toast('Öğretmen odayı kapattı.'); setTimeout(hardLeave,1500); } }
   else if(msg.t==='knock'){ if(STATE.isHost&&id){ if(STATE.waitingRoom) addPending(id,from); else sendData({t:'admit',target:id}); } }
@@ -2327,7 +2327,7 @@ function playFx(key){
 }
 function bindFx(){
   var bar=$('#gmr-fx-bar'); if(!bar) return;
-  FX_LIST.forEach(function(fx){ var b=document.createElement('button'); b.innerHTML=fx.ic; b.title=fx.name; b.addEventListener('click',function(ev){ ev.stopPropagation(); playFx(fx.key); sendData({t:'fx',key:fx.key}); $('#gmr-fx').classList.remove('open'); }); bar.appendChild(b); });
+  FX_LIST.forEach(function(fx){ var b=document.createElement('button'); b.innerHTML=fx.ic; b.title=fx.name; b.addEventListener('click',function(ev){ ev.stopPropagation(); if(!STATE.isHost) return; playFx(fx.key); sendData({t:'fx',key:fx.key}); $('#gmr-fx').classList.remove('open'); }); bar.appendChild(b); });
   var tb=$('#gmr-fx-btn'); if(tb) tb.addEventListener('click',function(ev){ ev.stopPropagation(); $('#gmr-fx').classList.toggle('open'); $('#gmr-react').classList.remove('open'); });
   document.addEventListener('click',function(ev){ if(!ev.target.closest('#gmr-fx')) $('#gmr-fx').classList.remove('open'); });
 }

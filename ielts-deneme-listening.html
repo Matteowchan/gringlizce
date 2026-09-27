@@ -1039,7 +1039,14 @@
           }
         }
       }
-      return { score, total, band: bandFromRaw(score) };
+      return { score, total, band: bandFromRaw(olcekle(score, total)) };
+    }
+
+    // Band tablosu 40 soruluk sinav icin. Bolum bazli / kisa testlerde ham dogru
+    // sayisi dogrudan tabloya sokulursa band comuyor. Once 40'a olcekle.
+    function olcekle(r, total) {
+      if (!total || total >= 40) return r;
+      return Math.round(r / total * 40);
     }
 
     function bandFromRaw(r) {

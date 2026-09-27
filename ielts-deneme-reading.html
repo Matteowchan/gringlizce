@@ -1092,7 +1092,15 @@
           }
         }
       }
-      return { score, total, band: bandFromRaw(score) };
+      return { score, total, band: bandFromRaw(olcekle(score, total)) };
+    }
+
+    // Band tablosu 40 soruluk sinav icin. Tek pasajlik testler 13-14 soru oldugu
+    // icin ham dogru sayisi dogrudan tabloya sokulursa band comuyor (11/14 -> 4.0).
+    // Once 40'a olcekle, sonra cevir.
+    function olcekle(r, total) {
+      if (!total || total >= 40) return r;
+      return Math.round(r / total * 40);
     }
 
     function bandFromRaw(r) {

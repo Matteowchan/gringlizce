@@ -330,6 +330,14 @@
     + '.gsch-sw{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:0 0 0 1px rgba(0,0,0,.12);}'
     + '.gsch-sw.on{border-color:#2a2a2a;box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;}'
     + ':root[data-theme="dark"] .gsch-clrname{color:#f0e9db;}'
+    + '.gsch-clrhdr{display:flex;align-items:center;justify-content:space-between;gap:8px;}'
+    + '.gsch-eye{font:inherit;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid #cfe0da;background:#eef6f3;color:#2C5856;border-radius:99px;padding:3px 11px;cursor:pointer;line-height:1.4;flex:none;transition:background .15s,color .15s,border-color .15s;}'
+    + '.gsch-eye:hover{background:#e2efea;}'
+    + '.gsch-eye.off{background:#f3efe6;color:#9a9382;border-color:#e3dccc;}'
+    + '.gsch-clrrow.is-hidden .gsch-sws{opacity:.42;}'
+    + '.gsch-clrrow.is-hidden .gsch-clrname{color:#9a9382;}'
+    + ':root[data-theme="dark"] .gsch-eye{background:rgba(111,182,175,.16);color:#8fd3ca;border-color:rgba(111,182,175,.32);}'
+    + ':root[data-theme="dark"] .gsch-eye.off{background:#2b271f;color:#8c8578;border-color:#3a352b;}'
     + ':root[data-theme="dark"] .gsch-sw.on{border-color:#f0e9db;box-shadow:0 0 0 2px #241f18,0 0 0 4px currentColor;}'
     + '.gsch-form .edit-tag{display:none;font-size:12px;color:#2C5856;font-weight:700;margin-bottom:8px;}'
     + '.gsch-form.editing .edit-tag{display:block;}'
@@ -536,7 +544,13 @@
     var statsOpen=false; try{ statsOpen=localStorage.getItem('gsch-stats-open')==='1'; }catch(e){}
     var listOpen=true; try{ if(localStorage.getItem('gsch-list-open')==='0') listOpen=false; }catch(e){}
     var statsData=null; // Ders İstatistiği için gruplanmış geçmiş dersler (null=henüz yüklenmedi)
-    var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null };
+    // Abone (dış) takvim gizleme — kullanıcı başına localStorage; hangi dış takvimler takvimde gösterilmesin
+    var _extHideKey='gsch-exthide-'+(opts.userId||'anon');
+    function loadHiddenExt(){ try{ var o=JSON.parse(localStorage.getItem(_extHideKey)||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
+    function saveHiddenExt(m){ try{ localStorage.setItem(_extHideKey, JSON.stringify(m||{})); }catch(e){} }
+    var state={ view:_savedView, month:new Date(new Date().getFullYear(),new Date().getMonth(),1), rows:[], sel:null, editing:null, hiddenExt:loadHiddenExt() };
+    // Görünür satırlar: gizlenen abone takvimlerinin etkinliklerini çıkar (allRows tam liste, rows süzülmüş)
+    function applyExtVisibility(){ var h=state.hiddenExt||{}; var src=state.allRows||state.rows; state.rows=src.filter(function(r){ return !(r._ext && h[r._extCalId]); }); }
 
     var _hopt='<option value="">--</option>'; for(var _h=0;_h<24;_h++){ var _hh=('0'+_h).slice(-2); _hopt+='<option value="'+_hh+'">'+_hh+'</option>'; }
     var _mopt='<option value="">--</option>'; for(var _m=0;_m<60;_m+=5){ var _mm=('0'+_m).slice(-2); _mopt+='<option value="'+_mm+'">'+_mm+'</option>'; }
@@ -701,7 +715,7 @@
         + '<div class="gsch-clrlist">'
         + classList.map(function(c){ return '<div class="gsch-clrrow"><span class="gsch-clrname">'+esc(c.name||c.id)+'</span><div class="gsch-sws" data-for="'+esc(c.id)+'">'+swatches(c.id)+'</div></div>'; }).join('')
         + '</div>'
-        + (extCals.length ? ('<div style="font-weight:700;font-size:13px;margin:16px 0 6px;color:#2a2a2a">Abone takvimler</div><div class="gsch-clrlist">' + extCals.map(function(c){ return '<div class="gsch-clrrow"><span class="gsch-clrname">'+esc(c.label||'Dış takvim')+'</span><div class="gsch-sws" data-extfor="'+esc(c.id)+'">'+extSwatches(c.id,c.color)+'</div></div>'; }).join('') + '</div>') : '')
+        + (extCals.length ? ('<div style="font-weight:700;font-size:13px;margin:16px 0 6px;color:#2a2a2a">Abone takvimler</div><div style="font-size:12px;color:#6b6250;margin:0 0 8px">Bir takvimi gizlersen etkinlikleri takvimde ve “Yaklaşan” listesinde görünmez; rengi ve aboneliği durmaya devam eder.</div><div class="gsch-clrlist">' + extCals.map(function(c){ var _hid=!!(state.hiddenExt&&state.hiddenExt[c.id]); return '<div class="gsch-clrrow'+(_hid?' is-hidden':'')+'" data-extrow="'+esc(c.id)+'"><div class="gsch-clrhdr"><span class="gsch-clrname">'+esc(c.label||'Dış takvim')+'</span><button type="button" class="gsch-eye'+(_hid?' off':'')+'" data-visfor="'+esc(c.id)+'" aria-pressed="'+(_hid?'false':'true')+'">'+(_hid?'Göster':'Gizle')+'</button></div><div class="gsch-sws" data-extfor="'+esc(c.id)+'">'+extSwatches(c.id,c.color)+'</div></div>'; }).join('') + '</div>') : '')
         + '<div class="macts" style="margin-top:14px;"><button type="button" class="gsch-btn m-close">Bitti</button></div>'
         + '</div>';
       document.body.appendChild(ov);
@@ -722,6 +736,18 @@
           var group=sw.parentNode; group.querySelectorAll('.gsch-sw').forEach(function(x){ x.classList.remove('on'); }); sw.classList.add('on');
           try{ var r=await sb.from('external_calendars').update({color:hx}).eq('id',eid); if(r.error) throw r.error; }
           catch(e){ alert('Renk kaydedilemedi: '+(e.message||'hata')); }
+        });
+      });
+      ov.querySelectorAll('.gsch-eye[data-visfor]').forEach(function(bt){
+        bt.addEventListener('click', function(){
+          var cid=bt.getAttribute('data-visfor'); var h=state.hiddenExt||(state.hiddenExt={});
+          if(h[cid]){ delete h[cid]; } else { h[cid]=1; }
+          saveHiddenExt(h);
+          var hid=!!h[cid];
+          bt.classList.toggle('off', hid); bt.textContent=hid?'Göster':'Gizle'; bt.setAttribute('aria-pressed', hid?'false':'true');
+          var rowEl=ov.querySelector('.gsch-clrrow[data-extrow="'+cid.replace(/"/g,'')+'"]'); if(rowEl) rowEl.classList.toggle('is-hidden', hid);
+          applyExtVisibility(); render(); if(statsOpen) loadStats();
+          if(opts.onLoad) try{ opts.onLoad(state.rows.length); }catch(_e){}
         });
       });
     }
@@ -890,7 +916,7 @@
           try{
             var _ecm={}; try{ var _ec=await sb.from('external_calendars').select('id,color').eq('user_id',opts.userId); (_ec.data||[]).forEach(function(c){ if(c.color) _ecm[c.id]=c.color; }); }catch(_e){}
             var ex=await sb.from('external_events').select('id,calendar_id,title,starts_at,ends_at,all_day,location').eq('user_id',opts.userId).gte('starts_at',floor).order('starts_at',{ascending:true});
-            (ex.data||[]).forEach(function(e){ var d=new Date(e.starts_at); var dur=e.ends_at?Math.max(15,Math.round((new Date(e.ends_at).getTime()-d.getTime())/60000)):60; state.rows.push({ id:'ext-'+e.id, title:e.title, starts_at:e.starts_at, duration_min:dur, note:e.location||null, all_day:e.all_day, _d:d, _ext:true, _extColor:_ecm[e.calendar_id]||null }); });
+            (ex.data||[]).forEach(function(e){ var d=new Date(e.starts_at); var dur=e.ends_at?Math.max(15,Math.round((new Date(e.ends_at).getTime()-d.getTime())/60000)):60; state.rows.push({ id:'ext-'+e.id, title:e.title, starts_at:e.starts_at, duration_min:dur, note:e.location||null, all_day:e.all_day, _d:d, _ext:true, _extCalId:e.calendar_id, _extColor:_ecm[e.calendar_id]||null }); });
             state.rows.sort(function(a,b){ return a._d.getTime()-b._d.getTime(); });
           }catch(_e){}
         }
@@ -902,6 +928,7 @@
             state.rows.sort(function(a,b){ return a._d.getTime()-b._d.getTime(); });
           }catch(_e){}
         }
+        state.allRows=state.rows; applyExtVisibility();
         render();
         if(statsOpen) loadStats();
         maybeSyncExternal();

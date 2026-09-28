@@ -2319,15 +2319,34 @@
     // ========================================================
     // DRAFT (localStorage)
     // ========================================================
-    function draftKey() { return 'ib-wiz-draft-' + state.typeId + '-v1'; }
+    // Taslak SORUYA baglidir. Eskiden anahtar yalnizca type'ti, bu yuzden gecen
+    // haftaki Task 1 yazisi bu haftanin BASKA Task 1 sorusunda kutuda cikiyordu.
+    // Ayni soruya donunce yazisi hala yerinde durur.
+    function draftKey() {
+      var soru = (state.currentPrompt && state.currentPrompt.id) || state.typeId;
+      return 'ib-wiz-draft-v2-' + state.typeId + '-' + soru;
+    }
     function saveDraft() {
       try { localStorage.setItem(draftKey(), document.getElementById('wizText').value); } catch(e) {}
     }
     function restoreDraft() {
       try {
         var saved = localStorage.getItem(draftKey());
+        if (!saved) saved = eskiTaslagiTasi();
         if (saved) document.getElementById('wizText').value = saved;
       } catch(e) {}
+    }
+    // v1 anahtari type bazliydi; o surumde yazi yazmis biri guncellemeden sonra
+    // taslagini kaybetmesin diye BIR KEZ tasinir, sonra eski anahtar silinir.
+    // Tek seferlik olmasi sart: kalici fallback, duzeltilen hatayi geri getirirdi
+    // (gecen haftanin yazisi yeni soruda cikardi).
+    function eskiTaslagiTasi() {
+      var eski = 'ib-wiz-draft-' + state.typeId + '-v1';
+      var metin = localStorage.getItem(eski);
+      localStorage.removeItem(eski);
+      if (!metin || !metin.trim()) return null;
+      localStorage.setItem(draftKey(), metin);
+      return metin;
     }
     function clearDraft() {
       try { localStorage.removeItem(draftKey()); } catch(e) {}
@@ -2363,7 +2382,13 @@
           updateWordCount();
           document.getElementById('undoBtn').style.display = 'inline-flex';
         }
-        loadRandomPrompt();
+        // Taslak soruya bagli oldugu icin yeni soru gelince o sorunun taslagi
+        // yuklenir (genelde bos); eski sorunun yazisi kendi anahtarinda kalir.
+        loadRandomPrompt().then(function () {
+          document.getElementById('wizText').value = '';
+          restoreDraft();
+          updateWordCount();
+        });
       });
 
       // Clear (Yazıyı Sıfırla)

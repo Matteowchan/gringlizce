@@ -13,11 +13,20 @@
   root.classList.add('gri-rv'); /* gating: yalnız script çalışırsa beliriş devreye girer */
 
   var io = null, seen = [];
-  function showAll() { for (var i = 0; i < seen.length; i++) seen[i].classList.add('in'); }
+  /* GÜVENLİK AĞI: yalnız şu an görünür/üstte olanları aç — alttaki bölümler scroll'da belirmeye devam etsin
+     (eskiden hepsini açıyordu, bu da 2sn sonra scroll-reveal'i tümden devre dışı bırakıyordu). */
+  function showAll() {
+    var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+    for (var i = 0; i < seen.length; i++) {
+      var el = seen[i];
+      try { if (el.getBoundingClientRect().top < vh + 40) el.classList.add('in'); }
+      catch (e) { el.classList.add('in'); }
+    }
+  }
   function observe(list) {
     for (var i = 0; i < list.length; i++) {
       var el = list[i];
-      if (el.__grv) continue; el.__grv = 1; seen.push(el);
+      if (el.__grv) continue; el.__grv = 1; el.setAttribute('data-grv', '1'); seen.push(el);
       if (io) io.observe(el); else el.classList.add('in');
     }
   }

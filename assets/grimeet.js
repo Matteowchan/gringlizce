@@ -1567,6 +1567,14 @@ function ytId(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)
 // runner'ın postMessage köprüsünü açarız (öğretmen yazınca öğrenci görsün / iki yönlü). #108
 function isExamRunner(v){ v=String(v||''); return /ielts-deneme-(reading|writing|listening)/i.test(v) || /(^|\/)odev(\.html)?([?#]|$)/i.test(v); }
 function loadMaterial(m,remote){
+  // Güvenlik: uzak (başka katılımcıdan gelen) materyalde yalnız http(s) şema; 'unit' için same-origin zorunlu.
+  // Aksi halde javascript: gibi bir değer öğretmen origin'inde iframe.src olarak çalışabilirdi.
+  if(remote && (m.kind==='unit'||m.kind==='file')){
+    try{ var _mv=new URL(m.value, location.origin);
+      if(!/^https?:$/.test(_mv.protocol)) return;
+      if(m.kind==='unit' && _mv.origin!==location.origin) return;
+    }catch(e){ return; }
+  }
   STATE.currentMaterial={kind:m.kind,value:m.value,ext:m.ext,name:m.name};
   STATE.matScrollEl=null;
   // Nav-izleyiciyi yeni materyale göre sıfırla (yt/file'a geçince de durdur).
@@ -2333,7 +2341,7 @@ function playFx(key){
   else { inner='<span class="fx-pop">'+fx.ic+'</span>'+word; }
   wrap.innerHTML=inner; layer.appendChild(wrap);
   if(fx.kind==='slap'||fx.kind==='punch'||fx.kind==='splat'){ var vid=document.getElementById('gmr-videos'); if(vid){ vid.classList.add('gmr-shake'); setTimeout(function(){ vid.classList.remove('gmr-shake'); },470); } }
-  var life=(fx.kind==='confetti'||fx.kind==='rain')?2900:1750;
+  var life=(fx.kind==='confetti'||fx.kind==='rain')?3600:2000;
   setTimeout(function(){ try{ wrap.remove(); }catch(e){} }, life);
 }
 function bindFx(){

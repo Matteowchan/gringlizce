@@ -607,12 +607,21 @@ function setTileSize(px,save){ px=Math.max(160,Math.min(620,px|0)); document.doc
 /* ===== Ders Planla / Takvim (host) — paylaşılan GriSchedule modülü, geniş modal ===== */
 var _schedMounted=false;
 function roomForClass(cid){ return ('C'+String(cid||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8)).toUpperCase(); }
+var _schedScriptP=null;
+function loadSchedScript(){
+  if(window.GriSchedule) return Promise.resolve();
+  if(_schedScriptP) return _schedScriptP;
+  _schedScriptP=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='assets/grimeet-schedule.js?v=59'; s.defer=true; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+  return _schedScriptP;
+}
 async function openSchedule(){
   if(!STATE.isHost)return;
   var modal=$('#sched-modal'); if(!modal)return;
   modal.classList.remove('hidden');
   if(_schedMounted)return;
   var body=$('#sched-body'), sb=STATE.supabase||window.GRI_SB;
+  // Takvim modülü yalnız ilk açılışta yüklenir (136KB; oda açılışında gereksizdi).
+  if(!window.GriSchedule){ if(body)body.innerHTML='<div class="gmr-sched-loading">Takvim yükleniyor…</div>'; try{ await loadSchedScript(); }catch(e){} }
   if(!sb||!window.GriSchedule){ if(body)body.innerHTML='<div class="gmr-sched-loading">Takvim şu an yüklenemedi. Sayfayı yenileyip tekrar dene.</div>'; return; }
   _schedMounted=true;
   try{

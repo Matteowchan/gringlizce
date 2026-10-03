@@ -1096,7 +1096,16 @@
       var _tb=el.querySelector('.cal-today'); if(_tb) _tb.addEventListener('click',function(){ var n=new Date(); state.month=new Date(n.getFullYear(),n.getMonth(),1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-prev').addEventListener('click',function(){ state.month=new Date(y,mo-1,1); state.sel=null; renderCal(el); });
       el.querySelector('.cal-next').addEventListener('click',function(){ state.month=new Date(y,mo+1,1); state.sel=null; renderCal(el); });
-      el.querySelectorAll('.gsch-clk').forEach(function(c){ c.addEventListener('click',function(){ var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
+      el.querySelectorAll('.gsch-clk').forEach(function(c){
+        // A11y: gün hücreleri klavyeyle açılabilsin (eskiden sadece tıklanabilir div'di).
+        var dd0=parseInt(c.dataset.day,10);
+        var cmo0=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo;
+        var cyr0=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y;
+        if(!c.hasAttribute('tabindex')){ c.setAttribute('tabindex','0'); c.setAttribute('role','button'); c.setAttribute('aria-label', dd0+' '+MONTHS_L[cmo0]+' '+cyr0+' — günü aç'); }
+        function openIt(){ openDayModal(cyr0,cmo0,dd0,c.getBoundingClientRect()); }
+        c.addEventListener('click', openIt);
+        c.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); openIt(); } });
+      });
       // "Dış takvim · N" toplu satırı → o günün popup'ını aç (hücre tıklanamasa da çalışır)
       el.querySelectorAll('.ev-extsum').forEach(function(ch){ ch.addEventListener('click',function(e){ e.stopPropagation(); var c=ch.closest('.gsch-cell'); if(!c)return; var dd=parseInt(c.dataset.day,10); var cmo=(c.dataset.mo!=null&&c.dataset.mo!=='')?parseInt(c.dataset.mo,10):mo; var cyr=(c.dataset.yr!=null&&c.dataset.yr!=='')?parseInt(c.dataset.yr,10):y; openDayModal(cyr,cmo,dd,c.getBoundingClientRect()); }); });
       if(role==='teacher'||manageOwn){

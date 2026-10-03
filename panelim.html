@@ -4317,52 +4317,18 @@
         // Build universe: distinct (category, subcategory) from published questions
         // Universe of (category, subcategory) — built from qLookup below; declared early so it's hoisted
         var universe = {};
-
-        // Build slug -> (category, subcategory) lookup, paginated to bypass 1000-row default cap
-        var qLookup = {};
-        var pageSize = 1000;
-        var offset = 0;
-        var keepGoing = true;
-        while (keepGoing) {
-          var qIdRes = await sbCli
-            .from('questions')
-            .select('slug, exam_type, section, subcategory')
-            .not('subcategory', 'is', null)
-            .not('exam_type', 'is', null)
-            .range(offset, offset + pageSize - 1);
-          if (qIdRes.error) { console.warn('[progress] question lookup failed:', qIdRes.error.message); return; }
-          var batch = qIdRes.data || [];
-          batch.forEach(function (r) {
-            if (!r.slug) return;
-            qLookup[r.slug] = { exam_type: r.exam_type, section: r.section, subcategory: r.subcategory };
-            var k = String(r.exam_type) + '|' + String(r.section || '') + '|' + String(r.subcategory);
-            if (!universe[k]) universe[k] = { exam_type: r.exam_type, section: r.section, subcategory: r.subcategory, total: 0, correct: 0 };
-          });
-          if (batch.length < pageSize) keepGoing = false;
-          else offset += pageSize;
-          if (offset > 20000) keepGoing = false;
-        }
-        console.log('[progress] qLookup size:', Object.keys(qLookup).length);
-
-        // User's answers — actual columns are question_slug + status ('correct'/'incorrect')
-        var aRes = await sbCli
-          .from('user_answers')
-          .select('question_slug, status')
-          .eq('user_id', userId);
-        if (aRes.error) { console.warn('[progress] answers fetch failed:', aRes.error.message); return; }
-        console.log('[progress] user answer count:', (aRes.data || []).length);
-
         var totalAll = 0, correctAll = 0;
-        (aRes.data || []).forEach(function (r) {
-          var q = qLookup[r.question_slug];
-          if (!q) return;
-          var k = String(q.exam_type) + '|' + String(q.section || '') + '|' + String(q.subcategory);
-          if (!universe[k]) universe[k] = { exam_type: q.exam_type, section: q.section, subcategory: q.subcategory, total: 0, correct: 0 };
-          var isCorrect = r.status === 'correct';
-          universe[k].total += 1;
-          if (isCorrect) universe[k].correct += 1;
-          totalAll += 1;
-          if (isCorrect) correctAll += 1;
+
+        // Tek RPC: 255 distinct (exam_type,section,subcategory) evreni + kullanıcının kendi
+        // answered/correct sayıları. (Eskiden 17.440 soru satırı 18 seri istekle iniyordu.)
+        var pRes = await sbCli.rpc('panelim_subcategory_progress');
+        if (pRes.error) { console.warn('[progress] rpc failed:', pRes.error.message); return; }
+        (pRes.data || []).forEach(function (r) {
+          var tot = r.total || 0, cor = r.correct || 0;
+          var k = String(r.exam_type) + '|' + String(r.section || '') + '|' + String(r.subcategory);
+          universe[k] = { exam_type: r.exam_type, section: r.section, subcategory: r.subcategory, total: tot, correct: cor };
+          totalAll += tot;
+          correctAll += cor;
         });
 
         // Map exam_type + section to display group

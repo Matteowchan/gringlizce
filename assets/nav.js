@@ -601,17 +601,37 @@
       var SEL = '.modal-overlay,.app-mode-modal-overlay,.gsch-modal-ov,.sb-overlay,.iom-overlay,.gri-modal,.modal-writing,[data-modal-overlay]';
       var _n = 0;
       function visible(el) { var st = window.getComputedStyle(el); return st.display !== "none" && st.visibility !== "hidden" && parseFloat(st.opacity || "1") > 0.01; }
+      function focusablesIn(el) {
+        return Array.prototype.slice.call(el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+          .filter(function (n) { return n.offsetWidth > 0 || n.offsetHeight > 0 || n === document.activeElement; });
+      }
       function enhance(el) {
         try {
           if (!el.matches || !el.matches(SEL)) return;
-          if (!visible(el)) { el.__a11yOpen = 0; return; }
+          if (!visible(el)) {
+            // Kapanışta odağı açan öğeye geri ver (WCAG focus-restore)
+            if (el.__a11yOpen && el.__a11yReturn && el.__a11yReturn.focus) { try { el.__a11yReturn.focus(); } catch (e) {} }
+            el.__a11yOpen = 0; return;
+          }
           if (el.__a11yOpen) return; el.__a11yOpen = 1;
+          el.__a11yReturn = (document.activeElement && !el.contains(document.activeElement)) ? document.activeElement : el.__a11yReturn;
           if (!el.getAttribute("role")) el.setAttribute("role", "dialog");
           if (!el.getAttribute("aria-modal")) el.setAttribute("aria-modal", "true");
           if (!el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby")) {
             var hd = el.querySelector("h1,h2,h3,h4,.modal-title");
             if (hd) { if (!hd.id) hd.id = "a11y-mt-" + (++_n); el.setAttribute("aria-labelledby", hd.id); }
             else el.setAttribute("aria-label", "İletişim kutusu");
+          }
+          // Tab focus-trap (bir kez bağla) — Escape EKLENMEZ (modallerin kendi Esc handler'ı var, çakışmasın)
+          if (!el.__a11yTrap) {
+            el.__a11yTrap = 1;
+            el.addEventListener("keydown", function (e) {
+              if (e.key !== "Tab") return;
+              var f = focusablesIn(el); if (!f.length) return;
+              var first = f[0], last = f[f.length - 1];
+              if (e.shiftKey && document.activeElement === first) { e.preventDefault(); try { last.focus(); } catch (_e) {} }
+              else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); try { first.focus(); } catch (_e) {} }
+            });
           }
           // odak modal içinde değilse kapsayıcıya taşı (kontrolleri tetiklemeden)
           if (!el.contains(document.activeElement)) {

@@ -6,12 +6,13 @@
 //   - Same-origin statik (css/js/img/font)-> stale-while-revalidate (cache'ten ver, arkada güncelle).
 // Sürüm bump = eski cache temizlenir.
 
-const SW_VERSION = '2.2.1';
+const SW_VERSION = '2.3.0';
+const ASSET_VER  = '20261003'; // HTML'deki ?v= ile AYNI olmalı (versiyonlu CSS cache-first eşleşmesi için)
 const STATIC_CACHE = 'gri-static-' + SW_VERSION;
 const PAGES_CACHE  = 'gri-pages-' + SW_VERSION;
 const OFFLINE_URL  = '/offline.html';
 
-// Açılışta öncelikli yüklenenler (kritik app-shell).
+// Açılışta öncelikli yüklenenler (kritik app-shell). CSS'ler versiyonlu URL ile (cache-first eşleşsin).
 const PRECACHE = [
   OFFLINE_URL,
   '/',
@@ -20,9 +21,8 @@ const PRECACHE = [
   '/favicon.ico',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/assets/main.css',
-  '/assets/site-overrides.css',
-  '/assets/app-mode.css'
+  '/assets/main.css?v=' + ASSET_VER,
+  '/assets/site-overrides.css?v=' + ASSET_VER
 ];
 
 self.addEventListener('install', (event) => {
@@ -90,8 +90,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Uygulama kodu (JS/CSS): network-first -> cache fallback (deploy sonrası hep güncel kod).
+  // Uygulama kodu (JS/CSS).
   if (isAppCode(url)) {
+    // Versiyonlu (?v=) dosya içeriği o versiyon için değişmez -> CACHE-FIRST (her gezinmede yeniden inmesin).
+    // Versiyon bump'ta URL değişir -> yeni anahtar -> ağdan çekilir. Versiyonsuzlar network-first (taze kalsın).
+    if (/[?&](v|ver)=/.test(url.search)) {
+      event.respondWith(
+        caches.open(STATIC_CACHE).then((cache) =>
+          cache.match(req).then((cached) => {
+            if (cached) return cached;
+            return fetch(req).then((res) => {
+              if (res && res.ok) cache.put(req, res.clone());
+              return res;
+            }).catch(() => cached);
+          })
+        )
+      );
+      return;
+    }
     event.respondWith(
       fetch(req, { cache: 'no-store' }).then((res) => {
         if (res && res.ok) {

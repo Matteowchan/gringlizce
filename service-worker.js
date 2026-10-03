@@ -6,8 +6,8 @@
 //   - Same-origin statik (css/js/img/font)-> stale-while-revalidate (cache'ten ver, arkada güncelle).
 // Sürüm bump = eski cache temizlenir.
 
-const SW_VERSION = '2.3.0';
-const ASSET_VER  = '20261003'; // HTML'deki ?v= ile AYNI olmalı (versiyonlu CSS cache-first eşleşmesi için)
+const SW_VERSION = '2.3.1';
+const ASSET_VER  = '20261004'; // HTML'deki ?v= ile AYNI olmalı (versiyonlu CSS cache-first eşleşmesi için)
 const STATIC_CACHE = 'gri-static-' + SW_VERSION;
 const PAGES_CACHE  = 'gri-pages-' + SW_VERSION;
 const OFFLINE_URL  = '/offline.html';

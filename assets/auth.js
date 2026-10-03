@@ -25,6 +25,11 @@
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
+  // Tek paylaşılan client: gri-* modülleri (plan/izler/pekistir/hatadefteri/ogretmen-ipuclari)
+  // window.GRI_SB'yi kontrol ediyordu ama kimse set etmiyordu → her biri kendi GoTrueClient'ını
+  // açıp aynı storage anahtarında token-refresh yarışına giriyordu (rastgele logout riski).
+  // Birincil (persistSession'lı) client'ı paylaş → o modüller bunu yeniden kullansın.
+  try { if (!window.GRI_SB) window.GRI_SB = sb; } catch (e) {}
 
   function getCache() {
     try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }

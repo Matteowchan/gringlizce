@@ -148,7 +148,7 @@
     host.querySelector('#gripkCount').textContent = '';
     var r = state.recovered, n = state.items.length;
     var msg = r === n ? 'Toparladın — mantık oturdu.' : r > 0 ? 'Bir adım ilerledin. Bu konuya biraz daha bakmak iyi gelir.' : 'Sorun değil; asıl öğrenme burada. Konuyu kısa bir tekrarla pekiştir.';
-    b.innerHTML = '<div class="gripk-recap"><img src="assets/gri-cat-happy.png" alt="Gri"><h3>' + r + ' / ' + n + '</h3><p>' + esc(msg) + '</p><div class="acts">' +
+    b.innerHTML = '<div class="gripk-recap"><img src="assets/gri-cat-happy.webp" alt="Gri"><h3>' + r + ' / ' + n + '</h3><p>' + esc(msg) + '</p><div class="acts">' +
       (state.topic ? '<a class="p" href="' + esc(state.topic) + '">Konuyu çalış</a>' : '') +
       '<button type="button" class="g" id="gripkDone">Kapat</button></div></div>';
     var d = b.querySelector('#gripkDone'); if (d) { d.addEventListener('click', close); d.focus(); }

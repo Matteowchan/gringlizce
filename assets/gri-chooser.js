@@ -105,7 +105,7 @@
     host.setAttribute('aria-label', 'Ne çalışayım rehberi');
     host.innerHTML =
       '<div class="grich">' +
-        '<div class="grich-top"><img src="assets/gri-cat-happy.png" alt="Gri" width="34" height="34"><h2>—</h2></div>' +
+        '<div class="grich-top"><img src="assets/gri-cat-happy.webp" alt="Gri" width="34" height="34"><h2>—</h2></div>' +
         '<p class="sub">—</p>' +
         '<div class="grich-opts"></div>' +
         '<div class="grich-foot"><button type="button" class="grich-link grich-back-link">‹ Geri</button><button type="button" class="grich-link grich-close">Kapat</button></div>' +

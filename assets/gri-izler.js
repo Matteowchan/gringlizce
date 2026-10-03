@@ -64,7 +64,7 @@
     el.className = 'griz';
     el.innerHTML =
       '<div class="griz-head"><span class="em">🪶</span><h2>Çalışma İzleri</h2></div>' +
-      '<div class="griz-empty"><img src="assets/gri-cat-happy.png" alt="Gri"><p>Çalışman burada iz bırakacak. İlk sorularını çözdükçe, kaç gün geldiğin ve nereye kadar ilerlediğin küçük izler hâlinde birikecek — kimseyle yarışmadan, kendi tempona göre.</p></div>' +
+      '<div class="griz-empty"><img src="assets/gri-cat-happy.webp" alt="Gri"><p>Çalışman burada iz bırakacak. İlk sorularını çözdükçe, kaç gün geldiğin ve nereye kadar ilerlediğin küçük izler hâlinde birikecek — kimseyle yarışmadan, kendi tempona göre.</p></div>' +
       '<div style="margin-top:.9rem"><a href="soru-bankasi" style="font-weight:700;font-size:.9rem;color:var(--teal,#2E6E6A);text-decoration:none">İlk izini bırak →</a></div>';
   }
 

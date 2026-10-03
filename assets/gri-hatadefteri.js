@@ -81,7 +81,7 @@
     el.className='grihd';
     el.innerHTML =
       '<div class="grihd-head"><span class="em">📓</span><h2>Hata Defteri</h2></div>' +
-      '<div class="grihd-empty"><img src="assets/gri-cat-happy.png" alt="Gri"><p>Henüz kayıtlı bir hata deseni yok. Soru çözdükçe, tekrar tekrar zorlandığın konular burada küçük notlar hâlinde birikecek — üstlerine gidip kapatabilirsin.</p></div>' +
+      '<div class="grihd-empty"><img src="assets/gri-cat-happy.webp" alt="Gri"><p>Henüz kayıtlı bir hata deseni yok. Soru çözdükçe, tekrar tekrar zorlandığın konular burada küçük notlar hâlinde birikecek — üstlerine gidip kapatabilirsin.</p></div>' +
       '<div style="margin-top:.9rem"><a href="soru-bankasi" style="font-weight:700;font-size:.9rem;color:var(--teal,#2E6E6A);text-decoration:none">Soru çözmeye başla →</a></div>';
   }
 

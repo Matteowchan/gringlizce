@@ -50,7 +50,7 @@
     el.hidden = false; el.className = 'grioi';
     el.innerHTML =
       '<div class="grioi-head"><span class="em">🧭</span><h3>Öğretmen İpuçları</h3></div>' +
-      '<div class="grioi-empty"><img src="assets/gri-cat-happy.png" alt="Gri"><span>Şu an dikkat isteyen bir şey görünmüyor — sınıfın iyi durumda. Yeni teslimler geldikçe burada özetlerim.</span></div>';
+      '<div class="grioi-empty"><img src="assets/gri-cat-happy.webp" alt="Gri"><span>Şu an dikkat isteyen bir şey görünmüyor — sınıfın iyi durumda. Yeni teslimler geldikçe burada özetlerim.</span></div>';
   }
 
   function render(el, hints) {

@@ -97,7 +97,7 @@
     el.setAttribute('aria-label', opts.title || 'Gri önerisi');
     el.tabIndex = -1;
 
-    var cat = 'assets/gri-cat-happy.png';
+    var cat = 'assets/gri-cat-happy.webp';
     var actionsHtml = '';
     (opts.actions || []).forEach(function (a, i) {
       var cls = 'griprompt-btn' + (a.ghost ? ' ghost' : '');

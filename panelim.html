@@ -34,6 +34,26 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/users.js"></script>
   <script src="assets/auth.js"></script>
+  <script>
+  /* panelim: bu sayfadaki ~22 inline window.supabase.createClient çağrısı TEK paylaşılan
+     client'a yönlensin — her biri ayrı GoTrueClient açıp aynı storage anahtarında token-refresh
+     yarışına girince rastgele logout riski doğuyordu. auth.js zaten window.GRI_SB'yi (persistSession'lı
+     birincil client) set etti; hepsi onu kullansın. Tüm çağrılar aynı proje+anon-key olduğundan davranış aynı. */
+  (function(){
+    try{
+      if(window.supabase && window.supabase.createClient && !window.__sbShared){
+        window.__sbShared = true;
+        var _orig = window.supabase.createClient.bind(window.supabase);
+        var _one = window.GRI_SB || null;
+        window.supabase.createClient = function(url, key, opts){
+          if(window.GRI_SB) return window.GRI_SB;
+          if(!_one){ _one = _orig(url, key, opts); try{ window.GRI_SB = _one; }catch(e){} }
+          return _one;
+        };
+      }
+    }catch(e){}
+  })();
+  </script>
   <script src="assets/site-config.js?v=10" defer></script>
   <style>
     .panel-hero { padding: 1.6rem 0 1.3rem; }

@@ -980,6 +980,7 @@ function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return;
 var DOC=(function(){
   var Q={}, ready=false, snapTimer=null, lastSnap={C:'',L:'',R:''};
   var _initTries=0, _initTimer=null; /* Quill geç yüklenirse init'i geri verme — tekrar dene */
+  function _loadQuillFallback(){ if(window.__quillFB)return; window.__quillFB=1; try{ var s=document.createElement('script'); s.src='https://unpkg.com/quill@2.0.3/dist/quill.js'; s.onload=function(){ try{ init(); }catch(e){} }; document.head.appendChild(s); }catch(e){} }
   var EXTRA=[]; /* dinamik ek sayfalar: [{id,side}] — 'C','L','R' sabit; ek'ler L2..L5 / R2..R5 */
   function panes(){ return ['C','L','R'].concat(EXTRA.map(function(e){ return e.id; })); }
   /* Yazım denetimi (kırmızı çizgiler) aç/kapa — YERELdir (senkronlanmaz); varsayılan KAPALI, tercih localStorage'da.
@@ -1105,6 +1106,8 @@ var DOC=(function(){
     // Aksi halde (öğrencide Quill geç yüklenirse) ready=false kalıyor, applyRemote tüm doc mesajlarını
     // düşürüyor ve "yazı tahtası öğrencide açılmıyor" bug'ı oluşuyordu.
     if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C')){
+      // ~1sn sonra Quill hâlâ yoksa birincil CDN (jsdelivr) muhtemelen düştü → yedek CDN'den yükle.
+      if(typeof Quill==='undefined' && _initTries===5) _loadQuillFallback();
       if(!_initTimer && _initTries < 150){ _initTimer=setTimeout(function(){ _initTimer=null; _initTries++; init(); }, 200); }
       return;
     }

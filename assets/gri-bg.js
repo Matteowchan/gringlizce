@@ -87,6 +87,13 @@
       if (autoframe) { try { detector = await loadDetector(); } catch (e) { detector = null; } }
       video = document.createElement('video');
       video.muted = true; video.playsInline = true; video.autoplay = true;
+      video.setAttribute('playsinline', '');
+      // Chrome, DOM'da olmayan / görünmeyen bir <video>'nun kare üretimini (ve requestVideoFrameCallback'i)
+      // kısar → bu video'yu besleyen canvas→captureStream ile ÜRETİLEN track donar. Panel değişip self-tile
+      // gizlenince "öğrencilerde kameram donuyor" bunun sonucuydu. Kaynağı ekran-DIŞI ama RENDER edilen bir
+      // öğe olarak DOM'a ekle → kareler panel durumundan bağımsız akmaya devam eder.
+      video.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
+      try { document.body.appendChild(video); } catch (e) {}
       video.srcObject = new MediaStream([track]);
       await new Promise(function (res) {
         if (video.readyState >= 1 && video.videoWidth) return res();
@@ -289,7 +296,7 @@
     proc.destroy = function () {
       stopped = true;
       try { if (proc.processedTrack) proc.processedTrack.stop(); } catch (e) {}
-      try { if (video) { video.pause(); video.srcObject = null; } } catch (e) {}
+      try { if (video) { video.pause(); video.srcObject = null; if (video.parentNode) video.parentNode.removeChild(video); } } catch (e) {}
       // NOT: _seg / _det tekil (singleton) ve yeniden kullanılır — burada KAPATILMAZ
       // (mevcut destroy kalıbı; kapatmak sonraki oturumda ağır yeniden-yüklemeye yol açardı).
       return Promise.resolve();

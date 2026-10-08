@@ -498,6 +498,11 @@
     const SUPABASE_KEY = 'sb_publishable_F5K-wIVQHXlD4e4GYnySNw_Xm4teO9g';
     const params = new URLSearchParams(window.location.search);
     const TEST_SLUG = params.get('test') || 'ielts-mock-1';
+    // ?part=N — 3 pasajlik testi tek pasajlik sureli alistirmaya indirger.
+    // Boylece her testten uc ayri 20 dakikalik calisma cikiyor (tek pasajlik
+    // test stogu sinirli). 0/yok = normal tam test.
+    const PART_NO = parseInt(params.get('part'), 10) || 0;
+    const DEPO_ANAHTARI = 'ielts_reading_' + TEST_SLUG + (PART_NO ? '_p' + PART_NO : '');
     // Gri Meet senkron modu: bir iframe'e gömülüyse (Gri Meet materyali — öğretmen iç-navigasyonla
     // varsa da) VEYA gmsync=1 ile. Otomatik-devamı kapat (deterministik başlangıç), durum köprüsünü aç.
     // Normal sınavda bu runner iframe'e gömülü değildir (parent===window) → köprü inert, davranış aynı.
@@ -507,7 +512,9 @@
     let state = {
       test: null, section: null, parts: [], answers: {},
       startedAt: null, duration: 60 * 60, user: null,
-      timerInterval: null, finished: false, currentPart: 1,
+      // Tek pasaj modunda aktif sekme o pasaj olmali; 1'de kalirsa
+      // setActivePart(1) hicbir bolumu eslestiremez ve ekran bos gelir.
+      timerInterval: null, finished: false, currentPart: PART_NO || 1,
       // Timer kontrolü
       timerStartedAt: null,
       timerElapsed: 0,
@@ -561,14 +568,20 @@
       state.section = section;
       state.duration = (section.duration_minutes || 60) * 60;
 
-      const { data: parts } = await sb.from('ielts_parts').select('*, question_groups:ielts_question_groups(*, questions:ielts_questions(*))').eq('section_id', section.id).order('part_number');
+      let { data: parts } = await sb.from('ielts_parts').select('*, question_groups:ielts_question_groups(*, questions:ielts_questions(*))').eq('section_id', section.id).order('part_number');
+      // Tek pasaj modu: yalnizca istenen pasaj, sure de pasaj basina 20 dakika.
+      // Istenen pasaj yoksa tam teste duseriz (yanlis parametre testi bozmasin).
+      if (PART_NO) {
+        const secili = (parts || []).filter(p => p.part_number === PART_NO);
+        if (secili.length) { parts = secili; state.duration = 20 * 60; }
+      }
       parts.forEach(p => {
         p.question_groups.sort((a, b) => a.group_order - b.group_order);
         p.question_groups.forEach(g => g.questions.sort((a, b) => a.question_number - b.question_number));
       });
       state.parts = parts;
 
-      const stored = localStorage.getItem('ielts_reading_' + TEST_SLUG);
+      const stored = localStorage.getItem(DEPO_ANAHTARI);
       if (stored) {
         try {
           const p = JSON.parse(stored);
@@ -582,7 +595,8 @@
       }
 
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('startTestName').textContent = test.name;
+      document.getElementById('startTestName').textContent =
+        test.name + (PART_NO ? ' · Pasaj ' + PART_NO + ' (20 dakika)' : '');
       if (!GMSYNC && state.startedAt) startTest();
       else document.getElementById('startScreen').style.display = 'block';
     }
@@ -929,7 +943,7 @@
     };
 
     function saveLocal() {
-      localStorage.setItem('ielts_reading_' + TEST_SLUG, JSON.stringify({
+      localStorage.setItem(DEPO_ANAHTARI, JSON.stringify({
         answers: state.answers,
         startedAt: state.startedAt,
         currentPart: state.currentPart,
@@ -1039,7 +1053,7 @@
         return;
       }
 
-      localStorage.removeItem('ielts_reading_' + TEST_SLUG);
+      localStorage.removeItem(DEPO_ANAHTARI);
       window.location.href = 'ielts-deneme-sonuc.html?attempt=' + attempt.id;
     });
 

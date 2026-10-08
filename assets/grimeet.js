@@ -566,7 +566,7 @@ function setMode(mode,opts){
   var _cd=$('#ctrl-doc'); if(_cd) _cd.classList.toggle('active',mode==='doc');
   $('#gmr-share-what').textContent=MODE_LBL[mode]||'Kameralar';
   if(mode==='board') setTimeout(WB.resize,40);
-  if(mode==='doc') setTimeout(function(){ var a=document.querySelector('#doc-col-C .ql-editor'); if(a)a.focus(); },80);
+  if(mode==='doc'){ try{ DOC.init(); }catch(e){} setTimeout(function(){ var a=document.querySelector('#doc-col-C .ql-editor'); if(a)a.focus(); },80); }
   if(STATE.isHost&&!opts.remote) sendData({t:'view',mode:mode});
 }
 
@@ -979,6 +979,7 @@ function bindChat(){ function send(){ if(STATE.chatLocked&&!STATE.isHost)return;
 /* ===== Ortak Doküman (Google Docs benzeri: Quill zengin editör + 3 sayfa, canlı senkron) ===== */
 var DOC=(function(){
   var Q={}, ready=false, snapTimer=null, lastSnap={C:'',L:'',R:''};
+  var _initTries=0, _initTimer=null; /* Quill geç yüklenirse init'i geri verme — tekrar dene */
   var EXTRA=[]; /* dinamik ek sayfalar: [{id,side}] — 'C','L','R' sabit; ek'ler L2..L5 / R2..R5 */
   function panes(){ return ['C','L','R'].concat(EXTRA.map(function(e){ return e.id; })); }
   /* Yazım denetimi (kırmızı çizgiler) aç/kapa — YERELdir (senkronlanmaz); varsayılan KAPALI, tercih localStorage'da.
@@ -1099,13 +1100,21 @@ var DOC=(function(){
   /* İndirme için: tüm sayfaların (ek sayfalar dahil) zengin HTML'i — biçim + görsel korunur. */
   function combinedHtml(){ var parts=[]; try{ panes().forEach(function(p){ var q=Q[p]; if(!q||!q.root)return; var plain=(q.getText()||'').trim(); var html=q.root.innerHTML||''; if(!plain && !/<img/i.test(html))return; var label=(p==='C')?'':(p==='L'?'Sol Sayfa':p==='R'?'Sağ Sayfa':'Ek Sayfa'); parts.push((label?'<h3 style="font-family:Georgia,serif">'+label+'</h3>':'')+'<div>'+html+'</div>'); }); }catch(e){} return parts.join('<hr style="margin:18px 0;border:none;border-top:1px solid #ccc">'); }
   function init(){
-    if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C'))return;
+    if(ready) return;
+    // KÖK FİX: Quill veya DOC DOM'u henüz hazır değilse ERKEN DÖNÜP PES ETME → tekrar dene.
+    // Aksi halde (öğrencide Quill geç yüklenirse) ready=false kalıyor, applyRemote tüm doc mesajlarını
+    // düşürüyor ve "yazı tahtası öğrencide açılmıyor" bug'ı oluşuyordu.
+    if(typeof Quill==='undefined'||!document.getElementById('doc-editor-C')){
+      if(!_initTimer && _initTries < 150){ _initTimer=setTimeout(function(){ _initTimer=null; _initTries++; init(); }, 200); }
+      return;
+    }
     try{ var Size=Quill.import('attributors/style/size'); Size.whitelist=['12px','14px','18px','24px','32px']; Quill.register(Size,true); }catch(e){}
     Q.C=mkEditor('C','#doc-editor-C','Birlikte yazmaya başlayın… Öğretmen ve öğrenci aynı anda düzenleyebilir.');
     Q.L=mkEditor('L','#doc-editor-L','Sol sayfa — notlar, plan…');
     Q.R=mkEditor('R','#doc-editor-R','Sağ sayfa — öğrenci taslağı…');
     ready=true;
     if(STATE._docPendingState){ applyFullState(STATE._docPendingState); STATE._docPendingState=null; }
+    else if(!STATE.isHost && STATE.admitted){ /* geç init: güncel doc durumunu hemen iste (5sn snapshot'ı bekleme) */ try{ sendData({t:'req-state'}); }catch(e){} }
     var tl=$('#doc-toggle-left'); if(tl)tl.addEventListener('click',function(){ togglePane('L'); });
     var tr=$('#doc-toggle-right'); if(tr)tr.addEventListener('click',function(){ togglePane('R'); });
     var al=$('#doc-addleft'); if(al)al.addEventListener('click',function(){ if(STATE.isHost) addPane('L'); });

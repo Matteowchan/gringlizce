@@ -234,6 +234,7 @@ function setupGate(){
     var r=await fetchLKToken();
     if(jb){ jb.disabled=false; jb.textContent=_ot||'Derse Katıl'; }
     if(r && r.token){ STATE._tokenPromise=Promise.resolve(r); proceedJoin(true); return; }
+    if(r && r.authNeeded){ showAuthNeeded(r.error); return; }   // giriş gerekli → net uyarı (demo/siyah ekran DEĞİL)
     if(isFullBlock(r)){ blockJoin(r.blocked); return; }
     if(isInactiveBlock(r)){ startWaitForTeacher(); return; }   // öğretmen henüz başlatmadı → bekle
     proceedJoin(false);   // belirsiz hata / token yok → eski akış (demo'ya düşebilir)
@@ -263,9 +264,16 @@ async function enterRoom(){
 // Token'ı önden çekilebilir yap: join anında başlatıp kamera/UI hazırlanırken paralel getir
 async function fetchLKToken(){
   var headers={'Content-Type':'application/json'};
-  if(STATE.supabase){ try{ var s=await STATE.supabase.auth.getSession(); if(s.data&&s.data.session){ headers['Authorization']='Bearer '+s.data.session.access_token; headers['apikey']=SUPABASE_ANON_KEY; } }catch(e){} }
+  if(STATE.supabase){ try{
+    var s=await STATE.supabase.auth.getSession(); var sess=s.data&&s.data.session;
+    // Bayat access_token (sekme uzun süre açık kaldıysa) edge fn'de getUser ile reddedilir → 401 → eskiden sessizce
+    // demo/siyah ekrana düşüyordu. Süresi dolmuşsa/dolmak üzereyse önce yenile.
+    if(sess){ var expMs=(sess.expires_at||0)*1000; if(expMs && (expMs-Date.now())<120000){ try{ var rf=await STATE.supabase.auth.refreshSession(); if(rf.data&&rf.data.session) sess=rf.data.session; }catch(e){} }
+      headers['Authorization']='Bearer '+sess.access_token; headers['apikey']=SUPABASE_ANON_KEY; }
+  }catch(e){} }
   try{
     var res=await fetch(TOKEN_ENDPOINT,{method:'POST',headers:headers,body:JSON.stringify({room:STATE.room,identity:STATE.identity,name:STATE.name,isHost:STATE.isHost})});
+    if(res.status===401){ var e401=await res.json().catch(function(){return{};}); return {authNeeded:true, error:e401.error||'Derse katılmak için giriş yapmalısın.'}; }
     if(res.status===403){ var e403=await res.json().catch(function(){return{};}); return {blocked:e403.error||'Oda bulunamadı.', code:e403.code||''}; }
     if(res.ok){ var jr=await res.json(); return {token:jr.token, url:jr.url}; }
   }catch(e){}
@@ -277,6 +285,7 @@ async function connectLiveKit(){
   var result = STATE._tokenPromise ? await STATE._tokenPromise : await fetchLKToken();
   STATE._tokenPromise = null;
   if(result && result.blocked){ blockJoin(result.blocked); return; }
+  if(result && result.authNeeded){ showAuthNeeded(result.error); return; }
   var token = result && result.token;
   if(result && result.url) LIVEKIT_URL = result.url;
   if(!token){ enterDemo('Token alınamadı'); return; }
@@ -439,6 +448,25 @@ function blockJoin(msg){
   document.body.appendChild(b);
   b.querySelector('#blk-retry').addEventListener('click',function(){ b.remove(); connectLiveKit(); });
   b.querySelector('#blk-exit').addEventListener('click',function(){ location.href='grimeet.html'; });
+}
+/* Öğrenci giriş yapmadan (ya da oturumu düşmüş) odaya gelirse: eskiden sessizce "Demo modu + siyah ekran"a
+   düşüyordu. Bunun yerine net, aksiyon alınabilir bir "Giriş yap" ekranı göster. Giriş sonrası otomatik bu odaya döner. */
+function showAuthNeeded(msg){
+  STATE._reconnecting=false; STATE._reconnectTries=0; clearTimeout(STATE._reconnectTimer);
+  setStatus('err','Giriş gerekli');
+  var ex=document.getElementById('gmr-block'); if(ex)ex.remove();
+  var ret=encodeURIComponent(location.pathname+location.search+location.hash);
+  var b=document.createElement('div'); b.className='gmr-gate'; b.id='gmr-block';
+  b.innerHTML='<div class="gmr-gate-card"><div class="gmr-brand big">Gri<span>Meet</span></div>'
+    +'<p style="color:var(--gm-ink-soft);font-size:15px;margin:16px 0 4px;line-height:1.5">'+esc(msg||'Derse katılmak için giriş yapmalısın.')+'</p>'
+    +'<p style="color:var(--gm-ink-soft);font-size:12.5px;opacity:.82;margin:0 0 16px;line-height:1.5">Hesabınla giriş yap — otomatik bu odaya döneceksin. Linki WhatsApp/Instagram gibi bir uygulamanın içinden açtıysan, tarayıcıda (Chrome/Safari) açman gerekebilir.</p>'
+    +'<button class="gmr-btn gold" id="blk-login">Giriş Yap</button>'
+    +'<button class="gmr-btn" id="blk-retry2" style="background:transparent;border:1px solid var(--gm-line);color:var(--gm-ink-soft);margin-top:8px">Giriş yaptım, tekrar dene</button>'
+    +'<button class="gmr-btn" id="blk-exit2" style="background:transparent;border:1px solid var(--gm-line);color:var(--gm-ink-soft);margin-top:8px">Çıkış</button></div>';
+  document.body.appendChild(b);
+  b.querySelector('#blk-login').addEventListener('click',function(){ location.href='giris?return='+ret; });
+  b.querySelector('#blk-retry2').addEventListener('click',function(){ location.reload(); });
+  b.querySelector('#blk-exit2').addEventListener('click',function(){ location.href='grimeet.html'; });
 }
 function isScreen(pub){ return pub&&(pub.source===LK.Track.Source.ScreenShare); }
 

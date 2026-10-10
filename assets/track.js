@@ -136,10 +136,27 @@
       }, function () {});
     } catch (e) {}
   }
+  // Admin ve ogretmen HICBIR kapiya takilmaz. Premium kapisi zaten muaf tutuyordu ama
+  // seviye/track kilidi tutmuyordu: kendi seviye belirleme kaydi olan bir ogretmen,
+  // ogrencisinin materyalini acamiyordu. FAIL-OPEN: sorgu hata verirse kapilar isler.
+  function rolMuaf(sb, uid, cb) {
+    try {
+      sb.from("profiles").select("role").eq("id", uid).maybeSingle().then(function (pr) {
+        var r = pr && pr.data && pr.data.role;
+        cb(r === "admin" || r === "teacher");
+      }, function () { cb(false); });
+    } catch (e) { cb(false); }
+  }
   function applyTrackGate(sb, uid) {
     if (!uid || !sb) return;
     var id = pageIdentity();
     if (!id) return;                                // ders sayfasi degil
+    rolMuaf(sb, uid, function (muaf) {
+      if (muaf) return;                             // ogretmen/admin: butun kapilar acik
+      trackGateDevam(sb, uid, id);
+    });
+  }
+  function trackGateDevam(sb, uid, id) {
     try {
       sb.rpc("ge_student_class_state").then(function (res) {
         var st = res && res.data;

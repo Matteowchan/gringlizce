@@ -290,7 +290,13 @@ async function connectLiveKit(){
   if(result && result.url) LIVEKIT_URL = result.url;
   if(!token){ enterDemo('Token alınamadı'); return; }
   try{
-    var room=new LK.Room({adaptiveStream:true,dynacast:true,videoCaptureDefaults:{resolution:resObj()},audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true}}); STATE.lkRoom=room;
+    var room=new LK.Room({adaptiveStream:true,dynacast:true,
+      videoCaptureDefaults:{resolution:resObj()},
+      audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true,channelCount:1,sampleRate:48000},
+      // Ses kalitesi: sesi 64 kbps'e cikar (varsayilandan net), RED (kayip-pakette tekrarli ses -> az
+      // kesik/robotik) ve DTX acik. Muzik/dinleme icin yuksek-kalite modu ayrica HIFI ile acilir.
+      publishDefaults:{ dtx:true, red:true, audioPreset:{maxBitrate:64000} }
+    }); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,function(p){ onParticipant(p); playJoinChime(); sysChat((p.name||'Katılımcı')+' katıldı'); });
     room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
@@ -754,7 +760,9 @@ async function shareScreen(){
 }
 async function doShareScreen(){
   if(!STATE.lkRoom)return;
-  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); STATE._shareOK=false; } else { clearScreen(); setMode('grid'); } }
+  // Ekran sesi (sekme sesi) muzik/dinleme icin yuksek kalitede yayinlanir: 160 kbps, DTX kapali
+  // (sessizlik algilayip kesmesin), RED acik. Video yayin ayarlari degismez.
+  try{ var on=STATE.lkRoom.localParticipant.isScreenShareEnabled; await STATE.lkRoom.localParticipant.setScreenShareEnabled(!on,{audio:true},{audioPreset:{maxBitrate:160000},dtx:false,red:true}); $('#ctrl-share').classList.toggle('active',!on); if(!on){ setMode('screen'); toast('Ses için "Sekme sesini paylaş" kutusunu işaretle.'); STATE._shareOK=false; } else { clearScreen(); setMode('grid'); } }
   catch(e){ toast('Ekran paylaşımı iptal edildi.'); }
 }
 function leaveRoom(){ if(!confirm('Dersten ayrılmak istiyor musun?'))return; if(STATE.isHost){ try{ if(confirm('Ayrılmadan ders paketini (özet + transcript + tahta) indirmek ister misin?')) endLessonPackage(); }catch(e){} } hardLeave(); }

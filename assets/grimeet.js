@@ -321,6 +321,9 @@ async function connectLiveKit(){
 
     await room.connect(LIVEKIT_URL,token);
     STATE.connected=true; STATE._reconnecting=false; STATE._reconnectTries=0; clearTimeout(STATE._reconnectTimer);
+    // TAM reconnect yeni bir Room+track oluşturur: Krisp durumunu sıfırla ki filtre yeni track'e yeniden uygulansın
+    // (yoksa _krispOn=true kalır ve applyNoiseFilter erken döner → gürültü filtresi sessizce kaybolur).
+    _krispOn=false; _nfTries=0;
     var _reconGate=document.getElementById('gmr-recon'); if(_reconGate)_reconGate.remove();
     setStatus('live','Canlı');
     room.remoteParticipants.forEach(onParticipant);
@@ -375,7 +378,7 @@ function showReconnectFailed(){
   b.querySelector('#recon-exit').addEventListener('click',function(){ STATE._leaving=true; hardLeave(); });
 }
 async function publishLocal(){ if(!STATE.lkRoom)return;
-  try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn); }catch(e){}
+  try{ await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn,_micCap(),_micPub()); }catch(e){}
   if(STATE.micOn) scheduleNoiseFilter();
   var lp=STATE.lkRoom.localParticipant;
   // ARKA PLANSIZ: gate track'ini doğrudan yayına taşı (kamera yeniden açılmaz, anlık).
@@ -668,7 +671,8 @@ async function openSchedule(){
 function closeSchedule(){ var m=$('#sched-modal'); if(m)m.classList.add('hidden'); }
 
 function bindControls(){
-  $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn);}catch(e){}} if(STATE.micOn){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
+  $('#ctrl-mic').addEventListener('click',async function(){ STATE.micOn=!STATE.micOn; this.setAttribute('data-on',STATE.micOn?'1':'0'); if(STATE.lkRoom){try{await STATE.lkRoom.localParticipant.setMicrophoneEnabled(STATE.micOn,_micCap(),_micPub());}catch(e){}} if(STATE.micOn && !_hifi){ _krispOn=false; setTimeout(applyNoiseFilter,600); } refreshPeople(); });
+  var _hf=$('#hifi-audio'); if(_hf){ _hf.addEventListener('change',function(){ setHifiAudio(_hf.checked); }); }
   $('#ctrl-cam').addEventListener('click',async function(){ STATE.camOn=!STATE.camOn; this.setAttribute('data-on',STATE.camOn?'1':'0');
     if(STATE.lkRoom){ try{ await STATE.lkRoom.localParticipant.setCameraEnabled(STATE.camOn); }catch(e){}
       if(STATE.camOn){ var cp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Camera); if(cp&&cp.videoTrack){ STATE.camTrack=cp.videoTrack; attachSelf(); if((STATE._bgApplied&&STATE.bg&&STATE.bg!=='none')||STATE.autoframe){ applyBackground(STATE.bg); } else { scheduleAutoBg(); } } }
@@ -1492,13 +1496,56 @@ var TP=null,tpTried=false;
 // Kapatmak için ?hqbg=0 veya localStorage gm-hqbg='0'. Hata olursa track-processors'a düşer.
 var _HQBG=!(/[?&]hqbg=0/.test(location.search)||(function(){try{return localStorage.getItem('gm-hqbg')==='0';}catch(e){return false;}})());
 async function loadTP(){ if(TP||tpTried)return TP; tpTried=true; try{ TP=await import('https://esm.sh/@livekit/track-processors'); }catch(e){ try{ TP=await import('https://cdn.jsdelivr.net/npm/@livekit/track-processors/+esm'); }catch(e2){ TP=null; } } return TP; }
+/* ======= Yüksek Kaliteli Ses (müzik/dinleme/telaffuz) modu — öğretmen, opt-in ======= */
+var _hifi=false, _hifiBusy=false, _appliedHifi=false;
+function _micCap(){ return _hifi
+  ? {echoCancellation:true,noiseSuppression:false,autoGainControl:false,voiceIsolation:false,sampleRate:48000}
+  : {echoCancellation:true,noiseSuppression:true,autoGainControl:true,voiceIsolation:true,channelCount:1,sampleRate:48000}; }
+function _micPub(){ return _hifi
+  ? {dtx:false,red:true,audioPreset:{maxBitrate:128000}}
+  : {dtx:true,red:true,audioPreset:{maxBitrate:64000}}; }
+function _setHifiUI(on){
+  _hifi=!!on;
+  var cb=document.getElementById('hifi-audio'); if(cb)cb.checked=_hifi;
+  var nt=document.getElementById('hifi-note'); if(nt)nt.textContent=_hifi
+    ? 'Açık: ses gürültü-filtresiz, yüksek bitrate yayınlanıyor. Konuşma dersine dönerken kapat.'
+    : 'Müzik/dinleme/telaffuz çalarken aç. Açınca gürültü filtresi kapanır, ses yüksek bitrate yayınlanır. Konuşma dersinde kapat.';
+}
+// ÖNEMLİ: profil (preset/suppression) değişimi ancak YENİ bir track oluşturulurken uygulanır.
+// setMicrophoneEnabled(false) track'i yalnızca MUTE eder (publication kalır); tekrar true sadece UNMUTE edip
+// verilen seçenekleri YOK SAYAR. Bu yüzden profili gerçekten değiştirmek için mevcut mic track'ini TAMAMEN
+// kaldırıp (unpublish) yeniden oluştururuz. Kısa bir ses boşluğu normaldir.
+async function _republishMic(){
+  if(!STATE.lkRoom)return; var lp=STATE.lkRoom.localParticipant;
+  if(_krispOn){ try{ var mp0=lp.getTrackPublication(LK.Track.Source.Microphone); var at0=mp0&&mp0.audioTrack; if(at0&&at0.stopProcessor) await at0.stopProcessor(); }catch(e){} _krispOn=false; }
+  try{ var mp=lp.getTrackPublication(LK.Track.Source.Microphone); if(mp&&mp.track){ await lp.unpublishTrack(mp.track,true); } }catch(e){}
+  if(STATE.micOn){
+    try{ await lp.setMicrophoneEnabled(true,_micCap(),_micPub()); }
+    catch(e){
+      // HIFI kısıtları reddedilirse normale dön ve mikrofonu kurtar (asla kapalı bırakma).
+      if(_hifi){ _setHifiUI(false); toast('Yüksek kaliteli ses uygulanamadı; normal moda dönüldü.'); }
+      try{ await lp.setMicrophoneEnabled(true,_micCap(),_micPub()); }catch(_){ try{ await lp.setMicrophoneEnabled(true); }catch(__){} }
+    }
+  }
+  if(!_hifi && STATE.micOn) scheduleNoiseFilter();
+}
+async function setHifiAudio(on){
+  on=!!on;
+  if(!STATE.isHost){ var cbh=document.getElementById('hifi-audio'); if(cbh)cbh.checked=false; return; }  // yalnızca öğretmen
+  _setHifiUI(on);
+  if(_hifiBusy) return;   // çalışan döngü en güncel _hifi'yi uygular → hızlı toggle güvenli, profil UI ile tutarlı kalır
+  _hifiBusy=true;
+  try{ while(_appliedHifi!==_hifi){ var want=_hifi; await _republishMic(); _appliedHifi=want; } }
+  finally{ _hifiBusy=false; }
+  toast(_hifi ? 'Yüksek kaliteli ses açık — müzik/dinleme/telaffuz için.' : 'Normal (konuşma) ses moduna dönüldü.');
+}
 var _krisp=null,_krispTried=false,_krispOn=false,_nfNoted=false,_nfTries=0;
 // Krisp WASM yüklemesi/başlatması AĞIR — kamera kurulumuyla AYNI anda çalışırsa ana
 // thread kilitlenir ve kamera o süre boyunca kapanır/donar. Bu yüzden kamera açıksa
 // gürültü filtresini kamera tam yerleşene kadar geciktir (çakışmayı ayır).
-function scheduleNoiseFilter(){ setTimeout(applyNoiseFilter, STATE.camOn ? 3200 : 800); }
+function scheduleNoiseFilter(){ if(_hifi)return; setTimeout(applyNoiseFilter, STATE.camOn ? 3200 : 800); }
 async function loadKrisp(){ if(_krisp||_krispTried)return _krisp; _krispTried=true; try{ _krisp=await import('https://esm.sh/@livekit/krisp-noise-filter'); }catch(e){ try{ _krisp=await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter/+esm'); }catch(e2){ _krisp=null; } } return _krisp; }
-async function applyNoiseFilter(){ if(_krispOn)return; try{
+async function applyNoiseFilter(){ if(_krispOn||_hifi)return; try{
   if(!STATE.lkRoom||!STATE.micOn)return;
   var mp=STATE.lkRoom.localParticipant.getTrackPublication(LK.Track.Source.Microphone); var at=mp&&mp.audioTrack;
   if((!at||!at.setProcessor)){ if(_nfTries++<6){ setTimeout(applyNoiseFilter,700); } return; }

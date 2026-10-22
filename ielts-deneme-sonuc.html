@@ -661,9 +661,15 @@
                 if (userAns === q.correct_answer) got = 1;
               } else if (['sentence_completion', 'form_completion', 'notes_completion', 'fill_blank_chart'].includes(group.question_type)) {
                 if (userAns) {
-                  const cleaned = userAns.toString().toLowerCase().trim();
-                  const accepts = q.acceptable_answers || [q.correct_answer];
-                  if (accepts.some(a => a.toString().toLowerCase().trim() === cleaned)) {
+                  // IELTS bosluk doldurma: kabul listesi dogru cevabin YERINE degil,
+                  // USTUNE gecer. Eskiden `acceptable_answers || [correct_answer]`
+                  // yazdigi icin, kabul listesi doluysa asil dogru cevap reddediliyordu
+                  // (ogrenci "delivery service" yaziyor, cevap anahtari "delivery service",
+                  // yine de yanlis sayiliyordu). Tire ve fazla bosluk da esitlenir.
+                  const nrm = s => s.toString().toLowerCase().replace(/[-\u2010-\u2015]/g, ' ').replace(/\s+/g, ' ').trim();
+                  const cleaned = nrm(userAns);
+                  const accepts = [q.correct_answer].concat(Array.isArray(q.acceptable_answers) ? q.acceptable_answers : []);
+                  if (accepts.some(a => a != null && nrm(a) === cleaned)) {
                     got = 1;
                   }
                 }

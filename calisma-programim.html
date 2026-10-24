@@ -636,8 +636,10 @@
         if(isNaN(n)||inp.value===''){delete v[inp.dataset.k];}
         else {v[inp.dataset.k]=Math.max(0,Math.min(40,n));inp.value=v[inp.dataset.k];}
         veri[key]=v;bandYaz();kapiTazele(key);
+        // data_at olmadan gunluk ozet maili bu skoru her gun yeniden
+        // gonderiyordu (skorun kendi zaman damgasi yoktu).
         await sb.from('student_program_progress').upsert(
-          {program_id:prog.id,student_id:me.id,item_key:key,data:v},
+          {program_id:prog.id,student_id:me.id,item_key:key,data:v,data_at:new Date().toISOString()},
           {onConflict:'program_id,item_key'});
       });
     });

@@ -16,6 +16,7 @@ var EXAMS=[
     {ic:"soru",label:"Soru Bankasi",desc:"Reading & Writing ve Math soru bankası, kategori kategori çözüm ve açıklamalarla.",href:"sat-soru-bankasi"},
     {ic:"deneme",label:"Deneme",desc:"Mock 1-10, gerçek sınav formatında, adaptif ve puanlı.",href:"sat-mock-1"},
     {ic:"kelime",label:"Kelime",desc:"Words in Context kelime setleri, Türkçe karşılık ve SAT formatında quizler.",href:"sat-kelime"},
+    {ic:"kelime",label:"Kelime Listeleri",desc:"Onarlık ezber setleri, üç geçişli tekrar takibi ve yazdırılabilir booklet.",href:"kelime-listeleri?exam=sat"},
     {ic:"yazi",label:"Gramer Drill",desc:"Punctuation, boundaries, transitions ve daha fazlası. Türkçe açıklamalı driller.",href:"sat-grammar-drill"},
   ],
   sections:[{label:"Ogren . Reading & Writing",units:[
@@ -92,6 +93,7 @@ var EXAMS=[
     {ic:"yazi",label:"Yazi Pratigi",desc:"Task 1 ve Task 2 için AI destekli geri bildirim, band tahmini ve paragraf paragraf analiz.",href:"ielts-bolum-calisma?bolum=writing"},
     {ic:"soru",label:"Pratik",desc:"Okuma, dinleme ve yazma denemeleri, bölüm bazlı çalışma.",href:"ielts-bolum-calisma"},
     {ic:"kelime",label:"Kelime",desc:"15 tematik quiz paketi, 150 kelime, otomatik puanlı.",href:"ielts-kelime"},
+    {ic:"kelime",label:"Kelime Listeleri",desc:"Onarlık ezber setleri, üç geçişli tekrar takibi ve yazdırılabilir booklet.",href:"kelime-listeleri?exam=ielts"},
     {ic:"deneme",label:"Deneme",desc:"Tam uzunlukta IELTS deneme testleri.",href:"ielts-deneme"},
   ],
   sections:[{label:"Ogren . Beceriler",units:[

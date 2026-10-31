@@ -92,6 +92,16 @@ h1 .it{font-family:'Crimson Pro',Georgia,serif;font-style:italic;color:var(--tea
   color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
 .pass button:hover{border-color:var(--teal)}
 .pass button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.zor{width:25px;height:25px;border-radius:6px;border:1px solid var(--line);background:var(--bg-soft);
+  color:var(--text-muted);cursor:pointer;font-size:12px;line-height:1;padding:0;transition:all .15s}
+.zor:hover{border-color:var(--gri-gold)}
+.zor.on{background:var(--gri-gold);border-color:var(--gri-gold);color:#fff}
+.row.zorlu .w{text-decoration:underline;text-decoration-color:var(--gri-gold);text-underline-offset:3px}
+.zorbar{display:none;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--gri-gold);
+  border-radius:9px;padding:10px 13px;margin-bottom:13px;font-size:13px}
+.zorbar.goster{display:flex}
+.zorbar b{color:var(--gri-gold)}
+.zorbar .sp2{flex:1}
 
 .hint{background:var(--bg-card);border:1px solid var(--line);border-left:3px solid var(--teal);
   border-radius:0 9px 9px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:var(--text-soft)}
@@ -118,6 +128,8 @@ h1 .it{font-family:'Crimson Pro',Georgia,serif;font-style:italic;color:var(--tea
   .row{grid-template-columns:120px 1fr 70px;padding:4px 0;border-color:#eee;break-inside:avoid}
   .w{font-size:10.5pt}
   .pass button{background:#fff;border:1px solid #bbb;color:#fff;width:14px;height:14px}
+  .zor{display:none!important}
+  .zorbar,#zorKutu{display:none!important}
   .pass button.on{background:#fff;border-color:#111;color:#111}
 }
 </style>
@@ -159,8 +171,16 @@ h1 .it{font-family:'Crimson Pro',Georgia,serif;font-style:italic;color:var(--tea
       <option value="">Sınav farketmez</option>
     </select>
     <span class="sp"></span>
+    <button class="btn ghost" id="btnZor">Zorlandıklarım</button>
     <button class="btn ghost" id="btnOpen">Tümünü aç</button>
     <button class="btn" id="btnPrint">Yazdır / PDF</button>
+  </div>
+
+  <div class="zorbar" id="zorbar">
+    <span>Yalnızca <b>zorlandığın kelimeler</b> gösteriliyor — tema filtresi devre dışı.</span>
+    <span class="sp2"></span>
+    <button class="btn ghost" id="btnKopya">Listeyi kopyala</button>
+    <button class="btn ghost" id="btnCik">Tüm listeye dön</button>
   </div>
 
   <div class="sync" id="sync"></div>
@@ -196,12 +216,15 @@ const selCat = document.getElementById('selCat');
 const selCefr= document.getElementById('selCefr');
 const selExam= document.getElementById('selExam');
 
-let UID = null, words = [], prog = {}, dirty = new Map(), saveTimer = null;
+let UID = null, words = [], prog = {}, zor = {}, dirty = new Map(), saveTimer = null;
+let zorModu = false;
 
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function lsKey(){ return 'kset_' + (UID || 'anon'); }
 function lsLoad(){ try{ return JSON.parse(localStorage.getItem(lsKey())||'{}'); }catch(e){ return {}; } }
-function lsSave(){ try{ localStorage.setItem(lsKey(), JSON.stringify(prog)); }catch(e){} }
+function lsSave(){ try{ localStorage.setItem(lsKey(), JSON.stringify(prog));
+  localStorage.setItem(lsKey()+'_zor', JSON.stringify(zor)); }catch(e){} }
+function lsZor(){ try{ return JSON.parse(localStorage.getItem(lsKey()+'_zor')||'{}'); }catch(e){ return {}; } }
 
 /* Turkce karsilik options dizisinde; correct harfi hangi secenek oldugunu soyler. */
 function anlam(r){
@@ -223,19 +246,21 @@ async function kimim(){
 }
 
 async function ilerlemeYukle(){
-  prog = lsLoad();
+  prog = lsLoad(); zor = lsZor();
   if (!UID){ elSync.textContent = 'Giriş yapılmadı — işaretlerin yalnızca bu cihazda saklanır.'; return; }
-  const { data, error } = await sb.from('kelime_set_progress').select('word_id,passes').eq('user_id', UID);
+  const { data, error } = await sb.from('kelime_set_progress').select('word_id,passes,hard').eq('user_id', UID);
   if (error){ elSync.textContent = 'İlerleme sunucudan alınamadı; bu cihazdaki kayıtlar kullanılıyor.'; return; }
   // Sunucu kaynak; cihazda olup sunucuda olmayan isaretler korunur.
-  const srv = {}; (data||[]).forEach(r=>{ srv[r.word_id] = r.passes; });
+  const srv = {}, srvZ = {};
+  (data||[]).forEach(r=>{ srv[r.word_id] = r.passes; if (r.hard) srvZ[r.word_id] = true; });
   Object.keys(prog).forEach(k=>{ if (srv[k] == null) srv[k] = prog[k]; });
-  prog = srv; lsSave();
+  Object.keys(zor).forEach(k=>{ if (zor[k] && srvZ[k] == null) srvZ[k] = true; });
+  prog = srv; zor = srvZ; lsSave();
   elSync.textContent = '';
 }
 
-function kuyrukla(wordId, passes){
-  dirty.set(wordId, passes);
+function kuyrukla(wordId){
+  dirty.set(wordId, true);
   lsSave();
   if (!UID) return;
   clearTimeout(saveTimer);
@@ -243,7 +268,8 @@ function kuyrukla(wordId, passes){
 }
 async function kaydet(){
   if (!UID || !dirty.size) return;
-  const rows = Array.from(dirty, ([word_id, passes]) => ({ user_id: UID, word_id, passes }));
+  const rows = Array.from(dirty.keys(), (word_id) => ({
+    user_id: UID, word_id, passes: prog[word_id] || 0, hard: !!zor[word_id] }));
   dirty.clear();
   elSync.textContent = 'Kaydediliyor…';
   const { error } = await sb.from('kelime_set_progress').upsert(rows, { onConflict: 'user_id,word_id' });
@@ -253,6 +279,19 @@ window.addEventListener('beforeunload', ()=>{ if (dirty.size) kaydet(); });
 
 async function kelimeleriGetir(){
   elList.innerHTML = '<div class="empty">Yükleniyor…</div>';
+  if (zorModu){
+    const ids = Object.keys(zor).filter(k=>zor[k]);
+    if (!ids.length){
+      words = [];
+      elList.innerHTML = '<div class="empty">Henüz zor işaretlediğin kelime yok. Çalışırken takıldığın kelimenin yanındaki yıldıza bas; buraya düşsün.</div>';
+      elSum.innerHTML = ''; return;
+    }
+    const { data, error } = await sb.from('kelimeler')
+      .select('id,word,pos,cefr,options,correct,example,exam_use')
+      .in('id', ids).order('word', { ascending: true });
+    if (error){ elList.innerHTML = '<div class="empty">Alınamadı: '+esc(error.message)+'</div>'; return; }
+    words = data || []; ciz(); return;
+  }
   let q = sb.from('kelimeler').select('id,word,pos,cefr,options,correct,example,exam_use')
             .eq('active', true).eq('category', selCat.value).order('word', { ascending: true });
   const cefr = selCefr.value;
@@ -270,11 +309,12 @@ function ciz(){
   let bitti = 0, baslanan = 0;
   words.forEach(w=>{ const p = prog[w.id]||0; if (p>=3) bitti++; else if (p>0) baslanan++; });
 
+  const zorSayi = Object.keys(zor).filter(k=>zor[k]).length;
   elSum.innerHTML =
     `<div><b>${words.length}</b><span>kelime</span></div>
      <div><b>${setSayisi}</b><span>set</span></div>
      <div><b>${bitti}</b><span>tamamlanan</span></div>
-     <div><b>${baslanan}</b><span>üzerinde çalışılan</span></div>`;
+     <div><b>${zorSayi}</b><span>zor işaretli</span></div>`;
 
   const parts = [];
   for (let s = 0; s < setSayisi; s++){
@@ -295,7 +335,7 @@ function ciz(){
         <div class="set-b">` +
       dilim.map(w=>{
         const p = prog[w.id]||0;
-        return `<div class="row${p>=3?' done':''}" data-id="${w.id}">
+        return `<div class="row${p>=3?' done':''}${zor[w.id]?' zorlu':''}" data-id="${w.id}">
           <div><div class="w">${esc(w.word)}</div><div class="meta">${esc((w.pos||'').slice(0,12))}${w.cefr?' · '+esc(w.cefr):''}</div></div>
           <div><div class="tr">${esc(anlam(w))}</div>
             ${w.example?`<div class="ex">${esc(w.example)}</div>`:''}
@@ -304,6 +344,7 @@ function ciz(){
             <button data-p="1" class="${p>=1?'on':''}" title="Bugün">1</button>
             <button data-p="2" class="${p>=2?'on':''}" title="İki gün sonra">2</button>
             <button data-p="3" class="${p>=3?'on':''}" title="Bir hafta sonra">3</button>
+            <button class="zor${zor[w.id]?' on':''}" data-zor="1" title="Zorlandım — sonra geri dön">&#9733;</button>
           </div></div>`;
       }).join('') +
       `</div></section>`);
@@ -319,7 +360,7 @@ function ozetiTazele(){
   words.forEach(w=>{ const p = prog[w.id]||0; if (p>=3) bitti++; else if (p>0) baslanan++; });
   const b = elSum.querySelectorAll('div b');
   if (b[2]) b[2].textContent = bitti;
-  if (b[3]) b[3].textContent = baslanan;
+  if (b[3]) b[3].textContent = Object.keys(zor).filter(k=>zor[k]).length;
 }
 function setiTazele(sec){
   const idx = +sec.dataset.set;
@@ -335,6 +376,16 @@ function setiTazele(sec){
 elList.addEventListener('click', (ev)=>{
   const h = ev.target.closest('.set-h');
   if (h){ h.parentNode.classList.toggle('open'); return; }
+  const z = ev.target.closest('.zor');
+  if (z){
+    const row = z.closest('.row'), id = row.dataset.id;
+    zor[id] = !zor[id];
+    z.classList.toggle('on', !!zor[id]);
+    row.classList.toggle('zorlu', !!zor[id]);
+    kuyrukla(id);
+    ozetiTazele();
+    return;
+  }
   const b = ev.target.closest('.pass button');
   if (!b) return;
   const row = b.closest('.row'), id = row.dataset.id, hedef = +b.dataset.p;
@@ -342,11 +393,43 @@ elList.addEventListener('click', (ev)=>{
   // Dolu olan en ust kutuya basmak o gecisi geri alir; digerleri o seviyeye cikarir.
   const yeni = (simdi === hedef) ? hedef-1 : hedef;
   prog[id] = yeni;
-  kuyrukla(id, yeni);
+  kuyrukla(id);
   row.querySelectorAll('.pass button').forEach(x=>x.classList.toggle('on', +x.dataset.p <= yeni));
   row.classList.toggle('done', yeni >= 3);
   setiTazele(row.closest('.set'));
   ozetiTazele();
+});
+
+const zorbar = document.getElementById('zorbar');
+function zorModunaGec(acik){
+  zorModu = acik;
+  const k = document.getElementById('zorKutu'); if (k) k.remove();
+  zorbar.classList.toggle('goster', acik);
+  selCat.disabled = selCefr.disabled = selExam.disabled = acik;
+  document.getElementById('btnZor').textContent = acik ? 'Tüm liste' : 'Zorlandıklarım';
+  kelimeleriGetir();
+}
+document.getElementById('btnZor').addEventListener('click', ()=>zorModunaGec(!zorModu));
+document.getElementById('btnCik').addEventListener('click', ()=>zorModunaGec(false));
+document.getElementById('btnKopya').addEventListener('click', async (e)=>{
+  // Odevde "bugun zorlandigin kelimeleri yaz" deniyor. Pano API'si izin veya
+  // baglam yuzunden sessizce basarisiz olabiliyor; metni her halukarda ekranda
+  // secili bir kutuda da gosteriyoruz ki kopyalanamasa bile okunabilsin.
+  const metin = words.map(w=>w.word + ' \u2014 ' + anlam(w)).join('\n');
+  let ok = false;
+  try{ await navigator.clipboard.writeText(metin); ok = true; }catch(_){}
+  let kutu = document.getElementById('zorKutu');
+  if (!kutu){
+    kutu = document.createElement('textarea');
+    kutu.id = 'zorKutu'; kutu.readOnly = true;
+    kutu.style.cssText = 'width:100%;min-height:110px;margin:10px 0 0;padding:10px 12px;'+
+      'border:1px solid var(--line);border-radius:8px;background:var(--bg-soft);color:var(--text);'+
+      'font:13px/1.6 Inter,system-ui,sans-serif;resize:vertical';
+    zorbar.insertAdjacentElement('afterend', kutu);
+  }
+  kutu.value = metin; kutu.focus(); kutu.select();
+  e.target.textContent = ok ? 'Kopyaland\u0131 \u2713' : 'A\u015fa\u011f\u0131dan kopyala';
+  setTimeout(()=>{ e.target.textContent = 'Listeyi kopyala'; }, 2200);
 });
 
 document.getElementById('btnPrint').addEventListener('click', ()=>{

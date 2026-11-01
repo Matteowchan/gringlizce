@@ -30,6 +30,15 @@
 
   function parseBannerText(raw) {
     var s = escapeHtml(raw);
+    // TR sayfada CSS text-transform:uppercase, İngilizce "i" harfini noktalı "İ" yapar ("its" -> "İTS").
+    // Çift tırnak içindeki İngilizce örnekleri lang="en" ile sar -> doğru büyük harf ("ITS"). Türkçe diakritik
+    // (ç ğ ı İ ö ş ü) içeren tırnak İngilizce değildir; ona dokunma. (escapeHtml sonrası tırnak = &quot;)
+    s = s.replace(/&quot;((?:(?!&quot;)[\s\S])*)&quot;/g, function (m, inner) {
+      if (!/[A-Za-z]/.test(inner) || /[çğıİöşüÇĞÖŞÜ]/.test(inner)) return m;
+      return '&quot;<span lang="en">' + inner + '</span>&quot;';
+    });
+    // Tırnaksız İngilizce kelimeyi elle işaretlemek için: `word` -> <span lang="en">word</span>
+    s = s.replace(/`([^`]+)`/g, '<span lang="en">$1</span>');
     s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, t, u) {
       u = u.trim();
       if (/^(javascript|data):/i.test(u)) { return t; }

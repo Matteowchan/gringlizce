@@ -802,7 +802,11 @@
         const locked = !prem && isPremTest;
         const status = statusByTest[t.id];
         // Bölüm-bazlıda "Gri Deneme N" yerine tipe/temaya göre isim (Tam Deneme sayfasi ayri, dokunulmaz)
-        const num = (String(t.name || '').match(/\d+/) || [''])[0];
+        // Numara: once "Test 9 / Deneme 3 / Writing 55" kalibindaki sayi; yoksa "B2+" ve "Task 1" gibi
+        // sahte sayilar ayiklanip ilk sayi alinir (eski regex her B2+ testte "2", her Task 1 testte "1" veriyordu)
+        const nm = String(t.name || '');
+        const num = (nm.match(/(?:test|deneme|reading|listening|writing)\s*(\d+)/i) || [])[1]
+          || (nm.replace(/[ABC][12]\+?/g, '').replace(/task\s*\d+/gi, '').match(/\d+/) || [''])[0];
         let topicTags = Array.isArray(t.topic_tags) ? t.topic_tags.slice() : [];
         let cardEyebrow, cardName, wType1 = null, wType2 = null;
         if (bolum === 'writing') {

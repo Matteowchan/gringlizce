@@ -952,7 +952,7 @@ function handleMsg(msg,p){
   else if(msg.t==='doc-clear'){ DOC.applyClear(); }
   else if(msg.t==='doc-timer'){ if(!STATE.isHost&&fromHost) DOC.applyTimer(msg); }
   else if(msg.t==='doc-draw'){ DOCDRAW.applyRemote(msg); }
-  else if(msg.t==='doc-sel'){ if(!STATE.isHost&&fromHost) DOC.applyRemoteSel(msg); }
+  else if(msg.t==='doc-sel'){ DOC.applyRemoteSel(msg, id, fromHost); }
   else if(msg.t==='doc-page-add'){ if(!STATE.isHost&&fromHost) DOC.applyAddPane(msg.id,msg.side); }
   else if(msg.t==='doc-page-del'){ if(!STATE.isHost&&fromHost) DOC.applyRemovePane(msg.id); }
   else if(msg.t==='wb-lock'){ if(!STATE.isHost&&fromHost){ STATE.wbLocked=!!msg.on; applyWbLock(); toast(msg.on?'Öğretmen tahtayı kilitledi — şu an çizemezsin':'Öğretmen tahta kilidini açtı'); } }
@@ -1110,7 +1110,8 @@ var DOC=(function(){
     try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)){ uploadDataImage(q, src); return new (Quill.import('delta'))(); } }catch(_){} return delta; }); }catch(e){}
     q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
     // Öğretmenin metin seçimi/işaretlemesi öğrencide highlight olarak görünsün (selection presence).
-    q.on('selection-change',function(range,old,source){ if(!STATE.connected||!STATE.isHost)return; if(range&&range.length>0) sendData({t:'doc-sel',pane:pane,index:range.index,length:range.length}); else sendData({t:'doc-sel',pane:pane,clear:1}); });
+    // Metin seçimi/işaretlemesi karşı tarafta highlight olarak görünsün — ÇİFT YÖNLÜ (hem öğretmen hem öğrenci yayınlar).
+    q.on('selection-change',function(range,old,source){ if(!STATE.connected)return; if(range&&range.length>0) sendData({t:'doc-sel',pane:pane,index:range.index,length:range.length}); else sendData({t:'doc-sel',pane:pane,clear:1}); });
     try{ q.root.spellcheck=false; q.root.setAttribute('spellcheck','false'); }catch(e){} /* yerel denetim kapalı — GriSpell (EN+TR canlı overlay) kullanılır */
     try{ q._spell=(window.GriSpell&&window.GriSpell.attach)?window.GriSpell.attach(q):null; if(q._spell&&SPELL) q._spell.setEnabled(true); }catch(e){}
     return q;
@@ -1204,15 +1205,21 @@ var DOC=(function(){
       if((msg.pane||'C')==='C') wc();
     }catch(e){}
   }
-  // Öğretmenin metin seçimini öğrencide highlight overlay olarak göster (içeriğe DOKUNMAZ).
-  function applyRemoteSel(msg){
+  // Bir katılımcının metin seçimini/işaretlemesini karşı tarafta highlight overlay olarak göster (içeriğe DOKUNMAZ).
+  // ÇİFT YÖNLÜ: gönderen kimliği (who) data-kanalındaki katılımcıdan gelir → öğretmen sarı, öğrenci mavi;
+  // her gönderenin kendi overlay'i olur (sınıfta birden çok seçim yan yana durabilir).
+  function applyRemoteSel(msg, who, isHostSender){
     try{
-      if(!msg||!ready||STATE.isHost)return;
+      if(!msg||!ready)return;
       var q=Q[msg.pane||'C']; if(!q)return;
       var cont=q.root&&q.root.parentElement; if(!cont)return;
-      var ov=cont.querySelector('.doc-hostsel');
+      var key=String(who||'peer').replace(/[^A-Za-z0-9_-]/g,'')||'peer';
+      var ov=cont.querySelector('.doc-sel-'+key);
       if(msg.clear||!msg.length){ if(ov)ov.remove(); return; }
-      if(!ov){ ov=document.createElement('div'); ov.className='doc-hostsel'; ov.setAttribute('contenteditable','false'); ov.style.cssText='position:absolute;pointer-events:none;background:rgba(255,213,74,.42);border-radius:2px;z-index:1'; try{ if(getComputedStyle(cont).position==='static') cont.style.position='relative'; }catch(_){}
+      if(!ov){ ov=document.createElement('div'); ov.className='doc-hostsel doc-sel-'+key; ov.setAttribute('contenteditable','false');
+        var col=isHostSender?'rgba(255,213,74,.42)':'rgba(74,144,226,.34)';
+        ov.style.cssText='position:absolute;pointer-events:none;background:'+col+';border-radius:2px;z-index:1';
+        try{ if(getComputedStyle(cont).position==='static') cont.style.position='relative'; }catch(_){}
         cont.appendChild(ov); }
       var b=q.getBounds(msg.index,msg.length); if(!b){ ov.remove(); return; }
       ov.style.left=b.left+'px'; ov.style.top=b.top+'px'; ov.style.width=Math.max(3,b.width)+'px'; ov.style.height=b.height+'px';

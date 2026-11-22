@@ -298,7 +298,7 @@ async function connectLiveKit(){
       publishDefaults:{ dtx:true, red:true, audioPreset:{maxBitrate:64000} }
     }); STATE.lkRoom=room;
     room.on(LK.RoomEvent.ParticipantConnected,function(p){ onParticipant(p); playJoinChime(); sysChat((p.name||'Katılımcı')+' katıldı'); });
-    room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
+    room.on(LK.RoomEvent.ParticipantDisconnected,function(p){ removeTile(p.identity); handQueueRemove(p.identity); removePending(p.identity); attendLeave(p.identity); try{ DOC.clearPeerSel(p.identity); }catch(e){} sysChat((p.name||'Katılımcı')+' ayrıldı'); refreshPeople(); updateGridCount(); });
     room.on(LK.RoomEvent.Reconnecting,function(){ setStatus('connecting','Yeniden bağlanıyor…'); });
     room.on(LK.RoomEvent.Reconnected,function(){ setStatus('live','Canlı');
       /* Yeniden bağlanınca senkronu tazele: kopukken kaçan materyal/nav/tahta güncellemeleri kapansın.
@@ -1108,7 +1108,7 @@ var DOC=(function(){
     var q=new Quill(host,{ theme:'snow', placeholder:ph, modules:{ toolbar:{ container:TOOLBAR, handlers:{ image:imgHandler(pane) } } } });
     // Yapıştırılan base64 (data:) görseli ham gömme (dev delta senkronu bozar); yerine Storage'a yükleyip URL göm → öğrencide de görünür.
     try{ q.clipboard.addMatcher('IMG',function(node,delta){ try{ var src=(node&&node.getAttribute)?(node.getAttribute('src')||''):''; if(/^data:/i.test(src)){ uploadDataImage(q, src); return new (Quill.import('delta'))(); } }catch(_){} return delta; }); }catch(e){}
-    q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); });
+    q.on('text-change',function(delta,old,source){ if(pane==='C') wc(); if(source==='user') sendData({t:'doc',pane:pane,d:delta.ops}); rerenderSels(pane); });
     // Öğretmenin metin seçimi/işaretlemesi öğrencide highlight olarak görünsün (selection presence).
     // Metin seçimi/işaretlemesi karşı tarafta highlight olarak görünsün — ÇİFT YÖNLÜ (hem öğretmen hem öğrenci yayınlar).
     q.on('selection-change',function(range,old,source){ if(!STATE.connected)return; if(range&&range.length>0) sendData({t:'doc-sel',pane:pane,index:range.index,length:range.length}); else sendData({t:'doc-sel',pane:pane,clear:1}); });
@@ -1203,26 +1203,42 @@ var DOC=(function(){
       if(msg.d){ q.updateContents({ops:msg.d},'silent'); }
       else if(msg.full){ if(!q.hasFocus()) q.setContents({ops:msg.full},'silent'); }
       if((msg.pane||'C')==='C') wc();
+      rerenderSels(msg.pane||'C');   // içerik değişince uzak seçim overlay'lerini yeni konumlara taşı (yarış self-heal)
     }catch(e){}
   }
   // Bir katılımcının metin seçimini/işaretlemesini karşı tarafta highlight overlay olarak göster (içeriğe DOKUNMAZ).
-  // ÇİFT YÖNLÜ: gönderen kimliği (who) data-kanalındaki katılımcıdan gelir → öğretmen sarı, öğrenci mavi;
-  // her gönderenin kendi overlay'i olur (sınıfta birden çok seçim yan yana durabilir).
+  // ÇİFT YÖNLÜ: gönderen kimliği (who) data-kanalındaki katılımcıdan gelir → öğretmen sarı, öğrenci mavi.
+  // Seçimi SAKLA + içerik/düzen değişince yeniden konumlandır: doc-sel mesajı içerik delta'sından ÖNCE gelirse
+  // (index henüz karşı tarafta yoksa) boş alana kutu düşmesin — menzil dışıysa gizle, içerik gelince tekrar çiz.
+  var _rsel={}, _selResizeBound=false;
+  try{ if(!_selResizeBound){ _selResizeBound=true; window.addEventListener('resize', function(){ rerenderSels(); }); } }catch(_){}
+  function _selKey(who){ return 'doc-sel-'+(String(who||'peer').replace(/[^A-Za-z0-9_-]/g,'')||'peer'); }
+  function removeSelOverlay(who){ try{ var k='.'+_selKey(who); var ns=document.querySelectorAll(k); for(var i=0;i<ns.length;i++) ns[i].remove(); }catch(_){} }
+  function renderSel(who){
+    var r=_rsel[who]; if(!r){ removeSelOverlay(who); return; }
+    var q=Q[r.pane||'C']; var cont=q&&q.root&&q.root.parentElement;
+    var key=_selKey(who); var ov=cont?cont.querySelector('.'+key):null;
+    if(!q||!cont){ if(ov)ov.remove(); return; }
+    var len=q.getLength(); // sondaki \n dahil
+    var maxLen=Math.max(0, len-1-r.index);
+    var length=Math.min(r.length, maxLen);
+    if(r.index<0 || r.index>=len || length<=0){ if(ov)ov.remove(); return; }  // menzil dışı → gizle (yarış)
+    var b=null; try{ b=q.getBounds(r.index,length); }catch(e){}
+    if(!b){ if(ov)ov.remove(); return; }
+    if(!ov){ ov=document.createElement('div'); ov.className='doc-hostsel '+key; ov.setAttribute('contenteditable','false');
+      ov.style.cssText='position:absolute;pointer-events:none;background:'+(r.host?'rgba(255,213,74,.42)':'rgba(74,144,226,.34)')+';border-radius:2px;z-index:1';
+      try{ if(getComputedStyle(cont).position==='static') cont.style.position='relative'; }catch(_){}
+      cont.appendChild(ov); }
+    ov.style.left=b.left+'px'; ov.style.top=b.top+'px'; ov.style.width=Math.max(3,b.width)+'px'; ov.style.height=b.height+'px';
+  }
+  function rerenderSels(pane){ try{ for(var w in _rsel){ if(_rsel.hasOwnProperty(w) && (!pane || _rsel[w].pane===pane)) renderSel(w); } }catch(_){} }
+  function clearPeerSel(who){ try{ delete _rsel[who]; removeSelOverlay(who); }catch(_){} }
   function applyRemoteSel(msg, who, isHostSender){
     try{
-      if(!msg||!ready)return;
-      var q=Q[msg.pane||'C']; if(!q)return;
-      var cont=q.root&&q.root.parentElement; if(!cont)return;
-      var key=String(who||'peer').replace(/[^A-Za-z0-9_-]/g,'')||'peer';
-      var ov=cont.querySelector('.doc-sel-'+key);
-      if(msg.clear||!msg.length){ if(ov)ov.remove(); return; }
-      if(!ov){ ov=document.createElement('div'); ov.className='doc-hostsel doc-sel-'+key; ov.setAttribute('contenteditable','false');
-        var col=isHostSender?'rgba(255,213,74,.42)':'rgba(74,144,226,.34)';
-        ov.style.cssText='position:absolute;pointer-events:none;background:'+col+';border-radius:2px;z-index:1';
-        try{ if(getComputedStyle(cont).position==='static') cont.style.position='relative'; }catch(_){}
-        cont.appendChild(ov); }
-      var b=q.getBounds(msg.index,msg.length); if(!b){ ov.remove(); return; }
-      ov.style.left=b.left+'px'; ov.style.top=b.top+'px'; ov.style.width=Math.max(3,b.width)+'px'; ov.style.height=b.height+'px';
+      if(!msg||!ready)return; who=String(who||'peer');
+      if(msg.clear||!msg.length){ delete _rsel[who]; removeSelOverlay(who); return; }
+      _rsel[who]={pane:msg.pane||'C', index:msg.index|0, length:msg.length|0, host:!!isHostSender};
+      renderSel(who);
     }catch(e){}
   }
   /* Ekstra sayfa ekleme (#114): host "+ Sol"/"+ Sağ" → dinamik Quill paneli oluştur, öğrenciye yayınla, geç-katılımda yeniden kur. */
@@ -1261,7 +1277,7 @@ var DOC=(function(){
   }
   function applyRemovePane(id){ removePane(id, true); }
   /* Temizle: TÜM panelleri koşulsuz boşalt (öğrenci odakta olsa bile) — 'full' snapshot skip-if-focused sorununu aşar. */
-  function clearAll(){ try{ panes().forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} wc(); }
+  function clearAll(){ try{ panes().forEach(function(p){ var q=Q[p]; if(q){ try{ q.setText('','silent'); }catch(_){} } }); lastSnap={C:'',L:'',R:''}; }catch(e){} try{ _rsel={}; var old=document.querySelectorAll('.doc-hostsel'); for(var i=0;i<old.length;i++) old[i].remove(); }catch(_){} wc(); }
   function colR(p){ var c=colEl(p); var ww=wsW(); if(!c||c.hasAttribute('hidden')||!ww)return 0; return c.offsetWidth/ww; }
   function getState(){ if(!ready)return null; try{ return {
     C:Q.C?Q.C.getContents().ops:null, L:Q.L?Q.L.getContents().ops:null, R:Q.R?Q.R.getContents().ops:null,
@@ -1289,7 +1305,7 @@ var DOC=(function(){
   }
   function startSnapshots(){ if(STATE.isHost&&ready&&!snapTimer) snapTimer=setInterval(sendSnapshot,5000); }
   function setLocked(on){ try{ panes().forEach(function(p){ var q=Q[p]; if(q) q.enable(STATE.isHost?true:!on); }); }catch(e){} }
-  return { init:init, applyRemote:applyRemote, applyRemoteSel:applyRemoteSel, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane, applyTimer:applyTimer };
+  return { init:init, applyRemote:applyRemote, applyRemoteSel:applyRemoteSel, clearPeerSel:clearPeerSel, applyLayout:applyLayout, applyGutter:applyGutter, getState:getState, applyFullState:applyFullState, startSnapshots:startSnapshots, setLocked:setLocked, applyClear:clearAll, applyAddPane:applyAddPane, applyRemovePane:applyRemovePane, applyTimer:applyTimer };
 })();
 function bindDoc(){ DOC.init(); }
 function refreshPeople(){

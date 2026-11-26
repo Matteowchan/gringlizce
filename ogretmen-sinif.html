@@ -4964,7 +4964,9 @@
       // ünite kilidi (class_unit_unlocks)
       // ============================================================
       var geLoaded_flag = false;
-      var GE_UNIT_MAX = { 'A1': 11, 'A2': 12, 'B1': 15, 'B2': 15, 'C1': 15, 'C2': 15 };
+      // Seviye başına EN UZUN track'in ünite sayısı (Junior A1/A2/B1 = 38; Yetişkin/Teen 19-21). Eskiden 11/12/15 idi →
+      // öğretmen Junior'da 12+ üniteleri öğrenciye HİÇ açamıyordu.
+      var GE_UNIT_MAX = { 'A1': 38, 'A2': 38, 'B1': 38, 'B2': 19, 'C1': 19, 'C2': 19 };
       var gePool = [];        // ge_assignments (havuz)
       var geAssigned = [];    // class_assignments satırları
       var geSubsByKey = {};   // assignment_id + '|' + user_id -> ge_submissions satırı
@@ -5043,7 +5045,7 @@
           var cur = parseInt(geUnlockMap[lv]) || 0;
           var opts = '<option value="">—</option>';
           for (var i = 1; i <= max; i++) {
-            opts += '<option value="' + i + '"' + (cur === i ? ' selected' : '') + '>Ünite ' + i + '</option>';
+            opts += '<option value="' + i + '"' + (cur === i ? ' selected' : '') + '>Ünite ' + i + (i === max ? ' (tümü açık)' : '') + '</option>';
           }
           return '<div class="ge-unlock-row">'
             + '<span class="ge-unlock-level">' + lv + '</span>'
@@ -6089,7 +6091,7 @@
       var GE_UNIT_COUNTS = {
         '': { A1:19, A2:19, B1:19, B2:19, C1:19, C2:19 },
         'teen-': { A1:21, A2:19, B1:19, B2:19, C1:19, C2:19 },
-        'junior-': { A1:38, A2:19, B1:19 }
+        'junior-': { A1:38, A2:38, B1:38, B2:19, C1:19, C2:19 }
       };
       var GE_MOCK_LEVELS = { '': ['A1','A2','B1','B2','C1','C2'], 'teen-': ['A1','A2','B1','B2','C1','C2'], 'junior-': ['A1','A2','B1','B2','C1','C2'] };
       var GE_AUD_LABEL = { '': 'Yetişkin', 'teen-': 'Teen', 'junior-': 'Junior' };

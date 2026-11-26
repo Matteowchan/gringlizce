@@ -331,9 +331,12 @@
       try{ if(!window.griTrackSB) window.griTrackSB=sb; }catch(e){}
       sb.auth.getUser().then(function(r){
         var uid=r&&r.data&&r.data.user?r.data.user.id:null; if(!uid) return;
-        sb.from('ge_track_placement').select('track').eq('user_id',uid).maybeSingle().then(function(pr){
-          var rec=pr&&pr.data; if(rec&&rec.track) lockTo(rec.track);
-        },function(){});
+        function doLock(){ sb.from('ge_track_placement').select('track').eq('user_id',uid).maybeSingle().then(function(pr){ var rec=pr&&pr.data; if(rec&&rec.track) lockTo(rec.track); },function(){}); }
+        // Admin ve ogretmen TUM kategorileri (Adult/Teen/Junior) gezebilir — track kilidi uygulanmaz
+        // (ders sayfalarinda da track.js zaten muaf tutuyor). Diger kullanicilar placement'a gore kilitlenir.
+        sb.from('profiles').select('role').eq('id',uid).maybeSingle().then(function(pr0){
+          var role=pr0&&pr0.data&&pr0.data.role; if(role==='admin'||role==='teacher') return; doLock();
+        },function(){ doLock(); });
       },function(){});
     }
     if(window.supabase&&window.supabase.createClient) tryGate();

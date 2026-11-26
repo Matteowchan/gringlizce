@@ -1467,7 +1467,9 @@ function wait(t){
     window.griTrackSB=c;
     c.auth.getSession().then(function(r){
       done=true;
-      if(r&&r.data&&r.data.session)unlock();else showLogin();
+      if(!(r&&r.data&&r.data.session)){showLogin();return;}
+      /* Sınıflı öğrenci: öğretmen 'Sınav izni' vermeden giremez (A1 sınavlarındaki kapının aynısı). Sınıfsız/öğretmen: serbest. Hata: fail-open. */
+      c.rpc('ge_student_class_state').then(function(rr){var st=rr&&rr.data;if(!st||!st.in_class){unlock();return;}var eu=(st.exam_unlocks||[]);if(eu.indexOf('C2:midterm')>=0){unlock();}else{var m=document.getElementById('geGateMsg'),a=document.getElementById('geGateActions'),hd=gate?gate.querySelector('h2'):null;if(hd)hd.textContent='Sınav henüz açılmadı';if(m)m.textContent='Bir sınıfa kayıtlısın. Öğretmenin bu sınavı henüz başlatmana izin vermedi. Öğretmenin açtığında bu sayfada çözebileceksin.';if(a)a.style.display='none';}},function(){unlock();});
     },function(){done=true;showLogin();});
     return;
   }

@@ -5296,8 +5296,24 @@
         var scoreBlock = asc.total
           ? '<div class="sd-summary"><div class="sd-stat"><div class="sd-stat-val">' + (asc.correct != null ? asc.correct : '?') + ' / ' + asc.total + '</div><div class="sd-stat-label">Otomatik Skor</div></div></div>'
           : '';
-        var writingHtml = c.writing
-          ? '<div class="ad-writing-prompt"><div class="ad-section-title">Yazma Görevi</div><div class="ad-writing-prompt-text">' + esc(c.writing) + '</div></div>'
+        // odev.html yazma cevabını [{prompt,text,words}] dizisi olarak kaydeder (eski kayıtlar düz metin olabilir).
+        var _wr = c.writing, _wrBody = '';
+        if (Array.isArray(_wr)) {
+          _wrBody = _wr.map(function (w, i) {
+            w = w || {};
+            return '<div style="margin:0 0 .9rem">'
+              + (w.prompt ? '<div style="font-weight:600;margin-bottom:.3rem">' + (_wr.length > 1 ? (i + 1) + '. ' : '') + esc(w.prompt) + '</div>' : '')
+              + '<div style="white-space:pre-wrap">' + esc(w.text || '') + '</div>'
+              + (w.words != null ? '<div class="ge-muted" style="font-size:.8rem;margin-top:.2rem">' + esc(String(w.words)) + ' kelime</div>' : '')
+              + '</div>';
+          }).join('');
+        } else if (_wr && typeof _wr === 'object') {
+          _wrBody = '<div style="white-space:pre-wrap">' + esc(_wr.text || JSON.stringify(_wr)) + '</div>';
+        } else if (_wr) {
+          _wrBody = '<div style="white-space:pre-wrap">' + esc(_wr) + '</div>';
+        }
+        var writingHtml = _wrBody
+          ? '<div class="ad-writing-prompt"><div class="ad-section-title">Yazma Görevi</div><div class="ad-writing-prompt-text">' + _wrBody + '</div></div>'
           : '<p class="ge-muted">Bu gönderimde yazma metni yok.</p>';
 
         adBody.innerHTML = ''
